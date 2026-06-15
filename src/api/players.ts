@@ -1,4 +1,4 @@
-import { doc, setDoc, collection, onSnapshot } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import type { HunterCard } from "@/types";
 
@@ -6,6 +6,10 @@ const playersCol = collection(db, "players");
 
 export async function saveHunterCard(card: HunterCard): Promise<void> {
   await setDoc(doc(playersCol, card.uid), card, { merge: true });
+}
+
+export async function deleteHunterCard(uid: string): Promise<void> {
+  await deleteDoc(doc(playersCol, uid));
 }
 
 /** Live-subscribe to your own hunter card. Returns an unsubscribe fn. */

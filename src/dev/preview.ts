@@ -79,7 +79,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     classId: "scout",
     background: "Plague Doctor",
     level: 3,
-    abilities: { str: 12, dex: 16, con: 14, int: 10, wis: 15, cha: 8 },
+    abilities: { str: 12, dex: 15, con: 13, int: 10, wis: 12, cha: 8 },
     skillProficiencies: ["Stealth", "Perception", "Survival"],
     mainArmorId: "hunter-leather-coat",
     currentHp: 9,
