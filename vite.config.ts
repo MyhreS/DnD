@@ -21,7 +21,12 @@ export default defineConfig({
     },
   },
   plugins: [
-    react(),
+    react({
+      // React Compiler — auto-memoises components/hooks at build time.
+      babel: {
+        plugins: [["babel-plugin-react-compiler", { target: "19" }]],
+      },
+    }),
     VitePWA({
       registerType: "autoUpdate",
       includeAssets: ["favicon.svg", "apple-touch-icon.png"],

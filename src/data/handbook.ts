@@ -175,7 +175,3 @@ export const HANDBOOK: HandbookChapter[] = [
     ],
   },
 ];
-
-export const CHAPTER_BY_ID: Record<string, HandbookChapter> = Object.fromEntries(
-  HANDBOOK.map((c) => [c.id, c]),
-);

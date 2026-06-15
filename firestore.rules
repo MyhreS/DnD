@@ -37,25 +37,29 @@ service cloud.firestore {
         );
     }
 
-    // The signed-in member's role from their allowlist entry ("admin" | "dm" |
-    // "player"). Super-admins are treated as "admin".
-    function myRole() {
-      return isSuperAdmin()
-        ? "admin"
-        : get(/databases/$(database)/documents/allowlist/$(emailKey())).data.role;
+    // The signed-in member's allowlist entry data.
+    function myData() {
+      return get(/databases/$(database)/documents/allowlist/$(emailKey())).data;
     }
 
-    // "Staff" = admins and the Dungeon Master: they run sessions & oversight.
+    // Access control: admin can manage members; admins/moderators are elevated.
+    function isAdmin() {
+      return isSuperAdmin() || (isAllowlisted() && myData().accessRole == "admin");
+    }
+
+    // "Staff" run sessions & oversight: admins, moderators, or the DM.
     function isStaff() {
-      return isAllowlisted() && myRole() in ["admin", "dm"];
+      return isSuperAdmin()
+        || (isAllowlisted()
+            && (myData().accessRole in ["admin", "moderator"] || myData().playerType == "dm"));
     }
 
     // /allowlist/{email}
     // Members can read their own entry so the app can confirm access.
-    // Staff can read the whole roster; super-admins manage membership.
+    // Staff can read the whole roster; admins manage membership.
     match /allowlist/{email} {
       allow read: if isStaff() || (isSignedIn() && email == emailKey());
-      allow write: if isSuperAdmin();
+      allow write: if isAdmin();
     }
 
     // /players/{uid}
@@ -68,8 +72,8 @@ service cloud.firestore {
     }
 
     // /sessions/{id}
-    // Anyone in the party can read the schedule. Only staff (admin/DM) can
-    // create, edit or remove dates.
+    // Anyone in the party can read the schedule. Only staff (admin/moderator/DM)
+    // can create, edit or remove dates.
     match /sessions/{id} {
       allow read: if isAllowlisted();
       allow write: if isStaff();

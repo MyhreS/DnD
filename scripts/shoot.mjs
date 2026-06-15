@@ -15,8 +15,8 @@ const errors = [];
 page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
 page.on("pageerror", (e) => errors.push(String(e)));
 
-await page.goto(url, { waitUntil: "networkidle" });
-await page.waitForTimeout(1500);
+await page.goto(url, { waitUntil: "domcontentloaded" });
+await page.waitForTimeout(2500);
 await page.screenshot({ path: out, fullPage: false });
 console.log("Saved", out);
 if (errors.length) console.log("CONSOLE ERRORS:\n" + errors.join("\n"));

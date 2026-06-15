@@ -24,36 +24,103 @@ aware, theme-colored).
 ## Stack
 
 - **React 19 + TypeScript + Vite 6**, bundled/run with **Bun**.
-- **Zustand** for state (`src/store`).
-- **react-router-dom** (3 tabs + a profile route).
-- **Firebase** (`firebase` web SDK): Auth (Google), Firestore, Hosting.
-- **vite-plugin-pwa** (Workbox) for the installable PWA + service worker.
-- **Doppler** for config/secrets injection.
+- **React Compiler** (auto-memoisation) enabled in `vite.config.ts`.
+- **Zustand** for state (stores live per-feature).
+- **react-router-dom** (4 tabs + a profile route).
+- **Firebase** (web SDK): Auth (Google), Firestore, **Cloud Functions**, Hosting.
+- **vite-plugin-pwa** (Workbox) for the installable PWA.
+- **Doppler** for frontend config/secrets injection.
+- **ESLint** + **knip** (dead-code) for quality gates.
 
-## Project layout
+## Architecture & conventions (follow these)
+
+**Folder structure follows features.** Each feature owns its components, hooks
+and store; cross-cutting concerns are global folders.
 
 ```
 src/
-  config.ts            App constants + SUPER_ADMIN_EMAILS (keep in sync w/ rules)
-  types.ts             Domain types (HunterCard, HunterClass, etc.)
-  data/                Premade game content (the source of truth for v1)
-    classes.ts         The six hunter classes
-    armor.ts           Armory + AC category helper
-    abilities.ts       Point-buy costs, modifiers
-    handbook.ts        Handbook chapters (structured for in-app reading)
-    sessions.ts        Upcoming session dates
-  lib/
-    firebase.ts        Firebase init (config from VITE_FIREBASE_* via Doppler)
-    allowlist.ts       Allowlist read/admin writes
-    players.ts         Hunter card read/write
-    character.ts       Derived stats (HP, AC, empty card)
-  store/               authStore, playerStore (Zustand)
-  components/          Layout, icons, editor, card view, error boundary
-  pages/               Login, Denied, Sessions, Hunter, Handbook, Profile
-public/
-  favicon.svg, pwa-*.png, apple-touch-icon.png   (regen: `bun run icons`)
-  handbook/...pdf      Full handbook (served by Hosting)
+  app/                 App shell (App.tsx, routing/gating)
+  config.ts            Constants + role model (Identity, capabilities, names)
+  types.ts             Shared domain types
+  api/                 ONE FILE PER API — all Firestore/Functions access
+    allowlist.ts  players.ts  sessions.ts  rsvp.ts  notifications.ts
+  hooks/               Shared hooks, grouped in subfolders
+    auth/useAuthInit.ts   common/useNow.ts
+  features/<feature>/  e.g. auth, sessions, hunter, party, handbook, profile
+    components/        Feature UI (each file < 200 lines — see rule)
+    hooks/             Feature hooks (every useEffect lives in a hook)
+    store/             Feature Zustand store
+    lib/               Feature-local pure helpers
+  components/          Shared UI (Layout, Splash, ErrorBoundary, icons)
+  lib/                 Pure cross-feature utils (firebase, character calc)
+  data/                Premade game content (classes, armor, handbook, abilities)
+  dev/                 Dev-only (preview mode)
 ```
+
+Rules:
+- **One file per API** under `src/api/`. No Firestore/Functions calls in
+  components — go through an `api/` module.
+- **Every `useEffect` lives in a hook** under a `hooks/` folder (shared in
+  `src/hooks/<group>/`, feature-specific in `features/<f>/hooks/`). Components
+  should read clean; side-effects are named hooks.
+- **No component file over ~200 lines.** If it grows past that, split it into
+  more components/files. Only a *few* deliberate exceptions are allowed (e.g.
+  `features/hunter/components/CharacterEditor.tsx`, the multi-step builder).
+- Imports use the `@/` alias (→ `src/`).
+
+## Tooling / quality gates
+
+```bash
+bun run typecheck     # tsc -b
+bun run lint          # eslint (incl. react-hooks + react-compiler rules)
+bun run lint:fix
+bun run deadcode      # knip — unused files/exports/deps
+bun run deadcode:fix  # knip --fix (auto-remove dead code)
+bun run check         # tsc + eslint + knip
+```
+
+Keep all three green before opening a PR.
+
+## Access model & roles (important)
+
+Two **independent** axes (`src/config.ts`, mirrored in `firestore.rules`):
+
+- **accessRole**: `user` | `moderator` | `admin` — what you can *do*.
+- **playerType**: `player` | `dm` — how you sit at the *table*.
+
+Capabilities are derived in `capabilities(identity)`:
+- `manageMembers` — admin only (add/remove members + roles).
+- `manageSessions` — admin, moderator, or DM (edit dates).
+- `email` — **admin or DM** (send invites/reminders).
+- `oversight` — admin, moderator, or DM (see the Party roster).
+- `needsCharacter(identity)` — true for `playerType: "player"` (players build a
+  hunter; the DM doesn't, and doesn't get the Hunter tab).
+
+Other notes:
+- Must sign in with Google **and** be on the allowlist (`/allowlist/{email}`).
+- **Super-admin** bootstrap (`SUPER_ADMIN_EMAILS`) is always allowed and can
+  manage members. First admin `simonmyhre1@gmail.com`; first DM Christoffer
+  (`myhrefjeld@gmail.com`). Change the email in **both** `config.ts` and
+  `firestore.rules`.
+- **Names**: members have `firstName`/`lastName` (required when adding). Show
+  `displayName(member, all)` — first name only, last name added on collision.
+- **Role switcher**: admins (and dev preview) get a "View as" switcher on the
+  Profile screen (`setViewAs`) to preview any role. Real Firestore writes are
+  still governed by actual permissions.
+- **Dev preview (for local AI navigation)**: in `bun run dev`, open
+  `?preview=admin.dm` (or `user.player`, `moderator`, `dm`, …) to run as any role
+  **without Google sign-in** — see `src/dev/preview.ts`. `?preview=off` clears it.
+  Data calls hit Firestore and may show empty states; it's for inspecting
+  layout & role-gated UI.
+
+Firestore data:
+- `/allowlist/{email}` — `{ email, firstName, lastName, accessRole, playerType,
+  addedBy, addedAt }`. Admin writes only; staff read the roster.
+- `/players/{uid}` — a `HunterCard`. Any member reads; owner writes.
+- `/sessions/{id}` — `{ title, date, location, notes, createdBy }`. Members read;
+  staff write.
+- `/sessions/{id}/rsvps/{uid}` — `{ uid, name, email, status, at }`. You write
+  your own; the party reads.
 
 ## Access model (important)
 

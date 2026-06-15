@@ -1,10 +1,11 @@
 import { NavLink, Outlet, Link, useLocation } from "react-router-dom";
-import { useAuthStore } from "@/store/authStore";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { CalendarIcon, HunterIcon, BookIcon, UsersIcon, Sigil } from "./icons";
 
 export function Layout() {
   const user = useAuthStore((s) => s.user);
-  const isStaff = useAuthStore((s) => s.isStaff);
+  // Players build a hunter; the DM doesn't, so they don't get the Hunter tab.
+  const showHunter = useAuthStore((s) => s.identity.playerType === "player");
   const location = useLocation();
 
   const initials = (user?.displayName || user?.email || "?")
@@ -63,7 +64,7 @@ export function Layout() {
           <CalendarIcon className="nav-icon" />
           <span>Sessions</span>
         </NavLink>
-        {!isStaff && (
+        {showHunter && (
           <NavLink to="/hunter">
             <HunterIcon className="nav-icon" />
             <span>Hunter</span>
