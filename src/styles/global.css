@@ -753,12 +753,26 @@ button {
   100% { background-position: -100% 0; }
 }
 
+/* Bundles that only exist when printing (e.g. "export all characters"). */
+.print-only {
+  display: none;
+}
+
 /* ---------- Print / PDF export ---------- */
 @media print {
   .app-header,
   .bottom-nav,
   .no-print {
     display: none !important;
+  }
+  .print-only {
+    display: block !important;
+  }
+  .print-character {
+    break-after: page;
+  }
+  .print-character:last-child {
+    break-after: auto;
   }
   body {
     background: #fff !important;
