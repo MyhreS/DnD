@@ -8,6 +8,7 @@ import { CharacterTrackers } from "./CharacterTrackers";
 import { DiceRoller } from "./DiceRoller";
 import { emptyCard } from "@/lib/character";
 import { CardSkeleton } from "@/components/Skeleton";
+import { usePrint } from "@/hooks/common/usePrint";
 import { Sigil } from "@/components/icons";
 import type { HunterCard } from "@/types";
 
@@ -15,6 +16,7 @@ export function CharacterPage() {
   const user = useAuthStore((s) => s.user);
   const { card, status, saving, error, save, remove } = usePlayerStore();
   const [editing, setEditing] = useState(false);
+  const { printing, print } = usePrint();
 
   useHunterCard();
 
@@ -114,7 +116,9 @@ export function CharacterPage() {
           <h1 className="page-title" style={{ margin: 0 }}>Character</h1>
         </div>
         <div className="row" style={{ gap: 8 }}>
-          <button className="btn btn-ghost btn-sm" onClick={() => window.print()}>Export PDF</button>
+          <button className="btn btn-ghost btn-sm" onClick={print} disabled={printing}>
+            {printing ? "Preparing…" : "Export PDF"}
+          </button>
           <button className="btn btn-ghost btn-sm" onClick={() => setEditing(true)}>Edit</button>
         </div>
       </div>
@@ -130,6 +134,18 @@ export function CharacterPage() {
       <div className="no-print" style={{ marginTop: 14 }}>
         <DiceRoller />
       </div>
+
+      {printing && (
+        <div className="modal-backdrop no-print" style={{ alignItems: "center" }}>
+          <div className="card center" style={{ maxWidth: 300, margin: 16 }}>
+            <div className="spinner" style={{ margin: "0 auto 14px" }} aria-hidden />
+            <p style={{ marginBottom: 4 }}>Preparing your sheet…</p>
+            <p className="faint" style={{ fontSize: "0.82rem", marginBottom: 0 }}>
+              In the dialog, choose <strong>Save as PDF</strong> to download or share it.
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

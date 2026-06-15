@@ -5,7 +5,6 @@ import type { RsvpStatus, SessionEvent } from "@/types";
 
 const OPTIONS: { value: RsvpStatus; label: string }[] = [
   { value: "yes", label: "I'm in" },
-  { value: "maybe", label: "Maybe" },
   { value: "no", label: "Can't" },
 ];
 
@@ -16,7 +15,6 @@ export function RsvpControls({ session }: { session: SessionEvent }) {
   const mine = rsvps.find((r) => r.uid === user?.uid)?.status ?? null;
   const counts = {
     yes: rsvps.filter((r) => r.status === "yes").length,
-    maybe: rsvps.filter((r) => r.status === "maybe").length,
     no: rsvps.filter((r) => r.status === "no").length,
   };
 
@@ -46,7 +44,7 @@ export function RsvpControls({ session }: { session: SessionEvent }) {
         ))}
       </div>
       <p className="faint center" style={{ fontSize: "0.78rem", marginTop: 8, marginBottom: 0 }}>
-        {counts.yes} in · {counts.maybe} maybe · {counts.no} out
+        {counts.yes} in · {counts.no} out
       </p>
     </div>
   );
