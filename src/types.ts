@@ -133,6 +133,8 @@ export interface HunterCard {
   skillProficiencies: string[];
   /** Selected Main Armor piece id, or null for unarmored. */
   mainArmorId: string | null;
+  /** Current hit points during play (defaults to max when unset). */
+  currentHp?: number;
   /** Play-time resource tracks (in addition to HP). C&S-specific mechanics. */
   madness: number;
   transform: number;

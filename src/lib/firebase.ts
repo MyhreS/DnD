@@ -1,5 +1,11 @@
 import { initializeApp, type FirebaseOptions } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import {
+  initializeAuth,
+  GoogleAuthProvider,
+  indexedDBLocalPersistence,
+  browserLocalPersistence,
+  browserPopupRedirectResolver,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getAnalytics, isSupported as analyticsSupported } from "firebase/analytics";
@@ -24,7 +30,12 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
 }
 
 export const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
+// Persist the session locally so installed (home-screen) launches stay signed
+// in and never re-prompt. IndexedDB first, with a localStorage fallback.
+export const auth = initializeAuth(app, {
+  persistence: [indexedDBLocalPersistence, browserLocalPersistence],
+  popupRedirectResolver: browserPopupRedirectResolver,
+});
 export const db = getFirestore(app);
 // Functions are deployed in europe-west1 (see functions/src/index.ts).
 export const functions = getFunctions(app, "europe-west1");

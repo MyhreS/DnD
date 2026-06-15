@@ -3,17 +3,14 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { CalendarIcon, HunterIcon, BookIcon, UsersIcon, Sigil } from "./icons";
 
 export function Layout() {
+  const member = useAuthStore((s) => s.member);
   const user = useAuthStore((s) => s.user);
-  // Players build a hunter; the DM doesn't, so they don't get the Hunter tab.
-  const showHunter = useAuthStore((s) => s.identity.playerType === "player");
+  // Players build a hunter; the DM doesn't, so they don't get the Character tab.
+  const showCharacter = useAuthStore((s) => s.identity.playerType === "player");
   const location = useLocation();
 
-  const initials = (user?.displayName || user?.email || "?")
-    .split(/[\s@.]+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((p) => p[0]?.toUpperCase())
-    .join("");
+  const firstName = member?.firstName || user?.displayName || user?.email || "Hunter";
+  const initial = firstName.trim().charAt(0).toUpperCase() || "H";
 
   return (
     <div className="app-shell">
@@ -22,34 +19,8 @@ export function Layout() {
           <Sigil className="brand-mark" />
           <span className="brand-title">Catacombs &amp; Starspawns</span>
         </Link>
-        <Link
-          to="/profile"
-          aria-label="Your profile"
-          style={{
-            width: 34,
-            height: 34,
-            borderRadius: "50%",
-            display: "grid",
-            placeItems: "center",
-            background: "var(--bg-elev-3)",
-            border: "1px solid var(--border-strong)",
-            color: "var(--gold)",
-            fontFamily: "var(--font-display)",
-            fontSize: "0.8rem",
-            overflow: "hidden",
-            flex: "none",
-          }}
-        >
-          {user?.photoURL ? (
-            <img
-              src={user.photoURL}
-              alt=""
-              referrerPolicy="no-referrer"
-              style={{ width: "100%", height: "100%", objectFit: "cover" }}
-            />
-          ) : (
-            initials || "H"
-          )}
+        <Link to="/profile" aria-label="Your profile" className="avatar">
+          {initial}
         </Link>
       </header>
 
@@ -64,10 +35,10 @@ export function Layout() {
           <CalendarIcon className="nav-icon" />
           <span>Sessions</span>
         </NavLink>
-        {showHunter && (
-          <NavLink to="/hunter">
+        {showCharacter && (
+          <NavLink to="/character">
             <HunterIcon className="nav-icon" />
-            <span>Hunter</span>
+            <span>Character</span>
           </NavLink>
         )}
         <NavLink to="/party">

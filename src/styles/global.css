@@ -132,9 +132,15 @@ button {
 /* ---------- App shell ---------- */
 
 .app-shell {
-  min-height: 100%;
+  min-height: 100dvh;
   display: flex;
   flex-direction: column;
+}
+
+/* Keep page content at least a screenful so the fixed bottom nav doesn't shift
+   while data is still loading. */
+.app-main {
+  min-height: calc(100dvh - 56px - var(--nav-h));
 }
 
 .app-header {
@@ -665,4 +671,80 @@ button {
   border-radius: 999px;
   border: 1px solid var(--border-strong);
   color: var(--gold);
+}
+
+/* avatar with an initial */
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 30% 25%, #2a1416, var(--bg-elev-3));
+  border: 1px solid var(--border-strong);
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.95rem;
+  flex: none;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+/* skeleton loaders keep layout stable while data fetches */
+.skeleton {
+  border-radius: var(--radius-sm);
+  background: linear-gradient(
+    90deg,
+    var(--bg-elev-2) 25%,
+    var(--bg-elev-3) 37%,
+    var(--bg-elev-2) 63%
+  );
+  background-size: 400% 100%;
+  animation: shimmer 1.4s ease infinite;
+}
+@keyframes shimmer {
+  0% { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* ---------- Print / PDF export ---------- */
+@media print {
+  .app-header,
+  .bottom-nav,
+  .no-print {
+    display: none !important;
+  }
+  body {
+    background: #fff !important;
+    color: #14110d !important;
+  }
+  .app-main {
+    padding: 0 !important;
+    max-width: none;
+  }
+  .print-sheet .card {
+    background: #fff !important;
+    border: 1px solid #bbb !important;
+    box-shadow: none !important;
+    break-inside: avoid;
+  }
+  .print-sheet .card,
+  .print-sheet h1,
+  .print-sheet h2,
+  .print-sheet h3,
+  .print-sheet .stat-value,
+  .print-sheet .gold {
+    color: #14110d !important;
+  }
+  .print-sheet .muted,
+  .print-sheet .faint,
+  .print-sheet .stat-label,
+  .print-sheet .eyebrow {
+    color: #555 !important;
+  }
+  .print-sheet .stat,
+  .print-sheet .chip {
+    border-color: #bbb !important;
+    background: #f6f3ec !important;
+  }
 }

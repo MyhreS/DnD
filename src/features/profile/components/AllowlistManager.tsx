@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { displayName } from "@/config";
+import { sendInvite } from "@/api/notifications";
 import { useAllowlist } from "../hooks/useAllowlist";
 import type { AccessRole, PlayerType } from "@/types";
 
@@ -12,6 +13,19 @@ export function AllowlistManager({ adminEmail }: { adminEmail: string }) {
   const [playerType, setPlayerType] = useState<PlayerType>("player");
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [invited, setInvited] = useState<string | null>(null);
+
+  async function invite(target: string) {
+    setInvited(null);
+    setError(null);
+    try {
+      await sendInvite(target);
+      setInvited(`Invite sent to ${target}.`);
+    } catch (err) {
+      console.error(err);
+      setError("Could not send invite — is email configured?");
+    }
+  }
 
   const canAdd =
     firstName.trim() && lastName.trim() && email.trim().includes("@") && !busy;
@@ -70,6 +84,11 @@ export function AllowlistManager({ adminEmail }: { adminEmail: string }) {
       </div>
 
       {(error || loadError) && <div className="banner banner-error" style={{ marginBottom: 12 }}>{error ?? loadError}</div>}
+      {invited && <div className="banner banner-ok" style={{ marginBottom: 12 }}>{invited}</div>}
+
+      <button className="btn btn-ghost btn-sm" style={{ marginBottom: 12 }} onClick={() => void invite(adminEmail)}>
+        Send myself a test invite
+      </button>
 
       {members === null ? (
         <p className="muted">Loading…</p>
@@ -83,11 +102,12 @@ export function AllowlistManager({ adminEmail }: { adminEmail: string }) {
                 {m.accessRole !== "user" && <span className="role-tag">{m.accessRole}</span>}
                 <span className="faint" style={{ fontSize: "0.78rem", wordBreak: "break-all" }}>{m.email}</span>
               </span>
-              {m.email === adminEmail.toLowerCase() ? (
-                <span className="chip" style={{ flex: "none" }}>you</span>
-              ) : (
-                <button className="btn btn-ghost btn-sm" style={{ flex: "none" }} onClick={() => void remove(m.email)}>Remove</button>
-              )}
+              <span className="row" style={{ gap: 6, flex: "none" }}>
+                <button className="btn btn-ghost btn-sm" onClick={() => void invite(m.email)}>Invite</button>
+                {m.email !== adminEmail.toLowerCase() && (
+                  <button className="btn btn-ghost btn-sm" onClick={() => void remove(m.email)}>Remove</button>
+                )}
+              </span>
             </li>
           ))}
         </ul>

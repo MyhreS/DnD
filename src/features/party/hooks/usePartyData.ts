@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { loadParty } from "@/api/players";
+import { subscribeParty } from "@/api/players";
 import { listAllowlist } from "@/api/allowlist";
 import { useSessionRsvps } from "@/features/sessions/hooks/useSessionRsvps";
 import type { AllowlistMember, HunterCard } from "@/types";
@@ -20,11 +20,14 @@ export function usePartyData(opts: { oversight: boolean; sessionId?: string }): 
   const [error, setError] = useState<string | null>(null);
   const rsvps = useSessionRsvps(sessionId);
 
+  // Live party (every hunter card).
+  useEffect(() => {
+    return subscribeParty(setPlayers, () => setError("Could not load the party."));
+  }, []);
+
+  // Roster (allowlist) — staff only; changes rarely, so a one-time load.
   useEffect(() => {
     let active = true;
-    loadParty()
-      .then((p) => active && setPlayers(p))
-      .catch(() => active && setError("Could not load the party."));
     if (oversight) {
       listAllowlist()
         .then((m) => active && setMembers(m))

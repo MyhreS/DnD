@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { HunterCard } from "@/types";
-import { loadHunterCard, saveHunterCard } from "@/api/players";
+import { saveHunterCard, subscribeHunterCard } from "@/api/players";
+import { isPreviewActive, previewCard } from "@/dev/preview";
 
 type LoadStatus = "idle" | "loading" | "loaded" | "error";
 
@@ -9,34 +10,53 @@ interface PlayerState {
   status: LoadStatus;
   saving: boolean;
   error: string | null;
-  /** Load the signed-in user's card. Safe to call repeatedly. */
-  load: (uid: string) => Promise<void>;
+  subscribedUid: string | null;
+  unsub: (() => void) | null;
+  /** Live-subscribe to the signed-in user's card. Idempotent per uid. */
+  subscribe: (uid: string) => void;
+  stop: () => void;
   save: (card: HunterCard) => Promise<boolean>;
-  reset: () => void;
 }
 
-export const usePlayerStore = create<PlayerState>((set) => ({
+export const usePlayerStore = create<PlayerState>((set, get) => ({
   card: null,
   status: "idle",
   saving: false,
   error: null,
+  subscribedUid: null,
+  unsub: null,
 
-  load: async (uid: string) => {
-    set({ status: "loading", error: null });
-    try {
-      const card = await loadHunterCard(uid);
-      set({ card, status: "loaded" });
-    } catch (err) {
-      console.error("Failed to load hunter card", err);
-      set({ status: "error", error: "Could not load your hunter card." });
+  subscribe: (uid: string) => {
+    if (isPreviewActive()) {
+      set({ card: previewCard(uid), status: "loaded", subscribedUid: uid });
+      return;
     }
+    if (get().subscribedUid === uid && get().unsub) return;
+    get().unsub?.();
+    set({ status: "loading", error: null, subscribedUid: uid });
+    const unsub = subscribeHunterCard(
+      uid,
+      (card) => set({ card, status: "loaded" }),
+      () => set({ status: "error", error: "Could not load your hunter card." }),
+    );
+    set({ unsub });
+  },
+
+  stop: () => {
+    get().unsub?.();
+    set({ unsub: null, subscribedUid: null });
   },
 
   save: async (card: HunterCard) => {
+    const toSave = { ...card, updatedAt: Date.now() };
+    if (isPreviewActive()) {
+      set({ card: toSave, status: "loaded" }); // local-only in preview
+      return true;
+    }
     set({ saving: true, error: null });
     try {
-      const toSave = { ...card, updatedAt: Date.now() };
       await saveHunterCard(toSave);
+      // The live subscription will echo the change; set optimistically too.
       set({ card: toSave, saving: false, status: "loaded" });
       return true;
     } catch (err) {
@@ -45,6 +65,4 @@ export const usePlayerStore = create<PlayerState>((set) => ({
       return false;
     }
   },
-
-  reset: () => set({ card: null, status: "idle", error: null, saving: false }),
 }));

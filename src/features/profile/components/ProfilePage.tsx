@@ -11,11 +11,13 @@ export function ProfilePage() {
   const member = useAuthStore((s) => s.member);
   const identity = useAuthStore((s) => s.identity);
   const canManageMembers = useAuthStore((s) => s.caps.manageMembers);
+  const oversight = useAuthStore((s) => s.caps.oversight);
   const signOut = useAuthStore((s) => s.signOut);
   const navigate = useNavigate();
 
   const name = member ? fullName(member) : (user?.displayName ?? "Hunter");
-  const showSwitcher = canManageMembers || isPreviewActive();
+  // Admins, moderators and the DM can preview other roles (DM ⇄ Player).
+  const showSwitcher = oversight || isPreviewActive();
 
   return (
     <div>

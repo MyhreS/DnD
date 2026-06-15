@@ -67,3 +67,26 @@ export function maybePreview(): PreviewSession | null {
 export function isPreviewActive(): boolean {
   return import.meta.env.DEV && readPreviewRaw() !== null;
 }
+
+/** A sample hunter card so the Character/Party views render in preview mode. */
+export function previewCard(uid: string): import("@/types").HunterCard {
+  const now = Date.now();
+  return {
+    uid,
+    ownerEmail: "preview@local.dev",
+    ownerName: "Preview Hunter",
+    name: "Eileen the Crow",
+    classId: "scout",
+    background: "Plague Doctor",
+    level: 3,
+    abilities: { str: 12, dex: 16, con: 14, int: 10, wis: 15, cha: 8 },
+    skillProficiencies: ["Stealth", "Perception", "Survival"],
+    mainArmorId: "hunter-leather-coat",
+    currentHp: 9,
+    madness: 2,
+    transform: 1,
+    notes: "Hunts the beasts that were once hunters.",
+    createdAt: now,
+    updatedAt: now,
+  };
+}
