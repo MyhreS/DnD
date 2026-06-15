@@ -39,6 +39,52 @@
   color-scheme: dark;
 }
 
+/* ---------- Light theme ---------- */
+:root[data-theme="light"] {
+  --bg: #f3efe6;
+  --bg-elev: #fffdf8;
+  --bg-elev-2: #f1ece1;
+  --bg-elev-3: #e6dfd0;
+
+  --blood: #a3111a;
+  --blood-bright: #c01620;
+  --blood-deep: #7a0d12;
+
+  --gold: #9a7b2e;
+  --gold-dim: #8a6f2e;
+
+  --ink: #1f1a12;
+  --ink-dim: #5d5546;
+  --ink-faint: #8b8270;
+
+  --border: rgba(60, 45, 20, 0.16);
+  --border-strong: rgba(60, 45, 20, 0.3);
+
+  --shadow: 0 8px 24px rgba(60, 45, 20, 0.14);
+
+  color-scheme: light;
+}
+
+:root[data-theme="light"] body {
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(120% 80% at 50% -10%, rgba(163, 17, 26, 0.1), transparent 60%),
+    radial-gradient(80% 60% at 100% 0%, rgba(154, 123, 46, 0.08), transparent 55%);
+}
+
+:root[data-theme="light"] .app-header {
+  background: linear-gradient(180deg, rgba(243, 239, 230, 0.96), rgba(243, 239, 230, 0.7));
+}
+:root[data-theme="light"] .bottom-nav {
+  background: linear-gradient(180deg, rgba(255, 253, 248, 0.92), rgba(243, 239, 230, 0.98));
+}
+:root[data-theme="light"] .btn-primary {
+  color: #fff;
+}
+:root[data-theme="light"] .avatar {
+  background: radial-gradient(circle at 30% 25%, #f6e9d6, var(--bg-elev-3));
+}
+
 * {
   box-sizing: border-box;
   -webkit-tap-highlight-color: transparent;

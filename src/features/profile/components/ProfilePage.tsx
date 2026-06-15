@@ -3,6 +3,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { fullName } from "@/config";
 import { isPreviewActive } from "@/dev/preview";
 import { SignOutIcon } from "@/components/icons";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { AllowlistManager } from "./AllowlistManager";
 
@@ -28,6 +29,7 @@ export function ProfilePage() {
         <span className="faint"> · {identity.accessRole}{identity.playerType === "dm" ? " · DM" : ""}</span>
       </p>
 
+      <ThemeToggle />
       {showSwitcher && <RoleSwitcher />}
       {canManageMembers && <AllowlistManager adminEmail={user?.email ?? ""} />}
 
