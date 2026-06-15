@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { fullName } from "@/config";
+import { fullName, capabilities } from "@/config";
 import { isPreviewActive } from "@/dev/preview";
 import { SignOutIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -12,13 +12,14 @@ export function ProfilePage() {
   const member = useAuthStore((s) => s.member);
   const identity = useAuthStore((s) => s.identity);
   const canManageMembers = useAuthStore((s) => s.caps.manageMembers);
-  const oversight = useAuthStore((s) => s.caps.oversight);
+  const realIdentity = useAuthStore((s) => s.realIdentity);
   const signOut = useAuthStore((s) => s.signOut);
   const navigate = useNavigate();
 
   const name = member ? fullName(member) : (user?.displayName ?? "Hunter");
-  // Admins, moderators and the DM can preview other roles (DM ⇄ Player).
-  const showSwitcher = oversight || isPreviewActive();
+  // Gate on the REAL role so previewing as a lower role doesn't hide the
+  // switcher (otherwise you'd be stuck and couldn't switch back).
+  const showSwitcher = capabilities(realIdentity).oversight || isPreviewActive();
 
   return (
     <div>
