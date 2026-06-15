@@ -1,0 +1,46 @@
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# build
+dist
+dist-ssr
+dev-dist
+*.local
+*.tsbuildinfo
+
+# playwright
+/test-results
+/playwright-report
+/blob-report
+
+# env / secrets — never commit these
+.env
+.env.*
+!.env.example
+
+# firebase
+.firebase
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+*serviceAccount*.json
+.runtimeconfig.json
+
+# editor / os
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# logs
+logs
+*.log
+npm-debug.log*
+bun-debug.log*

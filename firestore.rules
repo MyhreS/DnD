@@ -1,0 +1,91 @@
+rules_version = '2';
+
+// Catacombs & Starspawns — Firestore security rules.
+//
+// Access model:
+//  - You must be signed in with Google.
+//  - You must be on the allowlist (a document in /allowlist keyed by your email).
+//  - The allowlist itself is only writable by trusted backends (Admin SDK /
+//    Firebase console / seed script), never from the client.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function emailKey() {
+      return request.auth.token.email;
+    }
+
+    // Super-admins are always allowed and can manage the allowlist. This
+    // bootstraps the first user so the allowlist never needs hand-editing.
+    // Keep in sync with src/config.ts (SUPER_ADMIN_EMAILS).
+    function isSuperAdmin() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && emailKey() in ["simonmyhre1@gmail.com"];
+    }
+
+    // True when the signed-in user is a super-admin OR has a doc in /allowlist.
+    function isAllowlisted() {
+      return isSignedIn()
+        && request.auth.token.email_verified == true
+        && (
+          isSuperAdmin()
+          || exists(/databases/$(database)/documents/allowlist/$(emailKey()))
+        );
+    }
+
+    // The signed-in member's role from their allowlist entry ("admin" | "dm" |
+    // "player"). Super-admins are treated as "admin".
+    function myRole() {
+      return isSuperAdmin()
+        ? "admin"
+        : get(/databases/$(database)/documents/allowlist/$(emailKey())).data.role;
+    }
+
+    // "Staff" = admins and the Dungeon Master: they run sessions & oversight.
+    function isStaff() {
+      return isAllowlisted() && myRole() in ["admin", "dm"];
+    }
+
+    // /allowlist/{email}
+    // Members can read their own entry so the app can confirm access.
+    // Staff can read the whole roster; super-admins manage membership.
+    match /allowlist/{email} {
+      allow read: if isStaff() || (isSignedIn() && email == emailKey());
+      allow write: if isSuperAdmin();
+    }
+
+    // /players/{uid}
+    // Your hunter card. Any allowlisted member of the party can read everyone's
+    // card (party view / DM oversight), but you may only write your own.
+    match /players/{uid} {
+      allow read: if isAllowlisted();
+      allow create, update: if isAllowlisted() && request.auth.uid == uid;
+      allow delete: if isAllowlisted() && request.auth.uid == uid;
+    }
+
+    // /sessions/{id}
+    // Anyone in the party can read the schedule. Only staff (admin/DM) can
+    // create, edit or remove dates.
+    match /sessions/{id} {
+      allow read: if isAllowlisted();
+      allow write: if isStaff();
+
+      // /sessions/{id}/rsvps/{uid}
+      // Each member sets their own attendance; everyone in the party can read
+      // attendance (so the DM sees who hasn't answered).
+      match /rsvps/{uid} {
+        allow read: if isAllowlisted();
+        allow write: if isAllowlisted() && request.auth.uid == uid;
+      }
+    }
+
+    // Lock everything else down by default.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

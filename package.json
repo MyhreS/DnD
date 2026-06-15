@@ -1,0 +1,41 @@
+{
+  "name": "catacombs-and-starspawns",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Companion app for our Catacombs & Starspawns tabletop campaign.",
+  "scripts": {
+    "dev": "doppler run -- vite",
+    "build": "tsc -b && doppler run -- vite build",
+    "build:ci": "tsc -b && vite build",
+    "preview": "doppler run -- vite preview",
+    "typecheck": "tsc -b",
+    "lint": "tsc -b",
+    "icons": "bun run scripts/generate-icons.mjs",
+    "deploy": "bun run build && firebase deploy",
+    "deploy:hosting": "bun run build && firebase deploy --only hosting",
+    "deploy:rules": "firebase deploy --only firestore:rules"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "firebase": "^11.3.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.5",
+    "zustand": "^5.0.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "playwright": "^1.61.0",
+    "sharp": "^0.33.5",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "vite-plugin-pwa": "^0.21.1"
+  },
+  "trustedDependencies": [
+    "@firebase/util",
+    "protobufjs"
+  ]
+}
