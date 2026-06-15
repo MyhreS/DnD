@@ -37,6 +37,49 @@ export const CLASSES: HunterClass[] = [
       "Shortsword",
       "Rope",
     ],
+    baseClass: "Fighter",
+    signature:
+      "Refuse the Bleeding — when you take damage, use your reaction to reduce it by 1d10 + your Hunter Brute level.",
+    features: [
+      { level: 1, name: "Fighting Style", text: "Gain a Fighting Style feat of your choice." },
+      {
+        level: 1,
+        name: "Weapon Mastery",
+        text: "Use the mastery properties of three kinds of Simple or Martial weapons; you can swap your choices on a Long Rest.",
+      },
+      {
+        level: 2,
+        name: "Action Surge",
+        text: "On your turn, take one additional action. Once per Short or Long Rest (twice from level 17).",
+      },
+      {
+        level: 2,
+        name: "Refuse the Bleeding",
+        text: "Reaction: reduce incoming damage by 1d10 + your Hunter Brute level. Regain one use on a Short Rest, all on a Long Rest.",
+      },
+      {
+        level: 3,
+        name: "Hunter Brute Subclass",
+        text: "Choose a subclass — Battle Master or Champion.",
+      },
+      {
+        level: 4,
+        name: "Ability Score Improvement",
+        text: "Take the ASI feat or another feat. Again at levels 6, 8, 12, 14 and 16.",
+      },
+      { level: 5, name: "Extra Attack", text: "Attack twice when you take the Attack action." },
+      {
+        level: 9,
+        name: "Tactical Mind",
+        text: "When using a weapon's mastery property, you may swap it for Push, Sap or Slow for that attack.",
+      },
+      { level: 11, name: "Two Extra Attacks", text: "Attack three times when you take the Attack action." },
+      {
+        level: 13,
+        name: "Studied Attacks",
+        text: "After missing a creature, you have Advantage on your next attack roll against it.",
+      },
+    ],
   },
   {
     id: "scout",
@@ -71,6 +114,38 @@ export const CLASSES: HunterClass[] = [
       "Hunter Cleaver",
       "Pistol",
       "Bandolier",
+    ],
+    baseClass: "Ranger",
+    signature:
+      "Hunter's Mark — Bonus Action, mark a creature within 90 ft: deal +1d6 on your hits against it and gain Advantage on Wisdom (Perception/Survival) checks to find it.",
+    features: [
+      {
+        level: 1,
+        name: "Hunter's Mark",
+        text: "Mark a creature (Bonus Action, 90 ft) for +1d6 damage on hits and tracking advantage. Two marks; regain all on a Long Rest.",
+      },
+      {
+        level: 1,
+        name: "Weapon Mastery",
+        text: "Use the mastery properties of two kinds of weapons; you can swap your choices on a Long Rest.",
+      },
+      {
+        level: 2,
+        name: "Expertise",
+        text: "Choose one skill proficiency you lack Expertise in; you gain Expertise in it.",
+      },
+      { level: 2, name: "Fighting Style", text: "Gain a Fighting Style feat of your choice." },
+      {
+        level: 3,
+        name: "Hunter Scout Subclass",
+        text: "Choose a subclass — Beast Caller or Marksman.",
+      },
+      {
+        level: 4,
+        name: "Ability Score Improvement",
+        text: "Take the ASI feat or another feat. Again at levels 8, 12 and 16.",
+      },
+      { level: 5, name: "Extra Attack", text: "Attack twice when you take the Attack action." },
     ],
   },
   {

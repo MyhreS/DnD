@@ -133,6 +133,27 @@ export const HANDBOOK: HandbookChapter[] = [
     ],
   },
   {
+    id: "mechanics",
+    title: "Madness & Transform",
+    summary: "Two C&S-specific tracks kept alongside HP.",
+    sections: [
+      {
+        heading: "New mechanics (work in progress)",
+        body: [
+          "Alongside Hit Points, hunters in C&S track two more resources: Madness and Transform. Your hunter card has a place to record both.",
+          "Madness reflects how much the truths of the night have frayed your mind; Transform reflects how far the old blood has taken hold of your body.",
+          "The full rules for both arrive with the updated handbook — this app will be updated to calculate them automatically once they're finalised.",
+        ],
+      },
+      {
+        heading: "What C&S does NOT use",
+        body: [
+          "Unlike standard 5e, C&S does not use Languages or Species. The bonuses those would grant are baked into your Background and Class instead, so you won't find them on your hunter card.",
+        ],
+      },
+    ],
+  },
+  {
     id: "carrying",
     title: "Carrying & Encumbrance",
     summary: "Weight and item slots — what your hunter can actually haul.",

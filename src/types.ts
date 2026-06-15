@@ -9,6 +9,13 @@ export interface SkillChoice {
   options: string[];
 }
 
+/** A feature a class gains at a given level (from the DM's class drafts). */
+export interface LevelFeature {
+  level: number;
+  name: string;
+  text: string;
+}
+
 export interface HunterClass {
   id: string;
   name: string;
@@ -26,6 +33,12 @@ export interface HunterClass {
   toolProficiencies: string;
   skillChoices: SkillChoice;
   startingEquipment: string[];
+  /** The 5e class this hunter is built on, e.g. "Fighter" / "Ranger". */
+  baseClass?: string;
+  /** The signature level-1 mechanic, shown prominently. */
+  signature?: string;
+  /** Level-by-level progression (drafts; not every class is detailed yet). */
+  features?: LevelFeature[];
 }
 
 export type ArmorCategory =
@@ -112,6 +125,9 @@ export interface HunterCard {
   skillProficiencies: string[];
   /** Selected Main Armor piece id, or null for unarmored. */
   mainArmorId: string | null;
+  /** Play-time resource tracks (in addition to HP). C&S-specific mechanics. */
+  madness: number;
+  transform: number;
   notes: string;
   updatedAt: number;
   createdAt: number;
