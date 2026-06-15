@@ -1,6 +1,7 @@
 import { initializeApp, type FirebaseOptions } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
+import { getFunctions } from "firebase/functions";
 import { getAnalytics, isSupported as analyticsSupported } from "firebase/analytics";
 
 const firebaseConfig: FirebaseOptions = {
@@ -25,6 +26,8 @@ if (!firebaseConfig.apiKey || !firebaseConfig.projectId) {
 export const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+// Functions are deployed in europe-west1 (see functions/src/index.ts).
+export const functions = getFunctions(app, "europe-west1");
 
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });

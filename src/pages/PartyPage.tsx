@@ -4,6 +4,11 @@ import { useSessionStore } from "@/store/sessionStore";
 import { loadParty } from "@/lib/players";
 import { listAllowlist } from "@/lib/allowlist";
 import { subscribeRsvps } from "@/lib/rsvp";
+import {
+  remindMissingCharacters,
+  remindMissingRsvps,
+  type ReminderResult,
+} from "@/lib/notifications";
 import { sortUpcoming } from "@/data/sessions";
 import { HunterCardView } from "@/components/HunterCardView";
 import { getClass } from "@/data/classes";
@@ -54,7 +59,13 @@ export function PartyPage() {
       {error && <div className="banner banner-error">{error}</div>}
 
       {isStaff && (
-        <RosterPanel members={members} players={players} rsvps={rsvps} sessionTitle={nextSession?.title} />
+        <RosterPanel
+          members={members}
+          players={players}
+          rsvps={rsvps}
+          sessionId={nextSession?.id}
+          sessionTitle={nextSession?.title}
+        />
       )}
 
       <p className="eyebrow" style={{ margin: "18px 0 10px" }}>The hunters</p>
@@ -111,11 +122,13 @@ function RosterPanel({
   members,
   players,
   rsvps,
+  sessionId,
   sessionTitle,
 }: {
   members: AllowlistMember[] | null;
   players: HunterCard[] | null;
   rsvps: Rsvp[];
+  sessionId?: string;
   sessionTitle?: string;
 }) {
   if (members === null || players === null) {
@@ -171,24 +184,64 @@ function RosterPanel({
       </ul>
 
       <hr className="divider" />
-      <p className="eyebrow" style={{ marginBottom: 8 }}>Send a reminder</p>
+      <p className="eyebrow" style={{ marginBottom: 8 }}>Send reminder emails</p>
       <div className="stack" style={{ gap: 8 }}>
-        <ReminderButton
-          label={`Nudge ${missingCharacter.length} missing a character`}
-          emails={missingCharacter.map((m) => m.email)}
-          subject="Catacombs & Starspawns — make your hunter card"
-          body={`Hey! Before our next session, please open the app and forge your hunter card.\n\nhttps://dandd-ea955.web.app\n\n— sent from the C&S companion`}
+        <EmailButton
+          label={`Email ${missingCharacter.length} missing a character`}
+          disabled={missingCharacter.length === 0}
+          run={remindMissingCharacters}
         />
-        <ReminderButton
-          label={`Nudge ${notResponded.length} who haven't answered`}
-          emails={notResponded.map((m) => m.email)}
-          subject={`Catacombs & Starspawns — are you coming${sessionTitle ? ` to ${sessionTitle}` : ""}?`}
-          body={`Hey! Please open the app and let us know if you can make the next session.\n\nhttps://dandd-ea955.web.app\n\n— sent from the C&S companion`}
+        <EmailButton
+          label={`Email ${notResponded.length} who haven't answered`}
+          disabled={notResponded.length === 0 || !sessionId}
+          run={() => remindMissingRsvps(sessionId!)}
         />
       </div>
       <p className="faint" style={{ fontSize: "0.74rem", marginTop: 10, marginBottom: 0 }}>
-        Opens your email app with everyone on BCC. Automated reminders are coming later.
+        Sends from the campaign mailbox via the app's backend.
       </p>
+    </div>
+  );
+}
+
+function EmailButton({
+  label,
+  disabled,
+  run,
+}: {
+  label: string;
+  disabled?: boolean;
+  run: () => Promise<ReminderResult>;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [result, setResult] = useState<string | null>(null);
+
+  async function go() {
+    setBusy(true);
+    setResult(null);
+    try {
+      const r = await run();
+      setResult(
+        r.sent > 0
+          ? `Sent ${r.sent}${r.failed ? `, ${r.failed} failed` : ""}.`
+          : "Nobody to email.",
+      );
+    } catch (err) {
+      console.error(err);
+      setResult("Couldn't send — is email configured?");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div>
+      <button className="btn btn-ghost" disabled={disabled || busy} onClick={() => void go()}>
+        <MailIcon width={16} height={16} /> {busy ? "Sending…" : label}
+      </button>
+      {result && (
+        <p className="faint center" style={{ fontSize: "0.76rem", margin: "6px 0 0" }}>{result}</p>
+      )}
     </div>
   );
 }
@@ -208,30 +261,3 @@ function RsvpBadge({ status }: { status?: RsvpStatus }) {
   );
 }
 
-function ReminderButton({
-  label,
-  emails,
-  subject,
-  body,
-}: {
-  label: string;
-  emails: string[];
-  subject: string;
-  body: string;
-}) {
-  const href = `mailto:?bcc=${encodeURIComponent(emails.join(","))}&subject=${encodeURIComponent(
-    subject,
-  )}&body=${encodeURIComponent(body)}`;
-  if (emails.length === 0) {
-    return (
-      <div className="btn btn-ghost" style={{ opacity: 0.5, cursor: "default" }}>
-        <MailIcon width={16} height={16} /> Everyone's sorted 🎉
-      </div>
-    );
-  }
-  return (
-    <a className="btn btn-ghost" href={href}>
-      <MailIcon width={16} height={16} /> {label}
-    </a>
-  );
-}

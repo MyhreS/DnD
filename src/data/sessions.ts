@@ -5,20 +5,15 @@ import type { SessionEvent } from "@/types";
 // Dates are local time, format: "YYYY-MM-DDTHH:mm:ss".
 export const SEED_SESSIONS: Omit<SessionEvent, "id">[] = [
   {
-    date: "2026-06-20T18:00:00",
+    date: "2026-07-11T12:00:00",
     title: "Session 1 — The First Night of the Hunt",
-    location: "Simon's place",
-    notes:
-      "Bring your hunter card! Snacks and dice provided. We'll do a quick rules primer before we begin.",
-  },
-  {
-    date: "2026-07-04T18:00:00",
-    title: "Session 2",
     location: "TBD",
+    notes:
+      "Bring your hunter card! We'll do a quick rules primer before we begin.",
   },
   {
-    date: "2026-07-18T18:00:00",
-    title: "Session 3",
+    date: "2026-08-08T12:00:00",
+    title: "Session 2",
     location: "TBD",
   },
 ];
