@@ -6,9 +6,9 @@ import { sortUpcoming } from "@/data/sessions";
 import { usePartyData } from "../hooks/usePartyData";
 import { HunterRow } from "./HunterRow";
 import { RosterPanel } from "./RosterPanel";
-import { HunterCardView } from "@/features/hunter/components/HunterCardView";
+import { exportPartyPdf } from "@/features/hunter/lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
-import { usePrint } from "@/hooks/common/usePrint";
+import { AsyncButton } from "@/components/AsyncButton";
 
 export function PartyPage() {
   // "Staff" can export everyone's sheets; matches admin + DM (and moderators).
@@ -26,20 +26,24 @@ export function PartyPage() {
   });
 
   const hunters = (players ?? []).filter((c) => c.classId && c.name);
-  const { printing, print } = usePrint();
 
   return (
-    <>
-      <div className="no-print">
+    <div>
+      <div>
         <div className="row between">
           <div>
             <p className="eyebrow">The Hunting Party</p>
             <h1 className="page-title">Party</h1>
           </div>
           {canExport && hunters.length > 0 && (
-            <button className="btn btn-ghost btn-sm" onClick={print} disabled={printing}>
-              {printing ? "Preparing…" : "Export all PDF"}
-            </button>
+            <AsyncButton
+              className="btn-ghost btn-sm"
+              pendingText="Generating…"
+              showDone={false}
+              onClick={() => exportPartyPdf(hunters)}
+            >
+              Export all PDF
+            </AsyncButton>
           )}
         </div>
         <p className="page-intro">
@@ -75,27 +79,6 @@ export function PartyPage() {
           </div>
         )}
       </div>
-
-      {/* Print-only bundle: every hunter's sheet, one per page. */}
-      <div className="print-only print-sheet">
-        {hunters.map((c) => (
-          <div key={c.uid} className="print-character" style={{ marginBottom: 16 }}>
-            <HunterCardView card={c} />
-          </div>
-        ))}
-      </div>
-
-      {printing && (
-        <div className="modal-backdrop no-print" style={{ alignItems: "center" }}>
-          <div className="card center" style={{ maxWidth: 300, margin: 16 }}>
-            <div className="spinner" style={{ margin: "0 auto 14px" }} aria-hidden />
-            <p style={{ marginBottom: 4 }}>Preparing {hunters.length} sheets…</p>
-            <p className="faint" style={{ fontSize: "0.82rem", marginBottom: 0 }}>
-              In the dialog, choose <strong>Save as PDF</strong> to print them all.
-            </p>
-          </div>
-        </div>
-      )}
-    </>
+    </div>
   );
 }
