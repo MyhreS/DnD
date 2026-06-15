@@ -177,10 +177,12 @@ button {
 
 /* ---------- App shell ---------- */
 
-/* App-shell layout: exactly one viewport tall, content scrolls internally so
-   the bottom nav is a normal flex row pinned to the bottom (never floats). */
+/* App-shell layout: pinned to the real viewport edges so it fills the screen
+   in both Safari and an installed (standalone) PWA. Content scrolls internally,
+   so the bottom nav is a normal flex row glued to the very bottom. */
 .app-shell {
-  height: 100dvh;
+  position: fixed;
+  inset: 0;
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -770,6 +772,7 @@ button {
 @media print {
   /* Undo the one-viewport app shell so the whole sheet paginates. */
   .app-shell {
+    position: static !important;
     height: auto !important;
     overflow: visible !important;
   }
