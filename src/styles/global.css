@@ -586,6 +586,19 @@ button {
   border-top-color: var(--blood-bright);
   animation: spin 0.8s linear infinite;
 }
+
+/* small spinner that sits inside a button, matching the text colour */
+.btn-spinner {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  opacity: 0.9;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  flex: none;
+}
 @keyframes spin {
   to {
     transform: rotate(360deg);

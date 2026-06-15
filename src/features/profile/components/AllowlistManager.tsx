@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { displayName } from "@/config";
 import { sendInvite } from "@/api/notifications";
+import { AsyncButton } from "@/components/AsyncButton";
 import { useAllowlist } from "../hooks/useAllowlist";
 import type { AccessRole, PlayerType } from "@/types";
 
@@ -11,7 +12,6 @@ export function AllowlistManager({ adminEmail }: { adminEmail: string }) {
   const [email, setEmail] = useState("");
   const [accessRole, setAccessRole] = useState<AccessRole>("user");
   const [playerType, setPlayerType] = useState<PlayerType>("player");
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [invited, setInvited] = useState<string | null>(null);
 
@@ -24,24 +24,17 @@ export function AllowlistManager({ adminEmail }: { adminEmail: string }) {
     } catch (err) {
       console.error(err);
       setError("Could not send invite — is email configured?");
+      throw err; // let the button show its error state
     }
   }
 
-  const canAdd =
-    firstName.trim() && lastName.trim() && email.trim().includes("@") && !busy;
+  const canAdd = !!(firstName.trim() && lastName.trim() && email.trim().includes("@"));
 
   async function submit() {
-    if (!canAdd) {
-      setError("First name, last name and a valid email are all required.");
-      return;
-    }
-    setBusy(true);
     setError(null);
+    setInvited(null);
     try {
-      await add(
-        { email: email.trim(), firstName, lastName, accessRole, playerType },
-        adminEmail,
-      );
+      await add({ email: email.trim(), firstName, lastName, accessRole, playerType }, adminEmail);
       setFirstName("");
       setLastName("");
       setEmail("");
@@ -50,8 +43,7 @@ export function AllowlistManager({ adminEmail }: { adminEmail: string }) {
     } catch (err) {
       console.error(err);
       setError("Could not add that member.");
-    } finally {
-      setBusy(false);
+      throw err;
     }
   }
 
@@ -80,15 +72,17 @@ export function AllowlistManager({ adminEmail }: { adminEmail: string }) {
           <option value="player">Player</option>
           <option value="dm">Dungeon Master</option>
         </select>
-        <button className="btn btn-primary btn-sm" style={{ flex: "none" }} disabled={!canAdd} onClick={() => void submit()}>Add</button>
+        <AsyncButton className="btn-primary btn-sm" style={{ flex: "none" }} disabled={!canAdd} pendingText="Adding…" doneText="Added" onClick={submit}>
+          Add
+        </AsyncButton>
       </div>
 
       {(error || loadError) && <div className="banner banner-error" style={{ marginBottom: 12 }}>{error ?? loadError}</div>}
       {invited && <div className="banner banner-ok" style={{ marginBottom: 12 }}>{invited}</div>}
 
-      <button className="btn btn-ghost btn-sm" style={{ marginBottom: 12 }} onClick={() => void invite(adminEmail)}>
+      <AsyncButton className="btn-ghost btn-sm" style={{ marginBottom: 12 }} pendingText="Sending…" showDone={false} onClick={() => invite(adminEmail)}>
         Send myself a test invite
-      </button>
+      </AsyncButton>
 
       {members === null ? (
         <p className="muted">Loading…</p>
@@ -105,9 +99,13 @@ export function AllowlistManager({ adminEmail }: { adminEmail: string }) {
                 <div className="faint" style={{ fontSize: "0.78rem", overflowWrap: "anywhere" }}>{m.email}</div>
               </div>
               <div className="row" style={{ gap: 6, flex: "none" }}>
-                <button className="btn btn-ghost btn-sm" onClick={() => void invite(m.email)}>Invite</button>
+                <AsyncButton className="btn-ghost btn-sm" pendingText="…" showDone={false} onClick={() => invite(m.email)}>
+                  Invite
+                </AsyncButton>
                 {m.email !== adminEmail.toLowerCase() && (
-                  <button className="btn btn-ghost btn-sm" onClick={() => void remove(m.email)}>Remove</button>
+                  <AsyncButton className="btn-ghost btn-sm" pendingText="…" showDone={false} onClick={() => remove(m.email)}>
+                    Remove
+                  </AsyncButton>
                 )}
               </div>
             </li>
