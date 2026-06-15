@@ -13,7 +13,7 @@ import type { HunterCard } from "@/types";
 
 export function CharacterPage() {
   const user = useAuthStore((s) => s.user);
-  const { card, status, saving, error, save } = usePlayerStore();
+  const { card, status, saving, error, save, remove } = usePlayerStore();
   const [editing, setEditing] = useState(false);
 
   useHunterCard();
@@ -48,6 +48,12 @@ export function CharacterPage() {
 
   async function handleSave(next: HunterCard) {
     const ok = await save(next);
+    if (ok) setEditing(false);
+  }
+
+  async function handleDelete() {
+    if (!card) return;
+    const ok = await remove(card.uid);
     if (ok) setEditing(false);
   }
 
@@ -93,6 +99,7 @@ export function CharacterPage() {
           error={error}
           onSave={handleSave}
           onCancel={hasCard ? () => setEditing(false) : undefined}
+          onDelete={hasCard ? handleDelete : undefined}
         />
       </div>
     );

@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { HunterCard } from "@/types";
-import { saveHunterCard, subscribeHunterCard } from "@/api/players";
+import { saveHunterCard, deleteHunterCard, subscribeHunterCard } from "@/api/players";
 import { isPreviewActive, previewCard } from "@/dev/preview";
 
 type LoadStatus = "idle" | "loading" | "loaded" | "error";
@@ -16,6 +16,7 @@ interface PlayerState {
   subscribe: (uid: string) => void;
   stop: () => void;
   save: (card: HunterCard) => Promise<boolean>;
+  remove: (uid: string) => Promise<boolean>;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -62,6 +63,23 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     } catch (err) {
       console.error("Failed to save hunter card", err);
       set({ saving: false, error: "Could not save your hunter card. Try again." });
+      return false;
+    }
+  },
+
+  remove: async (uid: string) => {
+    if (isPreviewActive()) {
+      set({ card: null, status: "loaded" });
+      return true;
+    }
+    set({ saving: true, error: null });
+    try {
+      await deleteHunterCard(uid);
+      set({ card: null, saving: false, status: "loaded" });
+      return true;
+    } catch (err) {
+      console.error("Failed to delete hunter card", err);
+      set({ saving: false, error: "Could not delete your character. Try again." });
       return false;
     }
   },

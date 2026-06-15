@@ -95,19 +95,21 @@ export function AllowlistManager({ adminEmail }: { adminEmail: string }) {
       ) : (
         <ul className="list-reset pill-list">
           {members.map((m) => (
-            <li key={m.email} className="row between">
-              <span className="row" style={{ gap: 6, minWidth: 0 }}>
-                <span style={{ fontWeight: 600 }}>{displayName(m, members)}</span>
-                {m.playerType === "dm" && <span className="role-tag">DM</span>}
-                {m.accessRole !== "user" && <span className="role-tag">{m.accessRole}</span>}
-                <span className="faint" style={{ fontSize: "0.78rem", wordBreak: "break-all" }}>{m.email}</span>
-              </span>
-              <span className="row" style={{ gap: 6, flex: "none" }}>
+            <li key={m.email} className="row between" style={{ gap: 8, alignItems: "flex-start" }}>
+              <div style={{ minWidth: 0, flex: 1 }}>
+                <div className="row" style={{ gap: 6, flexWrap: "wrap" }}>
+                  <span style={{ fontWeight: 600 }}>{displayName(m, members)}</span>
+                  {m.playerType === "dm" && <span className="role-tag">DM</span>}
+                  {m.accessRole !== "user" && <span className="role-tag">{m.accessRole}</span>}
+                </div>
+                <div className="faint" style={{ fontSize: "0.78rem", overflowWrap: "anywhere" }}>{m.email}</div>
+              </div>
+              <div className="row" style={{ gap: 6, flex: "none" }}>
                 <button className="btn btn-ghost btn-sm" onClick={() => void invite(m.email)}>Invite</button>
                 {m.email !== adminEmail.toLowerCase() && (
                   <button className="btn btn-ghost btn-sm" onClick={() => void remove(m.email)}>Remove</button>
                 )}
-              </span>
+              </div>
             </li>
           ))}
         </ul>

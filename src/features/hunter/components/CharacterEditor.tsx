@@ -21,6 +21,8 @@ interface Props {
   error: string | null;
   onSave: (card: HunterCard) => void;
   onCancel?: () => void;
+  /** When provided (editing an existing card), shows the delete flow. */
+  onDelete?: () => void | Promise<void>;
 }
 
 // Split a final score into point-buy base (8–15) + background bonus (0–2).
@@ -29,7 +31,7 @@ function splitScore(final: number): { base: number; bonus: number } {
   return { base, bonus: Math.max(0, Math.min(2, final - base)) };
 }
 
-export function CharacterEditor({ initial, saving, error, onSave, onCancel }: Props) {
+export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDelete }: Props) {
   const [name, setName] = useState(initial.name);
   const [classId, setClassId] = useState(initial.classId);
   const [background, setBackground] = useState(initial.background);
@@ -208,16 +210,24 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel }: Pr
             return (
               <div
                 key={key}
-                className="row between"
+                className="row"
                 style={{
                   padding: "8px 0",
                   borderBottom: "1px solid var(--border)",
-                  gap: 8,
+                  gap: 6,
                 }}
               >
-                <div style={{ minWidth: 96 }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontWeight: 600 }}>{short}</div>
-                  <div className="faint" style={{ fontSize: "0.72rem" }}>
+                  <div
+                    className="faint"
+                    style={{
+                      fontSize: "0.72rem",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    }}
+                  >
                     {aName}
                   </div>
                 </div>
@@ -237,11 +247,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel }: Pr
                   onChange={(v) => setBonusScore(key, v)}
                 />
 
-                <div style={{ textAlign: "right", minWidth: 58 }}>
-                  <div style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem" }}>
+                <div style={{ textAlign: "right", minWidth: 38, flex: "none" }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontSize: "1.2rem", lineHeight: 1.1 }}>
                     {final}
                   </div>
-                  <div className="gold" style={{ fontSize: "0.8rem" }}>
+                  <div className="gold" style={{ fontSize: "0.78rem" }}>
                     {formatModifier(abilityModifier(final))}
                   </div>
                 </div>
@@ -354,6 +364,57 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel }: Pr
           {saving ? "Saving…" : "Save hunter"}
         </button>
       </div>
+
+      {onDelete && <DeleteCharacter saving={saving} onDelete={onDelete} />}
+    </div>
+  );
+}
+
+/** Delete a character behind TWO explicit confirmations. */
+function DeleteCharacter({
+  saving,
+  onDelete,
+}: {
+  saving: boolean;
+  onDelete: () => void | Promise<void>;
+}) {
+  const [step, setStep] = useState<0 | 1 | 2>(0);
+
+  if (step === 0) {
+    return (
+      <button
+        type="button"
+        className="btn btn-ghost btn-sm"
+        style={{ marginTop: 16, color: "var(--blood-bright)" }}
+        onClick={() => setStep(1)}
+        disabled={saving}
+      >
+        Delete character
+      </button>
+    );
+  }
+
+  return (
+    <div className="card" style={{ marginTop: 16, borderColor: "var(--blood-bright)" }}>
+      <p style={{ marginBottom: 10 }}>
+        {step === 1
+          ? "Delete this character? This can't be undone."
+          : "Are you absolutely sure? This permanently erases your hunter."}
+      </p>
+      <div className="btn-row">
+        <button type="button" className="btn btn-ghost" onClick={() => setStep(0)} disabled={saving}>
+          Keep
+        </button>
+        {step === 1 ? (
+          <button type="button" className="btn btn-ghost" style={{ color: "var(--blood-bright)" }} onClick={() => setStep(2)} disabled={saving}>
+            Yes, delete
+          </button>
+        ) : (
+          <button type="button" className="btn btn-primary" onClick={() => void onDelete()} disabled={saving}>
+            {saving ? "Deleting…" : "Delete forever"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }
@@ -372,23 +433,23 @@ function Stepper({
   onChange: (v: number) => void;
 }) {
   return (
-    <div style={{ textAlign: "center" }}>
-      <div className="row" style={{ gap: 6, justifyContent: "center" }}>
+    <div style={{ textAlign: "center", flex: "none" }}>
+      <div className="row" style={{ gap: 3, justifyContent: "center" }}>
         <button
           type="button"
           className="btn btn-ghost btn-sm"
-          style={{ width: 32, padding: 6 }}
+          style={{ width: 26, padding: 4 }}
           disabled={value <= min}
           onClick={() => onChange(value - 1)}
           aria-label={`decrease ${label}`}
         >
           −
         </button>
-        <span style={{ minWidth: 18, fontFamily: "var(--font-display)" }}>{value}</span>
+        <span style={{ minWidth: 16, fontFamily: "var(--font-display)" }}>{value}</span>
         <button
           type="button"
           className="btn btn-ghost btn-sm"
-          style={{ width: 32, padding: 6 }}
+          style={{ width: 26, padding: 4 }}
           disabled={value >= max}
           onClick={() => onChange(value + 1)}
           aria-label={`increase ${label}`}
