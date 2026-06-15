@@ -177,21 +177,17 @@ button {
 
 /* ---------- App shell ---------- */
 
+/* App-shell layout: exactly one viewport tall, content scrolls internally so
+   the bottom nav is a normal flex row pinned to the bottom (never floats). */
 .app-shell {
-  min-height: 100dvh;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
-}
-
-/* Keep page content at least a screenful so the fixed bottom nav doesn't shift
-   while data is still loading. */
-.app-main {
-  min-height: calc(100dvh - 56px - var(--nav-h));
+  overflow: hidden;
 }
 
 .app-header {
-  position: sticky;
-  top: 0;
+  flex: none;
   z-index: 20;
   padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
   display: flex;
@@ -227,26 +223,25 @@ button {
 }
 
 .app-main {
-  flex: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 18px 16px calc(var(--nav-h) + env(safe-area-inset-bottom) + 24px);
+  padding: 18px 16px 28px;
 }
 
 /* ---------- Bottom navigation ---------- */
 
 .bottom-nav {
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  flex: none;
   z-index: 30;
   height: calc(var(--nav-h) + env(safe-area-inset-bottom));
   padding-bottom: env(safe-area-inset-bottom);
   display: flex;
-  background: linear-gradient(180deg, rgba(19, 18, 23, 0.92), rgba(10, 10, 12, 0.98));
-  backdrop-filter: blur(14px);
+  background: linear-gradient(180deg, rgba(19, 18, 23, 0.96), rgba(10, 10, 12, 1));
   border-top: 1px solid var(--border-strong);
 }
 
@@ -760,6 +755,15 @@ button {
 
 /* ---------- Print / PDF export ---------- */
 @media print {
+  /* Undo the one-viewport app shell so the whole sheet paginates. */
+  .app-shell {
+    height: auto !important;
+    overflow: visible !important;
+  }
+  .app-main {
+    overflow: visible !important;
+    height: auto !important;
+  }
   .app-header,
   .bottom-nav,
   .no-print {
