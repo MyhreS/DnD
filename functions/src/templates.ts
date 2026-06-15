@@ -1,7 +1,19 @@
 import { renderHtml, type Mail } from "./email";
 
-const HOW_TO =
-  "Open the link and sign in with this Google account. On iPhone, tap Share → Add to Home Screen to install it as an app.";
+const STEPS = [
+  "Open the link below in Safari (on iPhone).",
+  "Tap the ••• (three dots) at the bottom right.",
+  "Tap Share.",
+  "Scroll down the list and tap “Add to Home Screen”.",
+  "In the popup, tap Add.",
+  "It's now on your home screen — open it and sign in with this Google account.",
+];
+
+const HOW_TO = `Add it to your home screen so it feels like a real app:\n${STEPS.map((s, i) => `  ${i + 1}. ${s}`).join("\n")}`;
+
+const stepsHtml = `<ol style="color:#a8a193;font-size:14px;padding-left:18px;margin:8px 0 0">${STEPS.map(
+  (s) => `<li style="margin-bottom:4px">${s}</li>`,
+).join("")}</ol>`;
 
 export function inviteEmail(to: string, appUrl: string, firstName?: string): Mail {
   const greeting = firstName ? `${firstName}, a hunter is needed` : "A hunter is needed";
@@ -13,7 +25,8 @@ export function inviteEmail(to: string, appUrl: string, firstName?: string): Mai
       heading: greeting,
       bodyHtml: `<p>You've been added to our <strong>Catacombs &amp; Starspawns</strong> party.</p>
         <p>Sign in with <em>this</em> Google account to forge your hunter, see when we next play, and read the handbook.</p>
-        <p style="color:#a8a193;font-size:14px">${HOW_TO}</p>`,
+        <p style="color:#e9e3d5;font-size:14px;margin-top:14px"><strong>Add it to your home screen so it feels like a real app:</strong></p>
+        ${stepsHtml}`,
       ctaText: "Enter the app",
       ctaHref: appUrl,
     }),

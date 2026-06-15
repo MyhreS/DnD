@@ -2,6 +2,8 @@ import { create } from "zustand";
 import {
   onAuthStateChanged,
   signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
   signOut as fbSignOut,
   type User,
 } from "firebase/auth";
@@ -61,6 +63,10 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   isStaff: false,
 
   init: () => {
+    // Complete any pending redirect sign-in (used in installed PWAs).
+    getRedirectResult(auth).catch((err) => {
+      console.error("Redirect sign-in failed", err);
+    });
     return onAuthStateChanged(auth, async (user) => {
       if (!user) {
         set({
@@ -91,6 +97,19 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   signIn: async () => {
     set({ signingIn: true, error: null });
+    // Installed/standalone PWAs block popups — use a full-page redirect there.
+    const standalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (navigator as unknown as { standalone?: boolean }).standalone === true;
+    if (standalone) {
+      try {
+        await signInWithRedirect(auth, googleProvider);
+      } catch (err) {
+        console.error("Redirect sign-in error", err);
+        set({ error: "Sign-in failed. Please try again.", signingIn: false });
+      }
+      return; // the page navigates away to Google
+    }
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err: unknown) {

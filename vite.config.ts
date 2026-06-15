@@ -62,8 +62,9 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,svg,png,woff2}"],
-        // The handbook PDF can be large; don't precache it, just runtime-cache.
+        globPatterns: ["**/*.{js,css,html,svg,woff2}", "pwa-*.png", "apple-touch-icon.png", "favicon.svg"],
+        // Don't precache the large handbook PDF or the iOS splash images.
+        globIgnores: ["**/splash/**", "**/handbook/**"],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/__/, /\.pdf$/],
       },

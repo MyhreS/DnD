@@ -6,6 +6,7 @@ import { sortUpcoming } from "@/data/sessions";
 import { usePartyData } from "../hooks/usePartyData";
 import { HunterRow } from "./HunterRow";
 import { RosterPanel } from "./RosterPanel";
+import { CardSkeleton } from "@/components/Skeleton";
 
 export function PartyPage() {
   const oversight = useAuthStore((s) => s.caps.oversight);
@@ -45,7 +46,10 @@ export function PartyPage() {
 
       <p className="eyebrow" style={{ margin: "18px 0 10px" }}>The hunters</p>
       {players === null ? (
-        <div className="card center"><p className="muted" style={{ margin: 0 }}>Loading…</p></div>
+        <div className="stack" style={{ gap: 10 }}>
+          <CardSkeleton lines={2} />
+          <CardSkeleton lines={2} />
+        </div>
       ) : hunters.length === 0 ? (
         <div className="card center"><p className="muted" style={{ margin: 0 }}>No hunters forged yet.</p></div>
       ) : (

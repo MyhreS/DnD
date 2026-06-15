@@ -12,6 +12,16 @@ const sendRemindersFn = httpsCallable<
   ReminderResult
 >(functions, "sendReminders");
 
+const resendInviteFn = httpsCallable<{ email: string }, { ok: boolean }>(
+  functions,
+  "resendInvite",
+);
+
+/** Admin/DM — (re)send an app invite to an email (handy for testing). */
+export async function sendInvite(email: string): Promise<void> {
+  await resendInviteFn({ email });
+}
+
 /** Staff only — email players who haven't built a hunter card. */
 export async function remindMissingCharacters(): Promise<ReminderResult> {
   const res = await sendRemindersFn({ kind: "character" });

@@ -50,7 +50,7 @@ export function SessionsPage() {
       <p className="page-intro">When we next gather around the table.</p>
 
       {showNag && (
-        <Link to="/hunter" style={{ display: "block", marginBottom: 16 }}>
+        <Link to="/character" style={{ display: "block", marginBottom: 16 }}>
           <div className="banner banner-warn row" style={{ gap: 8 }}>
             <HunterIcon width={18} height={18} />
             Your hunter card isn't ready yet — forge it before session 1.
