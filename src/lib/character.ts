@@ -63,6 +63,8 @@ export function emptyCard(params: {
     abilities: { ...DEFAULT_ABILITIES },
     skillProficiencies: [],
     mainArmorId: null,
+    madness: 0,
+    transform: 0,
     notes: "",
     createdAt: now,
     updatedAt: now,

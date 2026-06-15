@@ -28,8 +28,21 @@ export function HunterCardView({ card }: { card: HunterCard }) {
           <Stat label="Max HP" value={hp ?? "—"} />
           <Stat label="Speed" value={klass ? `${klass.speedFt}ft` : "—"} />
           <Stat label="Prof." value="+2" />
+          <Stat label="Madness" value={card.madness ?? 0} />
+          <Stat label="Transform" value={card.transform ?? 0} />
         </div>
+        <p className="faint" style={{ fontSize: "0.74rem", marginTop: 10, marginBottom: 0 }}>
+          Madness &amp; Transform are tracked in play alongside HP. Full rules land
+          with the updated handbook.
+        </p>
       </div>
+
+      {klass?.signature && (
+        <div className="card">
+          <p className="eyebrow" style={{ marginBottom: 6 }}>Signature</p>
+          <p className="muted" style={{ marginBottom: 0, fontSize: "0.94rem" }}>{klass.signature}</p>
+        </div>
+      )}
 
       <div className="card">
         <p className="eyebrow" style={{ marginBottom: 10 }}>Abilities</p>

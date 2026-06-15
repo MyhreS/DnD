@@ -167,6 +167,12 @@ function ClassesTab() {
             {isOpen && (
               <div className="fade-in" style={{ marginTop: 12 }}>
                 <p className="muted" style={{ fontSize: "0.94rem" }}>{c.blurb}</p>
+                {c.signature && (
+                  <div className="banner banner-warn" style={{ marginBottom: 12 }}>
+                    <strong className="gold">Signature.</strong> {c.signature}
+                  </div>
+                )}
+                {c.baseClass && <Field label="Built on" value={`${c.baseClass} (5e)`} />}
                 <Field label="Saving throws" value={c.savingThrows.map((k) => ABILITY_NAME[k]).join(", ")} />
                 <Field label="Skills" value={`Choose ${c.skillChoices.count}: ${c.skillChoices.options.join(", ")}`} />
                 <Field label="Weapons" value={c.weaponProficiencies} />
@@ -179,6 +185,23 @@ function ClassesTab() {
                     <span className="chip" key={i}>{i}</span>
                   ))}
                 </div>
+                {c.features && c.features.length > 0 && (
+                  <>
+                    <hr className="divider" />
+                    <p className="eyebrow" style={{ marginBottom: 8 }}>Level progression</p>
+                    <ul className="list-reset pill-list">
+                      {c.features.map((f, i) => (
+                        <li key={i}>
+                          <div className="row" style={{ gap: 8, alignItems: "baseline" }}>
+                            <span className="role-tag" style={{ flex: "none" }}>Lv {f.level}</span>
+                            <span style={{ fontWeight: 600 }}>{f.name}</span>
+                          </div>
+                          <div className="muted" style={{ fontSize: "0.88rem", marginTop: 2 }}>{f.text}</div>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
               </div>
             )}
           </div>

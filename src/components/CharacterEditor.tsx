@@ -118,6 +118,8 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel }: Pr
       mainArmorId,
       skillProficiencies: skills,
       abilities: finalScores,
+      madness: initial.madness ?? 0,
+      transform: initial.transform ?? 0,
     });
   }
 
