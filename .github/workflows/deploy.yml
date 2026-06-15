@@ -1,0 +1,71 @@
+name: Deploy
+
+# Builds the app and deploys to Firebase Hosting.
+#  - push to main           -> deploy to the live channel + push Firestore rules
+#  - pull request           -> deploy to a temporary preview channel
+#
+# Required GitHub repository secrets (Settings > Secrets and variables > Actions):
+#   DOPPLER_TOKEN            A Doppler *service token* for project `dnd`, config `prd`
+#                            (Doppler dashboard > dnd > prd > Access > Service Tokens).
+#                            Injects the VITE_FIREBASE_* build vars.
+#   FIREBASE_SERVICE_ACCOUNT The JSON key of a Firebase service account with
+#                            Hosting + Firestore deploy permissions. Easiest way to
+#                            create it: run `firebase init hosting:github` locally,
+#                            or generate one in the Google Cloud console.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write
+  checks: write
+
+jobs:
+  build_and_deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - uses: dopplerhq/cli-action@v3
+
+      - name: Build
+        run: doppler run --token="$DOPPLER_TOKEN" -- bun run build:ci
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+      - name: Deploy to live channel
+        if: github.event_name == 'push'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          channelId: live
+          projectId: dandd-ea955
+
+      - name: Deploy preview channel
+        if: github.event_name == 'pull_request'
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+          projectId: dandd-ea955
+
+      - name: Deploy Firestore rules
+        if: github.event_name == 'push'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          bunx firebase-tools@latest deploy --only firestore:rules \
+            --project dandd-ea955 --non-interactive
