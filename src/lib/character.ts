@@ -1,5 +1,5 @@
 import type { AbilityScores, HunterCard, HunterClass } from "@/types";
-import { abilityModifier, PROFICIENCY_BONUS_LVL1 } from "@/data/abilities";
+import { abilityModifier } from "@/data/abilities";
 import { acCategory, ARMOR_BY_ID } from "@/data/armor";
 
 export const DEFAULT_ABILITIES: AbilityScores = {
@@ -42,8 +42,6 @@ export function armorClass(
     dexApplied,
   };
 }
-
-export const PROFICIENCY_BONUS = PROFICIENCY_BONUS_LVL1;
 
 /** A fresh, unsaved card skeleton for a brand-new hunter. */
 export function emptyCard(params: {

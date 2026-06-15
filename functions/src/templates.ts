@@ -3,13 +3,14 @@ import { renderHtml, type Mail } from "./email";
 const HOW_TO =
   "Open the link and sign in with this Google account. On iPhone, tap Share → Add to Home Screen to install it as an app.";
 
-export function inviteEmail(to: string, appUrl: string): Mail {
+export function inviteEmail(to: string, appUrl: string, firstName?: string): Mail {
+  const greeting = firstName ? `${firstName}, a hunter is needed` : "A hunter is needed";
   return {
     to,
     subject: "You're invited to the hunt — Catacombs & Starspawns",
-    text: `A hunter is needed.\n\nYou've been added to our Catacombs & Starspawns party. Open the app and sign in with this Google account to forge your hunter, see when we play, and read the handbook.\n\n${appUrl}\n\n${HOW_TO}\n\nSee you in the fog.`,
+    text: `${greeting}.\n\nYou've been added to our Catacombs & Starspawns party. Open the app and sign in with this Google account to forge your hunter, see when we play, and read the handbook.\n\n${appUrl}\n\n${HOW_TO}\n\nSee you in the fog.`,
     html: renderHtml({
-      heading: "A hunter is needed",
+      heading: greeting,
       bodyHtml: `<p>You've been added to our <strong>Catacombs &amp; Starspawns</strong> party.</p>
         <p>Sign in with <em>this</em> Google account to forge your hunter, see when we next play, and read the handbook.</p>
         <p style="color:#a8a193;font-size:14px">${HOW_TO}</p>`,

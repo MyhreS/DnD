@@ -1,7 +1,8 @@
+import type { AccessRole, PlayerType, AllowlistMember } from "./types";
+
 // App-wide constants.
 
 export const APP_NAME = "Catacombs & Starspawns";
-export const APP_SHORT = "C&S Hunters";
 
 /**
  * Super-admins are always allowed in (no allowlist entry required) and can
@@ -15,9 +16,68 @@ export function isSuperAdmin(email: string | null | undefined): boolean {
   return SUPER_ADMIN_EMAILS.includes(email.toLowerCase());
 }
 
-import type { MemberRole } from "./types";
+// --- Identity & capabilities -------------------------------------------------
 
-/** Admins and the Dungeon Master — they run sessions and oversee the party. */
-export function isStaffRole(role: MemberRole | null | undefined): boolean {
-  return role === "admin" || role === "dm";
+export interface Identity {
+  accessRole: AccessRole;
+  playerType: PlayerType;
+}
+
+export const DEFAULT_IDENTITY: Identity = { accessRole: "user", playerType: "player" };
+
+export interface Capabilities {
+  /** Add/remove members and set their roles. */
+  manageMembers: boolean;
+  /** Create/edit/delete session dates. */
+  manageSessions: boolean;
+  /** Send invite & reminder emails. */
+  email: boolean;
+  /** See the party roster / DM oversight tools. */
+  oversight: boolean;
+}
+
+export function capabilities({ accessRole, playerType }: Identity): Capabilities {
+  const isAdmin = accessRole === "admin";
+  const isMod = accessRole === "moderator" || isAdmin;
+  const isDM = playerType === "dm";
+  return {
+    manageMembers: isAdmin,
+    manageSessions: isMod || isDM,
+    email: isAdmin || isDM, // admin and the DM can send emails
+    oversight: isMod || isDM,
+  };
+}
+
+/** "Staff" = anyone who runs things (not a plain user/player). */
+export function isStaff(identity: Identity): boolean {
+  const c = capabilities(identity);
+  return c.oversight || c.email || c.manageSessions;
+}
+
+/** Players bring a character; the DM does not. */
+export function needsCharacter(identity: Identity): boolean {
+  return identity.playerType === "player";
+}
+
+// --- Display names -----------------------------------------------------------
+
+export function fullName(m: { firstName?: string; lastName?: string; email?: string }): string {
+  const name = [m.firstName, m.lastName].filter(Boolean).join(" ").trim();
+  return name || m.email || "Hunter";
+}
+
+/**
+ * Show just the first name, unless another member shares it — then disambiguate
+ * with the last name.
+ */
+export function displayName(
+  member: Pick<AllowlistMember, "firstName" | "lastName" | "email">,
+  all: Pick<AllowlistMember, "firstName" | "lastName">[],
+): string {
+  const first = member.firstName?.trim();
+  if (!first) return member.email ?? "Hunter";
+  const clash = all.filter(
+    (m) => m.firstName && m.firstName.trim().toLowerCase() === first.toLowerCase(),
+  ).length;
+  return clash > 1 && member.lastName ? `${first} ${member.lastName}` : first;
 }

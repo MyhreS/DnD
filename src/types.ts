@@ -84,12 +84,20 @@ export interface SessionEvent {
 }
 
 // --- Membership & roles ---
+//
+// Two independent axes:
+//   accessRole — what you can DO in the app (permissions)
+//   playerType — how you sit at the TABLE (do you bring a character?)
 
-export type MemberRole = "admin" | "dm" | "player";
+export type AccessRole = "user" | "moderator" | "admin";
+export type PlayerType = "player" | "dm";
 
 export interface AllowlistMember {
   email: string;
-  role: MemberRole;
+  firstName: string;
+  lastName: string;
+  accessRole: AccessRole;
+  playerType: PlayerType;
   addedBy: string;
   addedAt: number;
 }

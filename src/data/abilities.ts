@@ -44,9 +44,3 @@ export function formatModifier(mod: number): string {
   return mod >= 0 ? `+${mod}` : `${mod}`;
 }
 
-/** Total points spent for a set of base scores (only valid 8–15 entries). */
-export function pointsSpent(scores: number[]): number {
-  return scores.reduce((sum, s) => sum + (POINT_COST[s] ?? 0), 0);
-}
-
-export const PROFICIENCY_BONUS_LVL1 = 2;

@@ -20,16 +20,35 @@ setGlobalOptions({
 // Helpers
 // ---------------------------------------------------------------------------
 
-type Role = "admin" | "dm" | "player";
-
-async function roleOf(email: string): Promise<Role | null> {
-  if (SUPER_ADMIN_EMAILS.includes(email.toLowerCase())) return "admin";
-  const snap = await db.doc(`allowlist/${email.toLowerCase()}`).get();
-  if (!snap.exists) return null;
-  return ((snap.data()?.role as Role) ?? "player");
+type AccessRole = "user" | "moderator" | "admin";
+type PlayerType = "player" | "dm";
+interface Member {
+  email: string;
+  accessRole: AccessRole;
+  playerType: PlayerType;
 }
 
-function assertStaff(request: CallableRequest): string {
+async function memberOf(email: string): Promise<Member | null> {
+  const key = email.toLowerCase();
+  if (SUPER_ADMIN_EMAILS.includes(key)) {
+    return { email: key, accessRole: "admin", playerType: "player" };
+  }
+  const snap = await db.doc(`allowlist/${key}`).get();
+  if (!snap.exists) return null;
+  const d = snap.data() ?? {};
+  return {
+    email: (d.email as string) ?? key,
+    accessRole: (d.accessRole as AccessRole) ?? "user",
+    playerType: (d.playerType as PlayerType) ?? "player",
+  };
+}
+
+/** Admins and the DM may send emails. */
+function canEmail(m: Member | null): boolean {
+  return !!m && (m.accessRole === "admin" || m.playerType === "dm");
+}
+
+function assertSignedIn(request: CallableRequest): string {
   const email = request.auth?.token.email;
   const verified = request.auth?.token.email_verified;
   if (!email || !verified) {
@@ -65,7 +84,7 @@ export const onAllowlistInvite = onDocumentCreated(
       return;
     }
     try {
-      await sendMail(inviteEmail(email, APP_URL.value()));
+      await sendMail(inviteEmail(email, APP_URL.value(), data?.firstName as string | undefined));
     } catch (err) {
       logger.error("Invite email failed", { email, err: String(err) });
     }
@@ -79,10 +98,9 @@ export const onAllowlistInvite = onDocumentCreated(
 export const resendInvite = onCall(
   { secrets: [GMAIL_APP_PASSWORD] },
   async (request) => {
-    const caller = assertStaff(request);
-    const role = await roleOf(caller);
-    if (role !== "admin" && role !== "dm") {
-      throw new HttpsError("permission-denied", "Staff only.");
+    const caller = assertSignedIn(request);
+    if (!canEmail(await memberOf(caller))) {
+      throw new HttpsError("permission-denied", "Admins and the DM only.");
     }
     const email = String(request.data?.email ?? "").trim().toLowerCase();
     if (!email.includes("@")) {
@@ -102,10 +120,9 @@ export const resendInvite = onCall(
 export const sendReminders = onCall(
   { secrets: [GMAIL_APP_PASSWORD] },
   async (request) => {
-    const caller = assertStaff(request);
-    const role = await roleOf(caller);
-    if (role !== "admin" && role !== "dm") {
-      throw new HttpsError("permission-denied", "Staff only.");
+    const caller = assertSignedIn(request);
+    if (!canEmail(await memberOf(caller))) {
+      throw new HttpsError("permission-denied", "Admins and the DM only.");
     }
 
     const kind = String(request.data?.kind ?? "");
@@ -115,7 +132,7 @@ export const sendReminders = onCall(
     const membersSnap = await db.collection("allowlist").get();
     const members = membersSnap.docs.map((d) => ({
       email: (d.data().email as string) ?? d.id,
-      role: (d.data().role as Role) ?? "player",
+      playerType: (d.data().playerType as PlayerType) ?? "player",
     }));
 
     if (kind === "character") {
@@ -127,7 +144,7 @@ export const sendReminders = onCall(
           .map((p) => String(p.ownerEmail).toLowerCase()),
       );
       const targets = members.filter(
-        (m) => m.role === "player" && !hasCard.has(m.email.toLowerCase()),
+        (m) => m.playerType === "player" && !hasCard.has(m.email.toLowerCase()),
       );
       const result = await sendMany(targets.map((m) => characterReminder(m.email, appUrl)));
       return { ...result, targeted: targets.length };
@@ -140,9 +157,7 @@ export const sendReminders = onCall(
       const session = sessionSnap.data()!;
       const rsvpSnap = await db.collection(`sessions/${sessionId}/rsvps`).get();
       const answered = new Set(rsvpSnap.docs.map((d) => String(d.data().email).toLowerCase()));
-      const targets = members.filter(
-        (m) => m.role !== "admin" && !answered.has(m.email.toLowerCase()),
-      );
+      const targets = members.filter((m) => !answered.has(m.email.toLowerCase()));
       const when = formatWhen(session.date as string);
       const result = await sendMany(
         targets.map((m) => rsvpReminder(m.email, appUrl, session.title as string, when)),
