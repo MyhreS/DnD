@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createSession, updateSession, deleteSession } from "@/api/sessions";
+import { AsyncButton } from "@/components/AsyncButton";
 import type { SessionEvent } from "@/types";
 
 // Datetime helpers for <input type="datetime-local"> (no seconds/zone).
@@ -19,14 +20,12 @@ export function SessionForm({
   const [date, setDate] = useState(session ? toInput(session.date) : "");
   const [location, setLocation] = useState(session?.location ?? "");
   const [notes, setNotes] = useState(session?.notes ?? "");
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const canSave = title.trim().length > 0 && date.length >= 16 && !busy;
+  const canSave = title.trim().length > 0 && date.length >= 16;
 
   async function save() {
     if (!canSave) return;
-    setBusy(true);
     setError(null);
     const payload = {
       title: title.trim(),
@@ -41,20 +40,19 @@ export function SessionForm({
     } catch (err) {
       console.error(err);
       setError("Could not save the session.");
-      setBusy(false);
+      throw err;
     }
   }
 
   async function remove() {
     if (!session || !confirm("Delete this session?")) return;
-    setBusy(true);
     try {
       await deleteSession(session.id);
       onClose();
     } catch (err) {
       console.error(err);
       setError("Could not delete the session.");
-      setBusy(false);
+      throw err;
     }
   }
 
@@ -80,15 +78,15 @@ export function SessionForm({
         </div>
         {error && <div className="banner banner-error" style={{ marginBottom: 12 }}>{error}</div>}
         <div className="btn-row">
-          <button className="btn btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
-          <button className="btn btn-primary" onClick={() => void save()} disabled={!canSave}>
-            {busy ? "Saving…" : "Save"}
-          </button>
+          <button className="btn btn-ghost" onClick={onClose}>Cancel</button>
+          <AsyncButton className="btn-primary" disabled={!canSave} pendingText="Saving…" showDone={false} onClick={save}>
+            Save
+          </AsyncButton>
         </div>
         {session && (
-          <button className="btn btn-ghost btn-sm" style={{ marginTop: 10, color: "var(--blood-bright)" }} onClick={() => void remove()} disabled={busy}>
+          <AsyncButton className="btn-ghost btn-sm" style={{ marginTop: 10, color: "var(--blood-bright)" }} pendingText="Deleting…" showDone={false} onClick={remove}>
             Delete session
-          </button>
+          </AsyncButton>
         )}
       </div>
     </div>

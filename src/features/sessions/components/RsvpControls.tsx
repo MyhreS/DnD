@@ -1,6 +1,7 @@
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useSessionRsvps } from "../hooks/useSessionRsvps";
 import { setRsvp } from "@/api/rsvp";
+import { AsyncButton } from "@/components/AsyncButton";
 import type { RsvpStatus, SessionEvent } from "@/types";
 
 const OPTIONS: { value: RsvpStatus; label: string }[] = [
@@ -33,14 +34,15 @@ export function RsvpControls({ session }: { session: SessionEvent }) {
       <p className="eyebrow" style={{ marginBottom: 8 }}>Will you answer the call?</p>
       <div className="btn-row">
         {OPTIONS.map((o) => (
-          <button
+          <AsyncButton
             key={o.value}
-            className={`btn btn-sm ${mine === o.value ? "btn-primary" : "btn-ghost"}`}
+            className={`btn-sm ${mine === o.value ? "btn-primary" : "btn-ghost"}`}
             style={{ flex: 1 }}
-            onClick={() => void choose(o.value)}
+            showDone={false}
+            onClick={() => choose(o.value)}
           >
             {o.label}
-          </button>
+          </AsyncButton>
         ))}
       </div>
       <p className="faint center" style={{ fontSize: "0.78rem", marginTop: 8, marginBottom: 0 }}>

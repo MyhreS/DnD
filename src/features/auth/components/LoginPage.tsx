@@ -29,8 +29,15 @@ export function LoginPage() {
           onClick={() => void signIn()}
           disabled={signingIn}
         >
-          <GoogleIcon />
-          {signingIn ? "Signing in…" : "Continue with Google"}
+          {signingIn ? (
+            <>
+              <span className="btn-spinner" aria-hidden /> Signing in…
+            </>
+          ) : (
+            <>
+              <GoogleIcon /> Continue with Google
+            </>
+          )}
         </button>
 
         <p className="faint center" style={{ fontSize: "0.82rem", marginTop: 18 }}>

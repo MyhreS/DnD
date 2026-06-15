@@ -361,7 +361,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
           </button>
         )}
         <button type="button" className="btn btn-primary" onClick={handleSave} disabled={!canSave}>
-          {saving ? "Saving…" : "Save hunter"}
+          {saving ? (<><span className="btn-spinner" aria-hidden /> Saving…</>) : "Save hunter"}
         </button>
       </div>
 
@@ -411,7 +411,7 @@ function DeleteCharacter({
           </button>
         ) : (
           <button type="button" className="btn btn-primary" onClick={() => void onDelete()} disabled={saving}>
-            {saving ? "Deleting…" : "Delete forever"}
+            {saving ? (<><span className="btn-spinner" aria-hidden /> Deleting…</>) : "Delete forever"}
           </button>
         )}
       </div>
