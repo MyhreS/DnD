@@ -16,6 +16,11 @@ export function isSuperAdmin(email: string | null | undefined): boolean {
   return SUPER_ADMIN_EMAILS.includes(email.toLowerCase());
 }
 
+/** Agent test accounts (agent-*@dandd-ea955.web.app) — hidden from real views. */
+export function isTestEmail(email: string | null | undefined): boolean {
+  return !!email && email.toLowerCase().endsWith("@dandd-ea955.web.app");
+}
+
 // --- Identity & capabilities -------------------------------------------------
 
 export interface Identity {
