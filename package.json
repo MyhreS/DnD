@@ -23,12 +23,15 @@
     "deploy:rules": "firebase deploy --only firestore:rules"
   },
   "dependencies": {
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.6.1",
     "date-fns": "^4.1.0",
     "firebase": "^11.3.0",
     "jspdf": "^4.2.1",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router-dom": "^7.1.5",
+    "three": "^0.184.0",
     "zustand": "^5.0.3"
   },
   "devDependencies": {
