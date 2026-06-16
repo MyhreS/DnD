@@ -5,15 +5,15 @@ import { ARMOR } from "@/data/armor";
 import { ABILITY_NAME } from "@/data/abilities";
 import { ChevronIcon } from "@/components/icons";
 import type { ArmorCategory } from "@/types";
-import { PdfViewer } from "./PdfViewer";
+import { AsyncButton } from "@/components/AsyncButton";
+import { downloadHandbookPdf } from "../lib/handbookPdf";
 import { usePrefetchHandbookPdf } from "../hooks/usePrefetchHandbookPdf";
 
 type Tab = "rules" | "classes" | "armory";
 
 export function HandbookPage() {
   const [tab, setTab] = useState<Tab>("rules");
-  const [pdfOpen, setPdfOpen] = useState(false);
-  // Download the big PDF in the background so the viewer opens fast.
+  // Fetch the big PDF in the background so saving it is instant.
   usePrefetchHandbookPdf();
 
   return (
@@ -39,11 +39,17 @@ export function HandbookPage() {
       {tab === "armory" && <ArmoryTab />}
 
       <div className="rule-ornament">◆</div>
-      <button type="button" className="btn btn-ghost" onClick={() => setPdfOpen(true)}>
-        Open the full handbook (PDF)
-      </button>
-
-      {pdfOpen && <PdfViewer onClose={() => setPdfOpen(false)} />}
+      <AsyncButton
+        className="btn btn-ghost"
+        pendingText="Preparing…"
+        showDone={false}
+        onClick={downloadHandbookPdf}
+      >
+        Download the full handbook (PDF)
+      </AsyncButton>
+      <p className="faint center" style={{ fontSize: "0.76rem", marginTop: 8 }}>
+        Saves the PDF so you can read it in Files / your PDF app.
+      </p>
     </div>
   );
 }
