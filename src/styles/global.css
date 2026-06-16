@@ -90,19 +90,19 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-html,
-body,
-#root {
+html {
   height: 100%;
 }
 
+/* The document itself scrolls (the natural iOS path). We deliberately do NOT use
+   a position:fixed shell with an inner overflow:auto scroller — on standalone
+   iOS that nested scroller steals touch focus, rubber-bands, and gets "stuck"
+   until you change pages. Letting the body scroll fixes that and lets content
+   run edge-to-edge under the home indicator (no leftover bottom bar). */
 body {
   margin: 0;
+  min-height: 100dvh;
   background-color: var(--bg);
-  background-image:
-    radial-gradient(120% 80% at 50% -10%, rgba(110, 12, 15, 0.22), transparent 60%),
-    radial-gradient(80% 60% at 100% 0%, rgba(201, 164, 90, 0.06), transparent 55%);
-  background-attachment: fixed;
   color: var(--ink);
   font-family: var(--font-body);
   font-size: 17px;
@@ -110,6 +110,25 @@ body {
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
   overscroll-behavior-y: none;
+}
+
+/* Atmospheric gradient as a fixed layer behind everything. Done with a fixed
+   pseudo-element instead of `background-attachment: fixed`, which forces costly
+   repaints (and visible jank) while the body scrolls on mobile Safari. */
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--bg);
+  background-image:
+    radial-gradient(120% 80% at 50% -10%, rgba(110, 12, 15, 0.22), transparent 60%),
+    radial-gradient(80% 60% at 100% 0%, rgba(201, 164, 90, 0.06), transparent 55%);
+}
+
+#root {
+  min-height: 100dvh;
 }
 
 h1,
@@ -177,20 +196,23 @@ button {
 
 /* ---------- App shell ---------- */
 
-/* App-shell layout: pinned to the real viewport edges so it fills the screen
-   in both Safari and an installed (standalone) PWA. Content scrolls internally,
-   so the bottom nav is a normal flex row glued to the very bottom. */
+/* App-shell flows in the normal document (the body scrolls — see body rule).
+   It just stacks a sticky top bar over the page content. */
 .app-shell {
-  position: fixed;
-  inset: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  min-height: 100dvh;
+}
+
+/* Header + tabs travel together as one sticky bar pinned to the top while the
+   page scrolls under them. */
+.app-topbar {
+  position: sticky;
+  top: 0;
+  z-index: 20;
 }
 
 .app-header {
-  flex: none;
-  z-index: 20;
   padding: calc(env(safe-area-inset-top) + 12px) 16px 12px;
   display: flex;
   align-items: center;
@@ -226,22 +248,16 @@ button {
 
 .app-main {
   flex: 1 1 auto;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  /* Extra bottom padding clears the iPhone home indicator so the last item can
-     scroll fully into view instead of hiding under the swipe bar. */
+  /* Extra bottom padding clears the iPhone home indicator so the last item
+     sits above the swipe bar instead of under it. */
   padding: 18px 16px calc(env(safe-area-inset-bottom) + 40px);
 }
 
-/* ---------- Bottom navigation ---------- */
-
 /* ---------- Top segmented tabs ---------- */
 .top-tabs {
-  flex: none;
   display: flex;
   gap: 2px;
   padding: 0 8px;

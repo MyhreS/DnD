@@ -6,7 +6,7 @@ import {
   browserLocalPersistence,
   browserPopupRedirectResolver,
 } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeFirestore } from "firebase/firestore";
 import { getFunctions } from "firebase/functions";
 import { getAnalytics, isSupported as analyticsSupported } from "firebase/analytics";
 
@@ -36,7 +36,11 @@ export const auth = initializeAuth(app, {
   persistence: [indexedDBLocalPersistence, browserLocalPersistence],
   popupRedirectResolver: browserPopupRedirectResolver,
 });
-export const db = getFirestore(app);
+// Auto-detect long-polling. The default WebChannel streaming transport can hang
+// ~10–15s on the first load on networks (mobile/iOS, proxies) that block it
+// before falling back — the classic "Firestore is slow on first open" problem.
+// Auto-detect probes once and picks the working transport immediately.
+export const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
 // Functions are deployed in europe-west1 (see functions/src/index.ts).
 export const functions = getFunctions(app, "europe-west1");
 
