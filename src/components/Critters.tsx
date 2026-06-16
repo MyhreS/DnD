@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from "react";
 import { subscribeParty } from "@/api/players";
 import { CreatureSprite } from "@/data/CreatureSprite";
+import { Climber } from "./Climber";
 import type { HunterCard } from "@/types";
 
 type Behavior = "climb-left" | "climb-right" | "card-roll" | "card-climb";
@@ -96,7 +97,11 @@ export function Critters() {
         >
           {active.name && <span className="critter-name">{active.name}</span>}
           <div className="critter-fig" style={active.flip ? { transform: "scaleX(-1)" } : undefined}>
-            <CreatureSprite id={active.creatureId} size={SIZE} className="critter-sprite" />
+            {active.behavior === "card-roll" ? (
+              <CreatureSprite id={active.creatureId} size={SIZE} className="critter-sprite" />
+            ) : (
+              <Climber id={active.creatureId} size={SIZE} className="critter-sprite" />
+            )}
           </div>
         </div>
       )}
