@@ -2,6 +2,7 @@ import { NavLink, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { Sigil } from "./icons";
 import { Fighters } from "./fighters/Fighters";
+import { UpdateBar } from "./UpdateBar";
 
 export function Layout() {
   const member = useAuthStore((s) => s.member);
@@ -32,6 +33,8 @@ export function Layout() {
           <NavLink to="/party">Party</NavLink>
           <NavLink to="/handbook">Handbook</NavLink>
         </nav>
+
+        <UpdateBar />
       </div>
 
       <main className="app-main">

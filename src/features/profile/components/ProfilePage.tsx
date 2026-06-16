@@ -6,8 +6,6 @@ import { format } from "date-fns";
 import { SignOutIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FightersToggle } from "./FightersToggle";
-import { AsyncButton } from "@/components/AsyncButton";
-import { hardRefresh } from "@/app/pwaUpdates";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { AllowlistManager } from "./AllowlistManager";
 
@@ -40,16 +38,14 @@ export function ProfilePage() {
 
       <div className="card">
         <p className="eyebrow">App</p>
-        <div className="row between" style={{ marginBottom: 10 }}>
+        <div className="row between" style={{ marginBottom: 0 }}>
           <span className="faint" style={{ fontSize: "0.84rem" }}>
             This build: {format(new Date(__APP_BUILD__), "d MMM HH:mm")}
           </span>
         </div>
-        <AsyncButton className="btn-ghost" pendingText="Refreshing…" showDone={false} onClick={hardRefresh}>
-          Get latest version
-        </AsyncButton>
         <p className="faint" style={{ fontSize: "0.76rem", marginTop: 8, marginBottom: 0 }}>
-          The app updates itself when you reopen it. Tap this if it ever looks out of date.
+          When a new version is ready, a flashing “update” banner appears at the
+          top — tap it to switch.
         </p>
       </div>
 

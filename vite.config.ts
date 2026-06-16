@@ -31,7 +31,9 @@ export default defineConfig({
       },
     }),
     VitePWA({
-      registerType: "autoUpdate",
+      // "prompt": a new build installs and waits; the app shows a flashing
+      // "update available" pill in the header instead of silently reloading.
+      registerType: "prompt",
       includeAssets: ["favicon.svg", "apple-touch-icon.png"],
       manifest: {
         name: "Catacombs & Starspawns",
