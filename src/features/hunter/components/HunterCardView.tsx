@@ -3,6 +3,8 @@ import { getClass } from "@/data/classes";
 import { ARMOR_BY_ID } from "@/data/armor";
 import { ABILITIES, ABILITY_NAME, abilityModifier, formatModifier } from "@/data/abilities";
 import { armorClass, maxHp } from "@/lib/character";
+import { CreatureSprite } from "@/data/CreatureSprite";
+import { creatureName } from "@/data/creatures";
 
 export function HunterCardView({ card }: { card: HunterCard }) {
   const klass = getClass(card.classId);
@@ -12,14 +14,24 @@ export function HunterCardView({ card }: { card: HunterCard }) {
 
   return (
     <div className="stack" style={{ gap: 14 }}>
-      <div className="card">
-        <p className="eyebrow">{klass ? klass.title : "Hunter"}</p>
-        <h1 style={{ marginBottom: 2 }}>{card.name || "Unnamed Hunter"}</h1>
-        <p className="muted" style={{ marginBottom: 0 }}>
-          {[card.background, klass ? `${klass.name} · Level ${card.level}` : null]
-            .filter(Boolean)
-            .join(" · ")}
-        </p>
+      <div className="card row between" style={{ gap: 12 }}>
+        <div style={{ minWidth: 0 }}>
+          <p className="eyebrow">{klass ? klass.title : "Hunter"}</p>
+          <h1 style={{ marginBottom: 2 }}>{card.name || "Unnamed Hunter"}</h1>
+          <p className="muted" style={{ marginBottom: 0 }}>
+            {[card.background, klass ? `${klass.name} · Level ${card.level}` : null]
+              .filter(Boolean)
+              .join(" · ")}
+          </p>
+        </div>
+        {card.creatureId && (
+          <div className="center" style={{ flex: "none" }} title={`Mascot: ${creatureName(card.creatureId)}`}>
+            <CreatureSprite id={card.creatureId} size={46} />
+            <div className="faint" style={{ fontSize: "0.62rem", letterSpacing: "0.06em" }}>
+              {creatureName(card.creatureId)}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="card">
