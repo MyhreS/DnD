@@ -5,6 +5,7 @@ import { isPreviewActive } from "@/dev/preview";
 import { format } from "date-fns";
 import { SignOutIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { FightersToggle } from "./FightersToggle";
 import { AsyncButton } from "@/components/AsyncButton";
 import { hardRefresh } from "@/app/pwaUpdates";
 import { RoleSwitcher } from "./RoleSwitcher";
@@ -34,6 +35,8 @@ export function ProfilePage() {
       </p>
 
       <ThemeToggle />
+
+      <FightersToggle />
 
       <div className="card">
         <p className="eyebrow">App</p>
