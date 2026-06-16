@@ -232,7 +232,9 @@ button {
   width: 100%;
   max-width: var(--maxw);
   margin: 0 auto;
-  padding: 18px 16px 28px;
+  /* Extra bottom padding clears the iPhone home indicator so the last item can
+     scroll fully into view instead of hiding under the swipe bar. */
+  padding: 18px 16px calc(env(safe-area-inset-bottom) + 40px);
 }
 
 /* ---------- Bottom navigation ---------- */
