@@ -2,15 +2,20 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { subscribeParty } from "@/api/players";
 import { useSettings } from "@/app/settings";
 import type { HunterCard } from "@/types";
-import { FIGHTERS, SHOW, type FighterConfig } from "./fighterConfig";
+import { FIGHTERS, SHOW, fighterForClass, type FighterConfig } from "./fighterConfig";
 
 export interface Show {
   /** Bumped each show so React fully remounts the scene (fresh choreography). */
   key: number;
   /** A party member to label the fighter with, if we have one. */
   name: string | null;
-  /** Which fighter from the roster performs this show. */
+  /** Which fighter performs this show (matched to the member's class). */
   fighter: FighterConfig;
+}
+
+interface Hunter {
+  name: string;
+  classId?: string;
 }
 
 let counter = 0;
@@ -25,13 +30,17 @@ const pick = <T,>(xs: T[]): T => xs[Math.floor(Math.random() * xs.length)];
 export function useFighterShows(): { show: Show | null; endShow: () => void } {
   const [show, setShow] = useState<Show | null>(null);
   const enabled = useSettings((s) => s.fighters);
-  const namesRef = useRef<string[]>([]);
+  const huntersRef = useRef<Hunter[]>([]);
   const endRef = useRef<() => void>(() => {});
 
   useEffect(
     () =>
       subscribeParty((party: HunterCard[]) => {
-        namesRef.current = party.map((c) => c.name).filter((n): n is string => !!n);
+        // Prefer members who have actually built a hunter (so we can match their
+        // class); fall back to anyone with a name.
+        huntersRef.current = party
+          .filter((c) => c.name)
+          .map((c) => ({ name: c.name as string, classId: c.classId }));
       }, () => {}),
     [],
   );
@@ -54,11 +63,15 @@ export function useFighterShows(): { show: Show | null; endShow: () => void } {
         restTimer = window.setTimeout(start, 30_000);
         return;
       }
-      const names = namesRef.current;
+      // Pick a hunter and send their class's fighter on stage, with their name.
+      // With no party data (e.g. preview), just send a random fighter.
+      const hunters = huntersRef.current;
+      const withClass = hunters.filter((h) => h.classId);
+      const hunter = withClass.length ? pick(withClass) : hunters.length ? pick(hunters) : null;
       setShow({
         key: ++counter,
-        name: names.length ? pick(names) : null,
-        fighter: pick(FIGHTERS),
+        name: hunter?.name ?? null,
+        fighter: hunter ? fighterForClass(hunter.classId) : pick(FIGHTERS),
       });
       capTimer = window.setTimeout(end, SHOW.maxMs);
     };
