@@ -15,16 +15,6 @@ const base = (props: IconProps): IconProps => ({
   ...props,
 });
 
-export function CalendarIcon(props: IconProps) {
-  return (
-    <svg {...base(props)}>
-      <rect x="3" y="4.5" width="18" height="16" rx="2" />
-      <path d="M3 9h18M8 3v3M16 3v3" />
-      <path d="M8 13h2M14 13h2M8 17h2M14 17h2" />
-    </svg>
-  );
-}
-
 export function HunterIcon(props: IconProps) {
   // A stylised hunter mask / skull-ish sigil.
   return (
@@ -32,16 +22,6 @@ export function HunterIcon(props: IconProps) {
       <path d="M12 3c-4 0-6.5 2.6-6.5 6.4 0 2 .8 3.4 2 4.7.7.8.9 1.4.9 2.6V19a2 2 0 0 0 2 2h3.2a2 2 0 0 0 2-2v-2.3c0-1.2.2-1.8.9-2.6 1.2-1.3 2-2.7 2-4.7C18.5 5.6 16 3 12 3Z" />
       <path d="M9.3 10.2c.6-.5 1.4-.5 2 0M12.7 10.2c.6-.5 1.4-.5 2 0" />
       <path d="M12 14v2.4" />
-    </svg>
-  );
-}
-
-export function BookIcon(props: IconProps) {
-  return (
-    <svg {...base(props)}>
-      <path d="M4 4.5A1.5 1.5 0 0 1 5.5 3H18a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 0-2 2V4.5Z" />
-      <path d="M4 19.5A2 2 0 0 1 6 18h14" />
-      <path d="M8.5 8h7M8.5 11h5" />
     </svg>
   );
 }
@@ -68,16 +48,6 @@ export function ChevronIcon(props: IconProps) {
   return (
     <svg {...base(props)}>
       <path d="M9 6l6 6-6 6" />
-    </svg>
-  );
-}
-
-export function UsersIcon(props: IconProps) {
-  return (
-    <svg {...base(props)}>
-      <circle cx="9" cy="8" r="3.2" />
-      <path d="M3.5 20a5.5 5.5 0 0 1 11 0" />
-      <path d="M16 5.2a3.2 3.2 0 0 1 0 5.6M17.5 20a5.5 5.5 0 0 0-3-4.9" />
     </svg>
   );
 }
