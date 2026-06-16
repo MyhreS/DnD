@@ -190,7 +190,15 @@ it can't show the notch/home-indicator behaviour).
   `import.meta.env.DEV`). This is the agent's "log in and test" — Google OAuth
   itself can't be automated.
 
-### A. Automated walkthrough — preferred for self-QA
+### Automated screenshot gallery (one command)
+
+```bash
+bun run e2e   # signs in (real, via testToken) as player + admin, walks every
+              # page, writes screenshots/ and reports console errors. Run on
+              # meaningful UI changes.
+```
+
+### A. Manual / simulator walkthrough — preferred for device-specific QA
 
 Drive **mobile Safari** in the simulator with **Appium + WebDriverIO** (the same
 stack as the tools repo's `tooling/native-screenshots`; `appium` 3.x with the

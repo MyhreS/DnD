@@ -14,6 +14,7 @@ dev-dist
 /test-results
 /playwright-report
 /blob-report
+/screenshots
 
 # env / secrets — never commit these
 .env
