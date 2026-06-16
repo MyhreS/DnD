@@ -4,7 +4,7 @@ import { ARMOR_BY_ID } from "@/data/armor";
 import { ABILITIES, ABILITY_NAME, abilityModifier, formatModifier } from "@/data/abilities";
 import { armorClass, maxHp } from "@/lib/character";
 import { CreatureSprite } from "@/data/CreatureSprite";
-import { creatureName } from "@/data/creatures";
+import { classCreatureId } from "@/data/creatures";
 
 export function HunterCardView({ card }: { card: HunterCard }) {
   const klass = getClass(card.classId);
@@ -24,12 +24,9 @@ export function HunterCardView({ card }: { card: HunterCard }) {
               .join(" · ")}
           </p>
         </div>
-        {card.creatureId && (
-          <div className="center" style={{ flex: "none" }} title={`Mascot: ${creatureName(card.creatureId)}`}>
-            <CreatureSprite id={card.creatureId} size={46} />
-            <div className="faint" style={{ fontSize: "0.62rem", letterSpacing: "0.06em" }}>
-              {creatureName(card.creatureId)}
-            </div>
+        {klass && (
+          <div className="center" style={{ flex: "none" }} title={klass.title}>
+            <CreatureSprite id={classCreatureId(card.classId)} size={46} />
           </div>
         )}
       </div>

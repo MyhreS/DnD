@@ -7,8 +7,6 @@ import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
 import { DiceRoller } from "./DiceRoller";
 import { emptyCard } from "@/lib/character";
-import { getAllPlayers } from "@/api/players";
-import { pickUnusedCreature } from "@/data/creatures";
 import { exportCharacterPdf } from "../lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
 import { AsyncButton } from "@/components/AsyncButton";
@@ -51,18 +49,7 @@ export function CharacterPage() {
   const hasCard = !!card && !!card.classId && !!card.name;
 
   async function handleSave(next: HunterCard) {
-    let card = next;
-    // Assign a mascot creature, unique among the party, on first save.
-    if (!card.creatureId) {
-      try {
-        const party = await getAllPlayers();
-        const taken = party.filter((p) => p.uid !== card.uid).map((p) => p.creatureId);
-        card = { ...card, creatureId: pickUnusedCreature(taken) };
-      } catch {
-        card = { ...card, creatureId: pickUnusedCreature([]) };
-      }
-    }
-    const ok = await save(card);
+    const ok = await save(next);
     if (ok) setEditing(false);
   }
 
