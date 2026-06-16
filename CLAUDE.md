@@ -167,6 +167,44 @@ These conventions keep parallel agents from colliding and keep `main` clean.
    or drive a signed-in session in Playwright.
 4. **Keep secrets out of git** (they live in Doppler / GitHub Actions secrets).
 
+## Testing on the iOS Simulator
+
+This is a phone app — for anything layout/safe-area/PWA related, verify on a real
+iOS simulator, not just Playwright (Playwright's `env(safe-area-inset-*)` is 0, so
+it can't show the notch/home-indicator behaviour).
+
+### A. Automated walkthrough (no login) — preferred for self-QA
+
+Drive **mobile Safari** in the simulator with **Appium + WebDriverIO** (the same
+stack as the tools repo's `tooling/native-screenshots`; `appium` 3.x with the
+`xcuitest` driver is installed globally). Use the **dev preview** to skip Google
+login entirely:
+
+1. Boot a sim: `xcrun simctl boot 'iPhone 17'`
+2. Run the app in dev (preview only works in dev): `bun run dev` (binds localhost;
+   the simulator shares the host's localhost).
+3. Appium session with `browserName: "Safari"`, `appium:udid` of the booted sim;
+   `driver.url("http://localhost:5173/<path>?preview=user.player")` (or
+   `admin.player`, `moderator.dm`, …). Click tabs / `driver.execute` to scroll,
+   `driver.saveScreenshot(...)`. Pin the status bar with
+   `xcrun simctl status_bar <udid> override --time 9:41 …` for clean shots.
+
+This is the **only** way to inspect authenticated screens automatically:
+production has no preview bypass, and Google OAuth can't be scripted.
+
+### B. Manual full journey (real login + installed app) — the real path
+
+Some things (real Google login, Add-to-Home-Screen, standalone/home-indicator
+behaviour) can't be automated — do them by hand each meaningful change:
+
+1. Simulator Safari → open `https://dandd-ea955.web.app`.
+2. **Sign in with Google** (real account).
+3. Click through Sessions / Character / Party / Handbook.
+4. **Add to Home Screen**: Share → Add to Home Screen → Add.
+5. Open the **home-screen app** (standalone), sign in if asked, and click through
+   again — checking the change you made, and especially standalone-only behaviour
+   (safe-area / home indicator, redirect sign-in, no re-prompt on relaunch).
+
 ## Commands
 
 ```bash
