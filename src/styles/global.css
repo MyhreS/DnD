@@ -707,15 +707,18 @@ button {
   100% { transform: translateY(calc(-1 * var(--climb, 80px) - 36px)); opacity: 0; }
 }
 
-/* The climbers sway as they cling. */
+/* The Climber articulates its own limbs (SMIL); here the whole body bobs in
+   time with the reach/push cycle so it heaves upward as it climbs. Bob lives on
+   .critter-sprite while the inward flip lives on .critter-fig — different
+   elements, so the transforms never fight. */
 .critter-climb-left .critter-sprite,
 .critter-climb-right .critter-sprite,
 .critter-card-climb .critter-sprite {
-  animation: critter-sway 0.62s ease-in-out infinite;
+  animation: critter-bob 1.05s ease-in-out infinite;
 }
-@keyframes critter-sway {
-  0%, 100% { transform: rotate(-5deg) translateY(0); }
-  50% { transform: rotate(5deg) translateY(-2px); }
+@keyframes critter-bob {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  50% { transform: translateY(-3px) scaleY(1.015); }
 }
 
 /* Tumble across the top of a card. */
