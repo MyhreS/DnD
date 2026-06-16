@@ -1,15 +1,20 @@
 import { useState } from "react";
-import { HANDBOOK, HANDBOOK_PDF_PATH } from "@/data/handbook";
+import { HANDBOOK } from "@/data/handbook";
 import { CLASSES } from "@/data/classes";
 import { ARMOR } from "@/data/armor";
 import { ABILITY_NAME } from "@/data/abilities";
 import { ChevronIcon } from "@/components/icons";
 import type { ArmorCategory } from "@/types";
+import { PdfViewer } from "./PdfViewer";
+import { usePrefetchHandbookPdf } from "../hooks/usePrefetchHandbookPdf";
 
 type Tab = "rules" | "classes" | "armory";
 
 export function HandbookPage() {
   const [tab, setTab] = useState<Tab>("rules");
+  const [pdfOpen, setPdfOpen] = useState(false);
+  // Download the big PDF in the background so the viewer opens fast.
+  usePrefetchHandbookPdf();
 
   return (
     <div>
@@ -34,9 +39,11 @@ export function HandbookPage() {
       {tab === "armory" && <ArmoryTab />}
 
       <div className="rule-ornament">◆</div>
-      <a className="btn btn-ghost" href={HANDBOOK_PDF_PATH} target="_blank" rel="noreferrer">
+      <button type="button" className="btn btn-ghost" onClick={() => setPdfOpen(true)}>
         Open the full handbook (PDF)
-      </a>
+      </button>
+
+      {pdfOpen && <PdfViewer onClose={() => setPdfOpen(false)} />}
     </div>
   );
 }
