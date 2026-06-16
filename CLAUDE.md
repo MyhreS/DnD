@@ -173,12 +173,29 @@ This is a phone app — for anything layout/safe-area/PWA related, verify on a r
 iOS simulator, not just Playwright (Playwright's `env(safe-area-inset-*)` is 0, so
 it can't show the notch/home-indicator behaviour).
 
-### A. Automated walkthrough (no login) — preferred for self-QA
+### Dev sign-in for testing (two options, both DEV-only)
+
+- **`?preview=<role>`** — fake session, **no real data** (Firestore calls fail).
+  Good for inspecting layout & role-gated UI. `?preview=admin.dm`, `user.player`, …
+- **`?testToken=<token>`** — a **REAL** Firebase session (real Firestore + rules),
+  so you can test authenticated screens with live data. Mint a token with the
+  `agent-test` service account (key in Doppler `AGENT_TEST_SA`):
+  ```bash
+  bun run token player    # or: admin | dm   → prints a custom token
+  ```
+  Then open `http://localhost:5173/?testToken=<token>` (it's saved to
+  localStorage; `?testToken=off` clears it). Tokens last ~1h — re-mint as needed.
+  The script ensures the `agent-{player,admin,dm}@…` Auth user + allowlist entry
+  exist. **Both paths are stripped from production builds** (gated on
+  `import.meta.env.DEV`). This is the agent's "log in and test" — Google OAuth
+  itself can't be automated.
+
+### A. Automated walkthrough — preferred for self-QA
 
 Drive **mobile Safari** in the simulator with **Appium + WebDriverIO** (the same
 stack as the tools repo's `tooling/native-screenshots`; `appium` 3.x with the
-`xcuitest` driver is installed globally). Use the **dev preview** to skip Google
-login entirely:
+`xcuitest` driver is installed globally). Sign in with `?testToken=` (real data)
+or `?preview=` (UI only):
 
 1. Boot a sim: `xcrun simctl boot 'iPhone 17'`
 2. Run the app in dev (preview only works in dev): `bun run dev` (binds localhost;
