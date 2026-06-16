@@ -82,11 +82,12 @@ export async function ensureSuperAdminEntry(email: string): Promise<void> {
   }
 }
 
-/** Staff only (enforced by rules). List everyone with access. */
+/** Staff only (enforced by rules). List real members (hides agent test users). */
 export async function listAllowlist(): Promise<AllowlistMember[]> {
   const snap = await getDocs(allowlistCol);
   return snap.docs
     .map((d) => toMember(d.id, d.data()))
+    .filter((m) => m.addedBy !== "agent-test")
     .sort((a, b) => a.firstName.localeCompare(b.firstName));
 }
 

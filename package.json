@@ -16,6 +16,7 @@
     "deadcode:fix": "knip --fix --allow-remove-files",
     "check": "tsc -b && eslint . && knip",
     "token": "doppler run -- bun scripts/mint-test-token.mjs",
+    "e2e": "doppler run -- bun scripts/e2e.mjs",
     "icons": "bun run scripts/generate-icons.mjs",
     "deploy": "bun run build && firebase deploy",
     "deploy:hosting": "bun run build && firebase deploy --only hosting",
