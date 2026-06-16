@@ -23,6 +23,8 @@ interface Props {
   onCancel?: () => void;
   /** When provided (editing an existing card), shows the delete flow. */
   onDelete?: () => void | Promise<void>;
+  /** Lock the class — editing an existing hunter can't change its type. */
+  lockClass?: boolean;
 }
 
 // Split a final score into point-buy base (8–15) + background bonus (0–2).
@@ -31,7 +33,7 @@ function splitScore(final: number): { base: number; bonus: number } {
   return { base, bonus: Math.max(0, Math.min(2, final - base)) };
 }
 
-export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDelete }: Props) {
+export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDelete, lockClass }: Props) {
   const [name, setName] = useState(initial.name);
   const [classId, setClassId] = useState(initial.classId);
   const [background, setBackground] = useState(initial.background);
@@ -103,14 +105,26 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     }
   }
 
-  const nameOk = name.trim().length > 0;
-  const classOk = !!classId;
+  const [attempted, setAttempted] = useState(false);
+
   const skillsOk =
     !klass || skills.filter((s) => klass.skillChoices.options.includes(s)).length === klass.skillChoices.count;
-  const canSave = nameOk && classOk && pointsLeft >= 0 && !saving;
+
+  // Everything that must be true before a hunter can be saved, each with a
+  // message so a failed save can say exactly what's missing.
+  const problems = useMemo(() => {
+    const p: string[] = [];
+    if (name.trim().length === 0) p.push("Give your hunter a name.");
+    if (!classId) p.push("Choose a class.");
+    if (pointsLeft > 0) p.push(`Spend all your ability points — ${pointsLeft} still left.`);
+    if (bonusTotal !== 3) p.push(`Apply your background bonus (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`);
+    if (klass && !skillsOk) p.push(`Choose exactly ${klass.skillChoices.count} skill proficiencies.`);
+    return p;
+  }, [name, classId, pointsLeft, bonusTotal, klass, skillsOk]);
 
   function handleSave() {
-    if (!canSave) return;
+    setAttempted(true);
+    if (problems.length > 0 || saving) return;
     onSave({
       ...initial,
       name: name.trim(),
@@ -156,38 +170,65 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       {/* Class */}
       <div className="card">
         <p className="eyebrow">Step 1 · Class</p>
-        <h3 style={{ marginBottom: 10 }}>Choose your hunter</h3>
-        <div className="stack" style={{ gap: 8 }}>
-          {CLASSES.map((c) => {
-            const selected = c.id === classId;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                onClick={() => chooseClass(c.id)}
-                className="card card-hover"
-                style={{
-                  textAlign: "left",
-                  padding: 14,
-                  borderColor: selected ? "var(--blood-bright)" : undefined,
-                  background: selected ? "rgba(179,18,26,0.12)" : undefined,
-                }}
-              >
-                <div className="row between">
-                  <span style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
-                    {c.name}
-                  </span>
+        {lockClass ? (
+          <>
+            <h3 style={{ marginBottom: 10 }}>Your class</h3>
+            <div className="card" style={{ padding: 14 }}>
+              <div className="row between">
+                <span style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
+                  {klass?.name ?? "—"}
+                </span>
+                {klass && (
                   <span className="faint" style={{ fontSize: "0.78rem" }}>
-                    d{c.hitDie} · {c.primaryAbility}
+                    d{klass.hitDie} · {klass.primaryAbility}
                   </span>
-                </div>
-                <div className="muted" style={{ fontSize: "0.88rem" }}>
-                  {c.tagline}
-                </div>
-              </button>
-            );
-          })}
-        </div>
+                )}
+              </div>
+              {klass && (
+                <div className="muted" style={{ fontSize: "0.88rem" }}>{klass.tagline}</div>
+              )}
+            </div>
+            <p className="faint" style={{ fontSize: "0.8rem", marginTop: 10, marginBottom: 0 }}>
+              Your class is set. To play a different type of hunter, delete this
+              one and create a new character.
+            </p>
+          </>
+        ) : (
+          <>
+            <h3 style={{ marginBottom: 10 }}>Choose your hunter</h3>
+            <div className="stack" style={{ gap: 8 }}>
+              {CLASSES.map((c) => {
+                const selected = c.id === classId;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => chooseClass(c.id)}
+                    className="card card-hover"
+                    style={{
+                      textAlign: "left",
+                      padding: 14,
+                      borderColor: selected ? "var(--blood-bright)" : undefined,
+                      background: selected ? "rgba(179,18,26,0.12)" : undefined,
+                    }}
+                  >
+                    <div className="row between">
+                      <span style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
+                        {c.name}
+                      </span>
+                      <span className="faint" style={{ fontSize: "0.78rem" }}>
+                        d{c.hitDie} · {c.primaryAbility}
+                      </span>
+                    </div>
+                    <div className="muted" style={{ fontSize: "0.88rem" }}>
+                      {c.tagline}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Ability scores */}
@@ -347,25 +388,30 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
         </div>
       </div>
 
+      {onDelete && <DeleteCharacter saving={saving} onDelete={onDelete} />}
+
       {error && <div className="banner banner-error">{error}</div>}
-      {!skillsOk && classOk && (
-        <div className="banner banner-warn">
-          Pick exactly {klass?.skillChoices.count} skills to finish your build.
+      {attempted && problems.length > 0 && (
+        <div className="banner banner-error">
+          <strong>Not saved — finish these first:</strong>
+          <ul className="list-reset" style={{ display: "grid", gap: 3, marginTop: 6 }}>
+            {problems.map((p) => (
+              <li key={p}>• {p}</li>
+            ))}
+          </ul>
         </div>
       )}
 
-      <div className="btn-row" style={{ position: "sticky", bottom: 0 }}>
+      <div className="btn-row" style={{ marginTop: 4 }}>
         {onCancel && (
           <button type="button" className="btn btn-ghost" onClick={onCancel} disabled={saving}>
             Cancel
           </button>
         )}
-        <button type="button" className="btn btn-primary" onClick={handleSave} disabled={!canSave}>
+        <button type="button" className="btn btn-primary" onClick={handleSave} disabled={saving}>
           {saving ? (<><span className="btn-spinner" aria-hidden /> Saving…</>) : "Save hunter"}
         </button>
       </div>
-
-      {onDelete && <DeleteCharacter saving={saving} onDelete={onDelete} />}
     </div>
   );
 }
