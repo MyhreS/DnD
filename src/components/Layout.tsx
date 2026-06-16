@@ -1,6 +1,6 @@
 import { NavLink, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { CalendarIcon, HunterIcon, BookIcon, UsersIcon, Sigil } from "./icons";
+import { Sigil } from "./icons";
 
 export function Layout() {
   const member = useAuthStore((s) => s.member);
@@ -24,32 +24,18 @@ export function Layout() {
         </Link>
       </header>
 
+      <nav className="top-tabs" aria-label="Primary">
+        <NavLink to="/" end>Sessions</NavLink>
+        {showCharacter && <NavLink to="/character">Character</NavLink>}
+        <NavLink to="/party">Party</NavLink>
+        <NavLink to="/handbook">Handbook</NavLink>
+      </nav>
+
       <main className="app-main">
         <div className="fade-in" key={location.pathname}>
           <Outlet />
         </div>
       </main>
-
-      <nav className="bottom-nav" aria-label="Primary">
-        <NavLink to="/" end>
-          <CalendarIcon className="nav-icon" />
-          <span>Sessions</span>
-        </NavLink>
-        {showCharacter && (
-          <NavLink to="/character">
-            <HunterIcon className="nav-icon" />
-            <span>Character</span>
-          </NavLink>
-        )}
-        <NavLink to="/party">
-          <UsersIcon className="nav-icon" />
-          <span>Party</span>
-        </NavLink>
-        <NavLink to="/handbook">
-          <BookIcon className="nav-icon" />
-          <span>Handbook</span>
-        </NavLink>
-      </nav>
     </div>
   );
 }
