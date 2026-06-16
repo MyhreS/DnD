@@ -1,69 +1,90 @@
-import { Suspense, useEffect, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Suspense, useEffect, useMemo, useRef } from "react";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useAnimations, useGLTF, Html } from "@react-three/drei";
-import {
-  AnimationAction,
-  Group,
-  LoopRepeat,
-  MathUtils,
-} from "three";
-import { FIGHTER } from "./fighterConfig";
-
-useGLTF.preload(FIGHTER.url);
+import { AnimationAction, Box3, Group, LoopRepeat, MathUtils } from "three";
+import { clone } from "three/examples/jsm/utils/SkeletonUtils.js";
+import type { FighterConfig } from "./fighterConfig";
 
 // Where the fighter faces (rotation about Y). The model's front is +Z, the
 // camera sits on +Z, so 0 faces the viewer.
 const FACE_RIGHT = Math.PI / 2;
 const FACE_VIEWER = 0.35; // a 3/4 view reads better than dead-on
 
-// A portrait phone viewport is narrow, so the fighter stays near centre: it
-// walks in from just off the left edge, fights at centre, and exits right.
-const ENTER_X = -3.4; // start just off-screen left
 const FIGHT_X = 0; // where it stops to fight (screen centre)
-const EXIT_X = 3.4; // off-screen right
 const WALK_SPEED = 1.4; // units / second
+const SWINGS = 2; // number of weapon strikes before the flourish
+const SWING_INTERVAL = 1.15; // seconds per strike
+const CHEER_SECONDS = 2.2; // length of the wave finisher
+const OFFSCREEN_MARGIN = 1; // extra world units past the edge so it's fully hidden
+
+const rand = <T,>(xs: T[]): T => xs[Math.floor(Math.random() * xs.length)];
 
 type Phase = "enter" | "fight" | "cheer" | "exit" | "done";
 
 interface FighterProps {
+  fighter: FighterConfig;
   name: string | null;
   onDone: () => void;
 }
 
 /** The character + its walk-in → fight → cheer → walk-off choreography. */
-function Fighter({ name, onDone }: FighterProps) {
+function Fighter({ fighter, name, onDone }: FighterProps) {
   const group = useRef<Group>(null);
-  const { scene, animations } = useGLTF(FIGHTER.url);
-  const { actions } = useAnimations(animations, group);
+  const { viewport } = useThree();
+  const { scene, animations } = useGLTF(fighter.url);
+
+  // Clone so each show gets its own instance, and hide every equipment mesh
+  // except this fighter's loadout (KayKit models embed all weapon variants).
+  const model = useMemo(() => {
+    const c = clone(scene);
+    c.traverse((o) => {
+      if (fighter.hide.includes(o.name)) o.visible = false;
+    });
+    return c;
+  }, [scene, fighter]);
+
+  // Derive the walk-on path + ground line from the *actual* visible area, so the
+  // fighter always starts fully off-screen (no matter the device/orientation)
+  // and stands on the bottom edge.
+  const feetY = useMemo(() => new Box3().setFromObject(model).min.y, [model]);
+  const halfW = viewport.width / 2;
+  const enterX = -(halfW + OFFSCREEN_MARGIN);
+  const exitX = halfW + OFFSCREEN_MARGIN;
+  const groundY = -viewport.height / 2 + 0.1 - feetY * fighter.scale + fighter.yOffset;
+
+  const { actions } = useAnimations(animations, model);
 
   const phase = useRef<Phase>("enter");
   const phaseT = useRef(0);
+  const lastSwing = useRef(0);
+  const swings = useRef(0);
   const current = useRef<AnimationAction | null>(null);
 
-  // Crossfade to a named clip.
-  const play = (name: keyof typeof FIGHTER.clips, loop = true) => {
-    const next = actions[FIGHTER.clips[name]];
+  // Crossfade to a clip by name.
+  const playClip = (clipName: string) => {
+    const next = actions[clipName];
     if (!next || next === current.current) return;
     next.reset();
-    next.setLoop(LoopRepeat, loop ? Infinity : 1);
-    next.fadeIn(0.3).play();
-    current.current?.fadeOut(0.3);
+    next.setLoop(LoopRepeat, Infinity);
+    next.fadeIn(0.25).play();
+    current.current?.fadeOut(0.25);
     current.current = next;
   };
 
   useEffect(() => {
     const g = group.current;
     if (g) {
-      g.position.set(ENTER_X, FIGHTER.yOffset, 0);
+      g.position.set(enterX, groundY, 0);
       g.rotation.y = FACE_RIGHT;
     }
-    play("walk");
+    playClip(fighter.clips.walk);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useFrame((_, dt) => {
     const g = group.current;
     if (!g) return;
+    g.position.y = groundY;
     phaseT.current += dt;
 
     switch (phase.current) {
@@ -73,33 +94,41 @@ function Fighter({ name, onDone }: FighterProps) {
           g.position.x = FIGHT_X;
           phase.current = "fight";
           phaseT.current = 0;
-          play("attack");
+          lastSwing.current = 0;
+          swings.current = 1;
+          playClip(rand(fighter.clips.attack));
         }
         break;
       }
       case "fight": {
-        // Turn to face the viewer and keep swinging the weapon.
+        // Turn to face the viewer and throw a couple of weapon strikes.
         g.rotation.y = MathUtils.damp(g.rotation.y, FACE_VIEWER, 6, dt);
-        if (phaseT.current > 9) {
-          phase.current = "cheer";
-          phaseT.current = 0;
-          play("cheer");
+        if (phaseT.current - lastSwing.current >= SWING_INTERVAL) {
+          lastSwing.current = phaseT.current;
+          if (swings.current < SWINGS) {
+            swings.current += 1;
+            playClip(rand(fighter.clips.attack));
+          } else {
+            phase.current = "cheer";
+            phaseT.current = 0;
+            playClip(fighter.clips.cheer);
+          }
         }
         break;
       }
       case "cheer": {
-        if (phaseT.current > 3) {
+        if (phaseT.current > CHEER_SECONDS) {
           phase.current = "exit";
           phaseT.current = 0;
           g.rotation.y = FACE_RIGHT;
-          play("walk");
+          playClip(fighter.clips.walk);
         }
         break;
       }
       case "exit": {
         g.rotation.y = MathUtils.damp(g.rotation.y, FACE_RIGHT, 6, dt);
         g.position.x += WALK_SPEED * dt;
-        if (g.position.x >= EXIT_X) {
+        if (g.position.x >= exitX) {
           phase.current = "done";
           onDone();
         }
@@ -111,10 +140,10 @@ function Fighter({ name, onDone }: FighterProps) {
   });
 
   return (
-    <group ref={group} scale={FIGHTER.scale}>
-      <primitive object={scene} />
+    <group ref={group} scale={fighter.scale}>
+      <primitive object={model} />
       {name && (
-        <Html position={[0, 4.2, 0]} center distanceFactor={9} pointerEvents="none">
+        <Html position={[0, 3, 0]} center distanceFactor={9} pointerEvents="none">
           <span className="fighter-name">{name}</span>
         </Html>
       )}
@@ -126,7 +155,7 @@ function Fighter({ name, onDone }: FighterProps) {
  * Full-screen, click-through 3D overlay that performs one fighter show, then
  * calls `onDone`. Mounted only during a show, so there's no idle WebGL cost.
  */
-export default function FighterScene({ name, onDone }: FighterProps) {
+export default function FighterScene({ fighter, name, onDone }: FighterProps) {
   const fired = useRef(false);
   const done = () => {
     if (fired.current) return;
@@ -145,7 +174,7 @@ export default function FighterScene({ name, onDone }: FighterProps) {
         <directionalLight position={[3, 6, 4]} intensity={2.2} color="#ffe9c7" />
         <directionalLight position={[-4, 2, -2]} intensity={0.7} color="#7c5cff" />
         <Suspense fallback={null}>
-          <Fighter name={name} onDone={done} />
+          <Fighter fighter={fighter} name={name} onDone={done} />
         </Suspense>
       </Canvas>
     </div>
