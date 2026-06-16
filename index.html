@@ -9,6 +9,39 @@
           localStorage.getItem("cs-theme") === "light" ? "light" : "dark";
       } catch (e) {}
     </script>
+    <script>
+      // White-screen watchdog: if the app hasn't mounted a while after load,
+      // the usual cause is a broken/stale service-worker cache. Unregister the
+      // SW, clear caches, and reload — once per session, so it can never loop.
+      (function () {
+        var KEY = "cs-recovered";
+        window.addEventListener("load", function () {
+          setTimeout(function () {
+            var root = document.getElementById("root");
+            if (root && root.childElementCount > 0) return; // mounted — all good
+            try {
+              if (sessionStorage.getItem(KEY)) return; // already tried this session
+              sessionStorage.setItem(KEY, "1");
+            } catch (e) {}
+            var reload = function () { location.reload(); };
+            Promise.resolve()
+              .then(function () {
+                if ("serviceWorker" in navigator)
+                  return navigator.serviceWorker.getRegistrations().then(function (rs) {
+                    return Promise.all(rs.map(function (r) { return r.unregister(); }));
+                  });
+              })
+              .then(function () {
+                if (window.caches)
+                  return caches.keys().then(function (ks) {
+                    return Promise.all(ks.map(function (k) { return caches.delete(k); }));
+                  });
+              })
+              .then(reload, reload);
+          }, 12000);
+        });
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />

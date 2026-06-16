@@ -17,6 +17,10 @@ function check(): void {
 
 export function setupPwaUpdates(): void {
   if (!("serviceWorker" in navigator)) return;
+  // One-off cleanup: an earlier build runtime-cached the 26MB handbook PDF,
+  // which can exhaust the small iOS PWA storage quota and white-screen the app
+  // on relaunch. We no longer cache it; drop that orphaned cache to free space.
+  if ("caches" in window) caches.delete("handbook-pdf").catch(() => {});
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") check();
   });
