@@ -642,6 +642,73 @@ button {
 .page-title {
   margin-bottom: 4px;
 }
+
+/* ---------- Playful critters ---------- */
+.critters {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: calc(env(safe-area-inset-bottom) + 2px);
+  height: 0;
+  pointer-events: none;
+  z-index: 18;
+  overflow: visible;
+}
+.critter {
+  position: absolute;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  will-change: transform;
+}
+.critter-sprite {
+  display: block;
+  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+}
+.critter-name {
+  font-family: var(--font-display);
+  font-size: 0.6rem;
+  letter-spacing: 0.03em;
+  color: var(--gold);
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  padding: 1px 8px;
+  max-width: 130px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  box-shadow: var(--shadow);
+}
+
+.critter-peek {
+  animation: critter-peek 4.4s ease-in-out forwards;
+}
+@keyframes critter-peek {
+  0% { transform: translateY(118%); }
+  15%, 78% { transform: translateY(0); }
+  84% { transform: translateY(0) rotate(-4deg); }
+  90% { transform: translateY(0) rotate(4deg); }
+  100% { transform: translateY(122%); }
+}
+
+.critter-walk {
+  left: -52px;
+  animation: critter-walk 9.5s linear forwards;
+}
+@keyframes critter-walk {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(100vw + 52px)); }
+}
+.critter-walk .critter-sprite {
+  animation: critter-bob 0.5s ease-in-out infinite;
+}
+@keyframes critter-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
 .page-intro {
   color: var(--ink-dim);
   margin-bottom: 18px;

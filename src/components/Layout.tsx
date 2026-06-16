@@ -1,6 +1,7 @@
 import { NavLink, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { Sigil } from "./icons";
+import { Critters } from "./Critters";
 
 export function Layout() {
   const member = useAuthStore((s) => s.member);
@@ -36,6 +37,8 @@ export function Layout() {
           <Outlet />
         </div>
       </main>
+
+      <Critters />
     </div>
   );
 }
