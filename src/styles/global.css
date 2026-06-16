@@ -643,71 +643,90 @@ button {
   margin-bottom: 4px;
 }
 
-/* ---------- Playful critters ---------- */
+/* ---------- Playful critters (climb edges / roll on cards) ---------- */
 .critters {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: calc(env(safe-area-inset-bottom) + 2px);
-  height: 0;
+  inset: 0;
   pointer-events: none;
+  overflow: hidden;
   z-index: 18;
-  overflow: visible;
 }
 .critter {
   position: absolute;
-  bottom: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 3px;
   will-change: transform;
 }
+.critter-fig {
+  line-height: 0;
+}
 .critter-sprite {
   display: block;
-  filter: drop-shadow(0 2px 3px rgba(0, 0, 0, 0.55));
+  filter: drop-shadow(0 3px 5px rgba(0, 0, 0, 0.6));
 }
 .critter-name {
   font-family: var(--font-display);
-  font-size: 0.6rem;
+  font-size: 0.62rem;
   letter-spacing: 0.03em;
   color: var(--gold);
   background: var(--bg-elev-2);
   border: 1px solid var(--border-strong);
   border-radius: 999px;
   padding: 1px 8px;
-  max-width: 130px;
+  max-width: 140px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
   box-shadow: var(--shadow);
 }
 
-.critter-peek {
-  animation: critter-peek 4.4s ease-in-out forwards;
+/* Climb up a screen edge (full height). */
+.critter-climb-left,
+.critter-climb-right {
+  bottom: -40px;
+  animation: critter-edge-climb 8.5s ease-in forwards;
 }
-@keyframes critter-peek {
-  0% { transform: translateY(118%); }
-  15%, 78% { transform: translateY(0); }
-  84% { transform: translateY(0) rotate(-4deg); }
-  90% { transform: translateY(0) rotate(4deg); }
-  100% { transform: translateY(122%); }
+@keyframes critter-edge-climb {
+  0% { transform: translateY(40px); opacity: 0; }
+  7% { opacity: 1; }
+  93% { opacity: 1; }
+  100% { transform: translateY(calc(-100vh - 90px)); opacity: 0; }
 }
 
-.critter-walk {
-  left: -52px;
-  animation: critter-walk 9.5s linear forwards;
+/* Climb up the side of a card. */
+.critter-card-climb {
+  animation: critter-card-climb 4.6s ease-in-out forwards;
 }
-@keyframes critter-walk {
-  from { transform: translateX(0); }
-  to { transform: translateX(calc(100vw + 52px)); }
+@keyframes critter-card-climb {
+  0% { transform: translateY(10px); opacity: 0; }
+  14% { opacity: 1; }
+  48%, 72% { transform: translateY(calc(-1 * var(--climb, 80px))); }
+  88% { opacity: 1; }
+  100% { transform: translateY(calc(-1 * var(--climb, 80px) - 36px)); opacity: 0; }
 }
-.critter-walk .critter-sprite {
-  animation: critter-bob 0.5s ease-in-out infinite;
+
+/* The climbers sway as they cling. */
+.critter-climb-left .critter-sprite,
+.critter-climb-right .critter-sprite,
+.critter-card-climb .critter-sprite {
+  animation: critter-sway 0.62s ease-in-out infinite;
 }
-@keyframes critter-bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-3px); }
+@keyframes critter-sway {
+  0%, 100% { transform: rotate(-5deg) translateY(0); }
+  50% { transform: rotate(5deg) translateY(-2px); }
+}
+
+/* Tumble across the top of a card. */
+.critter-card-roll {
+  animation: critter-roll 3.7s ease-in-out forwards;
+}
+@keyframes critter-roll {
+  0% { transform: translateX(-12px) rotate(-40deg); opacity: 0; }
+  10% { opacity: 1; }
+  84% { opacity: 1; transform: translateX(var(--roll, 120px)) rotate(700deg); }
+  100% { transform: translateX(calc(var(--roll, 120px) + 36px)) rotate(820deg) translateY(46px); opacity: 0; }
 }
 .page-intro {
   color: var(--ink-dim);

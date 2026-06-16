@@ -82,7 +82,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     abilities: { str: 12, dex: 15, con: 13, int: 10, wis: 12, cha: 8 },
     skillProficiencies: ["Stealth", "Perception", "Survival"],
     mainArmorId: "hunter-leather-coat",
-    creatureId: "crow",
+    creatureId: "dark-angel",
     currentHp: 9,
     madness: 2,
     transform: 1,
