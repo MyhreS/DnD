@@ -70,22 +70,12 @@ export default defineConfig({
         globIgnores: ["**/splash/**", "**/handbook/**"],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/__/, /\.pdf$/],
-        // The 26MB handbook PDF is too big to precache, but cache it at runtime
-        // (CacheFirst) once fetched — so the in-app prefetch makes opening it
-        // instant, and it works offline. rangeRequests is required because PDF
-        // viewers (especially iOS) request the file in byte ranges.
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) => url.pathname.endsWith(".pdf"),
-            handler: "CacheFirst",
-            options: {
-              cacheName: "handbook-pdf",
-              rangeRequests: true,
-              cacheableResponse: { statuses: [0, 200] },
-              expiration: { maxEntries: 2, maxAgeSeconds: 60 * 60 * 24 * 30 },
-            },
-          },
-        ],
+        cleanupOutdatedCaches: true,
+        // NOTE: we deliberately do NOT runtime-cache the ~26MB handbook PDF.
+        // iOS gives an installed PWA a small storage quota; caching a file that
+        // large evicts the app-shell precache and white-screens the app on the
+        // next launch. The PDF is fetched fresh on demand instead (see
+        // features/handbook/lib/handbookPdf.ts).
       },
       devOptions: {
         enabled: false,

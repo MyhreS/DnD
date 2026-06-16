@@ -7,14 +7,11 @@ import { ChevronIcon } from "@/components/icons";
 import type { ArmorCategory } from "@/types";
 import { AsyncButton } from "@/components/AsyncButton";
 import { downloadHandbookPdf } from "../lib/handbookPdf";
-import { usePrefetchHandbookPdf } from "../hooks/usePrefetchHandbookPdf";
 
 type Tab = "rules" | "classes" | "armory";
 
 export function HandbookPage() {
   const [tab, setTab] = useState<Tab>("rules");
-  // Fetch the big PDF in the background so saving it is instant.
-  usePrefetchHandbookPdf();
 
   return (
     <div>
