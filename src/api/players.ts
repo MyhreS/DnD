@@ -1,7 +1,10 @@
 import { doc, setDoc, deleteDoc, collection, getDocs, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { isPreviewActive, previewCard } from "@/dev/preview";
+import { isTestEmail } from "@/config";
 import type { HunterCard } from "@/types";
+
+const realCards = (cards: HunterCard[]) => cards.filter((c) => !isTestEmail(c.ownerEmail));
 
 const playersCol = collection(db, "players");
 
@@ -46,7 +49,7 @@ export function subscribeParty(
   }
   return onSnapshot(
     playersCol,
-    (snap) => cb(snap.docs.map((d) => d.data() as HunterCard)),
+    (snap) => cb(realCards(snap.docs.map((d) => d.data() as HunterCard))),
     (err) => {
       console.error("Party subscription failed", err);
       onError?.(err);
