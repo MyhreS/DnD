@@ -1,4 +1,4 @@
-import { doc, setDoc, deleteDoc, collection, getDocs, onSnapshot } from "firebase/firestore";
+import { doc, setDoc, deleteDoc, collection, onSnapshot } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { isPreviewActive, previewCard } from "@/dev/preview";
 import { isTestEmail } from "@/config";
@@ -10,12 +10,6 @@ const playersCol = collection(db, "players");
 
 export async function saveHunterCard(card: HunterCard): Promise<void> {
   await setDoc(doc(playersCol, card.uid), card, { merge: true });
-}
-
-/** One-time read of all party cards (used for unique creature assignment). */
-export async function getAllPlayers(): Promise<HunterCard[]> {
-  const snap = await getDocs(playersCol);
-  return snap.docs.map((d) => d.data() as HunterCard);
 }
 
 export async function deleteHunterCard(uid: string): Promise<void> {

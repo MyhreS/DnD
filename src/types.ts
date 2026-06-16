@@ -133,8 +133,6 @@ export interface HunterCard {
   skillProficiencies: string[];
   /** Selected Main Armor piece id, or null for unarmored. */
   mainArmorId: string | null;
-  /** Assigned mascot creature id (unique per party). See data/creatures. */
-  creatureId?: string;
   /** Current hit points during play (defaults to max when unset). */
   currentHp?: number;
   /** Play-time resource tracks (in addition to HP). C&S-specific mechanics. */
