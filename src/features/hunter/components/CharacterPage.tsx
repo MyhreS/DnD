@@ -102,6 +102,7 @@ export function CharacterPage() {
           onSave={handleSave}
           onCancel={hasCard ? () => setEditing(false) : undefined}
           onDelete={hasCard ? handleDelete : undefined}
+          lockClass={hasCard}
         />
       </div>
     );
