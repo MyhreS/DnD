@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { subscribeParty } from "@/api/players";
+import { useSettings } from "@/app/settings";
 import type { HunterCard } from "@/types";
 import { FIGHTERS, SHOW, type FighterConfig } from "./fighterConfig";
 
@@ -23,6 +24,7 @@ const pick = <T,>(xs: T[]): T => xs[Math.floor(Math.random() * xs.length)];
  */
 export function useFighterShows(): { show: Show | null; endShow: () => void } {
   const [show, setShow] = useState<Show | null>(null);
+  const enabled = useSettings((s) => s.fighters);
   const namesRef = useRef<string[]>([]);
   const endRef = useRef<() => void>(() => {});
 
@@ -35,7 +37,12 @@ export function useFighterShows(): { show: Show | null; endShow: () => void } {
   );
 
   useEffect(() => {
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    // Turned off in Settings, or the user prefers reduced motion: never play,
+    // and stop any show that's currently on screen.
+    if (!enabled || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setShow(null);
+      return;
+    }
 
     let restTimer = 0;
     let capTimer = 0;
@@ -68,7 +75,7 @@ export function useFighterShows(): { show: Show | null; endShow: () => void } {
       window.clearTimeout(restTimer);
       window.clearTimeout(capTimer);
     };
-  }, []);
+  }, [enabled]);
 
   const endShow = useCallback(() => endRef.current(), []);
   return { show, endShow };
