@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { subscribeParty } from "@/api/players";
 import type { HunterCard } from "@/types";
-import { SHOW } from "./fighterConfig";
+import { FIGHTERS, SHOW, type FighterConfig } from "./fighterConfig";
 
 export interface Show {
   /** Bumped each show so React fully remounts the scene (fresh choreography). */
   key: number;
   /** A party member to label the fighter with, if we have one. */
   name: string | null;
+  /** Which fighter from the roster performs this show. */
+  fighter: FighterConfig;
 }
 
 let counter = 0;
@@ -46,7 +48,11 @@ export function useFighterShows(): { show: Show | null; endShow: () => void } {
         return;
       }
       const names = namesRef.current;
-      setShow({ key: ++counter, name: names.length ? pick(names) : null });
+      setShow({
+        key: ++counter,
+        name: names.length ? pick(names) : null,
+        fighter: pick(FIGHTERS),
+      });
       capTimer = window.setTimeout(end, SHOW.maxMs);
     };
 

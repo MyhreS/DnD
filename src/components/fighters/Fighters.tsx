@@ -15,7 +15,7 @@ export function Fighters() {
   if (!show) return null;
   return (
     <Suspense fallback={null}>
-      <FighterScene key={show.key} name={show.name} onDone={endShow} />
+      <FighterScene key={show.key} fighter={show.fighter} name={show.name} onDone={endShow} />
     </Suspense>
   );
 }
