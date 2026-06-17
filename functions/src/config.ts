@@ -19,3 +19,11 @@ export const FROM_NAME = "Catacombs & Starspawns";
 // Super-admins (mirror of the frontend allowlist bootstrap). Always treated as
 // staff for callable authorization, even without an allowlist doc.
 export const SUPER_ADMIN_EMAILS = ["simonmyhre1@gmail.com"];
+
+// Agent test accounts (agent-*@dandd-ea955.web.app) are seeded into the
+// allowlist by scripts/mint-test-token.mjs. They have no real mailbox, so
+// emailing them bounces — never send them invites or reminders. Mirrors
+// isTestEmail() in the frontend src/config.ts.
+export function isTestEmail(email: string | null | undefined): boolean {
+  return !!email && email.toLowerCase().endsWith("@dandd-ea955.web.app");
+}

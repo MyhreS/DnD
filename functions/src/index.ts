@@ -4,7 +4,7 @@ import { setGlobalOptions, logger } from "firebase-functions/v2";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
 import { onCall, HttpsError, type CallableRequest } from "firebase-functions/v2/https";
 
-import { APP_URL, GMAIL_APP_PASSWORD, SUPER_ADMIN_EMAILS } from "./config";
+import { APP_URL, GMAIL_APP_PASSWORD, SUPER_ADMIN_EMAILS, isTestEmail } from "./config";
 import { sendMail, sendMany } from "./email";
 import { inviteEmail, characterReminder, rsvpReminder } from "./templates";
 
@@ -78,8 +78,9 @@ export const onAllowlistInvite = onDocumentCreated(
   async (event) => {
     const data = event.data?.data();
     const email = (data?.email as string) ?? event.params.email;
-    // Don't email bootstrap/seed entries (e.g. the admin themselves).
-    if (!email || data?.addedBy === "bootstrap") {
+    // Don't email bootstrap/seed entries (e.g. the admin themselves) or the
+    // agent test accounts, which have no real mailbox and would bounce.
+    if (!email || data?.addedBy === "bootstrap" || isTestEmail(email)) {
       logger.info("Skipping invite", { email, addedBy: data?.addedBy });
       return;
     }
@@ -106,6 +107,9 @@ export const resendInvite = onCall(
     if (!email.includes("@")) {
       throw new HttpsError("invalid-argument", "A valid email is required.");
     }
+    if (isTestEmail(email)) {
+      throw new HttpsError("invalid-argument", "That's a test account — no mailbox to invite.");
+    }
     await sendMail(inviteEmail(email, APP_URL.value()));
     return { ok: true };
   },
@@ -130,10 +134,13 @@ export const sendReminders = onCall(
     const appUrl = APP_URL.value();
 
     const membersSnap = await db.collection("allowlist").get();
-    const members = membersSnap.docs.map((d) => ({
-      email: (d.data().email as string) ?? d.id,
-      playerType: (d.data().playerType as PlayerType) ?? "player",
-    }));
+    const members = membersSnap.docs
+      .map((d) => ({
+        email: (d.data().email as string) ?? d.id,
+        playerType: (d.data().playerType as PlayerType) ?? "player",
+      }))
+      // Agent test accounts have no real mailbox — never remind them.
+      .filter((m) => !isTestEmail(m.email));
 
     if (kind === "character") {
       const playersSnap = await db.collection("players").get();
