@@ -1,0 +1,903 @@
+ CATACOMBS   & STARSPAWNS        ®
+
+
+
+
+P L AY E R ’ S H A N D B O O K
+                                                Chapter 1
+                           Creating a Character
+      Intro                                                 3: Determine Ability Scores. Allocate
+                                                            and calculate the total of your Ability
+      Character creation in C&S follows a                   Scores and Ability Modifiers. Much of
+      framework broadly similar to that of the              what you character does in the game
+      latest edition of D&D (5e). However,                  depends on the characters six abilities.
+      adventurers in C&S are referred to as                 4: Select and Equip Armor. Select the
+      hunters, reflecting the darker themes and             armor that fits best with your build, or just
+      setting of the world.                                 choose whatever armor you feel like.
+                                                            5: Fill in Details. Using the choices you
+      Create Your Character                                 have made, fill in the remaining details on
+                                                            your character sheet.
+      Here are the steps to make a character;
+      each step is explored in detail in this
+      chapter. At the end of this chapter there is
+      a character sheet where all the spaces are            Step 1: Choose a Class
+      labeled with a number that corresponds                In C&S, you have six classes to choose
+      with each of these steps.                             from. Below is a two-part Class Overview
+                                                            intended to give you a general
+      1: Choose a Class. Every hunter is a                  understanding of each class. For more
+      member of a class. This will make the                 detailed information on each class, see
+      biggest part of your build.                           Chapter 2. For now, simply choose your
+      2: Determine a Background. What did                   class and note your Armor Training on
+      your character do before becoming a                   your Character Sheet. We will come back
+      hunter? This will determine some more                 to your chosen class in later steps.
+      attributes about your characters such as
+      skills.
+
+
+
+     Class Overview Part 1
+     Class        Primary Ability Saving Throw LVL 1 HP   Starting equipment                                Speed
+     Hunter       STR or DEX    STR + CON     D10         Tool Belt, 2 Blood vial, Greatsword,              30ft (6 sq)
+     Brute                                                Shortsword and Rope
+     Hunter       DEX and WIS   STR + DEX     D10         Tool Belt, 1 Blood vial, 18 bullets, Hunter       35ft (7 sq)
+     Scout                                                Ri e, Hunter Cleaver,, Pistol and Bandolier
+     Hunter       DEX           DEX + INT     D8          Tool Belt, 1 Blood vial, 4 bullets, Scimitar, 4   30ft (6 sq)
+     Stalker                                              Daggers, Pistol and Thieves Tools
+     Hunter       INT           INT + WIS     D6          Tool Belt, 1 Blood vial, Sickle, 2 Daggers,       30ft (6 sq)
+     Deepcaller                                           Book (eldrich knowledge) and Robe
+     Hunter     CON             STR + CON     D12         Tool Belt, 3 Blood vial, Greataxe, 2       30ft (6 sq)
+     Bloodbound                                           Handaxes and Blood-drainer’s Tools (unique
+                                                          item)
+     Hunter       WIS and CHA   WIS + CHA     D10         Tool Belt, 1 Blood vial, Hunter Ri e, 10          30ft ((6 sq)
+     Warden                                               bullets, Longsword, Navigators Tools, Bell,
+                                                          Bandolier and 2 Hunting Traps
+
+
+                           fl
+fl
+Class Overview Part 2
+
+Class        Skill pro ciencies                           Weapon Pro ciencies Tool Pro ciencies Armor Training
+Hunter       Choose 2: Acrobatics, Athletics, Grit,       Simple and Martial     __                Light armor;
+Brute        Perception, Survival or Intimidation         weapons                                  Medium armor;
+                                                                                                   Heavy armor
+Hunter       Choose 3: Animal Handling, Athletics,        Simple and Martial     __                Light armor;
+Scout        Stealth, Survival, Investigation or          weapons                                  Medium armor
+             Perception
+Hunter       Choose 2: Acrobatics, Athletics,             Simple weapons and     Thieves Tools     Light armor
+Stalker      Deception, Insight, Intimidation,            Martial weapons that
+             Investigation, Perception, Sleight of Hand   have the Finesse or
+             or Stealth                                   Light property
+Hunter       Choose 2: Eldrich Knowledge, Old World       Simple weapons         __                Light armor
+Deepcaller   History, Investigation, Insight, Blood
+             Nature, Religion or Deception
+Hunter     Choose 2: Grit, Blood Nature, Athletics,       Simple and Martial     Blood-drainer’s     Light and
+Bloodbound Intimidation, Medicine, Perception or          weapons                Tools (unique item) Medium armor
+           Survival
+Hunter       Choose 2: Perception, Investigation,         Simple and Martial     __                Light, Medium
+Warden       Animal Handling, Survival, Presence or       weapons                                  and Heavy
+             Persuasion                                                                            armor
+
+
+
+
+ Step 2: Determine a Background                               Note Proficiencies. Your background
+                                                              gives proficiency in two skills and with
+ A character’s background is the                              one tool. Record this information on your
+ occupation that was most formative for                       character sheet.
+ the character before becoming a Hunter. A                    Your class also gives proficiencies. Check
+ background gives your character a Feat                       your class description in chapter 2 or in
+ and Proficiency with two skills and with                     the Class Overview above, and note the
+ one tool, and lastly gives some more                         proficiencies on your character sheet.
+ points towards a selection of Ability                        On the sample character sheet, you can
+ Scores. You can choose whatever                              indicate proficiency in skills and saving
+ background you want, see all the                             throws by marking the circle next to them.
+ Backgrounds in chapter 3. When you                           The features table in your class
+ have chosen you characters background,                       description (chapter 2) shows your
+ write it down on your character sheet. The                   Proficiency Bonus, which is +2 for a level
+ background you choose influences step 3,                     1 character. Note this number on your
+ when you determine your characters                           character sheet. You'll fill in other
+ ability scores.                                              numbers connected to these proficiencies
+                                                              in step 5.
+ Record Your Feat. A background gives
+ you a feat, which grants your character
+ particular capabilities. Feats are detailed
+ in chapter 5 of the original DnD Player’s
+ Handbook. Buy it or just look it up online
+ or something.
+
+
+
+  fi
+  fi    fi
+     Step 3: Determine Ability Scores               DETERMINE ABILITY MODIFIERS
+                                                    Finally, determine your ability modifiers
+     Your character has six Ability Scores:         using the Ability Scores and Modifiers
+     Strength (STR), Dexterity (DEX),               table. Write down the modifier next to
+     Constitution (CON), Intelligence (INT),        each of your scores in your character
+     Wisdom (WIS), and Charisma (CHR). To           sheet.
+     determine these scores, use the Point Cost
+     system below.
+                                                    Ability Scores and Modi ers
+
+     ASSIGN ABILITY SCORES                            Score     Modi er      Score    Modi er
+     You have 27 points to spend on your                3          -4        12-13       +1
+     Ability Scores. The cost of each score is
+                                                        4-5        -3        14-15       +2
+     shown in the Ability Score Point Costs
+     table. For example, purchasing a score of          6-7        -2        16-17       +3
+
+     14 to Wisdom costs 7 points from your              8-9        -1        18-19       +4
+     27-point pool.                                    10-11      +0          20         +5
+
+
+     Ability Score Point Costs
+
+       Score       Cost          Score   Cost
+         8          0             12       4
+         9          1             13       5
+         10         2             14       7
+         11         3             15       9
+
+
+     During this step, no Ability Score can be
+     higher than 15, but it can go higher
+     already in the next step when we account
+     for your chosen background, or as your
+     character gains levels, features, and other
+     benefits. But Ability Scores only increase
+     to a maximum of 20 even if your
+     character is at max level.
+
+     ADJUST ABILITY SCORES
+     After assigning your ability scores, adjust
+     them according to your background. Your
+     background lists three abilities; increase
+     one of those scores by 2 and a different
+     one by 1, or increase all three by 1. Again;
+     none of these increases can raise a score
+     above 20. Now note down your Ability
+     Scores on your character sheet.
+
+
+
+
+fi
+fi                        fi
+          Step 4: Select and Equip Armor                 certain items are tracked by item slots
+                                                         instead of only by weight.
+          This chapter explains how to select armor,
+          calculate Armor Class (AC), track carried      1: CHOSE AND EQUIP ARMOR
+          weight, and determine how your character       In this step, you select your armor and
+          stores and carries equipment.                  equip it to your character.
+          ARMOR CLASS                                    A major part of C&S is being able to
+          A character’s Armor Class, or AC,              visualize your hunter in the world. Armor
+          represents how difficult that character is     is not only a number on your Character
+          to wound in combat. A higher AC makes it       Sheet. It is something your character
+          harder for enemies to hit you with attacks.    wears and utilizes.
+          Calculating AC. All character’s start with     Use the following visualization order
+          the same base AC calculation:                  when equipping your character.
+          Base AC (unarmored) = 10 + the                 Step Layer         Rule
+          character’s Dexterity modifier                   1   Background When unarmored, your character
+                                                               Garments   is still wearing their Background
+          A character’s AC can then be modified by                        Garments.
+          armor, spells, and more.                         2   Main Armor   If you wear Main Armor, it is worn
+                                                                            over your Background Garments.
+          Only One Base AC. Some spells and class          3   Add-on       Add-on Armor is worn over your
+          features give characters a different way to          Armor        Main Armor, unless a speci c
+                                                                            item says otherwise.
+          calculate their AC. A character with
+          multiple features that give different ways       4   Extras and   Add any Extras, Class-speci c
+                                                               Speci c      Equipment, or Background-
+          to calculate AC must choose which one to             Gear         speci c Equipment.
+          use; only one base calculation can be in
+                                                           5   Carried      Decide how your weapons, tools,
+          effect for a character.                              Items        supplies, and other items are
+                                                                            stored or carried.
+          During character creation, you only need
+          to do the following:                           It is the player’s responsibility to know
+          1. Chose and equip your armor.                 what their character brings into the world
+          2. Calculate your Armor Class.                 and to make use of the advantages their
+          3. Add up your carried weight.                 gear provides during play. Having a clear
+          4. Check your item slots.                      visual image of your character helps
+          5. Record the final values on your             support that.
+              Character Sheet.
+
+          C&S uses the equipment rules from the
+          Official Player’s Handbook as a
+          foundation, but some parts have been
+          changed to better fit the tone and structure
+          of this game. Armor is more modular,
+          carried equipment is more visual, and
+
+
+
+fi                            fi
+                         fi
+     fi
+Armor Types. C&S separates armor into
+several armor types. These determine how
+many pieces you can wear and how they
+interact with your AC. This chapter
+explains how to select armor, calculate
+Armor Class (AC), track carried weight,
+and determine how your character stores
+and carries equipment
+
+ Armor Type      Rule
+ Main Armor      You may wear only one Main
+                 Armor.
+Add-on Armor     You may wear a maximum of ve
+                 Add-on Armor pieces.
+Armor Upgrade Armor Upgrades modify armor
+              pieces. They are not Add-on
+              Armor pieces.
+    Extra        You may wear only one Extra per
+                 subcategory.
+ Shield Arm      A pauldron and vambrace worn on
+                 the same arm count together as
+                 one Shield Arm and give +2 AC
+                 total. You can bene t from only
+                 one Shield Arm at a time.
+
+
+Now choose your armor on the next
+pages.
+
+
+
+
+                     fi
+            fi
+          Armor Part 1
+               Armor                       Type           AC          Weight    Special
+               Hunter Leather Vest         Main Armor     AC 11       6 lb.     Open Movement. You have advantage on
+                                                                                Strength (Athletics) checks made to climb,
+                                                                                vault, or jump while wearing this armor.
+               Hunter Leather Jacket       Main Armor     AC 11       6 lb.     Balanced Fit. You may wear one Add-on
+                                                                                Armour piece without it counting toward
+                                                                                your maximum number of Add-on Armour
+                                                                                pieces.
+               Hunter Leather Coat         Main Armor     AC 11       7 lb.     Blood-Slick Coat. The rst time you are hit
+                                                                                by a melee attack after rolling initiative,
+                                                                                reduce the damage by an amount equal to
+                                                                                your Pro ciency Bonus.
+               Reinforced Hunter           Main Armor     AC 12       10 lb.    Open Movement. You have advantage on
+               Leather Vest                                                     Strength (Athletics) checks made to climb,
+                                                                                vault, or jump while wearing this armor.
+               Reinforced Hunter           Main Armor     AC 12       10 lb.    Balanced Fit. You may wear one Add-on
+               Leather Jacket                                                   Armour piece without it counting toward
+                                                                                your maximum number of Add-on Armour
+                                                                                pieces.
+               Reinforced Hunter           Main Armor     AC 12       11 lb.    Blood-Slick Coat. The rst time you are hit
+               Leather Coat                                                     by a melee attack after rolling initiative,
+                                                                                reduce the damage by an amount equal to
+                                                                                your Pro ciency Bonus.
+               Full Leather Cuirass        Add-on Armor   +2 AC       10 lb.    You have disadvantage on Dexterity
+                                                                                (Stealth) checks made to hide or move
+                                                                                silently.
+               Leather Pauldron, Right     Add-on Armor   +1 AC       2 lb.     May give Shield Arm.
+               Leather Pauldron, Left      Add-on Armor   +1 AC       2 lb.     May give Shield Arm.
+               Leather Vambrace, Right Add-on Armor       +0 AC       2 lb.     May give Shield Arm.
+               Leather Vambrace, Left      Add-on Armor   +0 AC       2 lb.     May give Shield Arm.
+               Under Layer Leather         Add-on Armor   +1 AC*      2 lb.     *Only gives AC while wearing it underneath
+               Jerkin                                                           Main Armor. Can store and conceal
+                                                                                Insigni cant items, making them harder to
+                                                                                steal, nd, or strip away.
+               Studs                       Armor Upgrade +1 AC / +2 AC +3 lb.   Studs can be added to Add-on Armour
+                                                                       per      pieces. If at least one Add-on Armour piece
+                                                                       studde   is studded, you gain +1 AC. If ve Add-on
+                                                                       d Add-   Armour pieces are studded, this bonus
+                                                                       on       increases to +2 AC. While wearing studded
+                                                                       Armour   armour, you have disadvantage on Dexterity
+                                                                       piece    (Stealth) checks made to hide or move
+                                                                                silently.
+
+
+
+
+                                      fi
+                             fi
+                             fi
+          fi
+          fi
+     fi
+fi
+Armor Part 2
+Armor                 Type            AC   Weight   Special
+Tricorn               Extra: Head     0    1 lb.    May hide face transformations. Gives
+                      Gear                          impression of someone who is a hard hitting
+                                                    brawler.
+Cavalier Hat          Extra: Head     0    1 lb.    May hide face transformations. Gives
+                      Gear                          impression of someone who is dexterous.
+Cowl                  Extra: Head     0    1 lb.    May hide face transformations. Gives
+                      Gear                          impression of someone who has old
+                                                    knowledge.
+Wide Brim Hat         Extra: Head     0    1 lb.    May hide face transformations. Gives
+                      Gear                          impression of someone who is a skilled
+                                                    marksman.
+Small Scarf           Extra: Scarf    0    1 lb.    May hide face transformations, but gives
+                                                    little protection against smoke, ash, cold, or
+                                                    stench.
+Large Scarf           Extra: Scarf    0    2 lb.    May give advantage when concealing all
+                                                    your transformations. Can give protection
+                                                    against smoke, ash, or stench.
+Leather Gloves        Extra: Gloves   0    2 lb.    May give advantage against hand injury,
+                                                    heat, glass, bites, thorns, and dangerous
+                                                    substances, but gives disadvantage on
+                                                    delicate hand tasks and small rearm
+                                                    reloading.
+Leather Boots         Extra: Boots    0    2 lb.    Prevents barefoot penalties.
+
+
+
+
+                 fi
+               2: CALCULATE YOUR ARMOR CLASS                           weight, compare it to the table below and
+               Your Light, Medium or Heavy Armor                       record your total carried weight on your
+               Category determines how much of your                    Character Sheet..
+               Dexterity modifier you can add to AC.
+                                                                       Total Weight   Condition E ect
+                 Category     AC Total     Dexterity Rule
+                                                                       No more than Featherw       Your speed increases by
+                Unarmored     10 AC        Add your full Dexterity     Strength × 2 eight          5 ft.
+                                           modi er.                         lb.
+
+                Light Armor   11–12 AC Add your full Dexterity          More than     Encumber Your speed is reduced
+                                       modi er.                        Strength × 5   ed       by 10 ft.
+                                                                            lb.
+               Medium Armor 13–14 AC Add your Dexterity
+                                     modi er, up to a                   More than    Heavily  Your speed is reduced
+                                     maximum of +2.                    Strength × 10 Encumber by 20 ft. You have
+                                                                            lb.      ed       disadvantage on
+               Heavy Armor    15+ AC       Do not add your Dexterity                          Strength and Dexterity,
+                                           modi er.                                           ability checks, attack
+                                                                                              rolls, and saving throws.
+                                                                        More than    Over          You cannot carry this
+               Once you have selected your armor,                      Strength × 15 Capacity      weight normally.
+                                                                            lb.
+               calculate your AC using the steps below.
+
+               1. Start with 10 AC if unarmored, or
+                  replace it with your Main Armor                      4: CHECK YOUR ITEM SLOTS
+                  value.                                               In addition to weight, C&S uses item
+               2. Add AC bonuses from Add-on Armor                     carrying categories to determine how
+                  and Armor Upgrades.                                  easily your character can carry, store, and
+               3. Find your final base armor AC before                 access equipment. These categories are
+                  Dexterity is added.                                  separate from equipment categories such
+               4. Use that base armor AC to determine                  as Weapons, Armor, Tools, and
+                  whether your armor is Light, Medium,                 Adventuring Gear. For example, a pistol is
+                  or Heavy.                                            still a weapon, but it is also a Significant
+               5. Add your Dexterity modifier                          Item for carrying purposes.
+                  according to your Armor Category.
+                                                                        Carrying      Examples
+               6. Record your final AC on your                          Category
+                  Character Sheet.
+                                                                       Insigni cant   Key, letter, map, coin, ring, signet,
+                                                                           Items      parchment, blood vial, supplies, kit,
+               3: ADD UP YOUR CARRIED WEIGHT                                          tools, set
+               C&S uses carried weight to determine                     Signi cant    Dagger, handaxe, rope, pistol, ri e,
+               whether your character is moving freely,                   Items       chain, longsword, lantern, shovel,
+               carrying a heavy load, or overburdened.                                crowbar, tool belt, bandolier
+               Your total carried weight includes                       Oversized     Great weapon, heavy crate, large
+               weapons, armor, tools, adventuring gear,                  Items        chest, barrel, corpse, ladder
+
+               storage gear, and any other physical items
+               your character carries.
+               After choosing your armor and
+               equipment, add up your total carried
+
+
+
+
+ff   fi
+     fi
+     fi
+     fi
+     fi   fi                          fl
+By default your character has unlimited
+insignificant item slots and 3 significant
+item slots. You also have your hands
+which in addition can carry a total of
+either 2 significant items or 1 oversized
+item. This represent items carried at your
+front, back, hip as well as what you are
+actively holding in your hands. Keep in
+mind that holding something in your hand
+at all times prevents your hands to be free
+to do other interactions. You can add slots
+for significant items by equipping a
+backpack, bandolier or tool belt.
+
+5: RECORD THE FINAL VALUES ON
+YOUR CHARACTER SHEET
+Now you have selected and equipped all
+your armor and equipment. Now make
+sure you have noted down everything.
+- What armor you are wearing
+- What equipment you have
+- Use of item slots
+- Your final AC
+- Wearing light, medium or heavy armor
+- How much are you carrying
+- How well you are carrying your
+   equipment
+Chapter 2
+Classes
+Core Hunter Brute Traits                             You have honed your martial prowess and
+                                                     gain a Fighting Style feat of your choice
+Hit Point Die              D10 per Hunter Brute
+                           level
+                                                     (see chapter 4). Whenever you gain a
+                                                     Fighter level, you can replace the feat you
+Max Sanity                 12
+                                                     chose with a different Fighting Style feat.
+Sanity Die                 D12
+Saving Throw Pro ciencies Strength and               LEVEL 1: WEAPON MASTERY
+                          Constitution               Your training with weapons allows you to
+Skill Pro ciencies         Choose 2: Acrobatics,     use the mastery properties of three kinds
+                           Athletics, Grit,          of Simple or Martial weapons of your
+                           Perception, Survival or
+                           Intimidation
+                                                     choice. Whenever you finish a Long Rest,
+                                                     you can practice weapon drills and change
+Wapon Pro ciencies         Simple and Martial
+                           weapons
+                                                     one of those weapon choices.
+                                                     When you reach certain Fighter levels,
+Tool Pro ciencies          None
+                                                     you gain the ability to use the mastery
+Armor Training             Light, Medium, and        properties of more kinds of weapons, as
+                           Heavy armor
+                                                     shown in the Weapon Mastery column of
+Starting Equipment         Greatsword,               the Hunter Brute Features table.
+                           Shortsword and Rope
+Speed                      30ft (6 sq)               LEVEL 2: ACTION SURGE
+                                                     You can push yourself beyond your
+The first hunters learned quickly that               normal limits for a moment. On your turn,
+silvered words and clever plans mean                 you can take one additional action.
+little when a Dreadblood breaks the line.            Once you use this feature, you can't do so
+Brutes are the iron answer to that horror:           again until you finish a Short or Long
+scarred front-line killers who meet                  Rest. Starting at level 17, you can use it
+monstrosity with muscle, rage, and the               twice before a rest but only once on a
+stubborn refusal to die.                             turn.
+
+Becoming a Hunter Brute                              LEVEL 2: REFUSE THE BLEEDING
+                                                     When you take damage, you may use your
+AS A LEVEL 1 CHARACTER                               reaction and expend one use of Refuse the
+• Gain all the traits in the Core Hunter             Bleeding to reduce the incoming damage
+Brute Traits table.                                  by 1d10 + your Hunter Brute level.
+• Gain the Hunter Brute’s level 1 features,          You regain one expended use when you
+which are listed in the Hunter Brute                 finish a short rest, and you regain all
+Features table.                                      expended uses when you finish a long
+                                                     rest.
+FIGHTER CLASS FEATURES
+As a Fighter, you gain the following class
+features when you reach the specified
+Fighter levels. These features are listed on
+the Fighter Features table.
+
+LEVEL 1: FIGHTING STYLE
+
+
+
+
+ fi
+ fi   fi     fi
+     Hunter Brute Features
+
+     Level Pro ciency Bonus Class Features                                 Refuse the Bleeding Weapon Mastery
+       1          +2         Fighting Style, Weapon Mastery                        2                 3
+       2          +2         Action Surge (one use), Refuse the Bleeding           2                 3
+       3          +2         Hunter Brute Subclass                                 2                 3
+       4          +2         Ability Score Improvement                             3                 4
+       5          +3         Extra Attack                                          3                 4
+       6          +3         Ability Score Improvement                             3                 4
+       7          +3         Subclass Feature                                      3                 4
+       8          +3         Ability Score Improvement                             3                 4
+       9          +4         War Master                                            3                 4
+      10          +4         Subclass Feature                                      4                 5
+      11          +4         Two Extra Attacks                                     4                 5
+      12          +4         Ability Score Improvement                             4                 5
+      13          +5         Studied Attacks                                       4                 5
+      14          +5         Ability Score Improvement                             4                 5
+      15          +5         Subclass Feature                                      4                 5
+      16          +5         Ability Score Improvement                             4                 6
+      17          +6         Action Surge (two uses)                               4                 6
+      18          +6         Subclass Feature                                      4                 6
+      19          +6         Epic Boon                                             4                 6
+      20          +6         Three Extra Attacks                                   4                 6
+
+
+     LEVEL 3: HUNTER BRUTE                                    LEVEL 5: EXTRA ATTACK
+     SUBCLASS                                                 You can attack twice instead of once
+     You gain a Hunter Brute subclass of your                 whenever you take the Attack action on
+     choice. The Battle Master or the                         your turn.
+     Champion subclasses are detailed after
+     this class's description. A subclass is a                LEVEL 9: WAR MASTER
+     specialization that grants you features at               When you attack with a weapon whose
+     certain Hunter Brute levels.                             mastery property you can use, you can
+                                                              replace that property with the Push, Sap,
+     LEVEL 4: ABILITY SCORE                                   or Slow property for that attack.
+     IMPROVEMENT
+     You gain the Ability Score Improvement
+     feat (see chapter 5) or another feat of your
+     choice for which you qualify. You gain
+     this feature again at Hunter Brute levels 6,
+     8, 12, 14, and 16.
+
+
+
+
+fi
+LEVEL 11: TWO EXTRA ATTACKS
+You can attack three times instead of once
+whenever you take the Attack action on
+your turn.
+
+LEVEL 13: STUDIED ATTACKS
+You study your opponents and learn from
+each attack you make. If you make an
+attack roll against a creature and miss,
+you have Advantage on your next attack
+roll against that creature before the end of
+your next turn.
+
+LEVEL 19: EPIC BOON
+You gain an Epic Boon feat (see chapter
+4) or another feat of your choice for
+which you quality.
+
+LEVEL 20: THREE EXTRA ATTACKS
+You can attack four times instead of once
+whenever you take the Attack action on
+your turn.
+Hunter Brute Subclasses                         Saving Throws. If a maneuver requires a
+                                                saving throw, the DC equals 8 plus your
+A Hunter Brute subclass is a                    Strength or Dexterity modifier (your
+specialization that grants you features at      choice) and Proficiency Bonus.
+certain Hunter Brute levels, as specified
+in the subclass. This section presents the      LEVEL 7: STUDENT OF WAR
+Battle Master and Champion subclasses.          You gain proficiency in one skill of your
+                                                choice from the skills available to Hunter
+Battle Master                                   Brutes at level 1.
+Master Sophisticated Battle Maneuvers           LEVEL 10: IMPROVED COMBAT
+                                                SUPERIORITY
+Battle Masters are students of the art of       Your Superiority Die becomes a d10.
+battle. The most accomplished Battle
+Masters are well-rounded figures who use        LEVEL 15: RELENTLESS
+their carefully honed combat skills.            Once per turn, when you use a maneuver,
+                                                you can roll 1d8 and use the number
+LEVEL 3: COMBAT SUPERIORITY                     rolled instead of expending a Superiority
+Your experience on the battlefield has          Die.
+refined your fighting techniques. You
+learn maneuvers that are fueled by special      LEVEL 18: ULTIMATE COMBAT
+dice called Superiority Dice.                   SUPERIORITY
+                                                Your Superiority Die becomes a d12.
+Maneuvers. You learn three maneuvers of
+your choice from the "Maneuver Options"
+section later in this subclass's description.
+Many maneuvers enhance an attack in
+some way. You can use only one
+maneuver per attack.
+You learn two additional maneuvers of
+your choice when you reach Hunter Brute
+levels 7, 10, and 15.
+Each time you learn new maneuvers, you
+can also replace one maneuver you know
+with a different one.
+Superiority Dice. You have four
+Superiority Dice, which are d8s. A
+Superiority Die is expended when you use
+it. You regain all expended Superiority
+Dice when you finish a Short or Long
+Rest.
+You gain an additional Superiority Die
+when you reach Hunter Brute levels 7
+(five dice total) and 15 (six dice total).
+MANEUVER OPTIONS                                Goading Attack. When you hit a creature
+The maneuvers are presented here in             with an attack roll, you can expend one
+alphabetical order.                             Superiority Die to attempt to goad the target
+Bait and Switch. When you're within 5           into attacking you. Add the Superiority Die
+feet of a creature on your turn, you can        to the attack's damage roll. The target must
+expend one Superiority Die and switch           succeed on a Wisdom saving throw or have
+places with that creature, provided you         Disadvantage on attack rolls against targets
+spend at least 5 feet of movement and the       other than you until the end of your next
+creature is willing and doesn't have the        turn.
+Incapacitated condition. This movement          Lunging Attack. As a Bonus Action, you
+doesn't provoke Opportunity Attacks.            can expend one Superiority Die and take the
+Roll the Superiority Die. Until the start of    Dash action. If you move at least 5 feet in a
+your next turn, you or the other creature       straight line immediately before hitting with
+(your choice) gains a bonus to AC equal         a melee attack as part of the Attack action
+to the number rolled.                           on this turn, you can add the Superiority Die
+Disarming Attack. When you hit a                to the attack's damage roll.
+creature with an attack roll, you can           Maneuvering Attack. When you hit a
+expend one Superiority Die to attempt to        creature with an attack roll, you can expend
+disarm the target. Add the Superiority Die      one Superiority Die to maneuver one of
+roll to the attack's damage roll. The target    your comrades into another position. Add
+must succeed on a Strength saving throw         the Superiority Die roll to the attack's
+or drop one object of your choice that it's     damage roll, and choose a willing creature
+holding, with the object landing in its         who can see or hear you. That creature can
+space.                                          use its Reaction to move up to half its Speed
+Distracting Strike. When you hit a creature     without provoking an Opportunity Attack
+with an attack roll, you can expend one         from the target of your attack.
+Superiority Die to distract the target. Add     Menacing Attack. When you hit a creature
+the Superiority Die roll to the attack's        with an attack roll, you can expend one
+damage roll. The next attack roll against the   Superiority Die to attempt to frighten the
+target by an attacker other than you has        target. Add the Superiority Die to the
+Advantage if the attack is made before the      attack's damage roll. The target must
+start of your next turn.                        succeed on a Wisdom saving throw or have
+Evasive Footwork. As a Bonus Action, you        the Frightened condition until the end of
+can expend one Superiority Die and take the     your next turn.
+Disengage action. You also roll the die and     Precision Attack. When you miss with an
+add the number rolled to your AC until the      attack roll, you can expend one Superiority
+start of your next turn.                        Die, roll that die, and add it to the attack
+Feinting Attack. As a Bonus Action, you         roll, potentially causing the attack to hit.
+can expend one Superiority Die to feint,
+choosing one creature within 5 feet of
+yourself as your target.
+You have Advantage on your next attack roll
+against that target this turn. If that attack
+hits, add the Superiority Die to the attack's
+damage roll.
+Pushing Attack. When you hit a creature           devastating blows, withstand peril, and
+with an attack roll using a weapon or an          garner glory. Even in a bloody battle,
+Unarmed Strike, you can expend one                Champions strive for the crown of the
+Superiority Die to attempt to drive the target    victor.
+back. Add the Superiority Die to the attack's
+damage roll. If the target is Large or smaller,   LEVEL 3: IMPROVED CRITICAL
+it must succeed on a Strength saving throw        Your attack rolls with weapons and
+or be pushed up to 15 feet directly away          Unarmed
+from you.                                         Strikes can score a Critical Hit on a roll of
+Riposte. When a creature misses you with a        19 or 20 on the d20.
+melee attack roll, you can take a Reaction
+and expend one Superiority Die to make a          LEVEL 7: ADDITIONAL FIGHTING
+melee attack roll with a weapon or an             STYLE
+Unarmed Strike against the creature. If you       You gain another Fighting Style feat of
+hit, add the Superiority Die to the attack's      your choice.
+damage.
+Sweeping Attack. When you hit a creature          LEVEL 10: FEROCIOUS WARRIOR
+with a melee attack roll using a weapon or        The thrill of battle drives you toward
+an Unarmed Strike, you can expend one             victory. During combat, you can give
+Superiority Die to attempt to damage              yourself Blood Tinge whenever you start
+another creature. Choose another creature         your turn without it.
+within 5 feet of the original target and
+within your reach. If the original attack roll    LEVEL 15: SUPERIOR CRITICAL
+would hit the second creature, it takes           Your attack rolls with weapons and
+damage equal to the number you roll on            Unarmed Strikes can now score a Critical
+your Superiority Die. The damage is of the        Hit on a roll of 18-20 on the d20.
+same type dealt by the original attack.
+Trip Attack. When you hit a creature with         LEVEL 18: SURVIVOR
+an attack roll using a weapon or an               You attain the pinnacle of resilience in
+Unarmed Strike, you can expend one                battle, giving you these benefits.
+Superiority Die and add the die to the            Defy Death. You have Advantage on
+attack's damage roll. If the target is Large or   Death Saving Throws. Moreover, when
+smaller, it must succeed on a Strength            you roll 18-20 on a Death Saving Throw,
+saving throw or have the Prone condition.         you gain the benefit of rolling a 20 on it.
+                                                  Feral Rally. At the start of each of your
+                                                  turns, you regain Hit Points equal to 5
+                                                  plus your Constitution modifier if you are
+Champion                                          Bloodied and have at least 1
+                                                  Hit Point.
+Pursue Physical Excellence in Combat
+
+A Champion focuses on the development
+of martial prowess in a relentless pursuit
+of victory. Champions combine rigorous
+training with physical excellence to deal
+Core Hunter Scout Traits
+                                                   LEVEL 1: HUNTERS MARK
+Hit Point Die              D10 per Hunter Scout
+                           level
+                                                   You can mark a creature with the Hunters
+                                                   Mark.
+Max Sanity                 12
+                                                   You can make four marks, and you regain
+Sanity Die                 D12                     all expended uses of this ability when you
+Saving Throw Pro ciencies Strength and Dexterity   finish a Long Rest.
+Skill Pro ciencies         Choose 3: Animal
+                                                   The number of times you can make a mark
+                           Handling, Athletics,    increases when you reach certain Hunter
+                           Stealth, Survival,      Scout levels, as shown in the Hunters Mark
+                           Investigation or
+                           Perception
+                                                   column of the Hunter Scout Features table.
+Wapon Pro ciencies         Simple and Martial
+                           weapons
+                                                   HUNTER'S MARK
+                                                   Use: Bonus Action
+Tool Pro ciencies          None
+                                                   Range: 90 feet
+Armor Training             Light and Medium
+                           armor
+                                                   You mark one creature you can see within
+Starting Equipment         Hunter Ri e (unique     range as your quarry. Until the mark ends,
+                           item), Hunter Cleaver
+                           (unique item) and       you deal an extra 1d6 damage to the target
+                           Pistol                  whenever you hit it with an attack roll. You
+Speed                      35ft (7 sq)             also have Advantage on any Wisdom
+                                                   (Perception or Survival) check you make to
+Before rifles became the hunter’s sacred           find it.
+thunder, Scouts were the first to prove that a     If the target drops to 0 Hit Points before the
+Dreadblood could be studied, stalked, and          Mark ends, you can take a Bonus Action to
+dropped from afar. They are pathfinders,           move the mark to a new creature you can
+marksmen, and survivalists who read the            see within range.
+land like scripture and kill before the dark
+can close its jaws.                                You can only mark one creature at a time. If
+                                                   you spend a Hunters Mark while another
+                                                   mark is active, the old mark disappears. If
+Becoming a Hunter Scout                            you take damage, you must succeed on a
+AS A LEVEL 1 CHARACTER                             Constitution saving throw to maintain the
+• Gain all the traits in the Core Hunter Scout     Hunters Mark. The DC equals 10 or half the
+Traits table.                                      damage taken (round down), whichever
+• Gain the Hunter Scout’s level 1 features,        number is higher, up to a maximum DC of
+which are listed in the Ranger Features            30. Your Hunters Mark ends if you have the
+table.                                             Incapacitated condition or you die.
+
+HUNTER SCOUT CLASS FEATURES
+As a Hunter Scout, you gain the following
+class features when you reach the specified
+Hunter Scout levels. These features are
+listed in the Hunter Scout Features table.
+
+
+
+
+ fi
+ fi   fl   fi   fi
+LEVEL 1: WEAPON MASTERY                        LEVEL 9: EXPERTISE
+Your training with weapons allows you to       Choose two of your skill proficiencies with
+use the mastery properties of two kinds of     which you lack Expertise. You gain
+weapons of your choice with which you          Expertise in those skills.
+have proficiency.
+Whenever you finish a Long Rest, you can       LEVEL 10: TIRELESS
+change the kinds of weapons you chose.         Primal forces now help fuel you on your
+                                               journeys, granting you the following
+LEVEL 2: EXPERTiSE                             benefits.
+Choose one of your skill proficiencies with    Temporary Hit Points. As an action, you
+which you lack Expertise. You gain             can give yourself a number of Temporary
+Expertise in that skill.                       Hit Points equal to 1d8 plus your Wisdom
+                                               modifier (minimum of 1). You can use this
+LEVEL 2: FIGHTING STYLE                        action a number of times equal to your
+You gain a Fighting Style feat of your         Wisdom modifier (minimum of once), and
+choice (see chapter 4).                        you regain all expended uses when you
+                                               finish a Long Rest.
+LEVEL 3: HUNTER SCOUT SUBCLASS                 Decrease Exhaustion. Whenever you finish
+You gain a Hunter Scout subclass of your       a Short Rest, your Exhaustion level, if any,
+choice. The Beast Caller and the Marksman      decreases by 1.
+subclasses are detailed after this class's
+description. A subclass is a specialization    LEVEL 13: RELENTLESS HUNTER
+that grants you features at certain Hunter     Taking damage can't remove your Hunter's
+Scout levels.                                  Mark.
+
+LEVEL 4: ABILITY SCORE                         LEVEL 17: PRECISE HUNTER
+IMPROVEMENT                                    You have Advantage on attack rolls against
+You gain the Ability Score Improvement         the creature currently marked by your
+feat (see chapter 4) or another feat of your   Hunter's Mark.
+choice for which you qualify. You gain this
+feature again at Hunter Scout levels 8, 12,    LEVEL 18: FERAL SENSES
+and 16.                                        Your instincts gives you Blindsight with a
+                                               range of 30 feet.
+LEVEL 5: EXTRA ATTACK
+You can attack twice instead of once           LEVEL 19: EPIC BOON
+whenever you take the Attack action on         You gain an Epic Boon feat (see chapter 4)
+your turn.                                     or another feat of your choice for which you
+                                               qualify.
+LEVEL 6: ROVING
+Your Speed increases by 10 feet while you      LEVEL 20: FOE SLAYER
+aren't wearing Heavy armor. You also have a    The damage die of your Hunter's Mark is a
+Climb Speed and a Swim Speed equal to          d10 rather than a d6.
+your Speed.
+     Hunter Scout Subclasses                          Beast's Strike action. If you have the
+                                                      Incapacitated condition, the beast acts on its
+     A Hunter Scout subclass is a                     own and isn't limited to the Dodge action.
+     specialization that grants you features at
+     certain Hunter Scout levels, as specified
+     in the subclass. This section presents the
+     Beast Caller and the Marksman
+     subclasses.
+
+     Beast Caller
+     Call on a beast from beyond time.
+
+     A Beast Caller forms a mystical bond with
+     a special beast, through old knowledge
+     signing a contract drawing on mysterious
+     forces from the unknown.                         Hound of Tindalos
+                                                      Medium Beast, Natural
+     LEVEL 3: PACT WITH A BEAST
+     You call upon a timeless beast, and through      AC 13 plus your Wisdom modi er
+     the Pact you form with it, the beast draws       HP 5 plus ve times your Hunter Scout level
+     upon your strength for better and for worse.     Speed 40 ft., Climb 40 ft.
+     See the stat block: Hound of Tindalos. The       Senses Darkvision 60 ft.; Passive Perception
+                                                      12
+     beast is Friendly to you and your allies and
+                                                      CR None (XP 0; PB equals your Pro ciency
+     obeys your commands. It vanishes if you
+                                                      Bonus)
+     die. It also vanishes if it drops to 0 Hit
+     Points or when its stated task is done.          Traits
+     Summoning the Beast. You can take an             Pact. Add your Pro ciency Bonus to any
+     action to expend a Hunters Mark to summon        ability check or saving throw the beast
+     the beast. The Hound of Tindalos manifest        makes. If the beast reaches 0 Hit Points, you
+     in an unoccupied space that you can see          need to make a Grit Saving Throw DC 16. If
+     within range of 90 feet. The beast will only     you succeed nothing happens. If you fail
+     show up to complete a specific task, either      loose Hit Points equals to 1d10 + your
+     to defeat your foes during combat or             Hunter Scout level + your Wisdom modi er
+     something else. The reason for you to call       and suffer 4 Madness.
+     upon it must be stated beforehand.
+     The Beast in Combat. In combat, the beast        Actions
+     acts during your turn. It can move and use       Beast’s Feral Strike. Melee Attack Roll:
+                                                      Bonus equals your Wisdom modi er + your
+     its Reaction on its own, but the only action
+                                                      Pro ciency Bonus, reach 5 ft. Hit: 2d6 + 2 +
+     it takes is the Dodge action to avoid danger,
+                                                      your Wisdom modi er Slashing damage. If
+     unless you take a Bonus Action to command        the beast moved at least 20 feet straight
+     it to take an action in its stat block or some   toward the target before the hit, the target
+     other action. You can also sacrifice one of      takes an extra 1d6 damage of Slashing
+     your attacks when you take the Attack            damage, and the target has the Prone
+     action to command the beast to take the          condition if it is a Large or smaller creature.
+
+
+
+
+                                            fi
+                                       fi
+                                  fi
+                 fi   fi
+         fi
+fi                           fi
+     DEEPENED PACT                                  will. In your hands, firearms are not
+     When you take a Bonus Action to                merely weapons, but instruments of
+     command your summoned Hound of                 execution, sending foes into eternal sleep
+     Tindalos to take an action, you can also       before they can raise a blade.
+     command it to take the Dash, Disengage,
+     Dodge, or Help action using its Bonus          LEVEL 3: DEADLY RIFLEMAN
+                                                    If you are using a Hunters Ri e, it now changes to
+     Action. In addition, whenever it hits with     Trained Hunters Ri e.
+     an attack roll and deals damage, it can
+     deal your choice of either Psychic,
+     Bludgeoning or Piercing damage, or its
+                                                     Trained   Damage:    Properties:    Mastery:   Weight:
+     normal damage type.                             Hunters   1d12       Ammunition     Slow       10 lb.
+                                                     Ri e      Piercing   (Range
+                                                                          150/600;
+     LEVEL 11: THE BEASTS BRUTALITY                                       Bullet) Two-
+     When you command your summoned                                       Handed
+
+     Hound of Tindalos to take the Beast’s
+     Feral Strike action, the beast can use it
+     twice. In addition, the first time each turn
+     it hits a creature under the effect of your
+     Hunters Mark, the beast deals extra
+     Piercing damage equal to the Hunters
+     Mark’s bonus damage.
+
+     LEVEL 15: ABSOLUTE PACT
+     Your summoned Hound of Tindalos now
+     gains the Final Carnage action. You can
+     now command your summoned Hound of
+     Tindalos to make an final attack. The
+     Final Carnage action uses the Beast’s
+     Feral Strike action four times. If you
+     command your summoned Hound of
+     Tindalos to take the Final Carnage action,
+     the beast Hit Points will reach 0 at the end
+     of the attack.
+
+
+     Marksman
+     You specialize in long-ranged firearms
+     and close-quarters punishment, forcing
+     enemies to fear both the distance between
+     you and the mistake of closing it.
+
+     Whether you unleash a storm of bullets or
+     deliver a single shot with surgical cruelty,
+     your rifle becomes an extension of your
+
+
+
+fl             fl      fl
+

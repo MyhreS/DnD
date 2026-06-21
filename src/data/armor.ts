@@ -126,6 +126,18 @@ export const ARMOR: ArmorPiece[] = [
       "*Only grants AC while worn underneath Main Armor. Can conceal Insignificant items, making them harder to steal or strip away.",
   },
 
+  // --- Armor Upgrades (modify armor pieces; not Add-on pieces) ---
+  {
+    id: "studs",
+    name: "Studs",
+    category: "Armor Upgrade",
+    ac: "+1 / +2 AC",
+    acValue: 1,
+    weightLb: 3,
+    special:
+      "Added to Add-on Armor pieces (+3 lb. each). One studded piece grants +1 AC; five studded pieces grant +2 AC. While wearing studded armor you have disadvantage on Dexterity (Stealth) checks to hide or move silently.",
+  },
+
   // --- Extras (flavour / utility, AC 0) ---
   {
     id: "tricorn",
@@ -162,6 +174,16 @@ export const ARMOR: ArmorPiece[] = [
     acValue: 0,
     weightLb: 1,
     special: "May hide face transformations. Reads as a skilled marksman.",
+  },
+  {
+    id: "small-scarf",
+    name: "Small Scarf",
+    category: "Extra",
+    ac: "0",
+    acValue: 0,
+    weightLb: 1,
+    special:
+      "May hide face transformations, but gives little protection against smoke, ash, cold or stench.",
   },
   {
     id: "large-scarf",

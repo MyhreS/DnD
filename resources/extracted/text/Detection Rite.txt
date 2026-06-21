@@ -1,0 +1,73 @@
+     DETECT ELDRITCH PRESENCE
+     Level 1
+
+     Type: Detection Rite
+     Performing: Action
+     Range: Self
+     Duration: Concentration, up to 20 rounds
+
+     For the duration, you sense eldritch presence if any, within 30 feet of you. If you sense such a
+     presence, you can take the Rite Action to learn its direction and approximate distance: Close,
+     Away, or Far.
+     If the presence is Close and was created by a Rite, you also learn the Rite’s type.
+
+
+
+     ELDRITCH EYE
+     Level 1
+
+     Type: Detection Rite
+     Performing: Three Actions
+     Range: Self
+     Duration: Concentration, up to 20 rounds
+
+     You call upon a Patron that sees through distance, esh, and stone. Choose one creature on the
+     same plane of existence as you. The target must make a Wisdom saving throw, modi ed by how
+     well you know the target and what physical connection you have to it. The target does not know
+     what is watching it, only that something vast and unseen has turned its attention toward it.
+
+     Your Knowledge of the Target Is ...                 Save Modi er
+
+     Secondhand (heard of the target)                    +5
+     Firsthand (met the target)                          +0
+     Extensive (know the target well)                    -5
+
+     You Have the Target's ...                           Save Modi er
+
+     Picture or other likeness                           -2
+     Garment or other possession                         -4
+     Body part, lock of hair, or bit of nail             -10
+
+     On a successful save, the target is not a ected, and you can't perform this Rite on it again until
+     after a Long Rest.
+     On a failed save, the Patron opens an invisible, intangible eye within 10 feet of the target. For the
+     duration, you can see and hear through the eye as if you were there. The eye moves with the
+     target, remaining within 10 feet of it. If a creature can see the eye, it appears as a pale luminous
+     orb about the size of your st.
+
+
+
+
+                                                                                 fi
+                                               fl
+                                   ff
+                    fi
+fi
+fi
+     TRUE SEEING
+     Level 6
+
+     Type: Detection Rite
+     Performing: Action
+     Range: Touch
+     Duration: 20 rounds
+
+     You call upon a Patron that will show you what mortal eyes were never meant to witness. For the
+     duration, one willing creature you touch has Truesight with a range of 120 feet. The creature also
+     su ers 1 Madness.
+
+
+
+
+ff
+

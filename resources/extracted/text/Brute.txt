@@ -1,0 +1,232 @@
+     BECOMING A HUNTER BRUTE ...
+
+     AS A LEVEL 1 CHARACTER
+     • Gain all the traits in the Core Hunter Brute Traits table.
+     • Gain the Hunter Brute’s level 1 features, which are listed in the Hunter Brute Features table.
+
+     FIGHTER CLASS FEATURES
+     As a Fighter, you gain the following class features when you reach the speci ed Fighter levels.
+     These features are listed on the Fighter Features table.
+
+
+     LEVEL 1: FIGHTING STYLE
+     You have honed your martial prowess and gain a Fighting Style feat of your choice (see chapter
+     4). Whenever you gain a Fighter level, you can replace the feat you chose with a di erent Fighting
+     Style feat.
+
+     LEVEL 1: WEAPON MASTERY
+     Your training with weapons allows you to use the mastery properties of three kinds of Simple or
+     Martial weapons of your choice. Whenever you nish a Long Rest, you can practice weapon drills
+     and change one of those weapon choices.
+     When you reach certain Fighter levels, you gain the ability to use the mastery properties of more
+     kinds of weapons, as shown in the Weapon Mastery column of the Hunter Brute Features table.
+
+
+     LEVEL 2: ACTION SURGE
+     You can push yourself beyond your normal limits for a moment. On your turn, you can take one
+     additional action.
+     Once you use this feature, you can't do so again until you nish a Short or Long Rest. Starting at
+     level 17, you can use it twice before a rest but only once on a turn.
+
+     LEVEL 2: REFUSE THE BLEEDING
+     When you take damage, you may use your reaction and expend one use of Refuse the Bleeding
+     to reduce the incoming damage by 1d10 + your Hunter Brute level.
+     You regain one expended use when you nish a short rest, and you regain all expended uses
+     when you nish a long rest.
+
+     LEVEL 3: HUNTER BRUTE SUBCLASS
+     You gain a Hunter Brute subclass of your choice. The Battle Master or the Champion subclasses
+     are detailed after this class's description. A subclass is a specialization that grants you features at
+     certain Hunter Brute levels.
+
+     LEVEL 4: ABILITY SCORE IMPROVEMENT
+     You gain the Ability Score Improvement feat (see chapter 5) or another feat of your choice for
+     which you qualify. You gain this feature again at Hunter Brute levels 6, 8, 12, 14, and 16.
+
+     LEVEL 5: EXTRA ATTACK
+     You can attack twice instead of once whenever you take the Attack action on your turn.
+
+     LEVEL 9: WAR MASTER
+     When you attack with a weapon whose mastery property you can use, you can replace that
+     property with the Push, Sap, or Slow property for that attack.
+
+     LEVEL 11: TWO EXTRA ATTACKS
+     You can attack three times instead of once whenever you take the Attack action on your turn.
+
+     LEVEL 13: STUDIED ATTACKS
+     You study your opponents and learn from each attack you make. If you make an attack roll
+     against a creature and miss, you have Advantage on your next attack roll against that creature
+     before the end of your next turn.
+
+
+
+
+                                                                               ff
+                                                                        fi
+                                                      fi
+                                          fi
+                                   fi
+fi
+               LEVEL 19: EPIC BOON
+               You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you quality.
+
+               LEVEL 20: THREE EXTRA ATTACKS
+               You can attack four times instead of once whenever you take the Attack action on your turn.
+
+
+
+
+               HUNTER BRUTE SUBCLASSES
+               A Hunter Brute subclass is a specialization that grants you features at certain Hunter Brute levels,
+               as speci ed in the subclass. This section presents the Battle Master and Champion subclasses.
+
+               BATTLE MASTER
+               Master Sophisticated Battle Maneuvers
+
+               Battle Masters are students of the art of battle. The most accomplished Battle Masters are well-
+               rounded gures who use their carefully honed combat skills.
+
+               LEVEL 3: COMBAT SUPERIORITY
+               Your experience on the battle eld has re ned your ghting techniques. You learn maneuvers that
+               are fueled by special dice called Superiority Dice.
+
+               Maneuvers. You learn three maneuvers of your choice from the "Maneuver Options" section later
+               in this subclass's description. Many maneuvers enhance an attack in some way. You can use only
+               one maneuver per attack.
+               You learn two additional maneuvers of your choice when you reach Hunter Brute levels 7, 10, and
+               15.
+               Each time you learn new maneuvers, you can also replace one maneuver you know with a
+               di erent one.
+               Superiority Dice. You have four Superiority Dice, which are d8s. A Superiority Die is expended
+               when you use it. You regain all expended Superiority Dice when you nish a Short or Long Rest.
+               You gain an additional Superiority Die when you reach Hunter Brute levels 7 ( ve dice total) and 15
+               (six dice total).
+               Saving Throws. If a maneuver requires a saving throw, the DC equals 8 plus your Strength or
+               Dexterity modi er (your choice) and Pro ciency Bonus.
+
+               LEVEL 7: STUDENT OF WAR
+               You gain pro ciency in one skill of your choice from the skills available to Hunter Brutes at level 1.
+
+               LEVEL 10: IMPROVED COMBAT SUPERIORITY
+               Your Superiority Die becomes a d10.
+
+               LEVEL 15: RELENTLESS
+               Once per turn, when you use a maneuver, you can roll 1d8 and use the number rolled instead of
+               expending a Superiority Die.
+
+               LEVEL 18: ULTIMATE COMBAT SUPERIORITY
+               Your Superiority Die becomes a d12.
+
+               MANEUVER OPTIONS
+               The maneuvers are presented here in alphabetical order.
+               Bait and Switch. When you're within 5 feet of a creature on your turn, you can expend one
+               Superiority Die and switch places with that creature, provided you spend at least 5 feet of
+               movement and the creature is willing and doesn't have the Incapacitated condition. This
+               movement doesn't provoke Opportunity Attacks.
+               Roll the Superiority Die. Until the start of your next turn, you or the other creature (your choice)
+               gains a bonus to AC equal to the number rolled.
+
+
+
+
+                                                                                    fi
+                                                                           fi
+                                                        fi
+                                                 fi
+                                            fi
+                                 fi
+                     fi
+                fi
+          fi
+     fi
+ff
+Disarming Attack. When you hit a creature with an attack roll, you can expend one Superiority
+Die to attempt to disarm the target. Add the Superiority Die roll to the attack's damage roll. The
+target must succeed on a Strength saving throw or drop one object of your choice that it's
+holding, with the object landing in its space.
+Distracting Strike. When you hit a creature with an attack roll, you can expend one Superiority
+Die to distract the target. Add the Superiority Die roll to the attack's damage roll. The next attack
+roll against the target by an attacker other than you has Advantage if the attack is made before
+the start of your next turn.
+Evasive Footwork. As a Bonus Action, you can expend one Superiority Die and take the
+Disengage action. You also roll the die and add the number rolled to your AC until the start of your
+next turn.
+Feinting Attack. As a Bonus Action, you can expend one Superiority Die to feint, choosing one
+creature within 5 feet of yourself as your target.
+You have Advantage on your next attack roll against that target this turn. If that attack hits, add
+the Superiority Die to the attack's damage roll.
+Goading Attack. When you hit a creature with an attack roll, you can expend one Superiority Die
+to attempt to goad the target into attacking you. Add the Superiority Die to the attack's damage
+roll. The target must succeed on a Wisdom saving throw or have Disadvantage on attack rolls
+against targets other than you until the end of your next turn.
+Lunging Attack. As a Bonus Action, you can expend one Superiority Die and take the Dash
+action. If you move at least 5 feet in a straight line immediately before hitting with a melee attack
+as part of the Attack action on this turn, you can add the Superiority Die to the attack's damage
+roll.
+Maneuvering Attack. When you hit a creature with an attack roll, you can expend one Superiority
+Die to maneuver one of your comrades into another position. Add the Superiority Die roll to the
+attack's damage roll, and choose a willing creature who can see or hear you. That creature can
+use its Reaction to move up to half its Speed without provoking an Opportunity Attack from the
+target of your attack.
+Menacing Attack. When you hit a creature with an attack roll, you can expend one Superiority
+Die to attempt to frighten the target. Add the Superiority Die to the attack's damage roll. The
+target must succeed on a Wisdom saving throw or have the Frightened condition until the end of
+your next turn.
+Precision Attack. When you miss with an attack roll, you can expend one Superiority Die, roll that
+die, and add it to the attack roll, potentially causing the attack to hit.
+Pushing Attack. When you hit a creature with an attack roll using a weapon or an Unarmed
+Strike, you can expend one Superiority Die to attempt to drive the target back. Add the
+Superiority Die to the attack's damage roll. If the target is Large or smaller, it must succeed on a
+Strength saving throw or be pushed up to 15 feet directly away from you.
+Riposte. When a creature misses you with a melee attack roll, you can take a Reaction and
+expend one Superiority Die to make a melee attack roll with a weapon or an Unarmed Strike
+against the creature. If you hit, add the Superiority Die to the attack's damage.
+Sweeping Attack. When you hit a creature with a melee attack roll using a weapon or an
+Unarmed Strike, you can expend one Superiority Die to attempt to damage another creature.
+Choose another creature within 5 feet of the original target and within your reach. If the original
+attack roll would hit the second creature, it takes damage equal to the number you roll on your
+Superiority Die. The damage is of the same type dealt by the original attack.
+Trip Attack. When you hit a creature with an attack roll using a weapon or an Unarmed Strike, you
+can expend one Superiority Die and add the die to the attack's damage roll. If the target is Large
+or smaller, it must succeed on a Strength saving throw or have the Prone condition.
+
+
+
+
+CHAMPION
+Pursue Physical Excellence in Combat
+A Champion focuses on the development of martial prowess in a relentless pursuit of victory.
+Champions combine rigorous training with physical excellence to deal devastating blows,
+withstand peril, and garner glory. Even in a bloody battle, Champions strive for the crown of the
+victor.
+
+LEVEL 3: IMPROVED CRITICAL
+Your attack rolls with weapons and Unarmed
+Strikes can score a Critical Hit on a roll of 19 or 20 on the d20.
+
+LEVEL 7: ADDITIONAL FIGHTING STYLE
+You gain another Fighting Style feat of your choice.
+
+LEVEL 10: FEROCIOUS WARRIOR
+The thrill of battle drives you toward victory. During combat, you can give yourself Blood Tinge
+whenever you start your turn without it.
+
+LEVEL 15: SUPERIOR CRITICAL
+Your attack rolls with weapons and Unarmed Strikes can now score a Critical Hit on a roll of 18-20
+on the d20.
+
+LEVEL 18: SURVIVOR
+You attain the pinnacle of resilience in battle, giving you these bene ts.
+Defy Death. You have Advantage on Death Saving Throws. Moreover, when you roll 18-20 on a
+Death Saving Throw, you gain the bene t of rolling a 20 on it.
+Feral Rally. At the start of each of your turns, you regain Hit Points equal to 5 plus your
+Constitution modi er if you are Bloodied and have at least 1
+Hit Point.
+
+
+
+
+                                                          fi
+                             fi
+      fi
+

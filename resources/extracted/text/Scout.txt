@@ -1,0 +1,296 @@
+BECOMING A HUNTER SCOUT...
+
+AS A LEVEL 1 CHARACTER
+• Gain all the traits in the Core Hunter Scout Traits table.
+• Gain the Hunter Scout’s level 1 features, which are listed in the Ranger Features table.
+
+HUNTER SCOUT CLASS FEATURES
+As a Hunter Scout, you gain the following class features when you reach the speci ed Hunter
+Scout levels. These features are listed in the Hunter Scout Features table.
+
+LEVEL 1: HUNTERS MARK
+You can mark a creature with the Hunters Mark.
+You can make four marks, and you regain all expended uses of this ability when you nish a Long
+Rest.
+The number of times you can make a mark increases when you reach certain Hunter Scout levels,
+as shown in the Hunters Mark column of the Hunter Scout Features table.
+
+HUNTER'S MARK
+Use: Bonus Action
+Range: 90 feet
+
+You mark one creature you can see within range as your quarry. Until the mark ends, you deal an
+extra 1d6 damage to the target whenever you hit it with an attack roll. You also have Advantage
+on any Wisdom (Perception or Survival) check you make to nd it.
+If the target drops to 0 Hit Points before the Mark ends, you can take a Bonus Action to move the
+mark to a new creature you can see within range.
+
+You can only mark one creature at a time. If you spend a Hunters Mark while another mark is
+active, the old mark disappears. If you take damage, you must succeed on a Constitution saving
+throw to maintain the Hunters Mark. The DC equals 10 or half the damage taken (round down),
+whichever number is higher, up to a maximum DC of 30. Your Hunters Mark ends if you have the
+Incapacitated condition or you die.
+
+
+LEVEL 1: WEAPON MASTERY
+Your training with weapons allows you to use the mastery properties of two kinds of weapons of
+your choice with which you have pro ciency.
+Whenever you nish a Long Rest, you can change the kinds of weapons you chose.
+
+LEVEL 2: EXPERTiSE
+Choose one of your skill pro ciencies with which you lack Expertise. You gain Expertise in that
+skill.
+
+LEVEL 2: FIGHTING STYLE
+You gain a Fighting Style feat of your choice (see chapter 4).
+
+LEVEL 3: HUNTER SCOUT SUBCLASS
+You gain a Hunter Scout subclass of your choice. The Beast Caller and the Marksman subclasses
+are detailed after this class's description. A subclass is a specialization that grants you features at
+certain Hunter Scout levels.
+
+LEVEL 4: ABILITY SCORE IMPROVEMENT
+You gain the Ability Score Improvement feat (see chapter 4) or another feat of your choice for
+which you qualify. You gain this feature again at Hunter Scout levels 8, 12, and 16.
+
+LEVEL 5: EXTRA ATTACK
+You can attack twice instead of once whenever you take the Attack action on your turn.
+
+
+
+
+                                                                               fi
+                                                                          fi
+                                                  fi
+                          fi
+                 fi
+   fi
+     LEVEL 6: ROVING
+     Your Speed increases by 10 feet while you aren't wearing Heavy armor. You also have a Climb
+     Speed and a Swim Speed equal to your Speed.
+
+     LEVEL 9: EXPERTISE
+     Choose two of your skill pro ciencies with which you lack Expertise. You gain Expertise in those
+     skills.
+
+     LEVEL 10: TIRELESS
+     Primal forces now help fuel you on your journeys, granting you the following bene ts.
+     Temporary Hit Points. As an action, you can give yourself a number of Temporary Hit Points
+     equal to 1d8 plus your Wisdom modi er (minimum of 1). You can use this action a number of
+     times equal to your Wisdom modi er (minimum of once), and you regain all expended uses when
+     you nish a Long Rest.
+     Decrease Exhaustion. Whenever you nish a Short Rest, your Exhaustion level, if any, decreases
+     by 1.
+
+     LEVEL 13: RELENTLESS HUNTER
+     Taking damage can't remove your Hunter's Mark.
+
+     LEVEL 17: PRECISE HUNTER
+     You have Advantage on attack rolls against the creature currently marked by your Hunter's Mark.
+
+     LEVEL 18: FERAL SENSES
+     Your instincts gives you Blindsight with a range of 30 feet.
+
+     LEVEL 19: EPIC BOON
+     You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you qualify.
+
+     LEVEL 20: FOE SLAYER
+     The damage die of your Hunter's Mark is a d10 rather than a d6.
+
+
+
+     HUNTER SCOUT SUBCLASSES
+     A Hunter Scout subclass is a specialization that grants you features at certain Hunter Scout
+     levels, as speci ed in the subclass. This section presents the Beast Caller and the Marksman
+     subclasses.
+
+     BEAST CALLER
+     Call on a beast from beyond time.
+
+     A Beast Caller forms a mystical bond with a special beast, through old knowledge signing a
+     contract drawing on mysterious forces from the unknown.
+
+     LEVEL 3: PACT WITH A BEAST
+     You call upon a timeless beast, and through the Pact you form with it, the beast draws
+     upon your strength for better and for worse. See the stat block: Hound of Tindalos.
+     The beast is Friendly to you and your allies and obeys your commands. It vanishes if
+     you die. It also vanishes if it drops to 0 Hit Points or when its stated task is done.
+     Summoning the Beast. You can take an action to expend a Hunters Mark to summon
+     the beast. The Hound of Tindalos manifest in an unoccupied space that you can see
+     within range of 90 feet. The beast will only show up to complete a specific task,
+     either to defeat your foes during combat or something else. The reason for you to call
+     upon it must be stated beforehand.
+
+
+
+
+                                                                            fi
+                                     fi
+                                fi
+                           fi
+                      fi
+        fi
+fi
+     The Beast in Combat. In combat, the beast acts during your turn. It can move and use
+     its Reaction on its own, but the only action it takes is the Dodge action to avoid
+     danger, unless you take a Bonus Action to command it to take an action in its stat
+     block or some other action. You can also sacrifice one of your attacks when you take
+     the Attack action to command the beast to take the Beast's Strike action. If you have
+     the Incapacitated condition, the beast acts on its own and isn't limited to the Dodge
+     action.
+
+
+          Hound of Tindalos
+
+                           MOD   SAVE                      MOD        SAVE              MOD   SAVE
+
+
+            STR   14       +2    +2        DEX   18        +3         +3     CON   16   +3    +3
+
+
+            INT   4        -3    -3        WIS   14        +2         +2     CHA   5    -3    -3
+
+
+
+          Medium Beast, Natural
+
+          AC 13 plus your Wisdom modi er
+          HP 5 plus ve times your Hunter Scout level
+          Speed 40 ft., Climb 40 ft.
+          Senses Darkvision 60 ft.; Passive Perception 12
+          CR None (XP 0; PB equals your Pro ciency Bonus)
+
+          Traits
+          Pact. Add your Pro ciency Bonus to any ability
+          check or saving throw the beast makes. If the beast
+          reaches 0 Hit Points, you need to make a Grit
+          Saving Throw DC 16. If you succeed nothing
+          happens. If you fail loose Hit Points equals to 1d10
+          + your Hunter Scout level + your Wisdom modi er
+          and suffer 4 Madness.
+
+          Actions
+          Beast’s Feral Strike. Melee Attack Roll: Bonus
+          equals your Wisdom modi er + your Pro ciency
+          Bonus, reach 5 ft. Hit: 2d6 + 2 + your Wisdom
+          modi er Slashing damage. If the beast moved at
+          least 20 feet straight toward the target before the
+          hit, the target takes an extra 1d6 damage of
+          Slashing damage, and the target has the Prone
+          condition if it is a Large or smaller creature.
+
+
+
+
+                                                                              fi
+                                                                 fi
+                                                      fi
+                                            fi
+                                      fi
+                      fi
+     fi
+fi
+     LEVEL 7: DEEPENED PACT
+     When you take a Bonus Action to command your summoned Hound of Tindalos to take an action,
+     you can also command it to take the Dash, Disengage, Dodge, or Help action using its Bonus
+     Action. In addition, whenever it hits with an attack roll and deals damage, it can deal your choice
+     of either Psychic, Bludgeoning or Piercing damage, or its normal damage type.
+
+     LEVEL 11: THE BEASTS BRUTALITY
+     When you command your summoned Hound of Tindalos to take the Beast’s Feral Strike action,
+     the beast can use it twice. In addition, the rst time each turn it hits a creature under the e ect of
+     your Hunters Mark, the beast deals extra Piercing damage equal to the Hunters Mark’s bonus
+     damage.
+
+     LEVEL 15: ABSOLUTE PACT
+     Your summoned Hound of Tindalos now gains the Final Carnage action. You can now command
+     your summoned Hound of Tindalos to make an nal attack. The Final Carnage action uses the
+     Beast’s Feral Strike action four times. If you command your summoned Hound of Tindalos to take
+     the Final Carnage action, the beast Hit Points will reach 0 at the end of the attack.
+
+
+
+
+     MARKSMAN
+     You specialize in long-ranged rearms and close-quarters punishment, forcing enemies to fear
+     both the distance between you and the mistake of closing it.
+
+     Whether you unleash a storm of bullets or deliver a single shot with surgical cruelty, your ri e
+     becomes an extension of your will. In your hands, rearms are not merely weapons, but
+     instruments of execution, sending foes into eternal sleep before they can raise a blade.
+
+
+     LEVEL 3: DEADLY RIFLEMAN
+     If you are using a Hunters Ri e, it now changes to Trained Hunters Ri e.
+     Trained Hunters             Damage: 1d12             Properties:       Mastery: Slow                Weight: 10 lb.
+     Ri e                        Piercing                 Ammunition (Range
+                                                          150/600; Bullet)
+                                                          Two-Handed
+
+     If you are using a Pistol, it now changes to Trained Pistol.
+     Trained Pistol              Damage: 1d10             Properties:           Mastery: Vex             Weight: 3 lb.
+                                 Piercing                 Ammunition (Range
+                                                          30/90; Bullet) Light,
+                                                          Loading
+
+     LEVEL 3: HUNTER'S PREY
+     You gain one of the following feature options of your choice. Whenever you nish a Short or Long
+     Rest, you can replace the chosen option with the other one.
+     Colossus Slayer. Your tenacity can wear down even the most resilient foes. When you hit a
+     creature with a weapon, the weapon deals an extra 1d8 damage to the target if it's missing any of
+     its Hit Points. You can deal this extra damage only once per turn.
+     Horde Breaker. Once on each of your turns when you make an attack with a weapon, you can
+     make another attack with the same weapon against a di erent creature that is within 5 feet of the
+     original target, that is within the weapon's range, and that you haven't attacked this turn.
+
+     LEVEL 7: ELITE RIFLEMAN
+
+
+
+
+                                                                                                    fl
+                                                                                               ff
+                                                                                   fi
+                                                                            fl
+                                                              ff
+                                                     fi
+                                                fi
+                                         fi
+                            fi
+                       fl
+fl
+Before making an attack roll with your Trained Hunter’s Ri e, you may spend 1 Hunter’s Mark to
+gain mastery with that ri e for the attack if you do not already have it. When you do so, you may
+also replace the ri e’s mastery property for that shot with one of the following: Topple, Sap, or
+Push. The chosen mastery applies only to that attack.
+
+
+LEVEL 11: SUPERIOR HUNTER'S PREY
+Once per turn when you deal damage to a creature marked by your Hunter's Mark, you can also
+deal that marks extra damage to a di erent creature that you can see within 30 feet of the rst
+creature.
+
+LEVEL 15: DEATHMARK RIFLEMAN
+Gain the two following bene ts.
+Deathmark Shot. After you hit with an Attack Roll using your Trained Hunter’s Ri e, you may
+spend 1 Hunter’s Mark to turn the shot into a Deathmark Shot. Roll the attack’s damage once,
+then apply that same damage up to three times.
+You may apply all three instances of damage to the original target, or divide them among the
+original target and other creatures within the ri e’s normal range.
+
+Point-Blank Retort. When a creature within your pistol’s range deals melee damage to you, you
+may use your reaction and spend 1 Hunter’s Mark to immediately draw your pistol and make one
+pistol attack against that creature.
+
+
+
+
+                                                                               fi
+                                                                     fl
+                                              fl
+                                  fl
+                         ff
+                 fi
+            fl
+      fl
+

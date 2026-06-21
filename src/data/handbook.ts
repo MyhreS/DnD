@@ -133,16 +133,28 @@ export const HANDBOOK: HandbookChapter[] = [
     ],
   },
   {
-    id: "mechanics",
-    title: "Madness & Transform",
-    summary: "Two C&S-specific tracks kept alongside HP.",
+    id: "sanity",
+    title: "Sanity, Madness & Blood Tinge",
+    summary: "The mind's resilience against the truths of the night.",
     sections: [
       {
-        heading: "New mechanics (work in progress)",
+        heading: "Your Sanity pool",
         body: [
-          "Alongside Hit Points, hunters in C&S track two more resources: Madness and Transform. Your hunter card has a place to record both.",
-          "Madness reflects how much the truths of the night have frayed your mind; Transform reflects how far the old blood has taken hold of your body.",
-          "The full rules for both arrive with the updated handbook — this app will be updated to calculate them automatically once they're finalised.",
+          "Alongside Hit Points, every hunter has a Sanity score — a pool representing how well your mind holds together against the horrors of the hunt. Your class sets your starting maximum Sanity and your Sanity Die (for example the Brute's d12 or the Deepcaller's d20).",
+          "When the night frays your mind you suffer Madness: each point of Madness reduces your current Sanity. Your hunter card tracks current Sanity against your maximum.",
+        ],
+      },
+      {
+        heading: "Madness from forbidden power",
+        body: [
+          "Some power has a price paid in the mind. The Deepcaller suffers Madness each time they perform a Rite from the Book of the Deepcaller — and risks far worse by reaching past the limits of their Strain.",
+          "The Deepcaller's Fracturing Mind also permanently raises their maximum Sanity by 1 each time they level up, even as the forbidden knowledge takes its toll.",
+        ],
+      },
+      {
+        heading: "Blood Tinge",
+        body: [
+          "Blood Tinge is the C&S take on Heroic Inspiration. When you hold Blood Tinge you can spend it to reroll a d20. Your card tracks whether you're currently holding it.",
         ],
       },
       {

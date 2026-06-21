@@ -1,15 +1,29 @@
 import type { HunterCard } from "@/types";
-import { getClass } from "@/data/classes";
+import { getClass, getSubclass } from "@/data/classes";
 import { ARMOR_BY_ID } from "@/data/armor";
-import { ABILITIES, ABILITY_NAME, abilityModifier, formatModifier } from "@/data/abilities";
-import { armorClass, maxHp } from "@/lib/character";
+import { SKILLS_BY_ABILITY } from "@/data/skills";
+import { RITE_BY_ID } from "@/data/rites";
+import { ABILITIES, abilityModifier, formatModifier } from "@/data/abilities";
+import {
+  armorClass,
+  maxHp,
+  maxSanity,
+  proficiencyBonus,
+  saveModifier,
+  skillModifier,
+  riteStats,
+} from "@/lib/character";
 import { CreatureSprite } from "@/data/CreatureSprite";
 import { classCreatureId } from "@/data/creatures";
 
 export function HunterCardView({ card }: { card: HunterCard }) {
   const klass = getClass(card.classId);
+  const sub = getSubclass(card.classId, card.subclassId);
   const ac = armorClass(card.abilities, card.mainArmorId);
-  const hp = klass ? maxHp(klass, card.abilities) : null;
+  const lvl = card.level;
+  const prof = proficiencyBonus(lvl);
+  const hp = klass ? maxHp(klass, card.abilities, lvl) : null;
+  const san = klass ? maxSanity(klass, lvl) : null;
   const armor = card.mainArmorId ? ARMOR_BY_ID[card.mainArmorId] : null;
 
   return (
@@ -19,7 +33,7 @@ export function HunterCardView({ card }: { card: HunterCard }) {
           <p className="eyebrow">{klass ? klass.title : "Hunter"}</p>
           <h1 style={{ marginBottom: 2 }}>{card.name || "Unnamed Hunter"}</h1>
           <p className="muted" style={{ marginBottom: 0 }}>
-            {[card.background, klass ? `${klass.name} · Level ${card.level}` : null]
+            {[card.background, klass ? `${klass.name} · Level ${lvl}` : null, sub?.name]
               .filter(Boolean)
               .join(" · ")}
           </p>
@@ -36,14 +50,10 @@ export function HunterCardView({ card }: { card: HunterCard }) {
           <Stat label="Armor Class" value={ac.total} />
           <Stat label="Max HP" value={hp ?? "—"} />
           <Stat label="Speed" value={klass ? `${klass.speedFt}ft` : "—"} />
-          <Stat label="Prof." value="+2" />
-          <Stat label="Madness" value={card.madness ?? 0} />
-          <Stat label="Transform" value={card.transform ?? 0} />
+          <Stat label="Prof." value={formatModifier(prof)} />
+          <Stat label="Sanity" value={san ?? "—"} sub={klass ? `d${klass.sanityDie}` : undefined} />
+          <Stat label="Blood Tinge" value={card.bloodTinge ? "●" : "○"} />
         </div>
-        <p className="faint" style={{ fontSize: "0.74rem", marginTop: 10, marginBottom: 0 }}>
-          Madness &amp; Transform are tracked in play alongside HP. Full rules land
-          with the updated handbook.
-        </p>
       </div>
 
       {klass?.signature && (
@@ -54,42 +64,67 @@ export function HunterCardView({ card }: { card: HunterCard }) {
       )}
 
       <div className="card">
-        <p className="eyebrow" style={{ marginBottom: 10 }}>Abilities</p>
+        <p className="eyebrow" style={{ marginBottom: 10 }}>Abilities &amp; saves</p>
         <div className="stat-grid">
           {ABILITIES.map(({ key, short }) => {
             const score = card.abilities[key];
+            const sv = klass ? saveModifier(klass, card.abilities, key, lvl) : abilityModifier(score);
+            const proficient = klass?.savingThrows.includes(key);
             return (
               <div className="stat" key={key}>
                 <div className="stat-label">{short}</div>
                 <div className="stat-value">{formatModifier(abilityModifier(score))}</div>
                 <div className="stat-sub">{score}</div>
+                <div className="faint" style={{ fontSize: "0.68rem", marginTop: 2 }}>
+                  {proficient ? "●" : "○"} save {formatModifier(sv)}
+                </div>
               </div>
             );
           })}
         </div>
       </div>
 
+      <div className="card">
+        <p className="eyebrow" style={{ marginBottom: 8 }}>Skills</p>
+        <div className="skill-grid">
+          {SKILLS_BY_ABILITY.flatMap(({ skills }) =>
+            skills.map((s) => {
+              const proficient = card.skillProficiencies.includes(s.name);
+              const mod = skillModifier(card.abilities, s.name, proficient, lvl);
+              return (
+                <div
+                  key={s.name}
+                  className="row between"
+                  style={{ gap: 6, opacity: proficient ? 1 : 0.62, fontSize: "0.86rem", padding: "2px 0" }}
+                >
+                  <span style={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {proficient ? "●" : "○"} {s.name}
+                    <span className="faint" style={{ fontSize: "0.7rem" }}> {s.ability.toUpperCase()}</span>
+                  </span>
+                  <span className={proficient ? "gold" : ""} style={{ flex: "none" }}>{formatModifier(mod)}</span>
+                </div>
+              );
+            }),
+          )}
+        </div>
+      </div>
+
       {klass && (
         <div className="card">
           <p className="eyebrow">Proficiencies</p>
-          <Detail
-            label="Saving throws"
-            value={klass.savingThrows.map((k) => ABILITY_NAME[k]).join(", ")}
-          />
-          <Detail
-            label="Skills"
-            value={card.skillProficiencies.length ? card.skillProficiencies.join(", ") : "—"}
-          />
           <Detail label="Weapons" value={klass.weaponProficiencies} />
           <Detail label="Tools" value={klass.toolProficiencies} />
           <Detail label="Armor training" value={klass.armorTraining.join(", ")} />
         </div>
       )}
 
+      {klass?.caster && <RitesSection card={card} lvl={lvl} />}
+
       <div className="card">
-        <p className="eyebrow">Armor & gear</p>
+        <p className="eyebrow">Armor &amp; gear</p>
         <Detail label="Worn" value={armor ? `${armor.name} (${armor.ac})` : "Unarmored"} />
         {armor && <p className="muted" style={{ fontSize: "0.88rem", marginTop: 6 }}>{armor.special}</p>}
+        <Detail label="Coins" value={`${card.coins ?? 0} GP`} />
         {klass && (
           <>
             <hr className="divider" />
@@ -115,11 +150,48 @@ export function HunterCardView({ card }: { card: HunterCard }) {
   );
 }
 
-function Stat({ label, value }: { label: string; value: string | number }) {
+function RitesSection({ card, lvl }: { card: HunterCard; lvl: number }) {
+  const r = riteStats(card.abilities, lvl);
+  const prepared = (card.preparedWhispers ?? []).map((id) => RITE_BY_ID[id]).filter(Boolean);
+  return (
+    <div className="card">
+      <p className="eyebrow" style={{ marginBottom: 10 }}>Rites</p>
+      <div className="derived-grid">
+        <Stat label="Ability" value="INT" />
+        <Stat label="Rite Mod." value={formatModifier(r.modifier)} />
+        <Stat label="Save DC" value={r.saveDc} />
+        <Stat label="Attack" value={formatModifier(r.attack)} />
+      </div>
+      <hr className="divider" />
+      <p className="eyebrow" style={{ marginBottom: 8 }}>Prepared Whispers</p>
+      {prepared.length ? (
+        <ul className="list-reset pill-list">
+          {prepared.map((rite) => (
+            <li key={rite.id}>
+              <div className="row between">
+                <span style={{ fontWeight: 600 }}>{rite.name}</span>
+                <span className="gold" style={{ flex: "none", fontSize: "0.78rem" }}>
+                  {rite.whisper ? "Whisper" : `Lv ${rite.level}`} · {rite.type}
+                </span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p className="faint" style={{ fontSize: "0.86rem", margin: 0 }}>
+          None prepared. Browse the Book of the Deepcaller in the Handbook → Rites.
+        </p>
+      )}
+    </div>
+  );
+}
+
+function Stat({ label, value, sub }: { label: string; value: string | number; sub?: string }) {
   return (
     <div className="stat">
       <div className="stat-label">{label}</div>
       <div className="stat-value">{value}</div>
+      {sub && <div className="stat-sub">{sub}</div>}
     </div>
   );
 }
