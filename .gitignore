@@ -20,6 +20,9 @@ dev-dist
 .env
 .env.*
 !.env.example
+# …except the non-secret Cloud Functions params (sender + app URL), which CI
+# needs to resolve at deploy time. The real secret stays in Secret Manager.
+!functions/.env
 
 # firebase
 .firebase
