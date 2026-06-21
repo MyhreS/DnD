@@ -1,0 +1,115 @@
+import { useState } from "react";
+import { getClass } from "@/data/classes";
+import { maxHp } from "@/lib/character";
+import { AsyncButton } from "@/components/AsyncButton";
+import { InventoryPanel } from "@/features/hunter/components/InventoryPanel";
+import { useCharactersStore } from "../store/charactersStore";
+import type { ArchivedCharacter, HunterCard } from "@/types";
+
+/** DM-only board: every character with HP / level / items, plus full control —
+ * confirm/override death and recover archived hunters. */
+export function DMCharacters({ gameId }: { gameId: string | null }) {
+  const party = useCharactersStore((s) => s.party);
+  const archive = useCharactersStore((s) => s.archive);
+  const error = useCharactersStore((s) => s.error);
+
+  return (
+    <div className="card">
+      <p className="eyebrow" style={{ marginBottom: 8 }}>Characters · DM control</p>
+      {error && <div className="banner banner-error" style={{ marginBottom: 8 }}>{error}</div>}
+
+      {party.length === 0 ? (
+        <p className="faint" style={{ fontSize: "0.88rem", margin: 0 }}>No characters yet.</p>
+      ) : (
+        party.map((c) => <CharacterRow key={c.uid} card={c} gameId={gameId} />)
+      )}
+
+      {archive.length > 0 && (
+        <>
+          <hr className="divider" />
+          <p className="eyebrow" style={{ marginBottom: 8 }}>Archived ({archive.length})</p>
+          {archive.map((a) => <ArchivedRow key={a.id} a={a} />)}
+        </>
+      )}
+    </div>
+  );
+}
+
+function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | null }) {
+  const kill = useCharactersStore((s) => s.killCharacter);
+  const revive = useCharactersStore((s) => s.revive);
+  const [showItems, setShowItems] = useState(false);
+  const [confirming, setConfirming] = useState(false);
+
+  const klass = getClass(card.classId);
+  const hpMax = klass ? maxHp(klass, card.abilities, card.level) : 0;
+  const hp = card.currentHp ?? hpMax;
+  const dying = card.deathPending || hp <= 0;
+
+  return (
+    <div style={{ padding: "10px 0", borderTop: "1px solid var(--border)" }}>
+      <div className="row between" style={{ gap: 8 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontWeight: 600 }}>
+            {card.name}
+            {card.deathPending && <span className="role-tag" style={{ marginLeft: 8, color: "var(--blood-bright)" }}>death pending</span>}
+          </div>
+          <div className="faint" style={{ fontSize: "0.78rem" }}>
+            {klass ? `${klass.name} · Lvl ${card.level}` : "Hunter"} · HP {hp}/{hpMax}
+          </div>
+        </div>
+        <button className="btn btn-ghost btn-sm" style={{ width: "auto", flex: "none" }} onClick={() => setShowItems((s) => !s)}>
+          {showItems ? "Hide" : "Items"}
+        </button>
+      </div>
+
+      {showItems && (
+        <div style={{ marginTop: 8 }}>
+          <InventoryPanel card={card} />
+        </div>
+      )}
+
+      <div className="btn-row" style={{ marginTop: 8 }}>
+        {card.deathPending ? (
+          <>
+            <AsyncButton className="btn btn-ghost" pendingText="…" showDone={false} onClick={() => revive(card.uid)}>
+              Revive
+            </AsyncButton>
+            <AsyncButton className="btn btn-primary" style={{ background: "var(--blood)" }} pendingText="…" showDone={false} onClick={() => kill(card, gameId)}>
+              Confirm death
+            </AsyncButton>
+          </>
+        ) : confirming ? (
+          <>
+            <button className="btn btn-ghost" onClick={() => setConfirming(false)}>Cancel</button>
+            <AsyncButton className="btn btn-primary" style={{ background: "var(--blood)" }} pendingText="…" showDone={false} onClick={() => kill(card, gameId)}>
+              Yes, mark dead
+            </AsyncButton>
+          </>
+        ) : (
+          <button className="btn btn-ghost btn-sm" style={{ color: dying ? "var(--blood-bright)" : undefined, width: "auto" }} onClick={() => setConfirming(true)}>
+            Mark dead
+          </button>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function ArchivedRow({ a }: { a: ArchivedCharacter }) {
+  const recover = useCharactersStore((s) => s.recover);
+  const klass = getClass(a.card.classId);
+  return (
+    <div className="row between" style={{ padding: "8px 0", borderTop: "1px solid var(--border)", gap: 8 }}>
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontWeight: 600, fontSize: "0.92rem" }}>{a.card.name}</div>
+        <div className="faint" style={{ fontSize: "0.78rem" }}>
+          {klass ? `${klass.name} · Lvl ${a.card.level}` : "Hunter"} · {a.reason}
+        </div>
+      </div>
+      <AsyncButton className="btn btn-ghost btn-sm" style={{ width: "auto", flex: "none" }} pendingText="…" showDone={false} onClick={() => recover(a)}>
+        Recover
+      </AsyncButton>
+    </div>
+  );
+}

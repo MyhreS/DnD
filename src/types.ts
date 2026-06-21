@@ -245,6 +245,18 @@ export interface Trade {
   settledAt?: number | null;
 }
 
+/** A character removed from play (dead or deleted), kept so the DM can recover
+ * it during the session. Lives in its own `/archive` collection — purged when
+ * the game ends. */
+export interface ArchivedCharacter {
+  id: string;
+  originalUid: string;
+  gameId: string | null;
+  reason: "dead" | "deleted";
+  archivedAt: number;
+  card: HunterCard;
+}
+
 export interface SessionEvent {
   id: string;
   /** ISO date-time string (local), e.g. "2026-06-20T18:00:00". */
@@ -320,6 +332,8 @@ export interface HunterCard {
   coins?: number;
   /** Carried items (catalog item id + quantity). */
   inventory?: InventoryEntry[];
+  /** Player has hit 0 HP and confirmed death; awaiting the DM to confirm. */
+  deathPending?: boolean;
   notes: string;
   updatedAt: number;
   createdAt: number;

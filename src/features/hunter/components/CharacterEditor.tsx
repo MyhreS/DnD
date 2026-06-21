@@ -606,8 +606,8 @@ function DeleteCharacter({
     <div className="card" style={{ borderColor: "var(--blood-bright)" }}>
       <p style={{ marginBottom: 10 }}>
         {step === 1
-          ? "Delete this character? This can't be undone."
-          : "Are you absolutely sure? This permanently erases your hunter."}
+          ? "Delete this character? Your DM can still recover it until the session ends."
+          : "Are you absolutely sure? Your hunter is removed from play (the DM can recover it this session)."}
       </p>
       <div className="btn-row">
         <button type="button" className="btn btn-ghost" onClick={() => setStep(0)} disabled={saving}>Keep</button>

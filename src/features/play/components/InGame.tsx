@@ -10,7 +10,9 @@ import { PhaseControl } from "./PhaseControl";
 import { ParticipantList } from "./ParticipantList";
 import { TradePanel } from "./TradePanel";
 import { TradeLog } from "./TradeLog";
+import { DMCharacters } from "./DMCharacters";
 import { useTradesSync } from "../hooks/useTradesSync";
+import { useCharactersSync } from "../hooks/useCharactersSync";
 import { PHASE_LABEL, PHASES } from "../lib/phase";
 import type { Game, GameParticipant } from "@/types";
 
@@ -50,7 +52,7 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
         </>
       )}
 
-      {isDM && <TradeLog />}
+      {isDM && <DMSection gameId={game.id} />}
 
       <ParticipantList participants={participants} />
 
@@ -75,6 +77,17 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
         )}
       </div>
     </div>
+  );
+}
+
+/** DM-only section: the characters board + the trade log (subscribes both). */
+function DMSection({ gameId }: { gameId: string }) {
+  useCharactersSync();
+  return (
+    <>
+      <DMCharacters gameId={gameId} />
+      <TradeLog />
+    </>
   );
 }
 

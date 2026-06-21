@@ -6,6 +6,7 @@ import { CharacterEditor } from "./CharacterEditor";
 import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
 import { InventoryPanel } from "./InventoryPanel";
+import { useGameStore, currentGame } from "@/features/play/store/gameStore";
 import { emptyCard } from "@/lib/character";
 import { exportCharacterPdf } from "../lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -15,7 +16,8 @@ import type { HunterCard } from "@/types";
 
 export function CharacterPage() {
   const user = useAuthStore((s) => s.user);
-  const { card, status, saving, error, save, remove } = usePlayerStore();
+  const { card, status, saving, error, save, archive } = usePlayerStore();
+  const gameId = currentGame(useGameStore((s) => s.games))?.id ?? null;
   const [editing, setEditing] = useState(false);
 
   useHunterCard();
@@ -55,7 +57,7 @@ export function CharacterPage() {
 
   async function handleDelete() {
     if (!card) return;
-    const ok = await remove(card.uid);
+    const ok = await archive(gameId);
     if (ok) setEditing(false);
   }
 

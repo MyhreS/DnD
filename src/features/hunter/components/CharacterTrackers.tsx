@@ -60,6 +60,30 @@ export function CharacterTrackers({ card }: { card: HunterCard }) {
           {card.bloodTinge ? "● Held" : "○ Spend"}
         </button>
       </div>
+
+      {hp <= 0 && (
+        <div style={{ marginTop: 8, paddingTop: 10, borderTop: "1px solid var(--border)" }}>
+          {card.deathPending ? (
+            <p className="muted" style={{ margin: 0, fontSize: "0.9rem" }}>
+              <strong className="blood">Fallen.</strong> Awaiting the DM to confirm your hunter's death.
+            </p>
+          ) : (
+            <>
+              <p className="muted" style={{ marginTop: 0, marginBottom: 8, fontSize: "0.9rem" }}>
+                <strong className="blood">0 Hit Points.</strong> If your hunter has truly fallen, confirm
+                their death — the DM still has to verify it.
+              </p>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ color: "var(--blood-bright)", width: "auto" }}
+                onClick={() => patch({ deathPending: true })}
+              >
+                Confirm my hunter's death
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }

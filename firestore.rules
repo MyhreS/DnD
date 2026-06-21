@@ -67,8 +67,21 @@ service cloud.firestore {
     // card (party view / DM oversight), but you may only write your own.
     match /players/{uid} {
       allow read: if isAllowlisted();
-      allow create, update: if isAllowlisted() && request.auth.uid == uid;
-      allow delete: if isAllowlisted() && request.auth.uid == uid;
+      // You write your own card; staff (admin/moderator/DM) have full control
+      // over any character (confirm death, recover, adjust).
+      allow create, update: if isAllowlisted() && (request.auth.uid == uid || isStaff());
+      allow delete: if isAllowlisted() && (request.auth.uid == uid || isStaff());
+    }
+
+    // /archive/{id}
+    // Characters removed from play (dead or deleted), kept so the DM can recover
+    // them during a session and purged when the game ends. You may archive your
+    // own; staff may archive anyone; only staff recover/purge (delete).
+    match /archive/{id} {
+      allow read: if isAllowlisted();
+      allow create: if isAllowlisted()
+        && (request.resource.data.originalUid == request.auth.uid || isStaff());
+      allow delete: if isStaff();
     }
 
     // /sessions/{id}
