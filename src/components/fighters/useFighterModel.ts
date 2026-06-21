@@ -38,11 +38,11 @@ export interface FighterModel {
 function grit(mat: Material, accent: string): Material {
   const m = mat.clone();
   if (m instanceof MeshStandardMaterial) {
-    m.color.multiplyScalar(0.52);
-    m.roughness = Math.min(1, m.roughness * 0.4 + 0.7);
-    m.metalness = Math.max(0, m.metalness * 0.6);
+    m.color.multiplyScalar(0.78); // mildly darker for mood, but keep real colours
+    m.roughness = Math.min(1, m.roughness * 0.4 + 0.6);
+    m.metalness = Math.max(0, m.metalness * 0.7);
     m.emissive.set(accent);
-    m.emissiveIntensity = 0.08;
+    m.emissiveIntensity = 0.03; // barely-there inner glow, not a tint
     m.envMapIntensity = 0.3;
   }
   return m;
