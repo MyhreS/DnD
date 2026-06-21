@@ -4,6 +4,7 @@ import { getClass, getSubclass } from "@/data/classes";
 import { ARMOR_BY_ID } from "@/data/armor";
 import { SKILLS } from "@/data/skills";
 import { RITE_BY_ID } from "@/data/rites";
+import { resolveInventory, groupByCarry } from "@/lib/inventory";
 import { ABILITIES, abilityModifier, formatModifier } from "@/data/abilities";
 import {
   maxHp,
@@ -148,6 +149,17 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
   y = line(doc, y, "Coins", `${card.coins ?? 0} GP`);
   if (klass) y = line(doc, y, "Equipment", klass.startingEquipment.join(", "));
   y += 8;
+
+  // Inventory
+  const inv = resolveInventory(card);
+  if (inv.length) {
+    y = section(doc, y, "INVENTORY");
+    for (const { carry, entries } of groupByCarry(inv)) {
+      const list = entries.map((e) => (e.qty > 1 ? `${e.item.name} ×${e.qty}` : e.item.name)).join(", ");
+      y = line(doc, y, carry, list);
+    }
+    y += 8;
+  }
 
   if (card.notes) {
     y = section(doc, y, "NOTES");

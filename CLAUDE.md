@@ -151,20 +151,45 @@ it can't show the notch/home-indicator behaviour).
 
 ### Dev sign-in for testing (two options, both DEV-only)
 
-- **`?preview=<role>`** — fake session, **no real data** (Firestore calls fail).
-  Good for inspecting layout & role-gated UI. `?preview=admin.dm`, `user.player`, …
+- **`?preview=<role>`** — fake session, **no real data** (real Firestore calls
+  fail, but Character/Party/**Play** views are seeded with mock data so the UI
+  renders). Good for inspecting layout & role-gated UI without auth.
+  `?preview=admin.dm`, `user.player`, `moderator.dm`, … (`?preview=off` clears it.)
 - **`?testToken=<token>`** — a **REAL** Firebase session (real Firestore + rules),
   so you can test authenticated screens with live data. Mint a token with the
   `agent-test` service account (key in Doppler `AGENT_TEST_SA`):
   ```bash
-  bun run token player    # or: admin | dm   → prints a custom token
+  bun run token player    # or: player2 | admin | dm   → prints a custom token
   ```
   Then open `http://localhost:5173/?testToken=<token>` (it's saved to
   localStorage; `?testToken=off` clears it). Tokens last ~1h — re-mint as needed.
-  The script ensures the `agent-{player,admin,dm}@…` Auth user + allowlist entry
-  exist. **Both paths are stripped from production builds** (gated on
+  The script ensures the `agent-{player,player2,admin,dm}@…` Auth user + allowlist
+  entry exist. **Both paths are stripped from production builds** (gated on
   `import.meta.env.DEV`). This is the agent's "log in and test" — Google OAuth
   itself can't be automated.
+
+### Always check BOTH mobile and desktop
+
+The app is mobile-first **and** has a first-class desktop layout (sidebar nav,
+wide two-column views). Verify every UI change at **both** sizes:
+
+```bash
+bun run scripts/shots.mjs                       # default routes, preview mode
+bun run scripts/shots.mjs /character /handbook  # specific routes
+BASE=https://dandd-ea955.web.app bun run scripts/shots.mjs   # against prod
+```
+Screenshots each route at **iPhone 15** and **1440×900 desktop**, writes
+`screenshots/<route>-{mobile,desktop}.png`, and reports console errors (the
+`/sessions` + `/party` "insufficient permissions" lines are expected in preview —
+no real auth). Read both images; don't trust that it merely compiles.
+
+### Testing Play mode / multiplayer / the simulation
+
+`?preview=` shows **mock** game data (a lobby with sample hunters) — fine for
+layout, but it doesn't exercise real sync. For a real live game, drive **three**
+identities with `?testToken=` in separate browser contexts (Playwright
+`browser.newContext()` per identity): `dm` starts a game, `player` + `player2`
+join and trade. This is also how the admin **test-run simulation** is exercised.
 
 ### Automated screenshot gallery (one command)
 
