@@ -84,6 +84,20 @@
 :root[data-theme="light"] .avatar {
   background: radial-gradient(circle at 30% 25%, #f6e9d6, var(--bg-elev-3));
 }
+:root[data-theme="light"] .banner-warn {
+  background: rgba(179, 18, 26, 0.08);
+  border-color: rgba(163, 17, 26, 0.45);
+  color: #7a0d12;
+}
+:root[data-theme="light"] .banner-error {
+  background: rgba(179, 18, 26, 0.1);
+  color: #7a0d12;
+}
+:root[data-theme="light"] .banner-ok {
+  background: rgba(47, 93, 55, 0.1);
+  border-color: rgba(47, 93, 55, 0.5);
+  color: #2f5d37;
+}
 
 * {
   box-sizing: border-box;
