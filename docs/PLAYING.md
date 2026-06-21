@@ -189,12 +189,14 @@ So we can verify the whole multiplayer flow without a real table:
 
 1. ✅ Play foundation — lobby, live game, phases, DM stop, exit≠leave, banner.
 2. ✅ Inventory (catalog) + carry.
-3. 🟡 Trading (`/trades` + Cloud Function settle + waiting states + DM log).
-4. ⬜ Character death + DM character control board (recover/override/archive +
-   purge-on-end). *(Build right after trading.)*
-5. ⬜ Rest & recap.
-6. ⬜ Menu-mode management polish (level-up/tweaks).
-7. ⬜ Admin test-run simulation + Playwright test plays.
+3. ✅ Trading (`/trades` + Cloud Function settle + waiting states + DM log).
+4. ✅ Character death + DM character control board (two-party confirm, DM
+   override/recover, soft-archive, purge-on-end). *(Dropped loot — §7.3 — still
+   pending, next.)*
+5. ⬜ Dropped loot (claim a dead hunter's items).
+6. ⬜ Rest & recap.
+7. ⬜ Menu-mode management polish (level-up/tweaks).
+8. ⬜ Admin test-run simulation + Playwright test plays.
 
 ---
 

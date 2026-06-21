@@ -15,6 +15,7 @@ import {
 } from "@/api/games";
 import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { purgeArchive } from "@/api/players";
 
 type Status = "idle" | "loading" | "loaded" | "error";
 
@@ -165,7 +166,14 @@ export const useGameStore = create<GameState>((set, get) => {
         set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, status: "ended", endedPhase } : g)) }));
         return true;
       }
-      return (await run(() => endGame(gameId, endedPhase), "Couldn't stop the game.")) !== null;
+      // Ending a game purges archived (dead/deleted) characters so they don't
+      // pile up between sessions.
+      return (
+        (await run(async () => {
+          await endGame(gameId, endedPhase);
+          await purgeArchive();
+        }, "Couldn't stop the game.")) !== null
+      );
     },
 
     join: async (gameId, p) => {

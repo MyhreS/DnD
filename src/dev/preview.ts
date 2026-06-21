@@ -97,6 +97,45 @@ export function previewParticipants(): import("@/types").GameParticipant[] {
   ];
 }
 
+/** Sample party cards for the DM's character board (one alive, one dying). */
+export function previewPartyCards(): import("@/types").HunterCard[] {
+  const eileen = previewCard("preview-uid");
+  const gascoigne = {
+    ...previewCard("preview-p2"),
+    uid: "preview-p2",
+    name: "Gascoigne",
+    classId: "brute",
+    subclassId: "battle-master",
+    level: 3,
+    currentHp: 0,
+    deathPending: true,
+  };
+  return [eileen, gascoigne];
+}
+
+/** A sample archived (dead) character so the DM's character board renders. */
+export function previewArchive(): import("@/types").ArchivedCharacter[] {
+  const base = previewCard("preview-p3");
+  return [
+    {
+      id: "preview-archive-1",
+      originalUid: "preview-p3",
+      gameId: "preview-game",
+      reason: "dead",
+      archivedAt: Date.now(),
+      card: {
+        ...base,
+        uid: "preview-p3",
+        name: "Viktor the Lost",
+        classId: "deepcaller",
+        subclassId: "hunter-zealot",
+        level: 2,
+        currentHp: 0,
+      },
+    },
+  ];
+}
+
 /** A sample incoming trade so the trade UI renders in preview mode. */
 export function previewTrades(): import("@/types").Trade[] {
   const now = Date.now();

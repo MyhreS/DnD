@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { HunterCard } from "@/types";
-import { saveHunterCard, deleteHunterCard, subscribeHunterCard } from "@/api/players";
+import { saveHunterCard, archiveCharacter, subscribeHunterCard } from "@/api/players";
 import { isPreviewActive, previewCard } from "@/dev/preview";
 
 type LoadStatus = "idle" | "loading" | "loaded" | "error";
@@ -16,7 +16,9 @@ interface PlayerState {
   subscribe: (uid: string) => void;
   stop: () => void;
   save: (card: HunterCard) => Promise<boolean>;
-  remove: (uid: string) => Promise<boolean>;
+  /** Archive (soft-delete) the current card — recoverable by the DM until the
+   * session ends. Pass the active game id (or null) for purge scoping. */
+  archive: (gameId: string | null) => Promise<boolean>;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -67,18 +69,20 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     }
   },
 
-  remove: async (uid: string) => {
+  archive: async (gameId: string | null) => {
+    const card = get().card;
+    if (!card) return true;
     if (isPreviewActive()) {
       set({ card: null, status: "loaded" });
       return true;
     }
     set({ saving: true, error: null });
     try {
-      await deleteHunterCard(uid);
+      await archiveCharacter(card, "deleted", gameId);
       set({ card: null, saving: false, status: "loaded" });
       return true;
     } catch (err) {
-      console.error("Failed to delete hunter card", err);
+      console.error("Failed to archive hunter card", err);
       set({ saving: false, error: "Could not delete your character. Try again." });
       return false;
     }
