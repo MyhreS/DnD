@@ -35,7 +35,7 @@ export function SessionsPage() {
   const [editing, setEditing] = useState<SessionEvent | "new" | null>(null);
 
   return (
-    <div>
+    <div className="reading">
       <div className="row between">
         <div>
           <p className="eyebrow">The Hunt</p>

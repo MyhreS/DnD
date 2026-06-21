@@ -72,7 +72,7 @@ export function PartyPage() {
         ) : hunters.length === 0 ? (
           <div className="card center"><p className="muted" style={{ margin: 0 }}>No hunters forged yet.</p></div>
         ) : (
-          <div className="stack" style={{ gap: 10 }}>
+          <div className="card-grid">
             {hunters.map((c) => (
               <HunterRow key={c.uid} card={c} />
             ))}

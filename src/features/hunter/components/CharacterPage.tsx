@@ -88,7 +88,7 @@ export function CharacterPage() {
     }
 
     return (
-      <div>
+      <div className="reading">
         <p className="eyebrow">Your Hunter</p>
         <h1 className="page-title">{hasCard ? "Edit character" : "Forge your hunter"}</h1>
         <p className="page-intro">
@@ -128,12 +128,13 @@ export function CharacterPage() {
         </div>
       </div>
 
-      <div className="no-print" style={{ marginBottom: 14 }}>
-        <CharacterTrackers card={card!} />
-      </div>
-
-      <div className="print-sheet">
-        <HunterCardView card={card!} />
+      <div className="desk-2col">
+        <aside className="desk-aside no-print">
+          <CharacterTrackers card={card!} />
+        </aside>
+        <div className="desk-main print-sheet">
+          <HunterCardView card={card!} />
+        </div>
       </div>
     </div>
   );
