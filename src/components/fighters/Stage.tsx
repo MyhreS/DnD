@@ -31,14 +31,16 @@ export function Stage({ themes }: { themes: FighterTheme[] }) {
         <planeGeometry args={[13, 8]} />
         <meshBasicMaterial map={shadowTexture()} color="#05040a" transparent opacity={0.62} depthWrite={false} />
       </mesh>
-      {/* Low, cool ambient + a soft warm key keep the form readable; the strong
-          class-coloured rim from behind rakes the silhouette for the drama. */}
-      <ambientLight intensity={0.2} color="#1a1622" />
-      <directionalLight position={[4, 7, 6]} intensity={0.45} color="#ffe9c7" />
+      {/* A neutral warm key is the *dominant* light, so each fighter shows its
+          own real colours (skin, armour, cloth) rather than reading as a flat
+          one-colour silhouette. The class-coloured rim from behind only catches
+          the edges, and a soft cool fill lifts the shadow side. */}
+      <ambientLight intensity={0.6} color="#534d5e" />
+      <directionalLight position={[4, 7, 6]} intensity={1.9} color="#fff1dd" />
+      <directionalLight position={[-5, 3, 4]} intensity={0.45} color="#9fb4ff" />
       {rims.map((r, i) => (
-        <directionalLight key={i} position={[r.x, 5, -6]} intensity={3.2} color={r.c} />
+        <directionalLight key={i} position={[r.x, 5, -6]} intensity={1.5} color={r.c} />
       ))}
-      <pointLight position={[0, -0.4, 5]} intensity={0.45} color={themes[0].accent} distance={26} decay={1.1} />
       <Mist color={themes[0].accent} groundY={groundY} />
     </>
   );
