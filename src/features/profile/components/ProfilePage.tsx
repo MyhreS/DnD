@@ -24,7 +24,7 @@ export function ProfilePage() {
   const showSwitcher = capabilities(realIdentity).oversight || isPreviewActive();
 
   return (
-    <div>
+    <div className="reading">
       <p className="eyebrow">Profile</p>
       <h1 className="page-title">{name}</h1>
       <p className="page-intro">

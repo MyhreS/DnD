@@ -14,7 +14,7 @@ export function HandbookPage() {
   const [tab, setTab] = useState<Tab>("rules");
 
   return (
-    <div>
+    <div className="reading">
       <p className="eyebrow">The Codex</p>
       <h1 className="page-title">Player's Handbook</h1>
       <p className="page-intro">Everything you need to play Catacombs &amp; Starspawns.</p>

@@ -343,6 +343,128 @@ button {
   border-bottom-color: var(--blood-bright);
 }
 
+/* Two-column page wrapper. Single column by default (mobile, source order);
+   becomes side-by-side on desktop via the breakpoint below. */
+.desk-2col {
+  display: grid;
+  gap: 16px;
+}
+
+/* Gallery grid — one column on phones, auto-fills on wider screens. */
+.card-grid {
+  display: grid;
+  gap: 12px;
+}
+@media (min-width: 820px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    align-items: start;
+  }
+}
+
+/* Cap line length for reading/forms so they don't stretch on wide desktops. */
+.reading {
+  max-width: 780px;
+  margin-inline: auto;
+}
+
+/* ============================================================
+   Desktop layout — power-user wide view. The mobile top bar
+   becomes a left sidebar and content gets a roomier column.
+   ============================================================ */
+@media (min-width: 980px) {
+  .app-shell {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .app-topbar {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    width: 238px;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-elev);
+    border-right: 1px solid var(--border-strong);
+    overflow-y: auto;
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: calc(env(safe-area-inset-top) + 22px) 18px 18px;
+    background: transparent;
+    backdrop-filter: none;
+  }
+  .app-header .brand {
+    gap: 12px;
+  }
+  .app-header .brand-mark {
+    width: 36px;
+    height: 36px;
+  }
+  .app-header .brand-title {
+    font-size: 1.05rem;
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .top-tabs {
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px;
+    border-bottom: 0;
+    overflow: visible;
+    flex: 1 1 auto;
+  }
+  .top-tabs a {
+    flex: none;
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 0.8rem;
+    border-bottom: 0;
+    border-left: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .top-tabs a:hover {
+    color: var(--ink-dim);
+    background: var(--bg-elev-2);
+  }
+  .top-tabs a.active {
+    color: var(--gold);
+    background: var(--bg-elev-2);
+    border-bottom-color: transparent;
+    border-left-color: var(--blood-bright);
+  }
+
+  .app-main {
+    max-width: 1120px;
+    padding: 36px 44px 64px;
+  }
+}
+
+/* Wider desktop: two-column pages split, and an aside can stick. */
+@media (min-width: 1180px) {
+  .desk-2col {
+    grid-template-columns: minmax(0, 1.6fr) minmax(290px, 1fr);
+    align-items: start;
+    gap: 18px;
+  }
+  .desk-2col > .desk-main {
+    order: 1;
+    min-width: 0;
+  }
+  .desk-2col > .desk-aside {
+    order: 2;
+    position: sticky;
+    top: 28px;
+  }
+}
+
 /* ---------- Cards & panels ---------- */
 
 .card {
