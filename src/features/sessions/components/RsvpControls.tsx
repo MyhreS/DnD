@@ -4,9 +4,9 @@ import { setRsvp } from "@/api/rsvp";
 import { AsyncButton } from "@/components/AsyncButton";
 import type { RsvpStatus, SessionEvent } from "@/types";
 
-const OPTIONS: { value: RsvpStatus; label: string }[] = [
-  { value: "yes", label: "I'm in" },
-  { value: "no", label: "Can't" },
+const OPTIONS: { value: RsvpStatus; label: string; onClass: string }[] = [
+  { value: "yes", label: "I'm in", onClass: "btn-yes-on" },
+  { value: "no", label: "Can't", onClass: "btn-no-on" },
 ];
 
 export function RsvpControls({ session }: { session: SessionEvent }) {
@@ -33,19 +33,32 @@ export function RsvpControls({ session }: { session: SessionEvent }) {
     <div>
       <p className="eyebrow" style={{ marginBottom: 8 }}>Will you answer the call?</p>
       <div className="btn-row">
-        {OPTIONS.map((o) => (
-          <AsyncButton
-            key={o.value}
-            className={`btn-sm ${mine === o.value ? "btn-primary" : "btn-ghost"}`}
-            style={{ flex: 1 }}
-            showDone={false}
-            onClick={() => choose(o.value)}
-          >
-            {o.label}
-          </AsyncButton>
-        ))}
+        {OPTIONS.map((o) => {
+          const on = mine === o.value;
+          return (
+            <AsyncButton
+              key={o.value}
+              className={`btn-sm ${on ? o.onClass : "btn-ghost"}`}
+              style={{ flex: 1 }}
+              showDone={false}
+              onClick={() => choose(o.value)}
+            >
+              {on ? `${o.value === "yes" ? "✓" : "✕"} ${o.label}` : o.label}
+            </AsyncButton>
+          );
+        })}
       </div>
-      <p className="faint center" style={{ fontSize: "0.78rem", marginTop: 8, marginBottom: 0 }}>
+      {/* keyed on `mine` so it re-mounts and replays the flash each time the answer changes */}
+      <p key={mine ?? "none"} className={`rsvp-status ${mine ? "rsvp-status-flash" : ""}`}>
+        {mine === "yes" ? (
+          <span className="rsvp-status-yes">You're in for this one.</span>
+        ) : mine === "no" ? (
+          <span className="rsvp-status-no">You're sitting this one out.</span>
+        ) : (
+          <span className="faint">Tap to let the party know.</span>
+        )}
+      </p>
+      <p className="faint center" style={{ fontSize: "0.78rem", marginTop: 4, marginBottom: 0 }}>
         {counts.yes} in · {counts.no} out
       </p>
     </div>

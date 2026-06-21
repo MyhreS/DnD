@@ -446,6 +446,37 @@ button {
   flex: 1;
 }
 
+/* RSVP selected states — distinct per choice so a registered answer is obvious */
+.btn-yes-on {
+  background: linear-gradient(180deg, var(--ok), #3f7a4b);
+  border-color: var(--ok);
+  color: #fff;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  box-shadow: 0 6px 20px rgba(94, 158, 106, 0.35);
+}
+.btn-no-on {
+  background: linear-gradient(180deg, var(--blood), var(--blood-deep));
+  border-color: var(--blood-bright);
+  color: #fff;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  box-shadow: 0 6px 20px rgba(179, 18, 26, 0.35);
+}
+
+.rsvp-status {
+  text-align: center;
+  font-size: 0.82rem;
+  margin: 10px 0 0;
+}
+.rsvp-status .rsvp-status-yes { color: var(--ok); font-weight: 600; }
+.rsvp-status .rsvp-status-no { color: var(--ink-dim); }
+.rsvp-status-flash { animation: rsvp-flash 0.9s ease-out; }
+@keyframes rsvp-flash {
+  0% { opacity: 0; transform: translateY(-3px); }
+  35% { opacity: 1; transform: translateY(0); }
+}
+
 .btn-sm {
   width: auto;
   padding: 8px 14px;
