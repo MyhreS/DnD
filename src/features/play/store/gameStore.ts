@@ -107,6 +107,10 @@ export const useGameStore = create<GameState>((set, get) => {
             parts[2],
           ];
         }
+        // Dev affordance: `?play=active` previews an in-progress game.
+        if (new URLSearchParams(window.location.search).get("play") === "active") {
+          game = { ...game, status: "active", phase: "combat", startedAt: Date.now() };
+        }
         set({ preview: true, games: [game], participants: parts, status: "loaded" });
         return;
       }

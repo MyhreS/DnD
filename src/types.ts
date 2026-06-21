@@ -209,6 +209,42 @@ export interface GameParticipant {
   lastSeen: number;
 }
 
+// --- Trades (player ↔ player, settled by a Cloud Function) ---
+
+export type TradeStatus =
+  | "pending" // offered, awaiting the other player
+  | "accepted" // accepted; the Cloud Function will settle it
+  | "settled" // items/coins transferred
+  | "declined"
+  | "cancelled"
+  | "failed"; // settlement failed (e.g. an item was no longer owned)
+
+/** One side of a trade: items given + coins. */
+export interface TradeSide {
+  items: InventoryEntry[];
+  coins: number;
+}
+
+export interface Trade {
+  id: string;
+  /** The game this trade belongs to (for the DM's log). */
+  gameId: string | null;
+  fromUid: string;
+  fromName: string;
+  toUid: string;
+  toName: string;
+  /** What the offerer (fromUid) gives. */
+  offer: TradeSide;
+  /** What the offerer asks for from toUid. */
+  request: TradeSide;
+  status: TradeStatus;
+  error?: string | null;
+  sandbox?: boolean;
+  createdAt: number;
+  updatedAt: number;
+  settledAt?: number | null;
+}
+
 export interface SessionEvent {
   id: string;
   /** ISO date-time string (local), e.g. "2026-06-20T18:00:00". */
