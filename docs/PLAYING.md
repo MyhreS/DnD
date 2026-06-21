@@ -220,7 +220,7 @@ So we can verify the whole multiplayer flow without a real table:
 4. ✅ Character death + DM character control board (two-party confirm, DM
    override/recover, soft-archive, purge-on-end). *(Dropped loot — §7.3 — still
    pending, next.)*
-5. ⬜ Dropped loot (claim a dead hunter's items).
+5. ✅ Dropped loot (claim a dead hunter's items; purged at session end).
 6. ⬜ Rest & recap.
 7. ⬜ Menu-mode management polish (level-up/tweaks).
 8. ⬜ Admin test-run simulation + Playwright test plays.

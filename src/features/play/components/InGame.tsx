@@ -11,8 +11,10 @@ import { ParticipantList } from "./ParticipantList";
 import { TradePanel } from "./TradePanel";
 import { TradeLog } from "./TradeLog";
 import { DMCharacters } from "./DMCharacters";
+import { LootPanel } from "./LootPanel";
 import { useTradesSync } from "../hooks/useTradesSync";
 import { useCharactersSync } from "../hooks/useCharactersSync";
+import { useLootSync } from "../hooks/useLootSync";
 import { PHASE_LABEL, PHASES } from "../lib/phase";
 import type { Game, GameParticipant } from "@/types";
 
@@ -30,6 +32,7 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
   const combat = game.phase === "combat";
 
   useTradesSync(game.id);
+  useLootSync(game.id);
 
   return (
     <div className="stack" style={{ gap: 14 }}>
@@ -53,6 +56,8 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
       )}
 
       {isDM && <DMSection gameId={game.id} />}
+
+      <LootPanel gameId={game.id} card={isDM ? undefined : card ?? undefined} />
 
       <ParticipantList participants={participants} />
 
