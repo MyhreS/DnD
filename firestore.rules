@@ -109,6 +109,23 @@ service cloud.firestore {
       }
     }
 
+    // /trades/{tradeId}
+    // Player-to-player trades. The party can read (the DM keeps a log). The
+    // offerer creates; either participant may accept/decline/cancel — but they
+    // may only set those statuses and may not change the parties. The actual
+    // item/coin transfer (status "settled"/"failed") is done by the settleTrade
+    // Cloud Function with the Admin SDK, which bypasses these rules.
+    match /trades/{tradeId} {
+      allow read: if isAllowlisted();
+      allow create: if isAllowlisted() && request.resource.data.fromUid == request.auth.uid;
+      allow update: if isAllowlisted()
+        && request.auth.uid in [resource.data.fromUid, resource.data.toUid]
+        && request.resource.data.fromUid == resource.data.fromUid
+        && request.resource.data.toUid == resource.data.toUid
+        && request.resource.data.status in ["accepted", "declined", "cancelled"];
+      allow delete: if isAdmin();
+    }
+
     // Lock everything else down by default.
     match /{document=**} {
       allow read, write: if false;

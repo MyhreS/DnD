@@ -8,6 +8,9 @@ import { AsyncButton } from "@/components/AsyncButton";
 import { useGameStore } from "../store/gameStore";
 import { PhaseControl } from "./PhaseControl";
 import { ParticipantList } from "./ParticipantList";
+import { TradePanel } from "./TradePanel";
+import { TradeLog } from "./TradeLog";
+import { useTradesSync } from "../hooks/useTradesSync";
 import { PHASE_LABEL, PHASES } from "../lib/phase";
 import type { Game, GameParticipant } from "@/types";
 
@@ -23,6 +26,8 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
   const joined = participants.some((p) => p.uid === uid);
   const hint = PHASES.find((p) => p.id === game.phase)?.hint;
   const combat = game.phase === "combat";
+
+  useTradesSync(game.id);
 
   return (
     <div className="stack" style={{ gap: 14 }}>
@@ -41,8 +46,11 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
         <>
           <CharacterTrackers card={card} />
           <InventoryPanel card={card} editable />
+          <TradePanel game={game} participants={participants} card={card} />
         </>
       )}
+
+      {isDM && <TradeLog />}
 
       <ParticipantList participants={participants} />
 

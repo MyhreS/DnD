@@ -97,6 +97,27 @@ export function previewParticipants(): import("@/types").GameParticipant[] {
   ];
 }
 
+/** A sample incoming trade so the trade UI renders in preview mode. */
+export function previewTrades(): import("@/types").Trade[] {
+  const now = Date.now();
+  return [
+    {
+      id: "preview-trade-1",
+      gameId: "preview-game",
+      fromUid: "preview-p2",
+      fromName: "Gascoigne",
+      toUid: "preview-uid",
+      toName: "Eileen the Crow",
+      offer: { items: [{ itemId: "greataxe", qty: 1 }], coins: 0 },
+      request: { items: [{ itemId: "blood-vial", qty: 2 }], coins: 5 },
+      status: "pending",
+      createdAt: now,
+      updatedAt: now,
+      settledAt: null,
+    },
+  ];
+}
+
 /** A sample hunter card so the Character/Party views render in preview mode. */
 export function previewCard(uid: string): import("@/types").HunterCard {
   const now = Date.now();
