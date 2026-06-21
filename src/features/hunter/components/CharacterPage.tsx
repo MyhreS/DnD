@@ -5,7 +5,6 @@ import { useHunterCard } from "../hooks/useHunterCard";
 import { CharacterEditor } from "./CharacterEditor";
 import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
-import { DiceRoller } from "./DiceRoller";
 import { emptyCard } from "@/lib/character";
 import { exportCharacterPdf } from "../lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -135,10 +134,6 @@ export function CharacterPage() {
 
       <div className="print-sheet">
         <HunterCardView card={card!} />
-      </div>
-
-      <div className="no-print" style={{ marginTop: 14 }}>
-        <DiceRoller />
       </div>
     </div>
   );
