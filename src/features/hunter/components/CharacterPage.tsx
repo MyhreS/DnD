@@ -5,6 +5,7 @@ import { useHunterCard } from "../hooks/useHunterCard";
 import { CharacterEditor } from "./CharacterEditor";
 import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
+import { InventoryPanel } from "./InventoryPanel";
 import { emptyCard } from "@/lib/character";
 import { exportCharacterPdf } from "../lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -132,8 +133,13 @@ export function CharacterPage() {
         <aside className="desk-aside no-print">
           <CharacterTrackers card={card!} />
         </aside>
-        <div className="desk-main print-sheet">
-          <HunterCardView card={card!} />
+        <div className="desk-main">
+          <div className="print-sheet">
+            <HunterCardView card={card!} />
+          </div>
+          <div className="no-print" style={{ marginTop: 14 }}>
+            <InventoryPanel card={card!} editable />
+          </div>
         </div>
       </div>
     </div>

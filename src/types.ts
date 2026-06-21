@@ -109,6 +109,37 @@ export interface Rite {
   upgrade?: string;
 }
 
+// --- Items & inventory (catalog-based) ---
+
+export type ItemCategory =
+  | "Weapon"
+  | "Armor"
+  | "Ammunition"
+  | "Tool"
+  | "Gear"
+  | "Consumable"
+  | "Valuable";
+
+/** Handbook carrying category (how a carried item occupies slots). */
+export type CarrySignificance = "Insignificant" | "Significant" | "Oversized";
+
+export interface Item {
+  id: string;
+  name: string;
+  category: ItemCategory;
+  carry: CarrySignificance;
+  weightLb: number;
+  note?: string;
+  /** Unique/named item from the resources (e.g. Hunter Rifle). */
+  unique?: boolean;
+}
+
+/** A line in a hunter's inventory: a catalog item id + how many. */
+export interface InventoryEntry {
+  itemId: string;
+  qty: number;
+}
+
 export type ArmorCategory =
   | "Main Armor"
   | "Add-on Armor"
@@ -251,6 +282,8 @@ export interface HunterCard {
   preparedWhispers?: string[];
   /** Gold pieces (the only currency). */
   coins?: number;
+  /** Carried items (catalog item id + quantity). */
+  inventory?: InventoryEntry[];
   notes: string;
   updatedAt: number;
   createdAt: number;

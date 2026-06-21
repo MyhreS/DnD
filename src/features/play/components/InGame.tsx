@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { CharacterTrackers } from "@/features/hunter/components/CharacterTrackers";
+import { InventoryPanel } from "@/features/hunter/components/InventoryPanel";
 import { AsyncButton } from "@/components/AsyncButton";
 import { useGameStore } from "../store/gameStore";
 import { PhaseControl } from "./PhaseControl";
@@ -37,7 +38,10 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
       {isDM && <PhaseControl game={game} />}
 
       {!isDM && card && card.classId && card.name && (
-        <CharacterTrackers card={card} />
+        <>
+          <CharacterTrackers card={card} />
+          <InventoryPanel card={card} editable />
+        </>
       )}
 
       <ParticipantList participants={participants} />
