@@ -9,7 +9,34 @@ Status legend: ✅ shipped · 🟡 in progress · ⬜ planned.
 
 ---
 
-## 1. Two modes (maybe three)
+## 0. App structure — accounts, campaigns & the main menu ⬜
+
+The app is moving from a single private group to a **multi-campaign** experience
+(tracked by the **Multiplayer epic** + sub-issues on GitHub). The shape:
+
+- **Main menu (account home)** — the top-level screen after sign-in, like a
+  game's main menu. From here you:
+  - manage your **characters** — you can have **several**; this is where
+    **character creation** lives (moved out of the in-campaign views);
+  - **create a campaign** (a "server"/party) and become its **DM**, or **join**
+    one via an **invite code / link**;
+  - when joining/entering a campaign, **pick which character** to play with;
+  - read the **Handbook** and an **About** of what the app & game is (also shown
+    here so a newcomer understands it).
+- **Inside a campaign** — once you enter, you get the experience the rest of this
+  doc describes (Sessions, Party, Play, Handbook) — **scoped to that campaign**,
+  and **without** character creation (that's in the main menu). A campaign has
+  one DM (its creator, or whoever set themselves as DM).
+- **Handbook** is available **both** at the main menu and inside a campaign.
+
+Data model shift: characters become a **collection** (not one-per-user);
+`/campaigns/{id}` owns its sessions/party/games; membership carries the chosen
+character + an invite code. The sections below describe life **inside** a
+campaign.
+
+---
+
+## 1. Two modes (maybe three) — inside a campaign
 
 The app has distinct **modes**:
 
@@ -197,6 +224,11 @@ So we can verify the whole multiplayer flow without a real table:
 6. ⬜ Rest & recap.
 7. ⬜ Menu-mode management polish (level-up/tweaks).
 8. ⬜ Admin test-run simulation + Playwright test plays.
+9. ⬜ **Multiplayer** (§0): accounts, campaigns/servers, multiple characters,
+   main menu, invite codes — the big restructure.
+
+Remaining work is tracked as **GitHub issues** (labels `play-epic` and
+`multiplayer`; the Multiplayer epic links its sub-issues).
 
 ---
 
