@@ -38,11 +38,11 @@ export interface FighterModel {
 function grit(mat: Material, accent: string): Material {
   const m = mat.clone();
   if (m instanceof MeshStandardMaterial) {
-    m.color.multiplyScalar(0.6);
+    m.color.multiplyScalar(0.52);
     m.roughness = Math.min(1, m.roughness * 0.4 + 0.7);
     m.metalness = Math.max(0, m.metalness * 0.6);
     m.emissive.set(accent);
-    m.emissiveIntensity = 0.05;
+    m.emissiveIntensity = 0.08;
     m.envMapIntensity = 0.3;
   }
   return m;
@@ -67,7 +67,17 @@ export function useFighterModel(fighter: FighterConfig): FighterModel {
   }, [scene, fighter]);
 
   const { feetY, headY } = useMemo(() => {
-    const box = new Box3().setFromObject(model);
+    // Box only over *visible* meshes — the hidden weapon variants would
+    // otherwise inflate the bounds (and throw off ground placement).
+    const box = new Box3();
+    const tmp = new Box3();
+    model.updateWorldMatrix(true, true);
+    model.traverse((o) => {
+      const mesh = o as Mesh;
+      if (!mesh.isMesh || !mesh.visible || !mesh.geometry) return;
+      mesh.geometry.computeBoundingBox();
+      if (mesh.geometry.boundingBox) box.union(tmp.copy(mesh.geometry.boundingBox).applyMatrix4(mesh.matrixWorld));
+    });
     return { feetY: box.min.y, headY: box.max.y };
   }, [model]);
 

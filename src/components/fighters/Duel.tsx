@@ -5,7 +5,7 @@ import { Combatant, type CombatantHandle } from "./Combatant";
 import type { Cast } from "./useFighterShows";
 import type { Impact } from "./fighterConfig";
 
-const GAP = 2.2; // each fighter's distance from centre while clashing
+const GAP = 2.0; // each fighter's distance from centre while clashing
 const RUN = 3.6;
 const WALK = 1.6;
 const FACE_R = Math.PI / 2; // facing screen-right (toward a foe on the right)
@@ -70,7 +70,7 @@ export function Duel({ left, right, onImpact, onDone }: Props) {
     else if (r < 0.7) def?.play(defConf.fighter.clips.dodge);
     else def?.play(defConf.fighter.clips.hit);
     const attConf = attackerL.current ? left : right;
-    onImpact(0, groundY + 1.4, attConf.fighter.theme.accent);
+    onImpact(0, groundY + 1.9, attConf.fighter.theme.accent);
   };
 
   useFrame((_, dt) => {
@@ -139,7 +139,7 @@ export function Duel({ left, right, onImpact, onDone }: Props) {
           const loserConf = loserL.current ? left : right;
           const winConf = loserL.current ? right : left;
           loser.play(loserConf.fighter.clips.death, { loop: false, clamp: true });
-          onImpact(loserL.current ? -GAP : GAP, groundY + 1.3, winConf.fighter.theme.accent);
+          onImpact(loserL.current ? -GAP : GAP, groundY + 1.6, winConf.fighter.theme.accent);
         } else if (finStep.current === 1 && t.current >= 1.5) {
           finStep.current = 2;
           const winner = loserL.current ? r : l;

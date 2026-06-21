@@ -49,7 +49,7 @@ export function Solo({ cast, onImpact, onDone }: Props) {
       c.play(clips.dodge);
     } else {
       c.play(pick(clips.attack));
-      onImpact(0.6, groundY + 1.4, cast.fighter.theme.accent);
+      onImpact(0.6, groundY + 1.9, cast.fighter.theme.accent);
     }
   };
 

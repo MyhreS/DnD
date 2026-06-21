@@ -61,7 +61,7 @@ export interface FighterConfig {
 
 // All share the same rig/scale; only model, loadout, attack flavour + theme
 // differ. yOffset is a small vertical nudge on top of the auto ground placement.
-const SCALE = 0.55;
+const SCALE = 1.7;
 const Y_OFFSET = 0;
 
 // Shared clip vocabulary — every KayKit Adventurer GLB carries the same 76-clip

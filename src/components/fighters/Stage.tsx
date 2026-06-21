@@ -1,7 +1,7 @@
 import { useMemo, useRef } from "react";
 import { useFrame, useThree } from "@react-three/fiber";
 import { AdditiveBlending, DoubleSide, type Group } from "three";
-import { glowTexture } from "./textures";
+import { glowTexture, shadowTexture } from "./textures";
 import type { FighterTheme } from "./fighterConfig";
 
 /**
@@ -25,12 +25,20 @@ export function Stage({ themes }: { themes: FighterTheme[] }) {
 
   return (
     <>
-      <ambientLight intensity={0.42} color="#2a2533" />
-      <directionalLight position={[4, 7, 6]} intensity={0.75} color="#ffe9c7" />
+      {/* A pool of darkness behind the fighters separates them from the bright
+          app UI and reads as a cinematic spotlight on the duel. */}
+      <mesh position={[0, groundY + 2.6, -2]}>
+        <planeGeometry args={[13, 8]} />
+        <meshBasicMaterial map={shadowTexture()} color="#05040a" transparent opacity={0.62} depthWrite={false} />
+      </mesh>
+      {/* Low, cool ambient + a soft warm key keep the form readable; the strong
+          class-coloured rim from behind rakes the silhouette for the drama. */}
+      <ambientLight intensity={0.2} color="#1a1622" />
+      <directionalLight position={[4, 7, 6]} intensity={0.45} color="#ffe9c7" />
       {rims.map((r, i) => (
-        <directionalLight key={i} position={[r.x, 5, -6]} intensity={2.7} color={r.c} />
+        <directionalLight key={i} position={[r.x, 5, -6]} intensity={3.2} color={r.c} />
       ))}
-      <pointLight position={[0, -0.4, 5]} intensity={0.5} color={themes[0].accent} distance={26} decay={1.1} />
+      <pointLight position={[0, -0.4, 5]} intensity={0.45} color={themes[0].accent} distance={26} decay={1.1} />
       <Mist color={themes[0].accent} groundY={groundY} />
     </>
   );

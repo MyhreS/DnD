@@ -26,7 +26,7 @@ export const Sparks = forwardRef<SparksHandle>(function Sparks(_, ref) {
   const mat = useMemo(
     () =>
       new PointsMaterial({
-        size: 0.42,
+        size: 0.5,
         map: glowTexture(),
         transparent: true,
         blending: AdditiveBlending,

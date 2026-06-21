@@ -44,8 +44,9 @@ export const Combatant = forwardRef<CombatantHandle, Props>(function Combatant(
 
   return (
     <group ref={group}>
-      {/* Sink the model so its feet sit on the group origin (the ground line). */}
-      <group position={[0, -feetY * s, 0]} scale={s}>
+      {/* Sink the model so its feet sit on the group origin (the ground line),
+          plus an optional per-model vertical nudge. */}
+      <group position={[0, -feetY * s + fighter.yOffset, 0]} scale={s}>
         <primitive object={model} />
       </group>
       <mesh rotation-x={-Math.PI / 2} position-y={0.02} renderOrder={-1}>
