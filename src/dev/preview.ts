@@ -97,6 +97,27 @@ export function previewParticipants(): import("@/types").GameParticipant[] {
   ];
 }
 
+/** Sample dropped loot so the loot UI renders in preview mode. */
+export function previewLoot(): import("@/types").LootPile[] {
+  return [
+    {
+      id: "preview-loot-1",
+      fromUid: "preview-p3",
+      fromName: "Viktor the Lost",
+      items: [
+        { itemId: "sickle", qty: 1 },
+        { itemId: "dagger", qty: 2 },
+        { itemId: "blood-vial", qty: 1 },
+      ],
+      coins: 12,
+      status: "unclaimed",
+      claimedByUid: null,
+      claimedByName: null,
+      createdAt: Date.now(),
+    },
+  ];
+}
+
 /** Sample party cards for the DM's character board (one alive, one dying). */
 export function previewPartyCards(): import("@/types").HunterCard[] {
   const eileen = previewCard("preview-uid");

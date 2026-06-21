@@ -245,6 +245,20 @@ export interface Trade {
   settledAt?: number | null;
 }
 
+/** Items dropped by a dead hunter, claimable by others until the session ends.
+ * Lives at /games/{gameId}/loot/{id}. */
+export interface LootPile {
+  id: string;
+  fromUid: string;
+  fromName: string;
+  items: InventoryEntry[];
+  coins: number;
+  status: "unclaimed" | "claimed";
+  claimedByUid?: string | null;
+  claimedByName?: string | null;
+  createdAt: number;
+}
+
 /** A character removed from play (dead or deleted), kept so the DM can recover
  * it during the session. Lives in its own `/archive` collection — purged when
  * the game ends. */

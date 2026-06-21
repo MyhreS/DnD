@@ -7,6 +7,7 @@ import {
   recoverCharacter,
   patchHunterCard,
 } from "@/api/players";
+import { createLoot } from "@/api/games";
 import { isPreviewActive, previewPartyCards, previewArchive } from "@/dev/preview";
 
 interface CharactersState {
@@ -83,7 +84,20 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         }));
         return true;
       }
-      return (await run(() => archiveCharacter(card, "dead", gameId), "Couldn't archive the character.")) !== null;
+      return (
+        (await run(async () => {
+          await archiveCharacter(card, "dead", gameId);
+          // A dead hunter drops their gear as claimable loot.
+          if (gameId) {
+            await createLoot(gameId, {
+              fromUid: card.uid,
+              fromName: card.name,
+              items: card.inventory ?? [],
+              coins: card.coins ?? 0,
+            });
+          }
+        }, "Couldn't archive the character.")) !== null
+      );
     },
 
     revive: async (uid) => {

@@ -10,6 +10,7 @@ import {
   deleteGame,
   joinGame,
   leaveGame,
+  purgeLoot,
   type CreateGameInput,
   type JoinInput,
 } from "@/api/games";
@@ -172,6 +173,7 @@ export const useGameStore = create<GameState>((set, get) => {
         (await run(async () => {
           await endGame(gameId, endedPhase);
           await purgeArchive();
+          await purgeLoot(gameId);
         }, "Couldn't stop the game.")) !== null
       );
     },

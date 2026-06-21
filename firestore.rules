@@ -120,6 +120,14 @@ service cloud.firestore {
               || isAdmin()
               || get(/databases/$(database)/documents/games/$(gameId)).data.dmUid == request.auth.uid);
       }
+
+      // /games/{gameId}/loot/{id}
+      // Items dropped by a dead hunter. The party can read and claim (update);
+      // anyone may create a drop (death) and staff purge (delete) at session end.
+      match /loot/{lootId} {
+        allow read, create, update: if isAllowlisted();
+        allow delete: if isStaff();
+      }
     }
 
     // /trades/{tradeId}
