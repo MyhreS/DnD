@@ -232,6 +232,22 @@ button {
   0%, 100% { background: var(--blood); box-shadow: inset 0 0 0 rgba(0, 0, 0, 0); }
   50% { background: var(--blood-bright); box-shadow: inset 0 0 24px rgba(255, 120, 120, 0.45); }
 }
+.update-bar:active {
+  filter: brightness(0.9);
+}
+/* On tap: stop the urgent flash and show a steady spinner so it's obvious the
+   press registered while the reload is prepared. */
+.update-bar-busy,
+.update-bar-busy:active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: none;
+  filter: none;
+  background: var(--blood-deep);
+  cursor: default;
+}
 @media (prefers-reduced-motion: reduce) {
   .update-bar { animation: none; background: var(--blood-bright); }
 }
