@@ -122,30 +122,6 @@ Firestore data:
 - `/sessions/{id}/rsvps/{uid}` — `{ uid, name, email, status, at }`. You write
   your own; the party reads.
 
-## Access model (important)
-
-- Must sign in with Google **and** be on the allowlist to use the app.
-- The allowlist is the Firestore collection `/allowlist/{email}`, each with a
-  **role**: `admin` | `dm` | `player`. "Staff" = admin or dm.
-- **Super-admins** (`SUPER_ADMIN_EMAILS` in `src/config.ts`, mirrored in
-  `firestore.rules`) are always allowed and can add/remove members + set roles
-  from the **Profile** screen. First/bootstrap admin: `simonmyhre1@gmail.com`.
-  First DM: `myhrefjeld@gmail.com` (Christoffer).
-- Roles drive the UI: players build a hunter and RSVP; **DM/admin** don't need a
-  character, get the **Party roster**, can edit session dates and send reminders.
-- Security is enforced in `firestore.rules`, not just the client. If you change
-  the super-admin email, change it in **both** `src/config.ts` and
-  `firestore.rules` (the `isSuperAdmin()` list).
-
-Firestore data:
-- `/allowlist/{email}` — `{ email, role, addedBy, addedAt }`. Super-admin writes
-  only; staff can read the whole roster.
-- `/players/{uid}` — a `HunterCard`. Readable by any party member, writable by owner.
-- `/sessions/{id}` — a session `{ title, date, location, notes, createdBy }`.
-  Readable by all members; writable by staff.
-- `/sessions/{id}/rsvps/{uid}` — `{ uid, name, email, status, at }`. You write
-  your own; everyone in the party can read (so the DM sees who's missing).
-
 ## Working in this repo (agent workflow)
 
 These conventions keep parallel agents from colliding and keep `main` clean.

@@ -4,6 +4,10 @@
   "version": "0.1.0",
   "type": "module",
   "description": "Companion app for our Catacombs & Starspawns tabletop campaign.",
+  "engines": {
+    "node": ">=22",
+    "bun": ">=1.3"
+  },
   "scripts": {
     "dev": "doppler run -- vite",
     "build": "tsc -b && doppler run -- vite build",
@@ -43,7 +47,7 @@
     "eslint": "^9.18.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "eslint-plugin-react-refresh": "^0.4.18",
-    "firebase-admin": "^14.0.0",
+    "firebase-admin": "^13.0.0",
     "globals": "^15.14.0",
     "knip": "^5.42.0",
     "playwright": "^1.61.0",

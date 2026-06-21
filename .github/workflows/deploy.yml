@@ -1,17 +1,20 @@
 name: Deploy
 
-# Builds the app and deploys to Firebase Hosting.
-#  - push to main           -> deploy to the live channel + push Firestore rules
-#  - pull request           -> deploy to a temporary preview channel
+# Builds the app and deploys to Firebase.
+#  - push to main           -> deploy live hosting + Firestore rules + Cloud Functions
+#  - pull request           -> deploy to a temporary preview channel (hosting only)
 #
 # Required GitHub repository secrets (Settings > Secrets and variables > Actions):
 #   DOPPLER_TOKEN            A Doppler *service token* for project `dnd`, config `prd`
 #                            (Doppler dashboard > dnd > prd > Access > Service Tokens).
 #                            Injects the VITE_FIREBASE_* build vars.
-#   FIREBASE_SERVICE_ACCOUNT The JSON key of a Firebase service account with
-#                            Hosting + Firestore deploy permissions. Easiest way to
-#                            create it: run `firebase init hosting:github` locally,
-#                            or generate one in the Google Cloud console.
+#   FIREBASE_SERVICE_ACCOUNT The JSON key of a Firebase service account with deploy
+#                            permissions. Hosting + rules need Firebase Hosting Admin +
+#                            Cloud Datastore Owner. The Cloud Functions deploy step ALSO
+#                            needs Cloud Functions Admin + Service Account User + Secret
+#                            Manager access (functions load GMAIL_APP_PASSWORD from Secret
+#                            Manager at runtime). If the SA lacks those, the functions
+#                            step will fail — grant the roles or remove that step.
 
 on:
   push:
@@ -32,6 +35,11 @@ jobs:
       - uses: oven-sh/setup-bun@v2
         with:
           bun-version: latest
+
+      # Node 22 (matches the functions runtime) for the Cloud Functions predeploy build.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
 
       - name: Install dependencies
         run: bun install --frozen-lockfile
@@ -68,4 +76,15 @@ jobs:
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
           bunx firebase-tools@latest deploy --only firestore:rules \
+            --project dandd-ea955 --non-interactive
+
+      - name: Deploy Cloud Functions
+        if: github.event_name == 'push'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          npm --prefix functions ci
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          bunx firebase-tools@latest deploy --only functions \
             --project dandd-ea955 --non-interactive
