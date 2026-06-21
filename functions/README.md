@@ -1,6 +1,6 @@
 # Functions — Catacombs & Starspawns backend
 
-Firebase Cloud Functions (Node 20, v2). Provides email notifications and any
+Firebase Cloud Functions (Node 22, v2). Provides email notifications and any
 server-side party logic. Requires the project to be on the Blaze plan (it is).
 
 ## What's here

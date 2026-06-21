@@ -4,7 +4,7 @@ lib/
 .runtimeconfig.json
 bun.lock
 bun.lockb
-# NOTE: functions/.env holds only non-secret params (sender, app URL) and IS
-# committed. Real secrets go in Firebase Secret Manager. Ignore local overrides:
+# Non-secret params (sender, app URL) live as defaults in src/config.ts; real
+# secrets go in Firebase Secret Manager. Ignore local env overrides:
 .env.local
 .env.*.local

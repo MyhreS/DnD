@@ -99,8 +99,23 @@ async function run() {
     await r.step("create-open", async () => { await r.click("Create character"); await sleep(1200); });
     await r.step("create-fill", async () => {
       await r.page.locator("#hunter-name").fill("Grukk the Tester");
-      await r.page.getByText("Scout", { exact: true }).first().click();
-      await sleep(400);
+      await r.page.locator("#bg").fill("Deserter");
+      await r.page.getByRole("button", { name: "Scout" }).click();
+      await sleep(300);
+      // Point-buy: spend the full 27-point budget. Three abilities 10→14 cost 7
+      // each (=21); the other three stay at 10 (2 each =6); 21+6 = 27, 0 left.
+      const incBase = r.page.getByLabel("increase base");
+      for (let a = 0; a < 3; a++) for (let i = 0; i < 4; i++) await incBase.nth(a).click();
+      // Background bonus must total exactly 3 (+2 then +1).
+      const incBg = r.page.getByLabel("increase bg");
+      await incBg.nth(0).click(); await incBg.nth(0).click(); await incBg.nth(1).click();
+      // Skills: pick exactly the class's required number of proficiencies.
+      const skillCard = r.page.locator(".card").filter({ has: r.page.locator(".eyebrow", { hasText: "Skills" }) });
+      const m = (await skillCard.locator("h3").innerText()).match(/\d+/);
+      const need = m ? parseInt(m[0], 10) : 0;
+      const chips = skillCard.locator(".chip.selectable");
+      for (let i = 0; i < need; i++) await chips.nth(i).click();
+      await sleep(300);
       await r.shot("character-editor");
       await r.click("Save hunter");
       await sleep(2500);
