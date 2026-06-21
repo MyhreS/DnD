@@ -3,6 +3,8 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { Sigil } from "./icons";
 import { Fighters } from "./fighters/Fighters";
 import { UpdateBar } from "./UpdateBar";
+import { usePlaySync } from "@/features/play/hooks/usePlaySync";
+import { LiveGameBanner } from "@/features/play/components/LiveGameBanner";
 
 export function Layout() {
   const member = useAuthStore((s) => s.member);
@@ -10,6 +12,9 @@ export function Layout() {
   // Players build a hunter; the DM doesn't, so they don't get the Character tab.
   const showCharacter = useAuthStore((s) => s.identity.playerType === "player");
   const location = useLocation();
+
+  // Keep the live-game subscription running app-wide (powers the banner + Play).
+  usePlaySync();
 
   const firstName = member?.firstName || user?.displayName || user?.email || "Hunter";
   const initial = firstName.trim().charAt(0).toUpperCase() || "H";
@@ -29,11 +34,13 @@ export function Layout() {
 
         <nav className="top-tabs" aria-label="Primary">
           <NavLink to="/" end>Sessions</NavLink>
+          <NavLink to="/play">Play</NavLink>
           {showCharacter && <NavLink to="/character">Character</NavLink>}
           <NavLink to="/party">Party</NavLink>
           <NavLink to="/handbook">Handbook</NavLink>
         </nav>
 
+        <LiveGameBanner />
         <UpdateBar />
       </div>
 

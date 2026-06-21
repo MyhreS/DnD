@@ -140,6 +140,44 @@ export interface HandbookChapter {
   sections: HandbookSection[];
 }
 
+// --- Live games (Play mode) ---
+
+export type GameStatus = "lobby" | "active" | "ended";
+/** The DM-set phase while a game is active. */
+export type GamePhase = "exploration" | "combat" | "short_rest" | "long_rest";
+
+export interface Game {
+  id: string;
+  /** Linked scheduled session id, or null for an ad-hoc game. */
+  sessionId: string | null;
+  title: string;
+  dmUid: string;
+  dmName: string;
+  status: GameStatus;
+  /** Current phase (meaningful while active). */
+  phase: GamePhase;
+  /** Test-run game — hidden from real views and auto-cleaned. */
+  sandbox?: boolean;
+  createdAt: number;
+  startedAt?: number | null;
+  endedAt?: number | null;
+  /** Phase recorded when the DM stopped the game. */
+  endedPhase?: GamePhase | null;
+}
+
+/** A member present in a game's lobby / session (a denormalised snapshot). */
+export interface GameParticipant {
+  uid: string;
+  name: string;
+  classId: string;
+  subclassId?: string | null;
+  level: number;
+  role: PlayerType;
+  joinedAt: number;
+  /** Presence heartbeat (ms epoch). */
+  lastSeen: number;
+}
+
 export interface SessionEvent {
   id: string;
   /** ISO date-time string (local), e.g. "2026-06-20T18:00:00". */

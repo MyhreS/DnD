@@ -7,6 +7,7 @@ import { LoginPage } from "@/features/auth/components/LoginPage";
 import { DeniedPage } from "@/features/auth/components/DeniedPage";
 import { SessionsPage } from "@/features/sessions/components/SessionsPage";
 import { CharacterPage } from "@/features/hunter/components/CharacterPage";
+import { PlayPage } from "@/features/play/components/PlayPage";
 import { PartyPage } from "@/features/party/components/PartyPage";
 import { HandbookPage } from "@/features/handbook/components/HandbookPage";
 import { ProfilePage } from "@/features/profile/components/ProfilePage";
@@ -32,6 +33,7 @@ export default function App() {
     <Routes>
       <Route element={<Layout />}>
         <Route index element={<SessionsPage />} />
+        <Route path="play" element={<PlayPage />} />
         <Route path="character" element={<CharacterPage />} />
         <Route path="hunter" element={<Navigate to="/character" replace />} />
         <Route path="party" element={<PartyPage />} />

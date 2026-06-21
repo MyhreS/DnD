@@ -68,6 +68,35 @@ export function isPreviewActive(): boolean {
   return import.meta.env.DEV && readPreviewRaw() !== null;
 }
 
+/** A sample live game (lobby) so Play mode renders in preview mode. */
+export function previewGame(): import("@/types").Game {
+  const now = Date.now();
+  return {
+    id: "preview-game",
+    sessionId: null,
+    title: "The Sunless Vault",
+    dmUid: "preview-dm",
+    dmName: "Christoffer",
+    status: "lobby",
+    phase: "exploration",
+    sandbox: false,
+    createdAt: now,
+    startedAt: null,
+    endedAt: null,
+    endedPhase: null,
+  };
+}
+
+/** Sample participants so the lobby / DM board look populated in preview. */
+export function previewParticipants(): import("@/types").GameParticipant[] {
+  const now = Date.now();
+  return [
+    { uid: "preview-dm", name: "Christoffer", classId: "", subclassId: null, level: 1, role: "dm", joinedAt: now, lastSeen: now },
+    { uid: "preview-uid", name: "Eileen the Crow", classId: "scout", subclassId: "marksman", level: 3, role: "player", joinedAt: now, lastSeen: now },
+    { uid: "preview-p2", name: "Gascoigne", classId: "brute", subclassId: "battle-master", level: 3, role: "player", joinedAt: now, lastSeen: now },
+  ];
+}
+
 /** A sample hunter card so the Character/Party views render in preview mode. */
 export function previewCard(uid: string): import("@/types").HunterCard {
   const now = Date.now();
