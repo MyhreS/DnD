@@ -1,14 +1,16 @@
 import { getClass } from "@/data/classes";
-import { maxHp } from "@/lib/character";
+import { maxHp, maxSanity } from "@/lib/character";
 import { usePlayerStore } from "../store/playerStore";
 import type { HunterCard } from "@/types";
 
-/** Live, editable play trackers: HP, Madness, Transform. Saved on change. */
+/** Live, editable play trackers: HP, Sanity, Blood Tinge. Saved on change. */
 export function CharacterTrackers({ card }: { card: HunterCard }) {
   const save = usePlayerStore((s) => s.save);
   const klass = getClass(card.classId);
-  const hpMax = klass ? maxHp(klass, card.abilities) : 0;
+  const hpMax = klass ? maxHp(klass, card.abilities, card.level) : 0;
   const hp = card.currentHp ?? hpMax;
+  const sanMax = klass ? maxSanity(klass, card.level) : 0;
+  const san = card.sanity ?? sanMax;
 
   function patch(p: Partial<HunterCard>) {
     void save({ ...card, ...p });
@@ -31,45 +33,60 @@ export function CharacterTrackers({ card }: { card: HunterCard }) {
         label="Hit Points"
         value={hp}
         max={hpMax}
-        tone="hp"
+        color="var(--blood-bright)"
         onChange={(v) => patch({ currentHp: Math.max(0, Math.min(hpMax, v)) })}
       />
       <Tracker
-        label="Madness"
-        value={card.madness ?? 0}
-        tone="madness"
-        onChange={(v) => patch({ madness: Math.max(0, v) })}
+        label="Sanity"
+        sub="Suffer Madness → lose Sanity"
+        value={san}
+        max={sanMax}
+        color="#7c5cff"
+        onChange={(v) => patch({ sanity: Math.max(0, Math.min(sanMax, v)) })}
       />
-      <Tracker
-        label="Transform"
-        value={card.transform ?? 0}
-        tone="transform"
-        onChange={(v) => patch({ transform: Math.max(0, v) })}
-      />
+
+      <div className="row between" style={{ padding: "10px 0 2px" }}>
+        <div>
+          <span style={{ fontWeight: 600 }}>Blood Tinge</span>
+          <div className="faint" style={{ fontSize: "0.74rem" }}>Heroic inspiration</div>
+        </div>
+        <button
+          type="button"
+          className={`btn btn-sm${card.bloodTinge ? " btn-primary" : " btn-ghost"}`}
+          style={{ width: "auto", minWidth: 84 }}
+          aria-pressed={!!card.bloodTinge}
+          onClick={() => patch({ bloodTinge: !card.bloodTinge })}
+        >
+          {card.bloodTinge ? "● Held" : "○ Spend"}
+        </button>
+      </div>
     </div>
   );
 }
 
 function Tracker({
   label,
+  sub,
   value,
   max,
-  tone,
+  color,
   onChange,
 }: {
   label: string;
+  sub?: string;
   value: number;
   max?: number;
-  tone: "hp" | "madness" | "transform";
+  color: string;
   onChange: (v: number) => void;
 }) {
-  const color =
-    tone === "hp" ? "var(--blood-bright)" : tone === "madness" ? "var(--gold)" : "#7c5cff";
   const pct = max && max > 0 ? Math.round((value / max) * 100) : 0;
   return (
     <div style={{ padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
       <div className="row between" style={{ marginBottom: max ? 6 : 0 }}>
-        <span style={{ fontWeight: 600 }}>{label}</span>
+        <div>
+          <span style={{ fontWeight: 600 }}>{label}</span>
+          {sub && <div className="faint" style={{ fontSize: "0.72rem" }}>{sub}</div>}
+        </div>
         <div className="row" style={{ gap: 10 }}>
           <button className="btn btn-ghost btn-sm" style={{ width: 38, padding: 6 }} onClick={() => onChange(value - 1)} aria-label={`decrease ${label}`}>−</button>
           <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", minWidth: 56, textAlign: "center" }}>

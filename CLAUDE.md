@@ -241,11 +241,27 @@ git anyway.) First-time on a new machine: `doppler login && doppler setup -p dnd
 
 ## Updating game content
 
-The handbook/classes/character-creation will be **updated later** (Simon will
-provide a new table). The UI is fully data-driven, so updates are localized:
-edit `src/data/classes.ts`, `src/data/armor.ts`, `src/data/handbook.ts`,
-`src/data/abilities.ts`. The character builder and handbook screens follow
-automatically. Replace the PDF in `public/handbook/` if a new one arrives.
+The UI is fully data-driven, so content updates are localized to `src/data/`:
+- `classes.ts` — the six classes: traits (incl. **Max Sanity** + **Sanity Die**),
+  full 1–20 **progression tables**, level-by-level **features**, and **subclasses**.
+- `rites.ts` — the Deepcaller's **Rites & Whispers**.
+- `skills.ts` — the C&S skill list + each skill's governing ability.
+- `armor.ts` — the armory (Main / Add-on / **Armor Upgrade** / Extra).
+- `handbook.ts` — the Rules chapters (creation steps, AC, carrying, Sanity).
+- `abilities.ts` — ability metadata + point-buy.
+
+The character builder, hunter sheet and handbook screens follow automatically.
+Replace the PDF in `public/handbook/` if a new one arrives.
+
+**Source of truth.** The DM's raw material lives in `resources/` (PDFs + CSVs).
+`resources/extracted/` holds the clean `pdftotext` output, the structured
+`content.json`, and `gen.py`, which regenerates `classes.ts` + `rites.ts` from
+`content.json` + the level-table CSVs. After a content refresh, re-run
+`pdftotext`, update `content.json`, and `python3 resources/extracted/gen.py`.
+
+> A few source tables conflict with the handbook's Class Overview; resolved in
+> favour of the Overview + 5e basis: Stalker Hit Die = **d8** (per Rogue), Bloodbound
+> saves = **STR/CON**, Warden has **no** tool proficiency. Confirm with the DM.
 
 ## One-time manual setup (Firebase console)
 

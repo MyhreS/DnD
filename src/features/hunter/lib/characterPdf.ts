@@ -1,9 +1,19 @@
 import { jsPDF } from "jspdf";
 import type { HunterCard } from "@/types";
-import { getClass } from "@/data/classes";
+import { getClass, getSubclass } from "@/data/classes";
 import { ARMOR_BY_ID } from "@/data/armor";
-import { ABILITIES, ABILITY_NAME, abilityModifier, formatModifier } from "@/data/abilities";
-import { maxHp, armorClass } from "@/lib/character";
+import { SKILLS } from "@/data/skills";
+import { RITE_BY_ID } from "@/data/rites";
+import { ABILITIES, abilityModifier, formatModifier } from "@/data/abilities";
+import {
+  maxHp,
+  armorClass,
+  maxSanity,
+  proficiencyBonus,
+  saveModifier,
+  skillModifier,
+  riteStats,
+} from "@/lib/character";
 
 // Colours (print-friendly: dark ink on white, brass/blood accents).
 const INK: [number, number, number] = [31, 26, 18];
@@ -34,8 +44,12 @@ function slug(s: string): string {
 /** Draw one full character sheet on the current page. */
 function drawCharacter(doc: jsPDF, card: HunterCard): void {
   const klass = getClass(card.classId);
+  const sub = getSubclass(card.classId, card.subclassId);
   const ac = armorClass(card.abilities, card.mainArmorId);
-  const hpMax = klass ? maxHp(klass, card.abilities) : 0;
+  const lvl = card.level;
+  const prof = proficiencyBonus(lvl);
+  const hpMax = klass ? maxHp(klass, card.abilities, lvl) : 0;
+  const sanMax = klass ? maxSanity(klass, lvl) : 0;
   const armor = card.mainArmorId ? ARMOR_BY_ID[card.mainArmorId] : null;
   let y = 60;
 
@@ -48,10 +62,10 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
   doc.setFont("times", "italic");
   doc.setFontSize(11);
   doc.setTextColor(...GRAY);
-  const sub = [klass?.title, card.background, klass ? `Level ${card.level}` : null]
+  const subtitle = [klass?.title, sub?.name, card.background, klass ? `Level ${lvl}` : null]
     .filter(Boolean)
     .join("  ·  ");
-  doc.text(sub, M, y);
+  doc.text(subtitle, M, y);
   y += 14;
   doc.setDrawColor(...LINE);
   doc.line(M, y, PAGE_W - M, y);
@@ -62,9 +76,9 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
     ["Armor Class", String(ac.total)],
     ["Hit Points", `${card.currentHp ?? hpMax} / ${hpMax}`],
     ["Speed", klass ? `${klass.speedFt}ft` : "—"],
-    ["Prof.", "+2"],
-    ["Madness", String(card.madness ?? 0)],
-    ["Transform", String(card.transform ?? 0)],
+    ["Prof.", formatModifier(prof)],
+    ["Sanity", klass ? `${card.sanity ?? sanMax} / ${sanMax}` : "—"],
+    ["Blood Tinge", card.bloodTinge ? "Yes" : "No"],
   ];
   y = drawBoxRow(doc, y, vitals);
   y += 12;
@@ -82,11 +96,26 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
   y = drawBoxRow(doc, y, abilityBoxes);
   y += 14;
 
-  // Proficiencies
+  // Saving throws & skills
   if (klass) {
+    const saves = ABILITIES.map(
+      ({ key, short }) =>
+        `${short} ${formatModifier(saveModifier(klass, card.abilities, key, lvl))}${klass.savingThrows.includes(key) ? "*" : ""}`,
+    ).join("   ");
+    y = section(doc, y, "SAVING THROWS  (* = proficient)");
+    y = paragraph(doc, y, saves);
+    y += 4;
+
+    if (card.skillProficiencies.length) {
+      const skills = SKILLS.filter((s) => card.skillProficiencies.includes(s.name))
+        .map((s) => `${s.name} ${formatModifier(skillModifier(card.abilities, s.name, true, lvl))}`)
+        .join(",   ");
+      y = section(doc, y, "SKILL PROFICIENCIES");
+      y = paragraph(doc, y, skills);
+      y += 4;
+    }
+
     y = section(doc, y, "PROFICIENCIES");
-    y = line(doc, y, "Saving throws", klass.savingThrows.map((k) => ABILITY_NAME[k]).join(", "));
-    y = line(doc, y, "Skills", card.skillProficiencies.join(", ") || "—");
     y = line(doc, y, "Weapons", klass.weaponProficiencies);
     y = line(doc, y, "Tools", klass.toolProficiencies);
     y = line(doc, y, "Armor training", klass.armorTraining.join(", "));
@@ -99,10 +128,24 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
     y += 6;
   }
 
+  // Rites (Deepcaller)
+  if (klass?.caster) {
+    const r = riteStats(card.abilities, lvl);
+    y = section(doc, y, "RITES");
+    y = line(doc, y, "Rite stats", `Save DC ${r.saveDc}   ·   Attack ${formatModifier(r.attack)}   ·   INT ${formatModifier(r.modifier)}`);
+    const prepared = (card.preparedWhispers ?? [])
+      .map((id) => RITE_BY_ID[id]?.name)
+      .filter(Boolean)
+      .join(", ");
+    y = line(doc, y, "Prepared", prepared || "—");
+    y += 6;
+  }
+
   // Armor & gear
   y = section(doc, y, "ARMOR & GEAR");
   y = line(doc, y, "Worn", armor ? `${armor.name} (${armor.ac})` : "Unarmored");
   if (armor) y = paragraph(doc, y, armor.special);
+  y = line(doc, y, "Coins", `${card.coins ?? 0} GP`);
   if (klass) y = line(doc, y, "Equipment", klass.startingEquipment.join(", "));
   y += 8;
 

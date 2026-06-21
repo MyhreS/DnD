@@ -9,11 +9,37 @@ export interface SkillChoice {
   options: string[];
 }
 
-/** A feature a class gains at a given level (from the DM's class drafts). */
+/** A skill and the ability it keys off (C&S character sheet mapping). */
+export interface Skill {
+  name: string;
+  ability: AbilityKey;
+}
+
+/** A feature a class or subclass gains at a given level. */
 export interface LevelFeature {
   level: number;
   name: string;
   text: string;
+}
+
+/** One row of a class's 1–20 progression table. */
+export interface ClassLevel {
+  level: number;
+  /** Proficiency bonus, 2–6. */
+  profBonus: number;
+  /** Features gained, as listed in the class table (comma-separated). */
+  features: string;
+  /** Class-specific table columns, e.g. { "Sneak Attack": "3d6" }. */
+  extras: Record<string, string>;
+}
+
+/** A class specialization chosen at level 3. */
+export interface Subclass {
+  id: string;
+  name: string;
+  tagline: string;
+  blurb: string;
+  features: LevelFeature[];
 }
 
 export interface HunterClass {
@@ -25,8 +51,12 @@ export interface HunterClass {
   blurb: string;
   primaryAbility: string;
   savingThrows: AbilityKey[];
-  /** Hit die, e.g. "d10". Also the level-1 HP die. */
+  /** Hit die, e.g. 10. Also the level-1 HP die. */
   hitDie: number;
+  /** Starting maximum Sanity (the C&S sanity pool). */
+  maxSanity: number;
+  /** Sanity die, e.g. 12 → d12. */
+  sanityDie: number;
   speedFt: number;
   armorTraining: ArmorTraining[];
   weaponProficiencies: string;
@@ -37,8 +67,46 @@ export interface HunterClass {
   baseClass?: string;
   /** The signature level-1 mechanic, shown prominently. */
   signature?: string;
-  /** Level-by-level progression (drafts; not every class is detailed yet). */
+  /** Extra column headers in the progression table (besides Level/Prof/Features). */
+  progressionColumns: string[];
+  /** Full 1–20 level table. */
+  progression: ClassLevel[];
+  /** Detailed core-class feature text, level by level. */
   features?: LevelFeature[];
+  /** Subclasses chosen at level 3. */
+  subclasses: Subclass[];
+  /** True for the Deepcaller — performs Rites & Whispers with Strain. */
+  caster?: boolean;
+}
+
+// --- Rites (the Deepcaller's spell-like system) ---
+
+export type RiteType =
+  | "Evocation"
+  | "Mind Influence"
+  | "Illusion"
+  | "Summoning"
+  | "Traversal"
+  | "Detection"
+  | "Protection";
+
+export interface Rite {
+  id: string;
+  name: string;
+  /** Rite level 1–9; 0 marks a Whisper (lesser fragment, no Strain/Madness). */
+  level: number;
+  whisper: boolean;
+  type: RiteType;
+  /** Performing time, e.g. "Action", "Bonus Action", "Reaction". */
+  performing: string;
+  range: string;
+  duration: string;
+  /** Special Requirements line, if any. */
+  special?: string;
+  /** The effect text. */
+  text: string;
+  /** "Using Higher-Level Strain" / "Whisper Upgrade" scaling text, if any. */
+  upgrade?: string;
 }
 
 export type ArmorCategory =
@@ -125,6 +193,8 @@ export interface HunterCard {
   ownerName: string;
   name: string;
   classId: string;
+  /** Chosen subclass id (from the class's subclasses), or null. */
+  subclassId?: string | null;
   background: string;
   level: number;
   /** Final ability scores after background adjustment. */
@@ -135,9 +205,14 @@ export interface HunterCard {
   mainArmorId: string | null;
   /** Current hit points during play (defaults to max when unset). */
   currentHp?: number;
-  /** Play-time resource tracks (in addition to HP). C&S-specific mechanics. */
-  madness: number;
-  transform: number;
+  /** Current Sanity during play (defaults to max when unset). */
+  sanity?: number;
+  /** Blood Tinge — the C&S take on heroic inspiration. */
+  bloodTinge?: boolean;
+  /** Deepcaller: prepared Whispers / known rites, by rite id. */
+  preparedWhispers?: string[];
+  /** Gold pieces (the only currency). */
+  coins?: number;
   notes: string;
   updatedAt: number;
   createdAt: number;

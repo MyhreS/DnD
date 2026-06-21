@@ -1,0 +1,1237 @@
+{
+ "classes": [
+  {
+   "features": [
+    {
+     "level": 1,
+     "name": "Fighting Style",
+     "text": "You have honed your martial prowess and gain a Fighting Style feat of your choice (see chapter 4). Whenever you gain a Fighter level, you can replace the feat you chose with a different Fighting Style feat."
+    },
+    {
+     "level": 1,
+     "name": "Weapon Mastery",
+     "text": "Your training with weapons allows you to use the mastery properties of three kinds of Simple or Martial weapons of your choice. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices. When you reach certain Fighter levels, you gain the ability to use the mastery properties of more kinds of weapons, as shown in the Weapon Mastery column of the Hunter Brute Features table."
+    },
+    {
+     "level": 2,
+     "name": "Action Surge",
+     "text": "You can push yourself beyond your normal limits for a moment. On your turn, you can take one additional action. Once you use this feature, you can't do so again until you finish a Short or Long Rest. Starting at level 17, you can use it twice before a rest but only once on a turn."
+    },
+    {
+     "level": 2,
+     "name": "Refuse the Bleeding",
+     "text": "When you take damage, you may use your reaction and expend one use of Refuse the Bleeding to reduce the incoming damage by 1d10 + your Hunter Brute level. You regain one expended use when you finish a short rest, and you regain all expended uses when you finish a long rest."
+    },
+    {
+     "level": 3,
+     "name": "Hunter Brute Subclass",
+     "text": "You gain a Hunter Brute subclass of your choice. The Battle Master or the Champion subclasses are detailed after this class's description. A subclass is a specialization that grants you features at certain Hunter Brute levels."
+    },
+    {
+     "level": 4,
+     "name": "Ability Score Improvement",
+     "text": "You gain the Ability Score Improvement feat (see chapter 5) or another feat of your choice for which you qualify. You gain this feature again at Hunter Brute levels 6, 8, 12, 14, and 16."
+    },
+    {
+     "level": 5,
+     "name": "Extra Attack",
+     "text": "You can attack twice instead of once whenever you take the Attack action on your turn."
+    },
+    {
+     "level": 9,
+     "name": "War Master",
+     "text": "When you attack with a weapon whose mastery property you can use, you can replace that property with the Push, Sap, or Slow property for that attack."
+    },
+    {
+     "level": 11,
+     "name": "Two Extra Attacks",
+     "text": "You can attack three times instead of once whenever you take the Attack action on your turn."
+    },
+    {
+     "level": 13,
+     "name": "Studied Attacks",
+     "text": "You study your opponents and learn from each attack you make. If you make an attack roll against a creature and miss, you have Advantage on your next attack roll against that creature before the end of your next turn."
+    },
+    {
+     "level": 19,
+     "name": "Epic Boon",
+     "text": "You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you qualify."
+    },
+    {
+     "level": 20,
+     "name": "Three Extra Attacks",
+     "text": "You can attack four times instead of once whenever you take the Attack action on your turn."
+    }
+   ],
+   "subclasses": [
+    {
+     "id": "battle-master",
+     "name": "Battle Master",
+     "tagline": "*Master Sophisticated Battle Maneuvers*",
+     "blurb": "Battle Masters are students of the art of battle. The most accomplished Battle Masters are well-rounded figures who use their carefully honed combat skills.",
+     "features": [
+      {
+       "level": 3,
+       "name": "Combat Superiority",
+       "text": "Your experience on the battlefield has refined your fighting techniques. You learn maneuvers that are fueled by special dice called Superiority Dice.\n\nManeuvers. You learn three maneuvers of your choice from the \"Maneuver Options\" section later in this subclass's description. Many maneuvers enhance an attack in some way. You can use only one maneuver per attack. You learn two additional maneuvers of your choice when you reach Hunter Brute levels 7, 10, and 15. Each time you learn new maneuvers, you can also replace one maneuver you know with a different one.\n\nSuperiority Dice. You have four Superiority Dice, which are d8s. A Superiority Die is expended when you use it. You regain all expended Superiority Dice when you finish a Short or Long Rest. You gain an additional Superiority Die when you reach Hunter Brute levels 7 (five dice total) and 15 (six dice total).\n\nSaving Throws. If a maneuver requires a saving throw, the DC equals 8 plus your Strength or Dexterity modifier (your choice) and Proficiency Bonus."
+      },
+      {
+       "level": 7,
+       "name": "Student of War",
+       "text": "You gain proficiency in one skill of your choice from the skills available to Hunter Brutes at level 1."
+      },
+      {
+       "level": 10,
+       "name": "Improved Combat Superiority",
+       "text": "Your Superiority Die becomes a d10."
+      },
+      {
+       "level": 15,
+       "name": "Relentless",
+       "text": "Once per turn, when you use a maneuver, you can roll 1d8 and use the number rolled instead of expending a Superiority Die."
+      },
+      {
+       "level": 18,
+       "name": "Ultimate Combat Superiority",
+       "text": "Your Superiority Die becomes a d12."
+      }
+     ]
+    },
+    {
+     "id": "champion",
+     "name": "Champion",
+     "tagline": "*Pursue Physical Excellence in Combat*",
+     "blurb": "A Champion focuses on the development of martial prowess in a relentless pursuit of victory. Champions combine rigorous training with physical excellence to deal devastating blows, withstand peril, and garner glory. Even in a bloody battle, Champions strive for the crown of the victor.",
+     "features": [
+      {
+       "level": 3,
+       "name": "Improved Critical",
+       "text": "Your attack rolls with weapons and Unarmed Strikes can score a Critical Hit on a roll of 19 or 20 on the d20."
+      },
+      {
+       "level": 7,
+       "name": "Additional Fighting Style",
+       "text": "You gain another Fighting Style feat of your choice."
+      },
+      {
+       "level": 10,
+       "name": "Ferocious Warrior",
+       "text": "The thrill of battle drives you toward victory. During combat, you can give yourself Blood Tinge whenever you start your turn without it."
+      },
+      {
+       "level": 15,
+       "name": "Superior Critical",
+       "text": "Your attack rolls with weapons and Unarmed Strikes can now score a Critical Hit on a roll of 18-20 on the d20."
+      },
+      {
+       "level": 18,
+       "name": "Survivor",
+       "text": "You attain the pinnacle of resilience in battle, giving you these benefits.\n\nDefy Death. You have Advantage on Death Saving Throws. Moreover, when you roll 18-20 on a Death Saving Throw, you gain the benefit of rolling a 20 on it.\n\nFeral Rally. At the start of each of your turns, you regain Hit Points equal to 5 plus your Constitution modifier if you are Bloodied and have at least 1 Hit Point."
+      }
+     ]
+    }
+   ],
+   "id": "brute"
+  },
+  {
+   "features": [
+    {
+     "level": 1,
+     "name": "Hunter's Mark",
+     "text": "You can mark a creature with the Hunter's Mark. You can make four marks, and you regain all expended uses of this ability when you finish a Long Rest. The number of times you can make a mark increases when you reach certain Hunter Scout levels, as shown in the Hunter's Mark column of the Hunter Scout Features table.\n\nHunter's Mark\nUse: Bonus Action\nRange: 90 feet\n\nYou mark one creature you can see within range as your quarry. Until the mark ends, you deal an extra 1d6 damage to the target whenever you hit it with an attack roll. You also have Advantage on any Wisdom (Perception or Survival) check you make to find it. If the target drops to 0 Hit Points before the Mark ends, you can take a Bonus Action to move the mark to a new creature you can see within range.\n\nYou can only mark one creature at a time. If you spend a Hunter's Mark while another mark is active, the old mark disappears. If you take damage, you must succeed on a Constitution saving throw to maintain the Hunter's Mark. The DC equals 10 or half the damage taken (round down), whichever number is higher, up to a maximum DC of 30. Your Hunter's Mark ends if you have the Incapacitated condition or you die."
+    },
+    {
+     "level": 1,
+     "name": "Weapon Mastery",
+     "text": "Your training with weapons allows you to use the mastery properties of two kinds of weapons of your choice with which you have proficiency. Whenever you finish a Long Rest, you can change the kinds of weapons you chose."
+    },
+    {
+     "level": 2,
+     "name": "Expertise",
+     "text": "Choose one of your skill proficiencies with which you lack Expertise. You gain Expertise in that skill."
+    },
+    {
+     "level": 2,
+     "name": "Fighting Style",
+     "text": "You gain a Fighting Style feat of your choice (see chapter 4)."
+    },
+    {
+     "level": 3,
+     "name": "Hunter Scout Subclass",
+     "text": "You gain a Hunter Scout subclass of your choice. The Beast Caller and the Marksman subclasses are detailed after this class's description. A subclass is a specialization that grants you features at certain Hunter Scout levels."
+    },
+    {
+     "level": 4,
+     "name": "Ability Score Improvement",
+     "text": "You gain the Ability Score Improvement feat (see chapter 4) or another feat of your choice for which you qualify. You gain this feature again at Hunter Scout levels 8, 12, and 16."
+    },
+    {
+     "level": 5,
+     "name": "Extra Attack",
+     "text": "You can attack twice instead of once whenever you take the Attack action on your turn."
+    },
+    {
+     "level": 6,
+     "name": "Roving",
+     "text": "Your Speed increases by 10 feet while you aren't wearing Heavy armor. You also have a Climb Speed and a Swim Speed equal to your Speed."
+    },
+    {
+     "level": 9,
+     "name": "Expertise",
+     "text": "Choose two of your skill proficiencies with which you lack Expertise. You gain Expertise in those skills."
+    },
+    {
+     "level": 10,
+     "name": "Tireless",
+     "text": "Primal forces now help fuel you on your journeys, granting you the following benefits.\n\nTemporary Hit Points. As an action, you can give yourself a number of Temporary Hit Points equal to 1d8 plus your Wisdom modifier (minimum of 1). You can use this action a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a Long Rest.\n\nDecrease Exhaustion. Whenever you finish a Short Rest, your Exhaustion level, if any, decreases by 1."
+    },
+    {
+     "level": 13,
+     "name": "Relentless Hunter",
+     "text": "Taking damage can't remove your Hunter's Mark."
+    },
+    {
+     "level": 17,
+     "name": "Precise Hunter",
+     "text": "You have Advantage on attack rolls against the creature currently marked by your Hunter's Mark."
+    },
+    {
+     "level": 18,
+     "name": "Feral Senses",
+     "text": "Your instincts gives you Blindsight with a range of 30 feet."
+    },
+    {
+     "level": 19,
+     "name": "Epic Boon",
+     "text": "You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you qualify."
+    },
+    {
+     "level": 20,
+     "name": "Foe Slayer",
+     "text": "The damage die of your Hunter's Mark is a d10 rather than a d6."
+    }
+   ],
+   "subclasses": [
+    {
+     "id": "beast-caller",
+     "name": "Beast Caller",
+     "tagline": "Call on a beast from beyond time.",
+     "blurb": "A Beast Caller forms a mystical bond with a special beast, through old knowledge signing a contract drawing on mysterious forces from the unknown.",
+     "features": [
+      {
+       "level": 3,
+       "name": "Pact with a Beast",
+       "text": "You call upon a timeless beast, and through the Pact you form with it, the beast draws upon your strength for better and for worse. See the stat block: Hound of Tindalos.\n\nThe beast is Friendly to you and your allies and obeys your commands. It vanishes if you die. It also vanishes if it drops to 0 Hit Points or when its stated task is done.\n\nSummoning the Beast. You can take an action to expend a Hunter's Mark to summon the beast. The Hound of Tindalos manifest in an unoccupied space that you can see within range of 90 feet. The beast will only show up to complete a specific task, either to defeat your foes during combat or something else. The reason for you to call upon it must be stated beforehand.\n\nThe Beast in Combat. In combat, the beast acts during your turn. It can move and use its Reaction on its own, but the only action it takes is the Dodge action to avoid danger, unless you take a Bonus Action to command it to take an action in its stat block or some other action. You can also sacrifice one of your attacks when you take the Attack action to command the beast to take the Beast's Strike action. If you have the Incapacitated condition, the beast acts on its own and isn't limited to the Dodge action.\n\nHound of Tindalos\n\nSTR 14 (+2 mod, +2 save), DEX 18 (+3 mod, +3 save), CON 16 (+3 mod, +3 save), INT 4 (-3 mod, -3 save), WIS 14 (+2 mod, +2 save), CHA 5 (-3 mod, -3 save)\n\nMedium Beast, Natural\nAC 13 plus your Wisdom modifier\nHP 5 plus five times your Hunter Scout level\nSpeed 40 ft., Climb 40 ft.\nSenses Darkvision 60 ft.; Passive Perception 12\nCR None (XP 0; PB equals your Proficiency Bonus)\n\nTraits\nPact. Add your Proficiency Bonus to any ability check or saving throw the beast makes. If the beast reaches 0 Hit Points, you need to make a Grit Saving Throw DC 16. If you succeed nothing happens. If you fail lose Hit Points equal to 1d10 + your Hunter Scout level + your Wisdom modifier and suffer 4 Madness.\n\nActions\nBeast's Feral Strike. Melee Attack Roll: Bonus equals your Wisdom modifier + your Proficiency Bonus, reach 5 ft. Hit: 2d6 + 2 + your Wisdom modifier Slashing damage. If the beast moved at least 20 feet straight toward the target before the hit, the target takes an extra 1d6 damage of Slashing damage, and the target has the Prone condition if it is a Large or smaller creature."
+      },
+      {
+       "level": 7,
+       "name": "Deepened Pact",
+       "text": "When you take a Bonus Action to command your summoned Hound of Tindalos to take an action, you can also command it to take the Dash, Disengage, Dodge, or Help action using its Bonus Action. In addition, whenever it hits with an attack roll and deals damage, it can deal your choice of either Psychic, Bludgeoning or Piercing damage, or its normal damage type."
+      },
+      {
+       "level": 11,
+       "name": "The Beast's Brutality",
+       "text": "When you command your summoned Hound of Tindalos to take the Beast's Feral Strike action, the beast can use it twice. In addition, the first time each turn it hits a creature under the effect of your Hunter's Mark, the beast deals extra Piercing damage equal to the Hunter's Mark's bonus damage."
+      },
+      {
+       "level": 15,
+       "name": "Absolute Pact",
+       "text": "Your summoned Hound of Tindalos now gains the Final Carnage action. You can now command your summoned Hound of Tindalos to make a final attack. The Final Carnage action uses the Beast's Feral Strike action four times. If you command your summoned Hound of Tindalos to take the Final Carnage action, the beast Hit Points will reach 0 at the end of the attack."
+      }
+     ]
+    },
+    {
+     "id": "marksman",
+     "name": "Marksman",
+     "tagline": "You specialize in long-ranged firearms and close-quarters punishment, forcing enemies to fear both the distance between you and the mistake of closing it.",
+     "blurb": "Whether you unleash a storm of bullets or deliver a single shot with surgical cruelty, your rifle becomes an extension of your will. In your hands, firearms are not merely weapons, but instruments of execution, sending foes into eternal sleep before they can raise a blade.",
+     "features": [
+      {
+       "level": 3,
+       "name": "Deadly Rifleman",
+       "text": "If you are using a Hunter's Rifle, it now changes to Trained Hunter's Rifle.\n\nTrained Hunter's Rifle: Damage 1d12 Piercing, Properties: Ammunition (Range 150/600; Bullet), Two-Handed, Mastery: Slow, Weight: 10 lb.\n\nIf you are using a Pistol, it now changes to Trained Pistol.\n\nTrained Pistol: Damage 1d10 Piercing, Properties: Ammunition (Range 30/90; Bullet), Light, Loading, Mastery: Vex, Weight: 3 lb."
+      },
+      {
+       "level": 3,
+       "name": "Hunter's Prey",
+       "text": "You gain one of the following feature options of your choice. Whenever you finish a Short or Long Rest, you can replace the chosen option with the other one.\n\nColossus Slayer. Your tenacity can wear down even the most resilient foes. When you hit a creature with a weapon, the weapon deals an extra 1d8 damage to the target if it's missing any of its Hit Points. You can deal this extra damage only once per turn.\n\nHorde Breaker. Once on each of your turns when you make an attack with a weapon, you can make another attack with the same weapon against a different creature that is within 5 feet of the original target, that is within the weapon's range, and that you haven't attacked this turn."
+      },
+      {
+       "level": 7,
+       "name": "Elite Rifleman",
+       "text": "Before making an attack roll with your Trained Hunter's Rifle, you may spend 1 Hunter's Mark to gain mastery with that rifle for the attack if you do not already have it. When you do so, you may also replace the rifle's mastery property for that shot with one of the following: Topple, Sap, or Push. The chosen mastery applies only to that attack."
+      },
+      {
+       "level": 11,
+       "name": "Superior Hunter's Prey",
+       "text": "Once per turn when you deal damage to a creature marked by your Hunter's Mark, you can also deal that mark's extra damage to a different creature that you can see within 30 feet of the first creature."
+      },
+      {
+       "level": 15,
+       "name": "Deathmark Rifleman",
+       "text": "Gain the two following benefits.\n\nDeathmark Shot. After you hit with an Attack Roll using your Trained Hunter's Rifle, you may spend 1 Hunter's Mark to turn the shot into a Deathmark Shot. Roll the attack's damage once, then apply that same damage up to three times. You may apply all three instances of damage to the original target, or divide them among the original target and other creatures within the rifle's normal range.\n\nPoint-Blank Retort. When a creature within your pistol's range deals melee damage to you, you may use your reaction and spend 1 Hunter's Mark to immediately draw your pistol and make one pistol attack against that creature."
+      }
+     ]
+    }
+   ],
+   "id": "scout"
+  },
+  {
+   "id": "stalker",
+   "features": [
+    {
+     "level": 1,
+     "name": "Expertise",
+     "text": "You gain Expertise in two of your skill proficiencies of your choice. At Hunter Stalker level 6, you gain Expertise in two more of your skill proficiencies of your choice."
+    },
+    {
+     "level": 1,
+     "name": "Sneak Attack",
+     "text": "You know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal an extra 1d6 damage to one creature you hit with an attack roll if you have Advantage on the roll and the attack uses a Finesse or a Ranged weapon. The extra damage's type is the same as the weapon's type.\n\nYou don't need Advantage on the attack roll if at least one of your allies is within 5 feet of the target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage on the attack roll.\n\nThe extra damage increases as you gain Hunter Stalker levels, as shown in the Sneak Attack column of the Hunter Stalker Features table."
+    },
+    {
+     "level": 2,
+     "name": "Weapon Mastery",
+     "text": "Your training with weapons allows you to use the mastery properties of two kinds of weapons of your choice with which you have proficiency. Whenever you finish a Long Rest, you can change the kinds of weapons you chose."
+    },
+    {
+     "level": 2,
+     "name": "Cunning Action",
+     "text": "Your quick thinking and agility allow you to move and act quickly. On your turn, you can take one of the following actions as a Bonus Action: Dash, Disengage, or Hide."
+    },
+    {
+     "level": 3,
+     "name": "Hunter Stalker Subclass",
+     "text": "You gain a Hunter Stalker subclass of your choice. The Assassin or the Thief subclasses are detailed after this class's description. A subclass is a specialization that grants you features at certain Hunter Stalker levels."
+    },
+    {
+     "level": 3,
+     "name": "Steady Aim",
+     "text": "As a Bonus Action, you give yourself Advantage on your next attack roll on the current turn. You can use this feature only if you haven't moved during this turn, and after you use it, your Speed is 0 until the end of the current turn."
+    },
+    {
+     "level": 4,
+     "name": "Ability Score Improvement",
+     "text": "You gain the Ability Score Improvement feat (see chapter 4) or another feat of your choice for which you qualify. You gain this feature again at Hunter Stalker levels 8, 10, 12, and 16."
+    },
+    {
+     "level": 5,
+     "name": "Cunning Strike",
+     "text": "You've developed cunning ways to use your Sneak Attack. When you deal Sneak Attack damage, you can add one of the following Cunning Strike effects.\n\nEach effect has a die cost, which is the number of Sneak Attack damage dice you must forgo to add the effect. You remove the die before rolling, and the effect occurs immediately after the attack's damage is dealt. For example, if you add the Poison effect, remove 1d6 from the Sneak Attack's damage before rolling.\n\nIf a Cunning Strike effect requires a saving throw, the DC equals 8 plus your Dexterity modifier and Proficiency Bonus.\n\nPoison (Cost: 1d6). You add a toxin to your strike, forcing the target to make a Constitution saving throw. On a failed save, the target has the Poisoned condition for 1 minute. At the end of each of its turns, the Poisoned target repeats the save, ending the effect on itself on a success. To use this effect, you must have a Poisoner's Kit on your person.\n\nTrip (Cost: 1d6). If the target is Large or smaller, it must succeed on a Dexterity saving throw or have the Prone condition.\n\nWithdraw (Cost: 1d6). Immediately after the attack, you move up to half your Speed without provoking Opportunity Attacks."
+    },
+    {
+     "level": 7,
+     "name": "Evasion",
+     "text": "You can nimbly dodge out of the way of certain dangers. When you're subjected to an effect that allows you to make a Dexterity saving throw to take only half damage, you instead take no damage if you succeed on the saving throw and only half damage if you fail. You can't use this feature if you have the Incapacitated condition."
+    },
+    {
+     "level": 7,
+     "name": "Reliable Talent",
+     "text": "Whenever you make an ability check that uses one of your skill or tool proficiencies, you can treat a d20 roll of 9 or lower as a 10."
+    },
+    {
+     "level": 11,
+     "name": "Improved Cunning Strike",
+     "text": "You can use up to two Cunning Strike effects when you deal Sneak Attack damage, paying the die cost for each effect."
+    },
+    {
+     "level": 14,
+     "name": "Devious Strikes",
+     "text": "You've practiced new ways to use your Sneak Attack deviously. The following effects are now among your Cunning Strike options.\n\nDaze (Cost: 2d6). The target must succeed on a Constitution saving throw, or on its next turn, it can do only one of the following: move or take an action or a Bonus Action.\n\nKnock Out (Cost: 6d6). The target must succeed on a Constitution saving throw, or it has the Unconscious condition for 1 minute or until it takes any damage. The Unconscious target repeats the save at the end of each of its turns, ending the effect on itself on a success.\n\nObscure (Cost: 3d6). The target must succeed on a Dexterity saving throw, or it has the Blinded condition until the end of its next turn."
+    },
+    {
+     "level": 15,
+     "name": "Slippery Mind",
+     "text": "Your cunning mind is exceptionally difficult to control. You gain proficiency in Wisdom and Charisma saving throws."
+    },
+    {
+     "level": 18,
+     "name": "Elusive",
+     "text": "You're so evasive that attackers rarely gain the upper hand against you. No attack roll can have Advantage against you unless you have the Incapacitated condition."
+    },
+    {
+     "level": 19,
+     "name": "Epic Boon",
+     "text": "You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you qualify."
+    },
+    {
+     "level": 20,
+     "name": "Stroke of Luck",
+     "text": "You have a marvelous knack for succeeding when you need to. If you fail a D20 Test, you can turn the roll into a 20. Once you use this feature, you can't use it again until you finish a Short or Long Rest."
+    }
+   ],
+   "subclasses": [
+    {
+     "id": "assassin",
+     "name": "Assassin",
+     "tagline": "Practice the Grim Art of Death",
+     "blurb": "An Assassin's training focuses on using stealth, poison, and disguise to eliminate foes with deadly efficiency. While some Hunter Stalkers who follow this path are hired killers, spies, or bounty hunters, the capabilities of this subclass are equally useful for adventurers facing a variety of monstrous enemies.",
+     "features": [
+      {
+       "level": 3,
+       "name": "Assassinate",
+       "text": "You're adept at ambushing a target, granting you the following benefits.\n\nInitiative. You have Advantage on Initiative rolls.\n\nSurprising Strikes. During the first round of each combat, you have Advantage on attack rolls against any creature that hasn't taken a turn. If your Sneak Attack hits any target during that round, the target takes extra damage of the weapon's type equal to your Hunter Stalker level."
+      },
+      {
+       "level": 9,
+       "name": "Infiltration Expertise",
+       "text": "You are expert at the following techniques that aid your infiltrations.\n\nMasterful Mimicry. You can unerringly mimic another person's speech, handwriting, or both. To mimic a person's speech, you must have heard them speak and spent 1 action studying their voice. To mimic a person's handwriting, you must have seen their writing and spent 1 action studying it.\n\nRoving Aim. Your Speed isn't reduced to 0 by using Steady Aim."
+      },
+      {
+       "level": 13,
+       "name": "Envenom Weapons",
+       "text": "When you use the Poison option of your Cunning Strike, the target also takes 2d6 Poison damage whenever it fails the saving throw. This damage ignores Resistance to Poison damage."
+      },
+      {
+       "level": 17,
+       "name": "Death Strike",
+       "text": "When you hit with your Sneak Attack on the first round of a combat, the target must succeed on a Constitution saving throw (DC 8 plus your Dexterity modifier and Proficiency Bonus), or the attack's damage is doubled against the target."
+      }
+     ]
+    },
+    {
+     "id": "shadow",
+     "name": "Shadow",
+     "tagline": "Hunt for Treasure as a Classic Adventurer",
+     "blurb": "A mix of burglar, treasure hunter, and explorer, you are the epitome of an adventurer. In addition to improving your agility and stealth, you gain abilities useful for delving into ruins and getting maximum benefit from the magic items you find there.",
+     "features": [
+      {
+       "level": 3,
+       "name": "Fast Hands",
+       "text": "As a Bonus Action, you can do one of the following.\n\nSleight of Hand. Make a Dexterity (Sleight of Hand) check to pick a lock or disarm a trap with Thieves' Tools or to pick a pocket.\n\nUse an Object. Take the Utilize action."
+      },
+      {
+       "level": 3,
+       "name": "Second-Story Work",
+       "text": "You've trained to get into especially hard-to-reach places, granting you these benefits.\n\nClimber. You gain a Climb Speed equal to your Speed.\n\nJumper. You can determine your jump distance using your Dexterity rather than your Strength."
+      },
+      {
+       "level": 9,
+       "name": "Supreme Sneak",
+       "text": "You gain the following Cunning Strike option.\n\nStealth Attack (Cost: 1d6). If you have the Hide action's Invisible condition, this attack doesn't end that condition on you if you end the turn behind Three-Quarters Cover or Total Cover."
+      },
+      {
+       "level": 13,
+       "name": "Cloak of Shadows",
+       "text": "As a Bonus Action, you can give yourself the Invisible condition until the end of your next turn. You can use this feature a number of times equal to your Wisdom modifier (minimum of once), and you regain all expended uses when you finish a Long Rest."
+      },
+      {
+       "level": 17,
+       "name": "Shadowbringer",
+       "text": "You are adept at laying ambushes and quickly escaping danger. You can take two turns during the first round of any combat. You take your first turn at your normal Initiative and your second turn at your Initiative minus 10."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "features": [
+    {
+     "level": 1,
+     "name": "Bands Directive",
+     "text": "You read the battlefield with a commander's eye, identifying openings, weaknesses, and moments of hesitation. Through sharp orders and tactical insight, you rally your hunter band and guide them toward decisive action.\n\nThis command is represented by your Bands Directive die, which is a d6.\n\nUsing Bands Directive. As a Bonus Action, you can choose one creature other than yourself within 60 feet of you that can see or hear you. That creature gains one of your Bands Directive dice.\n\nA creature can have only one Bands Directive die at a time.\n\nOnce, when the creature fails a d20 Test, it can roll the Bands Directive die and add the number rolled to the d20, potentially turning the failure into a success.\n\nThe Bands Directive die is expended when it is rolled or after a long or short rest.\n\nNumber of Uses. You can grant a Bands Directive die a number of times equal to your Wisdom modifier, minimum of once. You regain all expended uses when you finish a Long Rest.\n\nAt Higher Levels. Your Bands Directive die changes when you reach certain Hunter Warden levels, as shown in the Bands Directive Die column of the Hunter Warden Features table. The die becomes a d8 at level 5, a d10 at level 10, and a d12 at level 15."
+    },
+    {
+     "level": 1,
+     "name": "Feel Your Enemy",
+     "text": "As a Bonus Action, you can discern certain strengths of a creature you can see within 30 feet of yourself; you can tell the creature's Challenge Rating (CR) or Level (Lvl.). Once you use this feature, you can't do so again until you finish a Short Rest or Long Rest. You can also restore a use of the feature by expending one Bands Directive die (no action required)."
+    },
+    {
+     "level": 2,
+     "name": "Tactical Mind",
+     "text": "You have a mind for tactics on and off the battlefield. When you fail an ability check, you can expend a use of Tactical Mind to push yourself toward success. Rather than giving a Bands Directive die to a player you can roll it yourself and add the number rolled to the ability check, potentially turning it into a success. The Bands Directive die is expended when it is rolled."
+    },
+    {
+     "level": 2,
+     "name": "Expertise",
+     "text": "You gain Expertise (see the rules glossary) in two of your skill proficiencies of your choice. Performance and Persuasion are recommended if you have proficiency in them.\n\nAt Hunter Warden level 9, you gain Expertise in two more of your skill proficiencies of your choice."
+    },
+    {
+     "level": 2,
+     "name": "Experience",
+     "text": "You can add half your Proficiency Bonus (round down) to any ability check you make that uses a skill proficiency you lack and that doesn't otherwise use your Proficiency Bonus.\n\nFor example, if you make a Strength (Athletics) check and lack Athletics proficiency, you can add half your Proficiency Bonus to the check."
+    },
+    {
+     "level": 3,
+     "name": "Hunter Warden Subclass",
+     "text": "You gain a Hunter Warden subclass of your choice. The Commander or the Warbringer subclasses are detailed after this class's description. A subclass is a specialization that grants you features at certain Hunter Warden levels."
+    },
+    {
+     "level": 4,
+     "name": "Ability Score Improvement",
+     "text": "You gain the Ability Score Improvement feat (see chapter 4) or another feat of your choice for which you qualify. You gain this feature again at Hunter Warden levels 8, 12, and 16."
+    },
+    {
+     "level": 5,
+     "name": "Effectiveness",
+     "text": "You now regain all your expended uses of Bands Directive when you finish a Short or Long Rest. In addition, you now have uses of Bands Directive die equal to your Wisdom modifier x 2."
+    },
+    {
+     "level": 7,
+     "name": "Know Your Enemy",
+     "text": "As a Bonus Action, you can discern certain strengths and weaknesses of a creature you can see within 30 feet of yourself; you know whether that creature has any Immunities, Resistances, or Vulnerabilities, and if the creature has any, you know what they are.\n\nOnce you use this feature, you can't do so again until you finish a Long Rest. You can also restore a use of the feature by expending one Bands Directive die (no action required)."
+    },
+    {
+     "level": 7,
+     "name": "Counter",
+     "text": "You have seen it all before. You know how to disrupt mind-influencing effects. If you or a creature within 30 feet of you fails a saving throw against an effect that applies the Charmed or Frightened condition, you can take a Reaction to cause the save to be rerolled, and the new roll has Advantage."
+    },
+    {
+     "level": 9,
+     "name": "Indomitable",
+     "text": "If you fail a saving throw, you can reroll it with a bonus equal to your Hunter Warden level. You must use the new roll, and you can't use this feature again until you finish a Long Rest. You can use this feature twice before a Long Rest starting at level 13 and three times before a Long Rest starting at level 17."
+    },
+    {
+     "level": 10,
+     "name": "Weapon Mastery",
+     "text": "Your training with weapons allows you to use the mastery properties of three kinds of Simple or Martial Melee weapons of your choice. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices."
+    },
+    {
+     "level": 11,
+     "name": "Superior Effectiveness",
+     "text": "You now have uses of Bands Directive die equal to your Wisdom modifier x 3."
+    },
+    {
+     "level": 13,
+     "name": "Expect Your Enemy",
+     "text": "As a Bonus Action, you can discern what a creature you can see within 30 feet of yourself intends to do on its next turn; your DM has to tell you (if able) what the creature intends to do on its turn including first movement and first action if any. If the creature intends to use an action the DM also has to tell you (if able) all available info about that specific first action. Once you use this feature, you can't do so again until you finish a Long Rest. You can also restore a use of the feature by expending one Bands Directive die (no action required)."
+    },
+    {
+     "level": 15,
+     "name": "Calm Band",
+     "text": "During a short or long rest you and the other creatures that have a Bands Directive die may roll that die in addition to their Sanity die."
+    },
+    {
+     "level": 18,
+     "name": "Superior Directive",
+     "text": "When you roll Initiative, you regain expended uses of Bands Directive until you have two if you have fewer than that."
+    },
+    {
+     "level": 19,
+     "name": "Epic Boon",
+     "text": "You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you qualify."
+    },
+    {
+     "level": 20,
+     "name": "Presence of Power",
+     "text": "Your very presence can be overwhelming. You have mastered words that ring with power in your enemies' ears: as an action you can expend a Bands Directive die to command a creature within 30 feet of you that can hear and see you to forfeit their next turn. This can not be used on the same creature twice."
+    }
+   ],
+   "subclasses": [
+    {
+     "id": "commander",
+     "name": "Commander",
+     "tagline": "",
+     "blurb": "Text.",
+     "features": [
+      {
+       "level": 3,
+       "name": "Studied Enemy",
+       "text": "You can spend an action to study your opponents and learn from each attack they make. One creature other than yourself within 60 feet of you that can see or hear you will have Advantage on their next attack roll against another creature before the start of your next turn."
+      },
+      {
+       "level": 6,
+       "name": "Band Commander",
+       "text": "Primal forces now help fuel you on your journeys, granting you the following benefits.\n\nCommander's Strike. When you take the Attack action on your turn, you can replace one of your attacks to direct one of your companions to strike. When you do so, choose a willing creature who can see or hear you and expend one Bands Directive Die. That creature can immediately use its Reaction to make one attack with a weapon or an Unarmed Strike, adding the Bands Directive Die to the attack's damage roll on a hit.\n\nCommanding Presence. As a Bonus Action you can spend a Bands Directive Die to give another creature within 30 feet of yourself who can see or hear you Blood Tinge.\n\nRally. As a Bonus Action, you can expend one Bands Directive Die to bolster the resolve of a companion. Choose an ally of yours within 30 feet of yourself who can see or hear you. That creature gains Temporary Hit Points equal to the Bands Directive Die roll plus half your Hunter Warden level (round down)."
+      },
+      {
+       "level": 14,
+       "name": "Master the Enemy",
+       "text": "As an action, you can spend one Band's Directive die to study an enemy and reveal a fatal opening in its defenses. Choose one creature other than yourself within 60 feet of you that can see or hear you. The first time that creature makes an attack roll before the start of your next turn, a roll of 14 or higher on the d20 counts as a 20."
+      }
+     ]
+    },
+    {
+     "id": "warbringer",
+     "name": "Warbringer",
+     "tagline": "",
+     "blurb": "Text.",
+     "features": [
+      {
+       "level": 3,
+       "name": "Combat Inspiration",
+       "text": "You can use your wit to turn the tide of battle. A creature that has a Bands Directive die from you can use it for one of the following effects.\n\nDefense. When the creature is hit by an attack roll, that creature can use its Reaction to roll the Bands Directive die and add the number rolled to its AC against that attack, potentially causing the attack to miss.\n\nOffense. Immediately after the creature hits a target with an attack roll, the creature can roll the Bands Directive die and add the number rolled to the attack's damage against the target."
+      },
+      {
+       "level": 6,
+       "name": "Extra Attack",
+       "text": "You can attack twice instead of once whenever you take the Attack action on your turn."
+      },
+      {
+       "level": 14,
+       "name": "War Chant",
+       "text": "When a creature that has a Band's Directive die from you takes the Attack action on its turn, it can expend that die to make one additional attack as part of the same action. This additional attack is made in addition to any attacks granted by Extra Attack or similar features."
+      }
+     ]
+    }
+   ],
+   "id": "warden"
+  },
+  {
+   "features": [
+    {
+     "level": 1,
+     "name": "Blood Frenzy",
+     "text": "You can imbue yourself with a primal power called Blood Frenzy, a force that grants you extraordinary might and resilience. You can enter it as a Bonus Action if you aren't wearing Heavy armor.\n\nYou can enter your Blood Frenzy the number of times shown for your Hunter Bloodbound level in the Blood Frenzys column of the Hunter Bloodbound Features table. You regain one expended use when you finish a Short Rest, and you regain all expended uses when you finish a Long Rest.\n\nWhile active, your Blood Frenzy follows the rules below.\n\nDamage Resistance. You have Resistance to Bludgeoning, Piercing, and Slashing damage.\n\nBlood Frenzy Damage. When you make an attack using Strength\u2014with either a weapon or an Unarmed Strike and deal damage to the target, you gain a bonus to the damage that increases as you gain levels as a Hunter Bloodbound, as shown in the Blood Frenzy Damage column of the Hunter Bloodbound Features table.\n\nStrength Advantage. You have Advantage on Strength checks and Strength saving throws.\n\nDuration. The Blood Frenzy lasts until the end of your next turn, and it ends early if you don Heavy armor or have the Incapacitated condition. If your Blood Frenzy is still active on your next turn, you can extend the Blood Frenzy for another round by doing one of the following:\n\u2022 Make an attack roll against an enemy.\n\u2022 Force an enemy to make a saving throw.\n\u2022 Take a Bonus Action to extend your Blood Frenzy.\n\nEach time the Blood Frenzy is extended, it lasts until the end of your next turn."
+    },
+    {
+     "level": 1,
+     "name": "Frenzied But Sane",
+     "text": "You can spend one Blood Frenzy to not suffer Madness from using the power of a Transformation one time."
+    },
+    {
+     "level": 2,
+     "name": "Danger Sense",
+     "text": "You gain an uncanny sense of when things aren't as they should be, giving you an edge when you dodge perils. You have Advantage on Dexterity saving throws unless you have the Incapacitated condition."
+    },
+    {
+     "level": 2,
+     "name": "Reckless Attack",
+     "text": "You can throw aside all concern for defense to attack with increased ferocity. When you make your first attack roll on your turn, you can decide to attack recklessly. Doing so gives you Advantage on attack rolls using Strength until the start of your next turn, but attack rolls against you have Advantage during that time."
+    },
+    {
+     "level": 3,
+     "name": "Hunter Bloodbound Subclass",
+     "text": "You gain a Hunter Bloodbound subclass of your choice. The Path of the Berserker and the Path of the Blood Drunk subclasses are detailed after this class's description. A subclass is a specialization that grants you features at certain Hunter Bloodbound levels."
+    },
+    {
+     "level": 4,
+     "name": "Ability Score Improvement",
+     "text": "You gain the Ability Score Improvement feat (see chapter 4) or another feat of your choice for which you qualify. You gain this feature again at Hunter Bloodbound levels 8, 12, and 16."
+    },
+    {
+     "level": 5,
+     "name": "Extra Attack",
+     "text": "You can attack twice instead of once whenever you take the Attack action on your turn."
+    },
+    {
+     "level": 7,
+     "name": "Instinctive Pounce",
+     "text": "As part of the Bonus Action you take to enter your Blood Frenzy, you can move up to half your Speed."
+    },
+    {
+     "level": 9,
+     "name": "Brutal Strike",
+     "text": "If you use Reckless Attack, you can forgo any Advantage on one Strength-based attack roll of your choice on your turn. The chosen attack roll mustn't have Disadvantage. If the chosen attack roll hits, the target takes an extra 1d10 damage of the same type dealt by the weapon or Unarmed Strike, and you can cause one Brutal Strike effect of your choice.\n\nYou have the following effect options.\n\nForceful Blow. The target is pushed 15 feet straight away from you. You can then move up to half your Speed straight toward the target without provoking Opportunity Attacks.\n\nHamstring Blow. The target's Speed is reduced by 15 feet until the start of your next turn. A target can be affected by only one Hamstring Blow at a time\u2014the most recent one."
+    },
+    {
+     "level": 11,
+     "name": "Relentless Blood Frenzy",
+     "text": "Your Blood Frenzy can keep you fighting despite grievous wounds. If you drop to 0 Hit Points while your Blood Frenzy is active and don't die outright, you can make a DC 10 Constitution saving throw. If you succeed, your Hit Points instead change to a number equal to twice your Hunter Bloodbound level.\n\nEach time you use this feature after the first, the DC increases by 5. When you finish a Short or Long Rest, the DC resets to 10."
+    },
+    {
+     "level": 12,
+     "name": "Weapon Mastery",
+     "text": "Your training with weapons allows you to use the mastery properties of two kinds of Simple or Martial Melee weapons of your choice. Whenever you finish a Long Rest, you can practice weapon drills and change one of those weapon choices."
+    },
+    {
+     "level": 13,
+     "name": "Improved Brutal Strike",
+     "text": "You have honed new ways to attack furiously. The following effects are now among your Brutal Strike options.\n\nStaggering Blow. The target has Disadvantage on the next saving throw it makes, and it can't make Opportunity Attacks until the start of your next turn.\n\nSundering Blow. Before the start of your next turn, the next attack roll made by another creature against the target gains a +5 bonus to the roll. An attack roll can gain only one Sundering Blow bonus."
+    },
+    {
+     "level": 15,
+     "name": "Persistent Blood Frenzy",
+     "text": "When you roll Initiative, you can regain all expended uses of Blood Frenzy. After you regain uses of Blood Frenzy in this way, you can't do so again until you finish a Long Rest.\n\nIn addition, your Blood Frenzy is so fierce that it now lasts without you needing to do anything to extend it from round to round. Your Blood Frenzy ends early if you have the Unconscious condition (not just the Incapacitated condition) or don Heavy armor."
+    },
+    {
+     "level": 17,
+     "name": "Improved Brutal Strike",
+     "text": "The extra damage of your Brutal Strike increases to 2d10. In addition, you can use two different Brutal Strike effects whenever you use your Brutal Strike feature."
+    },
+    {
+     "level": 18,
+     "name": "Indomitable Might",
+     "text": "If your total for a Strength check or Strength saving throw is less than your Strength score, you can use that score in place of the total."
+    },
+    {
+     "level": 19,
+     "name": "Epic Boon",
+     "text": "You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you qualify."
+    },
+    {
+     "level": 20,
+     "name": "Primal Champion",
+     "text": "You embody primal power. Your Strength and Constitution scores increase by 4, to a maximum of 25."
+    }
+   ],
+   "subclasses": [
+    {
+     "id": "path-of-the-berserker",
+     "name": "Path of the Berserker",
+     "tagline": "Channel Blood Frenzy into Violent Fury",
+     "blurb": "Hunter Bloodbounds who walk the Path of the Berserker direct their Blood Frenzy primarily toward violence. Their path is one of untrammeled fury, and they thrill in the chaos of battle as they allow their Blood Frenzy to seize and empower them.",
+     "features": [
+      {
+       "level": 3,
+       "name": "Frenzy",
+       "text": "If you use Reckless Attack while your Blood Frenzy is active, you deal extra damage to the first target you hit on your turn with a Strength-based attack. To determine the extra damage, roll a number of d6s equal to your Blood Frenzy Damage bonus, and add them together. The damage has the same type as the weapon or Unarmed Strike used for the attack."
+      },
+      {
+       "level": 6,
+       "name": "Mindless Blood Frenzy",
+       "text": "You have Immunity to the Charmed and Frightened conditions while your Blood Frenzy is active. If you're Charmed or Frightened when you enter your Blood Frenzy, the condition ends on you."
+      },
+      {
+       "level": 10,
+       "name": "Retaliation",
+       "text": "When you take damage from a creature that is within 5 feet of you, you can take a Reaction to make one melee attack against that creature, using a weapon or an Unarmed Strike."
+      },
+      {
+       "level": 14,
+       "name": "Intimidating Presence",
+       "text": "As a Bonus Action, you can strike terror into others with your menacing presence and primal power. When you do so, each creature of your choice in a 30-foot Emanation originating from you must make a Wisdom saving throw (DC 8 plus your Strength modifier and Proficiency Bonus). On a failed save, a creature has the Frightened condition for 10 rounds. At the end of each of the Frightened creature's turns, the creature repeats the save, ending the effect on itself on a success.\n\nOnce you use this feature, you can't use it again until you finish a Long Rest unless you expend a use of your Blood Frenzy (no action required) to restore your use of it."
+      }
+     ]
+    },
+    {
+     "id": "path-of-the-blood-drunk",
+     "name": "Path of the Blood Drunk",
+     "tagline": "Channel the power of the old blood",
+     "blurb": "Text.",
+     "features": [
+      {
+       "level": 3,
+       "name": "Further Frenzied But Sane",
+       "text": "You can spend one Blood Frenzy to not suffer Madness from using the power of a Transformation two times while its active."
+      },
+      {
+       "level": 6,
+       "name": "Embrace the Form",
+       "text": "At Transform level 1 you may spend one Blood Frenzy to instead decide for yourself the roll of the d20."
+      },
+      {
+       "level": 10,
+       "name": "Absolute Harmony",
+       "text": "You can spend one Blood Frenzy to not suffer Madness from using the power of a Transformation three times while its active."
+      },
+      {
+       "level": 14,
+       "name": "One Form",
+       "text": "You gain one transformation of your choice permanently, except the Lost Transformation. While using this transformation, or any other transformation, you no longer suffer Madness from using transformations.\n\nIf you roll for a transformation and the result is your chosen permanent transformation, you instead gain the Rare Transformation. You only gain the Rare Transformation this way if you roll the result. If another feature lets you choose a transformation instead of rolling, you cannot choose the Rare Transformation.\n\nRare Transformation. The Rare Transformation is not always active. You can activate it during combat by spending 1 use of Blood Frenzy. It lasts for 3 rounds before disappearing.\n\nWhen activated, your body mutates into an inhuman form. Your original arms elongate and twist into monstrous limbs, while two additional arms burst from your torso, leaving you with a total of four arms. Your legs stretch and contort with violent, unnatural force. You suffer 6 Madness.\n\nWhile transformed in this way, you gain the following benefits:\n\nOtherworldly Speed. Your movement speed increases by 15 feet, and creatures cannot make Opportunity Attacks against you.\n\nOtherworldly Power. When you take the Attack action, you can only make Unarmed Strikes, and those Unarmed Strikes can only be used to deal damage. You cannot use them to grapple or shove. Your Unarmed Strikes use Strength for the attack roll and damage roll. On a hit, they deal 4d12 piercing or bludgeoning damage, your choice for each attack, + your Strength modifier. When you hit a creature with one of these Unarmed Strikes, you may divide the damage equally between the target and one other creature within your reach, rounding down. This damage cannot be increased by feats, weapon properties, class features, or other similar effects. However, if you have the Extra Attack feature, you may still make additional Unarmed Strikes as part of the same Attack action.\n\nOtherworldly Retaliation. While this transformation is active, when a creature within your melee reach deals melee damage to you, you can use your reaction to lash out with your mutated limbs. The creature takes 1d12 piercing damage + your Strength modifier."
+      }
+     ]
+    }
+   ],
+   "id": "bloodbound"
+  },
+  {
+   "features": [
+    {
+     "level": 1,
+     "name": "Eldritch Comprehension",
+     "text": "Through occult rituals, you have expanded your mind beyond mortal limits, gaining the ability to comprehend eldritch passages and speak words no sane creature was meant to understand. These forbidden words allow you to read and perform Rites.\n\nWhispers. You know two Whispers of your choice. Whispers are lesser fragments of forbidden knowledge that are not written in the Book of the Deepcaller and must be memorized. Whenever you gain a Hunter Deepcaller level, you can replace one Whisper you know with another Whisper of your choice. When you reach Hunter Deepcaller levels 4 and 10, you learn another Whisper of your choice.\n\nStrains. The Hunter Deepcaller Features table shows how many Strains you have to perform your Rites of Levels 1-5. The table also shows the level of those Strains, all of which are the same level. You regain all expended Strains when you finish a Short or Long Rest.\n\nThe Book of the Deepcaller. Your Book of the Deepcaller contains the forbidden passages needed to perform Hunter Deepcaller Rites of level 1-5. You do not prepare these Rites. Any Hunter Deepcaller Rite in your book is available for you to perform, provided you have a Strain of a high enough level to perform it. As your Strain level increases, your mind becomes capable of comprehending deeper and more dangerous passages within the book. You can perform any Hunter Deepcaller Rite of a level equal to or lower than your current Strain level.\n\nRite Performing Ability. Intelligence is the Rite Performing ability for your Hunter Deepcaller Rites.\n\nPerforming a Rite. Unless otherwise stated, performing a Rite requires you to hold a Book of the Deepcaller in one hand and speak the Rite's words aloud. Each time you perform a Rite, you suffer 2 Madness, unless a feature or effect says otherwise.\n\nPerforming a Whisper. Whispers are an exception to the normal rules for performing Rites. Performing a Whisper requires only a hushed recitation of its words. You do not need a Book of the Deepcaller to perform a Whisper, and performing a Whisper does not cause you to suffer Madness unless an effect says otherwise.\n\nBreak the Limits of Your Mind. If you perform a Rite using a Strain level higher than your current Strain level, you suffer Madness equal to your maximum Sanity immediately after the Rite is performed."
+    },
+    {
+     "level": 1,
+     "name": "Fracturing Mind",
+     "text": "Every time you level up suffer 2 Madness and permanently gain 1 max Sanity."
+    },
+    {
+     "level": 2,
+     "name": "Braced Mind",
+     "text": "As an Action, you steady your mind through an esoteric rite, forcing forbidden knowledge back into shape. When you do so, you suffer 1 Madness and regain a number of expended Strains equal to half your maximum number of Strains, rounded up. Once you use this feature, you cannot use it again until you finish a Long Rest."
+    },
+    {
+     "level": 2,
+     "name": "Veiled Truth",
+     "text": "You no longer suffer Madness from performing Level 1 Rites unless an effect specifically says so."
+    },
+    {
+     "level": 3,
+     "name": "Opened Mind",
+     "text": "As a Bonus Action, you can establish a telepathic link between yourself and up to eight willing creatures you can see within 60 feet. The link lasts for 1 round (the start of your next round). While linked, each creature may communicate telepathically with the others. When the link is established, each linked creature may contribute once to the conversation. The order is determined by the participants themselves. Once a creature has finished communicating, the next creature may speak. This communication occurs outside the normal flow of time and does not consume Actions, Bonus Actions, Reactions, or movement. Once you use this feature, you can't use it again until you finish a Short or Long Rest unless you expend a Strain (no action required) to restore your use of it."
+    },
+    {
+     "level": 4,
+     "name": "Ability Score Improvement",
+     "text": "You gain the Ability Score Improvement feat or another feat of your choice for which you qualify. You gain this feature again at Hunter Deepcaller levels 8, 12, and 16."
+    },
+    {
+     "level": 5,
+     "name": "Endured Truth",
+     "text": "You no longer suffer Madness from performing Level 2 Rites unless an effect specifically says so."
+    },
+    {
+     "level": 6,
+     "name": "Opened Mind Combatant",
+     "text": "When you use your Opened Mind feature, you may choose one creature within 60 feet that you can see. The creature must succeed on a Wisdom saving throw against your Rite Save DC. On a failed save, you glimpse fragments of its immediate future and perceive its intentions before they unfold. For the duration of 10 rounds, the chosen creature has Disadvantage on attack rolls against you, and you have Advantage on attack rolls against it."
+    },
+    {
+     "level": 9,
+     "name": "Accepted Truth",
+     "text": "You no longer suffer Madness from performing Level 3 Rites unless an effect specifically says so."
+    },
+    {
+     "level": 10,
+     "name": "Fragments of an Eldritch Mind",
+     "text": "You have Resistance to Mind damage, and whenever a creature deals Mind damage to you, that creature takes the same amount of damage that you take."
+    },
+    {
+     "level": 11,
+     "name": "Forbidden Revelation",
+     "text": "Your studies uncover a fragment of knowledge that few minds can endure. The Book of the Deepcaller begins to reveal hidden passages that were always there, but impossible for you to perceive until now. Choose one Level 6 Rite. This Rite becomes one of your Forbidden Revelations. You can perform this Rite once without expending Strain. Once you perform it in this way, you cannot do so again until you finish a Long Rest. At Hunter Deepcaller levels 13, 15, and 17, the Book reveals another Forbidden Revelation to you. These Revelations must be chosen from Hunter Deepcaller Rites of the following levels: Level 13: one Level 7 Rite; Level 15: one Level 8 Rite; Level 17: one Level 9 Rite. You can also use a Forbidden Revelation for a 1-5 Level Rite that has the option to use Higher Level Strains. That Rite then becomes the level of which Forbidden Revelation you choose. Whenever you finish a Long Rest, you may replace all of your Forbidden Revelations with another Hunter Deepcaller Rite of the same level. You regain all uses of your Forbidden Revelations when you finish a Long Rest."
+    },
+    {
+     "level": 13,
+     "name": "Embraced Truth",
+     "text": "You no longer suffer Madness from performing Level 4 Rites unless an effect specifically says so."
+    },
+    {
+     "level": 14,
+     "name": "Great Summoning",
+     "text": "When you perform Call Lesser Starborn, you can choose to forgo Concentration. If you do, the Rite's duration becomes 10 rounds, and the summoned Lesser Starborn gains Temporary Hit Points equal to your Hunter Deepcaller level + your Intelligence modifier. In addition, the first time each turn the Lesser Starborn hits a creature affected by your Eldritch Chain of Bolts, the attack deals an extra 1d6 Mind damage. The first time the Lesser Starborn hits a creature affected by your Eldritch Chain of Bolts, choose one Ability. For as long as that creature remains affected by your Eldritch Chain of Bolts, it has Disadvantage on Ability Checks made using that chosen Ability."
+    },
+    {
+     "level": 17,
+     "name": "Absolute Truth",
+     "text": "You no longer suffer Madness from performing Level 5 Rites unless an effect specifically says so."
+    },
+    {
+     "level": 19,
+     "name": "Epic Boon",
+     "text": "You gain an Epic Boon feat or another feat of your choice for which you qualify."
+    },
+    {
+     "level": 20,
+     "name": "Eldritch Mastery",
+     "text": "When you use your Braced Mind feature, you regain all of your expended Strains instead of only half."
+    }
+   ],
+   "subclasses": [
+    {
+     "id": "hunter-zealot",
+     "name": "Hunter Zealot",
+     "tagline": "A living weapon forged through blood, fire, and singular devotion",
+     "blurb": "Most Deepcallers seek power through forbidden study, reading from the Book of the Deepcaller and calling upon many Patrons. A Zealot abandons that path. Through blood, fire, and devotion, the Zealot offers the book to a single eldritch being and becomes its living weapon. A Zealot does not search for many truths. A Zealot serves one Truth.",
+     "features": [
+      {
+       "level": 3,
+       "name": "Burn the Book",
+       "text": "When you enter the Hunter Zealot Prestige Class, your Book of the Deepcaller is destroyed, burned, consumed, and claimed by your new Patron. You lose all Hunter Deepcaller features gained before entering this Prestige Class unless a Zealot feature specifically says otherwise. You gain no further features from the Hunter Deepcaller class. Instead, whenever you would gain a Hunter Deepcaller feature, you gain the corresponding feature from the Hunter Zealot Prestige Class. You can no longer perform Rites of Level 2 or higher. You also lose all Rites of Level 2 or higher that you knew or had prepared. You retain your Rite Performing ability, Rite Save DC, and Rite Attack modifier."
+      },
+      {
+       "level": 3,
+       "name": "Chosen of One Patron",
+       "text": "Your new Patron becomes the source of your Zealot features. You no longer require a Book of the Deepcaller to perform Whispers. The words of your Patron are carved into your mind, blood, and flesh."
+      },
+      {
+       "level": 3,
+       "name": "Zealot Whispers",
+       "text": "You retain the Whispers you knew before entering this Prestige Class. In addition, when you prepare Whispers, you can choose from both normal Whispers and Level 1 Hunter Deepcaller Rites. A Level 1 Rite prepared in this way becomes a Zealot Whisper for you.\n\nA Zealot Whisper: does not require a Book of the Deepcaller, does not expend Strain, does not cause you to suffer Madness, cannot be performed using Higher-Level Strain, uses your Rite Save DC and Rite Attack modifier as normal.\n\nYou prepare a number of Whispers equal to the number shown for a Hunter Deepcaller of your level, plus one additional Whisper."
+      },
+      {
+       "level": 3,
+       "name": "Zealot Training",
+       "text": "Your Patron reshapes you for battle. You gain proficiency with martial weapons."
+      },
+      {
+       "level": 3,
+       "name": "Eldritch Armament",
+       "text": "Your devotion allows your Patron to guide your weapon through your body. When you attack with a weapon with which you have proficiency, you can use your Rite Performing ability for the attack and damage rolls instead of Strength or Dexterity. When you hit with such a weapon, you can choose for the weapon to deal its normal damage type or Eldritch Power damage."
+      },
+      {
+       "level": 3,
+       "name": "Carved Eldritch Strike",
+       "text": "You always have Eldritch Strike prepared. It does not count against the number of Whispers you can prepare."
+      },
+      {
+       "level": 3,
+       "name": "Carved Armor of Agathys",
+       "text": "You always have Armor of Agathys prepared. For you, Armor of Agathys is treated as a Whisper. It does not count against the number of Whispers you can prepare."
+      },
+      {
+       "level": 3,
+       "name": "Strain of Devotion",
+       "text": "You no longer use Strain to perform Rites. Instead, your Strain becomes a weaponized expression of your devotion. Your Strain progression and maximum Strain level continue to improve as shown in the Hunter Deepcaller table. However, you can spend Strain only on Zealot features.\n\nYou gain the following ways to spend Strain: Patron's Blow. Once per turn, when you hit a creature with a weapon attack or Eldritch Strike, you can expend one Strain to deal extra Eldritch Power damage to the target. The extra damage equals 1d8 per level of the Strain expended. Patron's Ward. When you take damage, you can take a Reaction and expend one Strain to reduce the damage by 1d8 per level of the Strain expended + your Rite Performing ability modifier. Patron's Step. As a Bonus Action, you can expend one Strain to teleport up to 10 feet per level of the Strain expended to an unoccupied space you can see. This movement does not provoke opportunity attacks."
+      },
+      {
+       "level": 4,
+       "name": "Ability Score Improvement",
+       "text": "You gain the Ability Score Improvement feat or another feat of your choice for which you qualify. You gain this feature again at Hunter Zealot levels 8, 12, and 16."
+      },
+      {
+       "level": 5,
+       "name": "Rite and Blade",
+       "text": "You can attack twice, instead of once, whenever you take the Attack Action on your turn. In addition, when you use your Action to perform a Whisper, you can make one weapon attack as a Bonus Action."
+      },
+      {
+       "level": 6,
+       "name": "Fanatical Focus",
+       "text": "Your devotion shields your mind from hesitation, fear, and pain. When you fail a saving throw, you can expend one Strain to reroll the saving throw. You must use the new roll. If the new roll succeeds, you can immediately move up to half your Speed without provoking opportunity attacks."
+      },
+      {
+       "level": 10,
+       "name": "Zealous Presence",
+       "text": "As a Bonus Action, you unleash a command filled with the authority of your Patron. Choose up to eight creatures of your choice within 60 feet that can see or hear you. Until the start of your next turn, each chosen creature has Advantage on attack rolls and saving throws. Once you use this feature, you cannot use it again until you finish a Long Rest, unless you expend one Strain to use it again."
+      },
+      {
+       "level": 19,
+       "name": "Epic Boon",
+       "text": "You gain an Epic Boon feat or another feat of your choice for which you qualify."
+      },
+      {
+       "level": 20,
+       "name": "Absolute Union",
+       "text": "As a Bonus Action, you allow your Patron to fully manifest through your body. This transformation lasts for 5 rounds, until you drop to 0 Hit Points, or until you end it early as a Bonus Action. Once you use this feature, you cannot use it again until you finish a Long Rest. When you enter this form, you suffer 20 Madness.\n\nWhile transformed, you gain the following benefits:\n\nPatron's Form. Your body becomes a living vessel for your Patron. Your eyes turn black like the abyss, blackened veins spread across your flesh, impossible shadows cling to your body, bone spines tear through your skin, and spectral limbs writhe around you as if guided by a will beyond your own. When you transform, each other creature within a 30-foot-radius Sphere centered on you must make a Wisdom saving throw against your Rite Save DC. On a failed save, a creature takes 8d10 Mind damage and suffers 6 Madness. On a successful save, a creature takes half as much damage and suffers 2 Madness. Each other creature within 120 feet that can see your transformation unfold, but is outside the 30-foot-radius Sphere, suffers 2 Madness.\n\nEldritch Resistance. You have Immunity to Mind damage and Resistance to Eldritch Power damage.\n\nUnshaken Vessel. You cannot be Frightened, Charmed, Paralyzed, or Stunned.\n\nDevoted Assault. The first time you hit a creature on each of your turns with a weapon attack or Eldritch Strike, the target takes an extra 4d8 Eldritch Power damage.\n\nLashing Tendrils. As an Action, you command the spectral limbs of your Patron to lash out. Choose up to three creatures you can see within 30 feet of you. Each target must make a Strength saving throw against your Rite Save DC. On a failed save, a target takes 6d10 Eldritch Power damage and gains the Restrained condition. On a successful save, a target takes half as much damage and is not Restrained. A Restrained creature can repeat the saving throw at the end of each of its turns, ending the condition on itself on a success. You cannot use Lashing Tendrils again while a creature is Restrained by this feature.\n\nTendril Reprisal. When a creature within 15 feet of you hits you with an attack, you can take a Reaction to lash out with a spectral tendril. The creature takes 3d10 Eldritch Power damage and must succeed on a Strength saving throw against your Rite Save DC or have the Restrained condition until the end of its next turn.\n\nUnbroken Vessel. If you would drop to 0 Hit Points while this transformation is active, you can expend one Strain to drop to 1 Hit Point instead. If you drop to 0 Hit Points and do not use this benefit, the transformation ends."
+      }
+     ]
+    }
+   ],
+   "id": "deepcaller"
+  }
+ ],
+ "rites": [
+  {
+   "id": "eldritch-blast",
+   "name": "ELDRITCH BLAST",
+   "level": 0,
+   "whisper": true,
+   "type": "Evocation",
+   "performing": "Action",
+   "range": "120 feet",
+   "duration": "Instantaneous",
+   "special": "",
+   "text": "You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in range. On a hit, the target takes 1d10 Eldritch Power damage.",
+   "upgrade": "The spell creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
+  },
+  {
+   "id": "eldritch-strike",
+   "name": "ELDRITCH STRIKE",
+   "level": 0,
+   "whisper": true,
+   "type": "Evocation",
+   "performing": "Action",
+   "range": "Self",
+   "duration": "Instantaneous",
+   "special": "A weapon with which you have proficiency",
+   "text": "Guided by your Patron's will, you make one attack with the weapon used to perform this Rite. The attack uses your Rite Performing ability for the attack and damage rolls instead of using Strength or Dexterity. If the attack deals damage, it can be Eldrich Power damage or the weapon's normal damage type (your choice).",
+   "upgrade": "Whether you deal Eldrich Power damage or the weapon's normal damage type, the attack deals extra Eldrich Power damage when you reach levels 5 (1d6), 11 (2d6), and 17 (3d6)."
+  },
+  {
+   "id": "eldritch-lightning",
+   "name": "ELDRITCH LIGHTNING",
+   "level": 0,
+   "whisper": true,
+   "type": "Evocation",
+   "performing": "Action",
+   "range": "Self",
+   "duration": "Instantaneous",
+   "special": "",
+   "text": "You call upon a Patron, letting a fragment of its voice burst from your body as crackling lightning. Each creature in a 5-foot Emanation originating from you must succeed on a Constitution saving throw or take 1d6 Lightning damage. The Rite also makes a thunderous sound can be heard up to 100 feet away.",
+   "upgrade": "The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6)."
+  },
+  {
+   "id": "eldritch-rebuke",
+   "name": "ELDRITCH REBUKE",
+   "level": 1,
+   "whisper": false,
+   "type": "Evocation",
+   "performing": "Reaction, which you take in response to taking damage from a creature that you can see within 60 feet of yourself",
+   "range": "60 feet",
+   "duration": "Instantaneous",
+   "special": "",
+   "text": "The creature that damaged you is momentarily surrounded by blue flames and crackling lightning. It makes a Dexterity saving throw, taking 2d10 Fire damage on a failed save or half as much damage on a successful one.",
+   "upgrade": "The damage increases by 1d10 for each Strain level above 1."
+  },
+  {
+   "id": "eldritch-chain-of-bolts",
+   "name": "ELDRITCH CHAIN OF BOLTS",
+   "level": 1,
+   "whisper": false,
+   "type": "Evocation",
+   "performing": "Action",
+   "range": "60 feet",
+   "duration": "Concentration, up to 10 rounds",
+   "special": "",
+   "text": "You invoke a Patron of storm and ruin, causing a beam of crackling lightning to lance toward a creature within range. Make a ranged Rite attack against the target. On a hit, the target takes 2d12 Lightning damage. Until the Rite ends, you can take a Bonus Action on each of your turns to cause the lightning to surge through the target, dealing 1d12 Lightning damage automatically. The Rite ends if the target is ever outside the Rite's range or has Total Cover from you.",
+   "upgrade": "The initial damage increases by 1d12 for each Strain level above 1."
+  },
+  {
+   "id": "darkness",
+   "name": "DARKNESS",
+   "level": 2,
+   "whisper": false,
+   "type": "Evocation",
+   "performing": "Action",
+   "range": "60 feet",
+   "duration": "Concentration, up to 20 rounds",
+   "special": "",
+   "text": "For the duration, otherworldly Darkness spreads from a point within range and fills a 15-foot-radius Sphere. Darkvision can't see through it, and light can't illuminate it.",
+   "upgrade": ""
+  },
+  {
+   "id": "mindcrack",
+   "name": "MINDCRACK",
+   "level": 0,
+   "whisper": true,
+   "type": "Mind Influence",
+   "performing": "Action",
+   "range": "60 feet",
+   "duration": "1 round",
+   "special": "",
+   "text": "You try to temporarily break the mind of one creature you can see within range, opening their minds to the words of your patron through whispers. The target must succeed on an Intelligence saving throw or take 1d6 Mind damage and subtract 1d4 from the next saving throw it makes before the end of your next turn.",
+   "upgrade": "The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6)."
+  },
+  {
+   "id": "mindgrab",
+   "name": "MINDGRAB",
+   "level": 2,
+   "whisper": false,
+   "type": "Mind Influence",
+   "performing": "Action",
+   "range": "120 feet",
+   "duration": "Concentration",
+   "special": "",
+   "text": "By your words a patron will attach itself onto the mind of one creature you can see within range. The target makes a Wisdom saving throw, taking 3d8 Mind damage on a failed save or half as much damage on a successful one. On a failed save, you also always know the target's location until the spell ends, but only while the two of you are on the same plane of existence. While you have this knowledge, the target can't become hidden from you, and if it has the Invisible condition, it gains no benefit from that condition against you.",
+   "upgrade": "The damage increases by 1d8 for each Strain level above 2."
+  },
+  {
+   "id": "enthrall",
+   "name": "ENTHRALL",
+   "level": 2,
+   "whisper": false,
+   "type": "Mind Influence",
+   "performing": "Action",
+   "range": "60 feet",
+   "duration": "Concentration, up to 10 rounds",
+   "special": "",
+   "text": "You word out forbidden truths gifted by a Patron whose words mortal minds struggle to comprehend. You suffer 1 Madness. Creatures of your choice that you can see within range must make a Wisdom saving throw. A creature currently fighting you or your allies automatically succeeds on this saving throw. On a failed save, a creature becomes captivated by the impossible words and suffers a -10 penalty to Perception checks and Passive Perception until the Rite ends.",
+   "upgrade": ""
+  },
+  {
+   "id": "eldritch-cacophony",
+   "name": "ELDRITCH CACOPHONY",
+   "level": 5,
+   "whisper": false,
+   "type": "Mind Influence",
+   "performing": "Action",
+   "range": "120 feet",
+   "duration": "Instantaneous",
+   "special": "",
+   "text": "You invoke a Patron of forbidden knowledge, flooding the minds of nearby creatures with fragments of truths they were never meant to comprehend. Each creature in a 20-foot-radius Sphere centered on a point within range must make an Intelligence saving throw. On a failed save, a creature takes 8d6 Mind damage, and its thoughts become muddled for 10 rounds. While muddled, it subtracts 1d6 from Attack Rolls, Ability Checks, and Constitution saving throws made to maintain Concentration. At the end of each of its turns, the creature may repeat the Intelligence saving throw, ending the muddled effect on itself on a success. On a successful save, a creature takes half as much damage and suffers no additional effects.",
+   "upgrade": "If this Rite is performed with a Strain above Level 5, the damage increases by 2d6 for each Strain level above 5."
+  },
+  {
+   "id": "mind-shatter",
+   "name": "MIND SHATTER",
+   "level": 8,
+   "whisper": false,
+   "type": "Mind Influence",
+   "performing": "Action",
+   "range": "150 feet",
+   "duration": "Instantaneous",
+   "special": "",
+   "text": "You invoke a Patron of unfathomable power, unleashing a fragment of its eldritch knowledge into the mind of a creature you can see within range. The target must make an Intelligence saving throw. On a failed save, it takes 10d12 Mind damage. For the next 10 rounds, the target can't perform Rites, and its Intelligence, Wisdom, and Charisma modifiers become -5. On a successful save, the target takes half as much damage and suffers no additional effects.",
+   "upgrade": ""
+  },
+  {
+   "id": "minor-illusion",
+   "name": "MINOR ILLUSION",
+   "level": 0,
+   "whisper": true,
+   "type": "Illusion",
+   "performing": "Action",
+   "range": "30 feet",
+   "duration": "10 rounds",
+   "special": "",
+   "text": "A patron will make a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you perform this rite again. If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your rites save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature. Sound. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a roar, a beating of a heart, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends. Image. If you create an image of an object-such as a chair, muddy footprints, or a small chest-it must be no larger than a 5-foot Cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it.",
+   "upgrade": ""
+  },
+  {
+   "id": "shattered-reflection",
+   "name": "SHATTERED REFLECTION",
+   "level": 2,
+   "whisper": false,
+   "type": "Illusion",
+   "performing": "Action",
+   "range": "Self",
+   "duration": "10 rounds",
+   "special": "",
+   "text": "You call upon a Patron of fractured sight, causing three illusory duplicates of yourself to appear in your space. Until the Rite ends, the duplicates move with you and mimic your actions, shifting constantly so it is impossible to know which image is real. Each time a creature hits you with an attack roll during the Rite's duration, roll a d6 for each duplicate you have remaining. If any of the d6s roll a 3 or higher, one duplicate is hit instead of you, and that duplicate is destroyed. The duplicates ignore all other damage and effects. The Rite ends early when all three duplicates are destroyed. A creature is unaffected by this Rite if it has the Blinded condition, Blindsight, or Truesight.",
+   "upgrade": ""
+  },
+  {
+   "id": "third-hand",
+   "name": "THIRD HAND",
+   "level": 0,
+   "whisper": true,
+   "type": "Summoning",
+   "performing": "Action",
+   "range": "30 feet",
+   "duration": "Concentration, 10 rounds",
+   "special": "",
+   "text": "A spectral, floating hand not from this world appears at a point you choose within range. The hand lasts for the duration. The hand vanishes if it is ever more than 30 feet away from you or if you perform this rite again. When you perform the rite, you can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial. As a Rite action on your later turns, you can control the hand thus again. As part of that action, you can move the hand up to 30 feet. The hand can't attack, or carry more than 10 pounds.",
+   "upgrade": ""
+  },
+  {
+   "id": "arms-of-hadar",
+   "name": "ARMS OF HADAR",
+   "level": 1,
+   "whisper": false,
+   "type": "Summoning",
+   "performing": "Action",
+   "range": "Self",
+   "duration": "Instantaneous",
+   "special": "",
+   "text": "You invoke Hadar, the Dark Hunger Between the Stars, causing writhing tendrils to erupt from your body and lash out at nearby creatures. Each creature in a 10-foot Emanation originating from you must make a Strength saving throw. On a failed save, a creature takes 2d6 Acid damage and can't take Reactions until the start of its next turn. On a successful save, it takes half as much damage only.",
+   "upgrade": "The damage increases by 1d6 for each Strain level above 1."
+  },
+  {
+   "id": "hadars-grasp",
+   "name": "HADAR'S GRASP",
+   "level": 2,
+   "whisper": false,
+   "type": "Summoning",
+   "performing": "Action",
+   "range": "60 feet",
+   "duration": "Concentration, up to 10 rounds",
+   "special": "",
+   "text": "You invoke Hadar, the Dark Hunger Between the Stars, causing a massive black tendril to erupt from the ground beneath a creature you can see within range. The target must make a Strength saving throw. On a failed save, the target takes 2d6 Bludgeoning damage and gains the Restrained condition. On a successful save, the target takes half as much damage and suffers no additional effects. At the end of each of its turns, a Restrained creature can repeat the saving throw, ending the condition on itself on a success. The tendril remains in its space for the duration. If the tendril is not currently Restraining a creature, a creature that enters a space within 5 feet of it for the first time on a turn, or starts its turn there, must make the saving throw against this Rite. On a failed save, the creature takes 2d6 Bludgeoning damage and becomes Restrained by the tendril. If a creature dies while Restrained by the tendril, Hadar claims its victim. The creature and everything it carries vanish into the void between the stars, and the Rite immediately ends.",
+   "upgrade": "The damage increases by 1d6 for each Strain level above 2."
+  },
+  {
+   "id": "unknown-realm",
+   "name": "UNKNOWN REALM",
+   "level": 3,
+   "whisper": false,
+   "type": "Summoning",
+   "performing": "Action",
+   "range": "120 feet",
+   "duration": "Concentration, up to 10 rounds",
+   "special": "",
+   "text": "By your words an unknown realm will appear in a 30-foot Cube within range. The realm appears for a moment and then vanishes. Each creature in the area who can see the realm must succeed on a Wisdom saving throw or suffer 2 Madness, have the Incapacitated condition and a Speed of 0. The condition will remain for the duration or end for an affected creature if it takes any damage or if someone else uses an action to shake the creature out of its stupor.",
+   "upgrade": ""
+  },
+  {
+   "id": "hadars-black-tentacles",
+   "name": "HADAR'S BLACK TENTACLES",
+   "level": 4,
+   "whisper": false,
+   "type": "Summoning",
+   "performing": "Action",
+   "range": "90 feet",
+   "duration": "Concentration, up to 10 rounds",
+   "special": "",
+   "text": "You invoke Hadar, the Dark Hunger Between the Stars, tearing open a brief passage for its writhing limbs to enter the world. Squirming black tentacles fill a 20-foot square on ground you can see within range. For the duration, the area is Difficult Terrain. Each creature in the area must make a Strength saving throw. On a failed save, a creature takes 3d6 Bludgeoning damage and has the Restrained condition until the Rite ends. On a successful save, a creature takes half as much damage and isn't Restrained. A creature must also make this save when it enters the area for the first time on a turn or ends its turn there. A creature makes this save only once per turn. A Restrained creature can take an Action to make a Strength (Athletics) check against your Rite save DC, ending the condition on itself on a success.",
+   "upgrade": ""
+  },
+  {
+   "id": "call-lesser-starborn",
+   "name": "CALL LESSER STARBORN",
+   "level": 6,
+   "whisper": false,
+   "type": "Summoning",
+   "performing": "Action",
+   "range": "90 feet",
+   "duration": "Concentration, up to 20 rounds",
+   "special": "",
+   "text": "You invoke a Patron from beyond the stars, tearing open a fleeting breach in reality and calling forth one of its lesser servants. A Lesser Starborn manifests in an unoccupied space you can see within range. The creature uses the Lesser Starborn stat block. The Lesser Starborn disappears when it drops to 0 Hit Points or when this Rite ends. The Lesser Starborn is friendly to you and your allies. In combat, it shares your Initiative count but takes its turn immediately after yours. The Lesser Starborn obeys your verbal commands (no Action required by you). If you issue no commands, it takes the Dodge Action and uses its movement to avoid danger. A Lesser Starborn is an unnatural creature of the outer dark. Its form varies according to the Patron that answered your call. Some resemble eyeless masses of flesh and tendrils, while others appear as twisted creatures stitched together from impossible anatomy and starlit void.",
+   "upgrade": "The Lesser Starborn gains 10 Temporary Hit Points for each Strain level above 5."
+  },
+  {
+   "id": "call-starborn-horror",
+   "name": "CALL STARBORN HORROR",
+   "level": 9,
+   "whisper": false,
+   "type": "Summoning",
+   "performing": "Action",
+   "range": "120 feet",
+   "duration": "5 rounds",
+   "special": "",
+   "text": "You tear open reality and call forth a true Starborn Horror, a servant of the outer dark that was never meant to enter the mortal world. When the Starborn Horror manifests, each creature within a 30-foot-radius Sphere centered on a point within range must make a Wisdom saving throw. On a failed save, a creature takes 10d10 Mind damage, suffers 6 Madness, and gains the Frightened condition for the duration. On a successful save, a creature takes half as much damage and suffers 2 Madness. Each other creature that can see or hear the Starborn Horror suffers 2 Madness. You suffer 6 Madness when you perform this Rite. The Starborn Horror uses the Starborn Horror stat block. It is not friendly to you or your allies, nor is it inherently hostile to your enemies. The Horror acts according to its own unknowable will. At the start of each of its turns, roll on the Starborn Horror Behavior Table to determine which action it takes. When determining targets, use your Madness die system. The Starborn Horror disappears when the Rite ends.",
+   "upgrade": ""
+  },
+  {
+   "id": "misty-step",
+   "name": "MISTY STEP",
+   "level": 4,
+   "whisper": false,
+   "type": "Traversal",
+   "performing": "Bonus Action",
+   "range": "Self",
+   "duration": "Instantaneous",
+   "special": "",
+   "text": "Briefly surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space you can see.",
+   "upgrade": ""
+  },
+  {
+   "id": "plane-shift",
+   "name": "PLANE SHIFT",
+   "level": 7,
+   "whisper": false,
+   "type": "Traversal",
+   "performing": "Action",
+   "range": "Touch",
+   "duration": "Instantaneous",
+   "special": "",
+   "text": "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence.",
+   "upgrade": ""
+  },
+  {
+   "id": "detect-eldritch-presence",
+   "name": "DETECT ELDRITCH PRESENCE",
+   "level": 1,
+   "whisper": false,
+   "type": "Detection",
+   "performing": "Action",
+   "range": "Self",
+   "duration": "Concentration, up to 20 rounds",
+   "special": "",
+   "text": "For the duration, you sense eldritch presence if any, within 30 feet of you. If you sense such a presence, you can take the Rite Action to learn its direction and approximate distance: Close, Away, or Far. If the presence is Close and was created by a Rite, you also learn the Rite's type.",
+   "upgrade": ""
+  },
+  {
+   "id": "eldritch-eye",
+   "name": "ELDRITCH EYE",
+   "level": 1,
+   "whisper": false,
+   "type": "Detection",
+   "performing": "Three Actions",
+   "range": "Self",
+   "duration": "Concentration, up to 20 rounds",
+   "special": "",
+   "text": "You call upon a Patron that sees through distance, flesh, and stone. Choose one creature on the same plane of existence as you. The target must make a Wisdom saving throw, modified by how well you know the target and what physical connection you have to it. The target does not know what is watching it, only that something vast and unseen has turned its attention toward it. Your Knowledge of the Target Is ... Secondhand (heard of the target) +5 Firsthand (met the target) +0 Extensive (know the target well) -5 You Have the Target's ... Picture or other likeness -2 Garment or other possession -4 Body part, lock of hair, or bit of nail -10 On a successful save, the target is not affected, and you can't perform this Rite on it again until after a Long Rest. On a failed save, the Patron opens an invisible, intangible eye within 10 feet of the target. For the duration, you can see and hear through the eye as if you were there. The eye moves with the target, remaining within 10 feet of it. If a creature can see the eye, it appears as a pale luminous orb about the size of your fist.",
+   "upgrade": ""
+  },
+  {
+   "id": "true-seeing",
+   "name": "TRUE SEEING",
+   "level": 6,
+   "whisper": false,
+   "type": "Detection",
+   "performing": "Action",
+   "range": "Touch",
+   "duration": "20 rounds",
+   "special": "",
+   "text": "You call upon a Patron that will show you what mortal eyes were never meant to witness. For the duration, one willing creature you touch has Truesight with a range of 120 feet. The creature also suffers 1 Madness.",
+   "upgrade": ""
+  },
+  {
+   "id": "armor-of-agathys",
+   "name": "ARMOR OF AGATHYS",
+   "level": 1,
+   "whisper": false,
+   "type": "Protection",
+   "performing": "Bonus Action",
+   "range": "Self",
+   "duration": "20 rounds",
+   "special": "",
+   "text": "You call upon a Patron of frozen ruin, wreathing your body in otherworldly frost. You gain 5 Temporary Hit Points. If a creature hits you with a melee attack while you have these Temporary Hit Points, that creature takes 5 Cold damage. This Rite ends early if you have no Temporary Hit Points remaining.",
+   "upgrade": "The Temporary Hit Points and Cold damage both increase by 5 for each Strain level above 1."
+  },
+  {
+   "id": "foresight",
+   "name": "FORESIGHT",
+   "level": 9,
+   "whisper": false,
+   "type": "Protection",
+   "performing": "Three Actions",
+   "range": "Touch",
+   "duration": "10 rounds",
+   "special": "",
+   "text": "You call upon a Patron that peers beyond the veil of time and fate. By its guidance, a willing creature you touch is granted fleeting glimpses of the immediate future, allowing it to perceive danger moments before it occurs. For the duration, the target has Advantage on all D20 Tests, and other creatures have Disadvantage on attack rolls against it. This Rite ends early if you perform it again.",
+   "upgrade": ""
+  }
+ ]
+}

@@ -12,7 +12,7 @@ import {
   abilityModifier,
   formatModifier,
 } from "@/data/abilities";
-import { armorClass, maxHp } from "@/lib/character";
+import { armorClass, maxHp, maxSanity, proficiencyBonus } from "@/lib/character";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 
 interface Props {
@@ -40,6 +40,8 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const [notes, setNotes] = useState(initial.notes);
   const [mainArmorId, setMainArmorId] = useState<string | null>(initial.mainArmorId);
   const [skills, setSkills] = useState<string[]>(initial.skillProficiencies);
+  const [level, setLevel] = useState<number>(initial.level || 1);
+  const [subclassId, setSubclassId] = useState<string | null>(initial.subclassId ?? null);
 
   const [base, setBase] = useState<Record<AbilityKey, number>>(() => {
     const out = {} as Record<AbilityKey, number>;
@@ -69,7 +71,9 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const bonusValid = bonusTotal === 3; // (2+1) or (1+1+1) both sum to 3
 
   const ac = armorClass(finalScores, mainArmorId);
-  const hp = klass ? maxHp(klass, finalScores) : null;
+  const hp = klass ? maxHp(klass, finalScores, level) : null;
+  const sanMax = klass ? maxSanity(klass, level) : null;
+  const prof = proficiencyBonus(level);
 
   function setBaseScore(k: AbilityKey, next: number) {
     if (next < POINT_BUY_MIN || next > POINT_BUY_MAX) return;
@@ -99,6 +103,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   // When class changes, drop skills that aren't valid for the new class.
   function chooseClass(id: string) {
     setClassId(id);
+    setSubclassId(null);
     const next = getClass(id);
     if (next) {
       setSkills((cur) => cur.filter((s) => next.skillChoices.options.includes(s)));
@@ -129,13 +134,17 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       ...initial,
       name: name.trim(),
       classId,
+      subclassId,
+      level,
       background: background.trim(),
       notes: notes.trim(),
       mainArmorId,
       skillProficiencies: skills,
       abilities: finalScores,
-      madness: initial.madness ?? 0,
-      transform: initial.transform ?? 0,
+      sanity: initial.sanity ?? sanMax ?? 0,
+      bloodTinge: initial.bloodTinge ?? false,
+      preparedWhispers: initial.preparedWhispers ?? [],
+      coins: initial.coins ?? 0,
     });
   }
 
@@ -154,7 +163,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
             onChange={(e) => setName(e.target.value)}
           />
         </div>
-        <div className="field" style={{ marginBottom: 0 }}>
+        <div className="field">
           <label htmlFor="bg">Background</label>
           <input
             id="bg"
@@ -164,6 +173,37 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
             placeholder="e.g. Plague Doctor, Deserter, Scholar…"
             onChange={(e) => setBackground(e.target.value)}
           />
+        </div>
+        <div className="field" style={{ marginBottom: 0 }}>
+          <label>Level</label>
+          <div className="row" style={{ gap: 12, alignItems: "center" }}>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              style={{ width: 40, padding: 6 }}
+              disabled={level <= 1}
+              onClick={() => setLevel((l) => Math.max(1, l - 1))}
+              aria-label="decrease level"
+            >
+              −
+            </button>
+            <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", minWidth: 28, textAlign: "center" }}>
+              {level}
+            </span>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm"
+              style={{ width: 40, padding: 6 }}
+              disabled={level >= 20}
+              onClick={() => setLevel((l) => Math.min(20, l + 1))}
+              aria-label="increase level"
+            >
+              +
+            </button>
+            <span className="faint" style={{ fontSize: "0.82rem" }}>
+              Proficiency {formatModifier(prof)}
+            </span>
+          </div>
         </div>
       </div>
 
@@ -230,6 +270,54 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
           </>
         )}
       </div>
+
+      {/* Subclass */}
+      {klass && klass.subclasses.length > 0 && (
+        <div className="card">
+          <p className="eyebrow">Subclass</p>
+          <h3 style={{ marginBottom: 6 }}>{klass.name} path</h3>
+          <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
+            {level >= 3
+              ? "Choose your specialization."
+              : "Chosen at level 3 — you can pick now or later."}
+          </p>
+          <div className="stack" style={{ gap: 8 }}>
+            <button
+              type="button"
+              onClick={() => setSubclassId(null)}
+              className="card card-hover"
+              style={{
+                textAlign: "left",
+                padding: 12,
+                borderColor: subclassId === null ? "var(--blood-bright)" : undefined,
+                background: subclassId === null ? "rgba(179,18,26,0.12)" : undefined,
+              }}
+            >
+              <span style={{ fontWeight: 600 }}>Undecided</span>
+            </button>
+            {klass.subclasses.map((s) => {
+              const selected = s.id === subclassId;
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => setSubclassId(s.id)}
+                  className="card card-hover"
+                  style={{
+                    textAlign: "left",
+                    padding: 12,
+                    borderColor: selected ? "var(--blood-bright)" : undefined,
+                    background: selected ? "rgba(179,18,26,0.12)" : undefined,
+                  }}
+                >
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{s.name}</div>
+                  <div className="muted" style={{ fontSize: "0.86rem" }}>{s.tagline}</div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Ability scores */}
       <div className="card">
@@ -365,8 +453,10 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
           <div className="derived-grid">
             <Derived label="Armor Class" value={ac.total} />
             <Derived label="Max HP" value={hp ?? "—"} />
+            <Derived label="Sanity" value={sanMax ?? "—"} />
             <Derived label="Speed" value={`${klass.speedFt}ft`} />
-            <Derived label="Prof. Bonus" value="+2" />
+            <Derived label="Prof. Bonus" value={formatModifier(prof)} />
+            <Derived label="Sanity Die" value={`d${klass.sanityDie}`} />
           </div>
           <p className="faint center" style={{ fontSize: "0.78rem", marginTop: 10, marginBottom: 0 }}>
             Saving throws: {klass.savingThrows.map((k) => ABILITY_NAME[k]).join(" & ")}

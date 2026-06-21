@@ -554,6 +554,55 @@ button {
   }
 }
 
+.skill-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  column-gap: 18px;
+  row-gap: 1px;
+}
+
+.meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 10px;
+}
+
+.level-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.level-table th,
+.level-table td {
+  text-align: left;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.level-table th {
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  white-space: nowrap;
+}
+.level-table .lvl-col {
+  text-align: center;
+  font-family: var(--font-display);
+  white-space: nowrap;
+}
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+@media (min-width: 420px) {
+  .skill-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
 /* ---------- Misc helpers ---------- */
 
 .stack {

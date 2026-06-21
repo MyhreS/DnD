@@ -1,0 +1,29 @@
+     MISTY STEP
+     Level 4
+
+     Type: Traversal Rite
+     Performing: Bonus Action
+     Range: Self
+     Duration: Instantaneous
+
+     Brie y surrounded by silvery mist, you teleport up to 30 feet to an unoccupied space you can see.
+
+
+
+     PLANE SHIFT
+     Level 7
+
+     Type: Traversal Rite
+     Performing: Action
+     Range: Touch
+     Duration: Instantaneous
+
+     You and up to eight willing creatures who link hands in a circle are transported to a di erent plane
+     of existence.
+
+
+
+
+                                                                                ff
+fl
+
