@@ -12,6 +12,7 @@ import { TradePanel } from "./TradePanel";
 import { TradeLog } from "./TradeLog";
 import { DMCharacters } from "./DMCharacters";
 import { LootPanel } from "./LootPanel";
+import { RestPanel } from "./RestPanel";
 import { useTradesSync } from "../hooks/useTradesSync";
 import { useCharactersSync } from "../hooks/useCharactersSync";
 import { useLootSync } from "../hooks/useLootSync";
@@ -50,6 +51,7 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
       {!isDM && card && card.classId && card.name && (
         <>
           <CharacterTrackers card={card} />
+          <RestPanel card={card} phase={game.phase} />
           <InventoryPanel card={card} editable />
           <TradePanel game={game} participants={participants} card={card} />
         </>

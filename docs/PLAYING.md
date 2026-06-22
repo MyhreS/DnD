@@ -221,7 +221,7 @@ So we can verify the whole multiplayer flow without a real table:
    override/recover, soft-archive, purge-on-end). *(Dropped loot — §7.3 — still
    pending, next.)*
 5. ✅ Dropped loot (claim a dead hunter's items; purged at session end).
-6. ⬜ Rest & recap.
+6. ✅ Rest & recap (short/long rest restores HP; post-session wrap-up).
 7. ⬜ Menu-mode management polish (level-up/tweaks).
 8. ⬜ Admin test-run simulation + Playwright test plays.
 9. ⬜ **Multiplayer** (§0): accounts, campaigns/servers, multiple characters,

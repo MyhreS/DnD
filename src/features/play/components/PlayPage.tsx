@@ -7,6 +7,7 @@ import { usePresence } from "../hooks/usePresence";
 import { StartGamePanel } from "./StartGamePanel";
 import { Lobby } from "./Lobby";
 import { InGame } from "./InGame";
+import { Recap } from "./Recap";
 
 export function PlayPage() {
   const user = useAuthStore((s) => s.user);
@@ -19,6 +20,11 @@ export function PlayPage() {
   const participants = useGameStore((s) => s.participants);
   const status = useGameStore((s) => s.status);
   const game = currentGame(games);
+
+  // The most recent ended game, for a short post-session recap.
+  const lastEnded = games.find((g) => !g.sandbox && g.status === "ended");
+  const showRecap =
+    !game && !!lastEnded && Date.now() - (lastEnded.endedAt ?? 0) < 8 * 60 * 60 * 1000;
 
   usePresence(game?.id ?? null, user?.uid ?? null);
 
@@ -34,15 +40,18 @@ export function PlayPage() {
           <p className="muted" style={{ margin: 0 }}>Couldn't reach the game. Check your connection and try again.</p>
         </div>
       ) : !game ? (
-        canRunGame ? (
-          <StartGamePanel />
-        ) : (
-          <div className="card center">
-            <p className="muted" style={{ margin: 0 }}>
-              No game is running yet. When your DM starts a session, it'll appear here.
-            </p>
-          </div>
-        )
+        <div className="stack" style={{ gap: 14 }}>
+          {showRecap && lastEnded && <Recap game={lastEnded} />}
+          {canRunGame ? (
+            <StartGamePanel />
+          ) : (
+            <div className="card center">
+              <p className="muted" style={{ margin: 0 }}>
+                No game is running yet. When your DM starts a session, it'll appear here.
+              </p>
+            </div>
+          )}
+        </div>
       ) : game.status === "lobby" ? (
         <Lobby game={game} participants={participants} />
       ) : (
