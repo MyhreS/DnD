@@ -27,7 +27,7 @@ export function Layout() {
             <Sigil className="brand-mark" />
             <span className="brand-title">{active ? active.name : "Catacombs & Starspawns"}</span>
           </Link>
-          <Link to="/profile" aria-label="Your profile" className="avatar">
+          <Link to="/profile" aria-label="Your profile" className="avatar avatar-top">
             {initial}
           </Link>
         </header>
@@ -41,8 +41,15 @@ export function Layout() {
           <NavLink to="/handbook">Handbook</NavLink>
         </nav>
 
-        <LiveGameBanner />
-        <UpdateBar />
+        <div className="sidebar-foot">
+          <LiveGameBanner />
+          <UpdateBar />
+          {/* Desktop: profile sits at the bottom of the sidebar (top-right on mobile). */}
+          <Link to="/profile" className="sidebar-profile" aria-label="Your profile & settings">
+            <span className="avatar">{initial}</span>
+            <span className="sidebar-profile-name">{firstName}</span>
+          </Link>
+        </div>
       </div>
 
       <main className="app-main">
