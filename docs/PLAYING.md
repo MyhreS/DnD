@@ -11,11 +11,20 @@ Status legend: ✅ shipped · 🟡 in progress · ⬜ planned.
 
 ## 0. App structure — accounts, campaigns & the main menu ⬜
 
-The app is moving from a single private group to a **multi-campaign** experience
-(tracked by the **Multiplayer epic** + sub-issues on GitHub). The shape:
+The app is moving from a single private group to an **open, multi-campaign**
+experience (tracked by the **Multiplayer epic** + sub-issues on GitHub). The shape:
 
-- **Main menu (account home)** — the top-level screen after sign-in, like a
-  game's main menu. From here you:
+**Open & deferred sign-in (important).** The app is **public** — anyone can sign
+in with Google and use it (it's no longer limited to one allowlisted group). The
+**main menu / landing is visible without logging in**, so a newcomer can see what
+the app & game is. **Don't force login up front** (bad UX): only **prompt Google
+sign-in when an action requires it** (create/join a campaign, create or save a
+character, RSVP, etc.). The old global **allowlist gate goes away** — access
+control becomes **per-campaign membership** (you're in a campaign because you
+created it or joined via its invite code), not a single app-wide allowlist.
+
+- **Main menu (account home)** — the top-level screen (public; richer once signed
+  in), like a game's main menu. From here you:
   - manage your **characters** — you can have **several**; this is where
     **character creation** lives (moved out of the in-campaign views);
   - **create a campaign** (a "server"/party) and become its **DM**, or **join**
@@ -33,6 +42,10 @@ Data model shift: characters become a **collection** (not one-per-user);
 `/campaigns/{id}` owns its sessions/party/games; membership carries the chosen
 character + an invite code. The sections below describe life **inside** a
 campaign.
+
+> **Early stage — no backwards compatibility.** We can restructure freely (drop
+> the allowlist, reshape `/players` → characters, scope data under campaigns) and
+> wipe existing data; no migrations required.
 
 ---
 
