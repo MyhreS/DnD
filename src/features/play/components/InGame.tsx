@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { ChevronIcon } from "@/components/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { CharacterTrackers } from "@/features/hunter/components/CharacterTrackers";
@@ -85,7 +86,8 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
       {isDM && <StopGame game={game} />}
 
       <div className="btn-row">
-        <button type="button" className="btn btn-ghost" onClick={() => navigate("/")}>
+        <button type="button" className="btn btn-menu" onClick={() => navigate("/")}>
+          <ChevronIcon width={16} height={16} className="icon-flip" />
           Exit to menu
         </button>
         {!isDM && joined && (

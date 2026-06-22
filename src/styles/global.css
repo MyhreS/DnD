@@ -487,6 +487,40 @@ button {
     max-width: 1120px;
     padding: 36px 44px 64px;
   }
+
+  /* Avatar moves from the header to a profile row pinned at the sidebar bottom.
+   * (.app-topbar prefix keeps these winning over the later base rules.) */
+  .top-tabs {
+    flex: 0 0 auto;
+  }
+  .app-topbar .sidebar-foot {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+  }
+  .app-header .avatar-top {
+    display: none;
+  }
+  .app-topbar .sidebar-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    color: var(--ink-dim);
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .app-topbar .sidebar-profile:hover {
+    background: var(--bg-elev-2);
+    color: var(--ink);
+  }
+  .app-topbar .sidebar-profile-name {
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 /* Wider desktop: two-column pages split, and an aside can stick. */
@@ -1075,6 +1109,29 @@ button {
   font-size: 0.95rem;
   flex: none;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
+}
+
+/* Profile link at the bottom of the desktop sidebar (hidden on mobile, where the
+ * header avatar is used instead). */
+.sidebar-profile {
+  display: none;
+}
+/* On mobile the footer is transparent (banner/update bar flow in the top bar). */
+.sidebar-foot {
+  display: contents;
+}
+
+/* Back-to-menu action — gold-tinted + a left chevron so it reads as "go back". */
+.btn-menu {
+  background: transparent;
+  border-color: var(--gold-dim);
+  color: var(--gold);
+}
+.btn-menu:hover {
+  background: var(--bg-elev-2);
+}
+.btn-menu .icon-flip {
+  transform: rotate(180deg);
 }
 
 /* skeleton loaders keep layout stable while data fetches */

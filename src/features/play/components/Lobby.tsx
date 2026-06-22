@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
+import { ChevronIcon } from "@/components/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { AsyncButton } from "@/components/AsyncButton";
@@ -85,7 +86,8 @@ export function Lobby({ game, participants }: { game: Game; participants: GamePa
       )}
 
       <div className="btn-row">
-        <button type="button" className="btn btn-ghost" onClick={() => navigate("/")}>
+        <button type="button" className="btn btn-menu" onClick={() => navigate("/")}>
+          <ChevronIcon width={16} height={16} className="icon-flip" />
           Exit to menu
         </button>
         {!isDM && joined && (
