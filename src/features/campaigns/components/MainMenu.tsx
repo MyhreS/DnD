@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { fullName } from "@/config";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { useHunterCard } from "@/features/hunter/hooks/useHunterCard";
 import { AsyncButton } from "@/components/AsyncButton";
@@ -24,14 +23,8 @@ export function MainMenu() {
     navigate("/sessions");
   }
 
-  const name = member ? fullName(member) : (user?.displayName ?? user?.email ?? "Hunter");
-  const initial = name.trim().charAt(0).toUpperCase() || "H";
-
   return (
     <div className="reading">
-      <div className="row" style={{ justifyContent: "flex-end", marginBottom: 2 }}>
-        <Link to="/profile" aria-label="Your profile & settings" className="avatar">{initial}</Link>
-      </div>
       <div className="center" style={{ paddingTop: 6 }}>
         <Sigil width={56} height={56} />
         <p className="eyebrow" style={{ marginTop: 8 }}>Catacombs &amp; Starspawns</p>
