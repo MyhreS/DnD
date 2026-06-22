@@ -1,12 +1,12 @@
 import { useEffect } from "react";
 import { useTradeStore } from "../store/tradeStore";
 
-/** Subscribe to a game's trades while mounted. */
-export function useTradesSync(gameId: string | null) {
+/** Subscribe to a campaign's trades while mounted. */
+export function useTradesSync(campaignId: string | null) {
   const sync = useTradeStore((s) => s.sync);
   const stop = useTradeStore((s) => s.stop);
   useEffect(() => {
-    sync(gameId);
+    sync(campaignId);
     return () => stop();
-  }, [gameId, sync, stop]);
+  }, [campaignId, sync, stop]);
 }

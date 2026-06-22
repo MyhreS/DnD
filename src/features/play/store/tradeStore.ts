@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { Trade } from "@/types";
 import {
-  subscribeGameTrades,
+  subscribeCampaignTrades,
   createTrade,
   acceptTrade,
   declineTrade,
@@ -16,9 +16,9 @@ interface TradeState {
   error: string | null;
   preview: boolean;
   _unsub: (() => void) | null;
-  _gameId: string | null;
+  _campaignId: string | null;
 
-  sync: (gameId: string | null) => void;
+  sync: (campaignId: string | null) => void;
   stop: () => void;
   clearError: () => void;
 
@@ -48,22 +48,22 @@ export const useTradeStore = create<TradeState>((set, get) => {
     error: null,
     preview: false,
     _unsub: null,
-    _gameId: null,
+    _campaignId: null,
 
-    sync: (gameId) => {
+    sync: (campaignId) => {
       if (isPreviewActive()) {
         if (!get().preview) set({ preview: true, trades: previewTrades() });
         return;
       }
-      if (gameId === get()._gameId && get()._unsub) return;
+      if (campaignId === get()._campaignId && get()._unsub) return;
       get()._unsub?.();
-      if (!gameId) {
-        set({ _unsub: null, _gameId: null, trades: [] });
+      if (!campaignId) {
+        set({ _unsub: null, _campaignId: null, trades: [] });
         return;
       }
-      set({ _gameId: gameId, trades: [] });
-      const unsub = subscribeGameTrades(
-        gameId,
+      set({ _campaignId: campaignId, trades: [] });
+      const unsub = subscribeCampaignTrades(
+        campaignId,
         (trades) => set({ trades }),
         () => set({ error: "Couldn't load trades." }),
       );
@@ -72,7 +72,7 @@ export const useTradeStore = create<TradeState>((set, get) => {
 
     stop: () => {
       get()._unsub?.();
-      set({ _unsub: null, _gameId: null });
+      set({ _unsub: null, _campaignId: null });
     },
 
     clearError: () => set({ error: null }),

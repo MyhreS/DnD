@@ -6,7 +6,6 @@ import {
   onSnapshot,
   query,
   where,
-  orderBy,
   limit,
   serverTimestamp,
   type Timestamp,
@@ -95,21 +94,17 @@ export async function cancelTrade(id: string): Promise<void> {
   await updateDoc(doc(tradesCol, id), { status: "cancelled", updatedAt: serverTimestamp() });
 }
 
-/** Live-subscribe to a game's recent trades (newest first). */
-export function subscribeGameTrades(
-  gameId: string,
+/** Live-subscribe to a campaign's recent trades (newest first, sorted
+ * client-side to avoid a composite index + match the member-scoped rules). */
+export function subscribeCampaignTrades(
+  campaignId: string,
   cb: (trades: Trade[]) => void,
   onError?: (e: unknown) => void,
 ): () => void {
-  const q = query(
-    tradesCol,
-    where("gameId", "==", gameId),
-    orderBy("createdAt", "desc"),
-    limit(50),
-  );
+  const q = query(tradesCol, where("campaignId", "==", campaignId), limit(50));
   return onSnapshot(
     q,
-    (snap) => cb(snap.docs.map((d) => toTrade(d.id, d.data()))),
+    (snap) => cb(snap.docs.map((d) => toTrade(d.id, d.data())).sort((a, b) => b.createdAt - a.createdAt)),
     (err) => {
       console.error("Trades subscription failed", err);
       onError?.(err);
