@@ -1165,6 +1165,18 @@ button {
   transform: rotate(180deg);
 }
 
+/* Campaign join code — prominent + easy to read out / copy. */
+.invite-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.25rem;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  background: var(--bg-elev-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+}
+
 /* skeleton loaders keep layout stable while data fetches */
 .skeleton {
   border-radius: var(--radius-sm);

@@ -2,12 +2,18 @@ import { create } from "zustand";
 import type { Campaign, CampaignMember } from "@/types";
 import {
   subscribeMyCampaigns,
+  subscribeInvitedCampaigns,
   subscribeCampaign,
   subscribeMembers,
   createCampaign,
   joinCampaign,
   leaveCampaign,
   setMemberCharacter,
+  inviteByEmail,
+  uninviteEmail,
+  regenerateInviteCode,
+  acceptInvite,
+  declineInvite,
   type CreateCampaignInput,
   type JoinCampaignInput,
 } from "@/api/campaigns";
@@ -20,6 +26,8 @@ type Status = "idle" | "loading" | "loaded" | "error";
 
 interface CampaignState {
   campaigns: Campaign[];
+  /** Campaigns you've been invited to by email (not yet joined). */
+  invited: Campaign[];
   activeId: string | null;
   active: Campaign | null;
   members: CampaignMember[];
@@ -28,6 +36,7 @@ interface CampaignState {
   error: string | null;
   preview: boolean;
   _unsubMine: (() => void) | null;
+  _unsubInvited: (() => void) | null;
   _unsubActive: (() => void) | null;
   _unsubMembers: (() => void) | null;
 
@@ -39,6 +48,13 @@ interface CampaignState {
   join: (input: JoinCampaignInput) => Promise<string | null>;
   leave: (id: string, uid: string) => Promise<boolean>;
   pickCharacter: (uid: string, characterId: string | null) => Promise<boolean>;
+  /** DM: invite/uninvite by email, regenerate the share code. */
+  invite: (email: string) => Promise<boolean>;
+  uninvite: (email: string) => Promise<boolean>;
+  regenerateCode: () => Promise<string | null>;
+  /** Player: accept / decline an email invite. */
+  accept: (campaign: Campaign) => Promise<string | null>;
+  decline: (campaign: Campaign) => Promise<boolean>;
 }
 
 export const useCampaignStore = create<CampaignState>((set, get) => {
@@ -69,6 +85,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
 
   return {
     campaigns: [],
+    invited: [],
     activeId: null,
     active: null,
     members: [],
@@ -77,6 +94,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
     error: null,
     preview: false,
     _unsubMine: null,
+    _unsubInvited: null,
     _unsubActive: null,
     _unsubMembers: null,
 
@@ -90,11 +108,17 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
           c = { ...c, dmUid: "preview-uid", dmName: "You (DM)" };
           members = [{ ...members[0], uid: "preview-uid", name: "You (DM)" }, ...members.slice(1)];
         }
-        set({ preview: true, campaigns: [c], activeId: c.id, active: c, members, status: "loaded" });
+        set({ preview: true, campaigns: [c], invited: [], activeId: c.id, active: c, members, status: "loaded" });
         return;
       }
       if (get()._unsubMine) return;
       set({ status: "loading" });
+      // Subscribe to campaigns you've been invited to (by email).
+      const email = useAuthStore.getState().user?.email;
+      if (email) {
+        const ui = subscribeInvitedCampaigns(email, (invited) => set({ invited }));
+        set({ _unsubInvited: ui });
+      }
       const stored = localStorage.getItem(ACTIVE_KEY);
       const unsub = subscribeMyCampaigns(
         uid,
@@ -116,9 +140,10 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
 
     stop: () => {
       get()._unsubMine?.();
+      get()._unsubInvited?.();
       get()._unsubActive?.();
       get()._unsubMembers?.();
-      set({ _unsubMine: null, _unsubActive: null, _unsubMembers: null });
+      set({ _unsubMine: null, _unsubInvited: null, _unsubActive: null, _unsubMembers: null });
     },
 
     enter: (id) => {
@@ -159,6 +184,50 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
       const id = get().activeId;
       if (!id) return false;
       return (await run(() => setMemberCharacter(id, uid, characterId), "Couldn't set your character.")) !== null;
+    },
+
+    invite: async (email) => {
+      if (get().preview) return true;
+      const id = get().activeId;
+      if (!id || !email.trim()) return false;
+      return (await run(() => inviteByEmail(id, email), "Couldn't send the invite.")) !== null;
+    },
+
+    uninvite: async (email) => {
+      if (get().preview) return true;
+      const id = get().activeId;
+      if (!id) return false;
+      return (await run(() => uninviteEmail(id, email), "Couldn't remove the invite.")) !== null;
+    },
+
+    regenerateCode: async () => {
+      if (get().preview) return previewCampaign().inviteCode;
+      const id = get().activeId;
+      if (!id) return null;
+      return run(() => regenerateInviteCode(id), "Couldn't regenerate the code.");
+    },
+
+    accept: async (campaign) => {
+      if (get().preview) return campaign.id;
+      const { user, member } = useAuthStore.getState();
+      if (!user?.email) return null;
+      const name = member?.firstName || user.displayName || "Hunter";
+      const ok = await run(
+        () => acceptInvite({ campaignId: campaign.id, uid: user.uid, name, email: user.email! }),
+        "Couldn't accept the invite.",
+      );
+      if (ok !== null) {
+        get().enter(campaign.id);
+        return campaign.id;
+      }
+      return null;
+    },
+
+    decline: async (campaign) => {
+      if (get().preview) return true;
+      const email = useAuthStore.getState().user?.email;
+      if (!email) return false;
+      return (await run(() => declineInvite(campaign.id, email), "Couldn't decline.")) !== null;
     },
   };
 });

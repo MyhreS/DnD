@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { useIsDM } from "@/features/campaigns/hooks/useIsDM";
+import { CampaignInvitePanel } from "@/features/campaigns/components/CampaignInvitePanel";
 import { useSessionStore } from "@/features/sessions/store/sessionStore";
 import { useSessionsLive } from "@/features/sessions/hooks/useSessionsLive";
 import { sortUpcoming } from "@/data/sessions";
@@ -26,8 +27,7 @@ export function PartyPage() {
   const sessions = useMemo(() => allSessions.filter((s) => s.campaignId === activeId), [allSessions, activeId]);
   const nextSession = useMemo(() => sortUpcoming(sessions)[0], [sessions]);
 
-  const { players, members, rsvps, error } = usePartyData({
-    oversight,
+  const { players, rsvps, error } = usePartyData({
     sessionId: nextSession?.id,
   });
 
@@ -70,9 +70,11 @@ export function PartyPage() {
 
         {error && <div className="banner banner-error">{error}</div>}
 
+        {isDM && <div style={{ marginBottom: 12 }}><CampaignInvitePanel /></div>}
+
         {oversight && (
           <RosterPanel
-            members={members}
+            members={campaignMembers}
             players={players}
             rsvps={rsvps}
             sessionId={nextSession?.id}

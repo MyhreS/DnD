@@ -286,6 +286,8 @@ export interface Campaign {
   inviteCode: string;
   /** Member uids (for "my campaigns" queries). */
   memberUids: string[];
+  /** Emails the DM has invited (lowercased); they see the invite in the menu. */
+  invitedEmails: string[];
   createdAt: number;
 }
 
