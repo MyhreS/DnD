@@ -163,6 +163,38 @@ export function CharacterPage() {
         <button className="chip selectable" onClick={startNew}>+ New hunter</button>
       </div>
 
+      {hasCard && (
+        <div className="card no-print row between" style={{ marginBottom: 14, alignItems: "center" }}>
+          <div>
+            <span className="eyebrow" style={{ margin: 0 }}>Level</span>
+            <div className="faint" style={{ fontSize: "0.78rem" }}>Level up between sessions — the maths follows.</div>
+          </div>
+          <div className="row" style={{ gap: 10, alignItems: "center", flex: "none" }}>
+            <button
+              className="btn btn-ghost btn-sm"
+              style={{ width: 38, padding: 6 }}
+              disabled={saving || card!.level <= 1}
+              aria-label="level down"
+              onClick={() => save({ ...card!, level: Math.max(1, card!.level - 1) })}
+            >
+              −
+            </button>
+            <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", minWidth: 26, textAlign: "center" }}>
+              {card!.level}
+            </span>
+            <button
+              className="btn btn-ghost btn-sm"
+              style={{ width: 38, padding: 6 }}
+              disabled={saving || card!.level >= 20}
+              aria-label="level up"
+              onClick={() => save({ ...card!, level: Math.min(20, card!.level + 1) })}
+            >
+              +
+            </button>
+          </div>
+        </div>
+      )}
+
       {hasCard ? (
         <div className="desk-2col">
           <aside className="desk-aside no-print">
