@@ -21,7 +21,7 @@ export function DMCharacters({ gameId }: { gameId: string | null }) {
       {party.length === 0 ? (
         <p className="faint" style={{ fontSize: "0.88rem", margin: 0 }}>No characters yet.</p>
       ) : (
-        party.map((c) => <CharacterRow key={c.uid} card={c} gameId={gameId} />)
+        party.map((c) => <CharacterRow key={c.id} card={c} gameId={gameId} />)
       )}
 
       {archive.length > 0 && (
@@ -72,7 +72,7 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
       <div className="btn-row" style={{ marginTop: 8 }}>
         {card.deathPending ? (
           <>
-            <AsyncButton className="btn btn-ghost" pendingText="…" showDone={false} onClick={() => revive(card.uid)}>
+            <AsyncButton className="btn btn-ghost" pendingText="…" showDone={false} onClick={() => revive(card.id)}>
               Revive
             </AsyncButton>
             <AsyncButton className="btn btn-primary" style={{ background: "var(--blood)" }} pendingText="…" showDone={false} onClick={() => kill(card, gameId)}>

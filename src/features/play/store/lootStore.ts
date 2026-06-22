@@ -1,7 +1,7 @@
 import { create } from "zustand";
 import type { HunterCard, InventoryEntry, LootPile } from "@/types";
 import { subscribeLoot, claimLoot } from "@/api/games";
-import { patchHunterCard } from "@/api/players";
+import { patchCharacter } from "@/api/players";
 import { isPreviewActive, previewLoot } from "@/dev/preview";
 
 /** Merge dropped items into an inventory (sum quantities). */
@@ -69,8 +69,8 @@ export const useLootStore = create<LootState>((set, get) => ({
     set({ busy: true, error: null });
     try {
       // Mark claimed first so two players can't grab the same pile, then bank it.
-      await claimLoot(gameId, loot.id, { uid: myCard.uid, name: myCard.name });
-      await patchHunterCard(myCard.uid, {
+      await claimLoot(gameId, loot.id, { uid: myCard.ownerUid, name: myCard.name });
+      await patchCharacter(myCard.id, {
         inventory: mergeInventory(myCard.inventory ?? [], loot.items),
         coins: (myCard.coins ?? 0) + loot.coins,
       });

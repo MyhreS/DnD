@@ -123,7 +123,6 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
   const eileen = previewCard("preview-uid");
   const gascoigne = {
     ...previewCard("preview-p2"),
-    uid: "preview-p2",
     name: "Gascoigne",
     classId: "brute",
     subclassId: "battle-master",
@@ -146,7 +145,6 @@ export function previewArchive(): import("@/types").ArchivedCharacter[] {
       archivedAt: Date.now(),
       card: {
         ...base,
-        uid: "preview-p3",
         name: "Viktor the Lost",
         classId: "deepcaller",
         subclassId: "hunter-zealot",
@@ -178,11 +176,13 @@ export function previewTrades(): import("@/types").Trade[] {
   ];
 }
 
-/** A sample hunter card so the Character/Party views render in preview mode. */
+/** A sample hunter card so the Character/Party views render in preview mode.
+ * `uid` is the owner; the character id is derived from it. */
 export function previewCard(uid: string): import("@/types").HunterCard {
   const now = Date.now();
   return {
-    uid,
+    id: `${uid}-char`,
+    ownerUid: uid,
     ownerEmail: "preview@local.dev",
     ownerName: "Preview Hunter",
     name: "Eileen the Crow",

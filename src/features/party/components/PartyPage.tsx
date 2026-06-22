@@ -74,7 +74,7 @@ export function PartyPage() {
         ) : (
           <div className="card-grid">
             {hunters.map((c) => (
-              <HunterRow key={c.uid} card={c} />
+              <HunterRow key={c.id} card={c} />
             ))}
           </div>
         )}

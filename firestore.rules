@@ -65,12 +65,15 @@ service cloud.firestore {
     // /players/{uid}
     // Your hunter card. Any allowlisted member of the party can read everyone's
     // card (party view / DM oversight), but you may only write your own.
-    match /players/{uid} {
+    // /characters/{id}
+    // A user (ownerUid) can own several characters. Anyone in the party can read
+    // (gallery / DM board); you write your own, and staff (admin/moderator/DM)
+    // have full control over any character (confirm death, recover, adjust).
+    match /characters/{id} {
       allow read: if isAllowlisted();
-      // You write your own card; staff (admin/moderator/DM) have full control
-      // over any character (confirm death, recover, adjust).
-      allow create, update: if isAllowlisted() && (request.auth.uid == uid || isStaff());
-      allow delete: if isAllowlisted() && (request.auth.uid == uid || isStaff());
+      allow create: if isAllowlisted() && request.resource.data.ownerUid == request.auth.uid;
+      allow update: if isAllowlisted() && (resource.data.ownerUid == request.auth.uid || isStaff());
+      allow delete: if isAllowlisted() && (resource.data.ownerUid == request.auth.uid || isStaff());
     }
 
     // /archive/{id}

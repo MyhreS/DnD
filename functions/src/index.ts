@@ -145,7 +145,7 @@ export const sendReminders = onCall(
       .filter((m) => !isTestEmail(m.email));
 
     if (kind === "character") {
-      const playersSnap = await db.collection("players").get();
+      const playersSnap = await db.collection("characters").get();
       const hasCard = new Set(
         playersSnap.docs
           .map((d) => d.data())
