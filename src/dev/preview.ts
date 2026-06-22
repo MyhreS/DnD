@@ -184,6 +184,7 @@ export function previewTrades(): import("@/types").Trade[] {
   return [
     {
       id: "preview-trade-1",
+      campaignId: "preview-campaign",
       gameId: "preview-game",
       fromUid: "preview-p2",
       fromName: "Gascoigne",

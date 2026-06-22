@@ -8,7 +8,7 @@ import {
   getDocs,
   onSnapshot,
   query,
-  orderBy,
+  where,
   limit,
   serverTimestamp,
   type Timestamp,
@@ -43,16 +43,17 @@ function toGame(id: string, data: Record<string, unknown>): Game {
   };
 }
 
-/** Live-subscribe to recent games (newest first). The store derives the
- * current game (latest non-sandbox in lobby/active) and any sandbox games. */
+/** Live-subscribe to a campaign's games (newest first, sorted client-side to
+ * avoid a composite index). The store derives the current/last game. */
 export function subscribeGames(
+  campaignId: string,
   cb: (games: Game[]) => void,
   onError?: (err: unknown) => void,
 ): () => void {
-  const q = query(gamesCol, orderBy("createdAt", "desc"), limit(30));
+  const q = query(gamesCol, where("campaignId", "==", campaignId), limit(50));
   return onSnapshot(
     q,
-    (snap) => cb(snap.docs.map((d) => toGame(d.id, d.data()))),
+    (snap) => cb(snap.docs.map((d) => toGame(d.id, d.data())).sort((a, b) => b.createdAt - a.createdAt)),
     (err) => {
       console.error("Games subscription failed", err);
       onError?.(err);

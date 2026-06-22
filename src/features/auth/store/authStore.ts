@@ -19,7 +19,7 @@ import {
 } from "@/config";
 import type { AllowlistMember } from "@/types";
 
-export type AuthStatus = "loading" | "signedOut" | "checking" | "allowed" | "denied";
+export type AuthStatus = "loading" | "signedOut" | "checking" | "allowed";
 
 interface AuthState {
   user: User | null;
@@ -84,9 +84,12 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       if (isSuperAdmin(user.email) && user.email) {
         void ensureSuperAdminEntry(user.email);
       }
-      const { allowed, identity, member } = await resolveAccess(user.email);
+      // Open access: anyone signed in may use the app. Roles/permissions are
+      // now per-campaign (you're a campaign's DM if you created it). We still
+      // read any allowlist entry for a display name, but never gate on it.
+      const { identity, member } = await resolveAccess(user.email);
       set({
-        status: allowed ? "allowed" : "denied",
+        status: "allowed",
         member,
         realIdentity: identity,
         viewAs: null,

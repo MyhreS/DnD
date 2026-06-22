@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
+import { useIsDM } from "@/features/campaigns/hooks/useIsDM";
 import { useHunterCard } from "@/features/hunter/hooks/useHunterCard";
 import { useSessionsLive } from "@/features/sessions/hooks/useSessionsLive";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -12,7 +13,7 @@ import { Recap } from "./Recap";
 
 export function PlayPage() {
   const user = useAuthStore((s) => s.user);
-  const canRunGame = useAuthStore((s) => s.caps.runGame);
+  const canRunGame = useIsDM();
 
   useHunterCard();
   useSessionsLive();

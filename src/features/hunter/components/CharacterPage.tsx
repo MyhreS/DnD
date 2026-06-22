@@ -9,6 +9,7 @@ import { InventoryPanel } from "./InventoryPanel";
 import { useGameStore, currentGame } from "@/features/play/store/gameStore";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { emptyCard } from "@/lib/character";
+import { patchCharacter } from "@/api/players";
 import { exportCharacterPdf } from "../lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
 import { AsyncButton } from "@/components/AsyncButton";
@@ -23,10 +24,14 @@ export function CharacterPage() {
   const pickCharacter = useCampaignStore((s) => s.pickCharacter);
   const gameId = currentGame(useGameStore((s) => s.games), activeCampaignId)?.id ?? null;
 
-  // Selecting a hunter while in a campaign records it as the one you play there.
+  // Selecting a hunter while in a campaign records it as the one you play there
+  // (and tags the hunter with the campaign so its DM can manage it).
   function chooseCharacter(id: string) {
     select(id);
-    if (activeCampaignId && user) void pickCharacter(user.uid, id);
+    if (activeCampaignId && user) {
+      void pickCharacter(user.uid, id);
+      void patchCharacter(id, { campaignId: activeCampaignId });
+    }
   }
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<HunterCard | null>(null);
@@ -75,7 +80,7 @@ export function CharacterPage() {
   const creating = !!draft;
 
   async function handleSave(next: HunterCard) {
-    const ok = await save(next);
+    const ok = await save(activeCampaignId ? { ...next, campaignId: activeCampaignId } : next);
     if (ok) {
       setEditing(false);
       setDraft(null);

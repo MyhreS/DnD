@@ -9,8 +9,9 @@ interface SessionState {
   status: Status;
   error: string | null;
   unsub: (() => void) | null;
-  /** Start the live subscription (idempotent). */
-  start: () => void;
+  campaignId: string | null;
+  /** Subscribe to a campaign's schedule (idempotent; re-subscribes on change). */
+  start: (campaignId: string | null) => void;
   stop: () => void;
 }
 
@@ -19,11 +20,19 @@ export const useSessionStore = create<SessionState>((set, get) => ({
   status: "idle",
   error: null,
   unsub: null,
+  campaignId: null,
 
-  start: () => {
-    if (get().unsub) return; // already subscribed
-    set({ status: "loading", error: null });
+  start: (campaignId) => {
+    if (!campaignId) {
+      get().unsub?.();
+      set({ unsub: null, campaignId: null, sessions: [], status: "ready" });
+      return;
+    }
+    if (campaignId === get().campaignId && get().unsub) return;
+    get().unsub?.();
+    set({ status: "loading", error: null, campaignId, sessions: [] });
     const unsub = subscribeSessions(
+      campaignId,
       (sessions) => set({ sessions, status: "ready" }),
       () => set({ status: "error", error: "Could not load the schedule." }),
     );
@@ -32,6 +41,6 @@ export const useSessionStore = create<SessionState>((set, get) => ({
 
   stop: () => {
     get().unsub?.();
-    set({ unsub: null });
+    set({ unsub: null, campaignId: null });
   },
 }));

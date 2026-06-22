@@ -1,6 +1,6 @@
 import { useMemo } from "react";
-import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
+import { useIsDM } from "@/features/campaigns/hooks/useIsDM";
 import { useSessionStore } from "@/features/sessions/store/sessionStore";
 import { useSessionsLive } from "@/features/sessions/hooks/useSessionsLive";
 import { sortUpcoming } from "@/data/sessions";
@@ -14,9 +14,10 @@ import type { HunterCard } from "@/types";
 
 export function PartyPage() {
   // "Staff" can export everyone's sheets; matches admin + DM (and moderators).
-  const canExport = useAuthStore((s) => s.caps.oversight);
-  const oversight = canExport;
-  const canEmail = useAuthStore((s) => s.caps.email);
+  const isDM = useIsDM();
+  const canExport = isDM;
+  const oversight = isDM;
+  const canEmail = isDM;
 
   useSessionsLive();
   const activeId = useCampaignStore((s) => s.activeId);

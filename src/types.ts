@@ -229,6 +229,8 @@ export interface TradeSide {
 
 export interface Trade {
   id: string;
+  /** The campaign this trade belongs to (for member-scoped access). */
+  campaignId: string | null;
   /** The game this trade belongs to (for the DM's log). */
   gameId: string | null;
   fromUid: string;
@@ -378,6 +380,9 @@ export interface HunterCard {
   inventory?: InventoryEntry[];
   /** Player has hit 0 HP and confirmed death; awaiting the DM to confirm. */
   deathPending?: boolean;
+  /** The campaign this hunter currently plays in (lets that campaign's DM
+   * manage it — death/recover). Set when chosen for a campaign. */
+  campaignId?: string | null;
   notes: string;
   updatedAt: number;
   createdAt: number;

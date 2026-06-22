@@ -5,6 +5,8 @@ import {
   setDoc,
   deleteDoc,
   addDoc,
+  query,
+  where,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -12,13 +14,14 @@ import type { SessionEvent } from "@/types";
 
 const sessionsCol = collection(db, "sessions");
 
-/** Live-subscribe to the schedule. Returns an unsubscribe fn. */
+/** Live-subscribe to a campaign's schedule. Returns an unsubscribe fn. */
 export function subscribeSessions(
+  campaignId: string,
   cb: (sessions: SessionEvent[]) => void,
   onError?: (err: unknown) => void,
 ): () => void {
   return onSnapshot(
-    sessionsCol,
+    query(sessionsCol, where("campaignId", "==", campaignId)),
     (snap) => {
       const list = snap.docs.map((d) => {
         const data = d.data();

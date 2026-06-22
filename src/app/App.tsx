@@ -8,7 +8,6 @@ import { CardSkeleton } from "@/components/Skeleton";
 import { Layout } from "@/components/Layout";
 import { Landing } from "@/features/auth/components/Landing";
 import { PublicLayout } from "@/features/auth/components/PublicLayout";
-import { DeniedPage } from "@/features/auth/components/DeniedPage";
 import { MainMenu } from "@/features/campaigns/components/MainMenu";
 import { SessionsPage } from "@/features/sessions/components/SessionsPage";
 import { CharacterPage } from "@/features/hunter/components/CharacterPage";
@@ -70,10 +69,6 @@ export default function App() {
     );
   }
 
-  if (status === "denied") {
-    return <DeniedPage />;
-  }
-
-  // status === "allowed"
+  // status === "allowed" (anyone signed in)
   return <AuthedApp />;
 }
