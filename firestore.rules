@@ -38,6 +38,14 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/campaigns/$(cid)).data.dmUid == request.auth.uid;
     }
 
+    // Parent campaign of a game / session (for subcollection scoping).
+    function gameCampaignId(gid) {
+      return get(/databases/$(database)/documents/games/$(gid)).data.campaignId;
+    }
+    function sessionCampaignId(sid) {
+      return get(/databases/$(database)/documents/sessions/$(sid)).data.campaignId;
+    }
+
     // /allowlist — legacy/optional. Self + super-admin read; super-admin writes.
     match /allowlist/{email} {
       allow read: if isSuperAdmin() || (isSignedIn() && email == emailKey());
@@ -81,9 +89,8 @@ service cloud.firestore {
       allow update, delete: if isCampaignDM(resource.data.campaignId);
 
       match /rsvps/{uid} {
-        allow read: if isMember(get(/databases/$(database)/documents/sessions/$(id)).data.campaignId);
-        allow write: if request.auth.uid == uid
-          && isMember(get(/databases/$(database)/documents/sessions/$(id)).data.campaignId);
+        allow read: if isMember(sessionCampaignId(id));
+        allow write: if request.auth.uid == uid && isMember(sessionCampaignId(id));
       }
     }
 
@@ -94,19 +101,15 @@ service cloud.firestore {
         && request.resource.data.dmUid == request.auth.uid;
       allow update, delete: if resource.data.dmUid == request.auth.uid;
 
-      function gameCampaign() {
-        return get(/databases/$(database)/documents/games/$(gameId)).data.campaignId;
-      }
-
       match /participants/{uid} {
-        allow read: if isMember(gameCampaign());
-        allow write: if isMember(gameCampaign())
-          && (request.auth.uid == uid || isCampaignDM(gameCampaign()));
+        allow read: if isMember(gameCampaignId(gameId));
+        allow write: if isMember(gameCampaignId(gameId))
+          && (request.auth.uid == uid || isCampaignDM(gameCampaignId(gameId)));
       }
 
       match /loot/{lootId} {
-        allow read, create, update: if isMember(gameCampaign());
-        allow delete: if isCampaignDM(gameCampaign());
+        allow read, create, update: if isMember(gameCampaignId(gameId));
+        allow delete: if isCampaignDM(gameCampaignId(gameId));
       }
     }
 

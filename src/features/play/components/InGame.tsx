@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
@@ -23,6 +23,7 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
   const user = useAuthStore((s) => s.user);
   const card = usePlayerStore((s) => s.card);
   const leave = useGameStore((s) => s.leave);
+  const join = useGameStore((s) => s.join);
   const error = useGameStore((s) => s.error);
   const navigate = useNavigate();
 
@@ -32,8 +33,24 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
   const hint = PHASES.find((p) => p.id === game.phase)?.hint;
   const combat = game.phase === "combat";
 
-  useTradesSync(game.id);
+  useTradesSync(game.campaignId);
   useLootSync(game.id);
+
+  // A player who arrives after the game has begun is auto-registered so the DM
+  // and party see them (the lobby's explicit join only exists before "begin").
+  const hasHunter = !!card && !!card.classId && !!card.name;
+  useEffect(() => {
+    if (!isDM && hasHunter && !joined && user && card) {
+      void join(game.id, {
+        uid: user.uid,
+        name: card.name,
+        classId: card.classId,
+        subclassId: card.subclassId ?? null,
+        level: card.level,
+        role: "player",
+      });
+    }
+  }, [isDM, hasHunter, joined, game.id, user, card, join]);
 
   return (
     <div className="stack" style={{ gap: 14 }}>
