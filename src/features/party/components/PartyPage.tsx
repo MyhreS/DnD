@@ -10,6 +10,7 @@ import { RosterPanel } from "./RosterPanel";
 import { exportPartyPdf } from "@/features/hunter/lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
 import { AsyncButton } from "@/components/AsyncButton";
+import type { HunterCard } from "@/types";
 
 export function PartyPage() {
   // "Staff" can export everyone's sheets; matches admin + DM (and moderators).
@@ -19,7 +20,7 @@ export function PartyPage() {
 
   useSessionsLive();
   const activeId = useCampaignStore((s) => s.activeId);
-  const memberUids = useCampaignStore((s) => s.active?.memberUids ?? []);
+  const campaignMembers = useCampaignStore((s) => s.members);
   const allSessions = useSessionStore((s) => s.sessions);
   const sessions = useMemo(() => allSessions.filter((s) => s.campaignId === activeId), [allSessions, activeId]);
   const nextSession = useMemo(() => sortUpcoming(sessions)[0], [sessions]);
@@ -29,10 +30,19 @@ export function PartyPage() {
     sessionId: nextSession?.id,
   });
 
-  // Only this campaign's members' hunters.
-  const hunters = (players ?? []).filter(
-    (c) => c.classId && c.name && memberUids.includes(c.ownerUid),
-  );
+  // Each campaign member's chosen hunter (or their newest if none picked yet).
+  const hunters = useMemo(() => {
+    const byId = new Map((players ?? []).map((c) => [c.id, c]));
+    const byOwner = new Map<string, HunterCard[]>();
+    for (const c of players ?? []) {
+      const list = byOwner.get(c.ownerUid) ?? [];
+      list.push(c);
+      byOwner.set(c.ownerUid, list);
+    }
+    return campaignMembers
+      .map((m) => (m.characterId ? byId.get(m.characterId) : undefined) ?? byOwner.get(m.uid)?.[0])
+      .filter((c): c is HunterCard => !!c && !!c.classId && !!c.name);
+  }, [players, campaignMembers]);
 
   return (
     <div>

@@ -19,7 +19,15 @@ export function CharacterPage() {
   const user = useAuthStore((s) => s.user);
   const { card, characters, selectedId, select, status, saving, error, save, archive } = usePlayerStore();
   const activeCampaignId = useCampaignStore((s) => s.activeId);
+  const activeCampaign = useCampaignStore((s) => s.active);
+  const pickCharacter = useCampaignStore((s) => s.pickCharacter);
   const gameId = currentGame(useGameStore((s) => s.games), activeCampaignId)?.id ?? null;
+
+  // Selecting a hunter while in a campaign records it as the one you play there.
+  function chooseCharacter(id: string) {
+    select(id);
+    if (activeCampaignId && user) void pickCharacter(user.uid, id);
+  }
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<HunterCard | null>(null);
 
@@ -137,12 +145,17 @@ export function CharacterPage() {
         </div>
       </div>
 
+      {activeCampaign && (
+        <p className="faint no-print" style={{ fontSize: "0.82rem", margin: "0 0 6px" }}>
+          Playing in <span className="gold">{activeCampaign.name}</span> — tap a hunter to bring them.
+        </p>
+      )}
       <div className="chip-row no-print" style={{ marginBottom: 14 }}>
         {characters.map((c) => (
           <button
             key={c.id}
             className={`chip selectable${c.id === selectedId ? " selected" : ""}`}
-            onClick={() => select(c.id)}
+            onClick={() => chooseCharacter(c.id)}
           >
             {c.name || "Unnamed"}
           </button>
