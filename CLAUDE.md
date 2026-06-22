@@ -191,6 +191,18 @@ identities with `?testToken=` in separate browser contexts (Playwright
 `browser.newContext()` per identity): `dm` starts a game, `player` + `player2`
 join and trade. This is also how the admin **test-run simulation** is exercised.
 
+Two real-auth verifiers exercise the live DB + **security rules** + Cloud
+Function (they sign in with custom tokens, run the flow, and clean up after):
+
+```bash
+bun run smoke       # exercises every core rule path (campaign/character/game/
+                    # join/lobby) + a negative test — fast, authoritative for rules
+bun run test:play   # Playwright: DM + player drive a live game through the real UI
+```
+Run `bun run smoke` after **any firestore.rules change** — it caught two scoping
+bugs that preview/check can't (rules only deploy on merge, so preview channels
+still run the old rules).
+
 ### Automated screenshot gallery (one command)
 
 ```bash
