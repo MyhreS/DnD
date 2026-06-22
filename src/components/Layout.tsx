@@ -1,5 +1,6 @@
 import { NavLink, Outlet, Link, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { Sigil } from "./icons";
 import { Fighters } from "./fighters/Fighters";
 import { UpdateBar } from "./UpdateBar";
@@ -9,8 +10,7 @@ import { LiveGameBanner } from "@/features/play/components/LiveGameBanner";
 export function Layout() {
   const member = useAuthStore((s) => s.member);
   const user = useAuthStore((s) => s.user);
-  // Players build a hunter; the DM doesn't, so they don't get the Character tab.
-  const showCharacter = useAuthStore((s) => s.identity.playerType === "player");
+  const active = useCampaignStore((s) => s.active);
   const location = useLocation();
 
   // Keep the live-game subscription running app-wide (powers the banner + Play).
@@ -23,9 +23,9 @@ export function Layout() {
     <div className="app-shell">
       <div className="app-topbar">
         <header className="app-header">
-          <Link to="/" className="brand" aria-label="Home">
+          <Link to="/" className="brand" aria-label="Main menu">
             <Sigil className="brand-mark" />
-            <span className="brand-title">Catacombs &amp; Starspawns</span>
+            <span className="brand-title">{active ? active.name : "Catacombs & Starspawns"}</span>
           </Link>
           <Link to="/profile" aria-label="Your profile" className="avatar">
             {initial}
@@ -33,10 +33,11 @@ export function Layout() {
         </header>
 
         <nav className="top-tabs" aria-label="Primary">
-          <NavLink to="/" end>Sessions</NavLink>
-          <NavLink to="/play">Play</NavLink>
-          {showCharacter && <NavLink to="/character">Character</NavLink>}
-          <NavLink to="/party">Party</NavLink>
+          <NavLink to="/" end>Menu</NavLink>
+          {active && <NavLink to="/sessions">Sessions</NavLink>}
+          {active && <NavLink to="/play">Play</NavLink>}
+          {active && <NavLink to="/party">Party</NavLink>}
+          <NavLink to="/character">Hunters</NavLink>
           <NavLink to="/handbook">Handbook</NavLink>
         </nav>
 

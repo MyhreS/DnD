@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { useHunterCard } from "@/features/hunter/hooks/useHunterCard";
 import { useSessionsLive } from "@/features/sessions/hooks/useSessionsLive";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -19,10 +20,11 @@ export function PlayPage() {
   const games = useGameStore((s) => s.games);
   const participants = useGameStore((s) => s.participants);
   const status = useGameStore((s) => s.status);
-  const game = currentGame(games);
+  const activeId = useCampaignStore((s) => s.activeId);
+  const game = currentGame(games, activeId);
 
   // The most recent ended game, for a short post-session recap.
-  const lastEnded = games.find((g) => !g.sandbox && g.status === "ended");
+  const lastEnded = games.find((g) => !g.sandbox && g.status === "ended" && g.campaignId === activeId);
   const showRecap =
     !game && !!lastEnded && Date.now() - (lastEnded.endedAt ?? 0) < 8 * 60 * 60 * 1000;
 

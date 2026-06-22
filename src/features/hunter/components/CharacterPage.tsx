@@ -7,6 +7,7 @@ import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
 import { InventoryPanel } from "./InventoryPanel";
 import { useGameStore, currentGame } from "@/features/play/store/gameStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { emptyCard } from "@/lib/character";
 import { exportCharacterPdf } from "../lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -17,7 +18,8 @@ import type { HunterCard } from "@/types";
 export function CharacterPage() {
   const user = useAuthStore((s) => s.user);
   const { card, characters, selectedId, select, status, saving, error, save, archive } = usePlayerStore();
-  const gameId = currentGame(useGameStore((s) => s.games))?.id ?? null;
+  const activeCampaignId = useCampaignStore((s) => s.activeId);
+  const gameId = currentGame(useGameStore((s) => s.games), activeCampaignId)?.id ?? null;
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<HunterCard | null>(null);
 

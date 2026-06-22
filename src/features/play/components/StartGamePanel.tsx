@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { useSessionStore } from "@/features/sessions/store/sessionStore";
 import { sortUpcoming } from "@/data/sessions";
 import { useNow } from "@/hooks/common/useNow";
@@ -19,6 +20,7 @@ export function StartGamePanel() {
   const hostGame = useGameStore((s) => s.hostGame);
   const join = useGameStore((s) => s.join);
   const error = useGameStore((s) => s.error);
+  const activeId = useCampaignStore((s) => s.activeId);
 
   const dmName = member?.firstName || user?.displayName || user?.email || "DM";
 
@@ -26,6 +28,7 @@ export function StartGamePanel() {
     if (!user) return;
     const title = session?.title || "Ad-hoc game";
     const id = await hostGame({
+      campaignId: activeId,
       sessionId: session?.id ?? null,
       title,
       dmUid: user.uid,

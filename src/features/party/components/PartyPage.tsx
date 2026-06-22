@@ -1,5 +1,6 @@
 import { useMemo } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { useSessionStore } from "@/features/sessions/store/sessionStore";
 import { useSessionsLive } from "@/features/sessions/hooks/useSessionsLive";
 import { sortUpcoming } from "@/data/sessions";
@@ -17,7 +18,10 @@ export function PartyPage() {
   const canEmail = useAuthStore((s) => s.caps.email);
 
   useSessionsLive();
-  const sessions = useSessionStore((s) => s.sessions);
+  const activeId = useCampaignStore((s) => s.activeId);
+  const memberUids = useCampaignStore((s) => s.active?.memberUids ?? []);
+  const allSessions = useSessionStore((s) => s.sessions);
+  const sessions = useMemo(() => allSessions.filter((s) => s.campaignId === activeId), [allSessions, activeId]);
   const nextSession = useMemo(() => sortUpcoming(sessions)[0], [sessions]);
 
   const { players, members, rsvps, error } = usePartyData({
@@ -25,7 +29,10 @@ export function PartyPage() {
     sessionId: nextSession?.id,
   });
 
-  const hunters = (players ?? []).filter((c) => c.classId && c.name);
+  // Only this campaign's members' hunters.
+  const hunters = (players ?? []).filter(
+    (c) => c.classId && c.name && memberUids.includes(c.ownerUid),
+  );
 
   return (
     <div>

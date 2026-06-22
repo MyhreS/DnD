@@ -68,11 +68,34 @@ export function isPreviewActive(): boolean {
   return import.meta.env.DEV && readPreviewRaw() !== null;
 }
 
+/** A sample campaign so the main menu / scoped app render in preview mode. */
+export function previewCampaign(): import("@/types").Campaign {
+  return {
+    id: "preview-campaign",
+    name: "The Sunless Vault",
+    dmUid: "preview-dm",
+    dmName: "Christoffer",
+    inviteCode: "VAULT7",
+    memberUids: ["preview-dm", "preview-uid", "preview-p2"],
+    createdAt: Date.now(),
+  };
+}
+
+export function previewMembers(): import("@/types").CampaignMember[] {
+  const now = Date.now();
+  return [
+    { uid: "preview-dm", name: "Christoffer", email: "dm@local.dev", role: "dm", characterId: null, joinedAt: now },
+    { uid: "preview-uid", name: "Eileen the Crow", email: "you@local.dev", role: "player", characterId: "preview-uid-char", joinedAt: now },
+    { uid: "preview-p2", name: "Gascoigne", email: "p2@local.dev", role: "player", characterId: "preview-p2-char", joinedAt: now },
+  ];
+}
+
 /** A sample live game (lobby) so Play mode renders in preview mode. */
 export function previewGame(): import("@/types").Game {
   const now = Date.now();
   return {
     id: "preview-game",
+    campaignId: "preview-campaign",
     sessionId: null,
     title: "The Sunless Vault",
     dmUid: "preview-dm",
