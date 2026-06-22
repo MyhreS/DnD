@@ -3,7 +3,8 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { useAuthInit } from "@/hooks/auth/useAuthInit";
 import { Splash } from "@/components/Splash";
 import { Layout } from "@/components/Layout";
-import { LoginPage } from "@/features/auth/components/LoginPage";
+import { Landing } from "@/features/auth/components/Landing";
+import { PublicLayout } from "@/features/auth/components/PublicLayout";
 import { DeniedPage } from "@/features/auth/components/DeniedPage";
 import { SessionsPage } from "@/features/sessions/components/SessionsPage";
 import { CharacterPage } from "@/features/hunter/components/CharacterPage";
@@ -20,8 +21,17 @@ export default function App() {
     return <Splash message={status === "checking" ? "Checking the ledger…" : undefined} />;
   }
 
+  // Signed-out visitors get a public landing + handbook (deferred sign-in).
   if (status === "signedOut") {
-    return <LoginPage />;
+    return (
+      <Routes>
+        <Route element={<PublicLayout />}>
+          <Route index element={<Landing />} />
+          <Route path="handbook" element={<HandbookPage />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Route>
+      </Routes>
+    );
   }
 
   if (status === "denied") {
