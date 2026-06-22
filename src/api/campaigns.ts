@@ -45,6 +45,7 @@ function toCampaign(id: string, data: Record<string, unknown>): Campaign {
     dmName: (data.dmName as string) ?? "DM",
     inviteCode: (data.inviteCode as string) ?? "",
     memberUids: (data.memberUids as string[]) ?? [],
+    invitedEmails: (data.invitedEmails as string[]) ?? [],
     createdAt: ms(data.createdAt),
   };
 }
@@ -67,6 +68,7 @@ export async function createCampaign(input: CreateCampaignInput): Promise<string
     dmName: input.dmName,
     inviteCode: generateInviteCode(),
     memberUids: [input.dmUid],
+    invitedEmails: [],
     createdAt: serverTimestamp(),
   });
   await setDoc(doc(membersCol(ref.id), input.dmUid), {
@@ -106,6 +108,78 @@ export async function joinCampaign(input: JoinCampaignInput): Promise<string> {
     { merge: true },
   );
   return campaignId;
+}
+
+/** DM invites a player by email (lowercased; they'll see it in their menu). */
+export async function inviteByEmail(campaignId: string, email: string): Promise<void> {
+  await updateDoc(doc(campaignsCol, campaignId), {
+    invitedEmails: arrayUnion(email.trim().toLowerCase()),
+  });
+}
+
+/** DM revokes an email invite. */
+export async function uninviteEmail(campaignId: string, email: string): Promise<void> {
+  await updateDoc(doc(campaignsCol, campaignId), {
+    invitedEmails: arrayRemove(email.trim().toLowerCase()),
+  });
+}
+
+/** DM regenerates the share code (invalidates the old one). Returns the new code. */
+export async function regenerateInviteCode(campaignId: string): Promise<string> {
+  const code = generateInviteCode();
+  await updateDoc(doc(campaignsCol, campaignId), { inviteCode: code });
+  return code;
+}
+
+/** Live-subscribe to campaigns this email has been invited to. */
+export function subscribeInvitedCampaigns(
+  email: string,
+  cb: (campaigns: Campaign[]) => void,
+  onError?: (err: unknown) => void,
+): () => void {
+  const q = query(campaignsCol, where("invitedEmails", "array-contains", email.toLowerCase()));
+  return onSnapshot(
+    q,
+    (snap) => cb(snap.docs.map((d) => toCampaign(d.id, d.data()))),
+    (err) => {
+      console.error("Invited campaigns subscription failed", err);
+      onError?.(err);
+    },
+  );
+}
+
+export interface AcceptInviteInput {
+  campaignId: string;
+  uid: string;
+  name: string;
+  email: string;
+}
+
+/** Accept an invite: become a member and clear the email invite. */
+export async function acceptInvite(input: AcceptInviteInput): Promise<void> {
+  await updateDoc(doc(campaignsCol, input.campaignId), {
+    memberUids: arrayUnion(input.uid),
+    invitedEmails: arrayRemove(input.email.toLowerCase()),
+  });
+  await setDoc(
+    doc(membersCol(input.campaignId), input.uid),
+    {
+      uid: input.uid,
+      name: input.name,
+      email: input.email,
+      role: "player",
+      characterId: null,
+      joinedAt: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}
+
+/** Decline an invite: just clear the email invite. */
+export async function declineInvite(campaignId: string, email: string): Promise<void> {
+  await updateDoc(doc(campaignsCol, campaignId), {
+    invitedEmails: arrayRemove(email.toLowerCase()),
+  });
 }
 
 export async function setMemberCharacter(

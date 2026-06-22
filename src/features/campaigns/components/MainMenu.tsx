@@ -13,10 +13,16 @@ export function MainMenu() {
   const user = useAuthStore((s) => s.user);
   const member = useAuthStore((s) => s.member);
   const campaigns = useCampaignStore((s) => s.campaigns);
+  const invitedAll = useCampaignStore((s) => s.invited);
   const enter = useCampaignStore((s) => s.enter);
+  const accept = useCampaignStore((s) => s.accept);
+  const decline = useCampaignStore((s) => s.decline);
   const characters = usePlayerStore((s) => s.characters);
   const navigate = useNavigate();
   useHunterCard();
+
+  // Invites you haven't already joined.
+  const invited = invitedAll.filter((c) => !campaigns.some((mc) => mc.id === c.id));
 
   function go(c: Campaign) {
     enter(c.id);
@@ -33,6 +39,37 @@ export function MainMenu() {
         </h1>
         <p className="muted">Join a campaign or start your own, then bring a hunter to the table.</p>
       </div>
+
+      {invited.length > 0 && (
+        <>
+          <p className="eyebrow" style={{ marginTop: 18, marginBottom: 8 }}>Campaign invites</p>
+          <div className="stack" style={{ gap: 10 }}>
+            {invited.map((c) => (
+              <div key={c.id} className="card row between" style={{ alignItems: "center", gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{c.name}</div>
+                  <div className="faint" style={{ fontSize: "0.82rem" }}>DM {c.dmName} invited you</div>
+                </div>
+                <div className="row" style={{ gap: 8, flex: "none" }}>
+                  <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={() => decline(c)}>Decline</button>
+                  <AsyncButton
+                    className="btn-primary btn-sm"
+                    style={{ width: "auto" }}
+                    pendingText="…"
+                    showDone={false}
+                    onClick={async () => {
+                      const id = await accept(c);
+                      if (id) navigate("/sessions");
+                    }}
+                  >
+                    Accept
+                  </AsyncButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
 
       <p className="eyebrow" style={{ marginTop: 18, marginBottom: 8 }}>Your campaigns</p>
       {campaigns.length === 0 ? (

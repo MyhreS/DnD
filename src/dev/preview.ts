@@ -77,6 +77,7 @@ export function previewCampaign(): import("@/types").Campaign {
     dmName: "Christoffer",
     inviteCode: "VAULT7",
     memberUids: ["preview-dm", "preview-uid", "preview-p2"],
+    invitedEmails: ["newhunter@example.com"],
     createdAt: Date.now(),
   };
 }
