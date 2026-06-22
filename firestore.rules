@@ -52,6 +52,11 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
+    // /users/{uid} — a signed-in user's self-set profile (name). Owner only.
+    match /users/{uid} {
+      allow read, write: if isUser() && request.auth.uid == uid;
+    }
+
     // /characters/{id}
     // Any signed-in user can view character sheets. You write your own; the DM of
     // the campaign a hunter is currently in can manage it (confirm death/recover).

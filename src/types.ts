@@ -333,6 +333,14 @@ export interface AllowlistMember {
   addedAt: number;
 }
 
+/** A signed-in user's self-set profile (open access — replaces the allowlist). */
+export interface UserProfile {
+  uid: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+}
+
 // --- Session attendance (RSVP) ---
 
 export type RsvpStatus = "yes" | "no" | "maybe";

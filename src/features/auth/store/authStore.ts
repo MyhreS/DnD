@@ -9,6 +9,7 @@ import {
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
 import { resolveAccess, ensureSuperAdminEntry } from "@/api/allowlist";
+import { getUserProfile, saveUserProfile } from "@/api/users";
 import {
   isSuperAdmin,
   capabilities,
@@ -17,7 +18,20 @@ import {
   type Identity,
   type Capabilities,
 } from "@/config";
-import type { AllowlistMember } from "@/types";
+import type { AllowlistMember, UserProfile } from "@/types";
+
+/** Synthesize a member (for display names) from a self-set profile. */
+function profileToMember(p: UserProfile): AllowlistMember {
+  return {
+    email: p.email,
+    firstName: p.firstName,
+    lastName: p.lastName,
+    accessRole: "user",
+    playerType: "player",
+    addedBy: "self",
+    addedAt: 0,
+  };
+}
 
 export type AuthStatus = "loading" | "signedOut" | "checking" | "allowed";
 
@@ -28,6 +42,8 @@ interface AuthState {
   signingIn: boolean;
 
   member: AllowlistMember | null;
+  /** True when a signed-in user has no name yet (first login) — show onboarding. */
+  needsOnboarding: boolean;
   /** The real identity from the allowlist. */
   realIdentity: Identity;
   /** Role-switcher override (preview a different role). null = use real. */
@@ -41,6 +57,8 @@ interface AuthState {
   signIn: () => Promise<void>;
   signOut: () => Promise<void>;
   setViewAs: (identity: Identity | null) => void;
+  /** Save the first-login profile (name) and finish onboarding. */
+  saveProfile: (firstName: string, lastName: string) => Promise<boolean>;
   /** Used by dev preview mode to inject a session without Google sign-in. */
   setPreview: (user: User, identity: Identity, member: AllowlistMember | null) => void;
 }
@@ -56,6 +74,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   error: null,
   signingIn: false,
   member: null,
+  needsOnboarding: false,
   realIdentity: DEFAULT_IDENTITY,
   viewAs: null,
   identity: DEFAULT_IDENTITY,
@@ -73,6 +92,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           user: null,
           status: "signedOut",
           member: null,
+          needsOnboarding: false,
           viewAs: null,
           realIdentity: DEFAULT_IDENTITY,
           ...derive(DEFAULT_IDENTITY, null),
@@ -85,12 +105,17 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         void ensureSuperAdminEntry(user.email);
       }
       // Open access: anyone signed in may use the app. Roles/permissions are
-      // now per-campaign (you're a campaign's DM if you created it). We still
-      // read any allowlist entry for a display name, but never gate on it.
-      const { identity, member } = await resolveAccess(user.email);
+      // now per-campaign. A name comes from the user's self-set profile (or a
+      // legacy allowlist entry); a brand-new user with neither onboards first.
+      const [{ identity, member }, profile] = await Promise.all([
+        resolveAccess(user.email).catch(() => ({ identity: DEFAULT_IDENTITY, member: null })),
+        getUserProfile(user.uid).catch(() => null),
+      ]);
+      const effectiveMember = profile ? profileToMember(profile) : member;
       set({
         status: "allowed",
-        member,
+        member: effectiveMember,
+        needsOnboarding: !effectiveMember,
         realIdentity: identity,
         viewAs: null,
         ...derive(identity, null),
@@ -134,6 +159,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
       user: null,
       status: "signedOut",
       member: null,
+      needsOnboarding: false,
       viewAs: null,
       realIdentity: DEFAULT_IDENTITY,
       ...derive(DEFAULT_IDENTITY, null),
@@ -145,11 +171,32 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     set({ viewAs, ...derive(get().realIdentity, viewAs) });
   },
 
+  saveProfile: async (firstName, lastName) => {
+    const user = get().user;
+    if (!user) return false;
+    const profile = {
+      uid: user.uid,
+      firstName: firstName.trim(),
+      lastName: lastName.trim(),
+      email: user.email ?? "",
+    };
+    try {
+      await saveUserProfile(profile);
+      set({ member: profileToMember(profile), needsOnboarding: false });
+      return true;
+    } catch (err) {
+      console.error("Couldn't save your profile", err);
+      set({ error: "Couldn't save your name. Please try again." });
+      return false;
+    }
+  },
+
   setPreview: (user, identity, member) => {
     set({
       user,
       status: "allowed",
       member,
+      needsOnboarding: false,
       realIdentity: identity,
       viewAs: null,
       ...derive(identity, null),
