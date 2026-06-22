@@ -11,7 +11,7 @@ import { getFirestore as adminGetFirestore } from "firebase-admin/firestore";
 import { initializeApp } from "firebase/app";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
 import {
-  getFirestore, doc, setDoc, addDoc, updateDoc, getDocs,
+  getFirestore, doc, setDoc, addDoc, updateDoc, getDoc, getDocs,
   collection, query, where, arrayUnion, serverTimestamp,
 } from "firebase/firestore";
 
@@ -93,6 +93,12 @@ await step("Player joins lobby (participant doc)", async () => {
   await setDoc(doc(pl.db, "games", gameId, "participants", plUid), {
     uid: plUid, name: "Agent Player", classId: "scout", level: 1, role: "player", joinedAt: serverTimestamp(), lastSeen: serverTimestamp(),
   });
+});
+await step("DM lists participants (subscription path)", async () => {
+  const g = await getDoc(doc(dm.db, "games", gameId));
+  if (g.data().campaignId !== campaignId) throw new Error(`game.campaignId=${g.data().campaignId}`);
+  const snap = await getDocs(collection(dm.db, "games", gameId, "participants"));
+  if (snap.empty) throw new Error("no participants visible");
 });
 await step("Outsider is blocked (negative)", async () => {
   // The player should NOT be able to read a different (nonexistent) campaign's

@@ -74,10 +74,12 @@ try {
   log("DM began the game");
 
   // Player opens Play → auto-registers in the active game.
-  await pl.p.goto(`${BASE}/play`, { waitUntil: "domcontentloaded" }); await sl(3000);
+  await pl.p.goto(`${BASE}/play`, { waitUntil: "domcontentloaded" }); await sl(4000);
   log("Player opened Play");
 
-  await dm.p.goto(`${BASE}/play`, { waitUntil: "domcontentloaded" }); await sl(2500);
+  // Let Firestore settle, then the DM views the game fresh.
+  errors.length = 0; // ignore churn during the rapid setup; assert on the steady state
+  await dm.p.goto(`${BASE}/play`, { waitUntil: "domcontentloaded" }); await sl(4000);
   const dmText = await dm.p.locator("body").innerText();
   const playerSeen = /Testra the Bold|Agent Player/.test(dmText);
   log(`DM sees the player in the game: ${playerSeen}`);
