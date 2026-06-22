@@ -150,6 +150,24 @@ service cloud.firestore {
       allow delete: if isAdmin();
     }
 
+    // /campaigns/{id}
+    // A campaign (server/party). Members read; the DM owns it. Joining adds you
+    // to memberUids (an allowlisted user may update to add themselves).
+    match /campaigns/{id} {
+      allow read: if isAllowlisted();
+      allow create: if isAllowlisted() && request.resource.data.dmUid == request.auth.uid;
+      allow update: if isAllowlisted();
+      allow delete: if isAllowlisted() && resource.data.dmUid == request.auth.uid;
+
+      // /campaigns/{id}/members/{uid}
+      match /members/{uid} {
+        allow read: if isAllowlisted();
+        allow write: if isAllowlisted()
+          && (request.auth.uid == uid
+              || get(/databases/$(database)/documents/campaigns/$(id)).data.dmUid == request.auth.uid);
+      }
+    }
+
     // Lock everything else down by default.
     match /{document=**} {
       allow read, write: if false;

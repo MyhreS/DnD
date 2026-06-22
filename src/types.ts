@@ -179,6 +179,8 @@ export type GamePhase = "exploration" | "combat" | "short_rest" | "long_rest";
 
 export interface Game {
   id: string;
+  /** The campaign this game belongs to. */
+  campaignId: string | null;
   /** Linked scheduled session id, or null for an ad-hoc game. */
   sessionId: string | null;
   title: string;
@@ -271,8 +273,34 @@ export interface ArchivedCharacter {
   card: HunterCard;
 }
 
+// --- Campaigns (a "server"/party you create or join) ---
+
+export interface Campaign {
+  id: string;
+  name: string;
+  dmUid: string;
+  dmName: string;
+  /** Share code players redeem to join. */
+  inviteCode: string;
+  /** Member uids (for "my campaigns" queries). */
+  memberUids: string[];
+  createdAt: number;
+}
+
+export interface CampaignMember {
+  uid: string;
+  name: string;
+  email: string;
+  role: PlayerType; // dm | player
+  /** The character this member plays in this campaign. */
+  characterId: string | null;
+  joinedAt: number;
+}
+
 export interface SessionEvent {
   id: string;
+  /** The campaign this session belongs to. */
+  campaignId?: string | null;
   /** ISO date-time string (local), e.g. "2026-06-20T18:00:00". */
   date: string;
   title: string;

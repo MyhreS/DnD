@@ -20,10 +20,17 @@ import { purgeArchive } from "@/api/players";
 
 type Status = "idle" | "loading" | "loaded" | "error";
 
-/** The live game the party should be looking at: newest non-sandbox game that
- * hasn't ended. (Sandbox/test-run games are surfaced separately.) */
-export function currentGame(games: Game[]): Game | null {
-  return games.find((g) => !g.sandbox && g.status !== "ended") ?? null;
+/** The live game the party should be looking at: newest non-sandbox game in the
+ * active campaign that hasn't ended. (Sandbox/test-run games are separate.) */
+export function currentGame(games: Game[], campaignId?: string | null): Game | null {
+  return (
+    games.find(
+      (g) =>
+        !g.sandbox &&
+        g.status !== "ended" &&
+        (campaignId == null || g.campaignId === campaignId),
+    ) ?? null
+  );
 }
 
 interface GameState {

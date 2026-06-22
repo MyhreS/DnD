@@ -24,6 +24,7 @@ export function subscribeSessions(
         const data = d.data();
         return {
           id: d.id,
+          campaignId: (data.campaignId as string | null) ?? null,
           date: data.date as string,
           title: (data.title as string) ?? "Session",
           location: (data.location as string) ?? "",

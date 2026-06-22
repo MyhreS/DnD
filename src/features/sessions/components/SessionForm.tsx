@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { createSession, updateSession, deleteSession } from "@/api/sessions";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { AsyncButton } from "@/components/AsyncButton";
 import type { SessionEvent } from "@/types";
 
@@ -21,6 +22,7 @@ export function SessionForm({
   const [location, setLocation] = useState(session?.location ?? "");
   const [notes, setNotes] = useState(session?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
+  const activeId = useCampaignStore((s) => s.activeId);
 
   const canSave = title.trim().length > 0 && date.length >= 16;
 
@@ -28,6 +30,7 @@ export function SessionForm({
     if (!canSave) return;
     setError(null);
     const payload = {
+      campaignId: session?.campaignId ?? activeId,
       title: title.trim(),
       date: fromInput(date),
       location: location.trim(),

@@ -28,6 +28,7 @@ function ms(v: unknown): number {
 function toGame(id: string, data: Record<string, unknown>): Game {
   return {
     id,
+    campaignId: (data.campaignId as string | null) ?? null,
     sessionId: (data.sessionId as string | null) ?? null,
     title: (data.title as string) ?? "Game",
     dmUid: (data.dmUid as string) ?? "",
@@ -60,6 +61,7 @@ export function subscribeGames(
 }
 
 export interface CreateGameInput {
+  campaignId: string | null;
   sessionId: string | null;
   title: string;
   dmUid: string;
@@ -69,6 +71,7 @@ export interface CreateGameInput {
 
 export async function createGame(input: CreateGameInput): Promise<string> {
   const ref = await addDoc(gamesCol, {
+    campaignId: input.campaignId ?? null,
     sessionId: input.sessionId,
     title: input.title,
     dmUid: input.dmUid,
