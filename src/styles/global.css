@@ -493,6 +493,11 @@ button {
   .top-tabs {
     flex: 0 0 auto;
   }
+  .top-tabs a.nav-back {
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+    padding-top: 14px;
+  }
   .app-topbar .sidebar-foot {
     display: flex;
     flex-direction: column;
@@ -1119,6 +1124,32 @@ button {
 /* On mobile the footer is transparent (banner/update bar flow in the top bar). */
 .sidebar-foot {
   display: contents;
+}
+
+/* "Campaign" label above the campaign name in the sidebar/header. */
+.brand-eyebrow {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  font-family: var(--font-body);
+  font-weight: 600;
+  margin-bottom: 1px;
+}
+
+/* Back-to-main-menu item in the campaign nav — gold-tinted, set apart. */
+.top-tabs a.nav-back {
+  color: var(--gold-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.top-tabs a.nav-back:hover {
+  color: var(--gold);
+}
+.top-tabs a.nav-back.active {
+  color: var(--gold);
 }
 
 /* Back-to-menu action — gold-tinted + a left chevron so it reads as "go back". */

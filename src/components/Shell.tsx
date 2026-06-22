@@ -1,19 +1,30 @@
-import { NavLink, Outlet, Link, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
+import type { ReactNode } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { Sigil } from "./icons";
 import { Fighters } from "./fighters/Fighters";
 import { UpdateBar } from "./UpdateBar";
 import { usePlaySync } from "@/features/play/hooks/usePlaySync";
 import { LiveGameBanner } from "@/features/play/components/LiveGameBanner";
 
-export function Layout() {
+/** The app frame (sidebar on desktop, top bar on mobile). The two contexts —
+ * the main menu and a campaign — supply their own title + nav via this shell. */
+export function Shell({
+  eyebrow,
+  title,
+  titleTo,
+  nav,
+}: {
+  eyebrow?: string;
+  title: string;
+  titleTo: string;
+  nav: ReactNode;
+}) {
   const member = useAuthStore((s) => s.member);
   const user = useAuthStore((s) => s.user);
-  const active = useCampaignStore((s) => s.active);
   const location = useLocation();
 
-  // Keep the live-game subscription running app-wide (powers the banner + Play).
+  // Keep the active campaign's live-game subscription running (powers the banner).
   usePlaySync();
 
   const firstName = member?.firstName || user?.displayName || user?.email || "Hunter";
@@ -23,9 +34,12 @@ export function Layout() {
     <div className="app-shell">
       <div className="app-topbar">
         <header className="app-header">
-          <Link to="/" className="brand" aria-label="Main menu">
+          <Link to={titleTo} className="brand" aria-label={title}>
             <Sigil className="brand-mark" />
-            <span className="brand-title">{active ? active.name : "Catacombs & Starspawns"}</span>
+            <span className="brand-title">
+              {eyebrow && <span className="brand-eyebrow">{eyebrow}</span>}
+              {title}
+            </span>
           </Link>
           <Link to="/profile" aria-label="Your profile" className="avatar avatar-top">
             {initial}
@@ -33,18 +47,12 @@ export function Layout() {
         </header>
 
         <nav className="top-tabs" aria-label="Primary">
-          <NavLink to="/" end>Menu</NavLink>
-          {active && <NavLink to="/sessions">Sessions</NavLink>}
-          {active && <NavLink to="/play">Play</NavLink>}
-          {active && <NavLink to="/party">Party</NavLink>}
-          <NavLink to="/character">Hunters</NavLink>
-          <NavLink to="/handbook">Handbook</NavLink>
+          {nav}
         </nav>
 
         <div className="sidebar-foot">
           <LiveGameBanner />
           <UpdateBar />
-          {/* Desktop: profile sits at the bottom of the sidebar (top-right on mobile). */}
           <Link to="/profile" className="sidebar-profile" aria-label="Your profile & settings">
             <span className="avatar">{initial}</span>
             <span className="sidebar-profile-name">{firstName}</span>

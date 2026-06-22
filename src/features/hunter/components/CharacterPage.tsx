@@ -6,10 +6,7 @@ import { CharacterEditor } from "./CharacterEditor";
 import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
 import { InventoryPanel } from "./InventoryPanel";
-import { useGameStore, currentGame } from "@/features/play/store/gameStore";
-import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { emptyCard } from "@/lib/character";
-import { patchCharacter } from "@/api/players";
 import { exportCharacterPdf } from "../lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
 import { AsyncButton } from "@/components/AsyncButton";
@@ -19,20 +16,6 @@ import type { HunterCard } from "@/types";
 export function CharacterPage() {
   const user = useAuthStore((s) => s.user);
   const { card, characters, selectedId, select, status, saving, error, save, archive } = usePlayerStore();
-  const activeCampaignId = useCampaignStore((s) => s.activeId);
-  const activeCampaign = useCampaignStore((s) => s.active);
-  const pickCharacter = useCampaignStore((s) => s.pickCharacter);
-  const gameId = currentGame(useGameStore((s) => s.games), activeCampaignId)?.id ?? null;
-
-  // Selecting a hunter while in a campaign records it as the one you play there
-  // (and tags the hunter with the campaign so its DM can manage it).
-  function chooseCharacter(id: string) {
-    select(id);
-    if (activeCampaignId && user) {
-      void pickCharacter(user.uid, id);
-      void patchCharacter(id, { campaignId: activeCampaignId });
-    }
-  }
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<HunterCard | null>(null);
 
@@ -80,7 +63,7 @@ export function CharacterPage() {
   const creating = !!draft;
 
   async function handleSave(next: HunterCard) {
-    const ok = await save(activeCampaignId ? { ...next, campaignId: activeCampaignId } : next);
+    const ok = await save(next);
     if (ok) {
       setEditing(false);
       setDraft(null);
@@ -88,7 +71,7 @@ export function CharacterPage() {
   }
 
   async function handleDelete() {
-    const ok = await archive(gameId);
+    const ok = await archive(null);
     if (ok) setEditing(false);
   }
 
@@ -150,17 +133,12 @@ export function CharacterPage() {
         </div>
       </div>
 
-      {activeCampaign && (
-        <p className="faint no-print" style={{ fontSize: "0.82rem", margin: "0 0 6px" }}>
-          Playing in <span className="gold">{activeCampaign.name}</span> — tap a hunter to bring them.
-        </p>
-      )}
       <div className="chip-row no-print" style={{ marginBottom: 14 }}>
         {characters.map((c) => (
           <button
             key={c.id}
             className={`chip selectable${c.id === selectedId ? " selected" : ""}`}
-            onClick={() => chooseCharacter(c.id)}
+            onClick={() => select(c.id)}
           >
             {c.name || "Unnamed"}
           </button>
