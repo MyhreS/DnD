@@ -1,11 +1,13 @@
 import {
+  collection,
   doc,
   setDoc,
   deleteDoc,
   addDoc,
   getDocs,
-  collection,
   onSnapshot,
+  query,
+  where,
   serverTimestamp,
   type Timestamp,
 } from "firebase/firestore";
@@ -14,10 +16,11 @@ import { isPreviewActive, previewCard, previewArchive } from "@/dev/preview";
 import { isTestEmail } from "@/config";
 import type { ArchivedCharacter, HunterCard } from "@/types";
 
-const realCards = (cards: HunterCard[]) => cards.filter((c) => !isTestEmail(c.ownerEmail));
-
-const playersCol = collection(db, "players");
+// Characters live in /characters/{id} — a user (ownerUid) can own several.
+const charsCol = collection(db, "characters");
 const archiveCol = collection(db, "archive");
+
+const realCards = (cards: HunterCard[]) => cards.filter((c) => !isTestEmail(c.ownerEmail));
 
 function ms(v: unknown): number {
   if (typeof v === "number") return v;
@@ -25,39 +28,76 @@ function ms(v: unknown): number {
   return Date.now();
 }
 
-export async function saveHunterCard(card: HunterCard): Promise<void> {
-  await setDoc(doc(playersCol, card.uid), card, { merge: true });
+export async function saveCharacter(card: HunterCard): Promise<void> {
+  await setDoc(doc(charsCol, card.id), card, { merge: true });
 }
 
-/** Merge a partial update into a player's card (player edits own; DM edits any). */
-export async function patchHunterCard(uid: string, partial: Partial<HunterCard>): Promise<void> {
-  await setDoc(doc(playersCol, uid), partial, { merge: true });
+/** Merge a partial update into a character (owner edits own; DM edits any). */
+export async function patchCharacter(id: string, partial: Partial<HunterCard>): Promise<void> {
+  await setDoc(doc(charsCol, id), partial, { merge: true });
 }
 
-/** Move a character into the archive (dead/deleted), then remove the live card.
- * Keeps it recoverable until the game ends. */
+/** Live-subscribe to all characters a user owns. */
+export function subscribeMyCharacters(
+  ownerUid: string,
+  cb: (cards: HunterCard[]) => void,
+  onError?: (err: unknown) => void,
+): () => void {
+  if (isPreviewActive()) {
+    cb([previewCard("preview-uid")]);
+    return () => {};
+  }
+  return onSnapshot(
+    query(charsCol, where("ownerUid", "==", ownerUid)),
+    (snap) => cb(snap.docs.map((d) => d.data() as HunterCard)),
+    (err) => {
+      console.error("Characters subscription failed", err);
+      onError?.(err);
+    },
+  );
+}
+
+/** Live-subscribe to every character (party gallery / DM board). */
+export function subscribeAllCharacters(
+  cb: (cards: HunterCard[]) => void,
+  onError?: (err: unknown) => void,
+): () => void {
+  if (isPreviewActive()) {
+    cb([previewCard("preview-uid")]);
+    return () => {};
+  }
+  return onSnapshot(
+    charsCol,
+    (snap) => cb(realCards(snap.docs.map((d) => d.data() as HunterCard))),
+    (err) => {
+      console.error("Party subscription failed", err);
+      onError?.(err);
+    },
+  );
+}
+
+// --- Archive (dead/deleted, recoverable until the game ends) ---
+
 export async function archiveCharacter(
   card: HunterCard,
   reason: ArchivedCharacter["reason"],
   gameId: string | null,
 ): Promise<void> {
   await addDoc(archiveCol, {
-    originalUid: card.uid,
+    originalUid: card.ownerUid,
     gameId: gameId ?? null,
     reason,
     archivedAt: serverTimestamp(),
     card,
   });
-  await deleteDoc(doc(playersCol, card.uid));
+  await deleteDoc(doc(charsCol, card.id));
 }
 
-/** Recover an archived character back into play (DM only). */
 export async function recoverCharacter(a: ArchivedCharacter): Promise<void> {
-  await setDoc(doc(playersCol, a.originalUid), { ...a.card, deathPending: false });
+  await setDoc(doc(charsCol, a.card.id), { ...a.card, deathPending: false });
   await deleteDoc(doc(archiveCol, a.id));
 }
 
-/** Remove every archived character (called when the game ends). */
 export async function purgeArchive(): Promise<void> {
   const snap = await getDocs(archiveCol);
   await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
@@ -89,41 +129,6 @@ export function subscribeArchive(
       ),
     (err) => {
       console.error("Archive subscription failed", err);
-      onError?.(err);
-    },
-  );
-}
-
-/** Live-subscribe to your own hunter card. Returns an unsubscribe fn. */
-export function subscribeHunterCard(
-  uid: string,
-  cb: (card: HunterCard | null) => void,
-  onError?: (err: unknown) => void,
-): () => void {
-  return onSnapshot(
-    doc(playersCol, uid),
-    (snap) => cb(snap.exists() ? (snap.data() as HunterCard) : null),
-    (err) => {
-      console.error("Hunter card subscription failed", err);
-      onError?.(err);
-    },
-  );
-}
-
-/** Live-subscribe to every party member's card. */
-export function subscribeParty(
-  cb: (cards: HunterCard[]) => void,
-  onError?: (err: unknown) => void,
-): () => void {
-  if (isPreviewActive()) {
-    cb([previewCard("preview-uid")]);
-    return () => {};
-  }
-  return onSnapshot(
-    playersCol,
-    (snap) => cb(realCards(snap.docs.map((d) => d.data() as HunterCard))),
-    (err) => {
-      console.error("Party subscription failed", err);
       onError?.(err);
     },
   );

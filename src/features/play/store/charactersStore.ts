@@ -1,11 +1,11 @@
 import { create } from "zustand";
 import type { ArchivedCharacter, HunterCard } from "@/types";
 import {
-  subscribeParty,
+  subscribeAllCharacters,
   subscribeArchive,
   archiveCharacter,
   recoverCharacter,
-  patchHunterCard,
+  patchCharacter,
 } from "@/api/players";
 import { createLoot } from "@/api/games";
 import { isPreviewActive, previewPartyCards, previewArchive } from "@/dev/preview";
@@ -59,7 +59,7 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         set({ preview: true, party: previewPartyCards(), archive: previewArchive() });
         return;
       }
-      const unsubParty = subscribeParty(
+      const unsubParty = subscribeAllCharacters(
         (party) => set({ party }),
         () => set({ error: "Couldn't load characters." }),
       );
@@ -76,9 +76,9 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
     killCharacter: async (card, gameId) => {
       if (get().preview) {
         set((s) => ({
-          party: s.party.filter((c) => c.uid !== card.uid),
+          party: s.party.filter((c) => c.id !== card.id),
           archive: [
-            { id: `arch-${card.uid}`, originalUid: card.uid, gameId, reason: "dead", archivedAt: Date.now(), card },
+            { id: `arch-${card.id}`, originalUid: card.ownerUid, gameId, reason: "dead", archivedAt: Date.now(), card },
             ...s.archive,
           ],
         }));
@@ -90,7 +90,7 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
           // A dead hunter drops their gear as claimable loot.
           if (gameId) {
             await createLoot(gameId, {
-              fromUid: card.uid,
+              fromUid: card.ownerUid,
               fromName: card.name,
               items: card.inventory ?? [],
               coins: card.coins ?? 0,
@@ -100,12 +100,12 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
       );
     },
 
-    revive: async (uid) => {
+    revive: async (id) => {
       if (get().preview) {
-        set((s) => ({ party: s.party.map((c) => (c.uid === uid ? { ...c, deathPending: false } : c)) }));
+        set((s) => ({ party: s.party.map((c) => (c.id === id ? { ...c, deathPending: false } : c)) }));
         return true;
       }
-      return (await run(() => patchHunterCard(uid, { deathPending: false }), "Couldn't revive the character.")) !== null;
+      return (await run(() => patchCharacter(id, { deathPending: false }), "Couldn't revive the character.")) !== null;
     },
 
     recover: async (a) => {

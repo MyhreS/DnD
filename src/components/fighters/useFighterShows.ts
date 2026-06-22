@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { subscribeParty } from "@/api/players";
+import { subscribeAllCharacters } from "@/api/players";
 import { useSettings } from "@/app/settings";
 import type { HunterCard } from "@/types";
 import {
@@ -75,7 +75,7 @@ export function useFighterShows(): { show: Show | null; endShow: () => void } {
 
   useEffect(
     () =>
-      subscribeParty((party: HunterCard[]) => {
+      subscribeAllCharacters((party: HunterCard[]) => {
         // Prefer members who have actually built a hunter (so we can match their
         // class); fall back to anyone with a name.
         huntersRef.current = party

@@ -112,13 +112,14 @@ export function riteStats(abilities: AbilityScores, level: number): RiteStats {
 
 /** A fresh, unsaved card skeleton for a brand-new hunter. */
 export function emptyCard(params: {
-  uid: string;
+  ownerUid: string;
   email: string;
   displayName: string;
 }): HunterCard {
   const now = Date.now();
   return {
-    uid: params.uid,
+    id: crypto.randomUUID(),
+    ownerUid: params.ownerUid,
     ownerEmail: params.email,
     ownerName: params.displayName,
     name: "",

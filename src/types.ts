@@ -318,8 +318,10 @@ export interface Rsvp {
 export type AbilityScores = Record<AbilityKey, number>;
 
 export interface HunterCard {
-  /** Owner uid (also the Firestore doc id). */
-  uid: string;
+  /** Character doc id (in the /characters collection). */
+  id: string;
+  /** Owner's user uid (a user can own several characters). */
+  ownerUid: string;
   ownerEmail: string;
   ownerName: string;
   name: string;
