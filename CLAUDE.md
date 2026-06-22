@@ -1,8 +1,9 @@
 # Catacombs & Starspawns — Companion App
 
-A private, mobile-first PWA for our **Catacombs & Starspawns** tabletop campaign
+A mobile-first PWA for our **Catacombs & Starspawns** tabletop campaign
 (a Bloodborne-flavoured dark-fantasy homebrew where adventurers are *Hunters*).
-It's for Simon and friends only — access is gated by Google sign-in + an allowlist.
+Open access: anyone signs in with Google, then creates or joins **campaigns**;
+permissions are per-campaign (see "Access model & roles").
 
 > This is a **public repo**. Never commit secrets. Real config/secrets live in
 > **Doppler** (project `dnd`) and GitHub Actions secrets — not in the repo.
@@ -43,7 +44,8 @@ src/
   config.ts            Constants + role model (Identity, capabilities, names)
   types.ts             Shared domain types
   api/                 ONE FILE PER API — all Firestore/Functions access
-    allowlist.ts  players.ts  sessions.ts  rsvp.ts  notifications.ts
+    users.ts  players.ts (characters)  campaigns.ts  games.ts  sessions.ts
+    rsvp.ts  trades.ts  notifications.ts  allowlist.ts (legacy)
   hooks/               Shared hooks, grouped in subfolders
     auth/useAuthInit.ts   common/useNow.ts
   features/<feature>/  e.g. auth, sessions, hunter, party, handbook, profile
@@ -83,44 +85,51 @@ Keep all three green before opening a PR.
 
 ## Access model & roles (important)
 
-Two **independent** axes (`src/config.ts`, mirrored in `firestore.rules`):
+**Open access, per-campaign permissions.** Anyone can sign in with a verified
+Google account — there is **no allowlist gate**. Permissions are scoped to each
+campaign (see `firestore.rules`):
 
-- **accessRole**: `user` | `moderator` | `admin` — what you can *do*.
-- **playerType**: `player` | `dm` — how you sit at the *table*.
+- **First login** → an **onboarding** screen captures the user's name, saved to
+  `/users/{uid}` (`authStore.needsOnboarding` / `saveProfile`). Display names come
+  from this profile (synthesized into `member`); a legacy `/allowlist` entry is
+  used if present but never required.
+- **DM** = whoever **created** a campaign (`campaign.dmUid`). `useIsDM()`
+  (`features/campaigns/hooks`) gates DM controls — start/stop games, edit
+  sessions, the Party roster, invites. There is no global "staff" role anymore.
+- **Membership** is per-campaign: `/campaigns/{id}` + `/campaigns/{id}/members/{uid}`.
+  You see/read a campaign's games/sessions/trades only if you're a member
+  (`isMember`); only its DM controls it (`isCampaignDM`).
+- **Super-admin** bootstrap (`SUPER_ADMIN_EMAILS`, `simonmyhre1@gmail.com`) still
+  exists for the legacy `/allowlist` admin tools, but isn't needed for normal use.
 
-Capabilities are derived in `capabilities(identity)`:
-- `manageMembers` — admin only (add/remove members + roles).
-- `manageSessions` — admin, moderator, or DM (edit dates).
-- `email` — **admin or DM** (send invites/reminders).
-- `oversight` — admin, moderator, or DM (see the Party roster).
-- `needsCharacter(identity)` — true for `playerType: "player"` (players build a
-  hunter; the DM doesn't, and doesn't get the Hunter tab).
+**Two chromes** (`src/components/`): `MainLayout` (the main menu — account home,
+**Hunters** create/manage, **Handbook**, Profile; no campaign) and `CampaignLayout`
+(inside a campaign — **Play / Sessions / Party / Hunter** + a "Main menu" back
+link, gated on an active campaign, with a "CAMPAIGN" badge + name).
 
-Other notes:
-- Must sign in with Google **and** be on the allowlist (`/allowlist/{email}`).
-- **Super-admin** bootstrap (`SUPER_ADMIN_EMAILS`) is always allowed and can
-  manage members. First admin `simonmyhre1@gmail.com`; first DM Christoffer
-  (`myhrefjeld@gmail.com`). Change the email in **both** `config.ts` and
-  `firestore.rules`.
-- **Names**: members have `firstName`/`lastName` (required when adding). Show
-  `displayName(member, all)` — first name only, last name added on collision.
-- **Role switcher**: admins (and dev preview) get a "View as" switcher on the
-  Profile screen (`setViewAs`) to preview any role. Real Firestore writes are
-  still governed by actual permissions.
-- **Dev preview (for local AI navigation)**: in `bun run dev`, open
-  `?preview=admin.dm` (or `user.player`, `moderator`, `dm`, …) to run as any role
-  **without Google sign-in** — see `src/dev/preview.ts`. `?preview=off` clears it.
-  Data calls hit Firestore and may show empty states; it's for inspecting
-  layout & role-gated UI.
+**Characters** live in the main menu (`/character`, multiple per user). You bring
+one *into* a campaign on the in-campaign **Hunter** page (`/hunter`,
+`CampaignHunterPage`): it sets `membership.characterId` + `character.campaignId`
+(so the campaign DM can manage it / handle death). No character creation
+in-campaign; if your hunter dies you bring a fresh one (level 1).
 
-Firestore data:
-- `/allowlist/{email}` — `{ email, firstName, lastName, accessRole, playerType,
-  addedBy, addedAt }`. Admin writes only; staff read the roster.
-- `/players/{uid}` — a `HunterCard`. Any member reads; owner writes.
-- `/sessions/{id}` — `{ title, date, location, notes, createdBy }`. Members read;
-  staff write.
-- `/sessions/{id}/rsvps/{uid}` — `{ uid, name, email, status, at }`. You write
-  your own; the party reads.
+- **Invites**: DM invites by **email** (`campaign.invitedEmails`) or shares the
+  **code** (`CampaignInvitePanel`, on the Party page — copy + regenerate). Invited
+  users see the campaign in the main menu and **Accept/Decline**.
+- **Dev preview**: `?preview=admin.dm` (or `user.player`, …) runs as a role
+  **without sign-in** — see `src/dev/preview.ts`. Preview seeds a sample campaign
+  (DM-aware), so campaign chrome + DM controls render. `?preview=off` clears it.
+
+Firestore data (all campaign data is **member-scoped** in the rules):
+- `/users/{uid}` — `{ firstName, lastName, email }`. Owner only.
+- `/characters/{id}` — a `HunterCard` (`ownerUid`, optional `campaignId`). Any
+  signed-in user reads; owner writes; the campaign's DM may also write (death/recover).
+- `/campaigns/{id}` — `{ name, dmUid, dmName, inviteCode, memberUids[],
+  invitedEmails[] }` + `/members/{uid}` (`{ uid, name, email, role, characterId }`).
+- `/games/{id}` (+ `/participants`, `/loot`), `/sessions/{id}` (+ `/rsvps`),
+  `/trades/{id}` — all carry `campaignId` and are readable only by that campaign's
+  members; games are owned/controlled by their DM.
+- `/allowlist/{email}` — **legacy**, optional (super-admin only).
 
 ## Working in this repo (agent workflow)
 
