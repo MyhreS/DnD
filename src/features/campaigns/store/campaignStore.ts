@@ -12,6 +12,7 @@ import {
   type JoinCampaignInput,
 } from "@/api/campaigns";
 import { isPreviewActive, previewCampaign, previewMembers } from "@/dev/preview";
+import { useAuthStore } from "@/features/auth/store/authStore";
 
 const ACTIVE_KEY = "cs-active-campaign";
 
@@ -81,8 +82,15 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
 
     init: (uid) => {
       if (isPreviewActive()) {
-        const c = previewCampaign();
-        set({ preview: true, campaigns: [c], activeId: c.id, active: c, members: previewMembers(), status: "loaded" });
+        const isDm = useAuthStore.getState().identity.playerType === "dm";
+        let c = previewCampaign();
+        let members = previewMembers();
+        if (isDm) {
+          // Make the preview user this campaign's DM so DM controls show.
+          c = { ...c, dmUid: "preview-uid", dmName: "You (DM)" };
+          members = [{ ...members[0], uid: "preview-uid", name: "You (DM)" }, ...members.slice(1)];
+        }
+        set({ preview: true, campaigns: [c], activeId: c.id, active: c, members, status: "loaded" });
         return;
       }
       if (get()._unsubMine) return;

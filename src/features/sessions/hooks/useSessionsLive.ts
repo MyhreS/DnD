@@ -1,8 +1,10 @@
 import { useEffect } from "react";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { useSessionStore } from "../store/sessionStore";
 
-/** Starts the live sessions subscription. Read data via `useSessionStore`. */
+/** Subscribes to the active campaign's schedule. Read via `useSessionStore`. */
 export function useSessionsLive(): void {
   const start = useSessionStore((s) => s.start);
-  useEffect(() => start(), [start]);
+  const activeId = useCampaignStore((s) => s.activeId);
+  useEffect(() => start(activeId), [start, activeId]);
 }

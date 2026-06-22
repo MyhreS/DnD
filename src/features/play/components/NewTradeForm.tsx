@@ -45,6 +45,7 @@ export function NewTradeForm({
   async function send() {
     if (!user || !recipient || !hasSomething) return;
     const id = await propose({
+      campaignId: game.campaignId,
       gameId: game.id,
       fromUid: user.uid,
       fromName: card.name || "Hunter",

@@ -34,6 +34,7 @@ function toSide(v: unknown): TradeSide {
 function toTrade(id: string, data: Record<string, unknown>): Trade {
   return {
     id,
+    campaignId: (data.campaignId as string | null) ?? null,
     gameId: (data.gameId as string | null) ?? null,
     fromUid: (data.fromUid as string) ?? "",
     fromName: (data.fromName as string) ?? "Hunter",
@@ -51,6 +52,7 @@ function toTrade(id: string, data: Record<string, unknown>): Trade {
 }
 
 export interface CreateTradeInput {
+  campaignId: string | null;
   gameId: string | null;
   fromUid: string;
   fromName: string;
@@ -63,6 +65,7 @@ export interface CreateTradeInput {
 
 export async function createTrade(input: CreateTradeInput): Promise<string> {
   const ref = await addDoc(tradesCol, {
+    campaignId: input.campaignId,
     gameId: input.gameId,
     fromUid: input.fromUid,
     fromName: input.fromName,

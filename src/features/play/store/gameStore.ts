@@ -44,8 +44,9 @@ interface GameState {
   _unsubGames: (() => void) | null;
   _unsubParts: (() => void) | null;
   _partsGameId: string | null;
+  _gamesCampaignId: string | null;
 
-  init: () => void;
+  init: (campaignId: string | null) => void;
   stopSync: () => void;
   clearError: () => void;
 
@@ -61,7 +62,7 @@ interface GameState {
 export const useGameStore = create<GameState>((set, get) => {
   /** (Re)subscribe to the current game's participants when it changes. */
   function syncParticipants(games: Game[]) {
-    const cur = currentGame(games);
+    const cur = currentGame(games, get()._gamesCampaignId);
     const id = cur?.id ?? null;
     if (id === get()._partsGameId) return;
     get()._unsubParts?.();
@@ -99,9 +100,10 @@ export const useGameStore = create<GameState>((set, get) => {
     _unsubGames: null,
     _unsubParts: null,
     _partsGameId: null,
+    _gamesCampaignId: null,
 
-    init: () => {
-      if (get()._unsubGames || get().preview) return;
+    init: (campaignId) => {
+      if (get().preview) return;
       if (isPreviewActive()) {
         const SELF = "preview-uid"; // the preview user's uid (see dev/preview.ts)
         const isDm = useAuthStore.getState().identity.playerType === "dm";
@@ -137,8 +139,17 @@ export const useGameStore = create<GameState>((set, get) => {
         set({ preview: true, games: [game], participants: parts, status: "loaded" });
         return;
       }
-      set({ status: "loading", error: null });
+      if (!campaignId) {
+        get()._unsubGames?.();
+        get()._unsubParts?.();
+        set({ _unsubGames: null, _unsubParts: null, _partsGameId: null, _gamesCampaignId: null, games: [], participants: [], status: "loaded" });
+        return;
+      }
+      if (campaignId === get()._gamesCampaignId && get()._unsubGames) return;
+      get()._unsubGames?.();
+      set({ status: "loading", error: null, _gamesCampaignId: campaignId });
       const unsub = subscribeGames(
+        campaignId,
         (games) => {
           set({ games, status: "loaded" });
           syncParticipants(games);
