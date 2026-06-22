@@ -7,6 +7,7 @@ import { MainLayout } from "@/components/MainLayout";
 import { CampaignLayout } from "@/components/CampaignLayout";
 import { Landing } from "@/features/auth/components/Landing";
 import { PublicLayout } from "@/features/auth/components/PublicLayout";
+import { Onboarding } from "@/features/auth/components/Onboarding";
 import { MainMenu } from "@/features/campaigns/components/MainMenu";
 import { SessionsPage } from "@/features/sessions/components/SessionsPage";
 import { CharacterPage } from "@/features/hunter/components/CharacterPage";
@@ -42,6 +43,7 @@ function AuthedApp() {
 export default function App() {
   useAuthInit();
   const status = useAuthStore((s) => s.status);
+  const needsOnboarding = useAuthStore((s) => s.needsOnboarding);
 
   if (status === "loading" || status === "checking") {
     return <Splash message={status === "checking" ? "Checking the ledger…" : undefined} />;
@@ -58,6 +60,11 @@ export default function App() {
         </Route>
       </Routes>
     );
+  }
+
+  // First login with no name yet → set it before entering.
+  if (needsOnboarding) {
+    return <Onboarding />;
   }
 
   // status === "allowed" (anyone signed in)
