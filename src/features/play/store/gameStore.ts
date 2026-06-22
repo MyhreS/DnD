@@ -109,9 +109,23 @@ export const useGameStore = create<GameState>((set, get) => {
             parts[2],
           ];
         }
-        // Dev affordance: `?play=active` previews an in-progress game.
-        if (new URLSearchParams(window.location.search).get("play") === "active") {
+        // Dev affordances: `?play=active|ended` and `?phase=` preview game states.
+        const params = new URLSearchParams(window.location.search);
+        const play = params.get("play");
+        if (play === "active") {
           game = { ...game, status: "active", phase: "combat", startedAt: Date.now() };
+        } else if (play === "ended") {
+          game = {
+            ...game,
+            status: "ended",
+            endedPhase: "long_rest",
+            startedAt: Date.now() - 2 * 60 * 60 * 1000,
+            endedAt: Date.now(),
+          };
+        }
+        const ph = params.get("phase");
+        if (ph && ["exploration", "combat", "short_rest", "long_rest"].includes(ph)) {
+          game = { ...game, phase: ph as typeof game.phase };
         }
         set({ preview: true, games: [game], participants: parts, status: "loaded" });
         return;
