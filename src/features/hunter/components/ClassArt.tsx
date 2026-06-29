@@ -20,6 +20,11 @@ export function ClassArt({
         src={src}
         alt={alt}
         loading="lazy"
+        onError={(e) => {
+          // Hide a failed image (renamed/removed asset, network hiccup) rather
+          // than show a broken-image icon — the identity text below still reads.
+          e.currentTarget.parentElement?.style.setProperty("display", "none");
+        }}
         style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
       />
       <div
