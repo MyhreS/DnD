@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { ChevronIcon } from "@/components/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
@@ -62,7 +62,12 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
         className="card"
         style={{ borderColor: combat ? "var(--blood-bright)" : undefined, background: combat ? "rgba(179,18,26,0.10)" : undefined }}
       >
-        <p className="eyebrow" style={{ marginBottom: 4 }}>{game.title} · in play</p>
+        <div className="row between" style={{ marginBottom: 4, gap: 8 }}>
+          <p className="eyebrow" style={{ margin: 0 }}>{game.title} · in play</p>
+          <Link className="faint" style={{ fontSize: "0.78rem", flex: "none" }} to="/status" target="_blank" rel="noreferrer">
+            Big screen ↗
+          </Link>
+        </div>
         <h1 style={{ margin: 0 }}>{PHASE_LABEL[game.phase]}</h1>
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
           <span className="chip">{LOCATION_LABEL[game.location ?? "wild"]}</span>

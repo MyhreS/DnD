@@ -16,6 +16,7 @@ import { PlayPage } from "@/features/play/components/PlayPage";
 import { PartyPage } from "@/features/party/components/PartyPage";
 import { HandbookPage } from "@/features/handbook/components/HandbookPage";
 import { ProfilePage } from "@/features/profile/components/ProfilePage";
+import { StatusPage } from "@/features/status/components/StatusPage";
 
 function AuthedApp() {
   useCampaignSync();
@@ -35,6 +36,8 @@ function AuthedApp() {
         <Route path="party" element={<PartyPage />} />
         <Route path="hunter" element={<CampaignHunterPage />} />
       </Route>
+      {/* Chrome-less big-screen status board (its own full-bleed layout). */}
+      <Route path="status" element={<StatusPage />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
