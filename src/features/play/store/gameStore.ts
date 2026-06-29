@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Game, GameParticipant, GamePhase, GameLocation } from "@/types";
+import type { Game, GameParticipant, GamePhase, GameLocation, EncounterState } from "@/types";
 import {
   subscribeGames,
   subscribeParticipants,
@@ -7,6 +7,7 @@ import {
   startGame,
   setGamePhase,
   setGameLocation,
+  setGameCombat,
   endGame,
   deleteGame,
   joinGame,
@@ -55,6 +56,7 @@ interface GameState {
   begin: (gameId: string) => Promise<boolean>;
   setPhase: (gameId: string, phase: GamePhase) => Promise<boolean>;
   setLocation: (gameId: string, location: GameLocation) => Promise<boolean>;
+  setCombat: (gameId: string, combat: EncounterState) => Promise<boolean>;
   stop: (gameId: string, endedPhase: GamePhase, endedLocation?: GameLocation) => Promise<boolean>;
   join: (gameId: string, p: JoinInput) => Promise<boolean>;
   leave: (gameId: string, uid: string) => Promise<boolean>;
@@ -204,6 +206,14 @@ export const useGameStore = create<GameState>((set, get) => {
       return (
         (await run(() => setGameLocation(gameId, location), "Couldn't change the location.")) !== null
       );
+    },
+
+    setCombat: async (gameId, combat) => {
+      if (get().preview) {
+        set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, combat } : g)) }));
+        return true;
+      }
+      return (await run(() => setGameCombat(gameId, combat), "Couldn't update combat.")) !== null;
     },
 
     stop: async (gameId, endedPhase, endedLocation) => {

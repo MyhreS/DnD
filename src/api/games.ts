@@ -19,6 +19,7 @@ import type {
   GameParticipant,
   GamePhase,
   GameLocation,
+  EncounterState,
   InventoryEntry,
   LootPile,
 } from "@/types";
@@ -43,6 +44,7 @@ function toGame(id: string, data: Record<string, unknown>): Game {
     status: (data.status as Game["status"]) ?? "lobby",
     phase: (data.phase as GamePhase) ?? "exploration",
     location: (data.location as GameLocation) ?? "wild",
+    combat: (data.combat as EncounterState) ?? { active: false, round: 0, turnId: null },
     sandbox: (data.sandbox as boolean) ?? false,
     createdAt: ms(data.createdAt),
     startedAt: data.startedAt ? ms(data.startedAt) : null,
@@ -89,6 +91,7 @@ export async function createGame(input: CreateGameInput): Promise<string> {
     status: "lobby",
     phase: "exploration",
     location: "wild",
+    combat: { active: false, round: 0, turnId: null },
     sandbox: input.sandbox ?? false,
     createdAt: serverTimestamp(),
     startedAt: null,
@@ -110,6 +113,11 @@ export async function setGamePhase(gameId: string, phase: GamePhase): Promise<vo
 /** Set where the party is — drives rest outcomes (see GameLocation). */
 export async function setGameLocation(gameId: string, location: GameLocation): Promise<void> {
   await updateDoc(doc(gamesCol, gameId), { location });
+}
+
+/** Set the live combat encounter state (round / whose turn / active). */
+export async function setGameCombat(gameId: string, combat: EncounterState): Promise<void> {
+  await updateDoc(doc(gamesCol, gameId), { combat });
 }
 
 export async function endGame(

@@ -103,12 +103,23 @@ export function previewGame(): import("@/types").Game {
     dmName: "Christoffer",
     status: "lobby",
     phase: "exploration",
+    combat: { active: true, round: 2, turnId: "prev-monster-1" },
     sandbox: false,
     createdAt: now,
     startedAt: null,
     endedAt: null,
     endedPhase: null,
   };
+}
+
+/** Sample combatants so the combat tracker renders in preview mode. */
+export function previewCombatants(): import("@/types").Combatant[] {
+  const now = Date.now();
+  return [
+    { id: "prev-monster-1", kind: "monster", name: "Cleric Beast", characterId: null, initiative: 19, ac: 14, maxHp: 80, currentHp: 52, conditions: ["poisoned"], createdAt: now },
+    { id: "prev-pc-1", kind: "pc", name: "Eileen the Crow", characterId: "preview-uid-char", initiative: 17, ac: null, maxHp: null, currentHp: null, conditions: ["frightened"], createdAt: now },
+    { id: "prev-pc-2", kind: "pc", name: "Gascoigne", characterId: "preview-p2-char", initiative: 12, ac: null, maxHp: null, currentHp: null, conditions: [], createdAt: now },
+  ];
 }
 
 /** Sample participants so the lobby / DM board look populated in preview. */

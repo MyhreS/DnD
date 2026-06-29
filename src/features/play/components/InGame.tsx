@@ -16,6 +16,7 @@ import { TradeLog } from "./TradeLog";
 import { DMCharacters } from "./DMCharacters";
 import { LootPanel } from "./LootPanel";
 import { RestPanel } from "./RestPanel";
+import { CombatTracker } from "./CombatTracker";
 import { useTradesSync } from "../hooks/useTradesSync";
 import { useCharactersSync } from "../hooks/useCharactersSync";
 import { useLootSync } from "../hooks/useLootSync";
@@ -74,6 +75,8 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
           {hint && <span className="faint" style={{ fontSize: "0.9rem" }}>{hint}</span>}
         </div>
       </div>
+
+      {combat && <CombatTracker game={game} isDM={isDM} participants={participants} />}
 
       {isDM && <PhaseControl game={game} />}
       {isDM && <LocationControl game={game} />}
