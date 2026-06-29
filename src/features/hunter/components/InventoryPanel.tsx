@@ -12,10 +12,14 @@ export function InventoryPanel({
   card,
   editable = false,
   onPatch,
+  onDrop,
 }: {
   card: HunterCard;
   editable?: boolean;
   onPatch?: (partial: Partial<HunterCard>) => void;
+  /** When set, each item gets a "Drop" action (pushes the stack to the shared
+   * loot pile). Only wired in-game for the owner. */
+  onDrop?: (entry: InventoryEntry) => void;
 }) {
   const playerSave = usePlayerStore((s) => s.save);
   const [adding, setAdding] = useState(false);
@@ -71,10 +75,17 @@ export function InventoryPanel({
                     {item.category} · {item.weightLb} lb{item.unique ? " · unique" : ""}
                   </div>
                 </div>
-                {editable && (
+                {(editable || onDrop) && (
                   <div className="row" style={{ gap: 6, flex: "none" }}>
-                    <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label={`remove one ${item.name}`} onClick={() => bump(item.id, -1)}>−</button>
-                    <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label={`add one ${item.name}`} onClick={() => bump(item.id, 1)}>+</button>
+                    {editable && (
+                      <>
+                        <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label={`remove one ${item.name}`} onClick={() => bump(item.id, -1)}>−</button>
+                        <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label={`add one ${item.name}`} onClick={() => bump(item.id, 1)}>+</button>
+                      </>
+                    )}
+                    {onDrop && (
+                      <button className="btn btn-ghost btn-sm" style={{ width: "auto", padding: "4px 8px" }} aria-label={`drop ${item.name}`} onClick={() => onDrop({ itemId: item.id, qty })}>Drop</button>
+                    )}
                   </div>
                 )}
               </div>

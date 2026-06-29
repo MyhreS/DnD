@@ -7,6 +7,7 @@ import { CharacterTrackers } from "@/features/hunter/components/CharacterTracker
 import { InventoryPanel } from "@/features/hunter/components/InventoryPanel";
 import { AsyncButton } from "@/components/AsyncButton";
 import { useGameStore } from "../store/gameStore";
+import { useLootStore } from "../store/lootStore";
 import { PhaseControl } from "./PhaseControl";
 import { LocationControl } from "./LocationControl";
 import { ParticipantList } from "./ParticipantList";
@@ -27,6 +28,7 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
   const leave = useGameStore((s) => s.leave);
   const join = useGameStore((s) => s.join);
   const error = useGameStore((s) => s.error);
+  const dropItem = useLootStore((s) => s.drop);
   const navigate = useNavigate();
 
   const uid = user?.uid ?? "";
@@ -77,7 +79,7 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
           {/* key on phase so each rest event gets a fresh panel — resets the
               once-per-rest guard when the DM moves between phases. */}
           <RestPanel key={game.phase} card={card} phase={game.phase} location={game.location ?? "wild"} />
-          <InventoryPanel card={card} editable />
+          <InventoryPanel card={card} editable onDrop={(entry) => void dropItem(entry, card, game.id)} />
           <TradePanel game={game} participants={participants} card={card} />
         </>
       )}
