@@ -5,9 +5,19 @@ import { resolveInventory, groupByCarry, totalWeight, carryCondition } from "@/l
 import { usePlayerStore } from "../store/playerStore";
 
 /** A hunter's carried gear + coins. Editable on your own character (menu + in
- * play); read-only when viewing someone else. Persists on every change. */
-export function InventoryPanel({ card, editable = false }: { card: HunterCard; editable?: boolean }) {
-  const save = usePlayerStore((s) => s.save);
+ * play); read-only when viewing someone else. Persists on every change. Pass
+ * `onPatch` to route writes somewhere other than the owner's store (the DM
+ * board edits another hunter via patchCharacter — never the owner playerStore). */
+export function InventoryPanel({
+  card,
+  editable = false,
+  onPatch,
+}: {
+  card: HunterCard;
+  editable?: boolean;
+  onPatch?: (partial: Partial<HunterCard>) => void;
+}) {
+  const playerSave = usePlayerStore((s) => s.save);
   const [adding, setAdding] = useState(false);
 
   const entries = resolveInventory(card);
@@ -16,7 +26,8 @@ export function InventoryPanel({ card, editable = false }: { card: HunterCard; e
   const cond = carryCondition(card.abilities.str, weight);
 
   function patch(p: Partial<HunterCard>) {
-    void save({ ...card, ...p });
+    if (onPatch) onPatch(p);
+    else void playerSave({ ...card, ...p });
   }
   function setQty(itemId: string, qty: number) {
     const inv = (card.inventory ?? []).filter((e) => e.itemId !== itemId);

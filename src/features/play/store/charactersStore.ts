@@ -33,6 +33,9 @@ interface CharactersState {
    * award path goes through the api, never the owner's playerStore, so the DM
    * editing someone else's hunter doesn't clobber their own selected card. */
   awardInsight: (id: string, delta: number) => Promise<boolean>;
+  /** DM: write any field(s) on any character (vitals, items, coins). Goes
+   * through patchCharacter (partial merge) — never the owner's playerStore. */
+  dmPatch: (id: string, partial: Partial<HunterCard>) => Promise<boolean>;
 }
 
 export const useCharactersStore = create<CharactersState>((set, get) => {
@@ -134,6 +137,14 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         return true;
       }
       return (await run(() => apiAwardInsight(id, delta), "Couldn't award Insight.")) !== null;
+    },
+
+    dmPatch: async (id, partial) => {
+      if (get().preview) {
+        set((s) => ({ party: s.party.map((c) => (c.id === id ? { ...c, ...partial } : c)) }));
+        return true;
+      }
+      return (await run(() => patchCharacter(id, partial), "Couldn't update the character.")) !== null;
     },
   };
 });
