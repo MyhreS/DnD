@@ -9,6 +9,8 @@ import type { HandbookChapter } from "@/types";
 // update — the UI is driven entirely from this data.
 
 export const HANDBOOK_PDF_PATH = "/handbook/catacombs-and-starspawns-handbook.pdf";
+export const WHISPERS_PDF_PATH = "/docs/whispers.pdf";
+export const DEEPCALLER_BOOK_PDF_PATH = "/docs/book-of-the-deepcaller.pdf";
 
 export const HANDBOOK: HandbookChapter[] = [
   {

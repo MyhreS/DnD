@@ -2,7 +2,6 @@ import type { HunterCard } from "@/types";
 import { getClass, getSubclass } from "@/data/classes";
 import { ARMOR_BY_ID } from "@/data/armor";
 import { SKILLS_BY_ABILITY } from "@/data/skills";
-import { RITE_BY_ID } from "@/data/rites";
 import { ABILITIES, abilityModifier, formatModifier } from "@/data/abilities";
 import {
   armorClass,
@@ -11,13 +10,15 @@ import {
   proficiencyBonus,
   saveModifier,
   skillModifier,
-  riteStats,
   initiativeMod,
   earnedLevel,
   insightToNext,
 } from "@/lib/character";
 import { CreatureSprite } from "@/data/CreatureSprite";
 import { classCreatureId } from "@/data/creatures";
+import { classArt } from "@/data/classArt";
+import { ClassArt } from "./ClassArt";
+import { RitesSection } from "./RitesSection";
 
 export function HunterCardView({ card }: { card: HunterCard }) {
   const klass = getClass(card.classId);
@@ -37,24 +38,28 @@ export function HunterCardView({ card }: { card: HunterCard }) {
       ? `${nextLevel.remaining} to Lv ${nextLevel.nextLevel}`
       : "max level";
   const transformation = card.transformationLevel ?? 0;
+  const art = classArt(card.classId);
 
   return (
     <div className="stack" style={{ gap: 14 }}>
-      <div className="card row between" style={{ gap: 12 }}>
-        <div style={{ minWidth: 0 }}>
-          <p className="eyebrow">{klass ? klass.title : "Hunter"}</p>
-          <h1 style={{ marginBottom: 2 }}>{card.name || "Unnamed Hunter"}</h1>
-          <p className="muted" style={{ marginBottom: 0 }}>
-            {[card.background, klass ? `${klass.name} · Level ${lvl}` : null, sub?.name]
-              .filter(Boolean)
-              .join(" · ")}
-          </p>
-        </div>
-        {klass && (
-          <div className="center" style={{ flex: "none" }} title={klass.title}>
-            <CreatureSprite id={classCreatureId(card.classId)} size={46} />
+      <div className="card" style={{ padding: 0, overflow: "hidden" }}>
+        <ClassArt classId={card.classId} alt={klass ? klass.name : "Hunter"} />
+        <div className="row between" style={{ gap: 12, padding: 18 }}>
+          <div style={{ minWidth: 0 }}>
+            <p className="eyebrow">{klass ? klass.title : "Hunter"}</p>
+            <h1 style={{ marginBottom: 2 }}>{card.name || "Unnamed Hunter"}</h1>
+            <p className="muted" style={{ marginBottom: 0 }}>
+              {[card.background, klass ? `${klass.name} · Level ${lvl}` : null, sub?.name]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
           </div>
-        )}
+          {klass && !art && (
+            <div className="center" style={{ flex: "none" }} title={klass.title}>
+              <CreatureSprite id={classCreatureId(card.classId)} size={46} />
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="card">
@@ -160,42 +165,6 @@ export function HunterCardView({ card }: { card: HunterCard }) {
             {card.notes}
           </p>
         </div>
-      )}
-    </div>
-  );
-}
-
-function RitesSection({ card, lvl }: { card: HunterCard; lvl: number }) {
-  const r = riteStats(card.abilities, lvl);
-  const prepared = (card.preparedWhispers ?? []).map((id) => RITE_BY_ID[id]).filter(Boolean);
-  return (
-    <div className="card">
-      <p className="eyebrow" style={{ marginBottom: 10 }}>Rites</p>
-      <div className="derived-grid">
-        <Stat label="Ability" value="INT" />
-        <Stat label="Rite Mod." value={formatModifier(r.modifier)} />
-        <Stat label="Save DC" value={r.saveDc} />
-        <Stat label="Attack" value={formatModifier(r.attack)} />
-      </div>
-      <hr className="divider" />
-      <p className="eyebrow" style={{ marginBottom: 8 }}>Prepared Whispers</p>
-      {prepared.length ? (
-        <ul className="list-reset pill-list">
-          {prepared.map((rite) => (
-            <li key={rite.id}>
-              <div className="row between">
-                <span style={{ fontWeight: 600 }}>{rite.name}</span>
-                <span className="gold" style={{ flex: "none", fontSize: "0.78rem" }}>
-                  {rite.whisper ? "Whisper" : `Lv ${rite.level}`} · {rite.type}
-                </span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      ) : (
-        <p className="faint" style={{ fontSize: "0.86rem", margin: 0 }}>
-          None prepared. Browse the Book of the Deepcaller in the Handbook → Rites.
-        </p>
       )}
     </div>
   );
