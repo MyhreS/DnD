@@ -320,7 +320,7 @@ export const RULES_REFERENCE: RuleEntry[] = [
     aliases: ["initiative order", "turn order", "dex check"],
     body: [
       "At the start of combat everyone rolls a Dexterity check; the DM orders turns from highest to lowest.",
-      "Ties are broken by higher Dexterity score (players decide among themselves).",
+      "Ties are decided by the participants (players choose among themselves; the DM decides for its own creatures, or roll off for a tie between the two sides).",
     ],
   },
   {
