@@ -6,6 +6,7 @@ import {
   archiveCharacter,
   recoverCharacter,
   patchCharacter,
+  awardInsight as apiAwardInsight,
 } from "@/api/players";
 import { createLoot } from "@/api/games";
 import { isPreviewActive, previewPartyCards, previewArchive } from "@/dev/preview";
@@ -28,10 +29,10 @@ interface CharactersState {
   revive: (uid: string) => Promise<boolean>;
   /** DM: recover an archived character back into play. */
   recover: (a: ArchivedCharacter) => Promise<boolean>;
-  /** DM: write any field(s) on any character (insight award, vitals, …). Goes
-   * through patchCharacter — never the owner's playerStore — so the DM editing
-   * someone else's hunter doesn't clobber their own selected card. */
-  dmPatch: (id: string, partial: Partial<HunterCard>) => Promise<boolean>;
+  /** DM: award (or subtract) Insight atomically — never loses rapid taps. The
+   * award path goes through the api, never the owner's playerStore, so the DM
+   * editing someone else's hunter doesn't clobber their own selected card. */
+  awardInsight: (id: string, delta: number) => Promise<boolean>;
 }
 
 export const useCharactersStore = create<CharactersState>((set, get) => {
@@ -123,12 +124,16 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
       return (await run(() => recoverCharacter(a), "Couldn't recover the character.")) !== null;
     },
 
-    dmPatch: async (id, partial) => {
+    awardInsight: async (id, delta) => {
       if (get().preview) {
-        set((s) => ({ party: s.party.map((c) => (c.id === id ? { ...c, ...partial } : c)) }));
+        set((s) => ({
+          party: s.party.map((c) =>
+            c.id === id ? { ...c, insight: Math.max(0, (c.insight ?? 0) + delta) } : c,
+          ),
+        }));
         return true;
       }
-      return (await run(() => patchCharacter(id, partial), "Couldn't update the character.")) !== null;
+      return (await run(() => apiAwardInsight(id, delta), "Couldn't award Insight.")) !== null;
     },
   };
 });

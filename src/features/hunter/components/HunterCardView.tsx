@@ -13,7 +13,7 @@ import {
   skillModifier,
   riteStats,
   initiativeMod,
-  levelForInsight,
+  earnedLevel,
   insightToNext,
 } from "@/lib/character";
 import { CreatureSprite } from "@/data/CreatureSprite";
@@ -29,10 +29,10 @@ export function HunterCardView({ card }: { card: HunterCard }) {
   const san = klass ? maxSanity(klass, card.abilities, lvl) : null;
   const armor = card.mainArmorId ? ARMOR_BY_ID[card.mainArmorId] : null;
   const insight = card.insight ?? 0;
-  const earnedLevel = levelForInsight(insight);
+  const earned = earnedLevel(card);
   const nextLevel = insightToNext(insight);
-  const insightSub = earnedLevel > lvl
-    ? `Lv ${earnedLevel} after a rest`
+  const insightSub = earned > lvl
+    ? `Lv ${earned} after a rest`
     : nextLevel
       ? `${nextLevel.remaining} to Lv ${nextLevel.nextLevel}`
       : "max level";

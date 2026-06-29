@@ -8,6 +8,16 @@ function rollDie(faces: number): number {
   return Math.floor(Math.random() * f) + 1;
 }
 
+/** A Long Rest restores all HP only in the Hunters Lodge (else half your max). */
+export function restoresFullHp(location: GameLocation): boolean {
+  return location === "lodge";
+}
+
+/** Hit Dice may be spent (on a Short Rest) only in a Safe Zone or the Lodge. */
+export function canSpendHitDice(location: GameLocation): boolean {
+  return location === "safe" || location === "lodge";
+}
+
 export interface LongRestOutcome {
   patch: Partial<HunterCard>;
   hpFrom: number;
@@ -38,7 +48,7 @@ export function applyLongRest(
   const earned = levelForInsight(card.insight ?? 0);
   const newLevel = Math.max(oldLevel, earned);
   const levelsGained = newLevel - oldLevel;
-  const inLodge = location === "lodge";
+  const inLodge = restoresFullHp(location);
 
   const oldMaxHp = maxHp(klass, card.abilities, oldLevel);
   const newMaxHp = maxHp(klass, card.abilities, newLevel);
@@ -101,12 +111,12 @@ export function applyShortRest(
 ): ShortRestOutcome {
   const hpMax = maxHp(klass, card.abilities, card.level);
   const hpFrom = card.currentHp ?? hpMax;
-  const canSpendHitDice = location === "safe" || location === "lodge";
+  const canHeal = canSpendHitDice(location);
   const con = abilityModifier(card.abilities.con);
 
   let hpTo = hpFrom;
   let hitDiceRolled = 0;
-  if (canSpendHitDice && hpFrom < hpMax) {
+  if (canHeal && hpFrom < hpMax) {
     const dice = proficiencyBonus(card.level);
     let healed = 0;
     for (let i = 0; i < dice; i++) healed += Math.max(1, rollDie(klass.hitDie) + con);
@@ -125,7 +135,7 @@ export function applyShortRest(
     hpFrom,
     hpTo,
     hitDiceRolled,
-    canSpendHitDice,
+    canSpendHitDice: canHeal,
     transformationFrom,
     transformationTo,
   };

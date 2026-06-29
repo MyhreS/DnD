@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { getClass } from "@/data/classes";
-import { maxHp, levelForInsight } from "@/lib/character";
+import { maxHp, earnedLevel, isLevelUpPending } from "@/lib/character";
 import { AsyncButton } from "@/components/AsyncButton";
 import { InventoryPanel } from "@/features/hunter/components/InventoryPanel";
 import { useCharactersStore } from "../store/charactersStore";
@@ -38,7 +38,7 @@ export function DMCharacters({ gameId }: { gameId: string | null }) {
 function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | null }) {
   const kill = useCharactersStore((s) => s.killCharacter);
   const revive = useCharactersStore((s) => s.revive);
-  const dmPatch = useCharactersStore((s) => s.dmPatch);
+  const award = useCharactersStore((s) => s.awardInsight);
   const [showItems, setShowItems] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
@@ -47,8 +47,8 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
   const hp = card.currentHp ?? hpMax;
   const dying = card.deathPending || hp <= 0;
   const insight = card.insight ?? 0;
-  const earnedLevel = levelForInsight(insight);
-  const pendingLevel = earnedLevel > card.level;
+  const earnedLvl = earnedLevel(card);
+  const pendingLevel = isLevelUpPending(card);
 
   return (
     <div style={{ padding: "10px 0", borderTop: "1px solid var(--border)" }}>
@@ -76,7 +76,7 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
       <div className="row between" style={{ marginTop: 8, gap: 8 }}>
         <div className="faint" style={{ fontSize: "0.78rem", minWidth: 0 }}>
           Insight {insight}
-          {pendingLevel && <span className="gold"> · → Lvl {earnedLevel} after a rest</span>}
+          {pendingLevel && <span className="gold"> · → Lvl {earnedLvl} after a rest</span>}
         </div>
         <div className="row" style={{ gap: 4, flex: "none" }}>
           {[1, 5, 25].map((d) => (
@@ -84,7 +84,7 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
               key={d}
               className="btn btn-ghost btn-sm"
               style={{ width: "auto", padding: "4px 8px" }}
-              onClick={() => dmPatch(card.id, { insight: insight + d })}
+              onClick={() => award(card.id, d)}
             >
               +{d}
             </button>
@@ -92,7 +92,8 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
           <button
             className="btn btn-ghost btn-sm"
             style={{ width: "auto", padding: "4px 8px" }}
-            onClick={() => dmPatch(card.id, { insight: Math.max(0, insight - 1) })}
+            disabled={insight <= 0}
+            onClick={() => award(card.id, -1)}
             aria-label="decrease Insight"
           >
             −

@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { getClass } from "@/data/classes";
-import { levelForInsight } from "@/lib/character";
+import { earnedLevel, isLevelUpPending } from "@/lib/character";
 import {
   applyLongRest,
   applyShortRest,
+  canSpendHitDice,
+  restoresFullHp,
   type LongRestOutcome,
   type ShortRestOutcome,
 } from "@/lib/rest";
@@ -31,10 +33,10 @@ export function RestPanel({
   if ((phase !== "short_rest" && phase !== "long_rest") || !klass) return null;
 
   const isLong = phase === "long_rest";
-  const inLodge = location === "lodge";
-  const safe = location === "safe" || inLodge;
-  const earned = levelForInsight(card.insight ?? 0);
-  const pendingLevel = earned > card.level;
+  const inLodge = restoresFullHp(location);
+  const safe = canSpendHitDice(location);
+  const earned = earnedLevel(card);
+  const pendingLevel = isLevelUpPending(card);
 
   async function takeRest() {
     if (!klass) return;
@@ -71,21 +73,24 @@ export function RestPanel({
         <p className="eyebrow" style={{ margin: 0 }}>{isLong ? "Long Rest" : "Short Rest"}</p>
         <span className="chip" style={{ flex: "none" }}>{LOCATION_LABEL[location]}</span>
       </div>
-      <ul className="muted" style={{ margin: "0 0 12px", paddingLeft: 18, fontSize: "0.9rem" }}>
-        {lines.map((l) => (
-          <li key={l}>{l}</li>
-        ))}
-      </ul>
-      <AsyncButton
-        className="btn btn-primary"
-        pendingText="Resting…"
-        showDone={false}
-        onClick={takeRest}
-      >
-        Take the {isLong ? "long" : "short"} rest
-      </AsyncButton>
-      {done && (
-        <p className="faint" style={{ fontSize: "0.84rem", margin: "10px 0 0" }}>{done}</p>
+      {done ? (
+        <p className="faint" style={{ fontSize: "0.84rem", margin: 0 }}>{done}</p>
+      ) : (
+        <>
+          <ul className="muted" style={{ margin: "0 0 12px", paddingLeft: 18, fontSize: "0.9rem" }}>
+            {lines.map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+          </ul>
+          <AsyncButton
+            className="btn btn-primary"
+            pendingText="Resting…"
+            showDone={false}
+            onClick={takeRest}
+          >
+            Take the {isLong ? "long" : "short"} rest
+          </AsyncButton>
+        </>
       )}
     </div>
   );

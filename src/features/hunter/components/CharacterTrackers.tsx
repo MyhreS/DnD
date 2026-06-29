@@ -8,9 +8,11 @@ export function CharacterTrackers({ card }: { card: HunterCard }) {
   const save = usePlayerStore((s) => s.save);
   const klass = getClass(card.classId);
   const hpMax = klass ? maxHp(klass, card.abilities, card.level) : 0;
-  const hp = card.currentHp ?? hpMax;
+  // Clamp the displayed value: a saved HP/Sanity can exceed a max that later
+  // dropped (e.g. a CON/WIS change), which would render an over-100% bar.
+  const hp = Math.min(hpMax, card.currentHp ?? hpMax);
   const sanMax = klass ? maxSanity(klass, card.abilities, card.level) : 0;
-  const san = card.sanity ?? sanMax;
+  const san = Math.min(sanMax, card.sanity ?? sanMax);
 
   function patch(p: Partial<HunterCard>) {
     void save({ ...card, ...p });
