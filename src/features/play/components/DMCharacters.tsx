@@ -2,7 +2,7 @@ import { useState } from "react";
 import { getClass } from "@/data/classes";
 import { maxHp, earnedLevel, isLevelUpPending } from "@/lib/character";
 import { AsyncButton } from "@/components/AsyncButton";
-import { InventoryPanel } from "@/features/hunter/components/InventoryPanel";
+import { DMCharacterEditor } from "./DMCharacterEditor";
 import { useCharactersStore } from "../store/charactersStore";
 import type { ArchivedCharacter, HunterCard } from "@/types";
 
@@ -39,7 +39,7 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
   const kill = useCharactersStore((s) => s.killCharacter);
   const revive = useCharactersStore((s) => s.revive);
   const award = useCharactersStore((s) => s.awardInsight);
-  const [showItems, setShowItems] = useState(false);
+  const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
   const klass = getClass(card.classId);
@@ -62,16 +62,12 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
             {klass ? `${klass.name} · Lvl ${card.level}` : "Hunter"} · HP {hp}/{hpMax}
           </div>
         </div>
-        <button className="btn btn-ghost btn-sm" style={{ width: "auto", flex: "none" }} onClick={() => setShowItems((s) => !s)}>
-          {showItems ? "Hide" : "Items"}
+        <button className="btn btn-ghost btn-sm" style={{ width: "auto", flex: "none" }} onClick={() => setEditing((s) => !s)}>
+          {editing ? "Close" : "Edit"}
         </button>
       </div>
 
-      {showItems && (
-        <div style={{ marginTop: 8 }}>
-          <InventoryPanel card={card} />
-        </div>
-      )}
+      {editing && <DMCharacterEditor card={card} />}
 
       <div className="row between" style={{ marginTop: 8, gap: 8 }}>
         <div className="faint" style={{ fontSize: "0.78rem", minWidth: 0 }}>
