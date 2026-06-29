@@ -8,6 +8,7 @@ import { InventoryPanel } from "@/features/hunter/components/InventoryPanel";
 import { AsyncButton } from "@/components/AsyncButton";
 import { useGameStore } from "../store/gameStore";
 import { PhaseControl } from "./PhaseControl";
+import { LocationControl } from "./LocationControl";
 import { ParticipantList } from "./ParticipantList";
 import { TradePanel } from "./TradePanel";
 import { TradeLog } from "./TradeLog";
@@ -17,7 +18,7 @@ import { RestPanel } from "./RestPanel";
 import { useTradesSync } from "../hooks/useTradesSync";
 import { useCharactersSync } from "../hooks/useCharactersSync";
 import { useLootSync } from "../hooks/useLootSync";
-import { PHASE_LABEL, PHASES } from "../lib/phase";
+import { PHASE_LABEL, PHASES, LOCATION_LABEL } from "../lib/phase";
 import type { Game, GameParticipant } from "@/types";
 
 export function InGame({ game, participants }: { game: Game; participants: GameParticipant[] }) {
@@ -61,10 +62,14 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
       >
         <p className="eyebrow" style={{ marginBottom: 4 }}>{game.title} · in play</p>
         <h1 style={{ margin: 0 }}>{PHASE_LABEL[game.phase]}</h1>
-        {hint && <p className="muted" style={{ marginBottom: 0, fontSize: "0.9rem" }}>{hint}</p>}
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 6, flexWrap: "wrap" }}>
+          <span className="chip">{LOCATION_LABEL[game.location ?? "wild"]}</span>
+          {hint && <span className="faint" style={{ fontSize: "0.9rem" }}>{hint}</span>}
+        </div>
       </div>
 
       {isDM && <PhaseControl game={game} />}
+      {isDM && <LocationControl game={game} />}
 
       {!isDM && card && card.classId && card.name && (
         <>
@@ -147,7 +152,7 @@ function StopGame({ game }: { game: Game }) {
           className="btn btn-primary"
           pendingText="Stopping…"
           showDone={false}
-          onClick={() => stop(game.id, game.phase)}
+          onClick={() => stop(game.id, game.phase, game.location)}
         >
           Stop game
         </AsyncButton>

@@ -14,7 +14,14 @@ import {
   type Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { Game, GameParticipant, GamePhase, InventoryEntry, LootPile } from "@/types";
+import type {
+  Game,
+  GameParticipant,
+  GamePhase,
+  GameLocation,
+  InventoryEntry,
+  LootPile,
+} from "@/types";
 
 const gamesCol = collection(db, "games");
 
@@ -35,11 +42,13 @@ function toGame(id: string, data: Record<string, unknown>): Game {
     dmName: (data.dmName as string) ?? "DM",
     status: (data.status as Game["status"]) ?? "lobby",
     phase: (data.phase as GamePhase) ?? "exploration",
+    location: (data.location as GameLocation) ?? "wild",
     sandbox: (data.sandbox as boolean) ?? false,
     createdAt: ms(data.createdAt),
     startedAt: data.startedAt ? ms(data.startedAt) : null,
     endedAt: data.endedAt ? ms(data.endedAt) : null,
     endedPhase: (data.endedPhase as GamePhase | null) ?? null,
+    endedLocation: (data.endedLocation as GameLocation | null) ?? null,
   };
 }
 
@@ -79,11 +88,13 @@ export async function createGame(input: CreateGameInput): Promise<string> {
     dmName: input.dmName,
     status: "lobby",
     phase: "exploration",
+    location: "wild",
     sandbox: input.sandbox ?? false,
     createdAt: serverTimestamp(),
     startedAt: null,
     endedAt: null,
     endedPhase: null,
+    endedLocation: null,
   });
   return ref.id;
 }
@@ -96,11 +107,21 @@ export async function setGamePhase(gameId: string, phase: GamePhase): Promise<vo
   await updateDoc(doc(gamesCol, gameId), { phase });
 }
 
-export async function endGame(gameId: string, endedPhase: GamePhase): Promise<void> {
+/** Set where the party is — drives rest outcomes (see GameLocation). */
+export async function setGameLocation(gameId: string, location: GameLocation): Promise<void> {
+  await updateDoc(doc(gamesCol, gameId), { location });
+}
+
+export async function endGame(
+  gameId: string,
+  endedPhase: GamePhase,
+  endedLocation?: GameLocation,
+): Promise<void> {
   await updateDoc(doc(gamesCol, gameId), {
     status: "ended",
     endedAt: serverTimestamp(),
     endedPhase,
+    endedLocation: endedLocation ?? null,
   });
 }
 

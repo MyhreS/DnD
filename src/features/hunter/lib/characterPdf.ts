@@ -50,7 +50,7 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
   const lvl = card.level;
   const prof = proficiencyBonus(lvl);
   const hpMax = klass ? maxHp(klass, card.abilities, lvl) : 0;
-  const sanMax = klass ? maxSanity(klass, lvl) : 0;
+  const sanMax = klass ? maxSanity(klass, card.abilities, lvl) : 0;
   const armor = card.mainArmorId ? ARMOR_BY_ID[card.mainArmorId] : null;
   let y = 60;
 

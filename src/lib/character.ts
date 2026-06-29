@@ -34,10 +34,52 @@ export function maxHp(klass: HunterClass, abilities: AbilityScores, level = 1): 
   return hp;
 }
 
-/** Maximum Sanity. The Deepcaller permanently gains +1 max Sanity per level. */
-export function maxSanity(klass: HunterClass, level = 1): number {
-  const bonus = klass.id === "deepcaller" ? Math.max(0, Math.min(20, level) - 1) : 0;
-  return klass.maxSanity + bonus;
+/**
+ * Maximum Sanity = the class base + the Wisdom modifier (per the handbook).
+ * The Deepcaller's "Fracturing Mind" also permanently grants +1 Max Sanity per
+ * level, with the class component capped at a total of 26.
+ */
+export function maxSanity(klass: HunterClass, abilities: AbilityScores, level = 1): number {
+  const classBase =
+    klass.id === "deepcaller"
+      ? Math.min(26, klass.maxSanity + Math.max(0, Math.min(20, level) - 1))
+      : klass.maxSanity;
+  return Math.max(0, classBase + abilityModifier(abilities.wis));
+}
+
+/**
+ * Cumulative Insight required to REACH each level (index 0 → level 1), from the
+ * handbook's Character Advancement table. Insight is the DM-awarded XP currency.
+ */
+export const INSIGHT_THRESHOLDS = [
+  0, 6, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525, 600, 680, 765, 855, 950,
+] as const;
+
+/**
+ * The highest level a hunter has EARNED for a total Insight (1–20).
+ * Rulebook gate: this level only takes effect after a Long Rest — so the
+ * applied `card.level` may lag this value until the hunter rests.
+ */
+export function levelForInsight(insight: number): number {
+  let lvl = 1;
+  for (let i = 0; i < INSIGHT_THRESHOLDS.length; i++) {
+    if (insight >= INSIGHT_THRESHOLDS[i]) lvl = i + 1;
+  }
+  return lvl;
+}
+
+/** Progress toward the next level, or null once level 20 is reached. */
+export function insightToNext(
+  insight: number,
+): { nextLevel: number; remaining: number } | null {
+  const earned = levelForInsight(insight);
+  if (earned >= 20) return null;
+  return { nextLevel: earned + 1, remaining: INSIGHT_THRESHOLDS[earned] - insight };
+}
+
+/** Initiative modifier (Dexterity), per the handbook. */
+export function initiativeMod(abilities: AbilityScores): number {
+  return abilityModifier(abilities.dex);
 }
 
 export interface ArmorClassResult {
@@ -130,6 +172,8 @@ export function emptyCard(params: {
     abilities: { ...DEFAULT_ABILITIES },
     skillProficiencies: [],
     mainArmorId: null,
+    transformationLevel: 0,
+    insight: 0,
     bloodTinge: false,
     preparedWhispers: [],
     coins: 0,
