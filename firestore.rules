@@ -63,11 +63,13 @@ service cloud.firestore {
     match /characters/{id} {
       allow read: if isUser();
       // You create your own; a campaign's DM may also author a hunter bound to
-      // their campaign (for a member, or the test-campaign bots).
+      // their campaign, but only for an existing MEMBER of it (a real player or
+      // a seeded bot) — never an arbitrary uid.
       allow create: if isUser() && (
         request.resource.data.ownerUid == request.auth.uid
         || (request.resource.data.campaignId != null
-            && isCampaignDM(request.resource.data.campaignId))
+            && isCampaignDM(request.resource.data.campaignId)
+            && exists(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId)/members/$(request.resource.data.ownerUid)))
       );
       allow update, delete: if isUser() && (
         resource.data.ownerUid == request.auth.uid

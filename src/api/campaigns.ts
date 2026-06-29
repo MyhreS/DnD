@@ -121,7 +121,9 @@ export async function createTestCampaign(dm: { uid: string; name: string; email:
     const bot = TEST_BOTS[i];
     const botUid = `bot-${campaignId}-${i + 1}`;
     const card = buildBotCard(botUid, campaignId, bot.classId, bot.name);
-    await saveCharacter(card);
+    // Write the member doc FIRST — the relaxed /characters create rule requires
+    // an existing member doc for the owner (rules see committed state), so this
+    // must precede saveCharacter(card).
     await setDoc(doc(membersCol(campaignId), botUid), {
       uid: botUid,
       name: bot.name,
@@ -131,6 +133,7 @@ export async function createTestCampaign(dm: { uid: string; name: string; email:
       joinedAt: serverTimestamp(),
     });
     await updateDoc(doc(campaignsCol, campaignId), { memberUids: arrayUnion(botUid) });
+    await saveCharacter(card);
   }
   return campaignId;
 }
