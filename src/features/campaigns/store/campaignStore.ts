@@ -6,6 +6,7 @@ import {
   subscribeCampaign,
   subscribeMembers,
   createCampaign,
+  createTestCampaign,
   joinCampaign,
   leaveCampaign,
   setMemberCharacter,
@@ -45,6 +46,8 @@ interface CampaignState {
   enter: (id: string) => void;
   exit: () => void;
   create: (input: CreateCampaignInput) => Promise<string | null>;
+  /** Create a real "Test Run" campaign seeded with the DM + 5 bot hunters. */
+  createTest: () => Promise<string | null>;
   join: (input: JoinCampaignInput) => Promise<string | null>;
   leave: (id: string, uid: string) => Promise<boolean>;
   pickCharacter: (uid: string, characterId: string | null) => Promise<boolean>;
@@ -161,6 +164,21 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
     create: async (input) => {
       if (get().preview) return previewCampaign().id;
       const id = await run(() => createCampaign(input), "Couldn't create the campaign.");
+      if (id) get().enter(id);
+      return id;
+    },
+
+    createTest: async () => {
+      if (get().preview) return previewCampaign().id;
+      const { user, member } = useAuthStore.getState();
+      if (!user) return null;
+      const name = member?.firstName
+        ? [member.firstName, member.lastName].filter(Boolean).join(" ")
+        : (user.displayName ?? "DM");
+      const id = await run(
+        () => createTestCampaign({ uid: user.uid, name, email: user.email ?? "" }),
+        "Couldn't create the test campaign.",
+      );
       if (id) get().enter(id);
       return id;
     },

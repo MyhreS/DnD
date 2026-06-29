@@ -20,6 +20,7 @@ import type {
   GamePhase,
   GameLocation,
   EncounterState,
+  HunterCard,
   InventoryEntry,
   LootPile,
 } from "@/types";
@@ -169,6 +170,27 @@ export async function joinGame(gameId: string, p: JoinInput): Promise<void> {
       lastSeen: serverTimestamp(),
     },
     { merge: true },
+  );
+}
+
+/** Seed a sandbox/"Test Run" campaign's bot hunters as participants when a game
+ * begins, so the lobby/play views look populated. Bots never act. */
+export async function seedSandboxParticipants(gameId: string, campaignId: string): Promise<void> {
+  const charsCol = collection(db, "characters");
+  const snap = await getDocs(query(charsCol, where("campaignId", "==", campaignId)));
+  await Promise.all(
+    snap.docs.map((d) => {
+      const c = d.data() as HunterCard;
+      if (!c.ownerUid?.startsWith("bot-") || !c.classId) return Promise.resolve();
+      return joinGame(gameId, {
+        uid: c.ownerUid,
+        name: c.name,
+        classId: c.classId,
+        subclassId: c.subclassId ?? null,
+        level: c.level,
+        role: "player",
+      });
+    }),
   );
 }
 

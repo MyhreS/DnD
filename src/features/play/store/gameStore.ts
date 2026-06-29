@@ -13,11 +13,13 @@ import {
   joinGame,
   leaveGame,
   purgeLoot,
+  seedSandboxParticipants,
   type CreateGameInput,
   type JoinInput,
 } from "@/api/games";
 import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { purgeArchive } from "@/api/players";
 
 type Status = "idle" | "loading" | "loaded" | "error";
@@ -187,7 +189,20 @@ export const useGameStore = create<GameState>((set, get) => {
         set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, status: "active", startedAt: Date.now() } : g)) }));
         return true;
       }
-      return (await run(() => startGame(gameId), "Couldn't begin the game.")) !== null;
+      const ok = (await run(() => startGame(gameId), "Couldn't begin the game.")) !== null;
+      if (ok) {
+        // A "Test Run" campaign auto-fills with its bot hunters so the table
+        // looks populated; bots never act.
+        const camp = useCampaignStore.getState().active;
+        if (camp?.sandbox) {
+          try {
+            await seedSandboxParticipants(gameId, camp.id);
+          } catch (err) {
+            console.error("Couldn't seed test bots", err);
+          }
+        }
+      }
+      return ok;
     },
 
     setPhase: async (gameId, phase) => {
