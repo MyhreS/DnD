@@ -144,7 +144,9 @@ service cloud.firestore {
     // doc (covered by the owner-write rule above).
     match /shopListings/{id} {
       allow read: if isMember(resource.data.campaignId);
-      allow create: if isCampaignDM(request.resource.data.campaignId);
+      allow create: if isCampaignDM(request.resource.data.campaignId)
+        && request.resource.data.priceGp is number
+        && request.resource.data.priceGp >= 0;
       allow update, delete: if isCampaignDM(resource.data.campaignId);
     }
 
@@ -157,10 +159,16 @@ service cloud.firestore {
       allow create: if isMember(request.resource.data.campaignId)
         && request.resource.data.sellerUid == request.auth.uid
         && request.resource.data.priceGp == null
-        && request.resource.data.status == "requested";
+        && request.resource.data.status == "requested"
+        && request.resource.data.qty is int
+        && request.resource.data.qty > 0;
       allow update: if isCampaignDM(resource.data.campaignId)
         || (request.auth.uid == resource.data.sellerUid
-            && request.resource.data.status == "declined");
+            && request.resource.data.status == "declined"
+            && request.resource.data.priceGp == resource.data.priceGp
+            && request.resource.data.itemId == resource.data.itemId
+            && request.resource.data.qty == resource.data.qty
+            && request.resource.data.characterId == resource.data.characterId);
       allow delete: if isCampaignDM(resource.data.campaignId);
     }
 

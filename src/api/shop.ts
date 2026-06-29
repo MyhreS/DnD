@@ -8,11 +8,11 @@ import {
   query,
   where,
   limit,
+  runTransaction,
   serverTimestamp,
   type Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import { patchCharacter } from "@/api/players";
 import type { HunterCard, InventoryEntry, ShopListing, SellRequest } from "@/types";
 
 // The DM's storefront + players' sell requests. Buying mutates the buyer's own
@@ -93,13 +93,20 @@ export async function removeListing(id: string): Promise<void> {
 }
 
 /** The BUYER spends their own coins on a listing: debit gold, add the item to
- * their inventory. Mutates the buyer's own /characters doc. Throws if broke. */
+ * their inventory. Runs in a transaction so rapid multi-buys can't lose updates
+ * (read fresh coins/inventory inside the tx, not from a stale snapshot). Mutates
+ * the buyer's own /characters doc. Throws if broke. */
 export async function buyListing(listing: ShopListing, card: HunterCard): Promise<void> {
-  const coins = card.coins ?? 0;
-  if (coins < listing.priceGp) throw new Error("Not enough gold");
-  await patchCharacter(card.id, {
-    coins: coins - listing.priceGp,
-    inventory: mergeInventory(card.inventory ?? [], [{ itemId: listing.itemId, qty: 1 }]),
+  const charRef = doc(db, "characters", card.id);
+  await runTransaction(db, async (tx) => {
+    const snap = await tx.get(charRef);
+    const data = (snap.data() ?? {}) as Partial<HunterCard>;
+    const coins = data.coins ?? 0;
+    if (coins < listing.priceGp) throw new Error("Not enough gold");
+    tx.update(charRef, {
+      coins: coins - listing.priceGp,
+      inventory: mergeInventory(data.inventory ?? [], [{ itemId: listing.itemId, qty: 1 }]),
+    });
   });
 }
 
@@ -170,16 +177,38 @@ export async function declineSellRequest(id: string): Promise<void> {
 }
 
 /** DM: approve a priced request — credit the seller's gold, remove the sold
- * item from their inventory, and settle the request. */
+ * item from their inventory, and settle the request, all in ONE transaction so
+ * the credit can never exceed what the seller still owns and a re-approve can't
+ * double-pay. Reads the request + seller's character fresh inside the tx:
+ *  - status must still be "priced" (else "Already settled" — idempotent);
+ *  - the credit/removal use the qty the seller *currently* owns (capped), so a
+ *    stale/duplicate request pays for nothing it can't deliver. */
 export async function approveSellRequest(req: SellRequest, sellerCard: HunterCard): Promise<void> {
-  if (req.priceGp == null) throw new Error("Set a price first");
-  await patchCharacter(sellerCard.id, {
-    coins: (sellerCard.coins ?? 0) + req.priceGp * req.qty,
-    inventory: removeFromInventory(sellerCard.inventory ?? [], req.itemId, req.qty),
-  });
-  await updateDoc(doc(sellRequestsCol, req.id), {
-    status: "approved",
-    updatedAt: serverTimestamp(),
-    settledAt: serverTimestamp(),
+  const reqRef = doc(sellRequestsCol, req.id);
+  const charRef = doc(db, "characters", sellerCard.id);
+  await runTransaction(db, async (tx) => {
+    const reqSnap = await tx.get(reqRef);
+    const charSnap = await tx.get(charRef);
+    const reqData = (reqSnap.data() ?? {}) as Partial<SellRequest>;
+    if (reqData.status !== "priced") throw new Error("Already settled");
+    const priceGp = reqData.priceGp;
+    if (typeof priceGp !== "number") throw new Error("Set a price first");
+
+    const charData = (charSnap.data() ?? {}) as Partial<HunterCard>;
+    const inventory = charData.inventory ?? [];
+    const owned = inventory.find((e) => e.itemId === reqData.itemId)?.qty ?? 0;
+    const sellQty = Math.min(reqData.qty ?? 0, owned);
+
+    if (sellQty <= 0) {
+      // Nothing left to sell — settle as declined, credit nothing.
+      tx.update(reqRef, { status: "declined", updatedAt: serverTimestamp() });
+      return;
+    }
+
+    tx.update(charRef, {
+      coins: (charData.coins ?? 0) + priceGp * sellQty,
+      inventory: removeFromInventory(inventory, reqData.itemId ?? "", sellQty),
+    });
+    tx.update(reqRef, { status: "approved", updatedAt: serverTimestamp(), settledAt: serverTimestamp() });
   });
 }
