@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { subscribeAllCharacters } from "@/api/players";
 import { useSettings } from "@/app/settings";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
+import { currentGame, useGameStore } from "@/features/play/store/gameStore";
 import type { HunterCard } from "@/types";
 import {
   SHOW,
@@ -70,6 +72,10 @@ function devForcedKind(): "solo" | "duel" | null {
 export function useFighterShows(): { show: Show | null; endShow: () => void } {
   const [show, setShow] = useState<Show | null>(null);
   const enabled = useSettings((s) => s.fighters);
+  // Never perform while a game is in progress: the party is playing, not idling.
+  const inGame = useGameStore(
+    (s) => currentGame(s.games, useCampaignStore.getState().activeId)?.status === "active",
+  );
   const huntersRef = useRef<Hunter[]>([]);
   const endRef = useRef<() => void>(() => {});
 
@@ -86,9 +92,13 @@ export function useFighterShows(): { show: Show | null; endShow: () => void } {
   );
 
   useEffect(() => {
-    // Turned off in Settings, or the user prefers reduced motion: never play,
-    // and stop any show that's currently on screen.
-    if (!enabled || window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    // Turned off in Settings, a game is in progress, or the user prefers reduced
+    // motion: never play, and stop any show that's currently on screen.
+    if (
+      !enabled ||
+      inGame ||
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
       setShow(null);
       return;
     }
@@ -127,7 +137,7 @@ export function useFighterShows(): { show: Show | null; endShow: () => void } {
       window.clearTimeout(restTimer);
       window.clearTimeout(capTimer);
     };
-  }, [enabled]);
+  }, [enabled, inGame]);
 
   const endShow = useCallback(() => endRef.current(), []);
   return { show, endShow };
