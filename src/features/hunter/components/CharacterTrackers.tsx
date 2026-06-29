@@ -18,16 +18,7 @@ export function CharacterTrackers({ card }: { card: HunterCard }) {
 
   return (
     <div className="card">
-      <div className="row between" style={{ marginBottom: 10 }}>
-        <p className="eyebrow" style={{ margin: 0 }}>Vitals · tracked in play</p>
-        <button
-          className="btn btn-ghost btn-sm"
-          style={{ width: "auto" }}
-          onClick={() => patch({ currentHp: hpMax })}
-        >
-          Long rest
-        </button>
-      </div>
+      <p className="eyebrow" style={{ margin: "0 0 10px" }}>Vitals · tracked in play</p>
 
       <Tracker
         label="Hit Points"

@@ -28,6 +28,10 @@ interface CharactersState {
   revive: (uid: string) => Promise<boolean>;
   /** DM: recover an archived character back into play. */
   recover: (a: ArchivedCharacter) => Promise<boolean>;
+  /** DM: write any field(s) on any character (insight award, vitals, …). Goes
+   * through patchCharacter — never the owner's playerStore — so the DM editing
+   * someone else's hunter doesn't clobber their own selected card. */
+  dmPatch: (id: string, partial: Partial<HunterCard>) => Promise<boolean>;
 }
 
 export const useCharactersStore = create<CharactersState>((set, get) => {
@@ -117,6 +121,14 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         return true;
       }
       return (await run(() => recoverCharacter(a), "Couldn't recover the character.")) !== null;
+    },
+
+    dmPatch: async (id, partial) => {
+      if (get().preview) {
+        set((s) => ({ party: s.party.map((c) => (c.id === id ? { ...c, ...partial } : c)) }));
+        return true;
+      }
+      return (await run(() => patchCharacter(id, partial), "Couldn't update the character.")) !== null;
     },
   };
 });

@@ -74,7 +74,7 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
       {!isDM && card && card.classId && card.name && (
         <>
           <CharacterTrackers card={card} />
-          <RestPanel card={card} phase={game.phase} />
+          <RestPanel card={card} phase={game.phase} location={game.location ?? "wild"} />
           <InventoryPanel card={card} editable />
           <TradePanel game={game} participants={participants} card={card} />
         </>
