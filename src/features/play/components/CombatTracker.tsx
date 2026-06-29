@@ -6,6 +6,7 @@ import { useCombatStore, initiativeOrder } from "../store/combatStore";
 import { useCombatSync } from "../hooks/useCombatSync";
 import { useCharactersSync } from "../hooks/useCharactersSync";
 import { useCharactersStore } from "../store/charactersStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { CombatantRow } from "./CombatantRow";
 import { AddMonsterForm } from "./AddMonsterForm";
 import type { Combatant, Game, GameParticipant } from "@/types";
@@ -26,6 +27,7 @@ export function CombatTracker({
   useCharactersSync();
   const combatants = useCombatStore((s) => s.combatants);
   const party = useCharactersStore((s) => s.party);
+  const members = useCampaignStore((s) => s.members);
   const startEncounter = useCombatStore((s) => s.startEncounter);
   const addMonster = useCombatStore((s) => s.addMonster);
   const patch = useCombatStore((s) => s.patch);
@@ -39,15 +41,19 @@ export function CombatTracker({
   const order = initiativeOrder(combatants);
   const activeId = game.combat?.turnId ?? order[0]?.id ?? null;
 
-  /** Seed PC combatants from the participants who brought a hunter. */
+  /** Seed PC combatants from each player participant's campaign character.
+   * Authoritative join: participant.uid → member.characterId → party card by id
+   * (party is the global /characters collection, so don't match by ownerUid). */
   function seedPcs() {
     const seen = new Set<string>();
     const pcs: { characterId: string; name: string; dexMod: number }[] = [];
     for (const pt of participants) {
       if (pt.role !== "player") continue;
-      const card = party.find((c) => c.ownerUid === pt.uid && !!c.classId);
-      if (!card || seen.has(card.id)) continue;
-      seen.add(card.id);
+      const characterId = members.find((m) => m.uid === pt.uid)?.characterId;
+      if (!characterId || seen.has(characterId)) continue;
+      const card = party.find((c) => c.id === characterId && !!c.classId);
+      if (!card) continue;
+      seen.add(characterId);
       pcs.push({ characterId: card.id, name: card.name, dexMod: initiativeMod(card.abilities) });
     }
     return pcs;

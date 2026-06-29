@@ -2,7 +2,7 @@ import {
   collection,
   doc,
   addDoc,
-  setDoc,
+  updateDoc,
   deleteDoc,
   getDocs,
   onSnapshot,
@@ -34,7 +34,9 @@ export async function patchCombatant(
   id: string,
   partial: Partial<Combatant>,
 ): Promise<void> {
-  await setDoc(doc(combatantsCol(gameId), id), partial, { merge: true });
+  // updateDoc (not setDoc/merge) so patching a concurrently-removed combatant
+  // fails instead of resurrecting a partial ghost doc.
+  await updateDoc(doc(combatantsCol(gameId), id), partial);
 }
 
 export async function removeCombatant(gameId: string, id: string): Promise<void> {

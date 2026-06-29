@@ -130,8 +130,10 @@ export const useCombatStore = create<CombatState>((set, get) => {
           await clearCombatants(gameId);
           await Promise.all(seeded.map((s) => addCombatant(gameId, s)));
         }, "Couldn't start the encounter.")) !== null;
-      // turnId is resolved by the tracker (top of initiative when null).
-      await setCombat(gameId, { active: true, round: 1, turnId: null });
+      // Only mark combat active if the combatant writes succeeded — else we'd
+      // leave the game "in combat" with no (or partial) combatants. turnId is
+      // resolved by the tracker (top of initiative when null).
+      if (ok) await setCombat(gameId, { active: true, round: 1, turnId: null });
       return ok;
     },
 
@@ -154,10 +156,10 @@ export const useCombatStore = create<CombatState>((set, get) => {
     },
 
     patch: async (gameId, id, partial) => {
-      if (get().preview) {
-        set((s) => ({ combatants: s.combatants.map((c) => (c.id === id ? { ...c, ...partial } : c)) }));
-        return true;
-      }
+      // Optimistic local echo so rapid taps read fresh state; the
+      // latency-compensated snapshot then confirms or corrects.
+      set((s) => ({ combatants: s.combatants.map((c) => (c.id === id ? { ...c, ...partial } : c)) }));
+      if (get().preview) return true;
       return (await run(() => patchCombatant(gameId, id, partial), "Couldn't update the combatant.")) !== null;
     },
 
@@ -170,9 +172,12 @@ export const useCombatStore = create<CombatState>((set, get) => {
     },
 
     toggleCondition: async (gameId, c, conditionId) => {
-      const conditions = c.conditions.includes(conditionId)
-        ? c.conditions.filter((x) => x !== conditionId)
-        : [...c.conditions, conditionId];
+      // Read the latest from the store (not the possibly-stale prop) so rapid
+      // toggles don't clobber each other.
+      const current = get().combatants.find((x) => x.id === c.id) ?? c;
+      const conditions = current.conditions.includes(conditionId)
+        ? current.conditions.filter((x) => x !== conditionId)
+        : [...current.conditions, conditionId];
       return get().patch(gameId, c.id, { conditions });
     },
 
@@ -200,7 +205,9 @@ export const useCombatStore = create<CombatState>((set, get) => {
         return true;
       }
       const ok = (await run(() => clearCombatants(gameId), "Couldn't end the encounter.")) !== null;
-      await setCombat(gameId, { active: false, round: 0, turnId: null });
+      // Keep combat marked active if the clear failed, so we never show
+      // "not in combat" while orphan combatants linger.
+      if (ok) await setCombat(gameId, { active: false, round: 0, turnId: null });
       return ok;
     },
   };

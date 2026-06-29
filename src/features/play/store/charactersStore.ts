@@ -19,6 +19,8 @@ interface CharactersState {
   preview: boolean;
   _unsubParty: (() => void) | null;
   _unsubArchive: (() => void) | null;
+  /** Mount count — multiple components share one subscription. */
+  _refs: number;
 
   sync: () => void;
   stop: () => void;
@@ -60,8 +62,10 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
     preview: false,
     _unsubParty: null,
     _unsubArchive: null,
+    _refs: 0,
 
     sync: () => {
+      set((s) => ({ _refs: s._refs + 1 }));
       if (get()._unsubParty || get().preview) return;
       if (isPreviewActive()) {
         set({ preview: true, party: previewPartyCards(), archive: previewArchive() });
@@ -75,7 +79,12 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
       set({ _unsubParty: unsubParty, _unsubArchive: unsubArchive });
     },
 
+    // Ref-counted: only tear down the shared subscription when the last
+    // consumer (DM board, combat tracker, …) unmounts.
     stop: () => {
+      const refs = Math.max(0, get()._refs - 1);
+      set({ _refs: refs });
+      if (refs > 0) return;
       get()._unsubParty?.();
       get()._unsubArchive?.();
       set({ _unsubParty: null, _unsubArchive: null });
