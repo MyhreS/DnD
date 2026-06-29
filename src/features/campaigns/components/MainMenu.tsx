@@ -6,6 +6,7 @@ import { useHunterCard } from "@/features/hunter/hooks/useHunterCard";
 import { AsyncButton } from "@/components/AsyncButton";
 import { Sigil } from "@/components/icons";
 import { useCampaignStore } from "../store/campaignStore";
+import { TestCampaignButton } from "./TestCampaignButton";
 import type { Campaign } from "@/types";
 
 /** The "main menu" home: your campaigns, your hunters, and the handbook. */
@@ -93,6 +94,7 @@ export function MainMenu() {
         <CreateCampaign />
         <JoinCampaign />
       </div>
+      <TestCampaignButton />
 
       <p className="eyebrow" style={{ marginTop: 22, marginBottom: 8 }}>Your hunters</p>
       <div className="card">

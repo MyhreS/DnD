@@ -382,6 +382,8 @@ export interface Campaign {
   memberUids: string[];
   /** Emails the DM has invited (lowercased); they see the invite in the menu. */
   invitedEmails: string[];
+  /** A "Test Run" campaign seeded with bot hunters so the DM can try the app. */
+  sandbox?: boolean;
   createdAt: number;
 }
 

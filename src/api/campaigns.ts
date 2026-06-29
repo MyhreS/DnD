@@ -16,7 +16,9 @@ import {
   type Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
-import type { Campaign, CampaignMember } from "@/types";
+import { emptyCard } from "@/lib/character";
+import { saveCharacter } from "@/api/players";
+import type { Campaign, CampaignMember, HunterCard } from "@/types";
 
 const campaignsCol = collection(db, "campaigns");
 
@@ -46,6 +48,7 @@ function toCampaign(id: string, data: Record<string, unknown>): Campaign {
     inviteCode: (data.inviteCode as string) ?? "",
     memberUids: (data.memberUids as string[]) ?? [],
     invitedEmails: (data.invitedEmails as string[]) ?? [],
+    sandbox: (data.sandbox as boolean) ?? false,
     createdAt: ms(data.createdAt),
   };
 }
@@ -59,6 +62,7 @@ export interface CreateCampaignInput {
   dmUid: string;
   dmName: string;
   dmEmail: string;
+  sandbox?: boolean;
 }
 
 export async function createCampaign(input: CreateCampaignInput): Promise<string> {
@@ -69,6 +73,7 @@ export async function createCampaign(input: CreateCampaignInput): Promise<string
     inviteCode: generateInviteCode(),
     memberUids: [input.dmUid],
     invitedEmails: [],
+    sandbox: input.sandbox ?? false,
     createdAt: serverTimestamp(),
   });
   await setDoc(doc(membersCol(ref.id), input.dmUid), {
@@ -80,6 +85,57 @@ export async function createCampaign(input: CreateCampaignInput): Promise<string
     joinedAt: serverTimestamp(),
   });
   return ref.id;
+}
+
+const TEST_BOTS: { classId: string; name: string }[] = [
+  { classId: "brute", name: "Bot · Brute" },
+  { classId: "scout", name: "Bot · Scout" },
+  { classId: "stalker", name: "Bot · Stalker" },
+  { classId: "deepcaller", name: "Bot · Deepcaller" },
+  { classId: "bloodbound", name: "Bot · Bloodbound" },
+];
+
+function buildBotCard(botUid: string, campaignId: string, classId: string, name: string): HunterCard {
+  return {
+    ...emptyCard({ ownerUid: botUid, email: "", displayName: name }),
+    name,
+    classId,
+    level: 3,
+    campaignId,
+    abilities: { str: 14, dex: 13, con: 13, int: 10, wis: 12, cha: 8 },
+  };
+}
+
+/** Create a real, playable "Test Run" campaign seeded with the DM + 5 bot hunters
+ * (they take no actions) so the DM can see how the populated app looks & plays.
+ * Requires the relaxed /characters create rule (campaign DM authors bot cards). */
+export async function createTestCampaign(dm: { uid: string; name: string; email: string }): Promise<string> {
+  const campaignId = await createCampaign({
+    name: "Test Run",
+    dmUid: dm.uid,
+    dmName: dm.name,
+    dmEmail: dm.email,
+    sandbox: true,
+  });
+  for (let i = 0; i < TEST_BOTS.length; i++) {
+    const bot = TEST_BOTS[i];
+    const botUid = `bot-${campaignId}-${i + 1}`;
+    const card = buildBotCard(botUid, campaignId, bot.classId, bot.name);
+    // Write the member doc FIRST — the relaxed /characters create rule requires
+    // an existing member doc for the owner (rules see committed state), so this
+    // must precede saveCharacter(card).
+    await setDoc(doc(membersCol(campaignId), botUid), {
+      uid: botUid,
+      name: bot.name,
+      email: "",
+      role: "player",
+      characterId: card.id,
+      joinedAt: serverTimestamp(),
+    });
+    await updateDoc(doc(campaignsCol, campaignId), { memberUids: arrayUnion(botUid) });
+    await saveCharacter(card);
+  }
+  return campaignId;
 }
 
 export interface JoinCampaignInput {

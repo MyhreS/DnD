@@ -8,6 +8,7 @@ import { sortUpcoming } from "@/data/sessions";
 import { usePartyData } from "../hooks/usePartyData";
 import { HunterRow } from "./HunterRow";
 import { RosterPanel } from "./RosterPanel";
+import { DMBuildHunter } from "./DMBuildHunter";
 import { exportPartyPdf } from "@/features/hunter/lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
 import { AsyncButton } from "@/components/AsyncButton";
@@ -71,6 +72,8 @@ export function PartyPage() {
         {error && <div className="banner banner-error">{error}</div>}
 
         {isDM && <div style={{ marginBottom: 12 }}><CampaignInvitePanel /></div>}
+
+        {isDM && activeId && <DMBuildHunter members={campaignMembers} campaignId={activeId} />}
 
         {oversight && (
           <RosterPanel
