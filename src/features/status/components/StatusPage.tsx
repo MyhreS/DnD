@@ -25,22 +25,24 @@ export function StatusPage() {
   const games = useGameStore((s) => s.games);
   const party = useCharactersStore((s) => s.party);
 
+  // Only a started game is "in play"; a queued lobby game shouldn't read as live.
   const game = currentGame(games, campaign?.id ?? null);
+  const liveGame = game && game.status === "active" ? game : null;
   const hunters = members
     .map((m) => party.find((c) => c.id === m.characterId))
     .filter((c): c is HunterCard => !!c && !!c.classId);
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--text)", padding: "clamp(16px, 3vw, 40px)" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)", padding: "clamp(16px, 3vw, 40px)" }}>
       <div className="row between" style={{ alignItems: "flex-start", marginBottom: 24, gap: 16 }}>
         <div style={{ minWidth: 0 }}>
           <p className="eyebrow">{campaign?.name ?? "Catacombs & Starspawns"}</p>
           <h1 style={{ fontSize: "clamp(2rem, 6vw, 4rem)", margin: 0, lineHeight: 1.05 }}>
-            {game ? PHASE_LABEL[game.phase] : "Between hunts"}
+            {liveGame ? PHASE_LABEL[liveGame.phase] : "Between hunts"}
           </h1>
-          {game && (
+          {liveGame && (
             <span className="chip" style={{ marginTop: 10, fontSize: "1rem" }}>
-              {LOCATION_LABEL[game.location ?? "wild"]}
+              {LOCATION_LABEL[liveGame.location ?? "wild"]}
             </span>
           )}
         </div>
@@ -62,6 +64,7 @@ export function StatusPage() {
             display: "grid",
             gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))",
             gap: 16,
+            alignItems: "start",
           }}
         >
           {hunters.map((c) => (
@@ -83,7 +86,7 @@ function VitalsCard({ card }: { card: HunterCard }) {
   const transform = card.transformationLevel ?? 0;
 
   return (
-    <div className="card" style={{ opacity: dead ? 0.55 : 1, borderColor: dead ? "var(--blood-bright)" : undefined }}>
+    <div className="card" style={{ marginTop: 0, opacity: dead ? 0.55 : 1, borderColor: dead ? "var(--blood-bright)" : undefined }}>
       <div className="row between" style={{ marginBottom: 10, gap: 8 }}>
         <div style={{ minWidth: 0 }}>
           <div style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
