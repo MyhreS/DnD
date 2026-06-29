@@ -3,7 +3,8 @@ import { maxHp, maxSanity } from "@/lib/character";
 import { usePlayerStore } from "../store/playerStore";
 import type { HunterCard } from "@/types";
 
-/** Live, editable play trackers: HP, Sanity, Blood Tinge. Saved on change. */
+/** Live, editable play trackers: HP, Sanity (with derived Madness),
+ * Transformation, Blood Tinge. Saved on change. */
 export function CharacterTrackers({ card }: { card: HunterCard }) {
   const save = usePlayerStore((s) => s.save);
   const klass = getClass(card.classId);
@@ -31,11 +32,18 @@ export function CharacterTrackers({ card }: { card: HunterCard }) {
       />
       <Tracker
         label="Sanity"
-        sub="Suffer Madness → lose Sanity"
+        sub={`Madness ${Math.max(0, sanMax - san)}`}
         value={san}
         max={sanMax}
         color="#7c5cff"
         onChange={(v) => patch({ sanity: Math.max(0, Math.min(sanMax, v)) })}
+      />
+      <Tracker
+        label="Transformation"
+        sub="Short rest −1 · Long rest clears all"
+        value={card.transformationLevel ?? 0}
+        color="#c9962f"
+        onChange={(v) => patch({ transformationLevel: Math.max(0, v) })}
       />
 
       <div className="row between" style={{ padding: "10px 0 2px" }}>
