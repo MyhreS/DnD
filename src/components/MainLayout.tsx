@@ -13,6 +13,7 @@ export function MainLayout() {
           <NavLink to="/" end>Menu</NavLink>
           <NavLink to="/character">Hunters</NavLink>
           <NavLink to="/handbook">Handbook</NavLink>
+          <NavLink to="/reference">Reference</NavLink>
         </>
       }
     />

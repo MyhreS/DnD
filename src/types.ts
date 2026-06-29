@@ -171,6 +171,26 @@ export interface HandbookChapter {
   sections: HandbookSection[];
 }
 
+// --- Rules reference (searchable 5e 2024 glossary) ---
+
+export type RuleCategory =
+  | "Condition"
+  | "Action"
+  | "Combat"
+  | "Damage & Healing"
+  | "General";
+
+/** One searchable rules-glossary entry. */
+export interface RuleEntry {
+  id: string;
+  term: string;
+  category: RuleCategory;
+  /** Alternative search terms (synonyms, related keywords). */
+  aliases?: string[];
+  /** Body paragraphs / bullet lines. */
+  body: string[];
+}
+
 // --- Live games (Play mode) ---
 
 export type GameStatus = "lobby" | "active" | "ended";
