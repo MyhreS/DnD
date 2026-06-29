@@ -3,7 +3,8 @@ import { maxHp, maxSanity } from "@/lib/character";
 import { usePlayerStore } from "../store/playerStore";
 import type { HunterCard } from "@/types";
 
-/** Live, editable play trackers: HP, Sanity, Blood Tinge. Saved on change. */
+/** Live, editable play trackers: HP, Sanity (with derived Madness),
+ * Transformation, Blood Tinge. Saved on change. */
 export function CharacterTrackers({ card }: { card: HunterCard }) {
   const save = usePlayerStore((s) => s.save);
   const klass = getClass(card.classId);
