@@ -9,6 +9,7 @@ import {
   query,
   where,
   serverTimestamp,
+  increment,
   type Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -35,6 +36,12 @@ export async function saveCharacter(card: HunterCard): Promise<void> {
 /** Merge a partial update into a character (owner edits own; DM edits any). */
 export async function patchCharacter(id: string, partial: Partial<HunterCard>): Promise<void> {
   await setDoc(doc(charsCol, id), partial, { merge: true });
+}
+
+/** Atomically add (or subtract) Insight — DM award. Uses a server-side increment
+ * so rapid taps never lose updates the way an absolute write would. */
+export async function awardInsight(id: string, delta: number): Promise<void> {
+  await setDoc(doc(charsCol, id), { insight: increment(delta) }, { merge: true });
 }
 
 /** Live-subscribe to all characters a user owns. */

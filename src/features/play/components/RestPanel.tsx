@@ -1,42 +1,117 @@
+import { useState } from "react";
 import { getClass } from "@/data/classes";
-import { maxHp } from "@/lib/character";
+import { earnedLevel, isLevelUpPending } from "@/lib/character";
+import {
+  applyLongRest,
+  applyShortRest,
+  canSpendHitDice,
+  restoresFullHp,
+  type LongRestOutcome,
+  type ShortRestOutcome,
+} from "@/lib/rest";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { AsyncButton } from "@/components/AsyncButton";
-import type { GamePhase, HunterCard } from "@/types";
+import { LOCATION_LABEL } from "../lib/phase";
+import type { GameLocation, GamePhase, HunterCard } from "@/types";
 
-/** Shown to a player when the DM calls a rest. Short rest heals half your max
- * HP; long rest restores you to full. (Self-hides outside a rest phase.) */
-export function RestPanel({ card, phase }: { card: HunterCard; phase: GamePhase }) {
+/** Shown to a player when the DM calls a rest. Rulebook-accurate and
+ * location-aware: Hit Dice/HP recovery depends on the Safe Zone / Hunters Lodge,
+ * the Sanity Die is rolled, Transformation is cleared, and a pending Insight
+ * level-up is applied — a level only takes effect after a Long Rest. */
+export function RestPanel({
+  card,
+  phase,
+  location,
+}: {
+  card: HunterCard;
+  phase: GamePhase;
+  location: GameLocation;
+}) {
   const save = usePlayerStore((s) => s.save);
   const klass = getClass(card.classId);
+  const [done, setDone] = useState<string | null>(null);
   if ((phase !== "short_rest" && phase !== "long_rest") || !klass) return null;
 
-  const hpMax = maxHp(klass, card.abilities, card.level);
-  const hp = card.currentHp ?? hpMax;
   const isLong = phase === "long_rest";
-  const restedHp = isLong ? hpMax : Math.min(hpMax, hp + Math.ceil(hpMax / 2));
-  const atFull = hp >= hpMax;
+  const inLodge = restoresFullHp(location);
+  const safe = canSpendHitDice(location);
+  const earned = earnedLevel(card);
+  const pendingLevel = isLevelUpPending(card);
+
+  async function takeRest() {
+    if (!klass) return;
+    if (isLong) {
+      const r = applyLongRest(card, klass, location);
+      await save({ ...card, ...r.patch });
+      setDone(longSummary(r));
+    } else {
+      const r = applyShortRest(card, klass, location);
+      await save({ ...card, ...r.patch });
+      setDone(shortSummary(r));
+    }
+  }
+
+  const lines = isLong
+    ? [
+        inLodge
+          ? "Restore all Hit Points (Hunters Lodge)."
+          : "Recover half your HP maximum (you're not in the Hunters Lodge).",
+        `Roll your Sanity Die (d${klass.sanityDie} + WIS) to recover Sanity.`,
+        "Clear all Transformation Levels.",
+        ...(pendingLevel ? [`Level up to ${earned}.`] : []),
+      ]
+    : [
+        safe
+          ? "Spend Hit Dice (up to your Proficiency Bonus) to heal."
+          : "No Hit Dice — you can only spend them in a Safe Zone.",
+        "Remove 1 Transformation Level.",
+      ];
 
   return (
     <div className="card" style={{ borderColor: "var(--gold-dim)" }}>
-      <p className="eyebrow" style={{ marginBottom: 6 }}>{isLong ? "Long Rest" : "Short Rest"}</p>
-      <p className="muted" style={{ marginTop: 0, fontSize: "0.92rem" }}>
-        {isLong
-          ? "The party beds down. Recover to full Hit Points and reset your per-rest abilities."
-          : "The party catches its breath. Recover some Hit Points and short-rest abilities."}
-      </p>
-      {atFull ? (
-        <p className="faint" style={{ fontSize: "0.86rem", margin: 0 }}>You're already at full HP ({hp}/{hpMax}).</p>
+      <div className="row between" style={{ marginBottom: 6 }}>
+        <p className="eyebrow" style={{ margin: 0 }}>{isLong ? "Long Rest" : "Short Rest"}</p>
+        <span className="chip" style={{ flex: "none" }}>{LOCATION_LABEL[location]}</span>
+      </div>
+      {done ? (
+        <p className="faint" style={{ fontSize: "0.84rem", margin: 0 }}>{done}</p>
       ) : (
-        <AsyncButton
-          className="btn btn-primary"
-          pendingText="Resting…"
-          showDone={false}
-          onClick={() => save({ ...card, currentHp: restedHp })}
-        >
-          Take the {isLong ? "long" : "short"} rest · HP {hp} → {restedHp}
-        </AsyncButton>
+        <>
+          <ul className="muted" style={{ margin: "0 0 12px", paddingLeft: 18, fontSize: "0.9rem" }}>
+            {lines.map((l) => (
+              <li key={l}>{l}</li>
+            ))}
+          </ul>
+          <AsyncButton
+            className="btn btn-primary"
+            pendingText="Resting…"
+            showDone={false}
+            onClick={takeRest}
+          >
+            Take the {isLong ? "long" : "short"} rest
+          </AsyncButton>
+        </>
       )}
     </div>
   );
+}
+
+function longSummary(r: LongRestOutcome): string {
+  const parts = [
+    `HP ${r.hpFrom} → ${r.hpTo}`,
+    `Sanity ${r.sanityFrom} → ${r.sanityTo} (rolled ${r.sanityRoll})`,
+  ];
+  if (r.transformationCleared > 0) parts.push(`cleared ${r.transformationCleared} Transformation`);
+  if (r.leveledTo) parts.push(`leveled up to ${r.leveledTo}!`);
+  return `Rested — ${parts.join(" · ")}.`;
+}
+
+function shortSummary(r: ShortRestOutcome): string {
+  const parts = r.canSpendHitDice
+    ? [`HP ${r.hpFrom} → ${r.hpTo} (${r.hitDiceRolled} Hit Dice)`]
+    : ["no Hit Dice — not in a Safe Zone"];
+  if (r.transformationFrom !== r.transformationTo) {
+    parts.push(`Transformation ${r.transformationFrom} → ${r.transformationTo}`);
+  }
+  return `Rested — ${parts.join(" · ")}.`;
 }

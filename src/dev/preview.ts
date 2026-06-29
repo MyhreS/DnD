@@ -220,6 +220,8 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     mainArmorId: "hunter-leather-coat",
     currentHp: 22,
     sanity: 9,
+    transformationLevel: 2,
+    insight: 60,
     bloodTinge: true,
     preparedWhispers: [],
     coins: 25,

@@ -77,6 +77,16 @@ export function insightToNext(
   return { nextLevel: earned + 1, remaining: INSIGHT_THRESHOLDS[earned] - insight };
 }
 
+/** The highest level a card's Insight has earned (1–20). */
+export function earnedLevel(card: Pick<HunterCard, "insight">): number {
+  return levelForInsight(card.insight ?? 0);
+}
+
+/** Whether a level-up is owed. Per the rulebook it only applies after a Long Rest. */
+export function isLevelUpPending(card: Pick<HunterCard, "insight" | "level">): boolean {
+  return earnedLevel(card) > card.level;
+}
+
 /** Initiative modifier (Dexterity), per the handbook. */
 export function initiativeMod(abilities: AbilityScores): number {
   return abilityModifier(abilities.dex);
