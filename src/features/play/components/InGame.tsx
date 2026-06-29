@@ -74,7 +74,9 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
       {!isDM && card && card.classId && card.name && (
         <>
           <CharacterTrackers card={card} />
-          <RestPanel card={card} phase={game.phase} location={game.location ?? "wild"} />
+          {/* key on phase so each rest event gets a fresh panel — resets the
+              once-per-rest guard when the DM moves between phases. */}
+          <RestPanel key={game.phase} card={card} phase={game.phase} location={game.location ?? "wild"} />
           <InventoryPanel card={card} editable />
           <TradePanel game={game} participants={participants} card={card} />
         </>
