@@ -257,8 +257,9 @@ export interface Trade {
   settledAt?: number | null;
 }
 
-/** Items dropped by a dead hunter, claimable by others until the session ends.
- * Lives at /games/{gameId}/loot/{id}. */
+/** Items on the shared loot pile, claimable by others until the session ends.
+ * Lives at /games/{gameId}/loot/{id}. Either a fallen hunter's remains or an
+ * item a living hunter chose to drop (`dropped`). */
 export interface LootPile {
   id: string;
   fromUid: string;
@@ -266,6 +267,8 @@ export interface LootPile {
   items: InventoryEntry[];
   coins: number;
   status: "unclaimed" | "claimed";
+  /** True when a living hunter dropped this (vs. a fallen hunter's remains). */
+  dropped?: boolean;
   claimedByUid?: string | null;
   claimedByName?: string | null;
   createdAt: number;

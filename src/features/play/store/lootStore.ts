@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import type { HunterCard, InventoryEntry, LootPile } from "@/types";
-import { subscribeLoot, claimLoot } from "@/api/games";
+import { subscribeLoot, claimLoot, createLoot } from "@/api/games";
 import { patchCharacter } from "@/api/players";
 import { isPreviewActive, previewLoot } from "@/dev/preview";
 
@@ -22,6 +22,9 @@ interface LootState {
   sync: (gameId: string | null) => void;
   stop: () => void;
   claim: (loot: LootPile, myCard: HunterCard, gameId: string) => Promise<boolean>;
+  /** Drop one item stack from your own inventory onto the shared loot pile so
+   * another hunter can claim it. */
+  drop: (entry: InventoryEntry, myCard: HunterCard, gameId: string) => Promise<boolean>;
 }
 
 export const useLootStore = create<LootState>((set, get) => ({
@@ -79,6 +82,49 @@ export const useLootStore = create<LootState>((set, get) => ({
     } catch (err) {
       console.error("Couldn't claim loot", err);
       set({ busy: false, error: "Couldn't claim that loot." });
+      return false;
+    }
+  },
+
+  drop: async (entry, myCard, gameId) => {
+    if (get().preview) {
+      set((s) => ({
+        loot: [
+          {
+            id: `drop-${entry.itemId}-${Date.now()}`,
+            fromUid: myCard.ownerUid,
+            fromName: myCard.name,
+            items: [entry],
+            coins: 0,
+            status: "unclaimed",
+            dropped: true,
+            claimedByUid: null,
+            claimedByName: null,
+            createdAt: Date.now(),
+          },
+          ...s.loot,
+        ],
+      }));
+      return true;
+    }
+    set({ busy: true, error: null });
+    try {
+      // Create the pile first, then remove from inventory — a duplicate is
+      // recoverable, a lost item is not.
+      await createLoot(gameId, {
+        fromUid: myCard.ownerUid,
+        fromName: myCard.name,
+        items: [entry],
+        coins: 0,
+        dropped: true,
+      });
+      const inventory = (myCard.inventory ?? []).filter((e) => e.itemId !== entry.itemId);
+      await patchCharacter(myCard.id, { inventory });
+      set({ busy: false });
+      return true;
+    } catch (err) {
+      console.error("Couldn't drop item", err);
+      set({ busy: false, error: "Couldn't drop that item." });
       return false;
     }
   },

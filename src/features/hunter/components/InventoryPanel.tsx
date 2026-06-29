@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { HunterCard, InventoryEntry, ItemCategory } from "@/types";
 import { ITEMS, ITEM_CATEGORIES } from "@/data/items";
 import { resolveInventory, groupByCarry, totalWeight, carryCondition } from "@/lib/inventory";
+import { AsyncButton } from "@/components/AsyncButton";
 import { usePlayerStore } from "../store/playerStore";
 
 /** A hunter's carried gear + coins. Editable on your own character (menu + in
@@ -12,10 +13,15 @@ export function InventoryPanel({
   card,
   editable = false,
   onPatch,
+  onDrop,
 }: {
   card: HunterCard;
   editable?: boolean;
   onPatch?: (partial: Partial<HunterCard>) => void;
+  /** When set, each item gets a "Drop" action (pushes the stack to the shared
+   * loot pile). Only wired in-game for the owner. Returns a promise so the
+   * button can block double-submits during the round-trip. */
+  onDrop?: (entry: InventoryEntry) => Promise<unknown> | void;
 }) {
   const playerSave = usePlayerStore((s) => s.save);
   const [adding, setAdding] = useState(false);
@@ -71,10 +77,19 @@ export function InventoryPanel({
                     {item.category} · {item.weightLb} lb{item.unique ? " · unique" : ""}
                   </div>
                 </div>
-                {editable && (
+                {(editable || onDrop) && (
                   <div className="row" style={{ gap: 6, flex: "none" }}>
-                    <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label={`remove one ${item.name}`} onClick={() => bump(item.id, -1)}>−</button>
-                    <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label={`add one ${item.name}`} onClick={() => bump(item.id, 1)}>+</button>
+                    {editable && (
+                      <>
+                        <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label={`remove one ${item.name}`} onClick={() => bump(item.id, -1)}>−</button>
+                        <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label={`add one ${item.name}`} onClick={() => bump(item.id, 1)}>+</button>
+                      </>
+                    )}
+                    {onDrop && (
+                      <AsyncButton className="btn btn-ghost btn-sm" style={{ width: "auto", padding: "4px 8px" }} pendingText="…" showDone={false} onClick={() => onDrop({ itemId: item.id, qty })}>
+                        Drop
+                      </AsyncButton>
+                    )}
                   </div>
                 )}
               </div>
