@@ -61,7 +61,7 @@ export interface FighterConfig {
 
 // All share the same rig/scale; only model, loadout, attack flavour + theme
 // differ. yOffset is a small vertical nudge on top of the auto ground placement.
-const SCALE = 1.7;
+const SCALE = 0.85;
 const Y_OFFSET = 0;
 
 // Shared clip vocabulary — every KayKit Adventurer GLB carries the same 76-clip
@@ -175,10 +175,10 @@ export const randomFighter = (): FighterConfig => randomOf(FIGHTERS);
 // canvas is then torn down for a quiet rest (zero GPU cost) before the next one.
 export const SHOW = {
   /** Let first paint settle before the very first show. */
-  firstDelayMs: 6_000,
-  /** Quiet gap between shows (randomised in this range) — roughly 1–2 minutes. */
-  restMinMs: 60_000,
-  restMaxMs: 130_000,
+  firstDelayMs: 15_000,
+  /** Quiet gap between shows (randomised in this range) — roughly 3–6 minutes. */
+  restMinMs: 180_000,
+  restMaxMs: 360_000,
   /** Safety cap: end the show even if choreography never signals done. */
   maxMs: 60_000,
   /** Probability a given show is a two-fighter duel (vs. a solo hero show). */
