@@ -183,12 +183,15 @@ export interface LootInput {
   fromName: string;
   items: InventoryEntry[];
   coins: number;
+  /** True when a living hunter dropped this (vs. a fallen hunter's remains). */
+  dropped?: boolean;
 }
 
 export async function createLoot(gameId: string, pile: LootInput): Promise<void> {
   if (pile.items.length === 0 && pile.coins <= 0) return; // nothing to drop
   await addDoc(lootCol(gameId), {
     ...pile,
+    dropped: pile.dropped ?? false,
     status: "unclaimed",
     claimedByUid: null,
     claimedByName: null,
@@ -231,6 +234,7 @@ export function subscribeLoot(
             items: (data.items as InventoryEntry[]) ?? [],
             coins: (data.coins as number) ?? 0,
             status: (data.status as LootPile["status"]) ?? "unclaimed",
+            dropped: (data.dropped as boolean) ?? false,
             claimedByUid: (data.claimedByUid as string | null) ?? null,
             claimedByName: (data.claimedByName as string | null) ?? null,
             createdAt: ms(data.createdAt),

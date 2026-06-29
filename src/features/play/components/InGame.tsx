@@ -79,7 +79,7 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
           {/* key on phase so each rest event gets a fresh panel — resets the
               once-per-rest guard when the DM moves between phases. */}
           <RestPanel key={game.phase} card={card} phase={game.phase} location={game.location ?? "wild"} />
-          <InventoryPanel card={card} editable onDrop={(entry) => void dropItem(entry, card, game.id)} />
+          <InventoryPanel card={card} editable onDrop={(entry) => dropItem(entry, card, game.id)} />
           <TradePanel game={game} participants={participants} card={card} />
         </>
       )}

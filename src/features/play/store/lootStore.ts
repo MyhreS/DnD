@@ -97,6 +97,7 @@ export const useLootStore = create<LootState>((set, get) => ({
             items: [entry],
             coins: 0,
             status: "unclaimed",
+            dropped: true,
             claimedByUid: null,
             claimedByName: null,
             createdAt: Date.now(),
@@ -115,6 +116,7 @@ export const useLootStore = create<LootState>((set, get) => ({
         fromName: myCard.name,
         items: [entry],
         coins: 0,
+        dropped: true,
       });
       const inventory = (myCard.inventory ?? []).filter((e) => e.itemId !== entry.itemId);
       await patchCharacter(myCard.id, { inventory });
