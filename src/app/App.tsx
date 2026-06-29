@@ -17,6 +17,7 @@ import { PartyPage } from "@/features/party/components/PartyPage";
 import { HandbookPage } from "@/features/handbook/components/HandbookPage";
 import { ProfilePage } from "@/features/profile/components/ProfilePage";
 import { StatusPage } from "@/features/status/components/StatusPage";
+import { RulesReferencePage } from "@/features/rules-reference/components/RulesReferencePage";
 
 function AuthedApp() {
   useCampaignSync();
@@ -27,6 +28,7 @@ function AuthedApp() {
         <Route path="/" element={<MainMenu />} />
         <Route path="character" element={<CharacterPage />} />
         <Route path="handbook" element={<HandbookPage />} />
+        <Route path="reference" element={<RulesReferencePage />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
       {/* Campaign: gated on an active campaign by CampaignLayout. */}
@@ -59,6 +61,7 @@ export default function App() {
         <Route element={<PublicLayout />}>
           <Route index element={<Landing />} />
           <Route path="handbook" element={<HandbookPage />} />
+          <Route path="reference" element={<RulesReferencePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>
