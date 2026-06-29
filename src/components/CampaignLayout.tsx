@@ -31,6 +31,7 @@ export function CampaignLayout() {
           <NavLink to="/play">Play</NavLink>
           <NavLink to="/sessions">Sessions</NavLink>
           <NavLink to="/party">Party</NavLink>
+          <NavLink to="/shop">Shop</NavLink>
           <NavLink to="/hunter">Hunter</NavLink>
           <NavLink to="/" end className="nav-back">
             <ChevronIcon width={15} height={15} className="icon-flip" />

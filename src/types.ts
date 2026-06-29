@@ -334,6 +334,41 @@ export interface ArchivedCharacter {
   card: HunterCard;
 }
 
+// --- Shop (the DM's per-campaign storefront) ---
+
+/** One catalog item the DM has stocked for sale, at a GP price. Lives in the
+ * top-level /shopListings collection, scoped by campaignId. Infinite stock. */
+export interface ShopListing {
+  id: string;
+  campaignId: string;
+  /** Catalog item id (see src/data/items.ts). */
+  itemId: string;
+  priceGp: number;
+  /** The DM uid who stocked it. */
+  createdBy: string;
+  createdAt: number;
+}
+
+/** A player's request to sell an item back to the shop. The DM must enter a
+ * price before it can be approved (which credits the seller's gold). Lives in
+ * the top-level /sellRequests collection, scoped by campaignId. */
+export interface SellRequest {
+  id: string;
+  campaignId: string;
+  sellerUid: string;
+  sellerName: string;
+  /** The seller's character to debit the item from / credit the gold to. */
+  characterId: string;
+  itemId: string;
+  qty: number;
+  /** Set by the DM; null until priced. The gate on approval. */
+  priceGp: number | null;
+  status: "requested" | "priced" | "approved" | "declined";
+  createdAt: number;
+  updatedAt: number;
+  settledAt?: number | null;
+}
+
 // --- Campaigns (a "server"/party you create or join) ---
 
 export interface Campaign {

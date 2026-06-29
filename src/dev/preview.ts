@@ -190,6 +190,53 @@ export function previewArchive(): import("@/types").ArchivedCharacter[] {
   ];
 }
 
+/** Sample storefront listings so the shop renders populated in preview mode. */
+export function previewShopListings(): import("@/types").ShopListing[] {
+  const now = Date.now();
+  return [
+    { id: "preview-listing-1", campaignId: "preview-campaign", itemId: "blood-vial", priceGp: 8, createdBy: "preview-dm", createdAt: now },
+    { id: "preview-listing-2", campaignId: "preview-campaign", itemId: "bullets", priceGp: 5, createdBy: "preview-dm", createdAt: now - 1 },
+    { id: "preview-listing-3", campaignId: "preview-campaign", itemId: "rope", priceGp: 12, createdBy: "preview-dm", createdAt: now - 2 },
+    { id: "preview-listing-4", campaignId: "preview-campaign", itemId: "lantern", priceGp: 18, createdBy: "preview-dm", createdAt: now - 3 },
+  ];
+}
+
+/** Sample sell requests (one awaiting a price, one priced) so the sell UI
+ * renders for both the player (their own request) and the DM (the queue). */
+export function previewSellRequests(): import("@/types").SellRequest[] {
+  const now = Date.now();
+  return [
+    {
+      id: "preview-sell-1",
+      campaignId: "preview-campaign",
+      sellerUid: "preview-uid",
+      sellerName: "Eileen the Crow",
+      characterId: "preview-uid-char",
+      itemId: "blood-vial",
+      qty: 2,
+      priceGp: null,
+      status: "requested",
+      createdAt: now,
+      updatedAt: now,
+      settledAt: null,
+    },
+    {
+      id: "preview-sell-2",
+      campaignId: "preview-campaign",
+      sellerUid: "preview-p2",
+      sellerName: "Gascoigne",
+      characterId: "preview-p2-char",
+      itemId: "greataxe",
+      qty: 1,
+      priceGp: 15,
+      status: "priced",
+      createdAt: now - 1,
+      updatedAt: now - 1,
+      settledAt: null,
+    },
+  ];
+}
+
 /** A sample incoming trade so the trade UI renders in preview mode. */
 export function previewTrades(): import("@/types").Trade[] {
   const now = Date.now();
