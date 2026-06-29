@@ -176,6 +176,10 @@ export interface HandbookChapter {
 export type GameStatus = "lobby" | "active" | "ended";
 /** The DM-set phase while a game is active. */
 export type GamePhase = "exploration" | "combat" | "short_rest" | "long_rest";
+/** Where the party is — orthogonal to phase, and the input that makes rests
+ * rulebook-accurate: Hunters Lodge = full Long Rest (HP + Hit Dice); a Safe Zone
+ * = spend Hit Dice on a Short Rest (and a half Long Rest); the Wild = neither. */
+export type GameLocation = "lodge" | "safe" | "wild";
 
 export interface Game {
   id: string;
@@ -189,6 +193,8 @@ export interface Game {
   status: GameStatus;
   /** Current phase (meaningful while active). */
   phase: GamePhase;
+  /** Current location/safety (drives rest math). Defaults to "wild". */
+  location?: GameLocation;
   /** Test-run game — hidden from real views and auto-cleaned. */
   sandbox?: boolean;
   createdAt: number;
@@ -196,6 +202,8 @@ export interface Game {
   endedAt?: number | null;
   /** Phase recorded when the DM stopped the game. */
   endedPhase?: GamePhase | null;
+  /** Location recorded when the DM stopped the game. */
+  endedLocation?: GameLocation | null;
 }
 
 /** A member present in a game's lobby / session (a denormalised snapshot). */
@@ -378,8 +386,15 @@ export interface HunterCard {
   mainArmorId: string | null;
   /** Current hit points during play (defaults to max when unset). */
   currentHp?: number;
-  /** Current Sanity during play (defaults to max when unset). */
+  /** Current Sanity during play (defaults to max when unset). Madness is the
+   * complement: madness = maxSanity − sanity. */
   sanity?: number;
+  /** Transformation Level (starts 0). A Short Rest removes 1; a Long Rest clears
+   * all. Each gain is resolved by the DM against the Transformation Table. */
+  transformationLevel?: number;
+  /** Insight — the rulebook's XP currency, awarded by the DM. Crossing a
+   * threshold only raises `level` after a Long Rest (see levelForInsight). */
+  insight?: number;
   /** Blood Tinge — the C&S take on heroic inspiration. */
   bloodTinge?: boolean;
   /** Deepcaller: prepared Whispers / known rites, by rite id. */

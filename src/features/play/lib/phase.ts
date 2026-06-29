@@ -1,4 +1,4 @@
-import type { GamePhase } from "@/types";
+import type { GamePhase, GameLocation } from "@/types";
 
 export const PHASES: { id: GamePhase; label: string; hint: string }[] = [
   { id: "exploration", label: "Exploration", hint: "Roaming, investigating, roleplay." },
@@ -9,5 +9,17 @@ export const PHASES: { id: GamePhase; label: string; hint: string }[] = [
 
 export const PHASE_LABEL = Object.fromEntries(PHASES.map((p) => [p.id, p.label])) as Record<
   GamePhase,
+  string
+>;
+
+/** Where the party is — orthogonal to phase, and what makes rests rulebook-accurate. */
+export const LOCATIONS: { id: GameLocation; label: string; hint: string }[] = [
+  { id: "wild", label: "The Wild", hint: "Out on the hunt — no Hit Dice on a Short Rest; a Long Rest restores only half HP." },
+  { id: "safe", label: "Safe Zone", hint: "Safe enough to catch a breath — spend Hit Dice on a Short Rest." },
+  { id: "lodge", label: "Hunters Lodge", hint: "A true haven — a Long Rest restores all HP and Hit Dice." },
+];
+
+export const LOCATION_LABEL = Object.fromEntries(LOCATIONS.map((l) => [l.id, l.label])) as Record<
+  GameLocation,
   string
 >;

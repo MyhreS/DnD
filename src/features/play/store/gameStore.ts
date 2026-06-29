@@ -1,11 +1,12 @@
 import { create } from "zustand";
-import type { Game, GameParticipant, GamePhase } from "@/types";
+import type { Game, GameParticipant, GamePhase, GameLocation } from "@/types";
 import {
   subscribeGames,
   subscribeParticipants,
   createGame,
   startGame,
   setGamePhase,
+  setGameLocation,
   endGame,
   deleteGame,
   joinGame,
@@ -53,7 +54,8 @@ interface GameState {
   hostGame: (input: CreateGameInput) => Promise<string | null>;
   begin: (gameId: string) => Promise<boolean>;
   setPhase: (gameId: string, phase: GamePhase) => Promise<boolean>;
-  stop: (gameId: string, endedPhase: GamePhase) => Promise<boolean>;
+  setLocation: (gameId: string, location: GameLocation) => Promise<boolean>;
+  stop: (gameId: string, endedPhase: GamePhase, endedLocation?: GameLocation) => Promise<boolean>;
   join: (gameId: string, p: JoinInput) => Promise<boolean>;
   leave: (gameId: string, uid: string) => Promise<boolean>;
   remove: (gameId: string) => Promise<boolean>;
@@ -194,16 +196,30 @@ export const useGameStore = create<GameState>((set, get) => {
       return (await run(() => setGamePhase(gameId, phase), "Couldn't change the phase.")) !== null;
     },
 
-    stop: async (gameId, endedPhase) => {
+    setLocation: async (gameId, location) => {
       if (get().preview) {
-        set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, status: "ended", endedPhase } : g)) }));
+        set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, location } : g)) }));
+        return true;
+      }
+      return (
+        (await run(() => setGameLocation(gameId, location), "Couldn't change the location.")) !== null
+      );
+    },
+
+    stop: async (gameId, endedPhase, endedLocation) => {
+      if (get().preview) {
+        set((s) => ({
+          games: s.games.map((g) =>
+            g.id === gameId ? { ...g, status: "ended", endedPhase, endedLocation: endedLocation ?? null } : g,
+          ),
+        }));
         return true;
       }
       // Ending a game purges archived (dead/deleted) characters so they don't
       // pile up between sessions.
       return (
         (await run(async () => {
-          await endGame(gameId, endedPhase);
+          await endGame(gameId, endedPhase, endedLocation);
           await purgeArchive();
           await purgeLoot(gameId);
         }, "Couldn't stop the game.")) !== null

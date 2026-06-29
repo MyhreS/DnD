@@ -9,7 +9,7 @@ export function CharacterTrackers({ card }: { card: HunterCard }) {
   const klass = getClass(card.classId);
   const hpMax = klass ? maxHp(klass, card.abilities, card.level) : 0;
   const hp = card.currentHp ?? hpMax;
-  const sanMax = klass ? maxSanity(klass, card.level) : 0;
+  const sanMax = klass ? maxSanity(klass, card.abilities, card.level) : 0;
   const san = card.sanity ?? sanMax;
 
   function patch(p: Partial<HunterCard>) {

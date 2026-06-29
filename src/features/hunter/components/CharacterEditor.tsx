@@ -76,7 +76,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
 
   const ac = armorClass(finalScores, mainArmorId);
   const hp = klass ? maxHp(klass, finalScores, level) : null;
-  const sanMax = klass ? maxSanity(klass, level) : null;
+  const sanMax = klass ? maxSanity(klass, finalScores, level) : null;
   const prof = proficiencyBonus(level);
 
   function setBaseScore(k: AbilityKey, next: number) {

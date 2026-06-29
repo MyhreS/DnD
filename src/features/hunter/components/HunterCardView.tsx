@@ -12,6 +12,9 @@ import {
   saveModifier,
   skillModifier,
   riteStats,
+  initiativeMod,
+  levelForInsight,
+  insightToNext,
 } from "@/lib/character";
 import { CreatureSprite } from "@/data/CreatureSprite";
 import { classCreatureId } from "@/data/creatures";
@@ -23,8 +26,17 @@ export function HunterCardView({ card }: { card: HunterCard }) {
   const lvl = card.level;
   const prof = proficiencyBonus(lvl);
   const hp = klass ? maxHp(klass, card.abilities, lvl) : null;
-  const san = klass ? maxSanity(klass, lvl) : null;
+  const san = klass ? maxSanity(klass, card.abilities, lvl) : null;
   const armor = card.mainArmorId ? ARMOR_BY_ID[card.mainArmorId] : null;
+  const insight = card.insight ?? 0;
+  const earnedLevel = levelForInsight(insight);
+  const nextLevel = insightToNext(insight);
+  const insightSub = earnedLevel > lvl
+    ? `Lv ${earnedLevel} after a rest`
+    : nextLevel
+      ? `${nextLevel.remaining} to Lv ${nextLevel.nextLevel}`
+      : "max level";
+  const transformation = card.transformationLevel ?? 0;
 
   return (
     <div className="stack" style={{ gap: 14 }}>
@@ -49,9 +61,12 @@ export function HunterCardView({ card }: { card: HunterCard }) {
         <div className="derived-grid">
           <Stat label="Armor Class" value={ac.total} />
           <Stat label="Max HP" value={hp ?? "—"} />
+          <Stat label="Initiative" value={formatModifier(initiativeMod(card.abilities))} />
           <Stat label="Speed" value={klass ? `${klass.speedFt}ft` : "—"} />
           <Stat label="Prof." value={formatModifier(prof)} />
           <Stat label="Sanity" value={san ?? "—"} sub={klass ? `d${klass.sanityDie}` : undefined} />
+          <Stat label="Transform" value={transformation} />
+          <Stat label="Insight" value={insight} sub={insightSub} />
           <Stat label="Blood Tinge" value={card.bloodTinge ? "●" : "○"} />
         </div>
       </div>
