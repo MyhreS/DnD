@@ -139,6 +139,39 @@ service cloud.firestore {
       allow delete: if isCampaignDM(resource.data.campaignId);
     }
 
+    // /shopListings/{id} — the DM's per-campaign storefront. Members browse; the
+    // DM stocks/prices/pulls items. Buying mutates the buyer's own /characters
+    // doc (covered by the owner-write rule above).
+    match /shopListings/{id} {
+      allow read: if isMember(resource.data.campaignId);
+      allow create: if isCampaignDM(request.resource.data.campaignId)
+        && request.resource.data.priceGp is number
+        && request.resource.data.priceGp >= 0;
+      allow update, delete: if isCampaignDM(resource.data.campaignId);
+    }
+
+    // /sellRequests/{id} — a player asks to sell an item; the DM prices then
+    // approves (crediting the seller's own character) or declines. A request is
+    // raised unpriced ("requested"); only the DM may price/approve/decline, and
+    // the seller may cancel (declined).
+    match /sellRequests/{id} {
+      allow read: if isMember(resource.data.campaignId);
+      allow create: if isMember(request.resource.data.campaignId)
+        && request.resource.data.sellerUid == request.auth.uid
+        && request.resource.data.priceGp == null
+        && request.resource.data.status == "requested"
+        && request.resource.data.qty is int
+        && request.resource.data.qty > 0;
+      allow update: if isCampaignDM(resource.data.campaignId)
+        || (request.auth.uid == resource.data.sellerUid
+            && request.resource.data.status == "declined"
+            && request.resource.data.priceGp == resource.data.priceGp
+            && request.resource.data.itemId == resource.data.itemId
+            && request.resource.data.qty == resource.data.qty
+            && request.resource.data.characterId == resource.data.characterId);
+      allow delete: if isCampaignDM(resource.data.campaignId);
+    }
+
     // Lock everything else down by default.
     match /{document=**} {
       allow read, write: if false;

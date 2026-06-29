@@ -14,6 +14,7 @@ import { CharacterPage } from "@/features/hunter/components/CharacterPage";
 import { CampaignHunterPage } from "@/features/hunter/components/CampaignHunterPage";
 import { PlayPage } from "@/features/play/components/PlayPage";
 import { PartyPage } from "@/features/party/components/PartyPage";
+import { ShopPage } from "@/features/shop/components/ShopPage";
 import { HandbookPage } from "@/features/handbook/components/HandbookPage";
 import { ProfilePage } from "@/features/profile/components/ProfilePage";
 import { StatusPage } from "@/features/status/components/StatusPage";
@@ -36,6 +37,7 @@ function AuthedApp() {
         <Route path="play" element={<PlayPage />} />
         <Route path="sessions" element={<SessionsPage />} />
         <Route path="party" element={<PartyPage />} />
+        <Route path="shop" element={<ShopPage />} />
         <Route path="hunter" element={<CampaignHunterPage />} />
       </Route>
       {/* Chrome-less big-screen status board (its own full-bleed layout). */}
