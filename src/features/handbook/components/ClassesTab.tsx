@@ -2,7 +2,12 @@ import { useState } from "react";
 import { CLASSES } from "@/data/classes";
 import { ABILITY_NAME } from "@/data/abilities";
 import { ChevronIcon } from "@/components/icons";
-import type { HunterClass, LevelFeature, Subclass } from "@/types";
+import { AsyncButton } from "@/components/AsyncButton";
+import { classArt } from "@/data/classArt";
+import { openDocument } from "../lib/handbookPdf";
+import { DEEPCALLER_BOOK_PDF_PATH } from "@/data/handbook";
+import { LevelTable, FeatureList, SubclassBlock } from "./ClassDetail";
+import type { HunterClass } from "@/types";
 
 export function ClassesTab() {
   const [open, setOpen] = useState<string | null>(null);
@@ -16,6 +21,7 @@ export function ClassesTab() {
 }
 
 function ClassCard({ c, isOpen, onToggle }: { c: HunterClass; isOpen: boolean; onToggle: () => void }) {
+  const art = classArt(c.id);
   return (
     <div className="card">
       <button
@@ -24,9 +30,19 @@ function ClassCard({ c, isOpen, onToggle }: { c: HunterClass; isOpen: boolean; o
         style={{ width: "100%", textAlign: "left", background: "transparent", border: 0, color: "var(--ink)", padding: 0 }}
       >
         <div className="row between">
-          <div>
-            <div style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: 600 }}>{c.name}</div>
-            <div className="gold" style={{ fontSize: "0.86rem" }}>{c.tagline}</div>
+          <div className="row" style={{ gap: 10, minWidth: 0 }}>
+            {art && (
+              <img
+                src={art}
+                alt=""
+                loading="lazy"
+                style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", flex: "none" }}
+              />
+            )}
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: 600 }}>{c.name}</div>
+              <div className="gold" style={{ fontSize: "0.86rem" }}>{c.tagline}</div>
+            </div>
           </div>
           <ChevronIcon
             width={18}
@@ -50,6 +66,19 @@ function ClassCard({ c, isOpen, onToggle }: { c: HunterClass; isOpen: boolean; o
             <div className="banner banner-warn" style={{ marginBottom: 12 }}>
               <strong className="gold">Signature.</strong> {c.signature}
             </div>
+          )}
+          {c.id === "deepcaller" && (
+            <AsyncButton
+              className="btn btn-ghost"
+              style={{ marginBottom: 12 }}
+              pendingText="Opening…"
+              showDone={false}
+              onClick={() =>
+                openDocument(DEEPCALLER_BOOK_PDF_PATH, "Book-of-the-Deepcaller.pdf", "Book of the Deepcaller")
+              }
+            >
+              Open the Book of the Deepcaller (PDF)
+            </AsyncButton>
           )}
           {c.baseClass && <Field label="Built on" value={`${c.baseClass} (5e)`} />}
           <Field label="Primary ability" value={c.primaryAbility} />
@@ -84,64 +113,6 @@ function ClassCard({ c, isOpen, onToggle }: { c: HunterClass; isOpen: boolean; o
           </Collapsible>
         </div>
       )}
-    </div>
-  );
-}
-
-function LevelTable({ c }: { c: HunterClass }) {
-  return (
-    <div className="table-scroll">
-      <table className="level-table">
-        <thead>
-          <tr>
-            <th className="lvl-col">Lv</th>
-            <th className="lvl-col">Prof</th>
-            <th>Features</th>
-            {c.progressionColumns.map((col) => (
-              <th key={col} className="lvl-col">{col}</th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {c.progression.map((row) => (
-            <tr key={row.level}>
-              <td className="lvl-col">{row.level}</td>
-              <td className="lvl-col">+{row.profBonus}</td>
-              <td>{row.features || "—"}</td>
-              {c.progressionColumns.map((col) => (
-                <td key={col} className="lvl-col">{row.extras[col] || "—"}</td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
-function FeatureList({ features }: { features: LevelFeature[] }) {
-  return (
-    <ul className="list-reset pill-list">
-      {features.map((f, i) => (
-        <li key={i}>
-          <div className="row" style={{ gap: 8, alignItems: "baseline" }}>
-            <span className="role-tag" style={{ flex: "none" }}>Lv {f.level}</span>
-            <span style={{ fontWeight: 600 }}>{f.name}</span>
-          </div>
-          <div className="muted" style={{ fontSize: "0.88rem", marginTop: 2, whiteSpace: "pre-wrap" }}>{f.text}</div>
-        </li>
-      ))}
-    </ul>
-  );
-}
-
-function SubclassBlock({ s }: { s: Subclass }) {
-  return (
-    <div className="card" style={{ background: "var(--bg-elev-2)" }}>
-      <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1rem" }}>{s.name}</div>
-      <div className="gold" style={{ fontSize: "0.82rem" }}>{s.tagline}</div>
-      <p className="muted" style={{ fontSize: "0.9rem", marginTop: 6 }}>{s.blurb}</p>
-      <FeatureList features={s.features} />
     </div>
   );
 }

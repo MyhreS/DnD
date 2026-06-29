@@ -2,6 +2,9 @@ import { useState } from "react";
 import { RITES, RITE_TYPES } from "@/data/rites";
 import type { Rite, RiteType } from "@/types";
 import { ChevronIcon } from "@/components/icons";
+import { AsyncButton } from "@/components/AsyncButton";
+import { openDocument } from "../lib/handbookPdf";
+import { WHISPERS_PDF_PATH } from "@/data/handbook";
 
 type Filter = "all" | RiteType;
 
@@ -17,6 +20,15 @@ export function RitesTab() {
         The Book of the Deepcaller — Rites and Whispers. Whispers cost no Strain and
         cause no Madness; Rites are fuelled by Strain and paid for in Madness.
       </p>
+
+      <AsyncButton
+        className="btn btn-ghost"
+        pendingText="Preparing…"
+        showDone={false}
+        onClick={() => openDocument(WHISPERS_PDF_PATH, "Whispers.pdf", "Whispers")}
+      >
+        Open the Whispers (PDF)
+      </AsyncButton>
 
       <div className="chip-row">
         <button
