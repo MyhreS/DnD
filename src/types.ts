@@ -201,6 +201,32 @@ export type GamePhase = "exploration" | "combat" | "short_rest" | "long_rest";
  * = spend Hit Dice on a Short Rest (and a half Long Rest); the Wild = neither. */
 export type GameLocation = "lodge" | "safe" | "wild";
 
+/** Live combat encounter state, stored on the Game doc. */
+export interface EncounterState {
+  active: boolean;
+  round: number;
+  /** The combatant whose turn it is, or null. */
+  turnId: string | null;
+}
+
+/** One combatant in the initiative tracker. Lives at
+ * /games/{gameId}/combatants/{id}. PCs read HP/AC live from their HunterCard;
+ * monsters carry their own HP. */
+export interface Combatant {
+  id: string;
+  kind: "pc" | "monster";
+  name: string;
+  /** For a PC — the HunterCard to read live HP from. */
+  characterId?: string | null;
+  initiative: number;
+  ac?: number | null;
+  maxHp?: number | null;
+  currentHp?: number | null;
+  /** Condition ids (see src/data/conditions.ts). */
+  conditions: string[];
+  createdAt: number;
+}
+
 export interface Game {
   id: string;
   /** The campaign this game belongs to. */
@@ -213,6 +239,8 @@ export interface Game {
   status: GameStatus;
   /** Current phase (meaningful while active). */
   phase: GamePhase;
+  /** Live combat encounter state (initiative round + whose turn). */
+  combat?: EncounterState;
   /** Current location/safety (drives rest math). Defaults to "wild". */
   location?: GameLocation;
   /** Test-run game — hidden from real views and auto-cleaned. */

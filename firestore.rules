@@ -116,6 +116,12 @@ service cloud.firestore {
         allow read, create, update: if isMember(gameCampaignId(gameId));
         allow delete: if isCampaignDM(gameCampaignId(gameId));
       }
+
+      // Combat tracker: members read the initiative tracker; only the DM edits it.
+      match /combatants/{cid} {
+        allow read: if isMember(gameCampaignId(gameId));
+        allow write: if isCampaignDM(gameCampaignId(gameId));
+      }
     }
 
     // /trades/{tradeId} — player↔player, settled by the settleTrade Cloud
