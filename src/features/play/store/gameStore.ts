@@ -21,6 +21,7 @@ import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { purgeArchive } from "@/api/players";
+import { explain } from "@/lib/errors";
 
 type Status = "idle" | "loading" | "loaded" | "error";
 
@@ -76,8 +77,8 @@ export const useGameStore = create<GameState>((set, get) => {
     if (!id) return set({ _unsubParts: null });
     const unsub = subscribeParticipants(
       id,
-      (participants) => set({ participants }),
-      () => set({ error: "Couldn't load who's in the game." }),
+      (participants) => set({ participants, error: null }), // a fresh snapshot clears any stale error
+      (err) => set({ error: explain("Couldn't load who's in the game", err) }),
     );
     set({ _unsubParts: unsub });
   }
@@ -91,7 +92,7 @@ export const useGameStore = create<GameState>((set, get) => {
       return out;
     } catch (err) {
       console.error(fallbackMsg, err);
-      set({ busy: false, error: fallbackMsg });
+      set({ busy: false, error: explain(fallbackMsg, err) });
       return null;
     }
   }
@@ -157,10 +158,10 @@ export const useGameStore = create<GameState>((set, get) => {
       const unsub = subscribeGames(
         campaignId,
         (games) => {
-          set({ games, status: "loaded" });
+          set({ games, status: "loaded", error: null });
           syncParticipants(games);
         },
-        () => set({ status: "error", error: "Couldn't load the game." }),
+        (err) => set({ status: "error", error: explain("Couldn't load the game", err) }),
       );
       set({ _unsubGames: unsub });
     },
@@ -181,7 +182,20 @@ export const useGameStore = create<GameState>((set, get) => {
         set({ games: [g] });
         return g.id;
       }
-      return run(() => createGame(input), "Couldn't start the game.");
+      const id = await run(() => createGame(input), "Couldn't start the game.");
+      if (id) {
+        // A "Test Run" campaign fills its lobby with the bot hunters right away,
+        // so the DM can see a populated table before pressing Begin.
+        const camp = useCampaignStore.getState().active;
+        if (camp?.sandbox) {
+          try {
+            await seedSandboxParticipants(id, camp.id);
+          } catch (err) {
+            console.error("Couldn't seed test bots", err);
+          }
+        }
+      }
+      return id;
     },
 
     begin: async (gameId) => {
