@@ -15,6 +15,33 @@ export interface Skill {
   ability: AbilityKey;
 }
 
+/** A character Background (Chapter 3): the formative occupation before the hunt.
+ *  Grants an Origin feat, two skills, one tool, ability points and equipment. */
+export interface Background {
+  id: string;
+  name: string;
+  text: string;
+  /** The three abilities the background's points may be assigned to. */
+  abilityScores: AbilityKey[];
+  /** The granted Origin feat, or null when the background lets you choose one. */
+  feat: string | null;
+  /** The two granted skill proficiencies. */
+  skills: string[];
+  tool: string | null;
+  equipment: string[];
+}
+
+export type FeatCategory = "Origin" | "General" | "Fighting Style" | "Epic Boon";
+
+/** A feat (Chapter 4), with verbatim benefit text. */
+export interface Feat {
+  id: string;
+  name: string;
+  category: FeatCategory;
+  prerequisite: string | null;
+  text: string;
+}
+
 /** A feature a class or subclass gains at a given level. */
 export interface LevelFeature {
   level: number;
