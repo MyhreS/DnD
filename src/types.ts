@@ -251,6 +251,8 @@ export interface Combatant {
   currentHp?: number | null;
   /** Condition ids (see src/data/conditions.ts). */
   conditions: string[];
+  /** Optional DM note for a monster — its attack / special / damage. */
+  note?: string | null;
   createdAt: number;
 }
 

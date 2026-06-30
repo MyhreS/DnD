@@ -35,6 +35,7 @@ export interface MonsterInput {
   initiative: number;
   maxHp: number;
   ac: number | null;
+  note?: string | null;
 }
 
 interface CombatState {
@@ -147,6 +148,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
         maxHp: m.maxHp,
         currentHp: m.maxHp,
         conditions: [] as string[],
+        note: m.note ?? null,
       };
       if (get().preview) {
         set((s) => ({ combatants: [...s.combatants, { ...data, id: previewId(), createdAt: Date.now() }] }));

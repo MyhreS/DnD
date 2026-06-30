@@ -69,6 +69,9 @@ function CombatRow({ c, hp, max, active }: { c: Combatant; hp: number | null; ma
         {c.ac != null ? ` · AC ${c.ac}` : ""}
         {hp != null && max != null ? ` · HP ${hp}/${max}` : ""}
       </div>
+      {c.note && (
+        <div className="muted" style={{ fontSize: "0.85rem", marginTop: 4 }}>{c.note}</div>
+      )}
       {hp != null && max != null && (
         <div style={{ height: 10, borderRadius: 6, background: "var(--bg)", overflow: "hidden", marginTop: 8 }}>
           <div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: "100%", background: "var(--blood-bright)" }} />
