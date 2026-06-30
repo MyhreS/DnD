@@ -147,6 +147,8 @@ for f in feats:
     ft_lines.append("  },")
 ft_lines.append("];")
 ft_lines.append("")
+ft_lines.append('export const ORIGIN_FEATS = FEATS.filter((f) => f.category === "Origin");')
+ft_lines.append("")
 open(os.path.join(SRC, "feats.ts"), "w", encoding="utf-8", newline="\n").write("\n".join(ft_lines))
 print("wrote feats.ts (%d feats: %s)" % (
     len(feats), ", ".join("%s=%d" % (c, sum(1 for f in feats if f["category"] == c))

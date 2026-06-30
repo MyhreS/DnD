@@ -156,6 +156,7 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
     ]);
     y = line(doc, y, "Weapons", klass.weaponProficiencies);
     if (klass.toolProficiencies) y = line(doc, y, "Tools", klass.toolProficiencies);
+    if (card.feat) y = line(doc, y, "Origin feat", card.feat);
     y += 8;
   }
 

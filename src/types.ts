@@ -491,11 +491,16 @@ export interface HunterCard {
   classId: string;
   /** Chosen subclass id (from the class's subclasses), or null. */
   subclassId?: string | null;
+  /** Background display name (e.g. "Cultist"); free text on legacy cards. */
   background: string;
+  /** Structured background id (from data/backgrounds.ts), when chosen. */
+  backgroundId?: string;
+  /** Origin feat granted/chosen via the background. */
+  feat?: string;
   level: number;
   /** Final ability scores after background adjustment. */
   abilities: AbilityScores;
-  /** Chosen skill proficiencies from the class list. */
+  /** Skill proficiencies (class choices + background-granted). */
   skillProficiencies: string[];
   /** Selected Main Armor piece id, or null for unarmored. */
   mainArmorId: string | null;
