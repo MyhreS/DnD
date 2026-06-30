@@ -433,7 +433,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                 <Derived label="Sanity" value={sanMax ?? "—"} />
                 <Derived label="Speed" value={`${klass.speedFt}ft`} />
                 <Derived label="Prof. Bonus" value={formatModifier(prof)} />
-                <Derived label="Sanity Die" value={`d${klass.sanityDie}`} />
+                <Derived label="Sanity Die" value={klass.sanityDie} />
               </div>
               <p className="faint center" style={{ fontSize: "0.78rem", marginTop: 10, marginBottom: 0 }}>
                 Saving throws: {klass.savingThrows.map((k) => ABILITY_NAME[k]).join(" & ")}

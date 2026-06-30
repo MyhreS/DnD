@@ -54,7 +54,7 @@ function ClassCard({ c, isOpen, onToggle }: { c: HunterClass; isOpen: boolean; o
 
       <div className="derived-grid" style={{ marginTop: 12 }}>
         <Mini label="Hit Die" value={`d${c.hitDie}`} />
-        <Mini label="Sanity" value={`${c.maxSanity} · d${c.sanityDie}`} />
+        <Mini label="Sanity" value={`${c.maxSanity} · ${c.sanityDie}`} />
         <Mini label="Speed" value={`${c.speedFt}ft`} />
         <Mini label="Saves" value={c.savingThrows.map((k) => ABILITY_NAME[k].slice(0, 3)).join("·")} />
       </div>

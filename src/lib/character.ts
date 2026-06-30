@@ -37,12 +37,12 @@ export function maxHp(klass: HunterClass, abilities: AbilityScores, level = 1): 
 /**
  * Maximum Sanity = the class base + the Wisdom modifier (per the handbook).
  * The Deepcaller's "Fracturing Mind" also permanently grants +1 Max Sanity per
- * level, with the class component capped at a total of 26.
+ * level (uncapped, per master.json's Fracturing Mind).
  */
 export function maxSanity(klass: HunterClass, abilities: AbilityScores, level = 1): number {
   const classBase =
     klass.id === "deepcaller"
-      ? Math.min(26, klass.maxSanity + Math.max(0, Math.min(20, level) - 1))
+      ? klass.maxSanity + Math.max(0, Math.min(20, level) - 1)
       : klass.maxSanity;
   return Math.max(0, classBase + abilityModifier(abilities.wis));
 }

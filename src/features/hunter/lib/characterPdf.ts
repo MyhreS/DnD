@@ -103,7 +103,7 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
     { label: "Insight", value: String(card.insight ?? 0), sub: insightSub },
     { label: "Transform.", value: String(card.transformationLevel ?? 0) },
     { label: "Sanity", value: klass ? `${card.sanity ?? sanMax} / ${sanMax}` : "—", sub: "current / max" },
-    { label: "Sanity Die", value: klass ? `d${klass.sanityDie}` : "—" },
+    { label: "Sanity Die", value: klass ? klass.sanityDie : "—" },
   ]);
   y += 10;
   doc.setFont("times", "italic");

@@ -56,7 +56,7 @@ export function RestPanel({
         inLodge
           ? "Restore all Hit Points (Hunters Lodge)."
           : "Recover half your HP maximum (you're not in the Hunters Lodge).",
-        `Roll your Sanity Die (d${klass.sanityDie} + WIS) to recover Sanity.`,
+        `Roll your Sanity Die (${klass.sanityDie} + WIS) to recover Sanity.`,
         "Clear all Transformation Levels.",
         ...(pendingLevel ? [`Level up to ${earned}.`] : []),
       ]

@@ -8,6 +8,16 @@ function rollDie(faces: number): number {
   return Math.floor(Math.random() * f) + 1;
 }
 
+/** Roll a Sanity Die spec like "2d6", "1d20" or "4d4" → the summed result. */
+function rollSanityDie(spec: string): number {
+  const m = /^(\d+)d(\d+)$/i.exec(spec.trim());
+  if (!m) return 0;
+  const count = Math.max(1, parseInt(m[1], 10));
+  let total = 0;
+  for (let i = 0; i < count; i++) total += rollDie(parseInt(m[2], 10));
+  return total;
+}
+
 /** A Long Rest restores all HP only in the Hunters Lodge (else half your max). */
 export function restoresFullHp(location: GameLocation): boolean {
   return location === "lodge";
@@ -65,7 +75,7 @@ export function applyLongRest(
   const sanityFrom = card.sanity ?? oldMaxSanity;
   const levelMadness = klass.id === "deepcaller" ? 2 * levelsGained : 0;
   const afterMadness = Math.max(0, sanityFrom - levelMadness);
-  const sanityRoll = Math.max(0, rollDie(klass.sanityDie) + wis);
+  const sanityRoll = Math.max(0, rollSanityDie(klass.sanityDie) + wis);
   const sanityTo = Math.min(newMaxSanity, afterMadness + sanityRoll);
 
   const patch: Partial<HunterCard> = {
