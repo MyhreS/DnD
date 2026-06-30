@@ -251,6 +251,41 @@ export async function leaveCampaign(campaignId: string, uid: string): Promise<vo
   await deleteDoc(doc(membersCol(campaignId), uid));
 }
 
+/** DM: permanently delete a campaign and its scoped data. Seeded bots are
+ *  removed; real players' hunters are KEPT (just un-bound from the campaign).
+ *  The DM can only delete docs the rules permit, so other players' RSVPs under a
+ *  deleted session may be left orphaned (harmless — their session is gone). */
+export async function deleteCampaign(campaignId: string): Promise<void> {
+  const purgeScoped = async (coll: string, subs: string[] = []) => {
+    const snap = await getDocs(query(collection(db, coll), where("campaignId", "==", campaignId)));
+    for (const d of snap.docs) {
+      for (const sub of subs) {
+        const ss = await getDocs(collection(db, coll, d.id, sub));
+        await Promise.all(ss.docs.map((x) => deleteDoc(x.ref)));
+      }
+      await deleteDoc(d.ref);
+    }
+  };
+  await purgeScoped("games", ["participants", "loot", "combatants"]);
+  await purgeScoped("sessions");
+  await purgeScoped("trades");
+  await purgeScoped("shopListings");
+  await purgeScoped("sellRequests");
+  // Characters: delete the seeded bots; keep real players' hunters (un-bind them).
+  const chars = await getDocs(query(collection(db, "characters"), where("campaignId", "==", campaignId)));
+  await Promise.all(
+    chars.docs.map((d) =>
+      (d.data().ownerUid as string | undefined)?.startsWith("bot-")
+        ? deleteDoc(d.ref)
+        : setDoc(d.ref, { campaignId: null }, { merge: true }),
+    ),
+  );
+  // Members subcollection, then the campaign doc itself.
+  const members = await getDocs(membersCol(campaignId));
+  await Promise.all(members.docs.map((d) => deleteDoc(d.ref)));
+  await deleteDoc(doc(campaignsCol, campaignId));
+}
+
 /** Live-subscribe to the campaigns the given user is a member of. */
 export function subscribeMyCampaigns(
   uid: string,
