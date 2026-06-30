@@ -2,6 +2,7 @@ import { useMemo } from "react";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { useIsDM } from "@/features/campaigns/hooks/useIsDM";
 import { CampaignInvitePanel } from "@/features/campaigns/components/CampaignInvitePanel";
+import { DeleteCampaign } from "@/features/campaigns/components/DeleteCampaign";
 import { useSessionStore } from "@/features/sessions/store/sessionStore";
 import { useSessionsLive } from "@/features/sessions/hooks/useSessionsLive";
 import { sortUpcoming } from "@/data/sessions";
@@ -74,6 +75,8 @@ export function PartyPage() {
         {isDM && <div style={{ marginBottom: 12 }}><CampaignInvitePanel /></div>}
 
         {isDM && activeId && <DMBuildHunter members={campaignMembers} campaignId={activeId} />}
+
+        {isDM && <div style={{ margin: "12px 0" }}><DeleteCampaign /></div>}
 
         {oversight && (
           <RosterPanel

@@ -9,6 +9,7 @@ import {
   createTestCampaign,
   joinCampaign,
   leaveCampaign,
+  deleteCampaign,
   setMemberCharacter,
   inviteByEmail,
   uninviteEmail,
@@ -50,6 +51,8 @@ interface CampaignState {
   createTest: () => Promise<string | null>;
   join: (input: JoinCampaignInput) => Promise<string | null>;
   leave: (id: string, uid: string) => Promise<boolean>;
+  /** DM: permanently delete a campaign (+ its scoped data) and exit it. */
+  remove: (id: string) => Promise<boolean>;
   pickCharacter: (uid: string, characterId: string | null) => Promise<boolean>;
   /** DM: invite/uninvite by email, regenerate the share code. */
   invite: (email: string) => Promise<boolean>;
@@ -193,6 +196,13 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
     leave: async (id, uid) => {
       if (get().preview) return true;
       const ok = (await run(() => leaveCampaign(id, uid), "Couldn't leave.")) !== null;
+      if (ok && get().activeId === id) get().exit();
+      return ok;
+    },
+
+    remove: async (id) => {
+      if (get().preview) { get().exit(); return true; }
+      const ok = (await run(() => deleteCampaign(id), "Couldn't delete the campaign.")) !== null;
       if (ok && get().activeId === id) get().exit();
       return ok;
     },
