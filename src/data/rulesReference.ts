@@ -312,6 +312,47 @@ export const RULES_REFERENCE: RuleEntry[] = [
     ],
   },
 
+  {
+    id: "bonus-action",
+    term: "Bonus Action",
+    category: "Action",
+    aliases: ["ba", "bonus"],
+    body: [
+      "A special action you can take only when a feature, spell, or item says you can.",
+      "You get at most one Bonus Action per turn, taken whenever you like during your turn.",
+    ],
+  },
+  {
+    id: "reaction",
+    term: "Reaction",
+    category: "Action",
+    aliases: ["react", "reactions"],
+    body: [
+      "An instant response triggered by a specific event; you get one Reaction per round.",
+      "Opportunity Attacks and readied effects use it. It refreshes at the start of your turn.",
+    ],
+  },
+  {
+    id: "object-interaction",
+    term: "Object Interaction",
+    category: "Action",
+    aliases: ["free interaction", "interact with object", "draw weapon"],
+    body: [
+      "Once on your turn you may interact with one object for free as part of your move or action — draw or stow a weapon, open an unlocked door, pick up a dropped item.",
+      "Further interactions need the Utilize action.",
+    ],
+  },
+  {
+    id: "improvised-weapon",
+    term: "Improvised Weapon",
+    category: "Action",
+    aliases: ["improvised", "makeshift weapon", "thrown object"],
+    body: [
+      "An object wielded as a weapon deals 1d4 of a fitting damage type; if it resembles a real weapon, the DM may use that weapon's stats.",
+      "Without proficiency you don't add your Proficiency Bonus to the attack.",
+    ],
+  },
+
   // --- Combat ---
   {
     id: "initiative",
@@ -404,6 +445,56 @@ export const RULES_REFERENCE: RuleEntry[] = [
     ],
   },
 
+  {
+    id: "armor-class",
+    term: "Armor Class (AC)",
+    category: "Combat",
+    aliases: ["ac", "defense", "armor class"],
+    body: [
+      "How hard you are to hit: an attack roll that equals or beats your AC hits.",
+      "AC comes from armor, Dexterity, and other bonuses; you benefit from only one base AC formula at a time.",
+    ],
+  },
+  {
+    id: "attack-roll",
+    term: "Attack Roll",
+    category: "Combat",
+    aliases: ["to hit", "attack roll"],
+    body: [
+      "Roll a d20 + ability modifier (Strength for melee, Dexterity for ranged or Finesse) + Proficiency Bonus if proficient.",
+      "Equal or beat the target's AC to hit. A natural 20 always hits and crits; a natural 1 always misses.",
+    ],
+  },
+  {
+    id: "unarmed-strike",
+    term: "Unarmed Strike",
+    category: "Combat",
+    aliases: ["punch", "unarmed"],
+    body: [
+      "In place of a weapon attack you can make an Unarmed Strike to Damage (1 + Strength modifier bludgeoning), Grapple, or Shove.",
+      "You're always proficient with your Unarmed Strike.",
+    ],
+  },
+  {
+    id: "two-weapon-fighting",
+    term: "Two-Weapon Fighting",
+    category: "Combat",
+    aliases: ["dual wield", "off-hand", "two weapon"],
+    body: [
+      "When you Attack with a Light melee weapon, you can use a Bonus Action to attack with a different Light melee weapon in your other hand.",
+      "You don't add your ability modifier to the bonus attack's damage unless it's negative.",
+    ],
+  },
+  {
+    id: "ranged-in-melee",
+    term: "Ranged Attacks in Close Combat",
+    category: "Combat",
+    aliases: ["ranged in melee", "shooting in melee"],
+    body: [
+      "You have disadvantage on a ranged attack roll while a hostile creature that can see you is within 5 feet of you.",
+    ],
+  },
+
   // --- Damage & Healing ---
   {
     id: "damage-types",
@@ -467,6 +558,66 @@ export const RULES_REFERENCE: RuleEntry[] = [
     aliases: ["crit", "nat 20", "natural 20"],
     body: [
       "A natural 20 on an attack roll always hits and lets you roll the attack's damage dice twice, adding your modifiers once.",
+    ],
+  },
+
+  {
+    id: "hit-points",
+    term: "Hit Points",
+    category: "Damage & Healing",
+    aliases: ["hp", "health", "hit point"],
+    body: [
+      "Your buffer against dropping. Damage subtracts from current HP; you can't exceed your maximum or go below 0.",
+      "At 0 HP you fall and begin making Death Saving Throws.",
+    ],
+  },
+  {
+    id: "hit-dice",
+    term: "Hit Dice",
+    category: "Damage & Healing",
+    aliases: ["hd", "hit die", "spend hit dice"],
+    body: [
+      "A pool tied to your level (one die of your class's type per level). On a Short Rest you can spend Hit Dice, rolling each + your Constitution modifier to regain HP.",
+      "You recover some spent Hit Dice on a Long Rest.",
+    ],
+  },
+  {
+    id: "healing",
+    term: "Healing",
+    category: "Damage & Healing",
+    aliases: ["heal", "regain hp", "recover"],
+    body: [
+      "Restores hit points, never above your maximum. Healing a creature at 0 HP brings it back to consciousness.",
+      "Healing never removes the dead condition.",
+    ],
+  },
+  {
+    id: "damage-roll",
+    term: "Damage Roll",
+    category: "Damage & Healing",
+    aliases: ["roll damage"],
+    body: [
+      "Roll the weapon's or effect's damage dice and add the relevant ability modifier (usually the one used for the attack).",
+      "A critical hit doubles the dice, not the modifier.",
+    ],
+  },
+  {
+    id: "dropping-to-0",
+    term: "Dropping to 0 Hit Points",
+    category: "Damage & Healing",
+    aliases: ["0 hp", "downed"],
+    body: [
+      "You fall Unconscious and start making Death Saving Throws, unless excess damage kills you outright (see Instant Death).",
+      "Any healing above 0 HP wakes you.",
+    ],
+  },
+  {
+    id: "knocking-out",
+    term: "Knocking a Creature Out",
+    category: "Damage & Healing",
+    aliases: ["nonlethal", "knock out", "subdue"],
+    body: [
+      "When a melee hit would drop a creature to 0 HP, the attacker can choose to knock it out instead — it falls Unconscious and stable rather than dying.",
     ],
   },
 
@@ -546,6 +697,123 @@ export const RULES_REFERENCE: RuleEntry[] = [
     body: [
       "Every foot of movement through it costs an extra foot — rubble, deep snow, dense undergrowth, and the like.",
       "Difficult terrain doesn't stack with itself; moving through it is just one extra foot per foot.",
+    ],
+  },
+  {
+    id: "difficulty-class",
+    term: "Difficulty Class (DC)",
+    category: "General",
+    aliases: ["dc", "target number"],
+    body: [
+      "The number a d20 Test must equal or beat to succeed. The DM sets it: 10 (easy), 15 (medium), 20 (hard), and beyond.",
+    ],
+  },
+  {
+    id: "contest",
+    term: "Contest",
+    category: "General",
+    aliases: ["opposed check", "opposed roll"],
+    body: [
+      "When two creatures' efforts directly oppose, both make an ability check and compare totals; the higher wins, and a tie means no change.",
+    ],
+  },
+  {
+    id: "ability-scores",
+    term: "Ability Scores & Modifiers",
+    category: "General",
+    aliases: ["modifier", "ability modifier", "stats"],
+    body: [
+      "The six abilities (STR, DEX, CON, INT, WIS, CHA) drive almost every roll.",
+      "A modifier is (score − 10) ÷ 2, rounded down: 10–11 → +0, 14–15 → +2, 8–9 → −1.",
+    ],
+  },
+  {
+    id: "movement-speed",
+    term: "Movement & Speed",
+    category: "General",
+    aliases: ["speed", "move", "movement"],
+    body: [
+      "On your turn you can move up to your Speed, splitting it around your action however you like.",
+      "Standing from Prone costs half your Speed; you can't move through hostile creatures' spaces.",
+    ],
+  },
+  {
+    id: "climb-swim-jump",
+    term: "Climbing, Swimming & Jumping",
+    category: "General",
+    aliases: ["climb", "swim", "jump", "long jump", "high jump"],
+    body: [
+      "Climbing or swimming costs 1 extra foot per foot (2 in difficult conditions) unless you have a relevant Speed.",
+      "A running long jump clears feet equal to your Strength score; a running high jump clears 3 + your Strength modifier feet.",
+    ],
+  },
+  {
+    id: "falling",
+    term: "Falling",
+    category: "General",
+    aliases: ["fall damage", "fall"],
+    body: [
+      "You take 1d6 bludgeoning per 10 feet fallen, to a maximum of 20d6, and land Prone unless you avoid the damage.",
+    ],
+  },
+  {
+    id: "vision-light",
+    term: "Vision & Light",
+    category: "General",
+    aliases: ["bright light", "dim light", "darkness", "lighting"],
+    body: [
+      "Bright light lets most creatures see normally. Dim light (a lightly obscured area) gives disadvantage on sight-based Perception checks.",
+      "Darkness is heavily obscured — effectively the Blinded condition when seeing into it.",
+    ],
+  },
+  {
+    id: "obscured",
+    term: "Obscured Areas",
+    category: "General",
+    aliases: ["lightly obscured", "heavily obscured", "obscurement", "fog"],
+    body: [
+      "Lightly obscured (dim light, patchy fog, light foliage): disadvantage on sight-based Perception checks.",
+      "Heavily obscured (darkness, thick fog): vision is blocked — you're effectively Blinded looking in.",
+    ],
+  },
+  {
+    id: "special-senses",
+    term: "Special Senses",
+    category: "General",
+    aliases: ["darkvision", "blindsight", "truesight", "tremorsense"],
+    body: [
+      "Darkvision: see in dim light as bright and darkness as dim (shades of gray) out to a range.",
+      "Blindsight senses without sight; Tremorsense detects via vibrations; Truesight pierces Darkness, invisibility, and illusions.",
+    ],
+  },
+  {
+    id: "carrying-capacity",
+    term: "Carrying Capacity",
+    category: "General",
+    aliases: ["encumbrance", "carry", "weight"],
+    body: [
+      "You can carry up to 15 × your Strength score in pounds; lifting, dragging, or pushing handles up to twice that.",
+      "This campaign tracks carried weight on your hunter sheet — see Carrying & Encumbrance in the handbook.",
+    ],
+  },
+  {
+    id: "rounds-turns",
+    term: "Rounds & Turns",
+    category: "General",
+    aliases: ["round", "turn", "action economy"],
+    body: [
+      "Combat runs in ~6-second rounds. On your turn you can move and take one action, plus a Bonus Action and Reaction when available.",
+      "Everyone acts once per round in initiative order; a new round begins when the order cycles back to the top.",
+    ],
+  },
+  {
+    id: "suffocating",
+    term: "Suffocating",
+    category: "General",
+    aliases: ["holding breath", "drowning", "no air"],
+    body: [
+      "You can hold your breath for 1 + your Constitution modifier minutes (at least 30 seconds).",
+      "Out of breath, you last a number of rounds equal to your Constitution modifier (minimum 1), then drop to 0 HP.",
     ],
   },
 ];
