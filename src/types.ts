@@ -55,8 +55,8 @@ export interface HunterClass {
   hitDie: number;
   /** Starting maximum Sanity (the C&S sanity pool). */
   maxSanity: number;
-  /** Sanity die, e.g. 12 → d12. */
-  sanityDie: number;
+  /** Sanity die as a dice string, e.g. "2d6", "1d12", "4d4". */
+  sanityDie: string;
   speedFt: number;
   armorTraining: ArmorTraining[];
   weaponProficiencies: string;

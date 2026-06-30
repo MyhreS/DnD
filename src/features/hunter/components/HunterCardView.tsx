@@ -69,7 +69,7 @@ export function HunterCardView({ card }: { card: HunterCard }) {
           <Stat label="Initiative" value={formatModifier(initiativeMod(card.abilities))} />
           <Stat label="Speed" value={klass ? `${klass.speedFt}ft` : "—"} />
           <Stat label="Prof." value={formatModifier(prof)} />
-          <Stat label="Sanity" value={san ?? "—"} sub={klass ? `d${klass.sanityDie}` : undefined} />
+          <Stat label="Sanity" value={san ?? "—"} sub={klass ? klass.sanityDie : undefined} />
           <Stat label="Transform" value={transformation} />
           <Stat label="Insight" value={insight} sub={insightSub} />
           <Stat label="Blood Tinge" value={card.bloodTinge ? "●" : "○"} />

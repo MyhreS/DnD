@@ -58,38 +58,38 @@ for block in open(BASE + "/class-descriptions.txt", encoding="utf-8").read().spl
 
 META = {
   "brute": dict(name="Brute", title="Hunter Brute", tagline="A wall of muscle and cold iron.",
-    primary="STR or DEX", saves=["str","con"], hitDie=10, maxSanity=12, sanityDie=12, speed=30,
+    primary="STR or DEX", saves=["str","con"], hitDie=10, maxSanity=12, sanityDie="2d6", speed=30,
     armor=["Light armor","Medium armor","Heavy armor"], weapons="Simple and Martial weapons",
     tools="—", skills=2, skillOpts=["Acrobatics","Athletics","Grit","Perception","Survival","Intimidation"],
     equip=["Tool Belt","2 Blood vials","Greatsword","Shortsword","Rope"], base="Fighter",
     sig="Refuse the Bleeding — when you take damage, use your reaction to reduce it by 1d10 + your Hunter Brute level."),
   "scout": dict(name="Scout", title="Hunter Scout", tagline="Eyes of the hunt, finger on the trigger.",
-    primary="DEX and WIS", saves=["str","dex"], hitDie=10, maxSanity=12, sanityDie=12, speed=35,
+    primary="DEX and WIS", saves=["str","dex"], hitDie=10, maxSanity=12, sanityDie="2d6", speed=35,
     armor=["Light armor","Medium armor"], weapons="Simple and Martial weapons",
     tools="—", skills=3, skillOpts=["Animal Handling","Athletics","Stealth","Survival","Investigation","Perception"],
     equip=["Tool Belt","1 Blood vial","18 bullets","Hunter Rifle","Hunter Cleaver","Pistol","Bandolier"], base="Ranger",
     sig="Hunter's Mark — Bonus Action, mark a creature within 90 ft: +1d6 on your hits against it and Advantage to track it."),
   "stalker": dict(name="Stalker", title="Hunter Stalker", tagline="A whisper, a glint, a slit throat.",
-    primary="DEX", saves=["dex","int"], hitDie=8, maxSanity=10, sanityDie=10, speed=30,
+    primary="DEX", saves=["dex","int"], hitDie=8, maxSanity=12, sanityDie="1d12", speed=30,
     armor=["Light armor"], weapons="Simple weapons and Martial weapons with the Finesse or Light property",
     tools="Thieves' Tools", skills=2, skillOpts=["Acrobatics","Athletics","Deception","Insight","Intimidation","Investigation","Perception","Sleight of Hand","Stealth"],
     equip=["Tool Belt","1 Blood vial","4 bullets","Scimitar","4 Daggers","Pistol","Thieves' Tools"], base="Rogue",
     sig="Sneak Attack — once per turn, deal extra damage (1d6, scaling to 10d6) to a target you have Advantage against."),
   "deepcaller": dict(name="Deepcaller", title="Hunter Deepcaller", tagline="Knowledge man was not meant to hold.",
-    primary="INT", saves=["int","wis"], hitDie=6, maxSanity=20, sanityDie=20, speed=30,
+    primary="INT", saves=["int","wis"], hitDie=6, maxSanity=16, sanityDie="1d20", speed=30,
     armor=["Light armor"], weapons="Simple weapons",
     tools="—", skills=2, skillOpts=["Eldritch Knowledge","Old World History","Investigation","Insight","Blood Nature","Religion","Deception"],
     equip=["Tool Belt","1 Blood vial","Sickle","2 Daggers","Book of eldritch knowledge","Robe"], base="Warlock",
     sig="Rites & Whispers — perform forbidden Rites from your Book of the Deepcaller, fuelled by Strain and paid for in Madness.",
     caster=True),
   "bloodbound": dict(name="Bloodbound", title="Hunter Bloodbound", tagline="The hunt sings in their veins.",
-    primary="CON", saves=["str","con"], hitDie=12, maxSanity=18, sanityDie=12, speed=30,
+    primary="CON", saves=["str","con"], hitDie=12, maxSanity=20, sanityDie="1d20", speed=30,
     armor=["Light armor","Medium armor"], weapons="Simple and Martial weapons",
     tools="Blood-drainer's Tools (unique item)", skills=2, skillOpts=["Grit","Blood Nature","Athletics","Intimidation","Medicine","Perception","Survival"],
     equip=["Tool Belt","3 Blood vials","Greataxe","2 Handaxes","Blood-drainer's Tools (unique item)"], base="Barbarian",
     sig="Blood Frenzy — enter a frenzy for bonus damage and resilience: frenzied, but sane."),
   "warden": dict(name="Warden", title="Hunter Warden", tagline="The lantern that others follow.",
-    primary="WIS and CHA", saves=["wis","cha"], hitDie=10, maxSanity=15, sanityDie=12, speed=30,
+    primary="WIS and CHA", saves=["wis","cha"], hitDie=10, maxSanity=14, sanityDie="4d4", speed=30,
     armor=["Light armor","Medium armor","Heavy armor"], weapons="Simple and Martial weapons",
     tools="—", skills=2, skillOpts=["Perception","Investigation","Animal Handling","Survival","Presence","Persuasion"],
     equip=["Tool Belt","1 Blood vial","Hunter Rifle","10 bullets","Longsword","Navigator's Tools","Bell","Bandolier","2 Hunting Traps"], base="Fighter",
@@ -125,7 +125,7 @@ def emit_class(cid):
     L.append("    savingThrows: [%s]," % ", ".join(js(s) for s in m["saves"]))
     L.append("    hitDie: %d," % m["hitDie"])
     L.append("    maxSanity: %d," % m["maxSanity"])
-    L.append("    sanityDie: %d," % m["sanityDie"])
+    L.append('    sanityDie: %s,' % js(m["sanityDie"]))
     L.append("    speedFt: %d," % m["speed"])
     L.append("    armorTraining: [%s]," % ", ".join(js(a) for a in m["armor"]))
     L.append("    weaponProficiencies: %s," % js(m["weapons"]))
