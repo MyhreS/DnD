@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { getClass } from "@/data/classes";
 import { maxHp, earnedLevel, isLevelUpPending } from "@/lib/character";
 import { AsyncButton } from "@/components/AsyncButton";
@@ -42,6 +43,8 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
   const kill = useCharactersStore((s) => s.killCharacter);
   const revive = useCharactersStore((s) => s.revive);
   const award = useCharactersStore((s) => s.awardInsight);
+  const playAs = useCampaignStore((s) => s.playAs);
+  const navigate = useNavigate();
   const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
@@ -65,9 +68,18 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
             {klass ? `${klass.name} · Lvl ${card.level}` : "Hunter"} · HP {hp}/{hpMax}
           </div>
         </div>
-        <button className="btn btn-ghost btn-sm" style={{ width: "auto", flex: "none" }} onClick={() => setEditing((s) => !s)}>
-          {editing ? "Close" : "Edit"}
-        </button>
+        <div className="row" style={{ gap: 6, flex: "none" }}>
+          <button
+            className="btn btn-ghost btn-sm"
+            style={{ width: "auto" }}
+            onClick={() => { playAs(card.id, card.name); navigate("/hunter"); }}
+          >
+            Play as
+          </button>
+          <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={() => setEditing((s) => !s)}>
+            {editing ? "Close" : "Edit"}
+          </button>
+        </div>
       </div>
 
       {editing && <DMCharacterEditor card={card} />}

@@ -2,6 +2,9 @@ import { Link } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
+import { useIsDM } from "@/features/campaigns/hooks/useIsDM";
+import { useCharactersStore } from "@/features/play/store/charactersStore";
+import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
 import { useHunterCard } from "../hooks/useHunterCard";
 import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
@@ -9,9 +12,9 @@ import { InventoryPanel } from "./InventoryPanel";
 import { patchCharacter } from "@/api/players";
 import { CardSkeleton } from "@/components/Skeleton";
 
-/** A player's hunter *for this campaign* — the one they brought in. You don't
- * create hunters here (that's the main menu); you pick which to bring, and if
- * yours died you bring a fresh one from the menu. */
+/** The in-campaign Hunter page. Players see their own brought hunter; the DM sees
+ * a DM view and can step into any hunter ("play as") to test the game, then
+ * return to DM. */
 export function CampaignHunterPage() {
   const user = useAuthStore((s) => s.user);
   const { characters, status } = usePlayerStore();
@@ -19,8 +22,81 @@ export function CampaignHunterPage() {
   const members = useCampaignStore((s) => s.members);
   const activeId = useCampaignStore((s) => s.activeId);
   const pickCharacter = useCampaignStore((s) => s.pickCharacter);
+  const isDM = useIsDM();
+  const playingAsId = useCampaignStore((s) => s.playingAsId);
+  const playAs = useCampaignStore((s) => s.playAs);
+  const returnToDm = useCampaignStore((s) => s.returnToDm);
+  const dmPatch = useCharactersStore((s) => s.dmPatch);
+  const party = useCharactersStore((s) => s.party);
   useHunterCard();
+  useCharactersSync();
 
+  // --- DM view: run the table, or step into a hunter to test the game ---
+  if (isDM) {
+    const playing = playingAsId
+      ? party.find((c) => c.id === playingAsId && c.classId && c.name) ?? null
+      : null;
+
+    if (playing) {
+      return (
+        <div>
+          <p className="eyebrow" style={{ margin: 0 }}>Playing as · DM</p>
+          <h1 className="page-title" style={{ margin: "0 0 12px" }}>{playing.name}</h1>
+          <div className="desk-2col">
+            <aside className="desk-aside no-print">
+              <CharacterTrackers card={playing} onPatch={(p) => void dmPatch(playing.id, p)} />
+            </aside>
+            <div className="desk-main">
+              <div className="print-sheet"><HunterCardView card={playing} /></div>
+              <div className="no-print" style={{ marginTop: 14 }}>
+                <InventoryPanel card={playing} editable onPatch={(p) => void dmPatch(playing.id, p)} />
+              </div>
+            </div>
+          </div>
+          <button className="btn btn-ghost" style={{ marginTop: 14, maxWidth: 220 }} onClick={returnToDm}>
+            ← Return to DM
+          </button>
+        </div>
+      );
+    }
+
+    const campHunters = party.filter((c) => c.campaignId === activeId && c.classId && c.name);
+    return (
+      <div className="reading">
+        <p className="eyebrow">You're the DM</p>
+        <h1 className="page-title">DM view</h1>
+        <p className="page-intro">
+          As the DM you run the table from <Link className="gold" to="/play">Play</Link> — you don't bring
+          your own hunter. To see the game from a player's side (great for a test run), step into one of
+          the campaign's hunters below; you can return to DM at any time.
+        </p>
+        <div className="card">
+          <p className="eyebrow" style={{ marginTop: 0 }}>Play as a hunter</p>
+          {campHunters.length === 0 ? (
+            <p className="muted" style={{ margin: 0 }}>No hunters in this campaign yet.</p>
+          ) : (
+            <div className="card-grid">
+              {campHunters.map((c) => (
+                <button
+                  key={c.id}
+                  type="button"
+                  className="card card-hover"
+                  style={{ textAlign: "left" }}
+                  onClick={() => playAs(c.id, c.name)}
+                >
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{c.name}</div>
+                  <div className="faint" style={{ fontSize: "0.82rem", marginTop: 2 }}>Level {c.level}</div>
+                  <div className="gold" style={{ fontSize: "0.8rem", marginTop: 6 }}>Play as →</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // --- Player view ---
   const myCharId = members.find((m) => m.uid === user?.uid)?.characterId ?? null;
   const brought = characters.find((c) => c.id === myCharId && c.classId && c.name) ?? null;
 

@@ -5,7 +5,16 @@ import type { HunterCard } from "@/types";
 
 /** Live, editable play trackers: HP, Sanity (with derived Madness),
  * Transformation, Blood Tinge. Saved on change. */
-export function CharacterTrackers({ card }: { card: HunterCard }) {
+export function CharacterTrackers({
+  card,
+  onPatch,
+}: {
+  card: HunterCard;
+  /** When provided (e.g. the DM playing as this hunter), edits route here
+   * instead of the owner's playerStore — so the owner's own selection isn't
+   * clobbered. */
+  onPatch?: (p: Partial<HunterCard>) => void;
+}) {
   const save = usePlayerStore((s) => s.save);
   const klass = getClass(card.classId);
   const hpMax = klass ? maxHp(klass, card.abilities, card.level) : 0;
@@ -16,7 +25,8 @@ export function CharacterTrackers({ card }: { card: HunterCard }) {
   const san = Math.min(sanMax, card.sanity ?? sanMax);
 
   function patch(p: Partial<HunterCard>) {
-    void save({ ...card, ...p });
+    if (onPatch) onPatch(p);
+    else void save({ ...card, ...p });
   }
 
   return (

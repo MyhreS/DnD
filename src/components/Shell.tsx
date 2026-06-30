@@ -14,11 +14,14 @@ export function Shell({
   title,
   titleTo,
   nav,
+  banner,
 }: {
   eyebrow?: string;
   title: string;
   titleTo: string;
   nav: ReactNode;
+  /** Optional banner shown above the page content (e.g. the DM role / play-as bar). */
+  banner?: ReactNode;
 }) {
   const member = useAuthStore((s) => s.member);
   const user = useAuthStore((s) => s.user);
@@ -61,6 +64,7 @@ export function Shell({
       </div>
 
       <main className="app-main">
+        {banner}
         <div className="fade-in" key={location.pathname}>
           <Outlet />
         </div>

@@ -1,6 +1,7 @@
 import { NavLink, Navigate } from "react-router-dom";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { useCampaignHunterSync } from "@/features/campaigns/hooks/useCampaignHunterSync";
+import { CampaignRoleBanner } from "@/features/campaigns/components/CampaignRoleBanner";
 import { CardSkeleton } from "@/components/Skeleton";
 import { ChevronIcon } from "./icons";
 import { Shell } from "./Shell";
@@ -39,6 +40,7 @@ export function CampaignLayout() {
           </NavLink>
         </>
       }
+      banner={<CampaignRoleBanner />}
     />
   );
 }
