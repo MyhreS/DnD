@@ -7,8 +7,10 @@ import { AsyncButton } from "@/components/AsyncButton";
 import { downloadHandbookPdf } from "../lib/handbookPdf";
 import { ClassesTab } from "./ClassesTab";
 import { RitesTab } from "./RitesTab";
+import { BackgroundsTab } from "./BackgroundsTab";
+import { FeatsTab } from "./FeatsTab";
 
-type Tab = "rules" | "classes" | "rites" | "armory";
+type Tab = "rules" | "classes" | "backgrounds" | "feats" | "rites" | "armory";
 
 export function HandbookPage() {
   const [tab, setTab] = useState<Tab>("rules");
@@ -22,12 +24,16 @@ export function HandbookPage() {
       <div className="row" style={{ gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
         <TabButton active={tab === "rules"} onClick={() => setTab("rules")}>Rules</TabButton>
         <TabButton active={tab === "classes"} onClick={() => setTab("classes")}>Classes</TabButton>
+        <TabButton active={tab === "backgrounds"} onClick={() => setTab("backgrounds")}>Backgrounds</TabButton>
+        <TabButton active={tab === "feats"} onClick={() => setTab("feats")}>Feats</TabButton>
         <TabButton active={tab === "rites"} onClick={() => setTab("rites")}>Rites</TabButton>
         <TabButton active={tab === "armory"} onClick={() => setTab("armory")}>Armory</TabButton>
       </div>
 
       {tab === "rules" && <RulesTab />}
       {tab === "classes" && <ClassesTab />}
+      {tab === "backgrounds" && <BackgroundsTab />}
+      {tab === "feats" && <FeatsTab />}
       {tab === "rites" && <RitesTab />}
       {tab === "armory" && <ArmoryTab />}
 
