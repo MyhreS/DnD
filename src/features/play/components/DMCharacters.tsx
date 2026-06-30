@@ -4,12 +4,15 @@ import { maxHp, earnedLevel, isLevelUpPending } from "@/lib/character";
 import { AsyncButton } from "@/components/AsyncButton";
 import { DMCharacterEditor } from "./DMCharacterEditor";
 import { useCharactersStore } from "../store/charactersStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import type { ArchivedCharacter, HunterCard } from "@/types";
 
-/** DM-only board: every character with HP / level / items, plus full control —
- * confirm/override death and recover archived hunters. */
+/** DM-only board: this campaign's characters with HP / level / items, plus full
+ * control — confirm/override death and recover archived hunters. Scoped to the
+ * active campaign so the DM only sees (and can only act on) hunters it manages. */
 export function DMCharacters({ gameId }: { gameId: string | null }) {
-  const party = useCharactersStore((s) => s.party);
+  const activeId = useCampaignStore((s) => s.activeId);
+  const party = useCharactersStore((s) => s.party).filter((c) => c.campaignId === activeId);
   const archive = useCharactersStore((s) => s.archive);
   const error = useCharactersStore((s) => s.error);
 

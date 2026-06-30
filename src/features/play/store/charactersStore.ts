@@ -9,6 +9,7 @@ import {
   awardInsight as apiAwardInsight,
 } from "@/api/players";
 import { createLoot } from "@/api/games";
+import { explain } from "@/lib/errors";
 import { isPreviewActive, previewPartyCards, previewArchive } from "@/dev/preview";
 
 interface CharactersState {
@@ -49,7 +50,7 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
       return out;
     } catch (err) {
       console.error(msg, err);
-      set({ busy: false, error: msg });
+      set({ busy: false, error: explain(msg, err) });
       return null;
     }
   }
@@ -72,8 +73,8 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         return;
       }
       const unsubParty = subscribeAllCharacters(
-        (party) => set({ party }),
-        () => set({ error: "Couldn't load characters." }),
+        (party) => set({ party, error: null }), // a fresh snapshot clears any stale error
+        (err) => set({ error: explain("Couldn't load characters", err) }),
       );
       const unsubArchive = subscribeArchive((archive) => set({ archive }));
       set({ _unsubParty: unsubParty, _unsubArchive: unsubArchive });
