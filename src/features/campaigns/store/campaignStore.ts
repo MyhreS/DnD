@@ -33,6 +33,9 @@ interface CampaignState {
   activeId: string | null;
   active: Campaign | null;
   members: CampaignMember[];
+  /** When the DM is "playing as" a hunter to test the game, that character's id + name. */
+  playingAsId: string | null;
+  playingAsName: string | null;
   status: Status;
   busy: boolean;
   error: string | null;
@@ -53,6 +56,9 @@ interface CampaignState {
   leave: (id: string, uid: string) => Promise<boolean>;
   /** DM: permanently delete a campaign (+ its scoped data) and exit it. */
   remove: (id: string) => Promise<boolean>;
+  /** DM: step into a hunter (play as them to test the game) / step back to DM. */
+  playAs: (characterId: string, name: string) => void;
+  returnToDm: () => void;
   pickCharacter: (uid: string, characterId: string | null) => Promise<boolean>;
   /** DM: invite/uninvite by email, regenerate the share code. */
   invite: (email: string) => Promise<boolean>;
@@ -95,6 +101,8 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
     activeId: null,
     active: null,
     members: [],
+    playingAsId: null,
+    playingAsName: null,
     status: "idle",
     busy: false,
     error: null,
@@ -161,7 +169,7 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
     exit: () => {
       localStorage.removeItem(ACTIVE_KEY);
       if (!get().preview) watchActive(null);
-      set({ activeId: null });
+      set({ activeId: null, playingAsId: null, playingAsName: null });
     },
 
     create: async (input) => {
@@ -206,6 +214,9 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
       if (ok && get().activeId === id) get().exit();
       return ok;
     },
+
+    playAs: (characterId, name) => set({ playingAsId: characterId, playingAsName: name }),
+    returnToDm: () => set({ playingAsId: null, playingAsName: null }),
 
     pickCharacter: async (uid, characterId) => {
       if (get().preview) return true;
