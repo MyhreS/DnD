@@ -50,6 +50,9 @@ export function CombatantRow({
             {combatant.ac != null ? ` · AC ${combatant.ac}` : ""}
             {hp != null && max != null ? ` · HP ${hp}/${max}` : ""}
           </div>
+          {combatant.note && (
+            <div className="muted" style={{ fontSize: "0.76rem", marginTop: 2 }}>{combatant.note}</div>
+          )}
         </div>
         {isDM && (
           <button
