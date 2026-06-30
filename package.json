@@ -26,7 +26,8 @@
     "icons": "bun run scripts/generate-icons.mjs",
     "deploy": "bun run build && firebase deploy",
     "deploy:hosting": "bun run build && firebase deploy --only hosting",
-    "deploy:rules": "firebase deploy --only firestore:rules"
+    "deploy:rules": "firebase deploy --only firestore:rules",
+    "qa": "doppler run -- node scripts/qa-crawl.mjs"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",
