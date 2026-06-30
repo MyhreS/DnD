@@ -53,6 +53,11 @@ export function HunterCardView({ card }: { card: HunterCard }) {
                 .filter(Boolean)
                 .join(" · ")}
             </p>
+            {card.feat && (
+              <p className="faint" style={{ marginBottom: 0, marginTop: 2, fontSize: "0.8rem" }}>
+                Origin feat: {card.feat}
+              </p>
+            )}
           </div>
           {klass && !art && (
             <div className="center" style={{ flex: "none" }} title={klass.title}>

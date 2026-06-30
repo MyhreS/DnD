@@ -1,7 +1,9 @@
 import { Fragment, useMemo, useState } from "react";
-import type { AbilityKey, AbilityScores, HunterCard } from "@/types";
+import type { AbilityKey, AbilityScores, Background, HunterCard } from "@/types";
 import { CLASSES, getClass } from "@/data/classes";
 import { MAIN_ARMOR } from "@/data/armor";
+import { BACKGROUNDS } from "@/data/backgrounds";
+import { ORIGIN_FEATS } from "@/data/feats";
 import {
   ABILITIES,
   ABILITY_NAME,
@@ -27,7 +29,9 @@ interface Props {
   lockClass?: boolean;
 }
 
-const STEP_TITLES = ["Class", "Details", "Abilities", "Skills", "Armor", "Review"];
+// Steps mirror the handbook's Chapter 1: Class · Background · Ability Scores ·
+// Armor · Details.
+const STEP_TITLES = ["Class", "Background", "Abilities", "Armor", "Details"];
 
 // Split a final score into point-buy base (8–15) + background bonus (0–2).
 function splitScore(final: number): { base: number; bonus: number } {
@@ -35,13 +39,33 @@ function splitScore(final: number): { base: number; bonus: number } {
   return { base, bonus: Math.max(0, Math.min(2, final - base)) };
 }
 
+const ZERO_BONUS = (): Record<AbilityKey, number> => {
+  const out = {} as Record<AbilityKey, number>;
+  for (const k of ABILITY_KEYS) out[k] = 0;
+  return out;
+};
+
+/** Pre-select a structured background from the card (by id, else by matching name). */
+function initialBackgroundId(card: HunterCard): string | null {
+  if (card.backgroundId && BACKGROUNDS.some((b) => b.id === card.backgroundId)) return card.backgroundId;
+  const match = BACKGROUNDS.find((b) => b.name.toLowerCase() === card.background.trim().toLowerCase());
+  return match?.id ?? null;
+}
+
 export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDelete, lockClass }: Props) {
   const [name, setName] = useState(initial.name);
   const [classId, setClassId] = useState(initial.classId);
-  const [background, setBackground] = useState(initial.background);
+  const [backgroundId, setBackgroundId] = useState<string | null>(() => initialBackgroundId(initial));
+  const [feat, setFeat] = useState<string>(initial.feat ?? "");
   const [notes, setNotes] = useState(initial.notes);
   const [mainArmorId, setMainArmorId] = useState<string | null>(initial.mainArmorId);
-  const [skills, setSkills] = useState<string[]>(initial.skillProficiencies);
+  // Class-chosen skills only: strip the initial background's granted skills so
+  // re-editing a saved hunter doesn't count background skills as class picks.
+  const [classSkills, setClassSkills] = useState<string[]>(() => {
+    const bgId = initialBackgroundId(initial);
+    const granted = bgId ? BACKGROUNDS.find((b) => b.id === bgId)?.skills ?? [] : [];
+    return initial.skillProficiencies.filter((s) => !granted.includes(s));
+  });
   const [level, setLevel] = useState<number>(initial.level || 1);
   const [subclassId, setSubclassId] = useState<string | null>(initial.subclassId ?? null);
   const [step, setStep] = useState(0);
@@ -59,12 +83,29 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   });
 
   const klass = getClass(classId);
+  const bg = useMemo<Background | null>(
+    () => (backgroundId ? BACKGROUNDS.find((b) => b.id === backgroundId) ?? null : null),
+    [backgroundId],
+  );
+  // Which abilities the background bonus may be applied to (legacy cards: any).
+  const bonusAbilities: readonly AbilityKey[] = bg ? bg.abilityScores : ABILITY_KEYS;
+  const bgSkills = useMemo(() => bg?.skills ?? [], [bg]);
 
   const finalScores = useMemo<AbilityScores>(() => {
     const out = {} as AbilityScores;
     for (const k of ABILITY_KEYS) out[k] = base[k] + bonus[k];
     return out;
   }, [base, bonus]);
+
+  // Class-chosen skills (validated against the class list) + background-granted.
+  const classSkillCount = klass
+    ? classSkills.filter((s) => klass.skillChoices.options.includes(s)).length
+    : 0;
+  const classSkillsOk = !klass || classSkillCount === klass.skillChoices.count;
+  const allSkills = useMemo(
+    () => Array.from(new Set([...classSkills, ...bgSkills])),
+    [classSkills, bgSkills],
+  );
 
   const pointsSpent = useMemo(
     () => ABILITY_KEYS.reduce((sum, k) => sum + (POINT_COST[base[k]] ?? 0), 0),
@@ -89,13 +130,14 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
 
   function setBonusScore(k: AbilityKey, next: number) {
     if (next < 0 || next > 2) return;
+    if (!bonusAbilities.includes(k)) return; // background restricts which abilities benefit
     const projected = { ...bonus, [k]: next };
     if (projected[k] - bonus[k] > 0 && bonusTotal >= 3) return; // cap at 3 total
     setBonus(projected);
   }
 
-  function toggleSkill(skill: string) {
-    setSkills((cur) => {
+  function toggleClassSkill(skill: string) {
+    setClassSkills((cur) => {
       if (cur.includes(skill)) return cur.filter((s) => s !== skill);
       if (!klass || cur.filter((s) => klass.skillChoices.options.includes(s)).length >= klass.skillChoices.count) {
         return cur; // at the limit
@@ -109,45 +151,52 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     setClassId(id);
     setSubclassId(null);
     const next = getClass(id);
-    if (next) {
-      setSkills((cur) => cur.filter((s) => next.skillChoices.options.includes(s)));
-    }
+    if (next) setClassSkills((cur) => cur.filter((s) => next.skillChoices.options.includes(s)));
   }
 
-  const skillCount = klass ? skills.filter((s) => klass.skillChoices.options.includes(s)).length : 0;
-  const skillsOk = !klass || skillCount === klass.skillChoices.count;
+  // Choosing a background sets its granted feat (or clears for a pick) and resets
+  // the ability bonus, since the eligible abilities change.
+  function chooseBackground(id: string) {
+    setBackgroundId(id);
+    const next = BACKGROUNDS.find((b) => b.id === id);
+    setFeat(next?.feat ?? "");
+    setBonus(ZERO_BONUS());
+  }
 
-  // Everything that must be true before a hunter can be saved, each with a
-  // message so a failed save can say exactly what's missing.
+  // Class skills the player picked that the background also grants (redundant).
+  const overlapSkills = classSkills.filter((s) => bgSkills.includes(s));
+
+  // Everything that must be true before a hunter can be saved.
   const problems = useMemo(() => {
     const p: string[] = [];
     if (name.trim().length === 0) p.push("Give your hunter a name.");
     if (!classId) p.push("Choose a class.");
+    if (klass && !classSkillsOk) p.push(`Choose exactly ${klass.skillChoices.count} class skill proficiencies.`);
+    if (!backgroundId) p.push("Choose a background.");
+    if (feat.trim().length === 0) p.push("Choose your Origin feat.");
     if (pointsLeft > 0) p.push(`Spend all your ability points — ${pointsLeft} still left.`);
-    if (bonusTotal !== 3) p.push(`Apply your background bonus (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`);
-    if (klass && !skillsOk) p.push(`Choose exactly ${klass.skillChoices.count} skill proficiencies.`);
+    if (bonusTotal !== 3) p.push(`Apply your background ability points (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`);
     return p;
-  }, [name, classId, pointsLeft, bonusTotal, klass, skillsOk]);
+  }, [name, classId, klass, classSkillsOk, backgroundId, feat, pointsLeft, bonusTotal]);
 
   // Per-step completion (drives the progress bar + Next gating).
   const stepValid = [
-    !!classId,
-    name.trim().length > 0,
+    !!classId && classSkillsOk,
+    !!backgroundId && feat.trim().length > 0,
     pointsLeft === 0 && bonusTotal === 3,
-    !!klass && skillsOk,
     true,
     problems.length === 0,
   ];
   const last = STEP_TITLES.length - 1;
 
   const stepHint = (() => {
-    if (step === 0) return "Choose a class to continue.";
-    if (step === 1) return "Give your hunter a name.";
+    if (step === 0)
+      return !classId ? "Choose a class to continue." : `Choose exactly ${klass?.skillChoices.count ?? 0} class skills.`;
+    if (step === 1) return !backgroundId ? "Choose a background." : "Choose your Origin feat.";
     if (step === 2)
       return pointsLeft > 0
         ? `Spend all your ability points — ${pointsLeft} still left.`
-        : `Apply your background bonus (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`;
-    if (step === 3) return `Choose exactly ${klass?.skillChoices.count ?? 0} skill proficiencies.`;
+        : `Apply your background ability points (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`;
     return "";
   })();
 
@@ -175,7 +224,6 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   function handleSave() {
     setAttempted(true);
     if (problems.length > 0 || saving) {
-      // jump to the first incomplete step so the fix is in view.
       const first = stepValid.findIndex((ok, i) => i < last && !ok);
       if (first >= 0) setStep(first);
       return;
@@ -186,10 +234,12 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       classId,
       subclassId,
       level,
-      background: background.trim(),
+      background: bg?.name ?? initial.background.trim(),
+      backgroundId: backgroundId ?? undefined,
+      feat: feat.trim() || undefined,
       notes: notes.trim(),
       mainArmorId,
-      skillProficiencies: skills,
+      skillProficiencies: allSkills,
       abilities: finalScores,
       sanity: initial.sanity ?? sanMax ?? 0,
       bloodTinge: initial.bloodTinge ?? false,
@@ -202,7 +252,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     <div className="stack" style={{ gap: 16 }}>
       <WizardProgress step={step} valid={stepValid} onJump={jump} />
 
-      {/* Step 1 · Class + subclass */}
+      {/* Step 1 · Class + subclass + class skills */}
       {step === 0 && (
         <>
           <div className="card">
@@ -265,65 +315,113 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
               </div>
             </div>
           )}
+
+          {klass && (
+            <div className="card">
+              <p className="eyebrow">Class skills</p>
+              <h3 style={{ marginBottom: 6 }}>Choose {klass.skillChoices.count} proficiencies</h3>
+              <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
+                {classSkillCount} / {klass.skillChoices.count} chosen · your background grants two more.
+              </p>
+              <div className="chip-row">
+                {klass.skillChoices.options.map((skill) => {
+                  const selected = classSkills.includes(skill);
+                  const atLimit = !selected && classSkillCount >= klass.skillChoices.count;
+                  return (
+                    <button
+                      key={skill}
+                      type="button"
+                      className={`chip selectable${selected ? " selected" : ""}${atLimit ? " disabled" : ""}`}
+                      onClick={() => toggleClassSkill(skill)}
+                    >
+                      {skill}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </>
       )}
 
-      {/* Step 2 · Details */}
+      {/* Step 2 · Background */}
       {step === 1 && (
-        <div className="card">
-          <p className="eyebrow">Step 2 · Details</p>
-          <div className="field">
-            <label htmlFor="hunter-name">Hunter name</label>
-            <input
-              id="hunter-name"
-              className="input"
-              value={name}
-              maxLength={40}
-              placeholder="What do they call you?"
-              onChange={(e) => setName(e.target.value)}
-            />
-          </div>
-          <div className="field">
-            <label htmlFor="bg">Background</label>
-            <input
-              id="bg"
-              className="input"
-              value={background}
-              maxLength={60}
-              placeholder="e.g. Plague Doctor, Deserter, Scholar…"
-              onChange={(e) => setBackground(e.target.value)}
-            />
-          </div>
-          <div className="field" style={{ marginBottom: 0 }}>
-            <label>Level</label>
-            <div className="row" style={{ gap: 12, alignItems: "center" }}>
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                style={{ width: 40, padding: 6 }}
-                disabled={level <= 1}
-                onClick={() => setLevel((l) => Math.max(1, l - 1))}
-                aria-label="decrease level"
-              >
-                −
-              </button>
-              <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", minWidth: 28, textAlign: "center" }}>
-                {level}
-              </span>
-              <button
-                type="button"
-                className="btn btn-ghost btn-sm"
-                style={{ width: 40, padding: 6 }}
-                disabled={level >= 20}
-                onClick={() => setLevel((l) => Math.min(20, l + 1))}
-                aria-label="increase level"
-              >
-                +
-              </button>
-              <span className="faint" style={{ fontSize: "0.82rem" }}>Proficiency {formatModifier(prof)}</span>
+        <>
+          <div className="card">
+            <p className="eyebrow">Step 2 · Background</p>
+            <h3 style={{ marginBottom: 6 }}>Who were you before the hunt?</h3>
+            <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
+              Grants a Feat, two skills, a tool, ability points and equipment.
+            </p>
+            <div className="stack" style={{ gap: 8 }}>
+              {BACKGROUNDS.map((b) => (
+                <SelectCard
+                  key={b.id}
+                  selected={b.id === backgroundId}
+                  onClick={() => chooseBackground(b.id)}
+                  title={b.name}
+                  meta={b.skills.join(" · ")}
+                  sub={b.feat ? `Feat: ${b.feat}` : "Choose any Origin feat"}
+                />
+              ))}
             </div>
           </div>
-        </div>
+
+          {bg && (
+            <div className="card">
+              <p className="eyebrow">{bg.name}</p>
+              <p className="muted" style={{ fontSize: "0.92rem", marginTop: 0 }}>{bg.text}</p>
+              <div className="derived-grid">
+                <Derived label="Skills" value={bg.skills.join(", ")} />
+                <Derived label="Tool" value={bg.tool ?? "—"} />
+                <Derived label="Boosts" value={bg.abilityScores.map((a) => ABILITY_NAME[a].slice(0, 3)).join(" · ")} />
+              </div>
+              {bg.equipment.length > 0 && (
+                <p className="faint" style={{ fontSize: "0.82rem", marginTop: 8, marginBottom: 0 }}>
+                  Equipment: {bg.equipment.join(", ")}
+                </p>
+              )}
+
+              <hr className="divider" />
+              <p className="eyebrow" style={{ marginBottom: 6 }}>Origin feat</p>
+              {bg.feat ? (
+                <p className="muted" style={{ fontSize: "0.92rem", marginTop: 0 }}>
+                  <strong className="gold">{bg.feat}.</strong>{" "}
+                  {ORIGIN_FEATS.find((f) => f.name === bg.feat)?.text ?? "Granted by this background."}
+                </p>
+              ) : (
+                <>
+                  <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
+                    This background lets you choose any Origin feat.
+                  </p>
+                  <div className="chip-row">
+                    {ORIGIN_FEATS.map((f) => (
+                      <button
+                        key={f.id}
+                        type="button"
+                        className={`chip selectable${feat === f.name ? " selected" : ""}`}
+                        onClick={() => setFeat(f.name)}
+                      >
+                        {f.name}
+                      </button>
+                    ))}
+                  </div>
+                  {feat && (
+                    <p className="muted" style={{ fontSize: "0.88rem", marginTop: 8, marginBottom: 0 }}>
+                      {ORIGIN_FEATS.find((f) => f.name === feat)?.text}
+                    </p>
+                  )}
+                </>
+              )}
+
+              {overlapSkills.length > 0 && (
+                <div className="banner banner-warn" style={{ marginTop: 12 }}>
+                  Your background already grants {overlapSkills.join(", ")}. Pick different class skills (Step 1) so a pick isn't wasted.
+                </div>
+              )}
+            </div>
+          )}
+        </>
       )}
 
       {/* Step 3 · Ability scores */}
@@ -337,12 +435,15 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
             </span>
           </div>
           <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-            Buy base scores 8–15 (27 pts). Then apply your background: +2 and +1, or three +1's{" "}
+            Buy base scores 8–15 (27 pts). Then apply your{" "}
+            {bg ? `${bg.name} ` : ""}background bonus to{" "}
+            {bonusAbilities.map((a) => ABILITY_NAME[a]).join(", ")}: +2 and +1, or three +1's{" "}
             {bonusValid ? "✓" : `(${bonusTotal}/3 used)`}.
           </p>
           <div className="stack" style={{ gap: 8 }}>
             {ABILITIES.map(({ key, name: aName, short }) => {
               const final = finalScores[key];
+              const canBonus = bonusAbilities.includes(key);
               return (
                 <div key={key} className="row" style={{ padding: "8px 0", borderBottom: "1px solid var(--border)", gap: 6 }}>
                   <div style={{ flex: 1, minWidth: 0 }}>
@@ -352,7 +453,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                     </div>
                   </div>
                   <Stepper label="base" value={base[key]} min={POINT_BUY_MIN} max={POINT_BUY_MAX} onChange={(v) => setBaseScore(key, v)} />
-                  <Stepper label="bg" value={bonus[key]} min={0} max={2} onChange={(v) => setBonusScore(key, v)} />
+                  {canBonus ? (
+                    <Stepper label="bg" value={bonus[key]} min={0} max={2} onChange={(v) => setBonusScore(key, v)} />
+                  ) : (
+                    <div style={{ width: 71, flex: "none" }} aria-hidden />
+                  )}
                   <div style={{ textAlign: "right", minWidth: 38, flex: "none" }}>
                     <div style={{ fontFamily: "var(--font-display)", fontSize: "1.2rem", lineHeight: 1.1 }}>{final}</div>
                     <div className="gold" style={{ fontSize: "0.78rem" }}>{formatModifier(abilityModifier(final))}</div>
@@ -364,43 +469,10 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
         </div>
       )}
 
-      {/* Step 4 · Skills */}
+      {/* Step 4 · Armor */}
       {step === 3 && (
         <div className="card">
-          <p className="eyebrow">Step 4 · Skills</p>
-          {klass ? (
-            <>
-              <h3 style={{ marginBottom: 6 }}>Choose {klass.skillChoices.count} proficiencies</h3>
-              <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-                {skillCount} / {klass.skillChoices.count} chosen
-              </p>
-              <div className="chip-row">
-                {klass.skillChoices.options.map((skill) => {
-                  const selected = skills.includes(skill);
-                  const atLimit = !selected && skillCount >= klass.skillChoices.count;
-                  return (
-                    <button
-                      key={skill}
-                      type="button"
-                      className={`chip selectable${selected ? " selected" : ""}${atLimit ? " disabled" : ""}`}
-                      onClick={() => toggleSkill(skill)}
-                    >
-                      {skill}
-                    </button>
-                  );
-                })}
-              </div>
-            </>
-          ) : (
-            <p className="muted" style={{ marginBottom: 0 }}>Choose a class first (Step 1) to see its skills.</p>
-          )}
-        </div>
-      )}
-
-      {/* Step 5 · Armor */}
-      {step === 4 && (
-        <div className="card">
-          <p className="eyebrow">Step 5 · Armor</p>
+          <p className="eyebrow">Step 4 · Armor</p>
           <h3 style={{ marginBottom: 8 }}>Main armor</h3>
           <div className="field" style={{ marginBottom: 8 }}>
             <select className="select" value={mainArmorId ?? ""} onChange={(e) => setMainArmorId(e.target.value || null)}>
@@ -414,9 +486,53 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
         </div>
       )}
 
-      {/* Step 6 · Review */}
-      {step === 5 && (
+      {/* Step 5 · Details (name, level, review, notes) */}
+      {step === 4 && (
         <>
+          <div className="card">
+            <p className="eyebrow">Step 5 · Details</p>
+            <div className="field">
+              <label htmlFor="hunter-name">Hunter name</label>
+              <input
+                id="hunter-name"
+                className="input"
+                value={name}
+                maxLength={40}
+                placeholder="What do they call you?"
+                onChange={(e) => setName(e.target.value)}
+              />
+            </div>
+            <div className="field" style={{ marginBottom: 0 }}>
+              <label>Level</label>
+              <div className="row" style={{ gap: 12, alignItems: "center" }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  style={{ width: 40, padding: 6 }}
+                  disabled={level <= 1}
+                  onClick={() => setLevel((l) => Math.max(1, l - 1))}
+                  aria-label="decrease level"
+                >
+                  −
+                </button>
+                <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", minWidth: 28, textAlign: "center" }}>
+                  {level}
+                </span>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm"
+                  style={{ width: 40, padding: 6 }}
+                  disabled={level >= 20}
+                  onClick={() => setLevel((l) => Math.min(20, l + 1))}
+                  aria-label="increase level"
+                >
+                  +
+                </button>
+                <span className="faint" style={{ fontSize: "0.82rem" }}>Proficiency {formatModifier(prof)}</span>
+              </div>
+            </div>
+          </div>
+
           {klass && (
             <div className="card">
               <p className="eyebrow">At a glance</p>
@@ -436,7 +552,8 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                 <Derived label="Sanity Die" value={klass.sanityDie} />
               </div>
               <p className="faint center" style={{ fontSize: "0.78rem", marginTop: 10, marginBottom: 0 }}>
-                Saving throws: {klass.savingThrows.map((k) => ABILITY_NAME[k]).join(" & ")}
+                {bg ? `${bg.name} · ` : ""}{feat ? `${feat} · ` : ""}
+                {allSkills.length > 0 ? `Skills: ${allSkills.join(", ")}` : ""}
               </p>
             </div>
           )}
@@ -543,7 +660,7 @@ function WizardProgress({
   );
 }
 
-/** A selectable option card (class / subclass). */
+/** A selectable option card (class / subclass / background). */
 function SelectCard({
   selected,
   onClick,
