@@ -2,19 +2,21 @@ import { Link } from "react-router-dom";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { useGameStore, currentGame } from "@/features/play/store/gameStore";
 import { useCharactersStore } from "@/features/play/store/charactersStore";
+import { useCombatStore } from "@/features/play/store/combatStore";
 import { usePlaySync } from "@/features/play/hooks/usePlaySync";
 import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
+import { useCombatSync } from "@/features/play/hooks/useCombatSync";
 import { PHASE_LABEL, LOCATION_LABEL } from "@/features/play/lib/phase";
 import { useWakeLock } from "@/hooks/common/useWakeLock";
 import { useFullscreen } from "@/hooks/common/useFullscreen";
 import { getClass } from "@/data/classes";
 import { maxHp, maxSanity } from "@/lib/character";
 import type { HunterCard } from "@/types";
+import { CombatBoard } from "./CombatBoard";
 
 /** Chrome-less big-screen board for a TV/laptop at the table: the current phase
- * + location and every hunter's live vitals. Read-only — a projection of the
- * live game; it never writes. (Combat initiative/conditions arrive with the
- * combat tracker.) */
+ * + location, the live initiative board during combat, and every hunter's live
+ * vitals. Read-only — a projection of the live game; it never writes. */
 export function StatusPage() {
   usePlaySync();
   useCharactersSync();
@@ -28,6 +30,9 @@ export function StatusPage() {
   // Only a started game is "in play"; a queued lobby game shouldn't read as live.
   const game = currentGame(games, campaign?.id ?? null);
   const liveGame = game && game.status === "active" ? game : null;
+  useCombatSync(liveGame?.id ?? null);
+  const combatants = useCombatStore((s) => s.combatants);
+  const inCombat = !!liveGame?.combat?.active && combatants.length > 0;
   const hunters = members
     .map((m) => party.find((c) => c.id === m.characterId))
     .filter((c): c is HunterCard => !!c && !!c.classId);
@@ -56,21 +61,26 @@ export function StatusPage() {
         </div>
       </div>
 
+      {inCombat && liveGame && <CombatBoard game={liveGame} combatants={combatants} party={party} />}
+
       {hunters.length === 0 ? (
         <p className="muted" style={{ fontSize: "1.2rem" }}>No hunters in this campaign yet.</p>
       ) : (
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))",
-            gap: 16,
-            alignItems: "start",
-          }}
-        >
-          {hunters.map((c) => (
-            <VitalsCard key={c.id} card={c} />
-          ))}
-        </div>
+        <>
+          {inCombat && <p className="eyebrow" style={{ fontSize: "1.05rem", marginBottom: 12 }}>Party</p>}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))",
+              gap: 16,
+              alignItems: "start",
+            }}
+          >
+            {hunters.map((c) => (
+              <VitalsCard key={c.id} card={c} />
+            ))}
+          </div>
+        </>
       )}
     </div>
   );
