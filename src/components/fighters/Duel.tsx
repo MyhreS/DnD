@@ -5,7 +5,8 @@ import { Combatant, type CombatantHandle } from "./Combatant";
 import type { Cast } from "./useFighterShows";
 import type { Impact } from "./fighterConfig";
 
-const GAP = 2.0; // each fighter's distance from centre while clashing
+const GAP = 0.9; // each fighter's distance from centre while clashing (tuned to
+// the smaller 0.85 model scale so duelists actually meet instead of swinging at air)
 const RUN = 3.6;
 const WALK = 1.6;
 const FACE_R = Math.PI / 2; // facing screen-right (toward a foe on the right)
