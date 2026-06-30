@@ -184,7 +184,7 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
     doc,
     y,
     "Worn armor",
-    armor ? `${armor.name} — AC ${armor.ac}  (total AC ${ac.total}, ${ac.category})` : `Unarmored — AC ${ac.total}`,
+    armor ? `${armor.name} — ${armor.ac}  (total AC ${ac.total}, ${ac.category})` : `Unarmored — AC ${ac.total}`,
   );
   if (armor?.special) y = paragraph(doc, y, armor.special);
   if (inv.length) {
