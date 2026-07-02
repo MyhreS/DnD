@@ -52,8 +52,18 @@ interface CombatState {
   startEncounter: (gameId: string, pcs: PcSeed[]) => Promise<boolean>;
   addMonster: (gameId: string, m: MonsterInput) => Promise<boolean>;
   patch: (gameId: string, id: string, partial: Partial<Combatant>) => Promise<boolean>;
-  remove: (gameId: string, id: string) => Promise<boolean>;
-  toggleCondition: (gameId: string, c: Combatant, conditionId: string) => Promise<boolean>;
+  remove: (
+    gameId: string,
+    id: string,
+    game?: Game,
+    combatants?: Combatant[],
+  ) => Promise<boolean>;
+  toggleCondition: (
+    gameId: string,
+    c: Combatant,
+    conditionId: string,
+    round: number,
+  ) => Promise<boolean>;
   nextTurn: (gameId: string, game: Game, combatants: Combatant[]) => Promise<boolean>;
   endEncounter: (gameId: string) => Promise<boolean>;
 }
@@ -165,7 +175,26 @@ export const useCombatStore = create<CombatState>((set, get) => {
       return (await run(() => patchCombatant(gameId, id, partial), "Couldn't update the combatant.")) !== null;
     },
 
-    remove: async (gameId, id) => {
+    remove: async (gameId, id, game, combatants) => {
+      // Deleting the combatant whose turn it is would orphan game.combat.turnId
+      // (no highlight; Next turn restarts from the top without bumping the
+      // round). Hand the turn to the next in order first.
+      if (game?.combat?.active && game.combat.turnId === id && combatants) {
+        const order = initiativeOrder(combatants);
+        const idx = order.findIndex((c) => c.id === id);
+        const rest = order.filter((c) => c.id !== id);
+        let round = game.combat.round ?? 1;
+        let turnId: string | null = null;
+        if (rest.length > 0 && idx >= 0) {
+          if (idx >= rest.length) {
+            round += 1; // the removed combatant was last in the round
+            turnId = rest[0].id;
+          } else {
+            turnId = rest[idx].id; // whoever slid into its slot is up next
+          }
+        }
+        await setCombat(gameId, { active: true, round, turnId });
+      }
       if (get().preview) {
         set((s) => ({ combatants: s.combatants.filter((c) => c.id !== id) }));
         return true;
@@ -173,14 +202,19 @@ export const useCombatStore = create<CombatState>((set, get) => {
       return (await run(() => removeCombatant(gameId, id), "Couldn't remove the combatant.")) !== null;
     },
 
-    toggleCondition: async (gameId, c, conditionId) => {
+    toggleCondition: async (gameId, c, conditionId, round) => {
       // Read the latest from the store (not the possibly-stale prop) so rapid
       // toggles don't clobber each other.
       const current = get().combatants.find((x) => x.id === c.id) ?? c;
-      const conditions = current.conditions.includes(conditionId)
+      const on = current.conditions.includes(conditionId);
+      const conditions = on
         ? current.conditions.filter((x) => x !== conditionId)
         : [...current.conditions, conditionId];
-      return get().patch(gameId, c.id, { conditions });
+      // Track the round a condition was applied so rows can show its duration.
+      const conditionSince = { ...(current.conditionSince ?? {}) };
+      if (on) delete conditionSince[conditionId];
+      else conditionSince[conditionId] = Math.max(1, round);
+      return get().patch(gameId, c.id, { conditions, conditionSince });
     },
 
     nextTurn: async (gameId, game, combatants) => {

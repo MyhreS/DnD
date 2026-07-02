@@ -1,0 +1,35 @@
+Insane Condition
+(Transcribed from resources/pdf/appendices/Insane Condition.pdf)
+
+Trigger. When your current Madness equals or exceeds your Max Sanity, you gain the
+Insane condition.
+
+Ending the Condition. The Insane condition ends immediately when your current Madness
+is reduced below your Max Sanity.
+
+Madness Die. While Insane, you have a Madness Die. The Madness Die is an 8-sided die
+with three Blank faces, three Star faces, and two Eye faces.
+
+Unstable Violence. Once per turn, when you take the Attack action or perform a harmful
+Rite, choose your target or area as normal. Before resolving the attack or Rite, roll the
+Madness Die.
+
+Star. Resolve the attack or Rite normally.
+
+Blank. The attack or Rite turns against your nearest ally instead. If more than one ally is
+equally near, you choose which one is targeted. If no ally is within range, you must spend
+available movement to bring an ally within range or reach, if possible. If no ally can be
+targeted after this movement, the attack or Rite turns inward and targets you instead.
+
+Eye. For one moment, you understand what you are about to do. You may either end your
+turn immediately with no effect, or roll the Madness Die again. If the second roll is another
+Eye, the vision breaks you: roll your Sanity Die, suffer that much Mind damage, and gain 1
+Madness.
+
+Cracked Perception. While Insane, you have Advantage on Wisdom (Perception) checks
+and Intelligence (Eldritch Knowledge) checks made to notice unnatural things, hidden
+entities, dream-architecture, impossible movement, or occult distortions.
+
+NOTE (app integration): Per the DM, what the Insane condition implies mechanically is a
+table secret — the app must show only that a hunter IS Insane (Madness >= Max Sanity),
+never these mechanics. Same for the "Lost" transformation result.

@@ -10,6 +10,9 @@ import { usePartyData } from "../hooks/usePartyData";
 import { HunterRow } from "./HunterRow";
 import { RosterPanel } from "./RosterPanel";
 import { DMBuildHunter } from "./DMBuildHunter";
+import { DMCharacters } from "@/features/play/components/DMCharacters";
+import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
+import { useGameStore, currentGame } from "@/features/play/store/gameStore";
 import { exportPartyPdf } from "@/features/hunter/lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
 import { AsyncButton } from "@/components/AsyncButton";
@@ -23,6 +26,10 @@ export function PartyPage() {
   const canEmail = isDM;
 
   useSessionsLive();
+  // The DM control board (insight/level/gold/blood tinge) reads the shared
+  // characters store — keep it live here too, not just in Play.
+  useCharactersSync();
+  const games = useGameStore((s) => s.games);
   const activeId = useCampaignStore((s) => s.activeId);
   const campaignMembers = useCampaignStore((s) => s.members);
   const allSessions = useSessionStore((s) => s.sessions);
@@ -34,6 +41,8 @@ export function PartyPage() {
   });
 
   // Each campaign member's chosen hunter (or their newest if none picked yet).
+  // The DM brings no hunter, so they get no owned-card fallback; and one card
+  // renders once even if two member rows resolve to it.
   const hunters = useMemo(() => {
     const byId = new Map((players ?? []).map((c) => [c.id, c]));
     const byOwner = new Map<string, HunterCard[]>();
@@ -42,9 +51,14 @@ export function PartyPage() {
       list.push(c);
       byOwner.set(c.ownerUid, list);
     }
+    const seen = new Set<string>();
     return campaignMembers
-      .map((m) => (m.characterId ? byId.get(m.characterId) : undefined) ?? byOwner.get(m.uid)?.[0])
-      .filter((c): c is HunterCard => !!c && !!c.classId && !!c.name);
+      .map((m) =>
+        (m.characterId ? byId.get(m.characterId) : undefined) ??
+        (m.role === "dm" ? undefined : byOwner.get(m.uid)?.[0]),
+      )
+      .filter((c): c is HunterCard => !!c && !!c.classId && !!c.name)
+      .filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
   }, [players, campaignMembers]);
 
   return (
@@ -75,6 +89,14 @@ export function PartyPage() {
         {isDM && <div style={{ marginBottom: 12 }}><CampaignInvitePanel /></div>}
 
         {isDM && activeId && <DMBuildHunter members={campaignMembers} campaignId={activeId} />}
+
+        {isDM && (
+          <div style={{ marginBottom: 12 }}>
+            {/* Pass the live game (if any) so confirming a death here still
+                drops the fallen hunter's loot into that game's pile. */}
+            <DMCharacters gameId={currentGame(games, activeId)?.id ?? null} />
+          </div>
+        )}
 
         {isDM && <div style={{ margin: "12px 0" }}><DeleteCampaign /></div>}
 

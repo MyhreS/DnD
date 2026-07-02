@@ -40,7 +40,13 @@ export const auth = initializeAuth(app, {
 // ~10–15s on the first load on networks (mobile/iOS, proxies) that block it
 // before falling back — the classic "Firestore is slow on first open" problem.
 // Auto-detect probes once and picks the working transport immediately.
-export const db = initializeFirestore(app, { experimentalAutoDetectLongPolling: true });
+// ignoreUndefinedProperties: partial HunterCard writes legitimately carry
+// `undefined` for "leave unset" optional fields (feat, inventory, …) — treat
+// them as omitted instead of throwing.
+export const db = initializeFirestore(app, {
+  experimentalAutoDetectLongPolling: true,
+  ignoreUndefinedProperties: true,
+});
 // Functions are deployed in europe-west1 (see functions/src/index.ts).
 export const functions = getFunctions(app, "europe-west1");
 

@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState } from "react";
 import type { AbilityKey, AbilityScores, Background, HunterCard } from "@/types";
 import { CLASSES, getClass } from "@/data/classes";
-import { MAIN_ARMOR } from "@/data/armor";
+import { MAIN_ARMOR, ADDON_ARMOR, EXTRA_ARMOR } from "@/data/armor";
 import { BACKGROUNDS } from "@/data/backgrounds";
 import { ORIGIN_FEATS } from "@/data/feats";
 import {
@@ -14,7 +14,17 @@ import {
   abilityModifier,
   formatModifier,
 } from "@/data/abilities";
-import { armorClass, maxHp, maxSanity, proficiencyBonus } from "@/lib/character";
+import {
+  armorClass,
+  maxAddonPieces,
+  maxHp,
+  maxSanity,
+  proficiencyBonus,
+  wornArmorWeight,
+  DEEPCALLER_STAY_ID,
+  ZEALOT_ID,
+} from "@/lib/character";
+import { startingKit, backgroundGold } from "@/lib/startingEquipment";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 
 interface Props {
@@ -45,6 +55,18 @@ const ZERO_BONUS = (): Record<AbilityKey, number> => {
   return out;
 };
 
+/** The no-feat trade-off, e.g. "30 GP · Poisoner's Kit proficiency". */
+function backgroundPerks(b: Background): string {
+  const gold = backgroundGold(b);
+  const gear = b.equipment.filter((e) => !/^\d+\s*GP$/i.test(e.trim()));
+  const parts = [
+    gold > 0 ? `${gold} GP` : null,
+    gear.length ? gear.join(", ") : null,
+    b.tool ? `${b.tool} proficiency` : null,
+  ].filter(Boolean);
+  return parts.length ? parts.join(" · ") : "extra standing in the world";
+}
+
 /** Pre-select a structured background from the card (by id, else by matching name). */
 function initialBackgroundId(card: HunterCard): string | null {
   if (card.backgroundId && BACKGROUNDS.some((b) => b.id === card.backgroundId)) return card.backgroundId;
@@ -57,8 +79,10 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const [classId, setClassId] = useState(initial.classId);
   const [backgroundId, setBackgroundId] = useState<string | null>(() => initialBackgroundId(initial));
   const [feat, setFeat] = useState<string>(initial.feat ?? "");
-  const [notes, setNotes] = useState(initial.notes);
   const [mainArmorId, setMainArmorId] = useState<string | null>(initial.mainArmorId);
+  const [addonIds, setAddonIds] = useState<string[]>(initial.addonArmorIds ?? []);
+  const [studded, setStudded] = useState<number>(initial.studdedAddons ?? 0);
+  const [extraIds, setExtraIds] = useState<string[]>(initial.extraArmorIds ?? []);
   // Class-chosen skills only: strip the initial background's granted skills so
   // re-editing a saved hunter doesn't count background skills as class picks.
   const [classSkills, setClassSkills] = useState<string[]>(() => {
@@ -66,19 +90,42 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     const granted = bgId ? BACKGROUNDS.find((b) => b.id === bgId)?.skills ?? [] : [];
     return initial.skillProficiencies.filter((s) => !granted.includes(s));
   });
-  const [level, setLevel] = useState<number>(initial.level || 1);
+  // Level is NOT player-editable: new hunters start at level 1; on an existing
+  // hunter the DM's grants (insight / direct levels) own this number.
+  const level = initial.level || 1;
   const [subclassId, setSubclassId] = useState<string | null>(initial.subclassId ?? null);
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState(false);
 
+  // Point buy (default) or the table's "Maduhausu" rolled-stats method.
+  const [mode, setMode] = useState<"pointbuy" | "maduhausu">(initial.abilityMode ?? "pointbuy");
+  const [hasRolled, setHasRolled] = useState(initial.abilityMode === "maduhausu");
+  // Ability scores are only re-validated (and re-saved) if the player actually
+  // touches them — so editing armor on a leveled hunter never trips over the
+  // creation-time point-buy rules or discards level-up ability increases.
+  const creating = !initial.classId;
+  const [abilitiesDirty, setAbilitiesDirty] = useState(creating);
+
   const [base, setBase] = useState<Record<AbilityKey, number>>(() => {
     const out = {} as Record<AbilityKey, number>;
-    for (const k of ABILITY_KEYS) out[k] = splitScore(initial.abilities[k]).base;
+    // Attribute at most +2 per ability to the background bonus; everything
+    // else (bought/rolled base + any level-up increases) counts as base, so
+    // base + bonus always reproduces the saved final scores.
+    for (const k of ABILITY_KEYS) {
+      const b = initial.baseAbilities
+        ? Math.max(0, Math.min(2, initial.abilities[k] - initial.baseAbilities[k]))
+        : splitScore(initial.abilities[k]).bonus;
+      out[k] = initial.abilities[k] - b;
+    }
     return out;
   });
   const [bonus, setBonus] = useState<Record<AbilityKey, number>>(() => {
     const out = {} as Record<AbilityKey, number>;
-    for (const k of ABILITY_KEYS) out[k] = splitScore(initial.abilities[k]).bonus;
+    for (const k of ABILITY_KEYS) {
+      out[k] = initial.baseAbilities
+        ? Math.max(0, Math.min(2, initial.abilities[k] - initial.baseAbilities[k]))
+        : splitScore(initial.abilities[k]).bonus;
+    }
     return out;
   });
 
@@ -114,8 +161,14 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const pointsLeft = POINT_BUY_BUDGET - pointsSpent;
   const bonusTotal = ABILITY_KEYS.reduce((s, k) => s + bonus[k], 0);
   const bonusValid = bonusTotal === 3; // (2+1) or (1+1+1) both sum to 3
+  // Untouched scores on an existing hunter are saved verbatim — no revalidation.
+  const scoresOk =
+    !abilitiesDirty || (mode === "maduhausu" ? hasRolled : pointsLeft === 0);
+  const bonusOk = !abilitiesDirty || bonusTotal === 3;
 
-  const ac = armorClass(finalScores, mainArmorId);
+  const maxAddons = maxAddonPieces(mainArmorId);
+  const studdedMax = Math.min(5, addonIds.length);
+  const ac = armorClass(finalScores, mainArmorId, addonIds, Math.min(studded, studdedMax));
   const hp = klass ? maxHp(klass, finalScores, level) : null;
   const sanMax = klass ? maxSanity(klass, finalScores, level) : null;
   const prof = proficiencyBonus(level);
@@ -125,7 +178,52 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     const projected = { ...base, [k]: next };
     const spent = ABILITY_KEYS.reduce((s, key) => s + (POINT_COST[projected[key]] ?? 0), 0);
     if (spent > POINT_BUY_BUDGET) return; // can't overspend
+    setAbilitiesDirty(true);
     setBase(projected);
+  }
+
+  /** Maduhausu 🤡 — roll 4d6 drop lowest for each ability, assigned in order. */
+  function rollMaduhausu() {
+    const rollScore = () => {
+      const dice = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
+      dice.sort((a, b) => a - b);
+      return dice[1] + dice[2] + dice[3];
+    };
+    const out = {} as Record<AbilityKey, number>;
+    for (const k of ABILITY_KEYS) out[k] = rollScore();
+    setAbilitiesDirty(true);
+    setBase(out);
+    setHasRolled(true);
+  }
+
+  function switchMode(next: "pointbuy" | "maduhausu") {
+    if (next === mode) return;
+    setAbilitiesDirty(true);
+    setMode(next);
+    if (next === "pointbuy") {
+      // Rolled scores don't fit the 8–15 buy space — reset to a clean slate.
+      const out = {} as Record<AbilityKey, number>;
+      for (const k of ABILITY_KEYS) out[k] = 10;
+      setBase(out);
+    } else {
+      setHasRolled(false);
+    }
+  }
+
+  function toggleAddon(id: string) {
+    setAddonIds((cur) => {
+      if (cur.includes(id)) {
+        const next = cur.filter((x) => x !== id);
+        setStudded((s) => Math.min(s, Math.min(5, next.length)));
+        return next;
+      }
+      if (cur.length >= maxAddons) return cur;
+      return [...cur, id];
+    });
+  }
+
+  function toggleExtra(id: string) {
+    setExtraIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
   }
 
   function setBonusScore(k: AbilityKey, next: number) {
@@ -133,6 +231,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     if (!bonusAbilities.includes(k)) return; // background restricts which abilities benefit
     const projected = { ...bonus, [k]: next };
     if (projected[k] - bonus[k] > 0 && bonusTotal >= 3) return; // cap at 3 total
+    setAbilitiesDirty(true);
     setBonus(projected);
   }
 
@@ -154,12 +253,14 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     if (next) setClassSkills((cur) => cur.filter((s) => next.skillChoices.options.includes(s)));
   }
 
-  // Choosing a background sets its granted feat (or clears for a pick) and resets
-  // the ability bonus, since the eligible abilities change.
+  // Choosing a background sets its granted feat (or none) and resets the
+  // ability bonus, since the eligible abilities change.
   function chooseBackground(id: string) {
+    if (id === backgroundId) return;
     setBackgroundId(id);
     const next = BACKGROUNDS.find((b) => b.id === id);
     setFeat(next?.feat ?? "");
+    setAbilitiesDirty(true);
     setBonus(ZERO_BONUS());
   }
 
@@ -173,17 +274,20 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     if (!classId) p.push("Choose a class.");
     if (klass && !classSkillsOk) p.push(`Choose exactly ${klass.skillChoices.count} class skill proficiencies.`);
     if (!backgroundId) p.push("Choose a background.");
-    if (feat.trim().length === 0) p.push("Choose your Origin feat.");
-    if (pointsLeft > 0) p.push(`Spend all your ability points — ${pointsLeft} still left.`);
-    if (bonusTotal !== 3) p.push(`Apply your background ability points (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`);
+    if (bg?.feat && feat.trim().length === 0) p.push("Choose your Origin feat.");
+    if (abilitiesDirty) {
+      if (mode === "pointbuy" && pointsLeft > 0) p.push(`Spend all your ability points — ${pointsLeft} still left.`);
+      if (mode === "maduhausu" && !hasRolled) p.push("Roll your Maduhausu scores.");
+      if (bonusTotal !== 3) p.push(`Apply your background ability points (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`);
+    }
     return p;
-  }, [name, classId, klass, classSkillsOk, backgroundId, feat, pointsLeft, bonusTotal]);
+  }, [name, classId, klass, classSkillsOk, backgroundId, bg, feat, abilitiesDirty, mode, hasRolled, pointsLeft, bonusTotal]);
 
   // Per-step completion (drives the progress bar + Next gating).
   const stepValid = [
     !!classId && classSkillsOk,
-    !!backgroundId && feat.trim().length > 0,
-    pointsLeft === 0 && bonusTotal === 3,
+    !!backgroundId,
+    scoresOk && bonusOk,
     true,
     problems.length === 0,
   ];
@@ -192,11 +296,13 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const stepHint = (() => {
     if (step === 0)
       return !classId ? "Choose a class to continue." : `Choose exactly ${klass?.skillChoices.count ?? 0} class skills.`;
-    if (step === 1) return !backgroundId ? "Choose a background." : "Choose your Origin feat.";
-    if (step === 2)
-      return pointsLeft > 0
+    if (step === 1) return "Choose a background.";
+    if (step === 2) {
+      if (mode === "maduhausu" && !hasRolled) return "Roll your Maduhausu scores first.";
+      return mode === "pointbuy" && pointsLeft > 0
         ? `Spend all your ability points — ${pointsLeft} still left.`
         : `Apply your background ability points (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`;
+    }
     return "";
   })();
 
@@ -228,23 +334,37 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       if (first >= 0) setStep(first);
       return;
     }
+    // A brand-new hunter starts with the class + background starting kit
+    // (real inventory items + starting gold). Edits keep what's carried.
+    const kit = creating ? startingKit(klass, bg) : null;
     onSave({
       ...initial,
       name: name.trim(),
       classId,
       subclassId,
       level,
+      lastSeenLevel: initial.lastSeenLevel ?? level,
+      feats: initial.feats ?? [],
       background: bg?.name ?? initial.background.trim(),
       backgroundId: backgroundId ?? undefined,
-      feat: feat.trim() || undefined,
-      notes: notes.trim(),
+      // null (not undefined) so switching to a no-feat background actually
+      // CLEARS a previously stored feat under setDoc merge semantics.
+      feat: bg?.feat ?? null,
       mainArmorId,
+      addonArmorIds: addonIds.slice(0, maxAddons),
+      studdedAddons: Math.min(studded, studdedMax),
+      extraArmorIds: extraIds,
       skillProficiencies: allSkills,
-      abilities: finalScores,
+      // Untouched ability scores round-trip verbatim — never re-derived, so
+      // level-up increases survive unrelated edits (armor, name, whispers).
+      abilities: abilitiesDirty ? finalScores : initial.abilities,
+      baseAbilities: abilitiesDirty ? { ...base } : initial.baseAbilities ?? { ...base },
+      abilityMode: abilitiesDirty ? mode : initial.abilityMode ?? mode,
       sanity: initial.sanity ?? sanMax ?? 0,
       bloodTinge: initial.bloodTinge ?? false,
       preparedWhispers: initial.preparedWhispers ?? [],
-      coins: initial.coins ?? 0,
+      coins: kit ? (initial.coins ?? 0) + kit.coins : initial.coins ?? 0,
+      inventory: kit ? kit.inventory : initial.inventory,
     });
   }
 
@@ -303,16 +423,33 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
               </p>
               <div className="stack" style={{ gap: 8 }}>
                 <SelectCard selected={subclassId === null} onClick={() => setSubclassId(null)} title="Undecided" />
+                {klass.id === "deepcaller" && (
+                  <SelectCard
+                    selected={subclassId === DEEPCALLER_STAY_ID}
+                    onClick={() => setSubclassId(DEEPCALLER_STAY_ID)}
+                    title="The Deepcaller Path"
+                    sub="Stay the course — keep your Book, your Rites and every Deepcaller feature."
+                  />
+                )}
                 {klass.subclasses.map((s) => (
                   <SelectCard
                     key={s.id}
                     selected={s.id === subclassId}
                     onClick={() => setSubclassId(s.id)}
                     title={s.name}
+                    meta={s.id === ZEALOT_ID ? "Prestige class" : undefined}
                     sub={s.tagline}
                   />
                 ))}
               </div>
+              {subclassId === ZEALOT_ID && (
+                <div className="banner banner-warn" style={{ marginTop: 10 }}>
+                  <strong>Burn the Book.</strong> The Zealot is a prestige class: entering it
+                  destroys your Book of the Deepcaller and REPLACES all Deepcaller features
+                  gained so far with the Zealot's own. You keep your Whispers and your Rite
+                  ability, and can no longer perform Rites of level 2+.
+                </div>
+              )}
             </div>
           )}
 
@@ -351,7 +488,8 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
             <p className="eyebrow">Step 2 · Background</p>
             <h3 style={{ marginBottom: 6 }}>Who were you before the hunt?</h3>
             <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-              Grants a Feat, two skills, a tool, ability points and equipment.
+              Grants two skills, ability points and equipment — and either a Feat
+              or richer worldly perks (gear, gold, proficiencies).
             </p>
             <div className="stack" style={{ gap: 8 }}>
               {BACKGROUNDS.map((b) => (
@@ -361,7 +499,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                   onClick={() => chooseBackground(b.id)}
                   title={b.name}
                   meta={b.skills.join(" · ")}
-                  sub={b.feat ? `Feat: ${b.feat}` : "Choose any Origin feat"}
+                  sub={b.feat ? `Feat: ${b.feat}` : `No feat — ${backgroundPerks(b)}`}
                 />
               ))}
             </div>
@@ -390,28 +528,10 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                   {ORIGIN_FEATS.find((f) => f.name === bg.feat)?.text ?? "Granted by this background."}
                 </p>
               ) : (
-                <>
-                  <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-                    This background lets you choose any Origin feat.
-                  </p>
-                  <div className="chip-row">
-                    {ORIGIN_FEATS.map((f) => (
-                      <button
-                        key={f.id}
-                        type="button"
-                        className={`chip selectable${feat === f.name ? " selected" : ""}`}
-                        onClick={() => setFeat(f.name)}
-                      >
-                        {f.name}
-                      </button>
-                    ))}
-                  </div>
-                  {feat && (
-                    <p className="muted" style={{ fontSize: "0.88rem", marginTop: 8, marginBottom: 0 }}>
-                      {ORIGIN_FEATS.find((f) => f.name === feat)?.text}
-                    </p>
-                  )}
-                </>
+                <p className="muted" style={{ fontSize: "0.92rem", marginTop: 0 }}>
+                  <strong className="gold">None.</strong> This background grants no feat — its
+                  edge is worldly: {backgroundPerks(bg)}.
+                </p>
               )}
 
               {overlapSkills.length > 0 && (
@@ -428,18 +548,60 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       {step === 2 && (
         <div className="card">
           <p className="eyebrow">Step 3 · Ability scores</p>
-          <div className="row between" style={{ marginBottom: 4 }}>
-            <h3 style={{ margin: 0 }}>Point buy</h3>
-            <span className={pointsLeft === 0 ? "gold" : "muted"}>
-              {pointsLeft} / {POINT_BUY_BUDGET} points left
-            </span>
+          <div className="chip-row" style={{ marginBottom: 10 }}>
+            <button
+              type="button"
+              className={`chip selectable${mode === "pointbuy" ? " selected" : ""}`}
+              onClick={() => switchMode("pointbuy")}
+            >
+              Point buy
+            </button>
+            <button
+              type="button"
+              className={`chip selectable${mode === "maduhausu" ? " selected" : ""}`}
+              onClick={() => switchMode("maduhausu")}
+            >
+              Maduhausu 🤡
+            </button>
           </div>
-          <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-            Buy base scores 8–15 (27 pts). Then apply your{" "}
-            {bg ? `${bg.name} ` : ""}background bonus to{" "}
-            {bonusAbilities.map((a) => ABILITY_NAME[a]).join(", ")}: +2 and +1, or three +1's{" "}
-            {bonusValid ? "✓" : `(${bonusTotal}/3 used)`}.
-          </p>
+
+          {mode === "pointbuy" ? (
+            <>
+              <div className="row between" style={{ marginBottom: 4 }}>
+                <h3 style={{ margin: 0 }}>Point buy</h3>
+                <span className={pointsLeft === 0 ? "gold" : "muted"}>
+                  {pointsLeft} / {POINT_BUY_BUDGET} points left
+                </span>
+              </div>
+              <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
+                Buy base scores 8–15 (27 pts). Then apply your{" "}
+                {bg ? `${bg.name} ` : ""}background bonus to{" "}
+                {bonusAbilities.map((a) => ABILITY_NAME[a]).join(", ")}: +2 and +1, or three +1's{" "}
+                {bonusValid ? "✓" : `(${bonusTotal}/3 used)`}.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="row between" style={{ marginBottom: 4, gap: 8 }}>
+                <h3 style={{ margin: 0 }}>Maduhausu 🤡</h3>
+                <button
+                  type="button"
+                  className="btn btn-primary btn-sm"
+                  style={{ width: "auto", flex: "none" }}
+                  onClick={rollMaduhausu}
+                >
+                  {hasRolled ? "Reroll the bones" : "Roll the bones"}
+                </button>
+              </div>
+              <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
+                The madhouse method: 4d6 drop the lowest, six times, assigned in order —
+                fate decides what you are. Then apply your background bonus to{" "}
+                {bonusAbilities.map((a) => ABILITY_NAME[a]).join(", ")}: +2 and +1, or three +1's{" "}
+                {bonusValid ? "✓" : `(${bonusTotal}/3 used)`}.
+              </p>
+            </>
+          )}
+
           <div className="stack" style={{ gap: 8 }}>
             {ABILITIES.map(({ key, name: aName, short }) => {
               const final = finalScores[key];
@@ -452,7 +614,16 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                       {aName}
                     </div>
                   </div>
-                  <Stepper label="base" value={base[key]} min={POINT_BUY_MIN} max={POINT_BUY_MAX} onChange={(v) => setBaseScore(key, v)} />
+                  {mode === "pointbuy" ? (
+                    <Stepper label="base" value={base[key]} min={POINT_BUY_MIN} max={POINT_BUY_MAX} onChange={(v) => setBaseScore(key, v)} />
+                  ) : (
+                    <div style={{ textAlign: "center", flex: "none", minWidth: 71 }}>
+                      <div style={{ fontFamily: "var(--font-display)", fontSize: "1.05rem" }}>
+                        {hasRolled ? base[key] : "—"}
+                      </div>
+                      <div className="faint" style={{ fontSize: "0.62rem", letterSpacing: "0.1em" }}>ROLLED</div>
+                    </div>
+                  )}
                   {canBonus ? (
                     <Stepper label="bg" value={bonus[key]} min={0} max={2} onChange={(v) => setBonusScore(key, v)} />
                   ) : (
@@ -469,21 +640,111 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
         </div>
       )}
 
-      {/* Step 4 · Armor */}
+      {/* Step 4 · Armor — the full layered system: Main + Add-ons + Studs + Extras */}
       {step === 3 && (
-        <div className="card">
-          <p className="eyebrow">Step 4 · Armor</p>
-          <h3 style={{ marginBottom: 8 }}>Main armor</h3>
-          <div className="field" style={{ marginBottom: 8 }}>
-            <select className="select" value={mainArmorId ?? ""} onChange={(e) => setMainArmorId(e.target.value || null)}>
-              <option value="">Unarmored (AC 10 + Dex)</option>
-              {MAIN_ARMOR.map((a) => (
-                <option key={a.id} value={a.id}>{a.name} — {a.ac}</option>
-              ))}
-            </select>
+        <>
+          <div className="card">
+            <p className="eyebrow">Step 4 · Armor</p>
+            <h3 style={{ marginBottom: 8 }}>Main armor</h3>
+            <div className="field" style={{ marginBottom: 8 }}>
+              <select
+                className="select"
+                value={mainArmorId ?? ""}
+                onChange={(e) => {
+                  const nextMain = e.target.value || null;
+                  // Losing Balanced Fit shrinks the add-on allowance — shed the
+                  // overflow so an illegal 6-piece stack can't be kept or saved.
+                  const trimmed = addonIds.slice(0, maxAddonPieces(nextMain));
+                  setMainArmorId(nextMain);
+                  setAddonIds(trimmed);
+                  setStudded((s) => Math.min(s, Math.min(5, trimmed.length)));
+                }}
+              >
+                <option value="">Unarmored (AC 10 + Dex)</option>
+                {MAIN_ARMOR.map((a) => (
+                  <option key={a.id} value={a.id}>{a.name} — {a.ac}</option>
+                ))}
+              </select>
+            </div>
+            {mainArmorId && (
+              <p className="muted" style={{ fontSize: "0.85rem", margin: 0 }}>
+                {MAIN_ARMOR.find((a) => a.id === mainArmorId)?.special}
+              </p>
+            )}
           </div>
-          <p className="faint" style={{ fontSize: "0.82rem", margin: 0 }}>{ac.category}: {ac.dexRule}</p>
-        </div>
+
+          <div className="card">
+            <p className="eyebrow">Add-on armor</p>
+            <h3 style={{ marginBottom: 6 }}>Layer up ({addonIds.length} / {maxAddons})</h3>
+            <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
+              Worn over your Main Armor — max five pieces{maxAddons === 6 ? " (+1 free from Balanced Fit)" : ""}.
+              A pauldron and vambrace on the same arm form a Shield Arm: +2 AC for the pair.
+            </p>
+            <div className="stack" style={{ gap: 8 }}>
+              {ADDON_ARMOR.map((a) => {
+                const selected = addonIds.includes(a.id);
+                const atLimit = !selected && addonIds.length >= maxAddons;
+                return (
+                  <SelectCard
+                    key={a.id}
+                    selected={selected}
+                    onClick={() => { if (!atLimit || selected) toggleAddon(a.id); }}
+                    title={a.name}
+                    meta={`${a.ac} · ${a.weightLb} lb`}
+                    sub={a.special}
+                  />
+                );
+              })}
+            </div>
+
+            {addonIds.length > 0 && (
+              <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border)" }}>
+                <div className="row between" style={{ gap: 8 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <span style={{ fontWeight: 600 }}>Studs upgrade</span>
+                    <div className="faint" style={{ fontSize: "0.74rem" }}>
+                      +3 lb per studded piece · one +1 AC, five +2 AC · disadvantage on Stealth
+                    </div>
+                  </div>
+                  <Stepper label="pieces" value={Math.min(studded, studdedMax)} min={0} max={studdedMax} onChange={setStudded} />
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="card">
+            <p className="eyebrow">Extras</p>
+            <h3 style={{ marginBottom: 6 }}>Hats, scarves &amp; gloves</h3>
+            <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
+              No AC — but they hide what the blood is doing to you.
+            </p>
+            <div className="stack" style={{ gap: 8 }}>
+              {EXTRA_ARMOR.map((a) => (
+                <SelectCard
+                  key={a.id}
+                  selected={extraIds.includes(a.id)}
+                  onClick={() => toggleExtra(a.id)}
+                  title={a.name}
+                  meta={`${a.weightLb} lb`}
+                  sub={a.special}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="card">
+            <p className="eyebrow">Armor Class</p>
+            <div className="derived-grid">
+              <Derived label="Base" value={ac.baseAc} />
+              <Derived label="Add-ons" value={formatModifier(ac.addonBonus)} />
+              <Derived label="Studs" value={formatModifier(ac.studBonus)} />
+              <Derived label="Dex" value={formatModifier(ac.dexApplied)} />
+              <Derived label="Total AC" value={ac.total} />
+              <Derived label="Worn weight" value={`${wornArmorWeight({ mainArmorId, addonArmorIds: addonIds, studdedAddons: Math.min(studded, studdedMax), extraArmorIds: extraIds })} lb`} />
+            </div>
+            <p className="faint" style={{ fontSize: "0.82rem", margin: "8px 0 0" }}>{ac.category}: {ac.dexRule}</p>
+          </div>
+        </>
       )}
 
       {/* Step 5 · Details (name, level, review, notes) */}
@@ -502,34 +763,19 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                 onChange={(e) => setName(e.target.value)}
               />
             </div>
-            <div className="field" style={{ marginBottom: 0 }}>
-              <label>Level</label>
-              <div className="row" style={{ gap: 12, alignItems: "center" }}>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  style={{ width: 40, padding: 6 }}
-                  disabled={level <= 1}
-                  onClick={() => setLevel((l) => Math.max(1, l - 1))}
-                  aria-label="decrease level"
-                >
-                  −
-                </button>
-                <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", minWidth: 28, textAlign: "center" }}>
-                  {level}
-                </span>
-                <button
-                  type="button"
-                  className="btn btn-ghost btn-sm"
-                  style={{ width: 40, padding: 6 }}
-                  disabled={level >= 20}
-                  onClick={() => setLevel((l) => Math.min(20, l + 1))}
-                  aria-label="increase level"
-                >
-                  +
-                </button>
-                <span className="faint" style={{ fontSize: "0.82rem" }}>Proficiency {formatModifier(prof)}</span>
+            <div className="row between" style={{ marginBottom: 0, gap: 8 }}>
+              <div>
+                <span className="eyebrow" style={{ margin: 0 }}>Level</span>
+                <div className="faint" style={{ fontSize: "0.78rem" }}>
+                  {level === 1
+                    ? "Every hunter starts at level 1 — the DM rewards Insight and levels."
+                    : "Set by the DM's rewards — Insight and levels come from play."}
+                </div>
               </div>
+              <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", flex: "none" }}>
+                {level}
+                <span className="faint" style={{ fontSize: "0.82rem" }}> · Prof {formatModifier(prof)}</span>
+              </span>
             </div>
           </div>
 
@@ -557,19 +803,6 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
               </p>
             </div>
           )}
-
-          <div className="card">
-            <div className="field" style={{ marginBottom: 0 }}>
-              <label htmlFor="notes">Notes</label>
-              <textarea
-                id="notes"
-                className="textarea"
-                value={notes}
-                placeholder="Backstory, goals, quirks, anything you want at the table…"
-                onChange={(e) => setNotes(e.target.value)}
-              />
-            </div>
-          </div>
 
           {onDelete && <DeleteCharacter saving={saving} onDelete={onDelete} />}
 

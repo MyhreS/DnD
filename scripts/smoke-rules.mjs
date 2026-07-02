@@ -111,11 +111,63 @@ await step("Outsider is blocked (negative)", async () => {
   if (!denied) throw new Error("player could update the game (should be DM-only)");
 });
 
+// --- Combat tracker: DM owns rows; members may kill/remove MONSTERS only ---
+let monsterId, pcRowId;
+await step("DM adds combatants (monster + pc)", async () => {
+  const m = await addDoc(collection(dm.db, "games", gameId, "combatants"), {
+    kind: "monster", name: "Smoke Beast", characterId: null, initiative: 12,
+    ac: 10, maxHp: 10, currentHp: 10, conditions: [], conditionSince: {},
+    note: null, createdAt: serverTimestamp(),
+  });
+  monsterId = m.id;
+  const p = await addDoc(collection(dm.db, "games", gameId, "combatants"), {
+    kind: "pc", name: "Smoke Hunter", characterId: `smoke-${dmUid}`, initiative: 15,
+    ac: null, maxHp: null, currentHp: null, conditions: [], conditionSince: {},
+    note: null, createdAt: serverTimestamp(),
+  });
+  pcRowId = p.id;
+});
+await step("Player marks the monster slain (update)", async () => {
+  await updateDoc(doc(pl.db, "games", gameId, "combatants", monsterId), { currentHp: 0 });
+});
+await step("Player cannot edit a PC combatant (negative)", async () => {
+  let denied = false;
+  try {
+    await updateDoc(doc(pl.db, "games", gameId, "combatants", pcRowId), { initiative: 1 });
+  } catch { denied = true; }
+  if (!denied) throw new Error("player could edit a PC combatant (should be DM-only)");
+});
+await step("Player cannot turn a monster into a pc (negative)", async () => {
+  let denied = false;
+  try {
+    await updateDoc(doc(pl.db, "games", gameId, "combatants", monsterId), { kind: "pc" });
+  } catch { denied = true; }
+  if (!denied) throw new Error("player could rewrite a monster's kind");
+});
+await step("Player cannot heal/buff/rewrite a monster (negative)", async () => {
+  for (const bad of [{ initiative: 20 }, { note: "hax" }, { currentHp: 10, maxHp: 99 }]) {
+    let denied = false;
+    try {
+      await updateDoc(doc(pl.db, "games", gameId, "combatants", monsterId), bad);
+    } catch { denied = true; }
+    if (!denied) throw new Error(`player could write ${JSON.stringify(bad)} on a monster (currentHp-only allowed)`);
+  }
+});
+await step("Player removes the monster from battle (delete)", async () => {
+  const { deleteDoc } = await import("firebase/firestore");
+  await deleteDoc(doc(pl.db, "games", gameId, "combatants", monsterId));
+});
+
 // Cleanup (admin bypass, best-effort).
 const adb = adminGetFirestore(admin);
 async function del(path) { try { await adb.doc(path).delete(); } catch { /* best-effort */ } }
 await step("cleanup", async () => {
-  if (gameId) { await del(`games/${gameId}/participants/${plUid}`); await del(`games/${gameId}`); }
+  if (gameId) {
+    await del(`games/${gameId}/participants/${plUid}`);
+    if (monsterId) await del(`games/${gameId}/combatants/${monsterId}`);
+    if (pcRowId) await del(`games/${gameId}/combatants/${pcRowId}`);
+    await del(`games/${gameId}`);
+  }
   if (campaignId) {
     await del(`campaigns/${campaignId}/members/${dmUid}`);
     await del(`campaigns/${campaignId}/members/${plUid}`);

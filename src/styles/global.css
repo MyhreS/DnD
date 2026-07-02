@@ -998,8 +998,11 @@ button {
 
 /* ---------- 3D fighter overlay (occasional, click-through) ---------- */
 .fighters {
+  /* A low stage strip along the bottom of the screen — the hunters perform
+     small, underfoot, never over the content. */
   position: fixed;
-  inset: 0;
+  inset: auto 0 0 0;
+  height: min(22vh, 200px);
   pointer-events: none;
   overflow: hidden;
   z-index: 18;

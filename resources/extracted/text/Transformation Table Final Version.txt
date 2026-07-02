@@ -1,0 +1,88 @@
+Transformation Table
+(Transcribed from resources/pdf/appendices/Transformation Table Final Version.pdf)
+
+Core Terms
+
+Transformation Level
+Your Transformation Level is the number from 0-10 that shows how far your blood has
+shifted. When you gain 1 Transformation Level, increase your Transformation Level by 1,
+then roll on the Transformation Table using your new Transformation Level.
+
+Transformation
+A Transformation is a mutation result gained from the Transformation Table, such as
+Dreadblood Eyes, Dreadblood Ears, Blood Fangs, or Mutated Arm. These are active
+transformations and remain until a rule says you lose them.
+
+Transformation Table Result
+A result on the Transformation Table is not always a Transformation. Nothing Happens is
+not a Transformation. Blood Lust is a compulsion result, not a Transformation. Lost is a
+special catastrophic result that counts as a Transformation.
+
+Reducing Transformation Level
+Your Transformation Level is reduced only when a rule, effect, rest, or condition specifically
+says so.
+
+Short Rest. When you finish a Short Rest, reduce your Transformation Level by 1 and lose
+all active Transformations. During the same Short Rest, you may make a DC 13 Constitution
+(Grit) check. On a success, reduce your Transformation Level by 1 additional level.
+
+Long Rest. When you finish a Long Rest, reduce your Transformation Level to 0 and lose all
+active Transformations.
+
+Unconscious. The first time you gain the Unconscious condition after gaining a
+Transformation, reduce your Transformation Level by 2 and lose all active Transformations.
+You cannot reduce your Transformation Level this way again until you finish a Short or Long
+Rest, or until you gain another Transformation.
+
+Result Texts
+
+Blood Lust.
+Drink another Blood Vial or suffer 3 Madness.
+
+Mutated Arm.
+Suffer 2 madness. Add +1d12 to your damage roll and 5 ft to your range if melee damage.
+Suffer 1 madness if you do.
+
+Blood Fangs.
+As an melee attack action you can choose to bite a creature within 5 ft, on hit dealing 4d3
+piercing damage. You heal the same amount as damage dealt. Suffer 1 madness if you do.
+
+Dreadblood Eyes.
+As an action you can gain Blindsight for 10 rounds. Suffer 1 Madness if you do.
+
+Dreadblood Ears.
+Your Wisdom (Perception) modifier increases by +5. You may suffer 1 Madness to make a
+Wisdom (Perception) check with Advantage.
+
+Nothing Happens.
+
+Lost.
+(Special catastrophic result; counts as a Transformation. Effects are DM-secret.)
+
+The Table
+Roll 1d20 against your (new) Transformation Level (columns 1-10).
+
+Legend: NH = Nothing Happens, BL = Blood Lust, MA = Mutated Arm, BF = Blood Fangs,
+DE = Dreadblood Eyes, DR = Dreadblood Ears, LOST = Lost.
+
+d20 | TL1 | TL2 | TL3 | TL4 | TL5 | TL6 | TL7 | TL8 | TL9 | TL10
+  1 | BL  | BL  | LOST| LOST| LOST| LOST| LOST| LOST| LOST| LOST
+  2 | MA  | BL  | BL  | LOST| LOST| LOST| LOST| LOST| LOST| LOST
+  3 | BF  | MA  | BL  | BL  | LOST| LOST| LOST| LOST| LOST| LOST
+  4 | DE  | BF  | BL  | BL  | BL  | LOST| LOST| LOST| LOST| LOST
+  5 | DR  | DE  | MA  | BL  | BL  | BL  | LOST| LOST| LOST| LOST
+  6 | NH  | DE  | MA  | BL  | BL  | BL  | BL  | LOST| LOST| LOST
+  7 | NH  | DR  | BF  | MA  | BL  | BL  | BL  | BL  | LOST| LOST
+  8 | NH  | DR  | BF  | MA  | MA  | BL  | BL  | BL  | LOST| LOST
+  9 | NH  | NH  | DE  | BF  | MA  | MA  | BL  | BL  | BL  | LOST
+ 10 | NH  | NH  | DE  | BF  | MA  | MA  | MA  | MA  | MA  | MA
+ 11 | NH  | NH  | DR  | DE  | BF  | MA  | MA  | MA  | MA  | MA
+ 12 | NH  | NH  | DR  | DE  | BF  | MA  | MA  | MA  | MA  | MA
+ 13 | NH  | NH  | NH  | DR  | BF  | BF  | MA  | MA  | MA  | MA
+ 14 | NH  | NH  | NH  | DR  | DE  | BF  | MA  | MA  | MA  | MA
+ 15 | NH  | NH  | NH  | NH  | DE  | BF  | BF  | BF  | BF  | BF
+ 16 | NH  | NH  | NH  | NH  | DR  | DE  | BF  | BF  | BF  | BF
+ 17 | NH  | NH  | NH  | NH  | DR  | DE  | BF  | BF  | BF  | BF
+ 18 | NH  | NH  | NH  | NH  | NH  | DR  | BF  | BF  | BF  | BF
+ 19 | NH  | NH  | NH  | NH  | NH  | DR  | DE  | DE  | DE  | DE
+ 20 | NH  | NH  | NH  | NH  | NH  | NH  | DR  | DR  | DR  | DR

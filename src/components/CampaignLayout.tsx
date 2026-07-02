@@ -13,6 +13,7 @@ export function CampaignLayout() {
   const active = useCampaignStore((s) => s.active);
   const activeId = useCampaignStore((s) => s.activeId);
   const status = useCampaignStore((s) => s.status);
+  const campaigns = useCampaignStore((s) => s.campaigns);
 
   // Bring the hunter you chose for this campaign into play.
   useCampaignHunterSync();
@@ -20,7 +21,17 @@ export function CampaignLayout() {
   if (status === "idle" || status === "loading") {
     return <div className="app-main"><CardSkeleton lines={3} /></div>;
   }
-  if (!activeId || !active) return <Navigate to="/" replace />;
+  if (!activeId) return <Navigate to="/" replace />;
+  if (!active) {
+    // The id is set but the campaign doc hasn't streamed in yet. If it's one
+    // of ours, hold the door (skeleton) instead of bouncing to the menu —
+    // redirect only when the campaign truly isn't ours anymore.
+    return campaigns.some((c) => c.id === activeId) ? (
+      <div className="app-main"><CardSkeleton lines={3} /></div>
+    ) : (
+      <Navigate to="/" replace />
+    );
+  }
 
   return (
     <Shell

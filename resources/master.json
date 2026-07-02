@@ -27,14 +27,18 @@
       "resources/extracted/text/Detection Rite.txt",
       "resources/extracted/text/Evocation Rite.txt",
       "resources/extracted/text/Illusion Rite.txt",
+      "resources/extracted/text/Insane Condition.txt",
       "resources/extracted/text/Mind Influence Rite.txt",
       "resources/extracted/text/Protection Rite.txt",
       "resources/extracted/text/Scout.txt",
       "resources/extracted/text/Staker.txt",
       "resources/extracted/text/Summoning Rite.txt",
+      "resources/extracted/text/Transformation Table Final Version.txt",
       "resources/extracted/text/Traversal Rite.txt",
       "resources/extracted/text/Warden.txt",
+      "resources/pdf/appendices/Insane Condition.pdf",
       "resources/pdf/appendices/Rules Reference Scan.pdf",
+      "resources/pdf/appendices/Transformation Table Final Version.pdf",
       "resources/pdf/appendices/V1.0 Book of The Deepcaller.pdf",
       "resources/pdf/appendices/V1.0 Whispers.pdf",
       "resources/pdf/character-sheets/Character Sheet For Sim.pdf",
@@ -219,6 +223,26 @@
       "description": "The Deepcaller's lesser spell fragments (cantrip-like Rites), each at Whisper level, with casting/range/duration stats and a Whisper Upgrade that scales at higher character levels.",
       "sourceFiles": [
         "resources/pdf/appendices/V1.0 Whispers.pdf"
+      ]
+    },
+    {
+      "id": "transformation-table",
+      "title": "Transformation Table (Final Version)",
+      "section": "transformation",
+      "description": "The full Transformation system: Transformation Level 0-10, the 1d20 x level Transformation Table (Blood Lust, Mutated Arm, Blood Fangs, Dreadblood Eyes/Ears, Nothing Happens, Lost), and the rules for reducing Transformation Level (Short Rest, Long Rest, Unconscious).",
+      "sourceFiles": [
+        "resources/pdf/appendices/Transformation Table Final Version.pdf",
+        "resources/extracted/text/Transformation Table Final Version.txt"
+      ]
+    },
+    {
+      "id": "insane-condition",
+      "title": "Insane Condition",
+      "section": "insaneCondition",
+      "description": "The Insane condition: triggered when current Madness equals or exceeds Max Sanity, ends when Madness drops below. Mechanics (Madness Die, Unstable Violence, Cracked Perception) are a DM secret and must not be surfaced in the app.",
+      "sourceFiles": [
+        "resources/pdf/appendices/Insane Condition.pdf",
+        "resources/extracted/text/Insane Condition.txt"
       ]
     }
   ],
@@ -7163,5 +7187,388 @@
         "description": "R1.0 numbered character sheet (creation-step labels) — page 05."
       }
     ]
+  },
+  "transformation": {
+    "title": "Transformation Table (Final Version)",
+    "source": "resources/pdf/appendices/Transformation Table Final Version.pdf",
+    "description": "The Catacombs & Starspawns Transformation system: a Transformation Level from 0-10 tracks how far a hunter’s blood has shifted. Gaining a Transformation Level means increasing the level by 1, then rolling 1d20 on the Transformation Table using the NEW level. Replaces the earlier simplified transformation rules.",
+    "coreTerms": {
+      "transformationLevel": "Your Transformation Level is the number from 0–10 that shows how far your blood has shifted. When you gain 1 Transformation Level, increase your Transformation Level by 1, then roll on the Transformation Table using your new Transformation Level.",
+      "transformation": "A Transformation is a mutation result gained from the Transformation Table, such as Dreadblood Eyes, Dreadblood Ears, Blood Fangs, or Mutated Arm. These are active transformations and remain until a rule says you lose them.",
+      "tableResult": "A result on the Transformation Table is not always a Transformation. Nothing Happens is not a Transformation. Blood Lust is a compulsion result, not a Transformation. Lost is a special catastrophic result that counts as a Transformation."
+    },
+    "reducing": {
+      "intro": "Your Transformation Level is reduced only when a rule, effect, rest, or condition specifically says so.",
+      "shortRest": "When you finish a Short Rest, reduce your Transformation Level by 1 and lose all active Transformations. During the same Short Rest, you may make a DC 13 Constitution (Grit) check. On a success, reduce your Transformation Level by 1 additional level.",
+      "longRest": "When you finish a Long Rest, reduce your Transformation Level to 0 and lose all active Transformations.",
+      "unconscious": "The first time you gain the Unconscious condition after gaining a Transformation, reduce your Transformation Level by 2 and lose all active Transformations. You cannot reduce your Transformation Level this way again until you finish a Short or Long Rest, or until you gain another Transformation."
+    },
+    "results": {
+      "nothing": {
+        "name": "Nothing Happens",
+        "isTransformation": false,
+        "kind": "none",
+        "text": "Nothing Happens"
+      },
+      "bloodLust": {
+        "name": "Blood Lust",
+        "isTransformation": false,
+        "kind": "compulsion",
+        "text": "Drink another Blood Vial or suffer 3 Madness"
+      },
+      "mutatedArm": {
+        "name": "Mutated Arm",
+        "isTransformation": true,
+        "kind": "transformation",
+        "text": "Suffer 2 madness. Add +1d12 to your damage roll and 5 ft to your range if melee damage. Suffer 1 madness if you do."
+      },
+      "bloodFangs": {
+        "name": "Blood Fangs",
+        "isTransformation": true,
+        "kind": "transformation",
+        "text": "As an melee attack action you can choose to bite a creature within 5 ft, on hit dealing 4d3 piercing damage. You heal the same amount as damage dealt. Suffer 1 madness if you do."
+      },
+      "dreadbloodEyes": {
+        "name": "Dreadblood Eyes",
+        "isTransformation": true,
+        "kind": "transformation",
+        "text": "As an action you can gain Blindsight for 10 rounds. Suffer 1 Madness if you do."
+      },
+      "dreadbloodEars": {
+        "name": "Dreadblood Ears",
+        "isTransformation": true,
+        "kind": "transformation",
+        "text": "Your Wisdom (Perception) modifier increases by +5. You may suffer 1 Madness to make a Wisdom (Perception) check with Advantage."
+      },
+      "lost": {
+        "name": "Lost",
+        "isTransformation": true,
+        "kind": "catastrophic",
+        "secret": true,
+        "text": "A special catastrophic result that counts as a Transformation. What Lost implies is a DM secret and must not be shown in the app."
+      }
+    },
+    "table": {
+      "roll": "1d20",
+      "note": "Columns are Transformation Level 1–10; roll after increasing your level.",
+      "rows": [
+        {
+          "d20": 1,
+          "byLevel": [
+            "bloodLust",
+            "bloodLust",
+            "lost",
+            "lost",
+            "lost",
+            "lost",
+            "lost",
+            "lost",
+            "lost",
+            "lost"
+          ]
+        },
+        {
+          "d20": 2,
+          "byLevel": [
+            "mutatedArm",
+            "bloodLust",
+            "bloodLust",
+            "lost",
+            "lost",
+            "lost",
+            "lost",
+            "lost",
+            "lost",
+            "lost"
+          ]
+        },
+        {
+          "d20": 3,
+          "byLevel": [
+            "bloodFangs",
+            "mutatedArm",
+            "bloodLust",
+            "bloodLust",
+            "lost",
+            "lost",
+            "lost",
+            "lost",
+            "lost",
+            "lost"
+          ]
+        },
+        {
+          "d20": 4,
+          "byLevel": [
+            "dreadbloodEyes",
+            "bloodFangs",
+            "bloodLust",
+            "bloodLust",
+            "bloodLust",
+            "lost",
+            "lost",
+            "lost",
+            "lost",
+            "lost"
+          ]
+        },
+        {
+          "d20": 5,
+          "byLevel": [
+            "dreadbloodEars",
+            "dreadbloodEyes",
+            "mutatedArm",
+            "bloodLust",
+            "bloodLust",
+            "bloodLust",
+            "lost",
+            "lost",
+            "lost",
+            "lost"
+          ]
+        },
+        {
+          "d20": 6,
+          "byLevel": [
+            "nothing",
+            "dreadbloodEyes",
+            "mutatedArm",
+            "bloodLust",
+            "bloodLust",
+            "bloodLust",
+            "bloodLust",
+            "lost",
+            "lost",
+            "lost"
+          ]
+        },
+        {
+          "d20": 7,
+          "byLevel": [
+            "nothing",
+            "dreadbloodEars",
+            "bloodFangs",
+            "mutatedArm",
+            "bloodLust",
+            "bloodLust",
+            "bloodLust",
+            "bloodLust",
+            "lost",
+            "lost"
+          ]
+        },
+        {
+          "d20": 8,
+          "byLevel": [
+            "nothing",
+            "dreadbloodEars",
+            "bloodFangs",
+            "mutatedArm",
+            "mutatedArm",
+            "bloodLust",
+            "bloodLust",
+            "bloodLust",
+            "lost",
+            "lost"
+          ]
+        },
+        {
+          "d20": 9,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "dreadbloodEyes",
+            "bloodFangs",
+            "mutatedArm",
+            "mutatedArm",
+            "bloodLust",
+            "bloodLust",
+            "bloodLust",
+            "lost"
+          ]
+        },
+        {
+          "d20": 10,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "dreadbloodEyes",
+            "bloodFangs",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm"
+          ]
+        },
+        {
+          "d20": 11,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "dreadbloodEars",
+            "dreadbloodEyes",
+            "bloodFangs",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm"
+          ]
+        },
+        {
+          "d20": 12,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "dreadbloodEars",
+            "dreadbloodEyes",
+            "bloodFangs",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm"
+          ]
+        },
+        {
+          "d20": 13,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "nothing",
+            "dreadbloodEars",
+            "bloodFangs",
+            "bloodFangs",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm"
+          ]
+        },
+        {
+          "d20": 14,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "nothing",
+            "dreadbloodEars",
+            "dreadbloodEyes",
+            "bloodFangs",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm",
+            "mutatedArm"
+          ]
+        },
+        {
+          "d20": 15,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "nothing",
+            "nothing",
+            "dreadbloodEyes",
+            "bloodFangs",
+            "bloodFangs",
+            "bloodFangs",
+            "bloodFangs",
+            "bloodFangs"
+          ]
+        },
+        {
+          "d20": 16,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "nothing",
+            "nothing",
+            "dreadbloodEars",
+            "dreadbloodEyes",
+            "bloodFangs",
+            "bloodFangs",
+            "bloodFangs",
+            "bloodFangs"
+          ]
+        },
+        {
+          "d20": 17,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "nothing",
+            "nothing",
+            "dreadbloodEars",
+            "dreadbloodEyes",
+            "bloodFangs",
+            "bloodFangs",
+            "bloodFangs",
+            "bloodFangs"
+          ]
+        },
+        {
+          "d20": 18,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "nothing",
+            "nothing",
+            "nothing",
+            "dreadbloodEars",
+            "bloodFangs",
+            "bloodFangs",
+            "bloodFangs",
+            "bloodFangs"
+          ]
+        },
+        {
+          "d20": 19,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "nothing",
+            "nothing",
+            "nothing",
+            "dreadbloodEars",
+            "dreadbloodEyes",
+            "dreadbloodEyes",
+            "dreadbloodEyes",
+            "dreadbloodEyes"
+          ]
+        },
+        {
+          "d20": 20,
+          "byLevel": [
+            "nothing",
+            "nothing",
+            "nothing",
+            "nothing",
+            "nothing",
+            "nothing",
+            "dreadbloodEars",
+            "dreadbloodEars",
+            "dreadbloodEars",
+            "dreadbloodEars"
+          ]
+        }
+      ]
+    }
+  },
+  "insaneCondition": {
+    "title": "Insane Condition",
+    "source": "resources/pdf/appendices/Insane Condition.pdf",
+    "secret": true,
+    "appNote": "DM secret: the app must only ever surface THAT a hunter is Insane (Madness ≥ Max Sanity) — none of the mechanics below may appear in the UI.",
+    "trigger": "When your current Madness equals or exceeds your Max Sanity, you gain the Insane condition.",
+    "ending": "The Insane condition ends immediately when your current Madness is reduced below your Max Sanity.",
+    "madnessDie": "While Insane, you have a Madness Die. The Madness Die is an 8-sided die with three Blank faces, three Star faces, and two Eye faces.",
+    "unstableViolence": {
+      "intro": "Once per turn, when you take the Attack action or perform a harmful Rite, choose your target or area as normal. Before resolving the attack or Rite, roll the Madness Die.",
+      "star": "Resolve the attack or Rite normally.",
+      "blank": "The attack or Rite turns against your nearest ally instead. If more than one ally is equally near, you choose which one is targeted. If no ally is within range, you must spend available movement to bring an ally within range or reach, if possible. If no ally can be targeted after this movement, the attack or Rite turns inward and targets you instead.",
+      "eye": "For one moment, you understand what you are about to do. You may either end your turn immediately with no effect, or roll the Madness Die again. If the second roll is another Eye, the vision breaks you: roll your Sanity Die, suffer that much Mind damage, and gain 1 Madness."
+    },
+    "crackedPerception": "While Insane, you have Advantage on Wisdom (Perception) checks and Intelligence (Eldritch Knowledge) checks made to notice unnatural things, hidden entities, dream-architecture, impossible movement, or occult distortions."
   }
 }

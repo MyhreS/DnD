@@ -57,14 +57,14 @@ export function RestPanel({
           ? "Restore all Hit Points (Hunters Lodge)."
           : "Recover half your HP maximum (you're not in the Hunters Lodge).",
         `Roll your Sanity Die (${klass.sanityDie} + WIS) to recover Sanity.`,
-        "Clear all Transformation Levels.",
+        "Transformation Level to 0 — all active Transformations fade.",
         ...(pendingLevel ? [`Level up to ${earned}.`] : []),
       ]
     : [
         safe
           ? "Spend Hit Dice (up to your Proficiency Bonus) to heal."
           : "No Hit Dice — you can only spend them in a Safe Zone.",
-        "Remove 1 Transformation Level.",
+        "Remove 1 Transformation Level (and all active Transformations); a DC 13 CON (Grit) check removes 1 more.",
       ];
 
   return (
@@ -112,6 +112,9 @@ function shortSummary(r: ShortRestOutcome): string {
     : ["no Hit Dice — not in a Safe Zone"];
   if (r.transformationFrom !== r.transformationTo) {
     parts.push(`Transformation ${r.transformationFrom} → ${r.transformationTo}`);
+    if (r.gritRoll != null) {
+      parts.push(`Grit check ${r.gritRoll} — ${r.gritSuccess ? "held firm (−1 more)" : "failed"}`);
+    }
   }
   return `Rested — ${parts.join(" · ")}.`;
 }

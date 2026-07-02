@@ -126,9 +126,13 @@ export function CombatTracker({
                 max={v.max}
                 active={c.id === activeId}
                 isDM={isDM}
+                round={game.combat?.round ?? 1}
                 onPatch={(p) => patch(game.id, c.id, p)}
-                onToggleCondition={(cid) => toggleCondition(game.id, c, cid)}
-                onRemove={() => remove(game.id, c.id)}
+                onToggleCondition={(cid) => toggleCondition(game.id, c, cid, game.combat?.round ?? 1)}
+                // Only the DM may write the game doc, so only the DM's removal
+                // repairs the turn pointer; a player's removal of the active
+                // monster is resolved by the DM's next "Next turn".
+                onRemove={() => remove(game.id, c.id, isDM ? game : undefined, isDM ? combatants : undefined)}
               />
             );
           })}

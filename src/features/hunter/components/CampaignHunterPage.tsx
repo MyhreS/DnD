@@ -9,6 +9,7 @@ import { useHunterCard } from "../hooks/useHunterCard";
 import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
 import { InventoryPanel } from "./InventoryPanel";
+import { LevelUpModal } from "./LevelUpModal";
 import { patchCharacter } from "@/api/players";
 import { CardSkeleton } from "@/components/Skeleton";
 
@@ -44,12 +45,14 @@ export function CampaignHunterPage() {
           <h1 className="page-title" style={{ margin: "0 0 12px" }}>{playing.name}</h1>
           <div className="desk-2col">
             <aside className="desk-aside no-print">
-              <CharacterTrackers card={playing} onPatch={(p) => void dmPatch(playing.id, p)} />
+              <CharacterTrackers card={playing} dmMode onPatch={(p) => void dmPatch(playing.id, p)} />
             </aside>
             <div className="desk-main">
-              <div className="print-sheet"><HunterCardView card={playing} /></div>
+              <div className="print-sheet">
+                <HunterCardView card={playing} onPatch={(p) => void dmPatch(playing.id, p)} />
+              </div>
               <div className="no-print" style={{ marginTop: 14 }}>
-                <InventoryPanel card={playing} editable onPatch={(p) => void dmPatch(playing.id, p)} />
+                <InventoryPanel card={playing} editable dmMode onPatch={(p) => void dmPatch(playing.id, p)} />
               </div>
             </div>
           </div>
@@ -122,12 +125,17 @@ export function CampaignHunterPage() {
       <div>
         <p className="eyebrow" style={{ margin: 0 }}>Your hunter in {campaign?.name}</p>
         <h1 className="page-title" style={{ margin: "0 0 12px" }}>{brought.name}</h1>
+        {brought.lastSeenLevel != null && brought.level > brought.lastSeenLevel && (
+          <LevelUpModal card={brought} onPatch={(p) => void patchCharacter(brought.id, p)} />
+        )}
         <div className="desk-2col">
           <aside className="desk-aside no-print">
             <CharacterTrackers card={brought} />
           </aside>
           <div className="desk-main">
-            <div className="print-sheet"><HunterCardView card={brought} /></div>
+            <div className="print-sheet">
+              <HunterCardView card={brought} onPatch={(p) => void patchCharacter(brought.id, p)} />
+            </div>
             <div className="no-print" style={{ marginTop: 14 }}>
               <InventoryPanel card={brought} editable />
             </div>

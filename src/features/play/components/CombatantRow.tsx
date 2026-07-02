@@ -2,12 +2,23 @@ import { useState } from "react";
 import { CONDITIONS, CONDITION_NAME } from "@/data/conditions";
 import type { Combatant } from "@/types";
 
+/** "Poisoned · 3r" — rounds a condition has been active, from the round it was
+ * applied to the current one. Legacy conditions without a stamp show bare. */
+function conditionLabel(c: Combatant, id: string, round: number): string {
+  const name = CONDITION_NAME[id] ?? id;
+  const since = c.conditionSince?.[id];
+  if (!since) return name;
+  const rounds = Math.max(1, round - since + 1);
+  return `${name} · ${rounds}r`;
+}
+
 export function CombatantRow({
   combatant,
   hp,
   max,
   active,
   isDM,
+  round,
   onPatch,
   onToggleCondition,
   onRemove,
@@ -17,11 +28,15 @@ export function CombatantRow({
   max: number | null;
   active: boolean;
   isDM: boolean;
+  round: number;
   onPatch: (partial: Partial<Combatant>) => void;
   onToggleCondition: (conditionId: string) => void;
   onRemove: () => void;
 }) {
   const [open, setOpen] = useState(false);
+  const monster = combatant.kind === "monster";
+  // Players never see a monster's health or AC — only the DM tracks those.
+  const showVitals = !monster || isDM;
   const pct = max && max > 0 && hp != null ? Math.round((hp / max) * 100) : 0;
   const dead = hp != null && hp <= 0;
 
@@ -42,13 +57,14 @@ export function CombatantRow({
             {combatant.name}
             <span className="faint" style={{ fontSize: "0.74rem" }}>
               {" "}
-              {combatant.kind === "monster" ? "monster" : "hunter"}
+              {monster ? "monster" : "hunter"}
+              {dead && monster ? " · slain" : ""}
             </span>
           </div>
           <div className="faint" style={{ fontSize: "0.76rem" }}>
             Init {combatant.initiative}
-            {combatant.ac != null ? ` · AC ${combatant.ac}` : ""}
-            {hp != null && max != null ? ` · HP ${hp}/${max}` : ""}
+            {showVitals && combatant.ac != null ? ` · AC ${combatant.ac}` : ""}
+            {showVitals && hp != null && max != null ? ` · HP ${hp}/${max}` : ""}
           </div>
           {combatant.note && (
             <div className="muted" style={{ fontSize: "0.76rem", marginTop: 2 }}>{combatant.note}</div>
@@ -66,7 +82,7 @@ export function CombatantRow({
         )}
       </div>
 
-      {hp != null && max != null && (
+      {showVitals && hp != null && max != null && (
         <div style={{ height: 6, borderRadius: 6, background: "var(--bg)", overflow: "hidden", marginTop: 6 }}>
           <div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: "100%", background: "var(--blood-bright)" }} />
         </div>
@@ -75,15 +91,51 @@ export function CombatantRow({
       {combatant.conditions.length > 0 && (
         <div className="chip-row" style={{ marginTop: 8 }}>
           {combatant.conditions.map((id) => (
-            <span key={id} className="chip" style={{ fontSize: "0.72rem" }}>{CONDITION_NAME[id] ?? id}</span>
+            <span key={id} className="chip" style={{ fontSize: "0.72rem" }}>
+              {conditionLabel(combatant, id, round)}
+            </span>
           ))}
+        </div>
+      )}
+
+      {/* Players can finish a monster off or clear it from the field. */}
+      {!isDM && monster && !dead && (
+        <div className="row" style={{ gap: 6, marginTop: 8 }}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            style={{ width: "auto", color: "var(--blood-bright)" }}
+            onClick={() => onPatch({ currentHp: 0 })}
+          >
+            Slain
+          </button>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            style={{ width: "auto" }}
+            onClick={onRemove}
+          >
+            Remove from battle
+          </button>
+        </div>
+      )}
+      {!isDM && monster && dead && (
+        <div className="row" style={{ gap: 6, marginTop: 8 }}>
+          <button
+            type="button"
+            className="btn btn-ghost btn-sm"
+            style={{ width: "auto" }}
+            onClick={onRemove}
+          >
+            Remove from battle
+          </button>
         </div>
       )}
 
       {isDM && open && (
         <div style={{ marginTop: 10, borderTop: "1px solid var(--border)", paddingTop: 10 }}>
           <Stepper label="Initiative" value={combatant.initiative} onChange={(v) => onPatch({ initiative: v })} />
-          {combatant.kind === "monster" && (
+          {monster && (
             <Stepper
               label="HP"
               value={combatant.currentHp ?? 0}

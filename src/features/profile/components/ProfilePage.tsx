@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { fullName, capabilities } from "@/config";
+import { fullName, capabilities, isSuperAdmin } from "@/config";
 import { isPreviewActive } from "@/dev/preview";
 import { format } from "date-fns";
 import { SignOutIcon } from "@/components/icons";
@@ -50,7 +50,11 @@ export function ProfilePage() {
       </div>
 
       {showSwitcher && <RoleSwitcher />}
-      {canManageMembers && <AllowlistManager adminEmail={user?.email ?? ""} />}
+      {/* Legacy allowlist tools: Firestore only permits the super-admin, so
+          don't render (and query) them for other admin-role accounts. */}
+      {canManageMembers && isSuperAdmin(user?.email) && (
+        <AllowlistManager adminEmail={user?.email ?? ""} />
+      )}
 
       <button
         className="btn btn-ghost"

@@ -279,6 +279,30 @@ export const ITEMS: Item[] = [
     carry: "Insignificant",
     weightLb: 0,
   },
+  {
+    id: "manacles",
+    name: "Manacles",
+    category: "Gear",
+    carry: "Significant",
+    weightLb: 6,
+    note: "Iron restraints for a Small or Medium creature.",
+  },
+  {
+    id: "lamp",
+    name: "Lamp",
+    category: "Gear",
+    carry: "Significant",
+    weightLb: 1,
+    note: "Burns oil to cast light in a 15 ft radius.",
+  },
+  {
+    id: "brewers-supplies",
+    name: "Brewer's Supplies",
+    category: "Tool",
+    carry: "Insignificant",
+    weightLb: 9,
+    note: "A missionary's cover trade — kettles, hops and bottles.",
+  },
 
   // --- Consumables ---
   {
@@ -296,6 +320,22 @@ export const ITEMS: Item[] = [
     carry: "Significant",
     weightLb: 2,
     note: "One day's trail rations.",
+  },
+  {
+    id: "antitoxin",
+    name: "Antitoxin",
+    category: "Consumable",
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "Advantage on saves against poison for 1 hour.",
+  },
+  {
+    id: "oil",
+    name: "Oil",
+    category: "Consumable",
+    carry: "Insignificant",
+    weightLb: 1,
+    note: "A flask of oil — fuel for a lamp, or stranger uses.",
   },
 
   // --- Armor (folded in from src/data/armor.ts) ---

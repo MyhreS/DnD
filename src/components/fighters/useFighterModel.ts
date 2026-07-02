@@ -32,18 +32,22 @@ export interface FighterModel {
   play: (clip: string, opts?: PlayOpts) => AnimationAction | null;
 }
 
-// Drag the bright, toy-like KayKit materials toward grim dark-fantasy: darker
-// albedo, rougher surface, a touch of class-coloured inner glow. Materials are
+// Drag the bright, toy-like KayKit materials toward grim dark-fantasy: darker,
+// desaturated leather-and-ash albedo, rougher surface, a touch of class-coloured
+// inner glow — so the generic adventurers read as HUNTERS. Materials are
 // cloned first so we never mutate the GLTF cache shared by other instances.
 function grit(mat: Material, accent: string): Material {
   const m = mat.clone();
   if (m instanceof MeshStandardMaterial) {
-    m.color.multiplyScalar(0.78); // mildly darker for mood, but keep real colours
-    m.roughness = Math.min(1, m.roughness * 0.4 + 0.6);
-    m.metalness = Math.max(0, m.metalness * 0.7);
+    const hsl = { h: 0, s: 0, l: 0 };
+    m.color.getHSL(hsl);
+    // Drain the storybook colour: mostly-grey cloth and leather, dimmed.
+    m.color.setHSL(hsl.h, hsl.s * 0.45, hsl.l * 0.62);
+    m.roughness = Math.min(1, m.roughness * 0.3 + 0.7);
+    m.metalness = Math.max(0, m.metalness * 0.6);
     m.emissive.set(accent);
     m.emissiveIntensity = 0.03; // barely-there inner glow, not a tint
-    m.envMapIntensity = 0.3;
+    m.envMapIntensity = 0.25;
   }
   return m;
 }
