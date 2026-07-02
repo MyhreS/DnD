@@ -156,8 +156,11 @@ export function armorClass(
   const dexMod = abilityModifier(abilities.dex);
   const main = mainArmorId ? ARMOR_BY_ID[mainArmorId] : undefined;
   const baseAc = main ? main.acValue : 10;
-  const addonBonus = addonAcBonus(addonArmorIds, !!main);
-  const studded = Math.max(0, Math.min(5, Math.min(studdedAddons, addonArmorIds.length)));
+  // Over-max stacks (e.g. a stored 6-piece set whose Balanced Fit main was
+  // swapped away) never contribute beyond the legal allowance.
+  const worn = addonArmorIds.slice(0, maxAddonPieces(mainArmorId));
+  const addonBonus = addonAcBonus(worn, !!main);
+  const studded = Math.max(0, Math.min(5, Math.min(studdedAddons, worn.length)));
   const studBonus = studded >= 5 ? 2 : studded >= 1 ? 1 : 0;
   const baseArmorAc = baseAc + addonBonus + studBonus;
   const cat = acCategory(baseArmorAc);

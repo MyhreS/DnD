@@ -12,6 +12,7 @@ import { RosterPanel } from "./RosterPanel";
 import { DMBuildHunter } from "./DMBuildHunter";
 import { DMCharacters } from "@/features/play/components/DMCharacters";
 import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
+import { useGameStore, currentGame } from "@/features/play/store/gameStore";
 import { exportPartyPdf } from "@/features/hunter/lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
 import { AsyncButton } from "@/components/AsyncButton";
@@ -28,6 +29,7 @@ export function PartyPage() {
   // The DM control board (insight/level/gold/blood tinge) reads the shared
   // characters store — keep it live here too, not just in Play.
   useCharactersSync();
+  const games = useGameStore((s) => s.games);
   const activeId = useCampaignStore((s) => s.activeId);
   const campaignMembers = useCampaignStore((s) => s.members);
   const allSessions = useSessionStore((s) => s.sessions);
@@ -90,7 +92,9 @@ export function PartyPage() {
 
         {isDM && (
           <div style={{ marginBottom: 12 }}>
-            <DMCharacters gameId={null} />
+            {/* Pass the live game (if any) so confirming a death here still
+                drops the fallen hunter's loot into that game's pile. */}
+            <DMCharacters gameId={currentGame(games, activeId)?.id ?? null} />
           </div>
         )}
 

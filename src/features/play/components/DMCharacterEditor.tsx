@@ -18,16 +18,24 @@ export function DMCharacterEditor({ card }: { card: HunterCard }) {
   const san = Math.min(sanMax, card.sanity ?? sanMax);
   const transform = card.transformationLevel ?? 0;
 
-  /** A direct DM level grant. Keeps Insight at least at the new level's
-   * threshold (so "N to next level" stays sensible) and arms the player's
-   * level-up walkthrough via lastSeenLevel. Reductions shed transformations
-   * only if the DM says so — this just sets the number. */
+  /** A direct DM level grant. Raising keeps Insight at least at the new
+   * level's threshold (so "N to next level" stays sensible) and arms the
+   * player's level-up walkthrough; lowering also caps Insight below the next
+   * threshold so the reduction STICKS (a rest can't silently re-level), and
+   * never rewinds lastSeenLevel — a level the player already walked is never
+   * walked (and its choices never re-applied) twice. */
   function setLevel(v: number) {
     const level = clamp(1, 20, v);
+    const insight = card.insight ?? 0;
     dmPatch(card.id, {
       level,
-      lastSeenLevel: Math.min(card.lastSeenLevel ?? card.level, level),
-      insight: Math.max(card.insight ?? 0, INSIGHT_THRESHOLDS[level - 1]),
+      lastSeenLevel: card.lastSeenLevel ?? card.level,
+      insight:
+        level > card.level
+          ? Math.max(insight, INSIGHT_THRESHOLDS[level - 1])
+          : level < card.level && level < 20
+            ? Math.min(insight, INSIGHT_THRESHOLDS[level] - 1)
+            : insight,
     });
   }
 

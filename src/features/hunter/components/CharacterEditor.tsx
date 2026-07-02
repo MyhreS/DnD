@@ -100,13 +100,22 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   // Point buy (default) or the table's "Maduhausu" rolled-stats method.
   const [mode, setMode] = useState<"pointbuy" | "maduhausu">(initial.abilityMode ?? "pointbuy");
   const [hasRolled, setHasRolled] = useState(initial.abilityMode === "maduhausu");
+  // Ability scores are only re-validated (and re-saved) if the player actually
+  // touches them — so editing armor on a leveled hunter never trips over the
+  // creation-time point-buy rules or discards level-up ability increases.
+  const creating = !initial.classId;
+  const [abilitiesDirty, setAbilitiesDirty] = useState(creating);
 
   const [base, setBase] = useState<Record<AbilityKey, number>>(() => {
     const out = {} as Record<AbilityKey, number>;
-    // Prefer the stored pre-background bases (exact for rolled scores);
-    // fall back to splitting the final scores for legacy cards.
+    // Attribute at most +2 per ability to the background bonus; everything
+    // else (bought/rolled base + any level-up increases) counts as base, so
+    // base + bonus always reproduces the saved final scores.
     for (const k of ABILITY_KEYS) {
-      out[k] = initial.baseAbilities?.[k] ?? splitScore(initial.abilities[k]).base;
+      const b = initial.baseAbilities
+        ? Math.max(0, Math.min(2, initial.abilities[k] - initial.baseAbilities[k]))
+        : splitScore(initial.abilities[k]).bonus;
+      out[k] = initial.abilities[k] - b;
     }
     return out;
   });
@@ -152,7 +161,10 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const pointsLeft = POINT_BUY_BUDGET - pointsSpent;
   const bonusTotal = ABILITY_KEYS.reduce((s, k) => s + bonus[k], 0);
   const bonusValid = bonusTotal === 3; // (2+1) or (1+1+1) both sum to 3
-  const scoresOk = mode === "maduhausu" ? hasRolled : pointsLeft === 0;
+  // Untouched scores on an existing hunter are saved verbatim — no revalidation.
+  const scoresOk =
+    !abilitiesDirty || (mode === "maduhausu" ? hasRolled : pointsLeft === 0);
+  const bonusOk = !abilitiesDirty || bonusTotal === 3;
 
   const maxAddons = maxAddonPieces(mainArmorId);
   const studdedMax = Math.min(5, addonIds.length);
@@ -166,6 +178,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     const projected = { ...base, [k]: next };
     const spent = ABILITY_KEYS.reduce((s, key) => s + (POINT_COST[projected[key]] ?? 0), 0);
     if (spent > POINT_BUY_BUDGET) return; // can't overspend
+    setAbilitiesDirty(true);
     setBase(projected);
   }
 
@@ -178,12 +191,14 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     };
     const out = {} as Record<AbilityKey, number>;
     for (const k of ABILITY_KEYS) out[k] = rollScore();
+    setAbilitiesDirty(true);
     setBase(out);
     setHasRolled(true);
   }
 
   function switchMode(next: "pointbuy" | "maduhausu") {
     if (next === mode) return;
+    setAbilitiesDirty(true);
     setMode(next);
     if (next === "pointbuy") {
       // Rolled scores don't fit the 8–15 buy space — reset to a clean slate.
@@ -216,6 +231,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     if (!bonusAbilities.includes(k)) return; // background restricts which abilities benefit
     const projected = { ...bonus, [k]: next };
     if (projected[k] - bonus[k] > 0 && bonusTotal >= 3) return; // cap at 3 total
+    setAbilitiesDirty(true);
     setBonus(projected);
   }
 
@@ -237,12 +253,14 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     if (next) setClassSkills((cur) => cur.filter((s) => next.skillChoices.options.includes(s)));
   }
 
-  // Choosing a background sets its granted feat (or clears for a pick) and resets
-  // the ability bonus, since the eligible abilities change.
+  // Choosing a background sets its granted feat (or none) and resets the
+  // ability bonus, since the eligible abilities change.
   function chooseBackground(id: string) {
+    if (id === backgroundId) return;
     setBackgroundId(id);
     const next = BACKGROUNDS.find((b) => b.id === id);
     setFeat(next?.feat ?? "");
+    setAbilitiesDirty(true);
     setBonus(ZERO_BONUS());
   }
 
@@ -257,17 +275,19 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     if (klass && !classSkillsOk) p.push(`Choose exactly ${klass.skillChoices.count} class skill proficiencies.`);
     if (!backgroundId) p.push("Choose a background.");
     if (bg?.feat && feat.trim().length === 0) p.push("Choose your Origin feat.");
-    if (mode === "pointbuy" && pointsLeft > 0) p.push(`Spend all your ability points — ${pointsLeft} still left.`);
-    if (mode === "maduhausu" && !hasRolled) p.push("Roll your Maduhausu scores.");
-    if (bonusTotal !== 3) p.push(`Apply your background ability points (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`);
+    if (abilitiesDirty) {
+      if (mode === "pointbuy" && pointsLeft > 0) p.push(`Spend all your ability points — ${pointsLeft} still left.`);
+      if (mode === "maduhausu" && !hasRolled) p.push("Roll your Maduhausu scores.");
+      if (bonusTotal !== 3) p.push(`Apply your background ability points (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`);
+    }
     return p;
-  }, [name, classId, klass, classSkillsOk, backgroundId, bg, feat, mode, hasRolled, pointsLeft, bonusTotal]);
+  }, [name, classId, klass, classSkillsOk, backgroundId, bg, feat, abilitiesDirty, mode, hasRolled, pointsLeft, bonusTotal]);
 
   // Per-step completion (drives the progress bar + Next gating).
   const stepValid = [
     !!classId && classSkillsOk,
     !!backgroundId,
-    scoresOk && bonusTotal === 3,
+    scoresOk && bonusOk,
     true,
     problems.length === 0,
   ];
@@ -316,7 +336,6 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     }
     // A brand-new hunter starts with the class + background starting kit
     // (real inventory items + starting gold). Edits keep what's carried.
-    const creating = !initial.classId;
     const kit = creating ? startingKit(klass, bg) : null;
     onSave({
       ...initial,
@@ -328,15 +347,19 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       feats: initial.feats ?? [],
       background: bg?.name ?? initial.background.trim(),
       backgroundId: backgroundId ?? undefined,
-      feat: bg?.feat ? bg.feat : undefined,
+      // null (not undefined) so switching to a no-feat background actually
+      // CLEARS a previously stored feat under setDoc merge semantics.
+      feat: bg?.feat ?? null,
       mainArmorId,
-      addonArmorIds: addonIds,
+      addonArmorIds: addonIds.slice(0, maxAddons),
       studdedAddons: Math.min(studded, studdedMax),
       extraArmorIds: extraIds,
       skillProficiencies: allSkills,
-      abilities: finalScores,
-      baseAbilities: { ...base },
-      abilityMode: mode,
+      // Untouched ability scores round-trip verbatim — never re-derived, so
+      // level-up increases survive unrelated edits (armor, name, whispers).
+      abilities: abilitiesDirty ? finalScores : initial.abilities,
+      baseAbilities: abilitiesDirty ? { ...base } : initial.baseAbilities ?? { ...base },
+      abilityMode: abilitiesDirty ? mode : initial.abilityMode ?? mode,
       sanity: initial.sanity ?? sanMax ?? 0,
       bloodTinge: initial.bloodTinge ?? false,
       preparedWhispers: initial.preparedWhispers ?? [],
@@ -624,7 +647,19 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
             <p className="eyebrow">Step 4 · Armor</p>
             <h3 style={{ marginBottom: 8 }}>Main armor</h3>
             <div className="field" style={{ marginBottom: 8 }}>
-              <select className="select" value={mainArmorId ?? ""} onChange={(e) => setMainArmorId(e.target.value || null)}>
+              <select
+                className="select"
+                value={mainArmorId ?? ""}
+                onChange={(e) => {
+                  const nextMain = e.target.value || null;
+                  // Losing Balanced Fit shrinks the add-on allowance — shed the
+                  // overflow so an illegal 6-piece stack can't be kept or saved.
+                  const trimmed = addonIds.slice(0, maxAddonPieces(nextMain));
+                  setMainArmorId(nextMain);
+                  setAddonIds(trimmed);
+                  setStudded((s) => Math.min(s, Math.min(5, trimmed.length)));
+                }}
+              >
                 <option value="">Unarmored (AC 10 + Dex)</option>
                 {MAIN_ARMOR.map((a) => (
                   <option key={a.id} value={a.id}>{a.name} — {a.ac}</option>

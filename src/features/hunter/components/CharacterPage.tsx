@@ -7,6 +7,7 @@ import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
 import { InventoryPanel } from "./InventoryPanel";
 import { LevelUpModal } from "./LevelUpModal";
+import { patchCharacter } from "@/api/players";
 import { emptyCard } from "@/lib/character";
 import { exportCharacterPdf } from "../lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -162,7 +163,9 @@ export function CharacterPage() {
       )}
 
       {hasCard && card!.lastSeenLevel != null && card!.level > card!.lastSeenLevel && (
-        <LevelUpModal card={card!} onPatch={(p) => void save({ ...card!, ...p })} />
+        // Partial patch (not a full-card save) so a concurrent DM award —
+        // insight, gold, HP — is never clobbered by this client's snapshot.
+        <LevelUpModal card={card!} onPatch={(p) => void patchCharacter(card!.id, p)} />
       )}
 
       {hasCard ? (
@@ -172,7 +175,7 @@ export function CharacterPage() {
           </aside>
           <div className="desk-main">
             <div className="print-sheet">
-              <HunterCardView card={card!} onPatch={(p) => void save({ ...card!, ...p })} />
+              <HunterCardView card={card!} onPatch={(p) => void patchCharacter(card!.id, p)} />
             </div>
             <div className="no-print" style={{ marginTop: 14 }}>
               <InventoryPanel card={card!} editable />

@@ -30,7 +30,8 @@ interface Props {
 export function Solo({ cast, onImpact, onDone }: Props) {
   const ref = useRef<CombatantHandle>(null);
   const { viewport } = useThree();
-  const halfW = viewport.width / 2;
+  // Capped stage half-width — see Duel.tsx (keeps entrances brisk on wide strips).
+  const halfW = Math.min(viewport.width / 2, 9);
   const exitX = halfW + OFF;
   const groundY = -viewport.height / 2 + 0.1;
 

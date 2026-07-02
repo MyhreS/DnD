@@ -10,9 +10,19 @@ const GENERAL_FEATS = FEATS.filter((f) => f.category === "General");
 const EPIC_FEATS = FEATS.filter((f) => f.category === "Epic Boon");
 const STYLE_FEATS = FEATS.filter((f) => f.category === "Fighting Style");
 
+/** One level's choice: EITHER an ASI allocation (2 points) OR one feat. */
+interface LevelChoice {
+  asi?: Partial<Record<AbilityKey, number>>;
+  feat?: string;
+}
+
+const asiSpent = (asi: LevelChoice["asi"]) =>
+  ABILITY_KEYS.reduce((s, k) => s + (asi?.[k] ?? 0), 0);
+
 /** Walks a hunter through every level gained since they last looked: the
  * features of each new level, plus the choices those levels grant (subclass at
- * 3+, feat/ASI, Epic Boon, Fighting Style) — applied to the card at the end. */
+ * 3+, feat OR ASI, Epic Boon, Fighting Style) — one choice per level, required
+ * before moving on, all applied to the card at the end. */
 export function LevelUpModal({
   card,
   onPatch,
@@ -23,10 +33,9 @@ export function LevelUpModal({
   const from = card.lastSeenLevel ?? card.level;
   const levels = Array.from({ length: card.level - from }, (_, i) => from + 1 + i);
   const [idx, setIdx] = useState(0);
-  // Choices accumulated across the walked levels.
+  // Choices accumulated across the walked levels (one per level).
   const [subclassId, setSubclassId] = useState<string | null>(card.subclassId ?? null);
-  const [feats, setFeats] = useState<string[]>([]);
-  const [asi, setAsi] = useState<Record<number, Partial<Record<AbilityKey, number>>>>({});
+  const [choices, setChoices] = useState<Record<number, LevelChoice>>({});
 
   const klass = getClass(card.classId);
   if (!klass || levels.length === 0) return null;
@@ -45,16 +54,38 @@ export function LevelUpModal({
   const grantsAsi = /Ability Score Improvement/i.test(rowFeatures);
   const grantsBoon = /Epic Boon/i.test(rowFeatures);
   const grantsStyle = /Fighting Style/i.test(rowFeatures) && lvl > 1;
+  const grantsChoice = grantsAsi || grantsBoon || grantsStyle;
+
+  const choice = choices[lvl] ?? {};
+  const choiceDone =
+    !grantsChoice || !!choice.feat || (grantsAsi && asiSpent(choice.asi) === 2);
+  const levelDone = !needsSubclass && choiceDone;
+
+  function setChoice(next: LevelChoice) {
+    setChoices((cur) => ({ ...cur, [lvl]: next }));
+  }
 
   function finish() {
     const abilities = { ...card.abilities };
-    for (const alloc of Object.values(asi)) {
+    // ASI raises the BASE scores — keep baseAbilities in step so re-editing
+    // the hunter doesn't misread the increase as background bonus points.
+    const baseAbilities = { ...(card.baseAbilities ?? card.abilities) };
+    for (const c of Object.values(choices)) {
+      if (!c.asi) continue;
       for (const k of ABILITY_KEYS) {
-        abilities[k] = Math.min(20, abilities[k] + (alloc[k] ?? 0));
+        const inc = c.asi[k] ?? 0;
+        if (!inc) continue;
+        const applied = Math.min(20, abilities[k] + inc) - abilities[k];
+        abilities[k] += applied;
+        baseAbilities[k] += applied;
       }
     }
+    const feats = Object.values(choices)
+      .map((c) => c.feat)
+      .filter((f): f is string => !!f);
     onPatch({
       abilities,
+      baseAbilities,
       feats: [...(card.feats ?? []), ...feats],
       subclassId,
       lastSeenLevel: card.level,
@@ -108,16 +139,21 @@ export function LevelUpModal({
           </div>
         )}
 
-        {(grantsAsi || grantsBoon || grantsStyle) && (
+        {grantsChoice && (
           <FeatChoice
             key={lvl}
             kind={grantsBoon ? "boon" : grantsStyle ? "style" : "asi"}
-            chosen={feats}
-            asi={asi[lvl]}
-            onAsi={(alloc) => setAsi((cur) => ({ ...cur, [lvl]: alloc }))}
-            onFeat={(name) => setFeats((cur) => [...cur, name])}
-            onUnfeat={(name) => setFeats((cur) => cur.filter((f) => f !== name))}
+            choice={choice}
+            onChange={setChoice}
           />
+        )}
+
+        {!levelDone && (
+          <p className="faint" style={{ fontSize: "0.8rem", margin: "4px 0 0" }}>
+            {needsSubclass
+              ? "Choose a path to continue."
+              : "Make your pick to continue — +2 in ability points, or one feat."}
+          </p>
         )}
 
         <div className="btn-row" style={{ marginTop: 14 }}>
@@ -125,9 +161,13 @@ export function LevelUpModal({
             <button className="btn btn-ghost" onClick={() => setIdx((i) => i - 1)}>Back</button>
           )}
           {idx < levels.length - 1 ? (
-            <button className="btn btn-primary" onClick={() => setIdx((i) => i + 1)}>Next level</button>
+            <button className="btn btn-primary" disabled={!levelDone} onClick={() => setIdx((i) => i + 1)}>
+              Next level
+            </button>
           ) : (
-            <button className="btn btn-primary" onClick={finish}>Take up the hunt</button>
+            <button className="btn btn-primary" disabled={!levelDone} onClick={finish}>
+              Take up the hunt
+            </button>
           )}
         </div>
       </div>
@@ -149,27 +189,21 @@ function PathButton({ title, sub, onClick }: { title: string; sub?: string; onCl
   );
 }
 
-/** One level's feat-shaped choice: an ASI allocation (+2/+1+1 up to 2 points)
- * or a feat from the right category. */
+/** One level's feat-shaped choice: an ASI allocation (+2 / +1+1) OR exactly one
+ * feat from the right category — picking one side clears the other. */
 function FeatChoice({
   kind,
-  chosen,
-  asi,
-  onAsi,
-  onFeat,
-  onUnfeat,
+  choice,
+  onChange,
 }: {
   kind: "asi" | "boon" | "style";
-  chosen: string[];
-  asi: Partial<Record<AbilityKey, number>> | undefined;
-  onAsi: (alloc: Partial<Record<AbilityKey, number>>) => void;
-  onFeat: (name: string) => void;
-  onUnfeat: (name: string) => void;
+  choice: LevelChoice;
+  onChange: (c: LevelChoice) => void;
 }) {
   const [tab, setTab] = useState<"asi" | "feat">(kind === "asi" ? "asi" : "feat");
   const pool = kind === "boon" ? EPIC_FEATS : kind === "style" ? STYLE_FEATS : GENERAL_FEATS;
   const label = kind === "boon" ? "Epic Boon" : kind === "style" ? "Fighting Style" : "Ability Score Improvement";
-  const spent = ABILITY_KEYS.reduce((s, k) => s + (asi?.[k] ?? 0), 0);
+  const spent = asiSpent(choice.asi);
 
   return (
     <div style={{ marginBottom: 4 }}>
@@ -191,18 +225,19 @@ function FeatChoice({
           </p>
           <div className="chip-row">
             {ABILITIES.map(({ key, short }) => {
-              const v = asi?.[key] ?? 0;
+              const v = choice.asi?.[key] ?? 0;
               return (
                 <button
                   key={key}
                   type="button"
                   className={`chip selectable${v > 0 ? " selected" : ""}`}
                   onClick={() => {
-                    const next = { ...asi };
-                    if (v >= 2 || (v === 1 && spent >= 2)) next[key] = 0;
-                    else if (spent < 2) next[key] = v + 1;
-                    else next[key] = 0;
-                    onAsi(next);
+                    // Cycle 0 → 1 → 2 → 0 within the 2-point budget; any ASI
+                    // edit drops a previously chosen feat (one choice per level).
+                    const asi = { ...choice.asi };
+                    const atBudget = spent >= 2;
+                    asi[key] = v >= 2 || (v > 0 && atBudget) ? 0 : atBudget ? v : v + 1;
+                    onChange({ asi });
                   }}
                 >
                   {short}{v > 0 ? ` ${formatModifier(v)}` : ""}
@@ -214,7 +249,7 @@ function FeatChoice({
       ) : (
         <div className="stack" style={{ gap: 4, maxHeight: 240, overflowY: "auto" }}>
           {pool.map((f) => {
-            const on = chosen.includes(f.name);
+            const on = choice.feat === f.name;
             return (
               <button
                 key={f.id}
@@ -228,7 +263,7 @@ function FeatChoice({
                   gap: 8,
                   textAlign: "left",
                 }}
-                onClick={() => (on ? onUnfeat(f.name) : onFeat(f.name))}
+                onClick={() => onChange(on ? {} : { feat: f.name })}
               >
                 <span style={{ minWidth: 0 }}>
                   <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>{f.name}</span>

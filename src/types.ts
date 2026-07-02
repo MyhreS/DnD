@@ -501,8 +501,9 @@ export interface HunterCard {
   background: string;
   /** Structured background id (from data/backgrounds.ts), when chosen. */
   backgroundId?: string;
-  /** Origin feat granted/chosen via the background. */
-  feat?: string;
+  /** Origin feat granted via the background; null when the background grants
+   * none (an explicit null so saves CLEAR a previously stored feat). */
+  feat?: string | null;
   level: number;
   /** The last level this player has walked through the level-up screen for.
    * When `level` moves past it (DM award/level or a Long Rest), the level-up

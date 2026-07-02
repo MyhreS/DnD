@@ -37,7 +37,10 @@ export function Duel({ left, right, onImpact, onDone }: Props) {
   const L = useRef<CombatantHandle>(null);
   const R = useRef<CombatantHandle>(null);
   const { viewport } = useThree();
-  const halfW = viewport.width / 2;
+  // Cap the stage half-width: on a wide bottom-strip canvas the world gets
+  // very wide, and viewport-edge entrances would mean many seconds of empty
+  // walking. Fighters enter from just past this capped stage instead.
+  const halfW = Math.min(viewport.width / 2, 9);
   const off = halfW + OFF;
   const groundY = -viewport.height / 2 + 0.1;
 

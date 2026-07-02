@@ -126,14 +126,15 @@ service cloud.firestore {
       }
 
       // Combat tracker: members read the initiative tracker; the DM edits it.
-      // Members may also update/remove MONSTERS (mark one slain / clear it from
-      // the field) — but never touch a PC row or turn a monster into one.
+      // Members may also finish off / clear MONSTERS (their Slain + Remove
+      // buttons) — but only the HP field, and never a PC row: no healing,
+      // initiative shuffling or note rewrites from the player side.
       match /combatants/{cid} {
         allow read: if isMember(gameCampaignId(gameId));
         allow write: if isCampaignDM(gameCampaignId(gameId));
         allow update: if isMember(gameCampaignId(gameId))
           && resource.data.kind == "monster"
-          && request.resource.data.kind == "monster";
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["currentHp"]);
         allow delete: if isMember(gameCampaignId(gameId))
           && resource.data.kind == "monster";
       }

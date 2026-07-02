@@ -144,6 +144,15 @@ await step("Player cannot turn a monster into a pc (negative)", async () => {
   } catch { denied = true; }
   if (!denied) throw new Error("player could rewrite a monster's kind");
 });
+await step("Player cannot heal/buff/rewrite a monster (negative)", async () => {
+  for (const bad of [{ initiative: 20 }, { note: "hax" }, { currentHp: 10, maxHp: 99 }]) {
+    let denied = false;
+    try {
+      await updateDoc(doc(pl.db, "games", gameId, "combatants", monsterId), bad);
+    } catch { denied = true; }
+    if (!denied) throw new Error(`player could write ${JSON.stringify(bad)} on a monster (currentHp-only allowed)`);
+  }
+});
 await step("Player removes the monster from battle (delete)", async () => {
   const { deleteDoc } = await import("firebase/firestore");
   await deleteDoc(doc(pl.db, "games", gameId, "combatants", monsterId));
