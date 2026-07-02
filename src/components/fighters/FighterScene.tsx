@@ -33,10 +33,16 @@ export default function FighterScene({ show, onDone }: Props) {
       ? [show.left.fighter.theme, show.right.fighter.theme]
       : [show.cast.fighter.theme];
 
+  // Desktop gets a taller stage strip (see .fighters in global.css) AND a
+  // closer camera — at phone-strip proportions the hunters read tiny on a
+  // 1440px screen. Read once per show; a show is short-lived, so live
+  // resize-tracking isn't worth the re-render churn.
+  const desktop = window.matchMedia("(min-width: 900px)").matches;
+
   return (
     <div className="fighters no-print" aria-hidden>
       <Canvas
-        camera={{ position: [0, 0, 16], fov: 32 }}
+        camera={{ position: [0, 0, desktop ? 12 : 16], fov: 32 }}
         dpr={[1, 1.75]}
         gl={{ alpha: true, antialias: true }}
         style={{ position: "absolute", inset: 0, pointerEvents: "none" }}

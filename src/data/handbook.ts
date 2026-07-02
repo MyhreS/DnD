@@ -87,6 +87,14 @@ export const HANDBOOK: HandbookChapter[] = [
         ],
       },
       {
+        heading: "Alternative: the Maduhausu point buy",
+        body: [
+          "Your table may instead use the DM's more ambitious min-maxing variant — the “Maduhausu” point buy. You have 57 points to spend and can buy scores from 3 to 16 (Ability Score Point Costs V2).",
+          "Scores 3–13 always cost the same: score − 3 points (a 10 costs 7). Buying 14+ gets pricier each time you buy that same score again: a 14 costs 12, then 14, then 17; a 15 costs 14, then 18, then 23; a 16 costs 20, then 26 — and a third 16 is simply too expensive.",
+          "Under this method, no Ability Score may be higher than 17 as a level 1 character — that includes the extra points from your background or anything else.",
+        ],
+      },
+      {
         heading: "Adjust for background",
         body: [
           "After assigning scores, adjust them for your background. Your background lists three abilities: increase one of them by 2 and a different one by 1, or increase all three by 1. None of these increases can raise a score above 20.",

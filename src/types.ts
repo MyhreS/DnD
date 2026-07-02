@@ -517,8 +517,9 @@ export interface HunterCard {
   /** Pre-background base scores (bought or rolled) — kept so re-editing can
    * split `abilities` back into base + background bonus correctly. */
   baseAbilities?: AbilityScores;
-  /** How the base scores were determined — point buy (default) or the table's
-   * "Maduhausu" rolled-stats house method (4d6 drop lowest). */
+  /** How the base scores were determined — standard 27-point buy (default) or
+   * the table's "Maduhausu" min-max buy: 57 points, scores 3–16, escalating
+   * repeat costs, no final level-1 score above 17 (background included). */
   abilityMode?: "pointbuy" | "maduhausu";
   /** Skill proficiencies (class choices + background-granted). */
   skillProficiencies: string[];

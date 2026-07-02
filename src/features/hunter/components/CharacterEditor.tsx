@@ -11,6 +11,12 @@ import {
   POINT_BUY_MIN,
   POINT_BUY_MAX,
   POINT_COST,
+  MADUHAUSU_BUDGET,
+  MADUHAUSU_MIN,
+  MADUHAUSU_MAX,
+  MADUHAUSU_FINAL_MAX,
+  MADUHAUSU_COST,
+  maduhausuSpent,
   abilityModifier,
   formatModifier,
 } from "@/data/abilities";
@@ -97,9 +103,8 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState(false);
 
-  // Point buy (default) or the table's "Maduhausu" rolled-stats method.
+  // Standard point buy (default) or the table's "Maduhausu" 57-point min-max buy.
   const [mode, setMode] = useState<"pointbuy" | "maduhausu">(initial.abilityMode ?? "pointbuy");
-  const [hasRolled, setHasRolled] = useState(initial.abilityMode === "maduhausu");
   // Ability scores are only re-validated (and re-saved) if the player actually
   // touches them — so editing armor on a leveled hunter never trips over the
   // creation-time point-buy rules or discards level-up ability increases.
@@ -116,6 +121,12 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
         ? Math.max(0, Math.min(2, initial.abilities[k] - initial.baseAbilities[k]))
         : splitScore(initial.abilities[k]).bonus;
       out[k] = initial.abilities[k] - b;
+      // Legacy Maduhausu cards were ROLLED (the old, wrong reading of the rule)
+      // and can sit outside the buyable 3–16 space — clamp the editor state so
+      // the steppers work. Untouched scores still save verbatim.
+      if ((initial.abilityMode ?? "pointbuy") === "maduhausu") {
+        out[k] = Math.max(MADUHAUSU_MIN, Math.min(MADUHAUSU_MAX, out[k]));
+      }
     }
     return out;
   });
@@ -154,16 +165,19 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     [classSkills, bgSkills],
   );
 
+  const budget = mode === "maduhausu" ? MADUHAUSU_BUDGET : POINT_BUY_BUDGET;
   const pointsSpent = useMemo(
-    () => ABILITY_KEYS.reduce((sum, k) => sum + (POINT_COST[base[k]] ?? 0), 0),
-    [base],
+    () =>
+      mode === "maduhausu"
+        ? maduhausuSpent(ABILITY_KEYS.map((k) => base[k])) ?? 0
+        : ABILITY_KEYS.reduce((sum, k) => sum + (POINT_COST[base[k]] ?? 0), 0),
+    [base, mode],
   );
-  const pointsLeft = POINT_BUY_BUDGET - pointsSpent;
+  const pointsLeft = budget - pointsSpent;
   const bonusTotal = ABILITY_KEYS.reduce((s, k) => s + bonus[k], 0);
   const bonusValid = bonusTotal === 3; // (2+1) or (1+1+1) both sum to 3
   // Untouched scores on an existing hunter are saved verbatim — no revalidation.
-  const scoresOk =
-    !abilitiesDirty || (mode === "maduhausu" ? hasRolled : pointsLeft === 0);
+  const scoresOk = !abilitiesDirty || pointsLeft === 0;
   const bonusOk = !abilitiesDirty || bonusTotal === 3;
 
   const maxAddons = maxAddonPieces(mainArmorId);
@@ -174,26 +188,19 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const prof = proficiencyBonus(level);
 
   function setBaseScore(k: AbilityKey, next: number) {
-    if (next < POINT_BUY_MIN || next > POINT_BUY_MAX) return;
+    const min = mode === "maduhausu" ? MADUHAUSU_MIN : POINT_BUY_MIN;
+    const max = mode === "maduhausu" ? MADUHAUSU_MAX : POINT_BUY_MAX;
+    if (next < min || next > max) return;
+    // Maduhausu's hard cap: no FINAL score above 17, background points included.
+    if (mode === "maduhausu" && next + bonus[k] > MADUHAUSU_FINAL_MAX) return;
     const projected = { ...base, [k]: next };
-    const spent = ABILITY_KEYS.reduce((s, key) => s + (POINT_COST[projected[key]] ?? 0), 0);
-    if (spent > POINT_BUY_BUDGET) return; // can't overspend
+    const spent =
+      mode === "maduhausu"
+        ? maduhausuSpent(ABILITY_KEYS.map((key) => projected[key]))
+        : ABILITY_KEYS.reduce((s, key) => s + (POINT_COST[projected[key]] ?? 0), 0);
+    if (spent === null || spent > budget) return; // can't overspend (or buy a third 16)
     setAbilitiesDirty(true);
     setBase(projected);
-  }
-
-  /** Maduhausu 🤡 — roll 4d6 drop lowest for each ability, assigned in order. */
-  function rollMaduhausu() {
-    const rollScore = () => {
-      const dice = Array.from({ length: 4 }, () => Math.floor(Math.random() * 6) + 1);
-      dice.sort((a, b) => a - b);
-      return dice[1] + dice[2] + dice[3];
-    };
-    const out = {} as Record<AbilityKey, number>;
-    for (const k of ABILITY_KEYS) out[k] = rollScore();
-    setAbilitiesDirty(true);
-    setBase(out);
-    setHasRolled(true);
   }
 
   function switchMode(next: "pointbuy" | "maduhausu") {
@@ -201,13 +208,12 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     setAbilitiesDirty(true);
     setMode(next);
     if (next === "pointbuy") {
-      // Rolled scores don't fit the 8–15 buy space — reset to a clean slate.
+      // Maduhausu scores can sit outside the 8–15 buy space — reset to a clean slate.
       const out = {} as Record<AbilityKey, number>;
       for (const k of ABILITY_KEYS) out[k] = 10;
       setBase(out);
-    } else {
-      setHasRolled(false);
     }
+    // → maduhausu keeps the current scores: 8–15 all fit the 3–16 buy space.
   }
 
   function toggleAddon(id: string) {
@@ -229,6 +235,8 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   function setBonusScore(k: AbilityKey, next: number) {
     if (next < 0 || next > 2) return;
     if (!bonusAbilities.includes(k)) return; // background restricts which abilities benefit
+    // Maduhausu's hard cap: no FINAL score above 17, background points included.
+    if (mode === "maduhausu" && base[k] + next > MADUHAUSU_FINAL_MAX) return;
     const projected = { ...bonus, [k]: next };
     if (projected[k] - bonus[k] > 0 && bonusTotal >= 3) return; // cap at 3 total
     setAbilitiesDirty(true);
@@ -276,12 +284,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     if (!backgroundId) p.push("Choose a background.");
     if (bg?.feat && feat.trim().length === 0) p.push("Choose your Origin feat.");
     if (abilitiesDirty) {
-      if (mode === "pointbuy" && pointsLeft > 0) p.push(`Spend all your ability points — ${pointsLeft} still left.`);
-      if (mode === "maduhausu" && !hasRolled) p.push("Roll your Maduhausu scores.");
+      if (pointsLeft !== 0) p.push(`Spend all your ability points — ${pointsLeft} still left.`);
       if (bonusTotal !== 3) p.push(`Apply your background ability points (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`);
     }
     return p;
-  }, [name, classId, klass, classSkillsOk, backgroundId, bg, feat, abilitiesDirty, mode, hasRolled, pointsLeft, bonusTotal]);
+  }, [name, classId, klass, classSkillsOk, backgroundId, bg, feat, abilitiesDirty, pointsLeft, bonusTotal]);
 
   // Per-step completion (drives the progress bar + Next gating).
   const stepValid = [
@@ -298,8 +305,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       return !classId ? "Choose a class to continue." : `Choose exactly ${klass?.skillChoices.count ?? 0} class skills.`;
     if (step === 1) return "Choose a background.";
     if (step === 2) {
-      if (mode === "maduhausu" && !hasRolled) return "Roll your Maduhausu scores first.";
-      return mode === "pointbuy" && pointsLeft > 0
+      return pointsLeft !== 0
         ? `Spend all your ability points — ${pointsLeft} still left.`
         : `Apply your background ability points (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`;
     }
@@ -582,23 +588,51 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
             </>
           ) : (
             <>
-              <div className="row between" style={{ marginBottom: 4, gap: 8 }}>
+              <div className="row between" style={{ marginBottom: 4 }}>
                 <h3 style={{ margin: 0 }}>Maduhausu 🤡</h3>
-                <button
-                  type="button"
-                  className="btn btn-primary btn-sm"
-                  style={{ width: "auto", flex: "none" }}
-                  onClick={rollMaduhausu}
-                >
-                  {hasRolled ? "Reroll the bones" : "Roll the bones"}
-                </button>
+                <span className={pointsLeft === 0 ? "gold" : "muted"}>
+                  {pointsLeft} / {MADUHAUSU_BUDGET} points left
+                </span>
               </div>
               <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-                The madhouse method: 4d6 drop the lowest, six times, assigned in order —
-                fate decides what you are. Then apply your background bonus to{" "}
+                The min-maxer's madness: buy scores {MADUHAUSU_MIN}–{MADUHAUSU_MAX} with{" "}
+                {MADUHAUSU_BUDGET} points — but buying the same score again costs more,
+                and no score may end above {MADUHAUSU_FINAL_MAX} (background points included).
+                Then apply your background bonus to{" "}
                 {bonusAbilities.map((a) => ABILITY_NAME[a]).join(", ")}: +2 and +1, or three +1's{" "}
                 {bonusValid ? "✓" : `(${bonusTotal}/3 used)`}.
               </p>
+              <details style={{ marginBottom: 10 }}>
+                <summary className="faint" style={{ fontSize: "0.8rem", cursor: "pointer" }}>
+                  Point cost table (per purchase of the same score)
+                </summary>
+                <div className="table-scroll" style={{ marginTop: 6 }}>
+                  <table className="level-table">
+                    <thead>
+                      <tr>
+                        <th className="lvl-col">Score</th>
+                        <th>First</th>
+                        <th>Second</th>
+                        <th>Third +</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td className="lvl-col">3–13</td>
+                        <td colSpan={3}>Score − 3, every time (a 10 always costs 7)</td>
+                      </tr>
+                      {[14, 15, 16].map((score) => (
+                        <tr key={score}>
+                          <td className="lvl-col">{score}</td>
+                          {MADUHAUSU_COST[score].map((cost, i) => (
+                            <td key={i}>{cost === null ? "Too expensive" : cost}</td>
+                          ))}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </details>
             </>
           )}
 
@@ -617,15 +651,22 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                   {mode === "pointbuy" ? (
                     <Stepper label="base" value={base[key]} min={POINT_BUY_MIN} max={POINT_BUY_MAX} onChange={(v) => setBaseScore(key, v)} />
                   ) : (
-                    <div style={{ textAlign: "center", flex: "none", minWidth: 71 }}>
-                      <div style={{ fontFamily: "var(--font-display)", fontSize: "1.05rem" }}>
-                        {hasRolled ? base[key] : "—"}
-                      </div>
-                      <div className="faint" style={{ fontSize: "0.62rem", letterSpacing: "0.1em" }}>ROLLED</div>
-                    </div>
+                    <Stepper
+                      label="base"
+                      value={base[key]}
+                      min={MADUHAUSU_MIN}
+                      max={Math.min(MADUHAUSU_MAX, MADUHAUSU_FINAL_MAX - bonus[key])}
+                      onChange={(v) => setBaseScore(key, v)}
+                    />
                   )}
                   {canBonus ? (
-                    <Stepper label="bg" value={bonus[key]} min={0} max={2} onChange={(v) => setBonusScore(key, v)} />
+                    <Stepper
+                      label="bg"
+                      value={bonus[key]}
+                      min={0}
+                      max={mode === "maduhausu" ? Math.min(2, MADUHAUSU_FINAL_MAX - base[key]) : 2}
+                      onChange={(v) => setBonusScore(key, v)}
+                    />
                   ) : (
                     <div style={{ width: 71, flex: "none" }} aria-hidden />
                   )}

@@ -999,7 +999,8 @@ button {
 /* ---------- 3D fighter overlay (occasional, click-through) ---------- */
 .fighters {
   /* A low stage strip along the bottom of the screen — the hunters perform
-     small, underfoot, never over the content. */
+     small, underfoot, never over the content. The fighters' on-screen size
+     scales with this strip's height (fixed vertical fov). */
   position: fixed;
   inset: auto 0 0 0;
   height: min(22vh, 200px);
@@ -1022,6 +1023,16 @@ button {
   white-space: nowrap;
   box-shadow: var(--shadow);
   pointer-events: none;
+}
+/* Desktop has far more room — let the hunters stand taller. */
+@media (min-width: 900px) {
+  .fighters {
+    height: min(32vh, 320px);
+  }
+  .fighter-name {
+    font-size: 0.74rem;
+    max-width: 180px;
+  }
 }
 
 .page-intro {
