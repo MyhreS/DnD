@@ -169,7 +169,11 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
 
     enter: (id) => {
       localStorage.setItem(ACTIVE_KEY, id);
-      set({ activeId: id });
+      // Seed `active` synchronously from the already-loaded list so the
+      // campaign chrome doesn't bounce back to the menu while the live
+      // subscription's first snapshot is still in flight.
+      const known = get().campaigns.find((c) => c.id === id) ?? null;
+      set({ activeId: id, active: known ?? (get().active?.id === id ? get().active : null) });
       if (!get().preview) watchActive(id);
     },
 
