@@ -39,6 +39,8 @@ export function PartyPage() {
   });
 
   // Each campaign member's chosen hunter (or their newest if none picked yet).
+  // The DM brings no hunter, so they get no owned-card fallback; and one card
+  // renders once even if two member rows resolve to it.
   const hunters = useMemo(() => {
     const byId = new Map((players ?? []).map((c) => [c.id, c]));
     const byOwner = new Map<string, HunterCard[]>();
@@ -47,9 +49,14 @@ export function PartyPage() {
       list.push(c);
       byOwner.set(c.ownerUid, list);
     }
+    const seen = new Set<string>();
     return campaignMembers
-      .map((m) => (m.characterId ? byId.get(m.characterId) : undefined) ?? byOwner.get(m.uid)?.[0])
-      .filter((c): c is HunterCard => !!c && !!c.classId && !!c.name);
+      .map((m) =>
+        (m.characterId ? byId.get(m.characterId) : undefined) ??
+        (m.role === "dm" ? undefined : byOwner.get(m.uid)?.[0]),
+      )
+      .filter((c): c is HunterCard => !!c && !!c.classId && !!c.name)
+      .filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
   }, [players, campaignMembers]);
 
   return (

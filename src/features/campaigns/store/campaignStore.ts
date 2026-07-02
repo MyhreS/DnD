@@ -118,9 +118,16 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
         let c = previewCampaign();
         let members = previewMembers();
         if (isDm) {
-          // Make the preview user this campaign's DM so DM controls show.
+          // Make the preview user this campaign's DM so DM controls show. The
+          // sample player who normally carries the session uid gets a fresh
+          // one, so no two members share a uid (duplicate React keys).
           c = { ...c, dmUid: "preview-uid", dmName: "You (DM)" };
-          members = [{ ...members[0], uid: "preview-uid", name: "You (DM)" }, ...members.slice(1)];
+          members = [
+            { ...members[0], uid: "preview-uid", name: "You (DM)" },
+            ...members.slice(1).map((m) =>
+              m.uid === "preview-uid" ? { ...m, uid: "preview-player" } : m,
+            ),
+          ];
         }
         set({ preview: true, campaigns: [c], invited: [], activeId: c.id, active: c, members, status: "loaded" });
         return;
