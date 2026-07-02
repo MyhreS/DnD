@@ -36,14 +36,17 @@ export function CombatBoard({ game, combatants, party }: { game: Game; combatant
       >
         {order.map((c) => {
           const v = vitals(c, party);
-          return <CombatRow key={c.id} c={c} hp={v.hp} max={v.max} active={c.id === activeId} />;
+          return <CombatRow key={c.id} c={c} hp={v.hp} max={v.max} active={c.id === activeId} round={round} />;
         })}
       </div>
     </div>
   );
 }
 
-function CombatRow({ c, hp, max, active }: { c: Combatant; hp: number | null; max: number | null; active: boolean }) {
+function CombatRow({ c, hp, max, active, round }: { c: Combatant; hp: number | null; max: number | null; active: boolean; round: number }) {
+  // The shared big screen is a player view — a monster's health and AC stay
+  // the DM's secret. Hunters show theirs as before.
+  const monster = c.kind === "monster";
   const dead = hp != null && hp <= 0;
   const pct = max && max > 0 && hp != null ? Math.round((hp / max) * 100) : 0;
   return (
@@ -60,28 +63,34 @@ function CombatRow({ c, hp, max, active }: { c: Combatant; hp: number | null; ma
         {active && <span className="gold">▸ </span>}
         {c.name}
         <span className="faint" style={{ fontSize: "0.8rem", marginLeft: 8 }}>
-          {c.kind === "monster" ? "monster" : "hunter"}
-          {dead ? " · down" : ""}
+          {monster ? "monster" : "hunter"}
+          {dead ? (monster ? " · slain" : " · down") : ""}
         </span>
       </div>
       <div className="faint" style={{ fontSize: "0.95rem", marginTop: 2 }}>
         Init {c.initiative}
-        {c.ac != null ? ` · AC ${c.ac}` : ""}
-        {hp != null && max != null ? ` · HP ${hp}/${max}` : ""}
+        {!monster && c.ac != null ? ` · AC ${c.ac}` : ""}
+        {!monster && hp != null && max != null ? ` · HP ${hp}/${max}` : ""}
       </div>
       {c.note && (
         <div className="muted" style={{ fontSize: "0.85rem", marginTop: 4 }}>{c.note}</div>
       )}
-      {hp != null && max != null && (
+      {!monster && hp != null && max != null && (
         <div style={{ height: 10, borderRadius: 6, background: "var(--bg)", overflow: "hidden", marginTop: 8 }}>
           <div style={{ width: `${Math.max(0, Math.min(100, pct))}%`, height: "100%", background: "var(--blood-bright)" }} />
         </div>
       )}
       {c.conditions.length > 0 && (
         <div className="chip-row" style={{ marginTop: 8 }}>
-          {c.conditions.map((id) => (
-            <span key={id} className="chip" style={{ fontSize: "0.8rem" }}>{CONDITION_NAME[id] ?? id}</span>
-          ))}
+          {c.conditions.map((id) => {
+            const since = c.conditionSince?.[id];
+            const label = since
+              ? `${CONDITION_NAME[id] ?? id} · ${Math.max(1, round - since + 1)}r`
+              : CONDITION_NAME[id] ?? id;
+            return (
+              <span key={id} className="chip" style={{ fontSize: "0.8rem" }}>{label}</span>
+            );
+          })}
         </div>
       )}
     </div>

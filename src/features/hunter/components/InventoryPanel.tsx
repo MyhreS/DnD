@@ -2,6 +2,7 @@ import { useState } from "react";
 import type { HunterCard, InventoryEntry, ItemCategory } from "@/types";
 import { ITEMS, ITEM_CATEGORIES } from "@/data/items";
 import { resolveInventory, groupByCarry, totalWeight, carryCondition } from "@/lib/inventory";
+import { wornArmorWeight } from "@/lib/character";
 import { AsyncButton } from "@/components/AsyncButton";
 import { usePlayerStore } from "../store/playerStore";
 
@@ -12,11 +13,15 @@ import { usePlayerStore } from "../store/playerStore";
 export function InventoryPanel({
   card,
   editable = false,
+  dmMode = false,
   onPatch,
   onDrop,
 }: {
   card: HunterCard;
   editable?: boolean;
+  /** DM view: may adjust gold directly. Players earn/spend GP through the
+   * shop, trades and DM grants — never a bare stepper. */
+  dmMode?: boolean;
   onPatch?: (partial: Partial<HunterCard>) => void;
   /** When set, each item gets a "Drop" action (pushes the stack to the shared
    * loot pile). Only wired in-game for the owner. Returns a promise so the
@@ -28,7 +33,8 @@ export function InventoryPanel({
 
   const entries = resolveInventory(card);
   const groups = groupByCarry(entries);
-  const weight = totalWeight(entries);
+  const wornWeight = wornArmorWeight(card);
+  const weight = Math.round((totalWeight(entries) + wornWeight) * 10) / 10;
   const cond = carryCondition(card.abilities.str, weight);
 
   function patch(p: Partial<HunterCard>) {
@@ -50,7 +56,7 @@ export function InventoryPanel({
       <div className="row between" style={{ marginBottom: 8 }}>
         <p className="eyebrow" style={{ margin: 0 }}>Inventory</p>
         <span className="faint" style={{ fontSize: "0.78rem" }}>
-          {weight} lb · {card.coins ?? 0} GP
+          {weight} lb{wornWeight > 0 ? ` (${wornWeight} lb worn)` : ""} · {card.coins ?? 0} GP
         </span>
       </div>
 
@@ -108,13 +114,19 @@ export function InventoryPanel({
         <>
           <hr className="divider" />
           <div className="row between" style={{ alignItems: "center", gap: 10 }}>
-            <div className="row" style={{ gap: 8, alignItems: "center" }}>
-              <span className="faint" style={{ fontSize: "0.8rem" }}>Coins</span>
-              <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label="remove coin" onClick={() => patch({ coins: Math.max(0, (card.coins ?? 0) - 1) })}>−</button>
-              <span style={{ fontFamily: "var(--font-display)", minWidth: 44, textAlign: "center" }}>{card.coins ?? 0} GP</span>
-              <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label="add coin" onClick={() => patch({ coins: (card.coins ?? 0) + 1 })}>+</button>
-            </div>
-            <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={() => setAdding((a) => !a)}>
+            {dmMode ? (
+              <div className="row" style={{ gap: 8, alignItems: "center" }}>
+                <span className="faint" style={{ fontSize: "0.8rem" }}>Coins</span>
+                <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label="remove coin" onClick={() => patch({ coins: Math.max(0, (card.coins ?? 0) - 1) })}>−</button>
+                <span style={{ fontFamily: "var(--font-display)", minWidth: 44, textAlign: "center" }}>{card.coins ?? 0} GP</span>
+                <button className="btn btn-ghost btn-sm" style={{ width: 30, padding: 4 }} aria-label="add coin" onClick={() => patch({ coins: (card.coins ?? 0) + 1 })}>+</button>
+              </div>
+            ) : (
+              <span className="faint" style={{ fontSize: "0.8rem" }}>
+                {card.coins ?? 0} GP — gold moves through the shop, trades and the DM
+              </span>
+            )}
+            <button className="btn btn-ghost btn-sm" style={{ width: "auto", flex: "none" }} onClick={() => setAdding((a) => !a)}>
               {adding ? "Done" : "Add item"}
             </button>
           </div>

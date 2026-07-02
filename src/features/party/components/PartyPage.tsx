@@ -10,6 +10,8 @@ import { usePartyData } from "../hooks/usePartyData";
 import { HunterRow } from "./HunterRow";
 import { RosterPanel } from "./RosterPanel";
 import { DMBuildHunter } from "./DMBuildHunter";
+import { DMCharacters } from "@/features/play/components/DMCharacters";
+import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
 import { exportPartyPdf } from "@/features/hunter/lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
 import { AsyncButton } from "@/components/AsyncButton";
@@ -23,6 +25,9 @@ export function PartyPage() {
   const canEmail = isDM;
 
   useSessionsLive();
+  // The DM control board (insight/level/gold/blood tinge) reads the shared
+  // characters store — keep it live here too, not just in Play.
+  useCharactersSync();
   const activeId = useCampaignStore((s) => s.activeId);
   const campaignMembers = useCampaignStore((s) => s.members);
   const allSessions = useSessionStore((s) => s.sessions);
@@ -75,6 +80,12 @@ export function PartyPage() {
         {isDM && <div style={{ marginBottom: 12 }}><CampaignInvitePanel /></div>}
 
         {isDM && activeId && <DMBuildHunter members={campaignMembers} campaignId={activeId} />}
+
+        {isDM && (
+          <div style={{ marginBottom: 12 }}>
+            <DMCharacters gameId={null} />
+          </div>
+        )}
 
         {isDM && <div style={{ margin: "12px 0" }}><DeleteCampaign /></div>}
 

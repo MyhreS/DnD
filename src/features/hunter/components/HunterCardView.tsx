@@ -4,7 +4,8 @@ import { ARMOR_BY_ID } from "@/data/armor";
 import { SKILLS_BY_ABILITY } from "@/data/skills";
 import { ABILITIES, abilityModifier, formatModifier } from "@/data/abilities";
 import {
-  armorClass,
+  armorClassFor,
+  wornArmorWeight,
   maxHp,
   maxSanity,
   proficiencyBonus,
@@ -13,25 +14,38 @@ import {
   initiativeMod,
   earnedLevel,
   insightToNext,
+  subclassDisplayName,
 } from "@/lib/character";
 import { CreatureSprite } from "@/data/CreatureSprite";
 import { classCreatureId } from "@/data/creatures";
 import { classArt } from "@/data/classArt";
 import { ClassArt } from "./ClassArt";
 import { RitesSection } from "./RitesSection";
+import { FeaturesSection } from "./FeaturesSection";
 
-export function HunterCardView({ card }: { card: HunterCard }) {
+export function HunterCardView({
+  card,
+  onPatch,
+}: {
+  card: HunterCard;
+  /** When provided, in-sheet management (e.g. preparing Whispers) is enabled
+   * and writes route here (owner save or DM patch). */
+  onPatch?: (p: Partial<HunterCard>) => void;
+}) {
   const klass = getClass(card.classId);
   const sub = getSubclass(card.classId, card.subclassId);
-  const ac = armorClass(card.abilities, card.mainArmorId);
+  const ac = armorClassFor(card);
   const lvl = card.level;
   const prof = proficiencyBonus(lvl);
   const hp = klass ? maxHp(klass, card.abilities, lvl) : null;
   const san = klass ? maxSanity(klass, card.abilities, lvl) : null;
   const armor = card.mainArmorId ? ARMOR_BY_ID[card.mainArmorId] : null;
+  const wornAddons = (card.addonArmorIds ?? []).map((id) => ARMOR_BY_ID[id]).filter(Boolean);
+  const wornExtras = (card.extraArmorIds ?? []).map((id) => ARMOR_BY_ID[id]).filter(Boolean);
+  const studded = card.studdedAddons ?? 0;
   const insight = card.insight ?? 0;
   const earned = earnedLevel(card);
-  const nextLevel = insightToNext(insight);
+  const nextLevel = insightToNext(card);
   const insightSub = earned > lvl
     ? `Lv ${earned} after a rest`
     : nextLevel
@@ -49,7 +63,7 @@ export function HunterCardView({ card }: { card: HunterCard }) {
             <p className="eyebrow">{klass ? klass.title : "Hunter"}</p>
             <h1 style={{ marginBottom: 2 }}>{card.name || "Unnamed Hunter"}</h1>
             <p className="muted" style={{ marginBottom: 0 }}>
-              {[card.background, klass ? `${klass.name} · Level ${lvl}` : null, sub?.name]
+              {[card.background, klass ? `${klass.name} · Level ${lvl}` : null, subclassDisplayName(sub?.name, card.subclassId)]
                 .filter(Boolean)
                 .join(" · ")}
             </p>
@@ -143,12 +157,27 @@ export function HunterCardView({ card }: { card: HunterCard }) {
         </div>
       )}
 
-      {klass?.caster && <RitesSection card={card} lvl={lvl} />}
+      <FeaturesSection card={card} />
+
+      {klass?.caster && <RitesSection card={card} lvl={lvl} onPatch={onPatch} />}
 
       <div className="card">
         <p className="eyebrow">Armor &amp; gear</p>
         <Detail label="Worn" value={armor ? `${armor.name} (${armor.ac})` : "Unarmored"} />
         {armor && <p className="muted" style={{ fontSize: "0.88rem", marginTop: 6 }}>{armor.special}</p>}
+        {wornAddons.length > 0 && (
+          <Detail
+            label="Add-ons"
+            value={wornAddons.map((a) => `${a.name} (${a.ac})`).join(", ")}
+          />
+        )}
+        {studded > 0 && <Detail label="Studs" value={`${studded} studded piece${studded > 1 ? "s" : ""} (+${studded >= 5 ? 2 : 1} AC)`} />}
+        {wornExtras.length > 0 && (
+          <Detail label="Extras" value={wornExtras.map((a) => a.name).join(", ")} />
+        )}
+        {(armor || wornAddons.length > 0 || wornExtras.length > 0) && (
+          <Detail label="Worn weight" value={`${wornArmorWeight(card)} lb`} />
+        )}
         <Detail label="Coins" value={`${card.coins ?? 0} GP`} />
         {klass && (
           <>
@@ -162,15 +191,6 @@ export function HunterCardView({ card }: { card: HunterCard }) {
           </>
         )}
       </div>
-
-      {card.notes && (
-        <div className="card">
-          <p className="eyebrow">Notes</p>
-          <p className="muted" style={{ whiteSpace: "pre-wrap", marginBottom: 0 }}>
-            {card.notes}
-          </p>
-        </div>
-      )}
     </div>
   );
 }

@@ -39,7 +39,7 @@ export default function FighterScene({ show, onDone }: Props) {
         camera={{ position: [0, 0, 16], fov: 32 }}
         dpr={[1, 1.75]}
         gl={{ alpha: true, antialias: true }}
-        style={{ position: "fixed", inset: 0, pointerEvents: "none" }}
+        style={{ position: "absolute", inset: 0, pointerEvents: "none" }}
       >
         <Stage themes={themes} />
         <Suspense fallback={null}>

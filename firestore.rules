@@ -125,10 +125,17 @@ service cloud.firestore {
         allow delete: if isCampaignDM(gameCampaignId(gameId));
       }
 
-      // Combat tracker: members read the initiative tracker; only the DM edits it.
+      // Combat tracker: members read the initiative tracker; the DM edits it.
+      // Members may also update/remove MONSTERS (mark one slain / clear it from
+      // the field) — but never touch a PC row or turn a monster into one.
       match /combatants/{cid} {
         allow read: if isMember(gameCampaignId(gameId));
         allow write: if isCampaignDM(gameCampaignId(gameId));
+        allow update: if isMember(gameCampaignId(gameId))
+          && resource.data.kind == "monster"
+          && request.resource.data.kind == "monster";
+        allow delete: if isMember(gameCampaignId(gameId))
+          && resource.data.kind == "monster";
       }
     }
 

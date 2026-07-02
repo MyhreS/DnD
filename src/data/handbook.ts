@@ -142,8 +142,15 @@ export const HANDBOOK: HandbookChapter[] = [
       {
         heading: "Your Sanity pool",
         body: [
-          "Alongside Hit Points, every hunter has a Sanity score — a pool representing how well your mind holds together against the horrors of the hunt. Your class sets your starting maximum Sanity and your Sanity Die (for example the Brute's d12 or the Deepcaller's d20).",
-          "When the night frays your mind you suffer Madness: each point of Madness reduces your current Sanity. Your hunter card tracks current Sanity against your maximum.",
+          "Alongside Hit Points, every hunter has a Max Sanity — how much the mind can hold together against the horrors of the hunt. Your class sets your Max Sanity and your Sanity Die (for example the Brute's 2d6 or the Deepcaller's d20).",
+          "When the night frays your mind you suffer Madness. Madness accumulates: each point eats into your Sanity. Your hunter card tracks it for you.",
+        ],
+      },
+      {
+        heading: "The Insane condition",
+        body: [
+          "When your current Madness equals or exceeds your Max Sanity, you gain the Insane condition. It ends immediately when your Madness is reduced below your Max Sanity.",
+          "What being Insane means for your hunter is not written here. The DM knows. You'll find out.",
         ],
       },
       {
@@ -156,13 +163,49 @@ export const HANDBOOK: HandbookChapter[] = [
       {
         heading: "Blood Tinge",
         body: [
-          "Blood Tinge is the C&S take on Heroic Inspiration. When you hold Blood Tinge you can spend it to reroll a d20. Your card tracks whether you're currently holding it.",
+          "Blood Tinge is the C&S take on Heroic Inspiration. When you hold Blood Tinge you can spend it to reroll a d20.",
+          "Hunters do not start with Blood Tinge, and you cannot give it to yourself — only the DM grants it (and a few rare features). Your card tracks whether you're holding it; spend it from there.",
         ],
       },
       {
         heading: "What C&S does NOT use",
         body: [
           "Unlike standard 5e, C&S does not use Languages or Species. The bonuses those would grant are baked into your Background and Class instead, so you won't find them on your hunter card.",
+        ],
+      },
+    ],
+  },
+  {
+    id: "transformation",
+    title: "Transformation",
+    summary: "How far the blood has shifted — and what crawls out when it does.",
+    sections: [
+      {
+        heading: "Transformation Level",
+        body: [
+          "Your Transformation Level is a number from 0–10 that shows how far your blood has shifted. When you gain 1 Transformation Level, increase the level by 1, then roll 1d20 on the Transformation Table using your NEW level. The app's tracker rolls for you.",
+          "Not every result is a Transformation. Nothing Happens is nothing. Blood Lust is a compulsion, not a Transformation. Lost is a special catastrophic result that counts as a Transformation — what it means is between you and the DM.",
+        ],
+      },
+      {
+        heading: "The results",
+        body: [
+          "Blood Lust — Drink another Blood Vial or suffer 3 Madness.",
+          "Mutated Arm — Suffer 2 Madness. Add +1d12 to your damage roll and 5 ft to your range if melee damage. Suffer 1 Madness if you do.",
+          "Blood Fangs — As a melee attack action, bite a creature within 5 ft for 4d3 piercing damage; you heal the same amount. Suffer 1 Madness if you do.",
+          "Dreadblood Eyes — As an action, gain Blindsight for 10 rounds. Suffer 1 Madness if you do.",
+          "Dreadblood Ears — Your Wisdom (Perception) modifier increases by +5. You may suffer 1 Madness to make a Wisdom (Perception) check with Advantage.",
+          "Lost — …",
+          "Low rolls grow more dangerous the higher your Transformation Level climbs: at high levels, a bad roll is Lost.",
+        ],
+      },
+      {
+        heading: "Reducing your Transformation Level",
+        body: [
+          "Your Transformation Level is reduced only when a rule, effect, rest, or condition specifically says so. Every reduction also sheds all your active Transformations.",
+          "Short Rest: reduce your Transformation Level by 1. During the same rest, make a DC 13 Constitution (Grit) check — on a success, reduce it by 1 more.",
+          "Long Rest: reduce your Transformation Level to 0.",
+          "Unconscious: the first time you gain the Unconscious condition after gaining a Transformation, reduce your Transformation Level by 2. You can't reduce it this way again until you finish a rest or gain another Transformation.",
         ],
       },
     ],

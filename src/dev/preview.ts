@@ -116,9 +116,9 @@ export function previewGame(): import("@/types").Game {
 export function previewCombatants(): import("@/types").Combatant[] {
   const now = Date.now();
   return [
-    { id: "prev-monster-1", kind: "monster", name: "Cleric Beast", characterId: null, initiative: 19, ac: 14, maxHp: 80, currentHp: 52, conditions: ["poisoned"], createdAt: now },
-    { id: "prev-pc-1", kind: "pc", name: "Eileen the Crow", characterId: "preview-uid-char", initiative: 17, ac: null, maxHp: null, currentHp: null, conditions: ["frightened"], createdAt: now },
-    { id: "prev-pc-2", kind: "pc", name: "Gascoigne", characterId: "preview-p2-char", initiative: 12, ac: null, maxHp: null, currentHp: null, conditions: [], createdAt: now },
+    { id: "prev-monster-1", kind: "monster", name: "Cleric Beast", characterId: null, initiative: 19, ac: 14, maxHp: 80, currentHp: 52, conditions: ["poisoned"], conditionSince: { poisoned: 1 }, note: "Claws +6 to hit, 2d8+3 slashing; howl frightens on hit", createdAt: now },
+    { id: "prev-pc-1", kind: "pc", name: "Eileen the Crow", characterId: "preview-uid-char", initiative: 17, ac: null, maxHp: null, currentHp: null, conditions: ["frightened"], conditionSince: { frightened: 1 }, createdAt: now },
+    { id: "prev-pc-2", kind: "pc", name: "Gascoigne", characterId: "preview-p2-char", initiative: 12, ac: null, maxHp: null, currentHp: null, conditions: ["prone"], conditionSince: { prone: 2 }, createdAt: now },
   ];
 }
 
@@ -184,7 +184,9 @@ export function previewArchive(): import("@/types").ArchivedCharacter[] {
         classId: "deepcaller",
         subclassId: "hunter-zealot",
         level: 2,
+        lastSeenLevel: 2,
         currentHp: 0,
+        preparedWhispers: ["eldritch-blast", "mindcrack"],
       },
     },
   ];
@@ -273,12 +275,20 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     subclassId: "marksman",
     background: "Plague Doctor",
     level: 3,
+    lastSeenLevel: 3,
+    feats: ["Tough"],
+    abilityMode: "pointbuy",
     abilities: { str: 12, dex: 15, con: 13, int: 10, wis: 12, cha: 8 },
+    baseAbilities: { str: 12, dex: 15, con: 13, int: 10, wis: 12, cha: 8 },
     skillProficiencies: ["Stealth", "Perception", "Survival"],
     mainArmorId: "hunter-leather-coat",
+    addonArmorIds: ["leather-pauldron-right", "leather-vambrace-right"],
+    studdedAddons: 1,
+    extraArmorIds: ["tricorn"],
     currentHp: 22,
     sanity: 9,
     transformationLevel: 2,
+    activeTransformations: ["dreadbloodEars"],
     insight: 60,
     bloodTinge: true,
     preparedWhispers: [],

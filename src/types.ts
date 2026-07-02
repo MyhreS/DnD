@@ -23,7 +23,8 @@ export interface Background {
   text: string;
   /** The three abilities the background's points may be assigned to. */
   abilityScores: AbilityKey[];
-  /** The granted Origin feat, or null when the background lets you choose one. */
+  /** The granted Origin feat, or null when the background grants NO feat (its
+   * other perks — equipment, gold, proficiencies — are the trade-off). */
   feat: string | null;
   /** The two granted skill proficiencies. */
   skills: string[];
@@ -251,6 +252,9 @@ export interface Combatant {
   currentHp?: number | null;
   /** Condition ids (see src/data/conditions.ts). */
   conditions: string[];
+  /** Round each active condition was applied on (conditionId → round), so the
+   * tracker can show how many rounds a condition has lasted. */
+  conditionSince?: Record<string, number>;
   /** Optional DM note for a monster — its attack / special / damage. */
   note?: string | null;
   createdAt: number;
@@ -500,20 +504,43 @@ export interface HunterCard {
   /** Origin feat granted/chosen via the background. */
   feat?: string;
   level: number;
+  /** The last level this player has walked through the level-up screen for.
+   * When `level` moves past it (DM award/level or a Long Rest), the level-up
+   * flow shows what was gained and records the choices, then catches this up. */
+  lastSeenLevel?: number;
+  /** Feats picked at level-ups (ASI levels / Epic Boon / Fighting Style),
+   * separate from the background's origin `feat`. Display strings. */
+  feats?: string[];
   /** Final ability scores after background adjustment. */
   abilities: AbilityScores;
+  /** Pre-background base scores (bought or rolled) — kept so re-editing can
+   * split `abilities` back into base + background bonus correctly. */
+  baseAbilities?: AbilityScores;
+  /** How the base scores were determined — point buy (default) or the table's
+   * "Maduhausu" rolled-stats house method (4d6 drop lowest). */
+  abilityMode?: "pointbuy" | "maduhausu";
   /** Skill proficiencies (class choices + background-granted). */
   skillProficiencies: string[];
   /** Selected Main Armor piece id, or null for unarmored. */
   mainArmorId: string | null;
+  /** Worn Add-on Armor piece ids (max five; a Balanced Fit main allows one more). */
+  addonArmorIds?: string[];
+  /** How many worn Add-on pieces carry the Studs upgrade (1–4 → +1 AC, 5 → +2). */
+  studdedAddons?: number;
+  /** Worn Extras (hats, scarves, gloves — AC 0 flavour/utility). */
+  extraArmorIds?: string[];
   /** Current hit points during play (defaults to max when unset). */
   currentHp?: number;
   /** Current Sanity during play (defaults to max when unset). Madness is the
    * complement: madness = maxSanity − sanity. */
   sanity?: number;
-  /** Transformation Level (starts 0). A Short Rest removes 1; a Long Rest clears
-   * all. Each gain is resolved by the DM against the Transformation Table. */
+  /** Transformation Level 0–10. Gaining a level rolls 1d20 on the Transformation
+   * Table (using the NEW level). Short Rest −1 (+1 more on a DC 13 CON (Grit)
+   * check) and Long Rest → 0 — both also clear all active Transformations. */
   transformationLevel?: number;
+  /** Active Transformation result keys (see src/data/transformation.ts), gained
+   * from table rolls. Cleared whenever the Transformation Level is reduced. */
+  activeTransformations?: string[];
   /** Insight — the rulebook's XP currency, awarded by the DM. Crossing a
    * threshold only raises `level` after a Long Rest (see levelForInsight). */
   insight?: number;

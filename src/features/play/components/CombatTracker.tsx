@@ -126,8 +126,9 @@ export function CombatTracker({
                 max={v.max}
                 active={c.id === activeId}
                 isDM={isDM}
+                round={game.combat?.round ?? 1}
                 onPatch={(p) => patch(game.id, c.id, p)}
-                onToggleCondition={(cid) => toggleCondition(game.id, c, cid)}
+                onToggleCondition={(cid) => toggleCondition(game.id, c, cid, game.combat?.round ?? 1)}
                 onRemove={() => remove(game.id, c.id)}
               />
             );

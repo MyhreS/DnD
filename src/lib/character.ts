@@ -68,13 +68,18 @@ export function levelForInsight(insight: number): number {
   return lvl;
 }
 
-/** Progress toward the next level, or null once level 20 is reached. */
+/**
+ * Progress toward the next level, or null once level 20 is reached. Measured
+ * from the hunter's APPLIED level too (a DM can grant levels directly, ahead
+ * of Insight) — so a level 10 hunter counts toward level 11, never "Lv 2".
+ */
 export function insightToNext(
-  insight: number,
+  card: Pick<HunterCard, "insight" | "level">,
 ): { nextLevel: number; remaining: number } | null {
-  const earned = levelForInsight(insight);
-  if (earned >= 20) return null;
-  return { nextLevel: earned + 1, remaining: INSIGHT_THRESHOLDS[earned] - insight };
+  const insight = card.insight ?? 0;
+  const lvl = Math.max(card.level, levelForInsight(insight));
+  if (lvl >= 20) return null;
+  return { nextLevel: lvl + 1, remaining: Math.max(0, INSIGHT_THRESHOLDS[lvl] - insight) };
 }
 
 /** The highest level a card's Insight has earned (1–20). */
@@ -94,29 +99,104 @@ export function initiativeMod(abilities: AbilityScores): number {
 
 export interface ArmorClassResult {
   total: number;
+  /** The Main Armor's base value (or 10 unarmored). */
   baseAc: number;
+  /** Bonus from Add-on pieces (incl. the Shield Arm pairing rule). */
+  addonBonus: number;
+  /** Bonus from Studs upgrades (1–4 studded pieces +1, five +2). */
+  studBonus: number;
+  /** Base armor AC (main + add-ons + upgrades) — decides the Dex category. */
+  baseArmorAc: number;
   category: string;
   dexRule: string;
   dexApplied: number;
 }
 
-/** Armor Class from the chosen Main Armor (or unarmored) plus Dexterity. */
+/** Worn-armor slice of a HunterCard the AC/weight math needs. */
+export type WornArmor = Pick<
+  HunterCard,
+  "mainArmorId" | "addonArmorIds" | "studdedAddons" | "extraArmorIds"
+>;
+
+/** Max Add-on pieces: five, or six when the Main Armor has Balanced Fit
+ * (one Add-on doesn't count toward the maximum). */
+export function maxAddonPieces(mainArmorId: string | null | undefined): number {
+  const main = mainArmorId ? ARMOR_BY_ID[mainArmorId] : undefined;
+  return main?.special.startsWith("Balanced Fit") ? 6 : 5;
+}
+
+/** Add-on AC total with the handbook's rules: the Under Layer Jerkin only
+ * counts beneath Main Armor, and a pauldron + vambrace on the SAME arm count
+ * as one Shield Arm worth +2 total (only one Shield Arm may benefit). */
+function addonAcBonus(addonIds: string[], hasMain: boolean): number {
+  const worn = new Set(addonIds);
+  let sum = 0;
+  for (const id of addonIds) {
+    const piece = ARMOR_BY_ID[id];
+    if (!piece || piece.category !== "Add-on Armor") continue;
+    if (id === "under-layer-leather-jerkin" && !hasMain) continue;
+    sum += piece.acValue;
+  }
+  // One completed Shield Arm upgrades its pauldron+vambrace sum (+1) to +2.
+  const completeArm =
+    (worn.has("leather-pauldron-right") && worn.has("leather-vambrace-right")) ||
+    (worn.has("leather-pauldron-left") && worn.has("leather-vambrace-left"));
+  if (completeArm) sum += 1;
+  return sum;
+}
+
+/** Armor Class from the full worn set (Main + Add-ons + Studs) plus Dexterity.
+ * Per the handbook, the combined base armor AC decides the Dex category. */
 export function armorClass(
   abilities: AbilityScores,
   mainArmorId: string | null,
+  addonArmorIds: string[] = [],
+  studdedAddons = 0,
 ): ArmorClassResult {
   const dexMod = abilityModifier(abilities.dex);
   const main = mainArmorId ? ARMOR_BY_ID[mainArmorId] : undefined;
   const baseAc = main ? main.acValue : 10;
-  const cat = acCategory(baseAc);
+  const addonBonus = addonAcBonus(addonArmorIds, !!main);
+  const studded = Math.max(0, Math.min(5, Math.min(studdedAddons, addonArmorIds.length)));
+  const studBonus = studded >= 5 ? 2 : studded >= 1 ? 1 : 0;
+  const baseArmorAc = baseAc + addonBonus + studBonus;
+  const cat = acCategory(baseArmorAc);
   const dexApplied = cat.applyDex(dexMod);
   return {
-    total: baseAc + dexApplied,
+    total: baseArmorAc + dexApplied,
     baseAc,
+    addonBonus,
+    studBonus,
+    baseArmorAc,
     category: cat.label,
     dexRule: cat.dexRule,
     dexApplied,
   };
+}
+
+/** AC for a card's full worn set. */
+export function armorClassFor(
+  card: Pick<HunterCard, "abilities"> & WornArmor,
+): ArmorClassResult {
+  return armorClass(
+    card.abilities,
+    card.mainArmorId,
+    card.addonArmorIds ?? [],
+    card.studdedAddons ?? 0,
+  );
+}
+
+/** Weight of everything WORN (main + add-ons + extras + 3 lb per Studs
+ * upgrade) — worn armor counts toward carried weight. */
+export function wornArmorWeight(card: WornArmor): number {
+  const ids = [
+    ...(card.mainArmorId ? [card.mainArmorId] : []),
+    ...(card.addonArmorIds ?? []),
+    ...(card.extraArmorIds ?? []),
+  ];
+  const pieces = ids.reduce((sum, id) => sum + (ARMOR_BY_ID[id]?.weightLb ?? 0), 0);
+  const studs = Math.max(0, Math.min(5, card.studdedAddons ?? 0)) * 3;
+  return Math.round((pieces + studs) * 10) / 10;
 }
 
 /** Saving-throw modifier for one ability (adds proficiency if the class is proficient). */
@@ -162,6 +242,31 @@ export function riteStats(abilities: AbilityScores, level: number): RiteStats {
   };
 }
 
+// --- Subclass path helpers ---
+
+/** Sentinel subclass id: the Deepcaller who explicitly STAYS on the base path
+ * (rather than leaving it for the Hunter Zealot prestige class). Not a real
+ * subclass in the data — it means "decided: no prestige". */
+export const DEEPCALLER_STAY_ID = "deepcaller-path";
+
+/** The Hunter Zealot prestige class id (the Deepcaller's only subclass). */
+export const ZEALOT_ID = "hunter-zealot";
+
+/** True when this hunter has burned the book — all Deepcaller class features
+ * are replaced by the Zealot's (per Burn the Book). */
+export function isZealot(card: Pick<HunterCard, "subclassId">): boolean {
+  return card.subclassId === ZEALOT_ID;
+}
+
+/** Display name for a chosen path, covering the "stay Deepcaller" sentinel. */
+export function subclassDisplayName(
+  subclassName: string | undefined,
+  subclassId: string | null | undefined,
+): string | undefined {
+  if (subclassId === DEEPCALLER_STAY_ID) return "The Deepcaller Path";
+  return subclassName;
+}
+
 /** A fresh, unsaved card skeleton for a brand-new hunter. */
 export function emptyCard(params: {
   ownerUid: string;
@@ -179,10 +284,17 @@ export function emptyCard(params: {
     subclassId: null,
     background: "",
     level: 1,
+    lastSeenLevel: 1,
+    feats: [],
     abilities: { ...DEFAULT_ABILITIES },
+    abilityMode: "pointbuy",
     skillProficiencies: [],
     mainArmorId: null,
+    addonArmorIds: [],
+    studdedAddons: 0,
+    extraArmorIds: [],
     transformationLevel: 0,
+    activeTransformations: [],
     insight: 0,
     bloodTinge: false,
     preparedWhispers: [],

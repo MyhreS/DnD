@@ -82,8 +82,13 @@ export function applyLongRest(
     currentHp: hpTo,
     sanity: sanityTo,
     transformationLevel: 0,
+    activeTransformations: [],
   };
-  if (levelsGained > 0) patch.level = newLevel;
+  if (levelsGained > 0) {
+    patch.level = newLevel;
+    // Arm the level-up walkthrough: the player has yet to "see" the new levels.
+    patch.lastSeenLevel = Math.min(card.lastSeenLevel ?? oldLevel, oldLevel);
+  }
 
   return {
     patch,
@@ -107,12 +112,18 @@ export interface ShortRestOutcome {
   canSpendHitDice: boolean;
   transformationFrom: number;
   transformationTo: number;
+  /** The DC 13 Constitution (Grit) check for one extra level of reduction —
+   * only rolled when there was a Transformation Level to reduce. */
+  gritRoll: number | null;
+  gritSuccess: boolean;
 }
 
 /**
- * Apply a Short Rest, per the handbook: remove 1 Transformation Level, and —
- * only in a Safe Zone or the Hunters Lodge — spend Hit Dice (up to your
- * Proficiency Bonus), each healing a roll of your Hit Die + CON.
+ * Apply a Short Rest, per the Transformation Table rules: reduce your
+ * Transformation Level by 1 and lose all active Transformations; make a DC 13
+ * Constitution (Grit) check to reduce it by 1 more. In a Safe Zone or the
+ * Hunters Lodge you also spend Hit Dice (up to your Proficiency Bonus), each
+ * healing a roll of your Hit Die + CON.
  */
 export function applyShortRest(
   card: HunterCard,
@@ -135,9 +146,20 @@ export function applyShortRest(
   }
 
   const transformationFrom = card.transformationLevel ?? 0;
-  const transformationTo = Math.max(0, transformationFrom - 1);
+  let gritRoll: number | null = null;
+  let gritSuccess = false;
+  let transformationTo = Math.max(0, transformationFrom - 1);
+  if (transformationFrom > 0) {
+    const gritProf = card.skillProficiencies.includes("Grit")
+      ? proficiencyBonus(card.level)
+      : 0;
+    gritRoll = rollDie(20) + con + gritProf;
+    gritSuccess = gritRoll >= 13;
+    if (gritSuccess) transformationTo = Math.max(0, transformationTo - 1);
+  }
 
   const patch: Partial<HunterCard> = { transformationLevel: transformationTo };
+  if (transformationFrom > 0) patch.activeTransformations = [];
   if (hpTo !== hpFrom) patch.currentHp = hpTo;
 
   return {
@@ -148,5 +170,7 @@ export function applyShortRest(
     canSpendHitDice: canHeal,
     transformationFrom,
     transformationTo,
+    gritRoll,
+    gritSuccess,
   };
 }

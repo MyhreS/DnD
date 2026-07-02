@@ -6,6 +6,7 @@ import { CharacterEditor } from "./CharacterEditor";
 import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
 import { InventoryPanel } from "./InventoryPanel";
+import { LevelUpModal } from "./LevelUpModal";
 import { emptyCard } from "@/lib/character";
 import { exportCharacterPdf } from "../lib/characterPdf";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -150,32 +151,18 @@ export function CharacterPage() {
         <div className="card no-print row between" style={{ marginBottom: 14, alignItems: "center" }}>
           <div>
             <span className="eyebrow" style={{ margin: 0 }}>Level</span>
-            <div className="faint" style={{ fontSize: "0.78rem" }}>Level up between sessions — the maths follows.</div>
+            <div className="faint" style={{ fontSize: "0.78rem" }}>
+              The DM rewards Insight and levels — they arrive here.
+            </div>
           </div>
-          <div className="row" style={{ gap: 10, alignItems: "center", flex: "none" }}>
-            <button
-              className="btn btn-ghost btn-sm"
-              style={{ width: 38, padding: 6 }}
-              disabled={saving || card!.level <= 1}
-              aria-label="level down"
-              onClick={() => save({ ...card!, level: Math.max(1, card!.level - 1) })}
-            >
-              −
-            </button>
-            <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", minWidth: 26, textAlign: "center" }}>
-              {card!.level}
-            </span>
-            <button
-              className="btn btn-ghost btn-sm"
-              style={{ width: 38, padding: 6 }}
-              disabled={saving || card!.level >= 20}
-              aria-label="level up"
-              onClick={() => save({ ...card!, level: Math.min(20, card!.level + 1) })}
-            >
-              +
-            </button>
-          </div>
+          <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", flex: "none" }}>
+            {card!.level}
+          </span>
         </div>
+      )}
+
+      {hasCard && card!.lastSeenLevel != null && card!.level > card!.lastSeenLevel && (
+        <LevelUpModal card={card!} onPatch={(p) => void save({ ...card!, ...p })} />
       )}
 
       {hasCard ? (
@@ -185,7 +172,7 @@ export function CharacterPage() {
           </aside>
           <div className="desk-main">
             <div className="print-sheet">
-              <HunterCardView card={card!} />
+              <HunterCardView card={card!} onPatch={(p) => void save({ ...card!, ...p })} />
             </div>
             <div className="no-print" style={{ marginTop: 14 }}>
               <InventoryPanel card={card!} editable />

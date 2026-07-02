@@ -1,21 +1,32 @@
+import { useState } from "react";
 import { getClass } from "@/data/classes";
 import { maxHp, maxSanity } from "@/lib/character";
+import {
+  TRANSFORMATION_RESULTS,
+  rollTransformation,
+  type TransformationResult,
+} from "@/data/transformation";
 import { usePlayerStore } from "../store/playerStore";
 import type { HunterCard } from "@/types";
 
-/** Live, editable play trackers: HP, Sanity (with derived Madness),
- * Transformation, Blood Tinge. Saved on change. */
+/** Live, editable play trackers: HP, Sanity (with derived Madness + the Insane
+ * state), Transformation (rolls the Transformation Table on a gain), and Blood
+ * Tinge (spend-only for players — the DM grants it). Saved on change. */
 export function CharacterTrackers({
   card,
   onPatch,
+  dmMode = false,
 }: {
   card: HunterCard;
   /** When provided (e.g. the DM playing as this hunter), edits route here
    * instead of the owner's playerStore — so the owner's own selection isn't
    * clobbered. */
   onPatch?: (p: Partial<HunterCard>) => void;
+  /** DM controls: may grant Blood Tinge (players can only spend it). */
+  dmMode?: boolean;
 }) {
   const save = usePlayerStore((s) => s.save);
+  const [lastRoll, setLastRoll] = useState<{ roll: number; result: TransformationResult } | null>(null);
   const klass = getClass(card.classId);
   const hpMax = klass ? maxHp(klass, card.abilities, card.level) : 0;
   // Clamp the displayed value: a saved HP/Sanity can exceed a max that later
@@ -23,10 +34,36 @@ export function CharacterTrackers({
   const hp = Math.min(hpMax, card.currentHp ?? hpMax);
   const sanMax = klass ? maxSanity(klass, card.abilities, card.level) : 0;
   const san = Math.min(sanMax, card.sanity ?? sanMax);
+  const madness = Math.max(0, sanMax - san);
+  // Madness has reached Max Sanity — the hunter is Insane. What that MEANS
+  // stays at the table: the app only ever shows the state itself.
+  const insane = sanMax > 0 && madness >= sanMax;
+  const transformation = card.transformationLevel ?? 0;
+  const active = (card.activeTransformations ?? [])
+    .map((k) => TRANSFORMATION_RESULTS[k])
+    .filter(Boolean);
 
   function patch(p: Partial<HunterCard>) {
     if (onPatch) onPatch(p);
     else void save({ ...card, ...p });
+  }
+
+  /** Gaining a Transformation Level rolls 1d20 on the table at the NEW level;
+   * any reduction sheds every active Transformation (rest/unconscious rules). */
+  function setTransformation(v: number) {
+    const next = Math.max(0, Math.min(10, v));
+    if (next === transformation) return;
+    if (next < transformation) {
+      setLastRoll(null);
+      patch({ transformationLevel: next, activeTransformations: [] });
+      return;
+    }
+    const outcome = rollTransformation(next);
+    setLastRoll(outcome);
+    const gained = outcome.result.isTransformation
+      ? [...(card.activeTransformations ?? []), outcome.result.key]
+      : card.activeTransformations ?? [];
+    patch({ transformationLevel: next, activeTransformations: gained });
   }
 
   return (
@@ -42,7 +79,8 @@ export function CharacterTrackers({
       />
       <Tracker
         label="Sanity"
-        sub={`Madness ${Math.max(0, sanMax - san)}`}
+        badge={insane ? "INSANE" : undefined}
+        sub={`Madness ${madness}${insane ? " — the DM knows what this means" : ""}`}
         value={san}
         max={sanMax}
         color="#7c5cff"
@@ -50,26 +88,64 @@ export function CharacterTrackers({
       />
       <Tracker
         label="Transformation"
-        sub="Short rest −1 · Long rest clears all"
-        value={card.transformationLevel ?? 0}
+        sub="Gaining a level rolls the Table · rests reduce it"
+        value={transformation}
+        max={10}
         color="#c9962f"
-        onChange={(v) => patch({ transformationLevel: Math.max(0, v) })}
+        onChange={setTransformation}
       />
+
+      {lastRoll && (
+        <div
+          className="card"
+          style={{ marginTop: 8, padding: 10, borderColor: lastRoll.result.key === "lost" ? "var(--blood-bright)" : "var(--gold-dim)" }}
+        >
+          <div className="row between">
+            <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
+              {lastRoll.result.name}
+            </span>
+            <span className="faint" style={{ flex: "none", fontSize: "0.76rem" }}>d20 → {lastRoll.roll}</span>
+          </div>
+          <p className="muted" style={{ margin: "4px 0 0", fontSize: "0.82rem" }}>{lastRoll.result.text}</p>
+        </div>
+      )}
+
+      {active.length > 0 && (
+        <div className="chip-row" style={{ marginTop: 8 }}>
+          {active.map((t, i) => (
+            <span key={`${t.key}-${i}`} className="chip" style={{ fontSize: "0.72rem" }}>{t.name}</span>
+          ))}
+        </div>
+      )}
 
       <div className="row between" style={{ padding: "10px 0 2px" }}>
         <div>
           <span style={{ fontWeight: 600 }}>Blood Tinge</span>
-          <div className="faint" style={{ fontSize: "0.74rem" }}>Heroic inspiration</div>
+          <div className="faint" style={{ fontSize: "0.74rem" }}>
+            {card.bloodTinge ? "Held — spend it to reroll a d20" : "Granted by the DM"}
+          </div>
         </div>
-        <button
-          type="button"
-          className={`btn btn-sm${card.bloodTinge ? " btn-primary" : " btn-ghost"}`}
-          style={{ width: "auto", minWidth: 84 }}
-          aria-pressed={!!card.bloodTinge}
-          onClick={() => patch({ bloodTinge: !card.bloodTinge })}
-        >
-          {card.bloodTinge ? "● Held" : "○ Spend"}
-        </button>
+        {card.bloodTinge ? (
+          <button
+            type="button"
+            className="btn btn-sm btn-primary"
+            style={{ width: "auto", minWidth: 84 }}
+            onClick={() => patch({ bloodTinge: false })}
+          >
+            ● Spend
+          </button>
+        ) : dmMode ? (
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost"
+            style={{ width: "auto", minWidth: 84 }}
+            onClick={() => patch({ bloodTinge: true })}
+          >
+            ○ Grant
+          </button>
+        ) : (
+          <span className="faint" style={{ fontSize: "0.9rem" }}>○ None</span>
+        )}
       </div>
 
       {hp <= 0 && (
@@ -101,6 +177,7 @@ export function CharacterTrackers({
 
 function Tracker({
   label,
+  badge,
   sub,
   value,
   max,
@@ -108,6 +185,7 @@ function Tracker({
   onChange,
 }: {
   label: string;
+  badge?: string;
   sub?: string;
   value: number;
   max?: number;
@@ -120,6 +198,19 @@ function Tracker({
       <div className="row between" style={{ marginBottom: max ? 6 : 0 }}>
         <div>
           <span style={{ fontWeight: 600 }}>{label}</span>
+          {badge && (
+            <span
+              className="chip"
+              style={{
+                marginLeft: 8,
+                fontSize: "0.66rem",
+                color: "var(--blood-bright)",
+                borderColor: "var(--blood-bright)",
+              }}
+            >
+              {badge}
+            </span>
+          )}
           {sub && <div className="faint" style={{ fontSize: "0.72rem" }}>{sub}</div>}
         </div>
         <div className="row" style={{ gap: 10 }}>

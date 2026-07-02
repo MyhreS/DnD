@@ -13,7 +13,7 @@ const BASE = `http://localhost:${PORT}`;
 const OUT = "screenshots";
 
 function mint(role) {
-  const r = spawnSync("bun", ["scripts/mint-test-token.mjs", role], { encoding: "utf8", env: process.env });
+  const r = spawnSync(process.execPath, ["scripts/mint-test-token.mjs", role], { encoding: "utf8", env: process.env });
   if (r.status !== 0) throw new Error(`mint ${role} failed: ${r.stderr}`);
   return r.stdout.trim().split("\n").pop().trim();
 }
@@ -200,7 +200,9 @@ async function run() {
 }
 
 console.log("▶ starting dev server");
-const dev = spawn("bunx", ["vite", "--port", String(PORT)], { stdio: ["ignore", "ignore", "inherit"], env: process.env });
+// process.execPath = whatever runtime is running this script (node on Windows,
+// where Bun breaks firebase/playwright; bun elsewhere) — keeps the spawn portable.
+const dev = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--port", String(PORT)], { stdio: ["ignore", "ignore", "inherit"], env: process.env });
 try {
   await waitForServer();
   await run();

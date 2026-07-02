@@ -61,7 +61,9 @@ export interface FighterConfig {
 
 // All share the same rig/scale; only model, loadout, attack flavour + theme
 // differ. yOffset is a small vertical nudge on top of the auto ground placement.
-const SCALE = 0.85;
+// The canvas itself is a low bottom-of-screen strip (see .fighters in
+// global.css), so the world scale stays modest.
+const SCALE = 0.78;
 const Y_OFFSET = 0;
 
 // Shared clip vocabulary — every KayKit Adventurer GLB carries the same 76-clip
@@ -128,6 +130,7 @@ export const CLASS_FIGHTER: Record<string, FighterConfig> = {
     hide: keepOnly(ROGUE_KIT, ["Knife", "Knife_Offhand"]),
   },
   // Knowledge man was not meant to hold — eldritch violet staff caster.
+  // The pointy wizard hat breaks the hunter silhouette — bare-headed occultist.
   deepcaller: {
     id: "deepcaller",
     url: "/models/mage.glb",
@@ -135,9 +138,9 @@ export const CLASS_FIGHTER: Record<string, FighterConfig> = {
     yOffset: Y_OFFSET,
     theme: { rim: "#9d6bff", accent: "#b78cff" },
     clips: clips(ATTACKS.spell),
-    hide: keepOnly(MAGE_KIT, ["2H_Staff"]),
+    hide: [...keepOnly(MAGE_KIT, ["2H_Staff"]), "Mage_Hat"],
   },
-  // The hunt sings in their veins — blood-fury greataxe.
+  // The hunt sings in their veins — blood-fury greataxe, no jolly hat.
   bloodbound: {
     id: "bloodbound",
     url: "/models/barbarian.glb",
@@ -145,7 +148,7 @@ export const CLASS_FIGHTER: Record<string, FighterConfig> = {
     yOffset: Y_OFFSET,
     theme: { rim: "#ff3344", accent: "#ff5a66" },
     clips: clips(ATTACKS.twoHand),
-    hide: keepOnly(BARB_KIT, ["2H_Axe"]),
+    hide: [...keepOnly(BARB_KIT, ["2H_Axe"]), "Barbarian_Hat"],
   },
   // The lantern others follow — gold sword-and-shield protector.
   warden: {

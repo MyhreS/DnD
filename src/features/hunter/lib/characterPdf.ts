@@ -8,7 +8,8 @@ import { resolveInventory, groupByCarry, totalWeight, carryCondition } from "@/l
 import { ABILITIES, abilityModifier, formatModifier } from "@/data/abilities";
 import {
   maxHp,
-  armorClass,
+  armorClassFor,
+  wornArmorWeight,
   maxSanity,
   proficiencyBonus,
   saveModifier,
@@ -55,7 +56,7 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
   const startPage = doc.getNumberOfPages();
   const klass = getClass(card.classId);
   const sub = getSubclass(card.classId, card.subclassId);
-  const ac = armorClass(card.abilities, card.mainArmorId);
+  const ac = armorClassFor(card);
   const lvl = card.level;
   const prof = proficiencyBonus(lvl);
   const hpMax = klass ? maxHp(klass, card.abilities, lvl) : 0;
@@ -84,7 +85,7 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
 
   // --- Vitals / derived block (HP, Sanity, AC, Initiative, Speed, Insight…) ---
   const earned = earnedLevel(card);
-  const toNext = insightToNext(card.insight ?? 0);
+  const toNext = insightToNext(card);
   const insightSub = earned > lvl ? "level-up ready" : toNext ? `${toNext.remaining} to L${toNext.nextLevel}` : "max level";
   const passivePerc = 10 + skillModifier(card.abilities, "Perception", card.skillProficiencies.includes("Perception"), lvl);
 
@@ -188,11 +189,11 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
     armor ? `${armor.name} — ${armor.ac}  (total AC ${ac.total}, ${ac.category})` : `Unarmored — AC ${ac.total}`,
   );
   if (armor?.special) y = paragraph(doc, y, armor.special);
-  if (inv.length) {
-    const wt = totalWeight(inv);
+  {
+    const wt = Math.round((totalWeight(inv) + wornArmorWeight(card)) * 10) / 10;
     const carry = carryCondition(card.abilities.str, wt);
     const delta = carry.speedDelta ? `  (speed ${carry.speedDelta > 0 ? "+" : ""}${carry.speedDelta} ft)` : "";
-    y = line(doc, y, "Carried weight", `${wt} lb — ${carry.label}${delta}`);
+    y = line(doc, y, "Carried weight", `${wt} lb (incl. worn armor) — ${carry.label}${delta}`);
   }
   y = line(doc, y, "Coins", `${card.coins ?? 0} GP`);
   if (klass?.startingEquipment.length) y = line(doc, y, "Starting kit", klass.startingEquipment.join(", "));
@@ -206,12 +207,6 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
       y = line(doc, y, carry, list);
     }
     y += 8;
-  }
-
-  // --- Notes ---
-  if (card.notes) {
-    y = section(doc, y, "Notes");
-    paragraph(doc, y, card.notes);
   }
 
   // Footer on every page this character produced.

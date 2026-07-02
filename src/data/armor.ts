@@ -217,6 +217,8 @@ export const ARMOR: ArmorPiece[] = [
 ];
 
 export const MAIN_ARMOR = ARMOR.filter((a) => a.category === "Main Armor");
+export const ADDON_ARMOR = ARMOR.filter((a) => a.category === "Add-on Armor");
+export const EXTRA_ARMOR = ARMOR.filter((a) => a.category === "Extra");
 
 export const ARMOR_BY_ID: Record<string, ArmorPiece> = Object.fromEntries(
   ARMOR.map((a) => [a.id, a]),

@@ -53,7 +53,12 @@ interface CombatState {
   addMonster: (gameId: string, m: MonsterInput) => Promise<boolean>;
   patch: (gameId: string, id: string, partial: Partial<Combatant>) => Promise<boolean>;
   remove: (gameId: string, id: string) => Promise<boolean>;
-  toggleCondition: (gameId: string, c: Combatant, conditionId: string) => Promise<boolean>;
+  toggleCondition: (
+    gameId: string,
+    c: Combatant,
+    conditionId: string,
+    round: number,
+  ) => Promise<boolean>;
   nextTurn: (gameId: string, game: Game, combatants: Combatant[]) => Promise<boolean>;
   endEncounter: (gameId: string) => Promise<boolean>;
 }
@@ -173,14 +178,19 @@ export const useCombatStore = create<CombatState>((set, get) => {
       return (await run(() => removeCombatant(gameId, id), "Couldn't remove the combatant.")) !== null;
     },
 
-    toggleCondition: async (gameId, c, conditionId) => {
+    toggleCondition: async (gameId, c, conditionId, round) => {
       // Read the latest from the store (not the possibly-stale prop) so rapid
       // toggles don't clobber each other.
       const current = get().combatants.find((x) => x.id === c.id) ?? c;
-      const conditions = current.conditions.includes(conditionId)
+      const on = current.conditions.includes(conditionId);
+      const conditions = on
         ? current.conditions.filter((x) => x !== conditionId)
         : [...current.conditions, conditionId];
-      return get().patch(gameId, c.id, { conditions });
+      // Track the round a condition was applied so rows can show its duration.
+      const conditionSince = { ...(current.conditionSince ?? {}) };
+      if (on) delete conditionSince[conditionId];
+      else conditionSince[conditionId] = Math.max(1, round);
+      return get().patch(gameId, c.id, { conditions, conditionSince });
     },
 
     nextTurn: async (gameId, game, combatants) => {

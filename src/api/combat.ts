@@ -69,6 +69,8 @@ export function subscribeCombatants(
             maxHp: (data.maxHp as number | null) ?? null,
             currentHp: (data.currentHp as number | null) ?? null,
             conditions: (data.conditions as string[]) ?? [],
+            conditionSince: (data.conditionSince as Record<string, number>) ?? {},
+            note: (data.note as string | null) ?? null,
             createdAt: ms(data.createdAt),
           } satisfies Combatant;
         }),
