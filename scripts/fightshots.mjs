@@ -7,7 +7,7 @@ import { chromium, devices } from "playwright";
 import { mkdir } from "node:fs/promises";
 
 const PORT = process.env.PORT ?? "5191";
-const BASE = `http://127.0.0.1:${PORT}`;
+const BASE = process.env.BASE ?? `http://127.0.0.1:${PORT}`;
 const PREVIEW = process.env.PREVIEW ?? "user.player";
 const OUT = "/tmp/fight";
 await mkdir(OUT, { recursive: true });

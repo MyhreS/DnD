@@ -36,6 +36,7 @@
       "resources/extracted/text/Transformation Table Final Version.txt",
       "resources/extracted/text/Traversal Rite.txt",
       "resources/extracted/text/Warden.txt",
+      "resources/images/ability-score-point-costs-v2.jpg",
       "resources/pdf/appendices/Insane Condition.pdf",
       "resources/pdf/appendices/Rules Reference Scan.pdf",
       "resources/pdf/appendices/Transformation Table Final Version.pdf",
@@ -243,6 +244,15 @@
       "sourceFiles": [
         "resources/pdf/appendices/Insane Condition.pdf",
         "resources/extracted/text/Insane Condition.txt"
+      ]
+    },
+    {
+      "id": "ability-point-costs-v2",
+      "title": "Ability Score Point Costs V2 (“Maduhausu” point buy)",
+      "section": "abilityPointCostsV2",
+      "description": "The DM's min-maxing point-buy variant: 57 points, per-score costs that escalate when the same score is bought a second and third time (16 buyable at most twice), and an absolute cap of 17 on any final ability score at level 1 including background bonuses.",
+      "sourceFiles": [
+        "resources/images/ability-score-point-costs-v2.jpg"
       ]
     }
   ],
@@ -6922,7 +6932,7 @@
   },
   "images": {
     "description": "Figures/art extracted from the source PDFs (mostly the Player's Handbook): the C&S emblem, class splash art, armor visualizations, weapon/item plates, creature art, covers, and the hand-drawn character sheets. Clean paintings were pulled as embedded images; label-heavy pages were captured as full-page renders. See resources/README.md.",
-    "count": 36,
+    "count": 37,
     "byCategory": {
       "item-weapon-art": 7,
       "class-art": 9,
@@ -6931,7 +6941,8 @@
       "emblem-logo": 2,
       "creature-art": 1,
       "cover": 3,
-      "character-sheet": 10
+      "character-sheet": 10,
+      "rules-table": 1
     },
     "assets": [
       {
@@ -7185,6 +7196,12 @@
         "sourcePage": "r1.0-numbered-sheet p05",
         "kind": "page-render",
         "description": "R1.0 numbered character sheet (creation-step labels) — page 05."
+      },
+      {
+        "path": "resources/images/ability-score-point-costs-v2.jpg",
+        "category": "rules-table",
+        "kind": "dm-screenshot",
+        "description": "Screenshot from the DM (Chris): the “Ability Score Point Costs V2 org” table — scores 3–16 with First/Second/Third+ purchase costs for the 57-point Maduhausu point-buy variant."
       }
     ]
   },
@@ -7570,5 +7587,109 @@
       "eye": "For one moment, you understand what you are about to do. You may either end your turn immediately with no effect, or roll the Madness Die again. If the second roll is another Eye, the vision breaks you: roll your Sanity Die, suffer that much Mind damage, and gain 1 Madness."
     },
     "crackedPerception": "While Insane, you have Advantage on Wisdom (Perception) checks and Intelligence (Eldritch Knowledge) checks made to notice unnatural things, hidden entities, dream-architecture, impossible movement, or occult distortions."
+  },
+  "abilityPointCostsV2": {
+    "title": "Ability Score Point Costs V2 (“Maduhausu” point buy)",
+    "source": "resources/images/ability-score-point-costs-v2.jpg",
+    "description": "The DM's more ambitious min-maxing point-buy variant (the table the group calls “Maduhausu”): instead of the handbook's 27 points, you have 57 points to buy ability scores with, using the V2 cost table below. An alternative to the standard Step 3 point buy.",
+    "budget": 57,
+    "repeatRule": "The cost goes up if you buy the same score multiple times: the first purchase of a given score uses First Cost, the second purchase of that same score uses Second Cost, and the third or later purchase uses Third Cost +. A score of 16 cannot be bought a third time (“Too expensive”).",
+    "maxFinalScoreAtLevel1": 17,
+    "maxFinalScoreNote": "The absolute max score a player is allowed to reach as a level 1 character is 17 — that INCLUDES the extra ability points from background or anything else.",
+    "table": {
+      "title": "Ability Score Point Costs V2 org",
+      "columns": [
+        "Score",
+        "First Cost",
+        "Second Cost",
+        "Third Cost +"
+      ],
+      "rows": [
+        [
+          "3",
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "4",
+          "1",
+          "1",
+          "1"
+        ],
+        [
+          "5",
+          "2",
+          "2",
+          "2"
+        ],
+        [
+          "6",
+          "3",
+          "3",
+          "3"
+        ],
+        [
+          "7",
+          "4",
+          "4",
+          "4"
+        ],
+        [
+          "8",
+          "5",
+          "5",
+          "5"
+        ],
+        [
+          "9",
+          "6",
+          "6",
+          "6"
+        ],
+        [
+          "10",
+          "7",
+          "7",
+          "7"
+        ],
+        [
+          "11",
+          "8",
+          "8",
+          "8"
+        ],
+        [
+          "12",
+          "9",
+          "9",
+          "9"
+        ],
+        [
+          "13",
+          "10",
+          "10",
+          "10"
+        ],
+        [
+          "14",
+          "12",
+          "14",
+          "17"
+        ],
+        [
+          "15",
+          "14",
+          "18",
+          "23"
+        ],
+        [
+          "16",
+          "20",
+          "26",
+          "Too expensive"
+        ]
+      ]
+    }
   }
 }
