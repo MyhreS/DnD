@@ -161,7 +161,9 @@ function dedupeExtras(ids: string[]): string[] {
  * shape: the legacy `studdedAddons` count becomes per-piece `studdedAddonIds`
  * (first-N worn add-ons; same AC and weight), `extraArmorIds` is deduped to
  * one Extra per subcategory, and `equippedStorageIds` is filtered to known
- * storage items (missing on legacy docs → nothing equipped). Docs are not
+ * storage items (missing on legacy docs → nothing equipped). `droppedItems`
+ * (#136) defaults to [] and sheds malformed entries; TTL expiry stays a
+ * render/write concern (lib/inventory.ts activeDropped). Docs are not
  * rewritten — the next save persists the new shape (plus the legacy count
  * mirror for stale clients). */
 export function normalizeCard(raw: HunterCard): HunterCard {
@@ -175,6 +177,15 @@ export function normalizeCard(raw: HunterCard): HunterCard {
           (id) => STORAGE_BY_ITEM_ID[id],
         ),
       ),
+    ),
+    droppedItems: (Array.isArray(raw.droppedItems) ? raw.droppedItems : []).filter(
+      (d) =>
+        !!d &&
+        typeof d.itemId === "string" &&
+        typeof d.qty === "number" &&
+        d.qty > 0 &&
+        typeof d.droppedAt === "number" &&
+        Number.isFinite(d.droppedAt),
     ),
   };
 }

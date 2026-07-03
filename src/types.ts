@@ -187,6 +187,17 @@ export interface InventoryEntry {
   qty: number;
 }
 
+/** A recently dropped inventory line (#136) — recoverable until DROPPED_TTL_MS
+ * after `droppedAt` (client clock; serverTimestamp is illegal inside arrays).
+ * Expired entries are filtered on render and pruned on the next
+ * `droppedItems` write — never by a server timer. */
+export interface DroppedItem {
+  itemId: string;
+  qty: number;
+  /** ms epoch, client clock at the moment of the drop. */
+  droppedAt: number;
+}
+
 export type ArmorCategory =
   | "Main Armor"
   | "Add-on Armor"
@@ -590,6 +601,8 @@ export interface HunterCard {
   coins?: number;
   /** Carried items (catalog item id + quantity). */
   inventory?: InventoryEntry[];
+  /** Recently dropped lines, recoverable for 15 minutes (see DroppedItem). */
+  droppedItems?: DroppedItem[];
   /** WORN storage items (sack/backpack/bandolier/tool belt/…), by catalog item
    * id. A worn storage item leaves `inventory` (like worn armor); its weight
    * still counts. Missing on legacy docs → nothing equipped. */

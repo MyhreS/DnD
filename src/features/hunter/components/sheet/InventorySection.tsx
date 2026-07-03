@@ -1,11 +1,14 @@
 import { useState } from "react";
 import type { HunterCard, InventoryEntry } from "@/types";
+import { ITEM_BY_ID } from "@/data/items";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
-import { resolveInventory, carryCondition, totalCarriedWeight } from "@/lib/inventory";
+import { resolveInventory, carryCondition, totalCarriedWeight, dropInventoryLine } from "@/lib/inventory";
 import { computeSlots } from "@/lib/slots";
 import { wearArmor, equipStorage } from "../../lib/equipment";
 import { AsyncButton } from "@/components/AsyncButton";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import { AddItemPicker } from "./AddItemPicker";
+import { RecentlyDropped } from "./RecentlyDropped";
 
 /** The inventory table (wireframe page 3): everything NOT worn — equipment |
  * carrying category | item slot used (from computeSlots, shared with the
@@ -32,6 +35,9 @@ export function InventorySection({
 }) {
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // #136: minus on an item's LAST unit asks first, then the line moves to
+  // "Recently dropped" (15-min recovery) — qty>1 decrements stay silent.
+  const [pendingDrop, setPendingDrop] = useState<string | null>(null);
 
   const entries = resolveInventory(card);
   const slots = computeSlots(card);
@@ -52,7 +58,12 @@ export function InventorySection({
   }
   function removeOne(itemId: string, qty: number) {
     if (onRemove) onRemove({ itemId, qty });
-    else bump(itemId, -1);
+    else if (qty <= 1) setPendingDrop(itemId); // last unit — confirm the drop
+    else bump(itemId, -1); // consumption: silent, not recoverable
+  }
+  function confirmDrop(itemId: string) {
+    setPendingDrop(null);
+    patch(dropInventoryLine(card, itemId, Date.now()));
   }
   function runEquip(result: ReturnType<typeof wearArmor>) {
     if ("error" in result) setError(result.error);
@@ -169,7 +180,18 @@ export function InventorySection({
             )}
           </div>
           {dmMode && adding && <AddItemPicker owned={card.inventory ?? []} onAdd={(id) => bump(id, 1)} />}
+          <RecentlyDropped card={card} onPatch={patch} />
         </>
+      )}
+      {pendingDrop && (
+        <ConfirmModal
+          title={`Drop ${ITEM_BY_ID[pendingDrop]?.name ?? "this item"}?`}
+          body="It stays within reach for 15 minutes — after that it's gone."
+          confirmLabel="Drop it"
+          cancelLabel="Keep it"
+          onConfirm={() => confirmDrop(pendingDrop)}
+          onCancel={() => setPendingDrop(null)}
+        />
       )}
     </div>
   );
