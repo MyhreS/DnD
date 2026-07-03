@@ -33,6 +33,11 @@ interface PlayerState {
   subscribe: (uid: string) => void;
   stop: () => void;
   select: (id: string) => void;
+  /** FULL-card write — for the builder/editor ONLY (create + deliberate edit of
+   * the whole sheet). Play-time writes (trackers, rests, equip, level-up) must
+   * go through `patchCharacter` with a minimal partial instead: a full-card
+   * save from a stale snapshot silently clobbers concurrent DM writes
+   * (insight/level grants, transformation records, item awards). */
   save: (card: HunterCard) => Promise<boolean>;
   /** Archive (soft-delete) the selected character — DM-recoverable for the session. */
   archive: (gameId: string | null) => Promise<boolean>;
