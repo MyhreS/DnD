@@ -310,6 +310,9 @@ export function previewCard(uid: string): import("@/types").HunterCard {
       { itemId: "lantern", qty: 1 },
       { itemId: "tool-belt", qty: 1 },
     ],
+    // One recently dropped line (2 min ago) so preview screenshots show the
+    // #136 recovery section with a live countdown.
+    droppedItems: [{ itemId: "torch", qty: 1, droppedAt: now - 2 * 60_000 }],
     notes: "Hunts the beasts that were once hunters.",
     createdAt: now,
     updatedAt: now,
