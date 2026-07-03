@@ -98,6 +98,16 @@
   border-color: rgba(47, 93, 55, 0.5);
   color: #2f5d37;
 }
+:root[data-theme="light"] .pick-counter {
+  background: rgba(154, 123, 46, 0.1);
+  border-color: rgba(138, 111, 46, 0.55);
+  color: #6d5620;
+}
+:root[data-theme="light"] .pick-counter.done {
+  background: rgba(47, 93, 55, 0.1);
+  border-color: rgba(47, 93, 55, 0.5);
+  color: #2f5d37;
+}
 
 * {
   box-sizing: border-box;
@@ -567,6 +577,26 @@ button {
   transform: scale(0.99);
 }
 
+/* Detail region that expands inside a selected SelectCard (accordion). */
+.select-card-detail {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  cursor: default;
+  animation: detail-in 0.18s ease;
+}
+@keyframes detail-in {
+  from {
+    opacity: 0;
+    transform: translateY(-3px);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .select-card-detail {
+    animation: none;
+  }
+}
+
 .divider {
   height: 1px;
   background: var(--border);
@@ -756,6 +786,27 @@ button {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+/* Live "X of N chosen" counter pill for the builder's pick-N choosers.
+   Warn-gold while incomplete; flips to the ok palette (with .done) when met. */
+.pick-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--gold-dim);
+  background: rgba(201, 164, 90, 0.1);
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  letter-spacing: 0.05em;
+}
+.pick-counter.done {
+  border-color: rgba(94, 158, 106, 0.5);
+  background: rgba(94, 158, 106, 0.12);
+  color: var(--ok);
 }
 
 /* ---------- Stat blocks ---------- */

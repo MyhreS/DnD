@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useMemo, useState, type ReactNode } from "react";
 import type { AbilityKey, AbilityScores, Background, HunterCard } from "@/types";
 import { CLASSES, getClass } from "@/data/classes";
 import { MAIN_ARMOR, ADDON_ARMOR, EXTRA_ARMOR } from "@/data/armor";
@@ -160,6 +160,8 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     ? classSkills.filter((s) => klass.skillChoices.options.includes(s)).length
     : 0;
   const classSkillsOk = !klass || classSkillCount === klass.skillChoices.count;
+  // >0 while picks remain; <0 only on legacy cards whose saved picks exceed the count.
+  const skillsRemaining = klass ? klass.skillChoices.count - classSkillCount : 0;
   const allSkills = useMemo(
     () => Array.from(new Set([...classSkills, ...bgSkills])),
     [classSkills, bgSkills],
@@ -463,8 +465,21 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
             <div className="card">
               <p className="eyebrow">Class skills</p>
               <h3 style={{ marginBottom: 6 }}>Choose {klass.skillChoices.count} proficiencies</h3>
+              <div
+                className={`pick-counter${classSkillsOk ? " done" : ""}`}
+                role="status"
+                style={{ margin: "2px 0 10px" }}
+              >
+                {classSkillsOk ? "✓ " : ""}
+                {classSkillCount} of {klass.skillChoices.count} chosen
+                {skillsRemaining > 0
+                  ? ` — pick ${skillsRemaining} more`
+                  : skillsRemaining < 0
+                    ? ` — remove ${-skillsRemaining}`
+                    : ""}
+              </div>
               <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-                {classSkillCount} / {klass.skillChoices.count} chosen · your background grants two more.
+                Your background grants two more skills in Step 2.
               </p>
               <div className="chip-row">
                 {klass.skillChoices.options.map((skill) => {
@@ -487,67 +502,59 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
         </>
       )}
 
-      {/* Step 2 · Background */}
+      {/* Step 2 · Background — the tapped option expands in place (accordion) */}
       {step === 1 && (
-        <>
-          <div className="card">
-            <p className="eyebrow">Step 2 · Background</p>
-            <h3 style={{ marginBottom: 6 }}>Who were you before the hunt?</h3>
-            <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-              Grants two skills, ability points and equipment — and either a Feat
-              or richer worldly perks (gear, gold, proficiencies).
-            </p>
-            <div className="stack" style={{ gap: 8 }}>
-              {BACKGROUNDS.map((b) => (
-                <SelectCard
-                  key={b.id}
-                  selected={b.id === backgroundId}
-                  onClick={() => chooseBackground(b.id)}
-                  title={b.name}
-                  meta={b.skills.join(" · ")}
-                  sub={b.feat ? `Feat: ${b.feat}` : `No feat — ${backgroundPerks(b)}`}
-                />
-              ))}
-            </div>
-          </div>
-
-          {bg && (
-            <div className="card">
-              <p className="eyebrow">{bg.name}</p>
-              <p className="muted" style={{ fontSize: "0.92rem", marginTop: 0 }}>{bg.text}</p>
-              <div className="derived-grid">
-                <Derived label="Skills" value={bg.skills.join(", ")} />
-                <Derived label="Tool" value={bg.tool ?? "—"} />
-                <Derived label="Boosts" value={bg.abilityScores.map((a) => ABILITY_NAME[a].slice(0, 3)).join(" · ")} />
-              </div>
-              {bg.equipment.length > 0 && (
-                <p className="faint" style={{ fontSize: "0.82rem", marginTop: 8, marginBottom: 0 }}>
-                  Equipment: {bg.equipment.join(", ")}
-                </p>
-              )}
-
-              <hr className="divider" />
-              <p className="eyebrow" style={{ marginBottom: 6 }}>Origin feat</p>
-              {bg.feat ? (
-                <p className="muted" style={{ fontSize: "0.92rem", marginTop: 0 }}>
-                  <strong className="gold">{bg.feat}.</strong>{" "}
-                  {ORIGIN_FEATS.find((f) => f.name === bg.feat)?.text ?? "Granted by this background."}
-                </p>
-              ) : (
-                <p className="muted" style={{ fontSize: "0.92rem", marginTop: 0 }}>
-                  <strong className="gold">None.</strong> This background grants no feat — its
-                  edge is worldly: {backgroundPerks(bg)}.
-                </p>
-              )}
-
-              {overlapSkills.length > 0 && (
-                <div className="banner banner-warn" style={{ marginTop: 12 }}>
-                  Your background already grants {overlapSkills.join(", ")}. Pick different class skills (Step 1) so a pick isn't wasted.
+        <div className="card">
+          <p className="eyebrow">Step 2 · Background</p>
+          <h3 style={{ marginBottom: 6 }}>Who were you before the hunt?</h3>
+          <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
+            Grants two skills, ability points and equipment — and either a Feat
+            or richer worldly perks (gear, gold, proficiencies).
+          </p>
+          <div className="stack" style={{ gap: 8 }}>
+            {BACKGROUNDS.map((b) => (
+              <SelectCard
+                key={b.id}
+                selected={b.id === backgroundId}
+                onClick={() => chooseBackground(b.id)}
+                title={b.name}
+                meta={b.skills.join(" · ")}
+                sub={b.feat ? `Feat: ${b.feat}` : `No feat — ${backgroundPerks(b)}`}
+              >
+                <div className="muted" style={{ fontSize: "0.9rem", marginBottom: 10 }}>{b.text}</div>
+                <div className="derived-grid">
+                  <Derived label="Skills" value={b.skills.join(", ")} />
+                  <Derived label="Tool" value={b.tool ?? "—"} />
+                  <Derived label="Boosts" value={b.abilityScores.map((a) => ABILITY_NAME[a].slice(0, 3)).join(" · ")} />
                 </div>
-              )}
-            </div>
-          )}
-        </>
+                {b.equipment.length > 0 && (
+                  <div className="faint" style={{ fontSize: "0.82rem", marginTop: 8 }}>
+                    Equipment: {b.equipment.join(", ")}
+                  </div>
+                )}
+                <div style={{ marginTop: 10, paddingTop: 10, borderTop: "1px solid var(--border)" }}>
+                  <div className="eyebrow" style={{ marginBottom: 6 }}>Origin feat</div>
+                  {b.feat ? (
+                    <div className="muted" style={{ fontSize: "0.9rem" }}>
+                      <strong className="gold">{b.feat}.</strong>{" "}
+                      {ORIGIN_FEATS.find((f) => f.name === b.feat)?.text ?? "Granted by this background."}
+                    </div>
+                  ) : (
+                    <div className="muted" style={{ fontSize: "0.9rem" }}>
+                      <strong className="gold">None.</strong> This background grants no feat — its
+                      edge is worldly: {backgroundPerks(b)}.
+                    </div>
+                  )}
+                </div>
+                {overlapSkills.length > 0 && (
+                  <div className="banner banner-warn" style={{ marginTop: 10 }}>
+                    Your background already grants {overlapSkills.join(", ")}. Pick different class skills (Step 1) so a pick isn't wasted.
+                  </div>
+                )}
+              </SelectCard>
+            ))}
+          </div>
+        </div>
       )}
 
       {/* Step 3 · Ability scores */}
@@ -582,9 +589,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
               <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
                 Buy base scores 8–15 (27 pts). Then apply your{" "}
                 {bg ? `${bg.name} ` : ""}background bonus to{" "}
-                {bonusAbilities.map((a) => ABILITY_NAME[a]).join(", ")}: +2 and +1, or three +1's{" "}
-                {bonusValid ? "✓" : `(${bonusTotal}/3 used)`}.
+                {bonusAbilities.map((a) => ABILITY_NAME[a]).join(", ")}: +2 and +1, or three +1's.
               </p>
+              <div className={`pick-counter${bonusValid ? " done" : ""}`} role="status" style={{ marginBottom: 8 }}>
+                {bonusValid ? "✓ " : ""}{bonusTotal} of 3 background points applied
+              </div>
             </>
           ) : (
             <>
@@ -599,9 +608,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                 {MADUHAUSU_BUDGET} points — but buying the same score again costs more,
                 and no score may end above {MADUHAUSU_FINAL_MAX} (background points included).
                 Then apply your background bonus to{" "}
-                {bonusAbilities.map((a) => ABILITY_NAME[a]).join(", ")}: +2 and +1, or three +1's{" "}
-                {bonusValid ? "✓" : `(${bonusTotal}/3 used)`}.
+                {bonusAbilities.map((a) => ABILITY_NAME[a]).join(", ")}: +2 and +1, or three +1's.
               </p>
+              <div className={`pick-counter${bonusValid ? " done" : ""}`} role="status" style={{ marginBottom: 8 }}>
+                {bonusValid ? "✓ " : ""}{bonusTotal} of 3 background points applied
+              </div>
               <details style={{ marginBottom: 10 }}>
                 <summary className="faint" style={{ fontSize: "0.8rem", cursor: "pointer" }}>
                   Point cost table (per purchase of the same score)
@@ -934,25 +945,29 @@ function WizardProgress({
   );
 }
 
-/** A selectable option card (class / subclass / background). */
+/** A selectable option card (class / subclass / background). Optional children
+ *  render as an accordion detail INSIDE the card while it is selected. */
 function SelectCard({
   selected,
   onClick,
   title,
   meta,
   sub,
+  children,
 }: {
   selected: boolean;
   onClick: () => void;
   title: string;
   meta?: string;
   sub?: string;
+  children?: ReactNode;
 }) {
   return (
     <button
       type="button"
       onClick={onClick}
       className="card card-hover"
+      aria-expanded={children !== undefined ? selected : undefined}
       style={{
         textAlign: "left",
         padding: 14,
@@ -965,6 +980,7 @@ function SelectCard({
         {meta && <span className="faint" style={{ fontSize: "0.78rem" }}>{meta}</span>}
       </div>
       {sub && <div className="muted" style={{ fontSize: "0.88rem" }}>{sub}</div>}
+      {children !== undefined && selected && <div className="select-card-detail">{children}</div>}
     </button>
   );
 }
