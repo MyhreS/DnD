@@ -396,10 +396,17 @@ button {
 }
 
 /* Two-column page wrapper. Single column by default (mobile, source order);
-   becomes side-by-side on desktop via the breakpoint below. */
+   becomes side-by-side on desktop via the breakpoint below.
+   minmax(0, 1fr) + min-width: 0 matter: grid items default to min-width auto,
+   so the track would otherwise grow to the widest item's min-content (e.g. the
+   class-art <img> on the hunter sheet) and push the page past the viewport. */
 .desk-2col {
   display: grid;
+  grid-template-columns: minmax(0, 1fr);
   gap: 16px;
+}
+.desk-2col > * {
+  min-width: 0;
 }
 
 /* Gallery grid — one column on phones, auto-fills on wider screens. */
@@ -547,7 +554,6 @@ button {
   }
   .desk-2col > .desk-main {
     order: 1;
-    min-width: 0;
   }
   .desk-2col > .desk-aside {
     order: 2;
