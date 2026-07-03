@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { useHunterCard } from "@/features/hunter/hooks/useHunterCard";
+import { HunterListCard } from "@/features/hunter/components/HunterListCard";
 import { AsyncButton } from "@/components/AsyncButton";
 import { Sigil } from "@/components/icons";
 import { useCampaignStore } from "../store/campaignStore";
@@ -19,6 +20,7 @@ export function MainMenu() {
   const accept = useCampaignStore((s) => s.accept);
   const decline = useCampaignStore((s) => s.decline);
   const characters = usePlayerStore((s) => s.characters);
+  const select = usePlayerStore((s) => s.select);
   const navigate = useNavigate();
   useHunterCard();
 
@@ -97,18 +99,22 @@ export function MainMenu() {
       <TestCampaignButton />
 
       <p className="eyebrow" style={{ marginTop: 22, marginBottom: 8 }}>Your hunters</p>
-      <div className="card">
-        {characters.length === 0 ? (
-          <p className="muted" style={{ marginTop: 0 }}>No hunters yet. Forge one to play.</p>
-        ) : (
-          <div className="chip-row" style={{ marginBottom: 12 }}>
-            {characters.map((c) => (
-              <span key={c.id} className="chip">{c.name || "Unnamed"}</span>
-            ))}
-          </div>
-        )}
-        <Link className="btn btn-ghost" to="/character">Manage hunters</Link>
-      </div>
+      {characters.length === 0 ? (
+        <div className="card"><p className="muted" style={{ margin: 0 }}>No hunters yet. Forge one to play.</p></div>
+      ) : (
+        <div className="stack" style={{ gap: 10 }}>
+          {characters.map((c) => (
+            <HunterListCard
+              key={c.id}
+              card={c}
+              campaignName={campaigns.find((x) => x.id === c.campaignId)?.name ?? null}
+              onOpen={() => { select(c.id); navigate("/character"); }}
+              onEdit={() => { select(c.id); navigate("/character?edit=1"); }}
+            />
+          ))}
+        </div>
+      )}
+      <Link className="btn btn-primary" to="/character?new=1" style={{ marginTop: 12 }}>Create hunter</Link>
 
       <div className="rule-ornament">◆</div>
       <Link className="btn btn-ghost" to="/handbook">Read the handbook</Link>

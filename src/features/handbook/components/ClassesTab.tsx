@@ -33,10 +33,10 @@ function ClassCard({ c, isOpen, onToggle }: { c: HunterClass; isOpen: boolean; o
           <div className="row" style={{ gap: 10, minWidth: 0 }}>
             {art && (
               <img
-                src={art}
+                src={art.src}
                 alt=""
                 loading="lazy"
-                style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", flex: "none" }}
+                style={{ width: 44, height: 44, borderRadius: 8, objectFit: "cover", objectPosition: art.focus, flex: "none" }}
               />
             )}
             <div style={{ minWidth: 0 }}>

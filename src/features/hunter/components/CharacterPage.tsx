@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { useHunterCard } from "../hooks/useHunterCard";
+import { useEditorIntent } from "../hooks/useEditorIntent";
 import { CharacterEditor } from "./CharacterEditor";
 import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
@@ -34,6 +35,9 @@ export function CharacterPage() {
     setDraft(newDraft());
     setEditing(false);
   }
+
+  // Main-menu deep links: ?new=1 → straight into creation, ?edit=1 → editor.
+  useEditorIntent({ onNew: startNew, onEdit: () => setEditing(true) });
 
   if (status === "idle" || status === "loading") {
     return (
@@ -97,7 +101,9 @@ export function CharacterPage() {
   }
 
   // Creating a new hunter, or editing an existing one → the guided builder.
-  if (creating || editing) {
+  // (`editing` needs a loaded card — a ?edit=1 deep link with zero characters
+  // must fall through to the splash, not crash on `card!`.)
+  if (creating || (editing && card)) {
     const initial = creating ? draft! : card!;
     return (
       <div className="reading">
@@ -113,7 +119,7 @@ export function CharacterPage() {
           onSave={handleSave}
           onCancel={() => { setEditing(false); setDraft(null); }}
           onDelete={creating ? undefined : handleDelete}
-          lockClass={!creating}
+          lockClass={!creating && !!card?.classId}
         />
       </div>
     );
