@@ -9,7 +9,7 @@ import {
   type LongRestOutcome,
   type ShortRestOutcome,
 } from "@/lib/rest";
-import { usePlayerStore } from "@/features/hunter/store/playerStore";
+import { patchCharacter } from "@/api/players";
 import { AsyncButton } from "@/components/AsyncButton";
 import { LOCATION_LABEL } from "../lib/phase";
 import type { GameLocation, GamePhase, HunterCard } from "@/types";
@@ -27,7 +27,6 @@ export function RestPanel({
   phase: GamePhase;
   location: GameLocation;
 }) {
-  const save = usePlayerStore((s) => s.save);
   const klass = getClass(card.classId);
   const [done, setDone] = useState<string | null>(null);
   if ((phase !== "short_rest" && phase !== "long_rest") || !klass) return null;
@@ -40,13 +39,18 @@ export function RestPanel({
 
   async function takeRest() {
     if (!klass) return;
+    // Write ONLY the fields the rest actually changes (a minimal partial
+    // patch, never the whole card) so a stale snapshot can't clobber
+    // concurrent DM writes. The rest math only ever REDUCES
+    // transformationLevel and CLEARS activeTransformations — the owner-side
+    // bounds firestore.rules enforces (transformation is otherwise DM-owned).
     if (isLong) {
       const r = applyLongRest(card, klass, location);
-      await save({ ...card, ...r.patch });
+      await patchCharacter(card.id, r.patch);
       setDone(longSummary(r));
     } else {
       const r = applyShortRest(card, klass, location);
-      await save({ ...card, ...r.patch });
+      await patchCharacter(card.id, r.patch);
       setDone(shortSummary(r));
     }
   }

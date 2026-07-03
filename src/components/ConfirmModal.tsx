@@ -1,10 +1,7 @@
-import { createPortal } from "react-dom";
+import { ModalBackdrop } from "./ModalBackdrop";
 
 /** A small confirmation dialog on the shared .modal-backdrop/.modal pattern
- * (same chrome as LevelUpModal). Clicking the backdrop cancels. Rendered
- * through a portal: deep inside the sheet the `.fade-in` page wrapper's
- * transform animation makes it the containing block for position:fixed,
- * which would strand the dialog mid-page. */
+ * (same chrome as LevelUpModal). Clicking the backdrop cancels. */
 export function ConfirmModal({
   title,
   body,
@@ -20,16 +17,8 @@ export function ConfirmModal({
   onConfirm: () => void;
   onCancel: () => void;
 }) {
-  return createPortal(
-    <div
-      className="modal-backdrop"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onCancel();
-      }}
-    >
+  return (
+    <ModalBackdrop label={title} onDismiss={onCancel}>
       <div className="modal">
         <h2 style={{ margin: "0 0 6px" }}>{title}</h2>
         <p className="muted" style={{ marginTop: 0, fontSize: "0.92rem" }}>{body}</p>
@@ -42,7 +31,6 @@ export function ConfirmModal({
           </button>
         </div>
       </div>
-    </div>,
-    document.body,
+    </ModalBackdrop>
   );
 }

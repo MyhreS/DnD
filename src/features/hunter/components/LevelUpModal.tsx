@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ModalBackdrop } from "@/components/ModalBackdrop";
 import type { AbilityKey, HunterCard } from "@/types";
 import { getClass, getSubclass } from "@/data/classes";
 import { FEATS } from "@/data/feats";
@@ -93,7 +94,7 @@ export function LevelUpModal({
   }
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Level up">
+    <ModalBackdrop label="Level up">
       <div className="modal">
         <p className="eyebrow" style={{ marginTop: 0 }}>
           Level up · {idx + 1} of {levels.length}
@@ -171,7 +172,7 @@ export function LevelUpModal({
           )}
         </div>
       </div>
-    </div>
+    </ModalBackdrop>
   );
 }
 
