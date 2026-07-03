@@ -853,6 +853,14 @@ button {
   }
 }
 
+/* The progression preview's 1–20 level slider. */
+input[type="range"].level-range {
+  flex: 1;
+  min-width: 0;
+  accent-color: var(--blood-bright);
+  cursor: pointer;
+}
+
 .skill-grid {
   display: grid;
   grid-template-columns: 1fr;

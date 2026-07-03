@@ -26,12 +26,15 @@ import {
   maxHp,
   maxSanity,
   proficiencyBonus,
+  subclassDisplayName,
   wornArmorWeight,
   DEEPCALLER_STAY_ID,
+  INSIGHT_THRESHOLDS,
   ZEALOT_ID,
 } from "@/lib/character";
 import { startingKit, backgroundGold } from "@/lib/startingEquipment";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
+import { ProgressionPreview } from "./ProgressionPreview";
 
 interface Props {
   initial: HunterCard;
@@ -96,9 +99,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     const granted = bgId ? BACKGROUNDS.find((b) => b.id === bgId)?.skills ?? [] : [];
     return initial.skillProficiencies.filter((s) => !granted.includes(s));
   });
-  // Level is NOT player-editable: new hunters start at level 1; on an existing
-  // hunter the DM's grants (insight / direct levels) own this number.
-  const level = initial.level || 1;
+  const creating = !initial.classId;
+  // Level is pickable ONLY while creating (the tucked-away "Advanced" control
+  // on Step 1, for joining mid-campaign at the DM's instruction). On an
+  // existing hunter the DM's grants (insight / direct levels) own this number.
+  const [level, setLevel] = useState(() => Math.max(1, Math.min(20, initial.level || 1)));
   const [subclassId, setSubclassId] = useState<string | null>(initial.subclassId ?? null);
   const [step, setStep] = useState(0);
   const [attempted, setAttempted] = useState(false);
@@ -108,7 +113,6 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   // Ability scores are only re-validated (and re-saved) if the player actually
   // touches them — so editing armor on a leveled hunter never trips over the
   // creation-time point-buy rules or discards level-up ability increases.
-  const creating = !initial.classId;
   const [abilitiesDirty, setAbilitiesDirty] = useState(creating);
 
   const [base, setBase] = useState<Record<AbilityKey, number>>(() => {
@@ -255,6 +259,14 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     });
   }
 
+  // The creation-level picker (create-only). Dropping below 3 clears any chosen
+  // subclass — a sub-3 hunter can't carry one out of the builder.
+  function chooseCreationLevel(next: number) {
+    const clamped = Math.max(1, Math.min(20, next));
+    setLevel(clamped);
+    if (clamped < 3) setSubclassId(null);
+  }
+
   // When class changes, drop skills that aren't valid for the new class.
   function chooseClass(id: string) {
     setClassId(id);
@@ -277,12 +289,18 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   // Class skills the player picked that the background also grants (redundant).
   const overlapSkills = classSkills.filter((s) => bgSkills.includes(s));
 
+  // Docs-correct subclass rule: hidden below level 3; REQUIRED at 3+ (there is
+  // no "Undecided" — same rule the LevelUpModal enforces at level 3).
+  const subclassRequired = !!klass && klass.subclasses.length > 0 && level >= 3;
+  const subclassOk = !subclassRequired || !!subclassId;
+
   // Everything that must be true before a hunter can be saved.
   const problems = useMemo(() => {
     const p: string[] = [];
     if (name.trim().length === 0) p.push("Give your hunter a name.");
     if (!classId) p.push("Choose a class.");
     if (klass && !classSkillsOk) p.push(`Choose exactly ${klass.skillChoices.count} class skill proficiencies.`);
+    if (klass && subclassRequired && !subclassId) p.push(`Choose your ${klass.name} path.`);
     if (!backgroundId) p.push("Choose a background.");
     if (bg?.feat && feat.trim().length === 0) p.push("Choose your Origin feat.");
     if (abilitiesDirty) {
@@ -290,11 +308,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       if (bonusTotal !== 3) p.push(`Apply your background ability points (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`);
     }
     return p;
-  }, [name, classId, klass, classSkillsOk, backgroundId, bg, feat, abilitiesDirty, pointsLeft, bonusTotal]);
+  }, [name, classId, klass, classSkillsOk, subclassRequired, subclassId, backgroundId, bg, feat, abilitiesDirty, pointsLeft, bonusTotal]);
 
   // Per-step completion (drives the progress bar + Next gating).
   const stepValid = [
-    !!classId && classSkillsOk,
+    !!classId && classSkillsOk && subclassOk,
     !!backgroundId,
     scoresOk && bonusOk,
     true,
@@ -303,8 +321,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const last = STEP_TITLES.length - 1;
 
   const stepHint = (() => {
-    if (step === 0)
-      return !classId ? "Choose a class to continue." : `Choose exactly ${klass?.skillChoices.count ?? 0} class skills.`;
+    if (step === 0) {
+      if (!classId) return "Choose a class to continue.";
+      if (!subclassOk) return "Choose your path — a level 3+ hunter must have a subclass.";
+      return `Choose exactly ${klass?.skillChoices.count ?? 0} class skills.`;
+    }
     if (step === 1) return "Choose a background.";
     if (step === 2) {
       return pointsLeft !== 0
@@ -351,7 +372,15 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       classId,
       subclassId,
       level,
-      lastSeenLevel: initial.lastSeenLevel ?? level,
+      // Creating at level N starts "caught up" (lastSeenLevel = N) so the
+      // level-up walkthrough doesn't immediately fire and walk levels 2..N.
+      // That means ASI/feat picks for creation levels 4+ are NOT granted at
+      // creation — an explicit follow-up, out of scope here (issue #126).
+      lastSeenLevel: creating ? level : initial.lastSeenLevel ?? level,
+      // Mid-campaign creation seeds Insight to the level's threshold, matching
+      // the DM direct-grant semantics (DMCharacterEditor.setLevel) so the
+      // "N to next level" math reads sensibly.
+      insight: creating && level > 1 ? INSIGHT_THRESHOLDS[level - 1] : initial.insight ?? 0,
       feats: initial.feats ?? [],
       background: bg?.name ?? initial.background.trim(),
       backgroundId: backgroundId ?? undefined,
@@ -418,19 +447,40 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                     />
                   ))}
                 </div>
+                {creating && (
+                  <details style={{ marginTop: 12 }}>
+                    <summary className="faint" style={{ fontSize: "0.8rem", cursor: "pointer" }}>
+                      Advanced · starting level
+                    </summary>
+                    <div className="row between" style={{ marginTop: 10, gap: 8 }}>
+                      <div style={{ minWidth: 0 }}>
+                        <span style={{ fontWeight: 600 }}>Starting level</span>
+                        <div className="faint" style={{ fontSize: "0.74rem" }}>
+                          Prof {formatModifier(proficiencyBonus(level))}
+                          {level >= 3 ? " · subclass required" : ""}
+                        </div>
+                      </div>
+                      <Stepper label="level" value={level} min={1} max={20} onChange={chooseCreationLevel} />
+                    </div>
+                    <p className="faint" style={{ fontSize: "0.78rem", margin: "8px 0 0" }}>
+                      Nearly every hunter is forged at level 1 — the DM rewards Insight and
+                      levels from play. Set a higher starting level only when joining
+                      mid-campaign, at the DM's instruction.
+                    </p>
+                  </details>
+                )}
               </>
             )}
           </div>
 
-          {klass && klass.subclasses.length > 0 && (
+          {klass && klass.subclasses.length > 0 && level >= 3 && (
             <div className="card">
               <p className="eyebrow">Subclass</p>
               <h3 style={{ marginBottom: 6 }}>{klass.name} path</h3>
               <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-                {level >= 3 ? "Choose your specialization." : "Chosen at level 3 — you can pick now or later."}
+                Your specialization — every level 3+ hunter has chosen a path.
               </p>
               <div className="stack" style={{ gap: 8 }}>
-                <SelectCard selected={subclassId === null} onClick={() => setSubclassId(null)} title="Undecided" />
                 {klass.id === "deepcaller" && (
                   <SelectCard
                     selected={subclassId === DEEPCALLER_STAY_ID}
@@ -819,9 +869,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
               <div>
                 <span className="eyebrow" style={{ margin: 0 }}>Level</span>
                 <div className="faint" style={{ fontSize: "0.78rem" }}>
-                  {level === 1
-                    ? "Every hunter starts at level 1 — the DM rewards Insight and levels."
-                    : "Set by the DM's rewards — Insight and levels come from play."}
+                  {creating && level > 1
+                    ? `Starting at level ${level} — set at the DM's instruction. From here, Insight and levels come from play.`
+                    : level === 1
+                      ? "Every hunter starts at level 1 — the DM rewards Insight and levels."
+                      : "Set by the DM's rewards — Insight and levels come from play."}
                 </div>
               </div>
               <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", flex: "none" }}>
@@ -838,7 +890,9 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                 {name.trim() || "Unnamed Hunter"}
                 <span className="faint" style={{ fontSize: "0.82rem", fontWeight: 400 }}>
                   {" "}· {klass.name}
-                  {subclassId ? ` (${klass.subclasses.find((s) => s.id === subclassId)?.name})` : ""} · Lvl {level}
+                  {subclassId
+                    ? ` (${subclassDisplayName(klass.subclasses.find((s) => s.id === subclassId)?.name, subclassId)})`
+                    : ""} · Lvl {level}
                 </span>
               </h3>
               <div className="derived-grid">
@@ -854,6 +908,15 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                 {allSkills.length > 0 ? `Skills: ${allSkills.join(", ")}` : ""}
               </p>
             </div>
+          )}
+
+          {klass && (
+            <ProgressionPreview
+              klass={klass}
+              subclassId={subclassId}
+              abilities={finalScores}
+              startLevel={level}
+            />
           )}
 
           {onDelete && <DeleteCharacter saving={saving} onDelete={onDelete} />}
