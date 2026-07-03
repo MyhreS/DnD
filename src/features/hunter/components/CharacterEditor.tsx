@@ -5,19 +5,11 @@ import { MAIN_ARMOR, ADDON_ARMOR, EXTRA_ARMOR } from "@/data/armor";
 import { BACKGROUNDS } from "@/data/backgrounds";
 import { ORIGIN_FEATS } from "@/data/feats";
 import {
-  ABILITIES,
   ABILITY_NAME,
-  POINT_BUY_BUDGET,
   POINT_BUY_MIN,
   POINT_BUY_MAX,
-  POINT_COST,
-  MADUHAUSU_BUDGET,
   MADUHAUSU_MIN,
   MADUHAUSU_MAX,
-  MADUHAUSU_FINAL_MAX,
-  MADUHAUSU_COST,
-  maduhausuSpent,
-  abilityModifier,
   formatModifier,
 } from "@/data/abilities";
 import {
@@ -34,6 +26,8 @@ import {
 } from "@/lib/character";
 import { startingKit, backgroundGold } from "@/lib/startingEquipment";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
+import { baseSetBlock, bonusSetBlock, budgetFor, spentFor } from "../lib/abilityBuy";
+import { AbilityScoresStep } from "./AbilityScoresStep";
 import { ProgressionPreview } from "./ProgressionPreview";
 
 interface Props {
@@ -171,17 +165,10 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     [classSkills, bgSkills],
   );
 
-  const budget = mode === "maduhausu" ? MADUHAUSU_BUDGET : POINT_BUY_BUDGET;
-  const pointsSpent = useMemo(
-    () =>
-      mode === "maduhausu"
-        ? maduhausuSpent(ABILITY_KEYS.map((k) => base[k])) ?? 0
-        : ABILITY_KEYS.reduce((sum, k) => sum + (POINT_COST[base[k]] ?? 0), 0),
-    [base, mode],
-  );
+  const budget = budgetFor(mode);
+  const pointsSpent = useMemo(() => spentFor(mode, base) ?? 0, [base, mode]);
   const pointsLeft = budget - pointsSpent;
   const bonusTotal = ABILITY_KEYS.reduce((s, k) => s + bonus[k], 0);
-  const bonusValid = bonusTotal === 3; // (2+1) or (1+1+1) both sum to 3
   // Untouched scores on an existing hunter are saved verbatim — no revalidation.
   const scoresOk = !abilitiesDirty || pointsLeft === 0;
   const bonusOk = !abilitiesDirty || bonusTotal === 3;
@@ -194,19 +181,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const prof = proficiencyBonus(level);
 
   function setBaseScore(k: AbilityKey, next: number) {
-    const min = mode === "maduhausu" ? MADUHAUSU_MIN : POINT_BUY_MIN;
-    const max = mode === "maduhausu" ? MADUHAUSU_MAX : POINT_BUY_MAX;
-    if (next < min || next > max) return;
-    // Maduhausu's hard cap: no FINAL score above 17, background points included.
-    if (mode === "maduhausu" && next + bonus[k] > MADUHAUSU_FINAL_MAX) return;
-    const projected = { ...base, [k]: next };
-    const spent =
-      mode === "maduhausu"
-        ? maduhausuSpent(ABILITY_KEYS.map((key) => projected[key]))
-        : ABILITY_KEYS.reduce((s, key) => s + (POINT_COST[projected[key]] ?? 0), 0);
-    if (spent === null || spent > budget) return; // can't overspend (or buy a third 16)
+    // The guard is the SAME predicate the tiles use to explain a blocked +,
+    // so the setter and the UI's reasons can never drift apart.
+    if (baseSetBlock(mode, base, bonus, k, next) !== null) return;
     setAbilitiesDirty(true);
-    setBase(projected);
+    setBase({ ...base, [k]: next });
   }
 
   function switchMode(next: "pointbuy" | "maduhausu") {
@@ -239,14 +218,10 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   }
 
   function setBonusScore(k: AbilityKey, next: number) {
-    if (next < 0 || next > 2) return;
-    if (!bonusAbilities.includes(k)) return; // background restricts which abilities benefit
-    // Maduhausu's hard cap: no FINAL score above 17, background points included.
-    if (mode === "maduhausu" && base[k] + next > MADUHAUSU_FINAL_MAX) return;
-    const projected = { ...bonus, [k]: next };
-    if (projected[k] - bonus[k] > 0 && bonusTotal >= 3) return; // cap at 3 total
+    // Same predicate as the tiles' gold-token blocked reasons — see above.
+    if (bonusSetBlock(mode, base, bonus, bonusAbilities, k, next) !== null) return;
     setAbilitiesDirty(true);
-    setBonus(projected);
+    setBonus({ ...bonus, [k]: next });
   }
 
   function toggleClassSkill(skill: string) {
@@ -609,137 +584,20 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
 
       {/* Step 3 · Ability scores */}
       {step === 2 && (
-        <div className="card">
-          <p className="eyebrow">Step 3 · Ability scores</p>
-          <div className="chip-row" style={{ marginBottom: 10 }}>
-            <button
-              type="button"
-              className={`chip selectable${mode === "pointbuy" ? " selected" : ""}`}
-              onClick={() => switchMode("pointbuy")}
-            >
-              Point buy
-            </button>
-            <button
-              type="button"
-              className={`chip selectable${mode === "maduhausu" ? " selected" : ""}`}
-              onClick={() => switchMode("maduhausu")}
-            >
-              Maduhausu 🤡
-            </button>
-          </div>
-
-          {mode === "pointbuy" ? (
-            <>
-              <div className="row between" style={{ marginBottom: 4 }}>
-                <h3 style={{ margin: 0 }}>Point buy</h3>
-                <span className={pointsLeft === 0 ? "gold" : "muted"}>
-                  {pointsLeft} / {POINT_BUY_BUDGET} points left
-                </span>
-              </div>
-              <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-                Buy base scores 8–15 (27 pts). Then apply your{" "}
-                {bg ? `${bg.name} ` : ""}background bonus to{" "}
-                {bonusAbilities.map((a) => ABILITY_NAME[a]).join(", ")}: +2 and +1, or three +1's.
-              </p>
-              <div className={`pick-counter${bonusValid ? " done" : ""}`} role="status" style={{ marginBottom: 8 }}>
-                {bonusValid ? "✓ " : ""}{bonusTotal} of 3 background points applied
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="row between" style={{ marginBottom: 4 }}>
-                <h3 style={{ margin: 0 }}>Maduhausu 🤡</h3>
-                <span className={pointsLeft === 0 ? "gold" : "muted"}>
-                  {pointsLeft} / {MADUHAUSU_BUDGET} points left
-                </span>
-              </div>
-              <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-                The min-maxer's madness: buy scores {MADUHAUSU_MIN}–{MADUHAUSU_MAX} with{" "}
-                {MADUHAUSU_BUDGET} points — but buying the same score again costs more,
-                and no score may end above {MADUHAUSU_FINAL_MAX} (background points included).
-                Then apply your background bonus to{" "}
-                {bonusAbilities.map((a) => ABILITY_NAME[a]).join(", ")}: +2 and +1, or three +1's.
-              </p>
-              <div className={`pick-counter${bonusValid ? " done" : ""}`} role="status" style={{ marginBottom: 8 }}>
-                {bonusValid ? "✓ " : ""}{bonusTotal} of 3 background points applied
-              </div>
-              <details style={{ marginBottom: 10 }}>
-                <summary className="faint" style={{ fontSize: "0.8rem", cursor: "pointer" }}>
-                  Point cost table (per purchase of the same score)
-                </summary>
-                <div className="table-scroll" style={{ marginTop: 6 }}>
-                  <table className="level-table">
-                    <thead>
-                      <tr>
-                        <th className="lvl-col">Score</th>
-                        <th>First</th>
-                        <th>Second</th>
-                        <th>Third +</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <tr>
-                        <td className="lvl-col">3–13</td>
-                        <td colSpan={3}>Score − 3, every time (a 10 always costs 7)</td>
-                      </tr>
-                      {[14, 15, 16].map((score) => (
-                        <tr key={score}>
-                          <td className="lvl-col">{score}</td>
-                          {MADUHAUSU_COST[score].map((cost, i) => (
-                            <td key={i}>{cost === null ? "Too expensive" : cost}</td>
-                          ))}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </details>
-            </>
-          )}
-
-          <div className="stack" style={{ gap: 8 }}>
-            {ABILITIES.map(({ key, name: aName, short }) => {
-              const final = finalScores[key];
-              const canBonus = bonusAbilities.includes(key);
-              return (
-                <div key={key} className="row" style={{ padding: "8px 0", borderBottom: "1px solid var(--border)", gap: 6 }}>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontWeight: 600 }}>{short}</div>
-                    <div className="faint" style={{ fontSize: "0.72rem", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {aName}
-                    </div>
-                  </div>
-                  {mode === "pointbuy" ? (
-                    <Stepper label="base" value={base[key]} min={POINT_BUY_MIN} max={POINT_BUY_MAX} onChange={(v) => setBaseScore(key, v)} />
-                  ) : (
-                    <Stepper
-                      label="base"
-                      value={base[key]}
-                      min={MADUHAUSU_MIN}
-                      max={Math.min(MADUHAUSU_MAX, MADUHAUSU_FINAL_MAX - bonus[key])}
-                      onChange={(v) => setBaseScore(key, v)}
-                    />
-                  )}
-                  {canBonus ? (
-                    <Stepper
-                      label="bg"
-                      value={bonus[key]}
-                      min={0}
-                      max={mode === "maduhausu" ? Math.min(2, MADUHAUSU_FINAL_MAX - base[key]) : 2}
-                      onChange={(v) => setBonusScore(key, v)}
-                    />
-                  ) : (
-                    <div style={{ width: 71, flex: "none" }} aria-hidden />
-                  )}
-                  <div style={{ textAlign: "right", minWidth: 38, flex: "none" }}>
-                    <div style={{ fontFamily: "var(--font-display)", fontSize: "1.2rem", lineHeight: 1.1 }}>{final}</div>
-                    <div className="gold" style={{ fontSize: "0.78rem" }}>{formatModifier(abilityModifier(final))}</div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+        <AbilityScoresStep
+          mode={mode}
+          base={base}
+          bonus={bonus}
+          finalScores={finalScores}
+          bg={bg}
+          bonusAbilities={bonusAbilities}
+          pointsLeft={pointsLeft}
+          bonusTotal={bonusTotal}
+          leveledNote={!abilitiesDirty && level > 1}
+          onSwitchMode={switchMode}
+          onSetBase={setBaseScore}
+          onSetBonus={setBonusScore}
+        />
       )}
 
       {/* Step 4 · Armor — the full layered system: Main + Add-ons + Studs + Extras */}

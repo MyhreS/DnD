@@ -853,6 +853,185 @@ button {
   }
 }
 
+/* ---------- Ability tiles & points meter (builder Step 3) ---------- */
+
+/* The prominent two-budget block: buy meter on top, background-bonus
+   mini-meter below its gold dashed divider — two currencies, two looks. */
+.points-meter {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+}
+.meter-big {
+  font-family: var(--font-display);
+  font-size: 1.9rem;
+  font-weight: 600;
+  line-height: 1;
+}
+.meter-big.done {
+  color: var(--gold);
+}
+.meter-bar {
+  height: 8px;
+  margin-top: 8px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--bg-elev-3);
+  overflow: hidden;
+}
+.meter-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
+  transition: width 0.2s ease;
+}
+.meter-fill.done {
+  background: var(--ok);
+}
+
+.bg-meter {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed var(--gold-dim);
+}
+.bg-meter-title {
+  font-family: var(--font-display);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--gold);
+}
+.bg-pip {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  border: 1px solid var(--gold-dim);
+  display: inline-block;
+}
+.bg-pip.filled {
+  background: var(--gold);
+  border-color: var(--gold);
+}
+
+/* The six ability tiles: 2-up on phones, 3-up where the editor is wide. */
+.ability-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+@media (min-width: 700px) {
+  .ability-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+.ability-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  text-align: center;
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 6px;
+}
+.tile-head {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.2;
+}
+.tile-short {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+.tile-name {
+  font-size: 0.66rem;
+}
+.tile-score {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  font-weight: 600;
+  line-height: 1.05;
+  margin-top: 2px;
+}
+.tile-mod {
+  font-size: 0.85rem;
+}
+.tile-base {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  margin-top: 5px;
+}
+.tile-btn {
+  width: 40px;
+  min-height: 38px;
+  padding: 4px 0;
+  font-size: 1.05rem;
+  line-height: 1;
+}
+.tile-cost {
+  font-size: 0.7rem;
+  color: var(--gold);
+}
+.tile-base-value {
+  min-width: 26px;
+  font-family: var(--font-display);
+  line-height: 1.1;
+}
+.tile-base-value .tile-base-label {
+  display: block;
+  font-size: 0.58rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+/* Blocked but tappable: looks disabled, still answers with the reason. */
+.is-blocked {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.tile-hint {
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--blood-bright);
+  margin-top: 4px;
+}
+
+/* The background-bonus token — gold, so the second currency is unmistakable
+   next to the plain base steppers and the blood-red selection chips. */
+.bg-chip {
+  margin-top: 6px;
+  min-height: 30px;
+  padding: 3px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--gold-dim);
+  background: rgba(201, 164, 90, 0.08);
+  color: var(--gold);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  transition: all 0.15s ease;
+}
+.bg-chip.on {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: #241d0e;
+  font-weight: 600;
+}
+.bg-slot {
+  min-height: 36px;
+}
+:root[data-theme="light"] .bg-chip {
+  background: rgba(154, 123, 46, 0.1);
+}
+:root[data-theme="light"] .bg-chip.on {
+  background: var(--gold);
+  color: #fffdf8;
+}
+
 /* The progression preview's 1–20 level slider. */
 input[type="range"].level-range {
   flex: 1;
