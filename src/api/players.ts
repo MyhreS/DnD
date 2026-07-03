@@ -13,6 +13,7 @@ import {
   type Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { normalizeCard } from "@/lib/character";
 import { isPreviewActive, previewCard, previewArchive } from "@/dev/preview";
 import { isTestEmail } from "@/config";
 import type { ArchivedCharacter, HunterCard } from "@/types";
@@ -56,7 +57,7 @@ export function subscribeMyCharacters(
   }
   return onSnapshot(
     query(charsCol, where("ownerUid", "==", ownerUid)),
-    (snap) => cb(snap.docs.map((d) => d.data() as HunterCard)),
+    (snap) => cb(snap.docs.map((d) => normalizeCard(d.data() as HunterCard))),
     (err) => {
       console.error("Characters subscription failed", err);
       onError?.(err);
@@ -75,7 +76,7 @@ export function subscribeAllCharacters(
   }
   return onSnapshot(
     charsCol,
-    (snap) => cb(realCards(snap.docs.map((d) => d.data() as HunterCard))),
+    (snap) => cb(realCards(snap.docs.map((d) => normalizeCard(d.data() as HunterCard)))),
     (err) => {
       console.error("Party subscription failed", err);
       onError?.(err);
@@ -130,7 +131,7 @@ export function subscribeArchive(
             gameId: (data.gameId as string | null) ?? null,
             reason: (data.reason as ArchivedCharacter["reason"]) ?? "deleted",
             archivedAt: ms(data.archivedAt),
-            card: data.card as HunterCard,
+            card: normalizeCard(data.card as HunterCard),
           } satisfies ArchivedCharacter;
         }),
       ),

@@ -1,7 +1,7 @@
 import { Fragment, useMemo, useState, type ReactNode } from "react";
 import type { AbilityKey, AbilityScores, Background, HunterCard } from "@/types";
 import { CLASSES, getClass } from "@/data/classes";
-import { MAIN_ARMOR, ADDON_ARMOR, EXTRA_ARMOR } from "@/data/armor";
+import { MAIN_ARMOR, ADDON_ARMOR, EXTRA_ARMOR, EXTRA_SUBCATEGORIES, ARMOR_BY_ID } from "@/data/armor";
 import { BACKGROUNDS } from "@/data/backgrounds";
 import { ORIGIN_FEATS } from "@/data/feats";
 import {
@@ -18,6 +18,7 @@ import {
   maxHp,
   maxSanity,
   proficiencyBonus,
+  studdedAddonIdsOf,
   subclassDisplayName,
   wornArmorWeight,
   DEEPCALLER_STAY_ID,
@@ -29,6 +30,7 @@ import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { baseSetBlock, bonusSetBlock, budgetFor, spentFor } from "../lib/abilityBuy";
 import { AbilityScoresStep } from "./AbilityScoresStep";
 import { ProgressionPreview } from "./ProgressionPreview";
+import { StudsPanel } from "./StudsPanel";
 
 interface Props {
   initial: HunterCard;
@@ -84,7 +86,8 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const [feat, setFeat] = useState<string>(initial.feat ?? "");
   const [mainArmorId, setMainArmorId] = useState<string | null>(initial.mainArmorId);
   const [addonIds, setAddonIds] = useState<string[]>(initial.addonArmorIds ?? []);
-  const [studded, setStudded] = useState<number>(initial.studdedAddons ?? 0);
+  // Per-piece Studs (studdedAddonIdsOf maps a legacy numeric count to ids).
+  const [studdedIds, setStuddedIds] = useState<string[]>(() => studdedAddonIdsOf(initial));
   const [extraIds, setExtraIds] = useState<string[]>(initial.extraArmorIds ?? []);
   // Class-chosen skills only: strip the initial background's granted skills so
   // re-editing a saved hunter doesn't count background skills as class picks.
@@ -174,8 +177,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const bonusOk = !abilitiesDirty || bonusTotal === 3;
 
   const maxAddons = maxAddonPieces(mainArmorId);
-  const studdedMax = Math.min(5, addonIds.length);
-  const ac = armorClass(finalScores, mainArmorId, addonIds, Math.min(studded, studdedMax));
+  const ac = armorClass(finalScores, mainArmorId, addonIds, studdedIds);
   const hp = klass ? maxHp(klass, finalScores, level) : null;
   const sanMax = klass ? maxSanity(klass, finalScores, level) : null;
   const prof = proficiencyBonus(level);
@@ -204,17 +206,28 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   function toggleAddon(id: string) {
     setAddonIds((cur) => {
       if (cur.includes(id)) {
-        const next = cur.filter((x) => x !== id);
-        setStudded((s) => Math.min(s, Math.min(5, next.length)));
-        return next;
+        // A removed piece can't stay studded.
+        setStuddedIds((s) => s.filter((x) => x !== id));
+        return cur.filter((x) => x !== id);
       }
       if (cur.length >= maxAddons) return cur;
       return [...cur, id];
     });
   }
 
+  function toggleStudded(id: string) {
+    setStuddedIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
+  }
+
+  // Only ONE Extra per subcategory: picking a second hat SWAPS the first;
+  // tapping the selected one deselects it.
   function toggleExtra(id: string) {
-    setExtraIds((cur) => (cur.includes(id) ? cur.filter((x) => x !== id) : [...cur, id]));
+    setExtraIds((cur) => {
+      if (cur.includes(id)) return cur.filter((x) => x !== id);
+      const sub = ARMOR_BY_ID[id]?.subcategory;
+      const kept = sub ? cur.filter((x) => ARMOR_BY_ID[x]?.subcategory !== sub) : cur;
+      return [...kept, id];
+    });
   }
 
   function setBonusScore(k: AbilityKey, next: number) {
@@ -341,6 +354,8 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     // A brand-new hunter starts with the class + background starting kit
     // (real inventory items + starting gold). Edits keep what's carried.
     const kit = creating ? startingKit(klass, bg) : null;
+    const savedAddons = addonIds.slice(0, maxAddons);
+    const savedStuds = studdedIds.filter((id) => savedAddons.includes(id));
     onSave({
       ...initial,
       name: name.trim(),
@@ -363,8 +378,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       // CLEARS a previously stored feat under setDoc merge semantics.
       feat: bg?.feat ?? null,
       mainArmorId,
-      addonArmorIds: addonIds.slice(0, maxAddons),
-      studdedAddons: Math.min(studded, studdedMax),
+      addonArmorIds: savedAddons,
+      studdedAddonIds: savedStuds,
+      // Legacy mirror (= the count) so stale cached PWA clients running the
+      // old numeric math still compute the right AC and weight.
+      studdedAddons: savedStuds.length,
       extraArmorIds: extraIds,
       skillProficiencies: allSkills,
       // Untouched ability scores round-trip verbatim — never re-derived, so
@@ -617,7 +635,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                   const trimmed = addonIds.slice(0, maxAddonPieces(nextMain));
                   setMainArmorId(nextMain);
                   setAddonIds(trimmed);
-                  setStudded((s) => Math.min(s, Math.min(5, trimmed.length)));
+                  setStuddedIds((s) => s.filter((id) => trimmed.includes(id)));
                 }}
               >
                 <option value="">Unarmored (AC 10 + Dex)</option>
@@ -658,17 +676,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
             </div>
 
             {addonIds.length > 0 && (
-              <div style={{ marginTop: 12, paddingTop: 10, borderTop: "1px solid var(--border)" }}>
-                <div className="row between" style={{ gap: 8 }}>
-                  <div style={{ minWidth: 0 }}>
-                    <span style={{ fontWeight: 600 }}>Studs upgrade</span>
-                    <div className="faint" style={{ fontSize: "0.74rem" }}>
-                      +3 lb per studded piece · one +1 AC, five +2 AC · disadvantage on Stealth
-                    </div>
-                  </div>
-                  <Stepper label="pieces" value={Math.min(studded, studdedMax)} min={0} max={studdedMax} onChange={setStudded} />
-                </div>
-              </div>
+              <StudsPanel addonIds={addonIds} studdedIds={studdedIds} onToggle={toggleStudded} />
             )}
           </div>
 
@@ -676,18 +684,26 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
             <p className="eyebrow">Extras</p>
             <h3 style={{ marginBottom: 6 }}>Hats, scarves &amp; gloves</h3>
             <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-              No AC — but they hide what the blood is doing to you.
+              No AC — but they hide what the blood is doing to you. One per
+              subcategory: picking a second hat swaps the first.
             </p>
-            <div className="stack" style={{ gap: 8 }}>
-              {EXTRA_ARMOR.map((a) => (
-                <SelectCard
-                  key={a.id}
-                  selected={extraIds.includes(a.id)}
-                  onClick={() => toggleExtra(a.id)}
-                  title={a.name}
-                  meta={`${a.weightLb} lb`}
-                  sub={a.special}
-                />
+            <div className="stack" style={{ gap: 14 }}>
+              {EXTRA_SUBCATEGORIES.map((sub) => (
+                <div key={sub}>
+                  <p className="eyebrow" style={{ marginBottom: 6 }}>{sub}</p>
+                  <div className="stack" style={{ gap: 8 }}>
+                    {EXTRA_ARMOR.filter((a) => a.subcategory === sub).map((a) => (
+                      <SelectCard
+                        key={a.id}
+                        selected={extraIds.includes(a.id)}
+                        onClick={() => toggleExtra(a.id)}
+                        title={a.name}
+                        meta={`${a.weightLb} lb`}
+                        sub={a.special}
+                      />
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </div>
@@ -700,7 +716,7 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
               <Derived label="Studs" value={formatModifier(ac.studBonus)} />
               <Derived label="Dex" value={formatModifier(ac.dexApplied)} />
               <Derived label="Total AC" value={ac.total} />
-              <Derived label="Worn weight" value={`${wornArmorWeight({ mainArmorId, addonArmorIds: addonIds, studdedAddons: Math.min(studded, studdedMax), extraArmorIds: extraIds })} lb`} />
+              <Derived label="Worn weight" value={`${wornArmorWeight({ mainArmorId, addonArmorIds: addonIds, studdedAddonIds: studdedIds, extraArmorIds: extraIds })} lb`} />
             </div>
             <p className="faint" style={{ fontSize: "0.82rem", margin: "8px 0 0" }}>{ac.category}: {ac.dexRule}</p>
           </div>

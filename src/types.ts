@@ -174,6 +174,10 @@ export type ArmorCategory =
   | "Armor Upgrade"
   | "Extra";
 
+/** Extras subcategories (handbook Armor Part 2) — a hunter may wear only ONE
+ * Extra per subcategory (one hat, one scarf, …). */
+export type ExtraSubcategory = "Head Gear" | "Scarf" | "Gloves" | "Boots";
+
 export interface ArmorPiece {
   id: string;
   name: string;
@@ -184,6 +188,8 @@ export interface ArmorPiece {
   acValue: number;
   weightLb: number;
   special: string;
+  /** Extras only: the one-per-subcategory slot this piece occupies. */
+  subcategory?: ExtraSubcategory;
 }
 
 export interface HandbookSection {
@@ -527,8 +533,12 @@ export interface HunterCard {
   mainArmorId: string | null;
   /** Worn Add-on Armor piece ids (max five; a Balanced Fit main allows one more). */
   addonArmorIds?: string[];
-  /** How many worn Add-on pieces carry the Studs upgrade (1–4 → +1 AC, 5 → +2). */
+  /** @deprecated Legacy studded-piece COUNT — normalized into `studdedAddonIds`
+   * on load and mirrored (= its length) on every save for stale clients. */
   studdedAddons?: number;
+  /** Worn Add-on piece ids carrying the Studs upgrade (≥1 → +1 AC, 5 → +2 AC;
+   * +3 lb each). Replaces the legacy `studdedAddons` count. */
+  studdedAddonIds?: string[];
   /** Worn Extras (hats, scarves, gloves — AC 0 flavour/utility). */
   extraArmorIds?: string[];
   /** Current hit points during play (defaults to max when unset). */
