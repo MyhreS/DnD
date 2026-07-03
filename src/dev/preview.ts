@@ -270,6 +270,8 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     ownerUid: uid,
     ownerEmail: "preview@local.dev",
     ownerName: "Preview Hunter",
+    // In the sample campaign — the DM board and "play as" list filter on this.
+    campaignId: "preview-campaign",
     name: "Eileen the Crow",
     classId: "scout",
     subclassId: "marksman",

@@ -191,7 +191,7 @@ export const HANDBOOK: HandbookChapter[] = [
       {
         heading: "Transformation Level",
         body: [
-          "Your Transformation Level is a number from 0–10 that shows how far your blood has shifted. When you gain 1 Transformation Level, increase the level by 1, then roll 1d20 on the Transformation Table using your NEW level. The app's tracker rolls for you.",
+          "Your Transformation Level is a number from 0–10 that shows how far your blood has shifted. When you gain 1 Transformation Level, increase the level by 1, then roll 1d20 on the Transformation Table using your NEW level. The roll happens physically at the table; your DM records your level and any result on your hunter card.",
           "Not every result is a Transformation. Nothing Happens is nothing. Blood Lust is a compulsion, not a Transformation. Lost is a special catastrophic result that counts as a Transformation — what it means is between you and the DM.",
         ],
       },
