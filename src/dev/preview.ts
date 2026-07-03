@@ -305,7 +305,6 @@ export function previewCard(uid: string): import("@/types").HunterCard {
       { itemId: "bandolier", qty: 1 },
     ],
     notes: "Hunts the beasts that were once hunters.",
-    campaignId: "preview-campaign",
     createdAt: now,
     updatedAt: now,
   };
