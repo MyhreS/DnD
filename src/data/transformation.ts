@@ -1,11 +1,14 @@
-// The Transformation Table — resources/pdf/appendices/"Transformation Table
-// Final Version.pdf" (mirrored in resources/master.json → `transformation`).
+// Transformation results — resources/pdf/appendices/"Transformation Table
+// Final Version.pdf" (the full d20 table lives in resources/master.json →
+// `transformation`; the app deliberately does NOT roll it).
 //
 // A hunter's Transformation Level runs 0–10. When you GAIN a level you first
-// increase the level, then roll 1d20 on the table using the NEW level. Not
-// every result is a Transformation: "Nothing Happens" is nothing, "Blood Lust"
-// is a compulsion, and "Lost" is a catastrophic result whose meaning is a DM
-// secret — the app must never explain it.
+// increase the level, then roll 1d20 on the table using the NEW level — the
+// roll happens PHYSICALLY at the table, and the DM records the level and any
+// persistent result on the hunter card. Not every result is a Transformation:
+// "Nothing Happens" is nothing, "Blood Lust" is a compulsion, and "Lost" is a
+// catastrophic result whose meaning is a DM secret — the app must never
+// explain it.
 
 export type TransformationKind = "none" | "compulsion" | "transformation" | "catastrophic";
 
@@ -71,51 +74,3 @@ export const TRANSFORMATION_RESULTS: Record<string, TransformationResult> = {
     text: "Something in your blood gives way. Tell your DM — they know what happens now.",
   },
 };
-
-// Rows: d20 roll (1–20) → result key per Transformation Level 1–10.
-const NH = "nothing";
-const BL = "bloodLust";
-const MA = "mutatedArm";
-const BF = "bloodFangs";
-const DE = "dreadbloodEyes";
-const DR = "dreadbloodEars";
-const LO = "lost";
-
-export const TRANSFORMATION_TABLE: Record<number, string[]> = {
-  1: [BL, BL, LO, LO, LO, LO, LO, LO, LO, LO],
-  2: [MA, BL, BL, LO, LO, LO, LO, LO, LO, LO],
-  3: [BF, MA, BL, BL, LO, LO, LO, LO, LO, LO],
-  4: [DE, BF, BL, BL, BL, LO, LO, LO, LO, LO],
-  5: [DR, DE, MA, BL, BL, BL, LO, LO, LO, LO],
-  6: [NH, DE, MA, BL, BL, BL, BL, LO, LO, LO],
-  7: [NH, DR, BF, MA, BL, BL, BL, BL, LO, LO],
-  8: [NH, DR, BF, MA, MA, BL, BL, BL, LO, LO],
-  9: [NH, NH, DE, BF, MA, MA, BL, BL, BL, LO],
-  10: [NH, NH, DE, BF, MA, MA, MA, MA, MA, MA],
-  11: [NH, NH, DR, DE, BF, MA, MA, MA, MA, MA],
-  12: [NH, NH, DR, DE, BF, MA, MA, MA, MA, MA],
-  13: [NH, NH, NH, DR, BF, BF, MA, MA, MA, MA],
-  14: [NH, NH, NH, DR, DE, BF, MA, MA, MA, MA],
-  15: [NH, NH, NH, NH, DE, BF, BF, BF, BF, BF],
-  16: [NH, NH, NH, NH, DR, DE, BF, BF, BF, BF],
-  17: [NH, NH, NH, NH, DR, DE, BF, BF, BF, BF],
-  18: [NH, NH, NH, NH, NH, DR, BF, BF, BF, BF],
-  19: [NH, NH, NH, NH, NH, DR, DE, DE, DE, DE],
-  20: [NH, NH, NH, NH, NH, NH, DR, DR, DR, DR],
-};
-
-/** Look up the table: a d20 roll against a Transformation Level (1–10). */
-export function transformationResult(roll: number, level: number): TransformationResult {
-  const row = TRANSFORMATION_TABLE[Math.max(1, Math.min(20, Math.round(roll)))];
-  const col = Math.max(1, Math.min(10, Math.round(level))) - 1;
-  return TRANSFORMATION_RESULTS[row[col]];
-}
-
-/** Gain a Transformation Level: roll 1d20 against the NEW level. Runtime-only. */
-export function rollTransformation(newLevel: number): {
-  roll: number;
-  result: TransformationResult;
-} {
-  const roll = Math.floor(Math.random() * 20) + 1;
-  return { roll, result: transformationResult(roll, newLevel) };
-}

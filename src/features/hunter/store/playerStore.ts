@@ -11,6 +11,13 @@ function pick(chars: HunterCard[], selId: string | null): HunterCard | null {
   return chars.find((c) => c.id === selId) ?? chars[0] ?? null;
 }
 
+/** Stable chip order: oldest-created first (id tie-break). Applied identically
+ * to the snapshot callback and save()'s upsert so saving NEVER reorders the
+ * character switcher — a new hunter simply lands last, next to "+ New hunter".
+ * Client-side on purpose: a Firestore orderBy would drop docs missing the field. */
+const byCreation = (a: HunterCard, b: HunterCard) =>
+  (a.createdAt ?? 0) - (b.createdAt ?? 0) || a.id.localeCompare(b.id);
+
 interface PlayerState {
   /** All characters the signed-in user owns. */
   characters: HunterCard[];
@@ -53,9 +60,10 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     const unsub = subscribeMyCharacters(
       uid,
       (cards) => {
+        const sorted = [...cards].sort(byCreation);
         const stored = localStorage.getItem(SEL_KEY);
-        const selId = cards.some((c) => c.id === stored) ? stored : (cards[0]?.id ?? null);
-        set({ characters: cards, selectedId: selId, card: pick(cards, selId), status: "loaded" });
+        const selId = sorted.some((c) => c.id === stored) ? stored : (sorted[0]?.id ?? null);
+        set({ characters: sorted, selectedId: selId, card: pick(sorted, selId), status: "loaded" });
       },
       () => set({ status: "error", error: "Could not load your characters." }),
     );
@@ -75,7 +83,7 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
   save: async (card: HunterCard) => {
     const toSave = { ...card, updatedAt: Date.now() };
     const upsert = (s: PlayerState) => {
-      const characters = [...s.characters.filter((c) => c.id !== toSave.id), toSave];
+      const characters = [...s.characters.filter((c) => c.id !== toSave.id), toSave].sort(byCreation);
       localStorage.setItem(SEL_KEY, toSave.id);
       return { characters, selectedId: toSave.id, card: toSave };
     };

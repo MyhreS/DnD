@@ -61,6 +61,17 @@ service cloud.firestore {
     // Any signed-in user can view character sheets. You write your own; the DM of
     // the campaign a hunter is currently in can manage it (confirm death/recover).
     match /characters/{id} {
+      // Transformation is DM-owned: gains are rolled physically at the table and
+      // recorded by the DM. The owner may only ever REDUCE transformationLevel
+      // (rests) and only CLEAR activeTransformations — never raise or add.
+      function ownerTransformationOk() {
+        let changed = request.resource.data.diff(resource.data).affectedKeys();
+        return (!changed.hasAny(['transformationLevel'])
+            || request.resource.data.get('transformationLevel', 0) <= resource.data.get('transformationLevel', 0))
+          && (!changed.hasAny(['activeTransformations'])
+            || request.resource.data.get('activeTransformations', []).size() == 0);
+      }
+
       allow read: if isUser();
       // You create your own; a campaign's DM may also author a hunter bound to
       // their campaign, but only for an existing MEMBER of it (a real player or
@@ -71,7 +82,11 @@ service cloud.firestore {
             && isCampaignDM(request.resource.data.campaignId)
             && exists(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId)/members/$(request.resource.data.ownerUid)))
       );
-      allow update, delete: if isUser() && (
+      allow update: if isUser() && (
+        (resource.data.ownerUid == request.auth.uid && ownerTransformationOk())
+        || (resource.data.campaignId != null && isCampaignDM(resource.data.campaignId))
+      );
+      allow delete: if isUser() && (
         resource.data.ownerUid == request.auth.uid
         || (resource.data.campaignId != null && isCampaignDM(resource.data.campaignId))
       );
