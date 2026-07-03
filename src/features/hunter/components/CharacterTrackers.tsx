@@ -1,13 +1,15 @@
 import { getClass } from "@/data/classes";
 import { maxHp, maxSanity } from "@/lib/character";
 import { TransformationStatus, TransformationEditor } from "./TransformationPanel";
-import { usePlayerStore } from "../store/playerStore";
+import { patchCharacter } from "@/api/players";
 import type { HunterCard } from "@/types";
 
 /** Live, editable play trackers: HP, Sanity (with derived Madness + the Insane
  * state), Transformation (read-only for players — rolled physically at the
  * table and recorded by the DM; dmMode gets the editor), and Blood Tinge
- * (spend-only for players — the DM grants it). Saved on change. */
+ * (spend-only for players — the DM grants it). Each edit is written as a
+ * MINIMAL partial patch (never the whole card), so a stale local snapshot can
+ * never clobber a concurrent DM write — insight, level, transformation, items. */
 export function CharacterTrackers({
   card,
   onPatch,
@@ -15,14 +17,13 @@ export function CharacterTrackers({
 }: {
   card: HunterCard;
   /** When provided (e.g. the DM playing as this hunter), edits route here
-   * instead of the owner's playerStore — so the owner's own selection isn't
-   * clobbered. */
+   * instead of the owner's own character doc — so the owner's own selection
+   * isn't clobbered. */
   onPatch?: (p: Partial<HunterCard>) => void;
   /** DM controls: may grant Blood Tinge and edit Transformation (players can
    * only spend / view). */
   dmMode?: boolean;
 }) {
-  const save = usePlayerStore((s) => s.save);
   const klass = getClass(card.classId);
   const hpMax = klass ? maxHp(klass, card.abilities, card.level) : 0;
   // Clamp the displayed value: a saved HP/Sanity can exceed a max that later
@@ -37,7 +38,9 @@ export function CharacterTrackers({
 
   function patch(p: Partial<HunterCard>) {
     if (onPatch) onPatch(p);
-    else void save({ ...card, ...p });
+    // Only the touched field(s) — the store's card refreshes via the Firestore
+    // onSnapshot echo (latency-compensated, effectively instant).
+    else void patchCharacter(card.id, p);
   }
 
   return (
