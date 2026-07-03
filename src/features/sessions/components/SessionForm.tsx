@@ -2,6 +2,7 @@ import { useState } from "react";
 import { createSession, updateSession, deleteSession } from "@/api/sessions";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { AsyncButton } from "@/components/AsyncButton";
+import { ModalBackdrop } from "@/components/ModalBackdrop";
 import type { SessionEvent } from "@/types";
 
 // Datetime helpers for <input type="datetime-local"> (no seconds/zone).
@@ -60,8 +61,8 @@ export function SessionForm({
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <ModalBackdrop label={session ? "Edit session" : "New session"} onDismiss={onClose}>
+      <div className="modal">
         <h2>{session ? "Edit session" : "New session"}</h2>
         <div className="field">
           <label htmlFor="s-title">Title</label>
@@ -92,6 +93,6 @@ export function SessionForm({
           </AsyncButton>
         )}
       </div>
-    </div>
+    </ModalBackdrop>
   );
 }
