@@ -536,12 +536,14 @@ export interface HunterCard {
   /** Current Sanity during play (defaults to max when unset). Madness is the
    * complement: madness = maxSanity − sanity. */
   sanity?: number;
-  /** Transformation Level 0–10. Gaining a level rolls 1d20 on the Transformation
-   * Table (using the NEW level). Short Rest −1 (+1 more on a DC 13 CON (Grit)
-   * check) and Long Rest → 0 — both also clear all active Transformations. */
+  /** Transformation Level 0–10. Gains are rolled physically at the table (1d20
+   * on the Transformation Table at the NEW level) and recorded by the DM — the
+   * app never rolls. Short Rest −1 (+1 more on a DC 13 CON (Grit) check) and
+   * Long Rest → 0 — every reduction also clears all active Transformations. */
   transformationLevel?: number;
-  /** Active Transformation result keys (see src/data/transformation.ts), gained
-   * from table rolls. Cleared whenever the Transformation Level is reduced. */
+  /** Active Transformation result keys (see src/data/transformation.ts),
+   * recorded by the DM from physical table rolls (duplicates allowed). Cleared
+   * whenever the Transformation Level is reduced. */
   activeTransformations?: string[];
   /** Insight — the rulebook's XP currency, awarded by the DM. Crossing a
    * threshold only raises `level` after a Long Rest (see levelForInsight). */

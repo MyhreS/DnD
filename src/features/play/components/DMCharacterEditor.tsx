@@ -1,6 +1,7 @@
 import { getClass } from "@/data/classes";
 import { maxHp, maxSanity, INSIGHT_THRESHOLDS } from "@/lib/character";
 import { InventoryPanel } from "@/features/hunter/components/InventoryPanel";
+import { TransformationEditor } from "@/features/hunter/components/TransformationPanel";
 import { useCharactersStore } from "../store/charactersStore";
 import type { HunterCard } from "@/types";
 
@@ -16,7 +17,6 @@ export function DMCharacterEditor({ card }: { card: HunterCard }) {
   const sanMax = klass ? maxSanity(klass, card.abilities, card.level) : 0;
   const hp = Math.min(hpMax, card.currentHp ?? hpMax);
   const san = Math.min(sanMax, card.sanity ?? sanMax);
-  const transform = card.transformationLevel ?? 0;
 
   /** A direct DM level grant. Raising keeps Insight at least at the new
    * level's threshold (so "N to next level" stays sensible) and arms the
@@ -53,16 +53,7 @@ export function DMCharacterEditor({ card }: { card: HunterCard }) {
         sub={`/ ${sanMax} · Madness ${Math.max(0, sanMax - san)}`}
         onChange={(v) => dmPatch(card.id, { sanity: clamp(0, sanMax, v) })}
       />
-      <Stepper
-        label="Transformation"
-        value={transform}
-        onChange={(v) =>
-          dmPatch(card.id, {
-            transformationLevel: clamp(0, 10, v),
-            ...(v < transform ? { activeTransformations: [] } : null),
-          })
-        }
-      />
+      <TransformationEditor card={card} onPatch={(p) => dmPatch(card.id, p)} divider="top" />
       <Stepper label="Level" value={card.level} onChange={setLevel} />
       <div className="row between" style={{ padding: "6px 0", borderTop: "1px solid var(--border)", gap: 8 }}>
         <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>Blood Tinge</span>

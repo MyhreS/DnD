@@ -1,17 +1,13 @@
-import { useState } from "react";
 import { getClass } from "@/data/classes";
 import { maxHp, maxSanity } from "@/lib/character";
-import {
-  TRANSFORMATION_RESULTS,
-  rollTransformation,
-  type TransformationResult,
-} from "@/data/transformation";
+import { TransformationStatus, TransformationEditor } from "./TransformationPanel";
 import { usePlayerStore } from "../store/playerStore";
 import type { HunterCard } from "@/types";
 
 /** Live, editable play trackers: HP, Sanity (with derived Madness + the Insane
- * state), Transformation (rolls the Transformation Table on a gain), and Blood
- * Tinge (spend-only for players — the DM grants it). Saved on change. */
+ * state), Transformation (read-only for players — rolled physically at the
+ * table and recorded by the DM; dmMode gets the editor), and Blood Tinge
+ * (spend-only for players — the DM grants it). Saved on change. */
 export function CharacterTrackers({
   card,
   onPatch,
@@ -22,11 +18,11 @@ export function CharacterTrackers({
    * instead of the owner's playerStore — so the owner's own selection isn't
    * clobbered. */
   onPatch?: (p: Partial<HunterCard>) => void;
-  /** DM controls: may grant Blood Tinge (players can only spend it). */
+  /** DM controls: may grant Blood Tinge and edit Transformation (players can
+   * only spend / view). */
   dmMode?: boolean;
 }) {
   const save = usePlayerStore((s) => s.save);
-  const [lastRoll, setLastRoll] = useState<{ roll: number; result: TransformationResult } | null>(null);
   const klass = getClass(card.classId);
   const hpMax = klass ? maxHp(klass, card.abilities, card.level) : 0;
   // Clamp the displayed value: a saved HP/Sanity can exceed a max that later
@@ -38,32 +34,10 @@ export function CharacterTrackers({
   // Madness has reached Max Sanity — the hunter is Insane. What that MEANS
   // stays at the table: the app only ever shows the state itself.
   const insane = sanMax > 0 && madness >= sanMax;
-  const transformation = card.transformationLevel ?? 0;
-  const active = (card.activeTransformations ?? [])
-    .map((k) => TRANSFORMATION_RESULTS[k])
-    .filter(Boolean);
 
   function patch(p: Partial<HunterCard>) {
     if (onPatch) onPatch(p);
     else void save({ ...card, ...p });
-  }
-
-  /** Gaining a Transformation Level rolls 1d20 on the table at the NEW level;
-   * any reduction sheds every active Transformation (rest/unconscious rules). */
-  function setTransformation(v: number) {
-    const next = Math.max(0, Math.min(10, v));
-    if (next === transformation) return;
-    if (next < transformation) {
-      setLastRoll(null);
-      patch({ transformationLevel: next, activeTransformations: [] });
-      return;
-    }
-    const outcome = rollTransformation(next);
-    setLastRoll(outcome);
-    const gained = outcome.result.isTransformation
-      ? [...(card.activeTransformations ?? []), outcome.result.key]
-      : card.activeTransformations ?? [];
-    patch({ transformationLevel: next, activeTransformations: gained });
   }
 
   return (
@@ -86,36 +60,10 @@ export function CharacterTrackers({
         color="#7c5cff"
         onChange={(v) => patch({ sanity: Math.max(0, Math.min(sanMax, v)) })}
       />
-      <Tracker
-        label="Transformation"
-        sub="Gaining a level rolls the Table · rests reduce it"
-        value={transformation}
-        max={10}
-        color="#c9962f"
-        onChange={setTransformation}
-      />
-
-      {lastRoll && (
-        <div
-          className="card"
-          style={{ marginTop: 8, padding: 10, borderColor: lastRoll.result.key === "lost" ? "var(--blood-bright)" : "var(--gold-dim)" }}
-        >
-          <div className="row between">
-            <span style={{ fontWeight: 600, fontSize: "0.9rem" }}>
-              {lastRoll.result.name}
-            </span>
-            <span className="faint" style={{ flex: "none", fontSize: "0.76rem" }}>d20 → {lastRoll.roll}</span>
-          </div>
-          <p className="muted" style={{ margin: "4px 0 0", fontSize: "0.82rem" }}>{lastRoll.result.text}</p>
-        </div>
-      )}
-
-      {active.length > 0 && (
-        <div className="chip-row" style={{ marginTop: 8 }}>
-          {active.map((t, i) => (
-            <span key={`${t.key}-${i}`} className="chip" style={{ fontSize: "0.72rem" }}>{t.name}</span>
-          ))}
-        </div>
+      {dmMode ? (
+        <TransformationEditor card={card} onPatch={patch} />
+      ) : (
+        <TransformationStatus card={card} />
       )}
 
       <div className="row between" style={{ padding: "10px 0 2px" }}>

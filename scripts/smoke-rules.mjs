@@ -158,6 +158,58 @@ await step("Player removes the monster from battle (delete)", async () => {
   await deleteDoc(doc(pl.db, "games", gameId, "combatants", monsterId));
 });
 
+// --- Transformation: DM-recorded; owners may only REDUCE the level / CLEAR the
+// list (rests). The NEGATIVE cases assert the new owner-write constraints and
+// only hold once the updated firestore.rules are DEPLOYED (rules ship on merge,
+// never on preview channels). Until then they are skipped — after
+// `bun run deploy:rules`, run with SMOKE_NEW_RULES=1 to enable them.
+const newRules = process.env.SMOKE_NEW_RULES === "1";
+const plCharId = `smoke-${plUid}`;
+await step("Player creates own character (with Transformation)", async () => {
+  await setDoc(doc(pl.db, "characters", plCharId), {
+    id: plCharId, ownerUid: plUid, ownerEmail: "p@x", ownerName: "Agent Player",
+    name: "Player Hunter", classId: "stalker", background: "", level: 1,
+    abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+    skillProficiencies: [], mainArmorId: null, campaignId, notes: "",
+    transformationLevel: 2, activeTransformations: ["mutatedArm"],
+    createdAt: Date.now(), updatedAt: Date.now(),
+  });
+});
+if (newRules) {
+  await step("Player cannot raise own Transformation Level (negative)", async () => {
+    let denied = false;
+    try {
+      await updateDoc(doc(pl.db, "characters", plCharId), { transformationLevel: 3 });
+    } catch { denied = true; }
+    if (!denied) throw new Error("player could raise their own transformationLevel (DM-only)");
+  });
+  await step("Player cannot add a Transformation result (negative)", async () => {
+    let denied = false;
+    try {
+      await updateDoc(doc(pl.db, "characters", plCharId), { activeTransformations: ["mutatedArm", "bloodFangs"] });
+    } catch { denied = true; }
+    if (!denied) throw new Error("player could add to activeTransformations (DM-only)");
+  });
+} else {
+  results.push("skip Transformation negatives — deploy the new rules, then rerun with SMOKE_NEW_RULES=1");
+}
+await step("Player rest-reduces own Transformation (allowed)", async () => {
+  await updateDoc(doc(pl.db, "characters", plCharId), { transformationLevel: 1, activeTransformations: [] });
+});
+await step("DM records Transformation on the player's card (allowed)", async () => {
+  await updateDoc(doc(dm.db, "characters", plCharId), {
+    transformationLevel: 4, activeTransformations: ["mutatedArm", "lost"],
+  });
+});
+await step("Player full-card save with unchanged Transformation (allowed)", async () => {
+  // Mirrors playerStore.save: a full-card setDoc-merge where the transformation
+  // fields carry the SAME values must stay writable for the owner.
+  await setDoc(doc(pl.db, "characters", plCharId), {
+    notes: "smoke full save", transformationLevel: 4, activeTransformations: ["mutatedArm", "lost"],
+    updatedAt: Date.now(),
+  }, { merge: true });
+});
+
 // Cleanup (admin bypass, best-effort).
 const adb = adminGetFirestore(admin);
 async function del(path) { try { await adb.doc(path).delete(); } catch { /* best-effort */ } }
@@ -174,6 +226,7 @@ await step("cleanup", async () => {
     await del(`campaigns/${campaignId}`);
   }
   await del(`characters/smoke-${dmUid}`);
+  await del(`characters/smoke-${plUid}`);
 });
 
 console.log(results.join("\n"));
