@@ -285,7 +285,8 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     skillProficiencies: ["Stealth", "Perception", "Survival"],
     mainArmorId: "hunter-leather-coat",
     addonArmorIds: ["leather-pauldron-right", "leather-vambrace-right"],
-    studdedAddons: 1,
+    studdedAddonIds: ["leather-pauldron-right"],
+    studdedAddons: 1, // legacy mirror
     extraArmorIds: ["tricorn"],
     currentHp: 22,
     sanity: 9,

@@ -1,4 +1,4 @@
-import type { ArmorPiece } from "@/types";
+import type { ArmorPiece, ExtraSubcategory } from "@/types";
 
 // Armory — Player's Handbook, Chapter 1 (Step 4 / Armor Parts 1 & 2).
 // `acValue` is the numeric contribution used by the AC calculator:
@@ -138,11 +138,12 @@ export const ARMOR: ArmorPiece[] = [
       "Added to Add-on Armor pieces (+3 lb. each). One studded piece grants +1 AC; five studded pieces grant +2 AC. While wearing studded armor you have disadvantage on Dexterity (Stealth) checks to hide or move silently.",
   },
 
-  // --- Extras (flavour / utility, AC 0) ---
+  // --- Extras (flavour / utility, AC 0; only ONE worn per subcategory) ---
   {
     id: "tricorn",
     name: "Tricorn",
     category: "Extra",
+    subcategory: "Head Gear",
     ac: "0",
     acValue: 0,
     weightLb: 1,
@@ -152,6 +153,7 @@ export const ARMOR: ArmorPiece[] = [
     id: "cavalier-hat",
     name: "Cavalier Hat",
     category: "Extra",
+    subcategory: "Head Gear",
     ac: "0",
     acValue: 0,
     weightLb: 1,
@@ -161,6 +163,7 @@ export const ARMOR: ArmorPiece[] = [
     id: "cowl",
     name: "Cowl",
     category: "Extra",
+    subcategory: "Head Gear",
     ac: "0",
     acValue: 0,
     weightLb: 1,
@@ -170,6 +173,7 @@ export const ARMOR: ArmorPiece[] = [
     id: "wide-brim-hat",
     name: "Wide Brim Hat",
     category: "Extra",
+    subcategory: "Head Gear",
     ac: "0",
     acValue: 0,
     weightLb: 1,
@@ -179,6 +183,7 @@ export const ARMOR: ArmorPiece[] = [
     id: "small-scarf",
     name: "Small Scarf",
     category: "Extra",
+    subcategory: "Scarf",
     ac: "0",
     acValue: 0,
     weightLb: 1,
@@ -189,6 +194,7 @@ export const ARMOR: ArmorPiece[] = [
     id: "large-scarf",
     name: "Large Scarf",
     category: "Extra",
+    subcategory: "Scarf",
     ac: "0",
     acValue: 0,
     weightLb: 2,
@@ -199,6 +205,7 @@ export const ARMOR: ArmorPiece[] = [
     id: "leather-gloves",
     name: "Leather Gloves",
     category: "Extra",
+    subcategory: "Gloves",
     ac: "0",
     acValue: 0,
     weightLb: 2,
@@ -209,6 +216,7 @@ export const ARMOR: ArmorPiece[] = [
     id: "leather-boots",
     name: "Leather Boots",
     category: "Extra",
+    subcategory: "Boots",
     ac: "0",
     acValue: 0,
     weightLb: 2,
@@ -219,6 +227,14 @@ export const ARMOR: ArmorPiece[] = [
 export const MAIN_ARMOR = ARMOR.filter((a) => a.category === "Main Armor");
 export const ADDON_ARMOR = ARMOR.filter((a) => a.category === "Add-on Armor");
 export const EXTRA_ARMOR = ARMOR.filter((a) => a.category === "Extra");
+
+/** The Extras subcategories in data order — you may wear only ONE Extra per
+ * subcategory (handbook Armor Part 2). Drives the builder's grouped picker. */
+export const EXTRA_SUBCATEGORIES: ExtraSubcategory[] = Array.from(
+  new Set(
+    EXTRA_ARMOR.map((a) => a.subcategory).filter((s): s is ExtraSubcategory => s !== undefined),
+  ),
+);
 
 export const ARMOR_BY_ID: Record<string, ArmorPiece> = Object.fromEntries(
   ARMOR.map((a) => [a.id, a]),

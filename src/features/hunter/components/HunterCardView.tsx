@@ -14,6 +14,7 @@ import {
   initiativeMod,
   earnedLevel,
   insightToNext,
+  studdedAddonIdsOf,
   subclassDisplayName,
 } from "@/lib/character";
 import { CreatureSprite } from "@/data/CreatureSprite";
@@ -42,7 +43,7 @@ export function HunterCardView({
   const armor = card.mainArmorId ? ARMOR_BY_ID[card.mainArmorId] : null;
   const wornAddons = (card.addonArmorIds ?? []).map((id) => ARMOR_BY_ID[id]).filter(Boolean);
   const wornExtras = (card.extraArmorIds ?? []).map((id) => ARMOR_BY_ID[id]).filter(Boolean);
-  const studded = card.studdedAddons ?? 0;
+  const studdedIds = studdedAddonIdsOf(card);
   const insight = card.insight ?? 0;
   const earned = earnedLevel(card);
   const nextLevel = insightToNext(card);
@@ -171,7 +172,20 @@ export function HunterCardView({
             value={wornAddons.map((a) => `${a.name} (${a.ac})`).join(", ")}
           />
         )}
-        {studded > 0 && <Detail label="Studs" value={`${studded} studded piece${studded > 1 ? "s" : ""} (+${studded >= 5 ? 2 : 1} AC)`} />}
+        {studdedIds.length > 0 && (
+          <>
+            <Detail
+              label="Studs"
+              value={`${studdedIds
+                .map((id) => ARMOR_BY_ID[id]?.name)
+                .filter(Boolean)
+                .join(", ")} (+${studdedIds.length >= 5 ? 2 : 1} AC)`}
+            />
+            <p className="faint" style={{ fontSize: "0.78rem", margin: "0 0 4px" }}>
+              Studded: disadvantage on Dexterity (Stealth) to hide or move silently.
+            </p>
+          </>
+        )}
         {wornExtras.length > 0 && (
           <Detail label="Extras" value={wornExtras.map((a) => a.name).join(", ")} />
         )}
