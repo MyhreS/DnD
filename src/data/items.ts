@@ -12,7 +12,11 @@ import { ARMOR } from "@/data/armor";
 //     scimitars, sickles, cleavers, lanterns, shovels, crowbars, tool belts,
 //     bandoliers, backpacks, hunting traps, books.
 //   Oversized     — great weapons, heavy crates, barrels, ladders, corpses.
-// Standard 5e weights are used as a guide. Hunter Rifle, Hunter Cleaver and
+// Weights, carrying categories and slot pins follow resources/master.json
+// (Weapons table, Hunter Gear table, Tools + Storage Items sections) — the
+// DM's source of truth; `scripts/verify-item-data.mjs` asserts the match.
+// Items with no master entry (Bedroll, Rations, …) use 5e weights as a guide.
+// Hunter Rifle, Hunter Cleaver and
 // Blood-drainer's Tools are flagged unique (the resources call them "unique
 // item"). Armor is folded in from src/data/armor.ts at the bottom.
 
@@ -139,7 +143,7 @@ export const ITEMS: Item[] = [
     name: "Thieves' Tools",
     category: "Tool",
     carry: "Insignificant",
-    weightLb: 2,
+    weightLb: 1,
   },
   {
     id: "navigators-tools",
@@ -164,7 +168,7 @@ export const ITEMS: Item[] = [
     name: "Rope",
     category: "Gear",
     carry: "Significant",
-    weightLb: 10,
+    weightLb: 5,
     note: "50 feet of hempen rope.",
   },
   {
@@ -257,8 +261,9 @@ export const ITEMS: Item[] = [
     id: "bell",
     name: "Bell",
     category: "Gear",
-    carry: "Significant",
-    weightLb: 1,
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "Rung as a Utilize action; heard up to 60 feet away.",
   },
   // `robe` (the Robe of the Deepcallers) now lives in src/data/armor.ts and is
   // folded in below — same item id, so legacy inventories keep resolving.
@@ -309,7 +314,7 @@ export const ITEMS: Item[] = [
     id: "manacles",
     name: "Manacles",
     category: "Gear",
-    carry: "Significant",
+    carry: "Insignificant",
     weightLb: 6,
     note: "Iron restraints for a Small or Medium creature.",
   },
