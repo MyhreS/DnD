@@ -304,6 +304,10 @@
     {
       "topic": "Class starting equipment",
       "note": "The handbook's Class Overview Part 1 defers equipment to 'See chapter 2'; the authoritative per-class equipment lives in classes[].overview.startingEquipment / coreTraits. Exact counts (blood vials, bullets, daggers, hunting traps) differ between the handbook overview, the Ch.2 Core Traits, and the standalone boards for every class."
+    },
+    {
+      "topic": "Hunter Cleaver — no weapon stats",
+      "note": "The weapons tables define no damage/properties for the Hunter Cleaver (unique Scout starting item). The app's weapon-damage table (issue #139) ships it with damage \"—\" and the note \"stats set by the DM\". Confirm the real stats with the DM and add a weapons row here when ruled."
     }
   ],
   "handbook": {
@@ -604,6 +608,7 @@
               },
               {
                 "title": "Armor Part 2 (Extras)",
+                "note": "DM ruling (issue #132, 2026-07-03): you may wear only ONE Extra per subcategory — one Head Gear, one Scarf, one pair of Gloves, one pair of Boots. Picking a second item of the same subcategory replaces the first.",
                 "columns": [
                   "Armor",
                   "Type",
@@ -7209,6 +7214,7 @@
     "title": "Transformation Table (Final Version)",
     "source": "resources/pdf/appendices/Transformation Table Final Version.pdf",
     "description": "The Catacombs & Starspawns Transformation system: a Transformation Level from 0-10 tracks how far a hunter’s blood has shifted. Gaining a Transformation Level means increasing the level by 1, then rolling 1d20 on the Transformation Table using the NEW level. Replaces the earlier simplified transformation rules.",
+    "recording": "DM ruling (issue #133, 2026-07-03): the 1d20 Transformation roll is made physically at the table, never by the companion app. Only the DM records Transformation Levels and the rolled result(s) — a hunter can carry more than one instance of the same Transformation. Players never raise their own level; they only reduce it through rests and other reduction rules (which shed ALL active Transformations).",
     "coreTerms": {
       "transformationLevel": "Your Transformation Level is the number from 0–10 that shows how far your blood has shifted. When you gain 1 Transformation Level, increase your Transformation Level by 1, then roll on the Transformation Table using your new Transformation Level.",
       "transformation": "A Transformation is a mutation result gained from the Transformation Table, such as Dreadblood Eyes, Dreadblood Ears, Blood Fangs, or Mutated Arm. These are active transformations and remain until a rule says you lose them.",
