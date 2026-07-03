@@ -4,12 +4,17 @@ import { getClass, getSubclass } from "@/data/classes";
 import { ARMOR_BY_ID } from "@/data/armor";
 import { SKILLS_BY_ABILITY } from "@/data/skills";
 import { RITE_BY_ID } from "@/data/rites";
-import { resolveInventory, groupByCarry, totalWeight, carryCondition } from "@/lib/inventory";
+import {
+  resolveInventory,
+  resolveStorage,
+  groupByCarry,
+  carryCondition,
+  totalCarriedWeight,
+} from "@/lib/inventory";
 import { ABILITIES, abilityModifier, formatModifier } from "@/data/abilities";
 import {
   maxHp,
   armorClassFor,
-  wornArmorWeight,
   maxSanity,
   proficiencyBonus,
   saveModifier,
@@ -190,13 +195,16 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
   );
   if (armor?.special) y = paragraph(doc, y, armor.special);
   {
-    const wt = Math.round((totalWeight(inv) + wornArmorWeight(card)) * 10) / 10;
+    const wornStorage = resolveStorage(card);
+    if (wornStorage.length) {
+      y = line(doc, y, "Storage worn", wornStorage.map((i) => i.name).join(", "));
+    }
+    const wt = totalCarriedWeight(card);
     const carry = carryCondition(card.abilities.str, wt);
     const delta = carry.speedDelta ? `  (speed ${carry.speedDelta > 0 ? "+" : ""}${carry.speedDelta} ft)` : "";
-    y = line(doc, y, "Carried weight", `${wt} lb (incl. worn armor) — ${carry.label}${delta}`);
+    y = line(doc, y, "Carried weight", `${wt} lb (incl. worn gear) — ${carry.label}${delta}`);
   }
   y = line(doc, y, "Coins", `${card.coins ?? 0} GP`);
-  if (klass?.startingEquipment.length) y = line(doc, y, "Starting kit", klass.startingEquipment.join(", "));
   y += 8;
 
   // --- Inventory ---

@@ -9,7 +9,7 @@ import { useHunterCard } from "../hooks/useHunterCard";
 import { HunterCardView } from "./HunterCardView";
 import { HunterListCard } from "./HunterListCard";
 import { CharacterTrackers } from "./CharacterTrackers";
-import { InventoryPanel } from "./InventoryPanel";
+import { InventorySection } from "./sheet/InventorySection";
 import { LevelUpModal } from "./LevelUpModal";
 import { patchCharacter } from "@/api/players";
 import { CardSkeleton } from "@/components/Skeleton";
@@ -53,7 +53,7 @@ export function CampaignHunterPage() {
                 <HunterCardView card={playing} onPatch={(p) => void dmPatch(playing.id, p)} />
               </div>
               <div className="no-print" style={{ marginTop: 14 }}>
-                <InventoryPanel card={playing} editable dmMode onPatch={(p) => void dmPatch(playing.id, p)} />
+                <InventorySection card={playing} dmMode onPatch={(p) => void dmPatch(playing.id, p)} />
               </div>
             </div>
           </div>
@@ -126,7 +126,7 @@ export function CampaignHunterPage() {
               <HunterCardView card={brought} onPatch={(p) => void patchCharacter(brought.id, p)} />
             </div>
             <div className="no-print" style={{ marginTop: 14 }}>
-              <InventoryPanel card={brought} editable />
+              <InventorySection card={brought} onPatch={(p) => void patchCharacter(brought.id, p)} />
             </div>
           </div>
         </div>

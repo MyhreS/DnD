@@ -4,8 +4,9 @@ import { ChevronIcon } from "@/components/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { CharacterTrackers } from "@/features/hunter/components/CharacterTrackers";
-import { InventoryPanel } from "@/features/hunter/components/InventoryPanel";
+import { InventorySection } from "@/features/hunter/components/sheet/InventorySection";
 import { AsyncButton } from "@/components/AsyncButton";
+import { patchCharacter } from "@/api/players";
 import { useGameStore } from "../store/gameStore";
 import { useLootStore } from "../store/lootStore";
 import { PhaseControl } from "./PhaseControl";
@@ -87,7 +88,11 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
           {/* key on phase so each rest event gets a fresh panel — resets the
               once-per-rest guard when the DM moves between phases. */}
           <RestPanel key={game.phase} card={card} phase={game.phase} location={game.location ?? "wild"} />
-          <InventoryPanel card={card} editable onDrop={(entry) => dropItem(entry, card, game.id)} />
+          <InventorySection
+            card={card}
+            onPatch={(p) => void patchCharacter(card.id, p)}
+            onDrop={(entry) => dropItem(entry, card, game.id)}
+          />
           <TradePanel game={game} participants={participants} card={card} />
         </>
       )}

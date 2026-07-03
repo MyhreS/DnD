@@ -1,6 +1,6 @@
 import { getClass } from "@/data/classes";
 import { maxHp, maxSanity, INSIGHT_THRESHOLDS } from "@/lib/character";
-import { InventoryPanel } from "@/features/hunter/components/InventoryPanel";
+import { InventorySection } from "@/features/hunter/components/sheet/InventorySection";
 import { TransformationEditor } from "@/features/hunter/components/TransformationPanel";
 import { useCharactersStore } from "../store/charactersStore";
 import type { HunterCard } from "@/types";
@@ -67,7 +67,7 @@ export function DMCharacterEditor({ card }: { card: HunterCard }) {
         </button>
       </div>
       <div style={{ marginTop: 8 }}>
-        <InventoryPanel card={card} editable dmMode onPatch={(p) => dmPatch(card.id, p)} />
+        <InventorySection card={card} dmMode onPatch={(p) => dmPatch(card.id, p)} />
       </div>
     </div>
   );

@@ -147,7 +147,8 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations. Reads as a hard-hitting brawler.",
+    special: "May hide face transformations.",
+    impression: "Reads as a hard-hitting brawler.",
   },
   {
     id: "cavalier-hat",
@@ -157,7 +158,8 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations. Reads as someone dexterous.",
+    special: "May hide face transformations.",
+    impression: "Reads as someone dexterous.",
   },
   {
     id: "cowl",
@@ -167,7 +169,8 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations. Reads as someone with old knowledge.",
+    special: "May hide face transformations.",
+    impression: "Reads as someone with old knowledge.",
   },
   {
     id: "wide-brim-hat",
@@ -177,7 +180,8 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations. Reads as a skilled marksman.",
+    special: "May hide face transformations.",
+    impression: "Reads as a skilled marksman.",
   },
   {
     id: "small-scarf",
@@ -222,6 +226,22 @@ export const ARMOR: ArmorPiece[] = [
     weightLb: 2,
     special: "Prevents barefoot penalties.",
   },
+  // The Robe of the Deepcallers is a UNIQUE item that "is also under the
+  // Equipment Category: Armor. You can equip this as any other Armor" (Unique
+  // Items). It reuses the legacy catalog item id `robe` so existing Deepcaller
+  // inventories keep resolving; being `unique`, it's never offered at creation.
+  {
+    id: "robe",
+    name: "Robe of the Deepcallers",
+    category: "Extra",
+    subcategory: "Robe",
+    ac: "0",
+    acValue: 0,
+    weightLb: 4,
+    special:
+      "If worn continuously since your previous Long Rest, add +2 to your Sanity Die roll when rolling it during a Long Rest.",
+    unique: true,
+  },
 ];
 
 export const MAIN_ARMOR = ARMOR.filter((a) => a.category === "Main Armor");
@@ -229,10 +249,13 @@ export const ADDON_ARMOR = ARMOR.filter((a) => a.category === "Add-on Armor");
 export const EXTRA_ARMOR = ARMOR.filter((a) => a.category === "Extra");
 
 /** The Extras subcategories in data order — you may wear only ONE Extra per
- * subcategory (handbook Armor Part 2). Drives the builder's grouped picker. */
+ * subcategory (handbook Armor Part 2). Drives the builder's grouped picker;
+ * unique pieces (the Robe) are found in play, never offered at creation. */
 export const EXTRA_SUBCATEGORIES: ExtraSubcategory[] = Array.from(
   new Set(
-    EXTRA_ARMOR.map((a) => a.subcategory).filter((s): s is ExtraSubcategory => s !== undefined),
+    EXTRA_ARMOR.filter((a) => !a.unique)
+      .map((a) => a.subcategory)
+      .filter((s): s is ExtraSubcategory => s !== undefined),
   ),
 );
 

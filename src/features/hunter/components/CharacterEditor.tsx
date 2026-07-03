@@ -718,7 +718,11 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
               <Derived label="Total AC" value={ac.total} />
               <Derived label="Worn weight" value={`${wornArmorWeight({ mainArmorId, addonArmorIds: addonIds, studdedAddonIds: studdedIds, extraArmorIds: extraIds })} lb`} />
             </div>
-            <p className="faint" style={{ fontSize: "0.82rem", margin: "8px 0 0" }}>{ac.category}: {ac.dexRule}</p>
+            <p className="faint" style={{ fontSize: "0.82rem", margin: "8px 0 0" }}>
+              <span className={ac.shieldArm ? "gold" : undefined}>{ac.shieldArm ? "☑" : "☐"} Shield Arm</span>
+              {" · "}
+              {ac.category}: {ac.dexRule}
+            </p>
           </div>
         </>
       )}

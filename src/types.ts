@@ -151,6 +151,10 @@ export type ItemCategory =
 /** Handbook carrying category (how a carried item occupies slots). */
 export type CarrySignificance = "Insignificant" | "Significant" | "Oversized";
 
+/** Where an item slot sits on the body (handbook "Check Your Item Slots").
+ * master.json's Bandolier "Front" renders as the sheet's "chest". */
+export type SlotLocation = "hand" | "back" | "chest" | "hip" | "ankle";
+
 export interface Item {
   id: string;
   name: string;
@@ -160,6 +164,21 @@ export interface Item {
   note?: string;
   /** Unique/named item from the resources (e.g. Hunter Rifle). */
   unique?: boolean;
+  /** Pinned slot location, e.g. Hunter Rifle = "Significant Item (back)". */
+  slotLocation?: SlotLocation;
+}
+
+/** Stats for a catalog weapon, from master.json's Weapons table. */
+export interface WeaponStats {
+  itemId: string;
+  category: "Simple" | "Martial";
+  kind: "Melee" | "Ranged";
+  /** Damage dice, e.g. "1d10". */
+  damage: string;
+  /** Damage type, e.g. "Piercing". */
+  damageType: string;
+  properties: string[];
+  mastery: string;
 }
 
 /** A line in a hunter's inventory: a catalog item id + how many. */
@@ -175,8 +194,9 @@ export type ArmorCategory =
   | "Extra";
 
 /** Extras subcategories (handbook Armor Part 2) — a hunter may wear only ONE
- * Extra per subcategory (one hat, one scarf, …). */
-export type ExtraSubcategory = "Head Gear" | "Scarf" | "Gloves" | "Boots";
+ * Extra per subcategory (one hat, one scarf, …). "Robe" covers the unique
+ * Robe of the Deepcallers, wearable "as any other Armor" per Unique Items. */
+export type ExtraSubcategory = "Head Gear" | "Scarf" | "Gloves" | "Boots" | "Robe";
 
 export interface ArmorPiece {
   id: string;
@@ -190,6 +210,10 @@ export interface ArmorPiece {
   special: string;
   /** Extras only: the one-per-subcategory slot this piece occupies. */
   subcategory?: ExtraSubcategory;
+  /** The "reads as …" line this piece gives off while worn (sheet Impressions). */
+  impression?: string;
+  /** Unique item (e.g. the Robe) — found in play, not offered at creation. */
+  unique?: boolean;
 }
 
 export interface HandbookSection {
@@ -566,6 +590,10 @@ export interface HunterCard {
   coins?: number;
   /** Carried items (catalog item id + quantity). */
   inventory?: InventoryEntry[];
+  /** WORN storage items (sack/backpack/bandolier/tool belt/…), by catalog item
+   * id. A worn storage item leaves `inventory` (like worn armor); its weight
+   * still counts. Missing on legacy docs → nothing equipped. */
+  equippedStorageIds?: string[];
   /** Player has hit 0 HP and confirmed death; awaiting the DM to confirm. */
   deathPending?: boolean;
   /** The campaign this hunter currently plays in (lets that campaign's DM

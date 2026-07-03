@@ -2,6 +2,7 @@ import type { AbilityKey, AbilityScores, HunterCard, HunterClass } from "@/types
 import { abilityModifier } from "@/data/abilities";
 import { acCategory, ARMOR_BY_ID } from "@/data/armor";
 import { skillAbility } from "@/data/skills";
+import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 
 export const DEFAULT_ABILITIES: AbilityScores = {
   str: 10,
@@ -107,6 +108,9 @@ export interface ArmorClassResult {
   studBonus: number;
   /** Base armor AC (main + add-ons + upgrades) — decides the Dex category. */
   baseArmorAc: number;
+  /** True when a pauldron + vambrace on the SAME arm complete a Shield Arm —
+   * always derived from the worn set, never persisted. */
+  shieldArm: boolean;
   category: string;
   dexRule: string;
   dexApplied: number;
@@ -155,14 +159,23 @@ function dedupeExtras(ids: string[]): string[] {
 /** Load-time normalization for character docs — applied ONCE, at the
  * api/players.ts read boundary, so every card in the app carries the current
  * shape: the legacy `studdedAddons` count becomes per-piece `studdedAddonIds`
- * (first-N worn add-ons; same AC and weight) and `extraArmorIds` is deduped to
- * one Extra per subcategory. Docs are not rewritten — the next save persists
- * the new shape (plus the legacy count mirror for stale clients). */
+ * (first-N worn add-ons; same AC and weight), `extraArmorIds` is deduped to
+ * one Extra per subcategory, and `equippedStorageIds` is filtered to known
+ * storage items (missing on legacy docs → nothing equipped). Docs are not
+ * rewritten — the next save persists the new shape (plus the legacy count
+ * mirror for stale clients). */
 export function normalizeCard(raw: HunterCard): HunterCard {
   return {
     ...raw,
     studdedAddonIds: studdedAddonIdsOf(raw),
     extraArmorIds: dedupeExtras(raw.extraArmorIds ?? []),
+    equippedStorageIds: Array.from(
+      new Set(
+        (Array.isArray(raw.equippedStorageIds) ? raw.equippedStorageIds : []).filter(
+          (id) => STORAGE_BY_ITEM_ID[id],
+        ),
+      ),
+    ),
   };
 }
 
@@ -173,11 +186,20 @@ export function maxAddonPieces(mainArmorId: string | null | undefined): number {
   return main?.special.startsWith("Balanced Fit") ? 6 : 5;
 }
 
-/** Add-on AC total with the handbook's rules: the Under Layer Jerkin only
- * counts beneath Main Armor, and a pauldron + vambrace on the SAME arm count
- * as one Shield Arm worth +2 total (only one Shield Arm may benefit). */
-function addonAcBonus(addonIds: string[], hasMain: boolean): number {
+/** A pauldron + vambrace worn on the SAME arm complete one Shield Arm
+ * (handbook Armor Types: the pair counts as +2 AC total; only one benefits). */
+export function hasShieldArm(addonIds: string[]): boolean {
   const worn = new Set(addonIds);
+  return (
+    (worn.has("leather-pauldron-right") && worn.has("leather-vambrace-right")) ||
+    (worn.has("leather-pauldron-left") && worn.has("leather-vambrace-left"))
+  );
+}
+
+/** Add-on AC total with the handbook's rules: the Under Layer Jerkin only
+ * counts beneath Main Armor, and a completed Shield Arm upgrades its
+ * pauldron+vambrace sum (+1) to +2. */
+function addonAcBonus(addonIds: string[], hasMain: boolean): number {
   let sum = 0;
   for (const id of addonIds) {
     const piece = ARMOR_BY_ID[id];
@@ -185,11 +207,7 @@ function addonAcBonus(addonIds: string[], hasMain: boolean): number {
     if (id === "under-layer-leather-jerkin" && !hasMain) continue;
     sum += piece.acValue;
   }
-  // One completed Shield Arm upgrades its pauldron+vambrace sum (+1) to +2.
-  const completeArm =
-    (worn.has("leather-pauldron-right") && worn.has("leather-vambrace-right")) ||
-    (worn.has("leather-pauldron-left") && worn.has("leather-vambrace-left"));
-  if (completeArm) sum += 1;
+  if (hasShieldArm(addonIds)) sum += 1;
   return sum;
 }
 
@@ -219,6 +237,7 @@ export function armorClass(
     addonBonus,
     studBonus,
     baseArmorAc,
+    shieldArm: hasShieldArm(worn),
     category: cat.label,
     dexRule: cat.dexRule,
     dexApplied,
@@ -351,6 +370,7 @@ export function emptyCard(params: {
     bloodTinge: false,
     preparedWhispers: [],
     coins: 0,
+    equippedStorageIds: [],
     notes: "",
     createdAt: now,
     updatedAt: now,

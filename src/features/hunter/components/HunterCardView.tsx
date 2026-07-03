@@ -1,11 +1,9 @@
 import type { HunterCard } from "@/types";
 import { getClass, getSubclass } from "@/data/classes";
-import { ARMOR_BY_ID } from "@/data/armor";
 import { SKILLS_BY_ABILITY } from "@/data/skills";
 import { ABILITIES, abilityModifier, formatModifier } from "@/data/abilities";
 import {
   armorClassFor,
-  wornArmorWeight,
   maxHp,
   maxSanity,
   proficiencyBonus,
@@ -14,7 +12,6 @@ import {
   initiativeMod,
   earnedLevel,
   insightToNext,
-  studdedAddonIdsOf,
   subclassDisplayName,
 } from "@/lib/character";
 import { CreatureSprite } from "@/data/CreatureSprite";
@@ -23,6 +20,8 @@ import { classArt } from "@/data/classArt";
 import { ClassArt } from "./ClassArt";
 import { RitesSection } from "./RitesSection";
 import { FeaturesSection } from "./FeaturesSection";
+import { ArmorGearSection } from "./sheet/ArmorGearSection";
+import { WeaponTable } from "./sheet/WeaponTable";
 
 export function HunterCardView({
   card,
@@ -40,10 +39,6 @@ export function HunterCardView({
   const prof = proficiencyBonus(lvl);
   const hp = klass ? maxHp(klass, card.abilities, lvl) : null;
   const san = klass ? maxSanity(klass, card.abilities, lvl) : null;
-  const armor = card.mainArmorId ? ARMOR_BY_ID[card.mainArmorId] : null;
-  const wornAddons = (card.addonArmorIds ?? []).map((id) => ARMOR_BY_ID[id]).filter(Boolean);
-  const wornExtras = (card.extraArmorIds ?? []).map((id) => ARMOR_BY_ID[id]).filter(Boolean);
-  const studdedIds = studdedAddonIdsOf(card);
   const insight = card.insight ?? 0;
   const earned = earnedLevel(card);
   const nextLevel = insightToNext(card);
@@ -149,62 +144,13 @@ export function HunterCardView({
         </div>
       </div>
 
-      {klass && (
-        <div className="card">
-          <p className="eyebrow">Proficiencies</p>
-          <Detail label="Weapons" value={klass.weaponProficiencies} />
-          <Detail label="Tools" value={klass.toolProficiencies} />
-          <Detail label="Armor training" value={klass.armorTraining.join(", ")} />
-        </div>
-      )}
-
       <FeaturesSection card={card} />
 
       {klass?.caster && <RitesSection card={card} lvl={lvl} onPatch={onPatch} />}
 
-      <div className="card">
-        <p className="eyebrow">Armor &amp; gear</p>
-        <Detail label="Worn" value={armor ? `${armor.name} (${armor.ac})` : "Unarmored"} />
-        {armor && <p className="muted" style={{ fontSize: "0.88rem", marginTop: 6 }}>{armor.special}</p>}
-        {wornAddons.length > 0 && (
-          <Detail
-            label="Add-ons"
-            value={wornAddons.map((a) => `${a.name} (${a.ac})`).join(", ")}
-          />
-        )}
-        {studdedIds.length > 0 && (
-          <>
-            <Detail
-              label="Studs"
-              value={`${studdedIds
-                .map((id) => ARMOR_BY_ID[id]?.name)
-                .filter(Boolean)
-                .join(", ")} (+${studdedIds.length >= 5 ? 2 : 1} AC)`}
-            />
-            <p className="faint" style={{ fontSize: "0.78rem", margin: "0 0 4px" }}>
-              Studded: disadvantage on Dexterity (Stealth) to hide or move silently.
-            </p>
-          </>
-        )}
-        {wornExtras.length > 0 && (
-          <Detail label="Extras" value={wornExtras.map((a) => a.name).join(", ")} />
-        )}
-        {(armor || wornAddons.length > 0 || wornExtras.length > 0) && (
-          <Detail label="Worn weight" value={`${wornArmorWeight(card)} lb`} />
-        )}
-        <Detail label="Coins" value={`${card.coins ?? 0} GP`} />
-        {klass && (
-          <>
-            <hr className="divider" />
-            <p className="eyebrow" style={{ marginBottom: 8 }}>Starting equipment</p>
-            <div className="chip-row">
-              {klass.startingEquipment.map((item) => (
-                <span className="chip" key={item}>{item}</span>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
+      <ArmorGearSection card={card} onPatch={onPatch} />
+
+      <WeaponTable card={card} />
     </div>
   );
 }
@@ -215,15 +161,6 @@ function Stat({ label, value, sub }: { label: string; value: string | number; su
       <div className="stat-label">{label}</div>
       <div className="stat-value">{value}</div>
       {sub && <div className="stat-sub">{sub}</div>}
-    </div>
-  );
-}
-
-function Detail({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="row between" style={{ padding: "6px 0", gap: 12, alignItems: "flex-start" }}>
-      <span className="faint" style={{ fontSize: "0.82rem", flex: "none" }}>{label}</span>
-      <span style={{ textAlign: "right", fontSize: "0.92rem" }}>{value}</span>
     </div>
   );
 }

@@ -25,6 +25,8 @@ const ALIASES: Record<string, string> = {
   "navigator's tools": "navigators-tools",
   "hunting trap": "hunting-trap",
   "hunting traps": "hunting-trap",
+  // The catalog names it "Robe of the Deepcallers"; class kit says "Robe".
+  robe: "robe",
 };
 
 function lookupId(rawName: string): string | null {
