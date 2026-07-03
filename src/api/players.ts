@@ -36,6 +36,18 @@ export async function saveCharacter(card: HunterCard): Promise<void> {
 
 /** Merge a partial update into a character (owner edits own; DM edits any). */
 export async function patchCharacter(id: string, partial: Partial<HunterCard>): Promise<void> {
+  if (isPreviewActive()) {
+    // Preview mode has no Firestore session — mock-apply the patch to the
+    // in-memory store (like playerStore.save / charactersStore.dmPatch do)
+    // so Wear/Equip/− respond in preview instead of erroring to the console.
+    // Dynamic import: playerStore statically imports this module.
+    const { usePlayerStore } = await import("@/features/hunter/store/playerStore");
+    usePlayerStore.setState((s) => ({
+      characters: s.characters.map((c) => (c.id === id ? normalizeCard({ ...c, ...partial }) : c)),
+      card: s.card && s.card.id === id ? normalizeCard({ ...s.card, ...partial }) : s.card,
+    }));
+    return;
+  }
   await setDoc(doc(charsCol, id), partial, { merge: true });
 }
 

@@ -227,6 +227,8 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
+    note: "Carried on the back.",
+    slotLocation: "back",
   },
   {
     id: "chain",

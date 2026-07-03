@@ -33,9 +33,16 @@ export interface SlotComputation {
   rows: SlotRow[];
   /** itemId → table label, e.g. "Back", "Chest ×2 · Hand", or "Unstowed". */
   byItem: Record<string, string>;
-  /** Item units that found no free slot (no mechanical penalty — a marker). */
-  unstowed: { itemId: string; name: string; count: number }[];
+  /** Item units that found no free slot (no mechanical penalty — a marker).
+   * `clamped` marks a qty capped at MAX_UNITS_PER_ENTRY (render "×99+"). */
+  unstowed: { itemId: string; name: string; count: number; clamped?: boolean }[];
 }
+
+/** Per-entry expansion cap: a corrupt qty (e.g. 10^7) must never freeze every
+ * client that renders the card (the party gallery computes slots for everyone).
+ * Every pool in the game totals well under 99 slots, so the surplus above the
+ * cap could only ever have been Unstowed — the clamp is display-lossless. */
+const MAX_UNITS_PER_ENTRY = 99;
 
 interface Pool {
   key: string;
@@ -110,13 +117,17 @@ export function computeSlots(
     (!pool.only || pool.only.includes(itemId)) &&
     (pool.location !== "hand" || hasSack || handFreeFor(kind));
 
-  // Inventory units, qty-expanded; insignificant items take no slot.
+  // Inventory units, qty-expanded (clamped per entry); insignificant items
+  // take no slot.
   const entries = resolveInventory(card).filter((e) => e.item.carry !== "Insignificant");
   type Unit = { itemId: string; name: string; kind: "significant" | "oversized"; pinned?: SlotLocation };
   const units: Unit[] = [];
+  const clampedIds = new Set<string>();
   for (const { item, qty } of entries) {
     const kind = item.carry === "Oversized" ? "oversized" : "significant";
-    for (let i = 0; i < qty; i++) units.push({ itemId: item.id, name: item.name, kind, pinned: item.slotLocation });
+    const capped = Math.min(qty, MAX_UNITS_PER_ENTRY);
+    if (capped < qty) clampedIds.add(item.id);
+    for (let i = 0; i < capped; i++) units.push({ itemId: item.id, name: item.name, kind, pinned: item.slotLocation });
   }
   units.sort((a, b) => a.name.localeCompare(b.name));
   const ordered = [
@@ -131,7 +142,7 @@ export function computeSlots(
     m.set(label, (m.get(label) ?? 0) + 1);
     placed.set(itemId, m);
   };
-  const unstowedMap = new Map<string, { itemId: string; name: string; count: number }>();
+  const unstowedMap = new Map<string, { itemId: string; name: string; count: number; clamped?: boolean }>();
 
   for (const u of ordered) {
     const candidates = u.pinned
@@ -153,11 +164,22 @@ export function computeSlots(
     }
   }
 
+  // A clamped qty means units beyond the cap exist but weren't expanded —
+  // they could only have been Unstowed (see MAX_UNITS_PER_ENTRY), so flag the
+  // Unstowed bucket and render its count open-ended ("×94+").
+  for (const id of clampedIds) {
+    const u = unstowedMap.get(id);
+    if (u) u.clamped = true;
+  }
+
   // Collapse per-item placements into one table label.
   const byItem: Record<string, string> = {};
   for (const [itemId, m] of placed) {
     byItem[itemId] = [...m.entries()]
-      .map(([label, count]) => (count > 1 ? `${label} ×${count}` : label))
+      .map(([label, count]) => {
+        const plus = clampedIds.has(itemId) && label === "Unstowed";
+        return count > 1 || plus ? `${label} ×${count}${plus ? "+" : ""}` : label;
+      })
       .join(" · ");
   }
 
@@ -175,9 +197,17 @@ export function computeSlots(
   const rows: SlotRow[] = [];
   for (const { location, kind } of rowOrder) {
     const parts = pools.filter((p) => p.location === location && p.kind === kind);
-    const capacity = parts.reduce((s, p) => s + p.capacity, 0);
+    let capacity = parts.reduce((s, p) => s + p.capacity, 0);
     const used = parts.reduce((s, p) => s + p.used, 0);
     if (capacity === 0 && used === 0) continue;
+    // Hand exclusivity (2 Significant XOR 1 Oversized) is enforced at
+    // placement; mirror it in the DISPLAY: once one hand pool is in use the
+    // other's capacity reads 0 — a greatsword in hand must not render
+    // "significant (hand) 0/2" as if two free slots remained.
+    if (location === "hand" && used === 0) {
+      const other = kind === "significant" ? handOver : handSig;
+      if (other.used > 0) capacity = 0;
+    }
     const items = new Map<string, { name: string; count: number }>();
     for (const p of parts)
       for (const [id, v] of p.items) {

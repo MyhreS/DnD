@@ -79,7 +79,10 @@ export function StorageSlotsPanel({
       {unstowed.length > 0 && (
         <p className="faint" style={{ fontSize: "0.78rem", margin: "8px 0 0" }}>
           Unstowed (no free slot):{" "}
-          {unstowed.map((u) => (u.count > 1 ? `${u.name} ×${u.count}` : u.name)).join(", ")} — tucked
+          {unstowed
+            .map((u) => (u.count > 1 || u.clamped ? `${u.name} ×${u.count}${u.clamped ? "+" : ""}` : u.name))
+            .join(", ")}{" "}
+          — tucked
           where possible, no penalty.
         </p>
       )}
