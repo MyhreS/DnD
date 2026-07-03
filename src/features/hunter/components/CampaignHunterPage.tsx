@@ -7,6 +7,7 @@ import { useCharactersStore } from "@/features/play/store/charactersStore";
 import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
 import { useHunterCard } from "../hooks/useHunterCard";
 import { HunterCardView } from "./HunterCardView";
+import { HunterListCard } from "./HunterListCard";
 import { CharacterTrackers } from "./CharacterTrackers";
 import { InventoryPanel } from "./InventoryPanel";
 import { LevelUpModal } from "./LevelUpModal";
@@ -73,28 +74,16 @@ export function CampaignHunterPage() {
           your own hunter. To see the game from a player's side (great for a test run), step into one of
           the campaign's hunters below; you can return to DM at any time.
         </p>
-        <div className="card">
-          <p className="eyebrow" style={{ marginTop: 0 }}>Play as a hunter</p>
-          {campHunters.length === 0 ? (
-            <p className="muted" style={{ margin: 0 }}>No hunters in this campaign yet.</p>
-          ) : (
-            <div className="card-grid">
-              {campHunters.map((c) => (
-                <button
-                  key={c.id}
-                  type="button"
-                  className="card card-hover"
-                  style={{ textAlign: "left" }}
-                  onClick={() => playAs(c.id, c.name)}
-                >
-                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{c.name}</div>
-                  <div className="faint" style={{ fontSize: "0.82rem", marginTop: 2 }}>Level {c.level}</div>
-                  <div className="gold" style={{ fontSize: "0.8rem", marginTop: 6 }}>Play as →</div>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+        <p className="eyebrow" style={{ marginTop: 0, marginBottom: 8 }}>Play as a hunter</p>
+        {campHunters.length === 0 ? (
+          <div className="card"><p className="muted" style={{ margin: 0 }}>No hunters in this campaign yet.</p></div>
+        ) : (
+          <div className="stack" style={{ gap: 10 }}>
+            {campHunters.map((c) => (
+              <HunterListCard key={c.id} card={c} actionHint="Play as →" onOpen={() => playAs(c.id, c.name)} />
+            ))}
+          </div>
+        )}
       </div>
     );
   }
@@ -160,19 +149,15 @@ export function CampaignHunterPage() {
       </p>
 
       {ready.length > 0 ? (
-        <div className="card">
-          <p className="eyebrow" style={{ marginTop: 0 }}>Your hunters</p>
-          <div className="card-grid">
+        <>
+          <p className="eyebrow" style={{ marginTop: 0, marginBottom: 8 }}>Your hunters</p>
+          <div className="stack" style={{ gap: 10 }}>
             {ready.map((c) => (
-              <button key={c.id} type="button" className="card card-hover" style={{ textAlign: "left" }} onClick={() => bring(c.id)}>
-                <div style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{c.name}</div>
-                <div className="faint" style={{ fontSize: "0.82rem", marginTop: 2 }}>Level {c.level}</div>
-                <div className="gold" style={{ fontSize: "0.8rem", marginTop: 6 }}>Bring in →</div>
-              </button>
+              <HunterListCard key={c.id} card={c} actionHint="Bring in →" onOpen={() => bring(c.id)} />
             ))}
           </div>
-          <Link className="btn btn-ghost" to="/character" style={{ marginTop: 12 }}>Create another in the main menu</Link>
-        </div>
+          <Link className="btn btn-ghost" to="/character?new=1" style={{ marginTop: 12 }}>Create another in the main menu</Link>
+        </>
       ) : (
         <div className="card center">
           <p className="muted">You have no hunters yet. Forge one in the main menu, then bring it in.</p>
