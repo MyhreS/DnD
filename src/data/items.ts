@@ -7,7 +7,7 @@ import { ARMOR } from "@/data/armor";
 // from the Player's Handbook carrying-category table ("CHECK YOUR ITEM SLOTS")
 // in resources/extracted/text/. Carrying significance follows that table:
 //   Insignificant — keys, letters, maps, coins, rings, parchment, blood vials,
-//     supplies, kits, tool *sets*, ammunition, robes.
+//     supplies, kits, tool *sets*, ammunition.
 //   Significant   — daggers, handaxes, rope, pistols, rifles, chains, swords,
 //     scimitars, sickles, cleavers, lanterns, shovels, crowbars, tool belts,
 //     bandoliers, backpacks, hunting traps, books.
@@ -23,6 +23,7 @@ const armorItems: Item[] = ARMOR.map((a) => ({
   carry: "Significant" as const,
   weightLb: a.weightLb,
   note: a.special,
+  ...(a.unique ? { unique: true } : {}),
 }));
 
 export const ITEMS: Item[] = [
@@ -32,7 +33,7 @@ export const ITEMS: Item[] = [
     name: "Greatsword",
     category: "Weapon",
     carry: "Oversized",
-    weightLb: 6,
+    weightLb: 14,
     note: "A great weapon — too large to tuck away.",
   },
   {
@@ -40,7 +41,7 @@ export const ITEMS: Item[] = [
     name: "Greataxe",
     category: "Weapon",
     carry: "Oversized",
-    weightLb: 7,
+    weightLb: 14,
     note: "A great weapon — too large to tuck away.",
   },
   {
@@ -102,8 +103,9 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 10,
-    note: "The hunter's sacred thunder.",
+    note: "The hunter's sacred thunder. Carried on the back.",
     unique: true,
+    slotLocation: "back",
   },
   {
     id: "pistol",
@@ -129,7 +131,8 @@ export const ITEMS: Item[] = [
     name: "Tool Belt",
     category: "Tool",
     carry: "Significant",
-    weightLb: 2,
+    weightLb: 3,
+    note: "Storage: uses the hip slot, gives 4 Significant slots (hip).",
   },
   {
     id: "thieves-tools",
@@ -169,7 +172,8 @@ export const ITEMS: Item[] = [
     name: "Bandolier",
     category: "Gear",
     carry: "Significant",
-    weightLb: 1,
+    weightLb: 4,
+    note: "Storage: uses the chest slot, gives 4 Significant slots (chest).",
   },
   {
     id: "backpack",
@@ -177,6 +181,31 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
+    note: "Storage: uses the back slot, gives 7 Significant slots (back).",
+  },
+  {
+    id: "sack",
+    name: "Sack",
+    category: "Gear",
+    carry: "Significant",
+    weightLb: 1,
+    note: "Storage: carried in hand (Oversized), gives 15 Significant slots (hand).",
+  },
+  {
+    id: "carrying-harness",
+    name: "Carrying Harness",
+    category: "Gear",
+    carry: "Significant",
+    weightLb: 3,
+    note: "Storage: uses the back slot, gives 2 Significant slots (back).",
+  },
+  {
+    id: "ankle-holster",
+    name: "Ankle Holster",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 1,
+    note: "Storage: gives 1 Significant slot (ankle) — Dagger or Pistol only.",
   },
   {
     id: "lantern",
@@ -198,6 +227,8 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
+    note: "Carried on the back.",
+    slotLocation: "back",
   },
   {
     id: "chain",
@@ -229,13 +260,8 @@ export const ITEMS: Item[] = [
     carry: "Significant",
     weightLb: 1,
   },
-  {
-    id: "robe",
-    name: "Robe",
-    category: "Gear",
-    carry: "Insignificant",
-    weightLb: 4,
-  },
+  // `robe` (the Robe of the Deepcallers) now lives in src/data/armor.ts and is
+  // folded in below — same item id, so legacy inventories keep resolving.
   {
     id: "torch",
     name: "Torch",

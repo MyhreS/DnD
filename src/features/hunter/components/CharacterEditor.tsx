@@ -354,8 +354,15 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     // A brand-new hunter starts with the class + background starting kit
     // (real inventory items + starting gold). Edits keep what's carried.
     const kit = creating ? startingKit(klass, bg) : null;
-    const savedAddons = addonIds.slice(0, maxAddons);
-    const savedStuds = studdedIds.filter((id) => savedAddons.includes(id));
+    // Armor is CREATION-ONLY in the builder: editing an existing hunter passes
+    // the whole worn set through UNCHANGED (all five fields, ids↔count mirror
+    // included). In play, armor is gear — pieces move between worn and the
+    // inventory on the sheet (wear/take-off), so a builder write here would
+    // either mint free duplicates or silently destroy owned pieces.
+    const savedAddons = creating ? addonIds.slice(0, maxAddons) : initial.addonArmorIds ?? [];
+    const savedStuds = creating
+      ? studdedIds.filter((id) => savedAddons.includes(id))
+      : studdedAddonIdsOf(initial);
     onSave({
       ...initial,
       name: name.trim(),
@@ -377,13 +384,13 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       // null (not undefined) so switching to a no-feat background actually
       // CLEARS a previously stored feat under setDoc merge semantics.
       feat: bg?.feat ?? null,
-      mainArmorId,
+      mainArmorId: creating ? mainArmorId : initial.mainArmorId,
       addonArmorIds: savedAddons,
       studdedAddonIds: savedStuds,
       // Legacy mirror (= the count) so stale cached PWA clients running the
       // old numeric math still compute the right AC and weight.
       studdedAddons: savedStuds.length,
-      extraArmorIds: extraIds,
+      extraArmorIds: creating ? extraIds : initial.extraArmorIds ?? [],
       skillProficiencies: allSkills,
       // Untouched ability scores round-trip verbatim — never re-derived, so
       // level-up increases survive unrelated edits (armor, name, whispers).
@@ -618,8 +625,52 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
         />
       )}
 
-      {/* Step 4 · Armor — the full layered system: Main + Add-ons + Studs + Extras */}
-      {step === 3 && (
+      {/* Step 4 · Armor — CREATION-ONLY pickers for the full layered system
+          (Main + Add-ons + Studs + Extras). On an existing hunter armor is
+          gear: pieces move between worn and the inventory on the sheet, so
+          the step becomes a read-only summary and handleSave passes the worn
+          set through unchanged (picking "free" armor here would duplicate or
+          destroy owned pieces). */}
+      {step === 3 && !creating && (
+        <div className="card">
+          <p className="eyebrow">Step 4 · Armor</p>
+          <h3 style={{ marginBottom: 6 }}>Worn armor</h3>
+          <p className="muted" style={{ fontSize: "0.88rem", marginTop: 0 }}>
+            Armor is gear now — wear and take off pieces on your hunter's{" "}
+            <strong>sheet</strong>, where they move in and out of the inventory.
+            Editing your build leaves the worn set untouched.
+          </p>
+          <div className="stack" style={{ gap: 6 }}>
+            <WornSummaryLine
+              label="Main Armor"
+              value={
+                initial.mainArmorId
+                  ? ARMOR_BY_ID[initial.mainArmorId]?.name ?? initial.mainArmorId
+                  : "Unarmored (AC 10 + Dex)"
+              }
+            />
+            <WornSummaryLine
+              label="Add-ons"
+              value={
+                (initial.addonArmorIds ?? [])
+                  .map((id) => {
+                    const name = ARMOR_BY_ID[id]?.name ?? id;
+                    return studdedAddonIdsOf(initial).includes(id) ? `${name} (studded)` : name;
+                  })
+                  .join(", ") || "None"
+              }
+            />
+            <WornSummaryLine
+              label="Extras"
+              value={
+                (initial.extraArmorIds ?? []).map((id) => ARMOR_BY_ID[id]?.name ?? id).join(", ") ||
+                "None"
+              }
+            />
+          </div>
+        </div>
+      )}
+      {step === 3 && creating && (
         <>
           <div className="card">
             <p className="eyebrow">Step 4 · Armor</p>
@@ -708,19 +759,25 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
             </div>
           </div>
 
-          <div className="card">
-            <p className="eyebrow">Armor Class</p>
-            <div className="derived-grid">
-              <Derived label="Base" value={ac.baseAc} />
-              <Derived label="Add-ons" value={formatModifier(ac.addonBonus)} />
-              <Derived label="Studs" value={formatModifier(ac.studBonus)} />
-              <Derived label="Dex" value={formatModifier(ac.dexApplied)} />
-              <Derived label="Total AC" value={ac.total} />
-              <Derived label="Worn weight" value={`${wornArmorWeight({ mainArmorId, addonArmorIds: addonIds, studdedAddonIds: studdedIds, extraArmorIds: extraIds })} lb`} />
-            </div>
-            <p className="faint" style={{ fontSize: "0.82rem", margin: "8px 0 0" }}>{ac.category}: {ac.dexRule}</p>
-          </div>
         </>
+      )}
+      {step === 3 && (
+        <div className="card">
+          <p className="eyebrow">Armor Class</p>
+          <div className="derived-grid">
+            <Derived label="Base" value={ac.baseAc} />
+            <Derived label="Add-ons" value={formatModifier(ac.addonBonus)} />
+            <Derived label="Studs" value={formatModifier(ac.studBonus)} />
+            <Derived label="Dex" value={formatModifier(ac.dexApplied)} />
+            <Derived label="Total AC" value={ac.total} />
+            <Derived label="Worn weight" value={`${wornArmorWeight({ mainArmorId, addonArmorIds: addonIds, studdedAddonIds: studdedIds, extraArmorIds: extraIds })} lb`} />
+          </div>
+          <p className="faint" style={{ fontSize: "0.82rem", margin: "8px 0 0" }}>
+            <span className={ac.shieldArm ? "gold" : undefined}>{ac.shieldArm ? "☑" : "☐"} Shield Arm</span>
+            {" · "}
+            {ac.category}: {ac.dexRule}
+          </p>
+        </div>
       )}
 
       {/* Step 5 · Details (name, level, review, notes) */}
@@ -1017,6 +1074,16 @@ function Derived({ label, value }: { label: string; value: string | number }) {
     <div className="stat">
       <div className="stat-label">{label}</div>
       <div className="stat-value">{value}</div>
+    </div>
+  );
+}
+
+/** One line of the read-only worn-armor summary (edit mode's Step 4). */
+function WornSummaryLine({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="row between" style={{ gap: 10, alignItems: "baseline" }}>
+      <span className="faint" style={{ fontSize: "0.8rem", flex: "none" }}>{label}</span>
+      <span style={{ fontSize: "0.88rem", textAlign: "right" }}>{value}</span>
     </div>
   );
 }

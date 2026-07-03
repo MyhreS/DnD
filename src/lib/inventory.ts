@@ -3,6 +3,7 @@
 
 import type { HunterCard, Item, CarrySignificance } from "@/types";
 import { ITEM_BY_ID } from "@/data/items";
+import { wornArmorWeight } from "@/lib/character";
 
 export interface ResolvedEntry {
   item: Item;
@@ -48,6 +49,35 @@ export function groupByCarry(
 /** Total carried weight in lb (sum of weightLb * qty), rounded to 1 decimal. */
 export function totalWeight(entries: ResolvedEntry[]): number {
   const sum = entries.reduce((acc, e) => acc + e.item.weightLb * e.qty, 0);
+  return Math.round(sum * 10) / 10;
+}
+
+/** A card's WORN storage items (equippedStorageIds), resolved to catalog
+ * items, dropping unknown ids. */
+export function resolveStorage(
+  card: Pick<HunterCard, "equippedStorageIds">,
+): Item[] {
+  return (card.equippedStorageIds ?? [])
+    .map((id) => ITEM_BY_ID[id])
+    .filter((i): i is Item => !!i);
+}
+
+/** EVERYTHING carried, per the handbook: inventory + worn armor (incl. studs)
+ * + worn storage items. Coins stay weightless (current behavior). */
+export function totalCarriedWeight(
+  card: Pick<
+    HunterCard,
+    | "inventory"
+    | "equippedStorageIds"
+    | "mainArmorId"
+    | "addonArmorIds"
+    | "studdedAddons"
+    | "studdedAddonIds"
+    | "extraArmorIds"
+  >,
+): number {
+  const storage = resolveStorage(card).reduce((sum, i) => sum + i.weightLb, 0);
+  const sum = totalWeight(resolveInventory(card)) + wornArmorWeight(card) + storage;
   return Math.round(sum * 10) / 10;
 }
 

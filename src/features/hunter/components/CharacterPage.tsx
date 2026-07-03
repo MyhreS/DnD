@@ -6,7 +6,7 @@ import { useEditorIntent } from "../hooks/useEditorIntent";
 import { CharacterEditor } from "./CharacterEditor";
 import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
-import { InventoryPanel } from "./InventoryPanel";
+import { InventorySection } from "./sheet/InventorySection";
 import { LevelUpModal } from "./LevelUpModal";
 import { patchCharacter } from "@/api/players";
 import { emptyCard } from "@/lib/character";
@@ -184,7 +184,7 @@ export function CharacterPage() {
               <HunterCardView card={card!} onPatch={(p) => void patchCharacter(card!.id, p)} />
             </div>
             <div className="no-print" style={{ marginTop: 14 }}>
-              <InventoryPanel card={card!} editable />
+              <InventorySection card={card!} onPatch={(p) => void patchCharacter(card!.id, p)} />
             </div>
           </div>
         </div>

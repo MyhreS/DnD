@@ -1089,6 +1089,47 @@ input[type="range"].level-range {
   }
 }
 
+/* ---------- Hunter sheet: armor & inventory (the #139 wireframe) ---------- */
+
+/* Top summary strip: AC + Shield Arm | weight + condition | impressions.
+   Column count follows the CONTAINER width (the sheet also renders inside
+   narrow party-gallery columns), so auto-fit instead of viewport queries. */
+.sheet-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+/* Worn-armor panel beside the storage/training rail on wide containers. */
+.sheet-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+  gap: 14px;
+  align-items: start;
+}
+
+/* The body diagram: paired slot boxes with Main Armor spanning the row. */
+.body-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+.slot-box {
+  background: var(--bg-elev-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  min-height: 58px;
+}
+.slot-box-wide {
+  grid-column: 1 / -1;
+}
+.slot-box-empty {
+  border-style: dashed;
+  opacity: 0.75;
+}
+
 /* ---------- Misc helpers ---------- */
 
 .stack {
@@ -1506,8 +1547,14 @@ input[type="range"].level-range {
     color: #555 !important;
   }
   .print-sheet .stat,
-  .print-sheet .chip {
+  .print-sheet .chip,
+  .print-sheet .slot-box {
     border-color: #bbb !important;
     background: #f6f3ec !important;
+  }
+  .print-sheet .level-table th,
+  .print-sheet .level-table td {
+    border-bottom-color: #ccc;
+    color: #14110d;
   }
 }

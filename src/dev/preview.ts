@@ -296,14 +296,19 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     bloodTinge: true,
     preparedWhispers: [],
     coins: 25,
+    // Bandolier WORN (chest slots), tool belt still in the pack — so preview
+    // screenshots exercise the storage panel, slot columns and equip actions.
+    equippedStorageIds: ["bandolier"],
     inventory: [
       { itemId: "hunter-rifle", qty: 1 },
       { itemId: "hunter-cleaver", qty: 1 },
       { itemId: "pistol", qty: 1 },
+      { itemId: "dagger", qty: 2 },
       { itemId: "bullets", qty: 1 },
       { itemId: "blood-vial", qty: 3 },
       { itemId: "rope", qty: 1 },
-      { itemId: "bandolier", qty: 1 },
+      { itemId: "lantern", qty: 1 },
+      { itemId: "tool-belt", qty: 1 },
     ],
     notes: "Hunts the beasts that were once hunters.",
     createdAt: now,
