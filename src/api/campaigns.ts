@@ -5,6 +5,7 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  getDoc,
   getDocs,
   onSnapshot,
   query,
@@ -15,7 +16,7 @@ import {
   serverTimestamp,
   type Timestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { db, auth } from "@/lib/firebase";
 import { emptyCard } from "@/lib/character";
 import { saveCharacter } from "@/api/players";
 import { logEvent, purgeCampaignActivity } from "@/api/activity";
@@ -305,6 +306,27 @@ export async function leaveCampaign(campaignId: string, uid: string, name?: stri
  *  The DM can only delete docs the rules permit, so other players' RSVPs under a
  *  deleted session may be left orphaned (harmless — their session is gone). */
 export async function deleteCampaign(campaignId: string): Promise<void> {
+  // Self-heal an orphaned campaign: if the DM's member doc is missing (a
+  // half-completed create or delete), every member-gated purge below would be
+  // denied and the campaign would be stuck forever. Rules always allow writing
+  // your own member doc, so restore it before purging.
+  const uid = auth.currentUser?.uid;
+  if (uid) {
+    const camp = await getDoc(doc(campaignsCol, campaignId));
+    if (camp.exists() && camp.data().dmUid === uid) {
+      const me = await getDoc(doc(membersCol(campaignId), uid));
+      if (!me.exists()) {
+        await setDoc(doc(membersCol(campaignId), uid), {
+          uid,
+          name: (camp.data().dmName as string) ?? "DM",
+          email: "",
+          role: "dm",
+          characterId: null,
+          joinedAt: serverTimestamp(),
+        });
+      }
+    }
+  }
   const purgeScoped = async (coll: string, subs: string[] = []) => {
     const snap = await getDocs(query(collection(db, coll), where("campaignId", "==", campaignId)));
     for (const d of snap.docs) {

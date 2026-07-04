@@ -9,6 +9,7 @@ export function LeaveCampaign({ campaign }: { campaign: Campaign }) {
   const user = useAuthStore((s) => s.user);
   const leave = useCampaignStore((s) => s.leave);
   const busy = useCampaignStore((s) => s.busy);
+  const error = useCampaignStore((s) => s.error);
   const [confirming, setConfirming] = useState(false);
   if (!user) return null;
 
@@ -27,6 +28,7 @@ export function LeaveCampaign({ campaign }: { campaign: Campaign }) {
 
   return (
     <div className="card" style={{ borderColor: "var(--blood-bright)" }}>
+      {error && <div className="banner banner-error" style={{ marginBottom: 10 }}>{error}</div>}
       <p style={{ marginBottom: 10 }}>
         Leave <strong>{campaign.name}</strong>? Your hunter is kept (just un-bound from this
         campaign), and you can rejoin any time with an invite code.
