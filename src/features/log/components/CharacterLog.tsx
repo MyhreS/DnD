@@ -2,9 +2,9 @@ import { useCharacterActivity } from "../hooks/useCharacterActivity";
 import { typeGlyph, dayLabel, timeLabel } from "../lib/format";
 import type { HunterCard } from "@/types";
 
-/** A hunter's history across campaigns — what happened to them, where, when.
+/** A hunter's log across campaigns — what happened to them, where, when.
  * Shown on the owner's character page (the query is owner-scoped). */
-export function CharacterHistory({ card }: { card: HunterCard }) {
+export function CharacterLog({ card }: { card: HunterCard }) {
   const { events, error } = useCharacterActivity(card.id, card.ownerUid);
 
   if (error) return <div className="banner banner-error">{error}</div>;
@@ -12,10 +12,10 @@ export function CharacterHistory({ card }: { card: HunterCard }) {
 
   return (
     <div className="card">
-      <p className="eyebrow" style={{ marginTop: 0 }}>History</p>
+      <p className="eyebrow" style={{ marginTop: 0 }}>Log</p>
       {events.length === 0 ? (
         <p className="muted" style={{ margin: 0, fontSize: "0.88rem" }}>
-          Nothing chronicled yet — loot, gold, levels, rests and deaths land here as {card.name || "this hunter"} plays.
+          Nothing logged yet — loot, gold, levels, rests and deaths land here as {card.name || "this hunter"} plays.
         </p>
       ) : (
         <div>
