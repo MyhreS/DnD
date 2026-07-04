@@ -21,6 +21,8 @@ import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { purgeArchive } from "@/api/players";
+import { logEvent } from "@/api/activity";
+import { PHASE_LABEL, LOCATION_LABEL } from "@/features/play/lib/phase";
 import { explain } from "@/lib/errors";
 
 type Status = "idle" | "loading" | "loaded" | "error";
@@ -95,6 +97,18 @@ export const useGameStore = create<GameState>((set, get) => {
       set({ busy: false, error: explain(fallbackMsg, err) });
       return null;
     }
+  }
+
+  function actor() {
+    const { user, member } = useAuthStore.getState();
+    return { actorUid: user?.uid ?? "", actorName: member?.firstName || user?.displayName || "Someone" };
+  }
+
+  /** Chronicle a game event (fire-and-forget). Sandbox/test games stay quiet. */
+  function logGame(gameId: string, type: "game.started" | "game.phase" | "game.location" | "game.ended" | "game.joined", message: string) {
+    const g = get().games.find((x) => x.id === gameId);
+    if (!g?.campaignId || g.sandbox) return;
+    void logEvent({ campaignId: g.campaignId, type, message, ...actor() });
   }
 
   return {
@@ -183,6 +197,14 @@ export const useGameStore = create<GameState>((set, get) => {
         return g.id;
       }
       const id = await run(() => createGame(input), "Couldn't start the game.");
+      if (id && input.campaignId && !input.sandbox) {
+        void logEvent({
+          campaignId: input.campaignId,
+          type: "game.created",
+          message: `${input.dmName} opened a game lobby — «${input.title}».`,
+          ...actor(),
+        });
+      }
       if (id) {
         // A "Test Run" campaign fills its lobby with the bot hunters right away,
         // so the DM can see a populated table before pressing Begin.
@@ -205,6 +227,10 @@ export const useGameStore = create<GameState>((set, get) => {
       }
       const ok = (await run(() => startGame(gameId), "Couldn't begin the game.")) !== null;
       if (ok) {
+        const title = get().games.find((g) => g.id === gameId)?.title ?? "the game";
+        logGame(gameId, "game.started", `The hunt began — «${title}».`);
+      }
+      if (ok) {
         // A "Test Run" campaign auto-fills with its bot hunters so the table
         // looks populated; bots never act.
         const camp = useCampaignStore.getState().active;
@@ -224,7 +250,9 @@ export const useGameStore = create<GameState>((set, get) => {
         set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, phase } : g)) }));
         return true;
       }
-      return (await run(() => setGamePhase(gameId, phase), "Couldn't change the phase.")) !== null;
+      const ok = (await run(() => setGamePhase(gameId, phase), "Couldn't change the phase.")) !== null;
+      if (ok) logGame(gameId, "game.phase", `The party entered ${PHASE_LABEL[phase]}.`);
+      return ok;
     },
 
     setLocation: async (gameId, location) => {
@@ -232,9 +260,10 @@ export const useGameStore = create<GameState>((set, get) => {
         set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, location } : g)) }));
         return true;
       }
-      return (
-        (await run(() => setGameLocation(gameId, location), "Couldn't change the location.")) !== null
-      );
+      const ok =
+        (await run(() => setGameLocation(gameId, location), "Couldn't change the location.")) !== null;
+      if (ok) logGame(gameId, "game.location", `The party moved to ${LOCATION_LABEL[location]}.`);
+      return ok;
     },
 
     setCombat: async (gameId, combat) => {
@@ -254,15 +283,19 @@ export const useGameStore = create<GameState>((set, get) => {
         }));
         return true;
       }
+      // Log before the game flips to "ended" so the line lands while the
+      // context is still current (the write itself is fire-and-forget).
+      const title = get().games.find((g) => g.id === gameId)?.title ?? "the game";
       // Ending a game purges archived (dead/deleted) characters so they don't
       // pile up between sessions.
-      return (
+      const ok =
         (await run(async () => {
           await endGame(gameId, endedPhase, endedLocation);
           await purgeArchive();
           await purgeLoot(gameId);
-        }, "Couldn't stop the game.")) !== null
-      );
+        }, "Couldn't stop the game.")) !== null;
+      if (ok) logGame(gameId, "game.ended", `The game ended — «${title}».`);
+      return ok;
     },
 
     join: async (gameId, p) => {
@@ -274,7 +307,9 @@ export const useGameStore = create<GameState>((set, get) => {
         }));
         return true;
       }
-      return (await run(() => joinGame(gameId, p), "Couldn't join the game.")) !== null;
+      const ok = (await run(() => joinGame(gameId, p), "Couldn't join the game.")) !== null;
+      if (ok) logGame(gameId, "game.joined", `${p.name} joined the game.`);
+      return ok;
     },
 
     leave: async (gameId, uid) => {

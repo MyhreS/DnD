@@ -59,7 +59,7 @@ interface CampaignState {
   /** DM: step into a hunter (play as them to test the game) / step back to DM. */
   playAs: (characterId: string, name: string) => void;
   returnToDm: () => void;
-  pickCharacter: (uid: string, characterId: string | null) => Promise<boolean>;
+  pickCharacter: (uid: string, characterId: string | null, characterName?: string) => Promise<boolean>;
   /** DM: invite/uninvite by email, regenerate the share code. */
   invite: (email: string) => Promise<boolean>;
   uninvite: (email: string) => Promise<boolean>;
@@ -214,7 +214,9 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
 
     leave: async (id, uid) => {
       if (get().preview) return true;
-      const ok = (await run(() => leaveCampaign(id, uid), "Couldn't leave.")) !== null;
+      const { user, member } = useAuthStore.getState();
+      const name = member?.firstName || user?.displayName || undefined;
+      const ok = (await run(() => leaveCampaign(id, uid, name), "Couldn't leave.")) !== null;
       if (ok && get().activeId === id) get().exit();
       return ok;
     },
@@ -229,11 +231,21 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
     playAs: (characterId, name) => set({ playingAsId: characterId, playingAsName: name }),
     returnToDm: () => set({ playingAsId: null, playingAsName: null }),
 
-    pickCharacter: async (uid, characterId) => {
+    pickCharacter: async (uid, characterId, characterName) => {
       if (get().preview) return true;
       const id = get().activeId;
       if (!id) return false;
-      return (await run(() => setMemberCharacter(id, uid, characterId), "Couldn't set your character.")) !== null;
+      const { user, member } = useAuthStore.getState();
+      const meta =
+        user && characterId && characterName
+          ? {
+              actorUid: user.uid,
+              actorName: member?.firstName || user.displayName || "A hunter",
+              characterName,
+              ownerUid: uid,
+            }
+          : undefined;
+      return (await run(() => setMemberCharacter(id, uid, characterId, meta), "Couldn't set your character.")) !== null;
     },
 
     invite: async (email) => {

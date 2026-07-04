@@ -616,3 +616,49 @@ export interface HunterCard {
   updatedAt: number;
   createdAt: number;
 }
+
+// --- The campaign activity log (immutable, append-only) ---
+
+export type ActivityType =
+  | "campaign.created"
+  | "member.joined"
+  | "member.left"
+  | "hunter.brought"
+  | "session.created"
+  | "session.updated"
+  | "game.created"
+  | "game.started"
+  | "game.phase"
+  | "game.location"
+  | "game.ended"
+  | "game.joined"
+  | "loot.dropped"
+  | "loot.claimed"
+  | "shop.bought"
+  | "shop.sold"
+  | "trade.accepted"
+  | "hunter.died"
+  | "hunter.recovered"
+  | "hunter.rested"
+  | "hunter.leveled"
+  | "insight.awarded"
+  | "item.given"
+  | "gold.changed";
+
+/** One line in a campaign's chronicle. `characterId`/`ownerUid` are set when
+ * the event is about a specific hunter, so the owner can read their hunter's
+ * history across campaigns. */
+export interface ActivityEvent {
+  id: string;
+  campaignId: string;
+  /** Denormalized so a hunter's history can name campaigns you've since left. */
+  campaignName: string;
+  type: ActivityType;
+  /** Ready-to-display line, rendered at write time. */
+  message: string;
+  actorUid: string;
+  actorName: string;
+  characterId: string | null;
+  ownerUid: string | null;
+  at: number;
+}

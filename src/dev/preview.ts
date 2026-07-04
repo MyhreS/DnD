@@ -119,6 +119,27 @@ export function previewGame(): import("@/types").Game {
   };
 }
 
+/** Sample chronicle lines so the Log page / character history render in preview. */
+export function previewActivity(): import("@/types").ActivityEvent[] {
+  const now = Date.now();
+  const base = {
+    campaignId: "preview-campaign",
+    campaignName: "The Sunless Vault",
+    actorUid: "preview-dm",
+    actorName: "Christoffer",
+    characterId: null as string | null,
+    ownerUid: null as string | null,
+  };
+  return [
+    { ...base, id: "prev-log-1", type: "game.phase", message: "The party entered Combat.", at: now - 5 * 60 * 1000 },
+    { ...base, id: "prev-log-2", type: "loot.claimed", message: "Eileen the Crow claimed 1× Rope, 12 gp from Gascoigne.", actorUid: "preview-uid", actorName: "Eileen the Crow", characterId: "preview-uid-char", ownerUid: "preview-uid", at: now - 42 * 60 * 1000 },
+    { ...base, id: "prev-log-3", type: "game.started", message: "The hunt began — «The Sunless Vault».", at: now - 60 * 60 * 1000 },
+    { ...base, id: "prev-log-4", type: "session.created", message: "Christoffer scheduled a session — «Session 4» on 12 Jul 2026, 18:00.", at: now - 26 * 60 * 60 * 1000 },
+    { ...base, id: "prev-log-5", type: "member.joined", message: "Gascoigne joined the campaign (invite code).", at: now - 3 * 24 * 60 * 60 * 1000 },
+    { ...base, id: "prev-log-6", type: "campaign.created", message: "Christoffer founded the campaign «The Sunless Vault».", at: now - 4 * 24 * 60 * 60 * 1000 },
+  ];
+}
+
 /** Sample combatants so the combat tracker renders in preview mode. */
 export function previewCombatants(): import("@/types").Combatant[] {
   const now = Date.now();

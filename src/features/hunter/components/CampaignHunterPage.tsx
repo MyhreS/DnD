@@ -94,7 +94,7 @@ export function CampaignHunterPage() {
 
   function bring(id: string) {
     if (!user || !activeId) return;
-    void pickCharacter(user.uid, id);
+    void pickCharacter(user.uid, id, characters.find((c) => c.id === id)?.name);
     // Entering a campaign is a fresh start — leftover "recently dropped"
     // lines (#136) don't follow the hunter in.
     void patchCharacter(id, { campaignId: activeId, droppedItems: [] });

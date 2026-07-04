@@ -9,8 +9,27 @@ import {
   awardInsight as apiAwardInsight,
 } from "@/api/players";
 import { createLoot } from "@/api/games";
+import { logEvent, describeLoot } from "@/api/activity";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { explain } from "@/lib/errors";
 import { isPreviewActive, previewPartyCards, previewArchive } from "@/dev/preview";
+import type { ActivityType } from "@/types";
+
+/** Chronicle a DM action on a hunter (fire-and-forget; bots stay quiet). */
+function logHunter(card: HunterCard, type: ActivityType, message: string) {
+  if (!card.campaignId || card.ownerUid.startsWith("bot-")) return;
+  const { user, member } = useAuthStore.getState();
+  if (!user) return;
+  void logEvent({
+    campaignId: card.campaignId,
+    type,
+    message,
+    actorUid: user.uid,
+    actorName: member?.firstName || user.displayName || "The DM",
+    characterId: card.id,
+    ownerUid: card.ownerUid,
+  });
+}
 
 interface CharactersState {
   party: HunterCard[];
@@ -102,7 +121,7 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         }));
         return true;
       }
-      return (
+      const ok =
         (await run(async () => {
           await archiveCharacter(card, "dead", gameId);
           // A dead hunter drops their gear as claimable loot.
@@ -114,8 +133,9 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
               coins: card.coins ?? 0,
             });
           }
-        }, "Couldn't archive the character.")) !== null
-      );
+        }, "Couldn't archive the character.")) !== null;
+      if (ok) logHunter(card, "hunter.died", `${card.name} fell — the DM confirmed their death.`);
+      return ok;
     },
 
     revive: async (id) => {
@@ -134,7 +154,9 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         }));
         return true;
       }
-      return (await run(() => recoverCharacter(a), "Couldn't recover the character.")) !== null;
+      const ok = (await run(() => recoverCharacter(a), "Couldn't recover the character.")) !== null;
+      if (ok) logHunter(a.card, "hunter.recovered", `${a.card.name} was recovered from the fallen.`);
+      return ok;
     },
 
     awardInsight: async (id, delta) => {
@@ -146,7 +168,18 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         }));
         return true;
       }
-      return (await run(() => apiAwardInsight(id, delta), "Couldn't award Insight.")) !== null;
+      const ok = (await run(() => apiAwardInsight(id, delta), "Couldn't award Insight.")) !== null;
+      const card = get().party.find((c) => c.id === id);
+      if (ok && card) {
+        logHunter(
+          card,
+          "insight.awarded",
+          delta >= 0
+            ? `${card.name} was awarded ${delta} Insight.`
+            : `${card.name} lost ${-delta} Insight.`,
+        );
+      }
+      return ok;
     },
 
     dmPatch: async (id, partial) => {
@@ -154,7 +187,33 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         set((s) => ({ party: s.party.map((c) => (c.id === id ? { ...c, ...partial } : c)) }));
         return true;
       }
-      return (await run(() => patchCharacter(id, partial), "Couldn't update the character.")) !== null;
+      const before = get().party.find((c) => c.id === id);
+      const ok = (await run(() => patchCharacter(id, partial), "Couldn't update the character.")) !== null;
+      // Chronicle the grants players care about (level, items, gold) — vitals
+      // fiddling (HP/sanity/transformation) would drown the log.
+      if (ok && before) {
+        if (partial.level != null && partial.level !== before.level) {
+          logHunter(before, "hunter.leveled", `${before.name} reached level ${partial.level}.`);
+        }
+        if (partial.inventory) {
+          const prev = new Map((before.inventory ?? []).map((e) => [e.itemId, e.qty]));
+          const next = new Map(partial.inventory.map((e) => [e.itemId, e.qty]));
+          const gained = [...next].filter(([itemId, qty]) => qty > (prev.get(itemId) ?? 0))
+            .map(([itemId, qty]) => ({ itemId, qty: qty - (prev.get(itemId) ?? 0) }));
+          const lost = [...prev].filter(([itemId, qty]) => qty > (next.get(itemId) ?? 0))
+            .map(([itemId, qty]) => ({ itemId, qty: qty - (next.get(itemId) ?? 0) }));
+          if (gained.length > 0) {
+            logHunter(before, "item.given", `${before.name} received ${describeLoot(gained, 0)} from the DM.`);
+          }
+          if (lost.length > 0) {
+            logHunter(before, "item.given", `The DM took ${describeLoot(lost, 0)} from ${before.name}.`);
+          }
+        }
+        if (partial.coins != null && partial.coins !== (before.coins ?? 0)) {
+          logHunter(before, "gold.changed", `${before.name}'s gold: ${before.coins ?? 0} → ${partial.coins} gp (DM).`);
+        }
+      }
+      return ok;
     },
   };
 });

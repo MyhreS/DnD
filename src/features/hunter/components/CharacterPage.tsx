@@ -7,6 +7,7 @@ import { CharacterEditor } from "./CharacterEditor";
 import { HunterCardView } from "./HunterCardView";
 import { CharacterTrackers } from "./CharacterTrackers";
 import { InventorySection } from "./sheet/InventorySection";
+import { CharacterHistory } from "@/features/log/components/CharacterHistory";
 import { LevelUpModal } from "./LevelUpModal";
 import { patchCharacter } from "@/api/players";
 import { emptyCard } from "@/lib/character";
@@ -185,6 +186,9 @@ export function CharacterPage() {
             </div>
             <div className="no-print" style={{ marginTop: 14 }}>
               <InventorySection card={card!} onPatch={(p) => void patchCharacter(card!.id, p)} />
+            </div>
+            <div className="no-print" style={{ marginTop: 14 }}>
+              <CharacterHistory card={card!} />
             </div>
           </div>
         </div>
