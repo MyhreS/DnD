@@ -10,6 +10,7 @@ import { StartGamePanel } from "./StartGamePanel";
 import { Lobby } from "./Lobby";
 import { InGame } from "./InGame";
 import { Recap } from "./Recap";
+import { GameLog } from "@/features/log/components/GameLog";
 
 export function PlayPage() {
   const user = useAuthStore((s) => s.user);
@@ -56,9 +57,15 @@ export function PlayPage() {
           )}
         </div>
       ) : game.status === "lobby" ? (
-        <Lobby game={game} participants={participants} />
+        <div className="stack" style={{ gap: 14 }}>
+          <Lobby game={game} participants={participants} />
+          <GameLog since={game.createdAt} />
+        </div>
       ) : (
-        <InGame game={game} participants={participants} />
+        <div className="stack" style={{ gap: 14 }}>
+          <InGame game={game} participants={participants} />
+          <GameLog since={game.createdAt} />
+        </div>
       )}
     </div>
   );
