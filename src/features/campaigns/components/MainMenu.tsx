@@ -9,6 +9,7 @@ import { Sigil } from "@/components/icons";
 import { useCampaignStore } from "../store/campaignStore";
 import { TestCampaignButton } from "./TestCampaignButton";
 import { DeleteCampaign } from "./DeleteCampaign";
+import { LeaveCampaign } from "./LeaveCampaign";
 import type { Campaign } from "@/types";
 
 /** The "main menu" home: your campaigns, your hunters, and the handbook. */
@@ -90,7 +91,7 @@ export function MainMenu() {
                 </div>
                 <div className="gold" style={{ fontSize: "0.8rem", marginTop: 6 }}>Enter →</div>
               </button>
-              {c.dmUid === user?.uid && <DeleteCampaign campaign={c} />}
+              {c.dmUid === user?.uid ? <DeleteCampaign campaign={c} /> : <LeaveCampaign campaign={c} />}
             </div>
           ))}
         </div>
