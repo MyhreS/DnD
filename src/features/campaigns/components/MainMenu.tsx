@@ -8,6 +8,7 @@ import { AsyncButton } from "@/components/AsyncButton";
 import { Sigil } from "@/components/icons";
 import { useCampaignStore } from "../store/campaignStore";
 import { TestCampaignButton } from "./TestCampaignButton";
+import { DeleteCampaign } from "./DeleteCampaign";
 import type { Campaign } from "@/types";
 
 /** The "main menu" home: your campaigns, your hunters, and the handbook. */
@@ -80,14 +81,17 @@ export function MainMenu() {
       ) : (
         <div className="card-grid">
           {campaigns.map((c) => (
-            <button key={c.id} type="button" className="card card-hover" style={{ textAlign: "left" }} onClick={() => go(c)}>
-              <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.05rem" }}>{c.name}</div>
-              <div className="faint" style={{ fontSize: "0.82rem", marginTop: 2 }}>
-                DM {c.dmName} · {c.memberUids.length} {c.memberUids.length === 1 ? "member" : "members"}
-                {c.dmUid === user?.uid ? " · you're DM" : ""}
-              </div>
-              <div className="gold" style={{ fontSize: "0.8rem", marginTop: 6 }}>Enter →</div>
-            </button>
+            <div key={c.id} className="stack" style={{ gap: 2 }}>
+              <button type="button" className="card card-hover" style={{ textAlign: "left", width: "100%" }} onClick={() => go(c)}>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.05rem" }}>{c.name}</div>
+                <div className="faint" style={{ fontSize: "0.82rem", marginTop: 2 }}>
+                  DM {c.dmName} · {c.memberUids.length} {c.memberUids.length === 1 ? "member" : "members"}
+                  {c.dmUid === user?.uid ? " · you're DM" : ""}
+                </div>
+                <div className="gold" style={{ fontSize: "0.8rem", marginTop: 6 }}>Enter →</div>
+              </button>
+              {c.dmUid === user?.uid && <DeleteCampaign campaign={c} />}
+            </div>
           ))}
         </div>
       )}
