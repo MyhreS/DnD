@@ -18,6 +18,7 @@ import {
 import { db } from "@/lib/firebase";
 import { emptyCard } from "@/lib/character";
 import { saveCharacter } from "@/api/players";
+import { logEvent, purgeCampaignActivity } from "@/api/activity";
 import type { Campaign, CampaignMember, HunterCard } from "@/types";
 
 const campaignsCol = collection(db, "campaigns");
@@ -83,6 +84,13 @@ export async function createCampaign(input: CreateCampaignInput): Promise<string
     role: "dm",
     characterId: null,
     joinedAt: serverTimestamp(),
+  });
+  await logEvent({
+    campaignId: ref.id,
+    type: "campaign.created",
+    message: `${input.dmName} founded the campaign «${input.name}».`,
+    actorUid: input.dmUid,
+    actorName: input.dmName,
   });
   return ref.id;
 }
@@ -163,6 +171,13 @@ export async function joinCampaign(input: JoinCampaignInput): Promise<string> {
     },
     { merge: true },
   );
+  await logEvent({
+    campaignId,
+    type: "member.joined",
+    message: `${input.name} joined the campaign (invite code).`,
+    actorUid: input.uid,
+    actorName: input.name,
+  });
   return campaignId;
 }
 
@@ -229,6 +244,13 @@ export async function acceptInvite(input: AcceptInviteInput): Promise<void> {
     },
     { merge: true },
   );
+  await logEvent({
+    campaignId: input.campaignId,
+    type: "member.joined",
+    message: `${input.name} joined the campaign (accepted an invite).`,
+    actorUid: input.uid,
+    actorName: input.name,
+  });
 }
 
 /** Decline an invite: just clear the email invite. */
@@ -242,11 +264,32 @@ export async function setMemberCharacter(
   campaignId: string,
   uid: string,
   characterId: string | null,
+  /** For the campaign log: who did it, and which hunter came in. */
+  meta?: { actorUid: string; actorName: string; characterName: string; ownerUid: string },
 ): Promise<void> {
   await setDoc(doc(membersCol(campaignId), uid), { characterId }, { merge: true });
+  if (meta && characterId) {
+    await logEvent({
+      campaignId,
+      type: "hunter.brought",
+      message: `${meta.actorName} brought ${meta.characterName} into the campaign.`,
+      actorUid: meta.actorUid,
+      actorName: meta.actorName,
+      characterId,
+      ownerUid: meta.ownerUid,
+    });
+  }
 }
 
-export async function leaveCampaign(campaignId: string, uid: string): Promise<void> {
+export async function leaveCampaign(campaignId: string, uid: string, name?: string): Promise<void> {
+  // Log first — after the member doc is gone, the rules no longer let us write.
+  await logEvent({
+    campaignId,
+    type: "member.left",
+    message: `${name ?? "A hunter"} left the campaign.`,
+    actorUid: uid,
+    actorName: name ?? "A hunter",
+  });
   // Un-bind the leaver's own hunters first (while still a member), so they
   // don't stay labelled with a campaign they're no longer in.
   const chars = await getDocs(
@@ -277,6 +320,7 @@ export async function deleteCampaign(campaignId: string): Promise<void> {
   await purgeScoped("trades");
   await purgeScoped("shopListings");
   await purgeScoped("sellRequests");
+  await purgeCampaignActivity(campaignId);
   // Characters: delete the seeded bots; keep real players' hunters (un-bind them).
   const chars = await getDocs(query(collection(db, "characters"), where("campaignId", "==", campaignId)));
   await Promise.all(

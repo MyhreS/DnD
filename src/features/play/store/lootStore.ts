@@ -2,7 +2,24 @@ import { create } from "zustand";
 import type { HunterCard, InventoryEntry, LootPile } from "@/types";
 import { subscribeLoot, claimLoot, createLoot } from "@/api/games";
 import { patchCharacter } from "@/api/players";
+import { logEvent, describeLoot } from "@/api/activity";
+import { useGameStore } from "./gameStore";
 import { isPreviewActive, previewLoot } from "@/dev/preview";
+
+/** Chronicle a loot event against the game's campaign (quiet in sandbox runs). */
+function logLoot(gameId: string, card: HunterCard, type: "loot.claimed" | "loot.dropped", message: string) {
+  const g = useGameStore.getState().games.find((x) => x.id === gameId);
+  if (!g?.campaignId || g.sandbox) return;
+  void logEvent({
+    campaignId: g.campaignId,
+    type,
+    message,
+    actorUid: card.ownerUid,
+    actorName: card.name,
+    characterId: card.id,
+    ownerUid: card.ownerUid,
+  });
+}
 
 /** Merge dropped items into an inventory (sum quantities). */
 function mergeInventory(inv: InventoryEntry[], add: InventoryEntry[]): InventoryEntry[] {
@@ -77,6 +94,12 @@ export const useLootStore = create<LootState>((set, get) => ({
         inventory: mergeInventory(myCard.inventory ?? [], loot.items),
         coins: (myCard.coins ?? 0) + loot.coins,
       });
+      logLoot(
+        gameId,
+        myCard,
+        "loot.claimed",
+        `${myCard.name} claimed ${describeLoot(loot.items, loot.coins)} from ${loot.fromName}.`,
+      );
       set({ busy: false });
       return true;
     } catch (err) {
@@ -120,6 +143,7 @@ export const useLootStore = create<LootState>((set, get) => ({
       });
       const inventory = (myCard.inventory ?? []).filter((e) => e.itemId !== entry.itemId);
       await patchCharacter(myCard.id, { inventory });
+      logLoot(gameId, myCard, "loot.dropped", `${myCard.name} dropped ${describeLoot([entry], 0)}.`);
       set({ busy: false });
       return true;
     } catch (err) {

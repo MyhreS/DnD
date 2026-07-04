@@ -10,6 +10,7 @@ import {
   type ShortRestOutcome,
 } from "@/lib/rest";
 import { patchCharacter } from "@/api/players";
+import { logEvent } from "@/api/activity";
 import { AsyncButton } from "@/components/AsyncButton";
 import { LOCATION_LABEL } from "../lib/phase";
 import type { GameLocation, GamePhase, HunterCard } from "@/types";
@@ -44,14 +45,27 @@ export function RestPanel({
     // concurrent DM writes. The rest math only ever REDUCES
     // transformationLevel and CLEARS activeTransformations — the owner-side
     // bounds firestore.rules enforces (transformation is otherwise DM-owned).
+    let summary: string;
     if (isLong) {
       const r = applyLongRest(card, klass, location);
       await patchCharacter(card.id, r.patch);
-      setDone(longSummary(r));
+      summary = longSummary(r);
     } else {
       const r = applyShortRest(card, klass, location);
       await patchCharacter(card.id, r.patch);
-      setDone(shortSummary(r));
+      summary = shortSummary(r);
+    }
+    setDone(summary);
+    if (card.campaignId) {
+      void logEvent({
+        campaignId: card.campaignId,
+        type: "hunter.rested",
+        message: `${card.name} took a ${isLong ? "long" : "short"} rest. ${summary}`,
+        actorUid: card.ownerUid,
+        actorName: card.name,
+        characterId: card.id,
+        ownerUid: card.ownerUid,
+      });
     }
   }
 

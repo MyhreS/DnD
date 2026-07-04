@@ -8,6 +8,8 @@ import {
   cancelTrade,
   type CreateTradeInput,
 } from "@/api/trades";
+import { logEvent, describeLoot } from "@/api/activity";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { isPreviewActive, previewTrades } from "@/dev/preview";
 
 interface TradeState {
@@ -101,7 +103,21 @@ export const useTradeStore = create<TradeState>((set, get) => {
         set((s) => ({ trades: s.trades.map((t) => (t.id === id ? { ...t, status: "settled", settledAt: Date.now() } : t)) }));
         return true;
       }
-      return (await run(() => acceptTrade(id), "Couldn't accept the trade.")) !== null;
+      const ok = (await run(() => acceptTrade(id), "Couldn't accept the trade.")) !== null;
+      const t = get().trades.find((x) => x.id === id);
+      if (ok && t?.campaignId && !t.sandbox) {
+        const { user, member } = useAuthStore.getState();
+        if (user) {
+          void logEvent({
+            campaignId: t.campaignId,
+            type: "trade.accepted",
+            message: `${t.toName} accepted a trade with ${t.fromName}: ${describeLoot(t.offer.items, t.offer.coins)} for ${describeLoot(t.request.items, t.request.coins)}.`,
+            actorUid: user.uid,
+            actorName: member?.firstName || user.displayName || t.toName,
+          });
+        }
+      }
+      return ok;
     },
 
     decline: async (id) => {

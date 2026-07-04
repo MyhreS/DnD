@@ -110,6 +110,20 @@ service cloud.firestore {
       }
     }
 
+    // /activity/{id} — the campaign chronicle. Append-only: members write
+    // events about themselves (actorUid must match); nobody edits history.
+    // Reads: members see a campaign's log; a hunter's OWNER sees that hunter's
+    // history across campaigns (queries must filter ownerUid == their uid so
+    // the rule is provable). The DM purges the log with the campaign.
+    match /activity/{id} {
+      allow read: if isMember(resource.data.campaignId)
+        || (isUser() && resource.data.ownerUid == request.auth.uid);
+      allow create: if isMember(request.resource.data.campaignId)
+        && request.resource.data.actorUid == request.auth.uid;
+      allow update: if false;
+      allow delete: if isCampaignDM(resource.data.campaignId);
+    }
+
     // /sessions/{id} — campaign schedule. Members read; the DM manages dates.
     match /sessions/{id} {
       allow read: if isMember(resource.data.campaignId);

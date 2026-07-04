@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createSession, updateSession, deleteSession } from "@/api/sessions";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { AsyncButton } from "@/components/AsyncButton";
 import { ModalBackdrop } from "@/components/ModalBackdrop";
 import type { SessionEvent } from "@/types";
@@ -24,6 +25,11 @@ export function SessionForm({
   const [notes, setNotes] = useState(session?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
   const activeId = useCampaignStore((s) => s.activeId);
+  const user = useAuthStore((s) => s.user);
+  const member = useAuthStore((s) => s.member);
+  const actor = user
+    ? { uid: user.uid, name: member?.firstName || user.displayName || "The DM" }
+    : undefined;
 
   const canSave = title.trim().length > 0 && date.length >= 16;
 
@@ -38,8 +44,8 @@ export function SessionForm({
       notes: notes.trim(),
     };
     try {
-      if (session) await updateSession(session.id, payload);
-      else await createSession(payload, authorEmail);
+      if (session) await updateSession(session.id, payload, actor);
+      else await createSession(payload, authorEmail, actor);
       onClose();
     } catch (err) {
       console.error(err);

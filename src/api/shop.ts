@@ -13,6 +13,7 @@ import {
   type Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
+import { logEvent, describeLoot } from "@/api/activity";
 import type { HunterCard, InventoryEntry, ShopListing, SellRequest } from "@/types";
 
 // The DM's storefront + players' sell requests. Buying mutates the buyer's own
@@ -108,6 +109,15 @@ export async function buyListing(listing: ShopListing, card: HunterCard): Promis
       inventory: mergeInventory(data.inventory ?? [], [{ itemId: listing.itemId, qty: 1 }]),
     });
   });
+  await logEvent({
+    campaignId: listing.campaignId,
+    type: "shop.bought",
+    message: `${card.name} bought ${describeLoot([{ itemId: listing.itemId, qty: 1 }], 0)} from the shop for ${listing.priceGp} gp.`,
+    actorUid: card.ownerUid,
+    actorName: card.name,
+    characterId: card.id,
+    ownerUid: card.ownerUid,
+  });
 }
 
 // --- Sell requests (player-raised, DM-gated) ---
@@ -183,10 +193,18 @@ export async function declineSellRequest(id: string): Promise<void> {
  *  - status must still be "priced" (else "Already settled" — idempotent);
  *  - the credit/removal use the qty the seller *currently* owns (capped), so a
  *    stale/duplicate request pays for nothing it can't deliver. */
-export async function approveSellRequest(req: SellRequest, sellerCard: HunterCard): Promise<void> {
+export async function approveSellRequest(
+  req: SellRequest,
+  sellerCard: HunterCard,
+  actor?: { uid: string; name: string },
+): Promise<void> {
   const reqRef = doc(sellRequestsCol, req.id);
   const charRef = doc(db, "characters", sellerCard.id);
+  let soldQty = 0;
+  let soldFor = 0;
   await runTransaction(db, async (tx) => {
+    soldQty = 0;
+    soldFor = 0;
     const reqSnap = await tx.get(reqRef);
     const charSnap = await tx.get(charRef);
     const reqData = (reqSnap.data() ?? {}) as Partial<SellRequest>;
@@ -210,5 +228,18 @@ export async function approveSellRequest(req: SellRequest, sellerCard: HunterCar
       inventory: removeFromInventory(inventory, reqData.itemId ?? "", sellQty),
     });
     tx.update(reqRef, { status: "approved", updatedAt: serverTimestamp(), settledAt: serverTimestamp() });
+    soldQty = sellQty;
+    soldFor = priceGp * sellQty;
   });
+  if (actor && soldQty > 0) {
+    await logEvent({
+      campaignId: req.campaignId,
+      type: "shop.sold",
+      message: `${req.sellerName} sold ${describeLoot([{ itemId: req.itemId, qty: soldQty }], 0)} to the shop for ${soldFor} gp.`,
+      actorUid: actor.uid,
+      actorName: actor.name,
+      characterId: req.characterId,
+      ownerUid: req.sellerUid,
+    });
+  }
 }

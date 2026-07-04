@@ -3,12 +3,15 @@ import { CharacterEditor } from "@/features/hunter/components/CharacterEditor";
 import { emptyCard } from "@/lib/character";
 import { saveCharacter } from "@/api/players";
 import { setMemberCharacter } from "@/api/campaigns";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import type { CampaignMember, HunterCard } from "@/types";
 
 /** DM-only: author a hunter for a campaign member who has none. The character is
  * owned by that player (ownerUid = member.uid) so they keep full control; it's
  * bound to the campaign and set as the member's character. */
 export function DMBuildHunter({ members, campaignId }: { members: CampaignMember[]; campaignId: string }) {
+  const user = useAuthStore((s) => s.user);
+  const member = useAuthStore((s) => s.member);
   const [building, setBuilding] = useState<CampaignMember | null>(null);
   const [draft, setDraft] = useState<HunterCard | null>(null);
   const [saving, setSaving] = useState(false);
@@ -31,7 +34,19 @@ export function DMBuildHunter({ members, campaignId }: { members: CampaignMember
     try {
       const toSave = { ...card, campaignId };
       await saveCharacter(toSave);
-      await setMemberCharacter(campaignId, building.uid, toSave.id);
+      await setMemberCharacter(
+        campaignId,
+        building.uid,
+        toSave.id,
+        user
+          ? {
+              actorUid: user.uid,
+              actorName: member?.firstName || user.displayName || "The DM",
+              characterName: toSave.name,
+              ownerUid: building.uid,
+            }
+          : undefined,
+      );
       setBuilding(null);
       setDraft(null);
     } catch (e) {

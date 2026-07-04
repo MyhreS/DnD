@@ -175,7 +175,11 @@ export const useShopStore = create<ShopState>((set, get) => {
         }));
         return true;
       }
-      return run(() => approveSellRequest(req, card), "Couldn't approve the sale.");
+      const { user, member } = useAuthStore.getState();
+      const actor = user
+        ? { uid: user.uid, name: member?.firstName || user.displayName || "The DM" }
+        : undefined;
+      return run(() => approveSellRequest(req, card, actor), "Couldn't approve the sale.");
     },
 
     declineSell: async (id) => {
