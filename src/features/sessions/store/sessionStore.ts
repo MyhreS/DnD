@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import type { SessionEvent } from "@/types";
 import { subscribeSessions } from "@/api/sessions";
+import { subscribeWithDeniedRetry } from "@/lib/subscribeRetry";
 
 type Status = "idle" | "loading" | "ready" | "error";
 
@@ -31,9 +32,8 @@ export const useSessionStore = create<SessionState>((set, get) => ({
     if (campaignId === get().campaignId && get().unsub) return;
     get().unsub?.();
     set({ status: "loading", error: null, campaignId, sessions: [] });
-    const unsub = subscribeSessions(
-      campaignId,
-      (sessions) => set({ sessions, status: "ready" }),
+    const unsub = subscribeWithDeniedRetry(
+      (onError) => subscribeSessions(campaignId, (sessions) => set({ sessions, status: "ready" }), onError),
       () => set({ status: "error", error: "Could not load the schedule." }),
     );
     set({ unsub });

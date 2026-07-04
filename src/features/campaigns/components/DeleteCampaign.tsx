@@ -11,6 +11,7 @@ export function DeleteCampaign({ campaign }: { campaign?: Campaign }) {
   const active = useCampaignStore((s) => s.active);
   const remove = useCampaignStore((s) => s.remove);
   const busy = useCampaignStore((s) => s.busy);
+  const error = useCampaignStore((s) => s.error);
   const [step, setStep] = useState<0 | 1 | 2>(0);
   const [typed, setTyped] = useState("");
   const target = campaign ?? active;
@@ -40,6 +41,7 @@ export function DeleteCampaign({ campaign }: { campaign?: Campaign }) {
   return (
     <div className="card" style={{ borderColor: "var(--blood-bright)" }}>
       <p className="eyebrow" style={{ marginBottom: 6, color: "var(--blood-bright)" }}>Danger zone</p>
+      {error && <div className="banner banner-error" style={{ marginBottom: 10 }}>{error}</div>}
       {step === 1 ? (
         <>
           <p style={{ marginBottom: 10 }}>

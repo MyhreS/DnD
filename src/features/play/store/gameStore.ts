@@ -23,6 +23,7 @@ import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { purgeArchive } from "@/api/players";
 import { logEvent } from "@/api/activity";
 import { PHASE_LABEL, LOCATION_LABEL } from "@/features/play/lib/phase";
+import { subscribeWithDeniedRetry } from "@/lib/subscribeRetry";
 import { explain } from "@/lib/errors";
 
 type Status = "idle" | "loading" | "loaded" | "error";
@@ -169,12 +170,16 @@ export const useGameStore = create<GameState>((set, get) => {
       if (campaignId === get()._gamesCampaignId && get()._unsubGames) return;
       get()._unsubGames?.();
       set({ status: "loading", error: null, _gamesCampaignId: campaignId });
-      const unsub = subscribeGames(
-        campaignId,
-        (games) => {
-          set({ games, status: "loaded", error: null });
-          syncParticipants(games);
-        },
+      const unsub = subscribeWithDeniedRetry(
+        (onError) =>
+          subscribeGames(
+            campaignId,
+            (games) => {
+              set({ games, status: "loaded", error: null });
+              syncParticipants(games);
+            },
+            onError,
+          ),
         (err) => set({ status: "error", error: explain("Couldn't load the game", err) }),
       );
       set({ _unsubGames: unsub });
