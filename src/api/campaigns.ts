@@ -247,6 +247,12 @@ export async function setMemberCharacter(
 }
 
 export async function leaveCampaign(campaignId: string, uid: string): Promise<void> {
+  // Un-bind the leaver's own hunters first (while still a member), so they
+  // don't stay labelled with a campaign they're no longer in.
+  const chars = await getDocs(
+    query(collection(db, "characters"), where("campaignId", "==", campaignId), where("ownerUid", "==", uid)),
+  );
+  await Promise.all(chars.docs.map((d) => setDoc(d.ref, { campaignId: null }, { merge: true })));
   await updateDoc(doc(campaignsCol, campaignId), { memberUids: arrayRemove(uid) });
   await deleteDoc(doc(membersCol(campaignId), uid));
 }

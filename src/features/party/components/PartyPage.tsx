@@ -3,6 +3,7 @@ import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { useIsDM } from "@/features/campaigns/hooks/useIsDM";
 import { CampaignInvitePanel } from "@/features/campaigns/components/CampaignInvitePanel";
 import { DeleteCampaign } from "@/features/campaigns/components/DeleteCampaign";
+import { LeaveCampaign } from "@/features/campaigns/components/LeaveCampaign";
 import { useSessionStore } from "@/features/sessions/store/sessionStore";
 import { useSessionsLive } from "@/features/sessions/hooks/useSessionsLive";
 import { sortUpcoming } from "@/data/sessions";
@@ -31,6 +32,7 @@ export function PartyPage() {
   useCharactersSync();
   const games = useGameStore((s) => s.games);
   const activeId = useCampaignStore((s) => s.activeId);
+  const active = useCampaignStore((s) => s.active);
   const campaignMembers = useCampaignStore((s) => s.members);
   const allSessions = useSessionStore((s) => s.sessions);
   const sessions = useMemo(() => allSessions.filter((s) => s.campaignId === activeId), [allSessions, activeId]);
@@ -99,6 +101,7 @@ export function PartyPage() {
         )}
 
         {isDM && <div style={{ margin: "12px 0" }}><DeleteCampaign /></div>}
+        {!isDM && active && <div style={{ margin: "12px 0" }}><LeaveCampaign campaign={active} /></div>}
 
         {oversight && (
           <RosterPanel
