@@ -162,7 +162,10 @@ function drawCharacter(doc: jsPDF, card: HunterCard): void {
     ]);
     y = line(doc, y, "Weapons", klass.weaponProficiencies);
     if (klass.toolProficiencies) y = line(doc, y, "Tools", klass.toolProficiencies);
-    if (card.feat) y = line(doc, y, "Origin feat", card.feat);
+    if (card.feat) {
+      const picks = card.featSkills?.length ? ` (${card.featSkills.join(", ")})` : "";
+      y = line(doc, y, "Origin feat", `${card.feat}${picks}`);
+    }
     y += 8;
   }
 
