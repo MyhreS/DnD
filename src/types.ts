@@ -545,6 +545,10 @@ export interface HunterCard {
   /** Origin feat granted via the background; null when the background grants
    * none (an explicit null so saves CLEAR a previously stored feat). */
   feat?: string | null;
+  /** The Skilled feat's three chosen proficiencies (skills and/or tools).
+   * Skill picks are ALSO merged into `skillProficiencies`; tool picks live
+   * only here. Empty when the origin feat grants no choice. */
+  featSkills?: string[];
   level: number;
   /** The last level this player has walked through the level-up screen for.
    * When `level` moves past it (DM award/level or a Long Rest), the level-up

@@ -4,6 +4,8 @@ import { CLASSES, getClass } from "@/data/classes";
 import { MAIN_ARMOR, ADDON_ARMOR, EXTRA_ARMOR, EXTRA_SUBCATEGORIES, ARMOR_BY_ID } from "@/data/armor";
 import { BACKGROUNDS } from "@/data/backgrounds";
 import { ORIGIN_FEATS } from "@/data/feats";
+import { SKILLS, SKILL_BY_NAME } from "@/data/skills";
+import { TOOL_PROFICIENCIES, SKILLED_FEAT, SKILLED_PICKS } from "@/data/tools";
 import {
   ABILITY_NAME,
   POINT_BUY_MIN,
@@ -89,13 +91,17 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   // Per-piece Studs (studdedAddonIdsOf maps a legacy numeric count to ids).
   const [studdedIds, setStuddedIds] = useState<string[]>(() => studdedAddonIdsOf(initial));
   const [extraIds, setExtraIds] = useState<string[]>(initial.extraArmorIds ?? []);
-  // Class-chosen skills only: strip the initial background's granted skills so
-  // re-editing a saved hunter doesn't count background skills as class picks.
+  // Class-chosen skills only: strip the initial background's granted skills
+  // and the Skilled-feat picks, so re-editing a saved hunter doesn't count
+  // either as class picks.
   const [classSkills, setClassSkills] = useState<string[]>(() => {
     const bgId = initialBackgroundId(initial);
     const granted = bgId ? BACKGROUNDS.find((b) => b.id === bgId)?.skills ?? [] : [];
-    return initial.skillProficiencies.filter((s) => !granted.includes(s));
+    const fromFeat = initial.featSkills ?? [];
+    return initial.skillProficiencies.filter((s) => !granted.includes(s) && !fromFeat.includes(s));
   });
+  // The Skilled feat's three free proficiencies (skills and/or tools).
+  const [featSkills, setFeatSkills] = useState<string[]>(initial.featSkills ?? []);
   const creating = !initial.classId;
   // Level is pickable ONLY while creating (the tucked-away "Advanced" control
   // on Step 1, for joining mid-campaign at the DM's instruction). On an
@@ -163,9 +169,18 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
   const classSkillsOk = !klass || classSkillCount === klass.skillChoices.count;
   // >0 while picks remain; <0 only on legacy cards whose saved picks exceed the count.
   const skillsRemaining = klass ? klass.skillChoices.count - classSkillCount : 0;
+  // The Skilled feat's picks only apply while the background grants it.
+  const skilledFeat = bg?.feat === SKILLED_FEAT;
+  const activeFeatSkills = useMemo(() => (skilledFeat ? featSkills : []), [skilledFeat, featSkills]);
+  // Skill-type picks merge into the proficiency list; tool picks live in featSkills only.
+  const featSkillPicks = useMemo(
+    () => activeFeatSkills.filter((s) => !!SKILL_BY_NAME[s]),
+    [activeFeatSkills],
+  );
+  const featSkillsOk = !skilledFeat || activeFeatSkills.length === SKILLED_PICKS;
   const allSkills = useMemo(
-    () => Array.from(new Set([...classSkills, ...bgSkills])),
-    [classSkills, bgSkills],
+    () => Array.from(new Set([...classSkills, ...bgSkills, ...featSkillPicks])),
+    [classSkills, bgSkills, featSkillPicks],
   );
 
   const budget = budgetFor(mode);
@@ -270,8 +285,23 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     setBackgroundId(id);
     const next = BACKGROUNDS.find((b) => b.id === id);
     setFeat(next?.feat ?? "");
+    // Skilled picks only survive a switch to another Skilled background — and
+    // even then, drop any pick the new background now grants outright.
+    setFeatSkills((cur) =>
+      next?.feat === SKILLED_FEAT
+        ? cur.filter((s) => !next.skills.includes(s) && next.tool !== s)
+        : [],
+    );
     setAbilitiesDirty(true);
     setBonus(ZERO_BONUS());
+  }
+
+  function toggleFeatSkill(pick: string) {
+    setFeatSkills((cur) => {
+      if (cur.includes(pick)) return cur.filter((s) => s !== pick);
+      if (cur.length >= SKILLED_PICKS) return cur; // at the limit
+      return [...cur, pick];
+    });
   }
 
   // Class skills the player picked that the background also grants (redundant).
@@ -291,17 +321,18 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
     if (klass && subclassRequired && !subclassId) p.push(`Choose your ${klass.name} path.`);
     if (!backgroundId) p.push("Choose a background.");
     if (bg?.feat && feat.trim().length === 0) p.push("Choose your Origin feat.");
+    if (!featSkillsOk) p.push(`Skilled: choose ${SKILLED_PICKS} skills or tools — ${activeFeatSkills.length}/${SKILLED_PICKS} chosen.`);
     if (abilitiesDirty) {
       if (pointsLeft !== 0) p.push(`Spend all your ability points — ${pointsLeft} still left.`);
       if (bonusTotal !== 3) p.push(`Apply your background ability points (+2 and +1, or three +1s) — ${bonusTotal}/3 used.`);
     }
     return p;
-  }, [name, classId, klass, classSkillsOk, subclassRequired, subclassId, backgroundId, bg, feat, abilitiesDirty, pointsLeft, bonusTotal]);
+  }, [name, classId, klass, classSkillsOk, subclassRequired, subclassId, backgroundId, bg, feat, featSkillsOk, activeFeatSkills, abilitiesDirty, pointsLeft, bonusTotal]);
 
   // Per-step completion (drives the progress bar + Next gating).
   const stepValid = [
     !!classId && classSkillsOk && subclassOk,
-    !!backgroundId,
+    !!backgroundId && featSkillsOk,
     scoresOk && bonusOk,
     true,
     problems.length === 0,
@@ -314,7 +345,10 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       if (!subclassOk) return "Choose your path — a level 3+ hunter must have a subclass.";
       return `Choose exactly ${klass?.skillChoices.count ?? 0} class skills.`;
     }
-    if (step === 1) return "Choose a background.";
+    if (step === 1) {
+      if (!backgroundId) return "Choose a background.";
+      return `Skilled: choose ${SKILLED_PICKS} skills or tools — ${activeFeatSkills.length}/${SKILLED_PICKS} chosen.`;
+    }
     if (step === 2) {
       return pointsLeft !== 0
         ? `Spend all your ability points — ${pointsLeft} still left.`
@@ -384,6 +418,8 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
       // null (not undefined) so switching to a no-feat background actually
       // CLEARS a previously stored feat under setDoc merge semantics.
       feat: bg?.feat ?? null,
+      // [] (not undefined) so switching away from Skilled clears stored picks.
+      featSkills: activeFeatSkills,
       mainArmorId: creating ? mainArmorId : initial.mainArmorId,
       addonArmorIds: savedAddons,
       studdedAddonIds: savedStuds,
@@ -563,8 +599,8 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
           </p>
           <div className="stack" style={{ gap: 8 }}>
             {BACKGROUNDS.map((b) => (
+              <Fragment key={b.id}>
               <SelectCard
-                key={b.id}
                 selected={b.id === backgroundId}
                 onClick={() => chooseBackground(b.id)}
                 title={b.name}
@@ -602,6 +638,14 @@ export function CharacterEditor({ initial, saving, error, onSave, onCancel, onDe
                   </div>
                 )}
               </SelectCard>
+              {b.id === backgroundId && b.feat === SKILLED_FEAT && (
+                <SkilledPicker
+                  picks={featSkills}
+                  taken={new Set([...bgSkills, ...classSkills, ...(bg?.tool ? [bg.tool] : [])])}
+                  onToggle={toggleFeatSkill}
+                />
+              )}
+              </Fragment>
             ))}
           </div>
         </div>
@@ -976,6 +1020,60 @@ function SelectCard({
       {sub && <div className="muted" style={{ fontSize: "0.88rem" }}>{sub}</div>}
       {children !== undefined && selected && <div className="select-card-detail">{children}</div>}
     </button>
+  );
+}
+
+/** The Skilled feat's picker: any combination of three skills or tools.
+ *  Options the hunter is already proficient in (background skills, class picks,
+ *  the background's tool) are disabled so a free pick is never wasted. */
+function SkilledPicker({
+  picks,
+  taken,
+  onToggle,
+}: {
+  picks: string[];
+  taken: Set<string>;
+  onToggle: (pick: string) => void;
+}) {
+  const done = picks.length === SKILLED_PICKS;
+  const remaining = SKILLED_PICKS - picks.length;
+  const chip = (name: string) => {
+    const selected = picks.includes(name);
+    const blocked = !selected && (taken.has(name) || picks.length >= SKILLED_PICKS);
+    return (
+      <button
+        key={name}
+        type="button"
+        className={`chip selectable${selected ? " selected" : ""}${blocked ? " disabled" : ""}`}
+        onClick={() => { if (!blocked) onToggle(name); }}
+        disabled={!selected && taken.has(name)}
+        title={!selected && taken.has(name) ? "Already proficient" : undefined}
+      >
+        {name}
+      </button>
+    );
+  };
+  return (
+    <div className="card" style={{ borderColor: "var(--gold-dim)" }}>
+      <p className="eyebrow">Skilled · your free proficiencies</p>
+      <h3 style={{ marginBottom: 6 }}>Choose any {SKILLED_PICKS} skills or tools</h3>
+      <div className={`pick-counter${done ? " done" : ""}`} role="status" style={{ margin: "2px 0 10px" }}>
+        {done ? "✓ " : ""}
+        {picks.length} of {SKILLED_PICKS} chosen
+        {remaining > 0 ? ` — pick ${remaining} more` : ""}
+      </div>
+      <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
+        Proficiencies you already have are greyed out — a free pick shouldn't be wasted.
+      </p>
+      <p className="eyebrow" style={{ marginBottom: 6 }}>Skills</p>
+      <div className="chip-row" style={{ marginBottom: 12 }}>
+        {SKILLS.map((s) => chip(s.name))}
+      </div>
+      <p className="eyebrow" style={{ marginBottom: 6 }}>Tools</p>
+      <div className="chip-row">
+        {TOOL_PROFICIENCIES.map((t) => chip(t))}
+      </div>
+    </div>
   );
 }
 
