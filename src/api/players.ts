@@ -53,20 +53,6 @@ export async function patchCharacter(id: string, partial: Partial<HunterCard>): 
   await setDoc(doc(charsCol, id), partial, { merge: true });
 }
 
-/** Replace a sheet-made character's WHOLE paper sheet (the "Clear sheet"
- * flow) plus its mirrored summary fields. Uses updateDoc — NOT a merge — so
- * removed sheet keys actually clear on the server instead of deep-merging
- * back in. The doc must already exist (first save goes through
- * `saveCharacter` via the player store). */
-export async function replaceCharacterSheet(
-  id: string,
-  sheet: SheetData,
-  mirror: Partial<HunterCard>,
-): Promise<void> {
-  if (isPreviewActive()) return patchCharacter(id, { ...mirror, sheet });
-  await updateDoc(doc(charsCol, id), { ...mirror, sheet, updatedAt: Date.now() });
-}
-
 /** Per-field paper-sheet autosave: writes ONLY the changed keys, as dotted
  * `sheet.<key>` paths, so two open copies (phone + desktop, or the DM and the
  * owner) merge per field instead of last-writer-wins on the whole map.
