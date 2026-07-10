@@ -219,7 +219,7 @@
 }
 .papersheet .pageno {
   position: absolute;
-  bottom: 5mm;
+  bottom: 4.5mm;
   right: 12mm;
   font-size: 10px;
   letter-spacing: 0.2em;
@@ -697,6 +697,45 @@
   opacity: 0.85;
 }
 
+/* Section title: names what lives below a divider ("ABILITIES & SKILLS").
+ * Sits tight under the blue rule; ornaments keep it in the sheet's voice. */
+.papersheet .sec-title {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  margin: -3mm 0 1mm;
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.22em;
+  color: var(--ink-soft);
+  text-align: center;
+  justify-content: center;
+}
+.papersheet .sec-title::before,
+.papersheet .sec-title::after {
+  content: "";
+  flex: 1;
+  max-width: 18mm;
+  height: 1.2px;
+  background: rgba(33, 29, 23, 0.35);
+}
+
+/* Column eyebrows for the unlabelled top-of-page regions. */
+.papersheet .col-title {
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+  margin-bottom: 1.5mm;
+}
+/* The name field's red "Your ACTUAL name" note floats 6mm above it — leave
+ * that much air under this column's title so they never overlap. */
+.papersheet .idfields .col-title {
+  margin-bottom: 7mm;
+}
+
 /* stat grid */
 .papersheet .statgrid {
   display: grid;
@@ -749,6 +788,15 @@
   border-bottom: none;
   font-size: 19px;
 }
+/* The mod circle overlaps the score box's right edge (the reference's look) —
+ * pad the score's digits away from the overlap so "14" never touches the
+ * circle, and nudge the modifier's digits toward the circle's visible centre. */
+.papersheet .score input {
+  padding-right: 3.5mm;
+}
+.papersheet .mod input {
+  padding-left: 1.5mm;
+}
 .papersheet .mod {
   width: 13mm;
   height: 13mm;
@@ -774,7 +822,7 @@
   display: flex;
   align-items: center;
   gap: 1.6mm;
-  margin-bottom: 0.7mm;
+  margin-bottom: 0.5mm;
 }
 .papersheet .skill .sname {
   font-size: 10.5px;
@@ -844,7 +892,8 @@
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
   gap: 7mm;
-  margin-top: 5mm;
+  /* Tight enough that the row clears the absolutely-anchored page footer. */
+  margin-top: 2.5mm;
 }
 .papersheet .bigstat {
   border: 1.8px solid var(--rule);
@@ -864,7 +913,7 @@
   background: rgba(33, 29, 23, 0.05);
 }
 .papersheet .bigstat input {
-  height: 12mm;
+  height: 10.5mm;
   text-align: center;
   font-size: 22px;
   border-bottom: none;
@@ -1021,7 +1070,7 @@
   display: flex;
   align-items: center;
   gap: 4mm;
-  margin-bottom: 2.6mm;
+  margin-bottom: 2.2mm;
 }
 .papersheet .addon-row .frame {
   flex: 1;
@@ -1092,7 +1141,7 @@
   display: flex;
   align-items: center;
   gap: 3mm;
-  margin-top: 6mm;
+  margin-top: 4mm;
 }
 .papersheet .coinbox {
   width: 20mm;

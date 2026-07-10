@@ -69,6 +69,7 @@ export function SheetPage1() {
     <div className="page">
       <div className="p1-top">
         <div className="idfields">
+          <div className="col-title">IDENTITY</div>
           <div className="fld">
             <span className="st-note">Your ACTUAL name</span>
             <F f="name" />
@@ -98,6 +99,7 @@ export function SheetPage1() {
         </div>
 
         <div className="vitals">
+          <div className="col-title">VITALS</div>
           <Vital step="5" head={<>TRANSFORMATION LVL <St n={5} /> <Info k="transformation" side="left" /></>}>
             <div className="minifields"><MF f="transformation" /></div>
           </Vital>
@@ -146,6 +148,7 @@ export function SheetPage1() {
       </div>
 
       <div className="blue-rule" />
+      <div className="sec-title">ABILITIES &amp; SKILLS</div>
 
       <div className="statgrid">
         <div>
