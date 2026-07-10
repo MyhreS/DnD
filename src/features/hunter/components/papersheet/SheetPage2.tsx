@@ -18,6 +18,7 @@ export function SheetPage2() {
   return (
     <div className="page">
       <div className="blue-rule" style={{ marginTop: 0 }} />
+      <div className="sec-title">ARMOR &amp; EQUIPMENT</div>
       <div className="p2-grid">
         {/* left column: armor */}
         <div>
