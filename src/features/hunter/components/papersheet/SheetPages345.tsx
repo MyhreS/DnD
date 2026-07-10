@@ -47,7 +47,7 @@ export function SheetPage5() {
       <div className="blue-rule" style={{ marginTop: 0, width: "60mm" }} />
       <div className="rites-grid">
         <div>
-          <h2 className="sec" style={{ fontSize: 16 }}>WHISPERS AND RITES <St n={5} /> <Info k="rites" /></h2>
+          <h2 className="sec" style={{ fontSize: 16 }}>WHISPERS AND RITES <St n={5} /> <Info k="rites" side="right" /></h2>
           <div className="riteline wide"><span className="lbl">RITE PERFORMING ABILITY</span><F f="riteAbility" /></div>
           <div className="riteline"><span className="lbl">RITE PERFORMING MODIFIER <St n={5} /></span><F f="riteMod" /></div>
           <div className="riteline"><span className="lbl">RITE SAVE DC <St n={5} /></span><F f="riteDC" /></div>

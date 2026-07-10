@@ -67,7 +67,7 @@ export function SheetPage1() {
             <span className="lbl">Your Name <Info k="name" /></span>
           </div>
           <div className="fld"><F f="background" /><span className="lbl">Background <St n={2} /> <Info k="background" /></span></div>
-          <div className="fld"><F f="class" /><span className="lbl">Class <St n={1} /> <Info k="class" /></span></div>
+          <div className="fld"><F f="class" /><span className="lbl">Class <St n={1} /> <Info k="class" side="right" /></span></div>
           <div className="fld"><F f="subclass" /><span className="lbl">Subclass <St n={1} /> <Info k="subclass" /></span></div>
         </div>
 

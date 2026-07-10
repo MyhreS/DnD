@@ -52,7 +52,7 @@ export function SheetPage2() {
           </div>
 
           <div className="coins">
-            <span className="lbl">COINS <St n={2} /> <Info k="coins" /></span>
+            <span className="lbl">COINS <St n={2} /> <Info k="coins" side="up" /></span>
             <div className="coinbox"><F f="coins" /></div>
             <span className="lbl">GP</span>
           </div>
