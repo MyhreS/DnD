@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { F, Chk, St } from "./sheetPrimitives";
+import { Info } from "./InfoDot";
 
 interface SkillLine {
   label: string;
@@ -13,7 +14,7 @@ function Ability({ title, k, step = 3, skills }: { title: string; k: string; ste
   return (
     <div className="abil">
       <h3>
-        {title} <St n={step} />
+        {title} <St n={step} /> <Info k="abilities" />
       </h3>
       <div className="scoremod">
         <div className="score"><F f={`${k}Score`} /></div>
@@ -63,11 +64,11 @@ export function SheetPage1() {
           <div className="fld">
             <span className="st-note">Your ACTUAL name</span>
             <F f="name" />
-            <span className="lbl">Your Name</span>
+            <span className="lbl">Your Name <Info k="name" /></span>
           </div>
-          <div className="fld"><F f="background" /><span className="lbl">Background <St n={2} /></span></div>
-          <div className="fld"><F f="class" /><span className="lbl">Class <St n={1} /></span></div>
-          <div className="fld"><F f="subclass" /><span className="lbl">Subclass <St n={1} /></span></div>
+          <div className="fld"><F f="background" /><span className="lbl">Background <St n={2} /> <Info k="background" /></span></div>
+          <div className="fld"><F f="class" /><span className="lbl">Class <St n={1} /> <Info k="class" /></span></div>
+          <div className="fld"><F f="subclass" /><span className="lbl">Subclass <St n={1} /> <Info k="subclass" /></span></div>
         </div>
 
         <div className="eye-wrap">
@@ -79,22 +80,22 @@ export function SheetPage1() {
             </svg>
             <div className="iris-stack">
               <F f="level" />
-              <span className="lbl">Level <St n={1} /></span>
+              <span className="lbl">Level <St n={1} /> <Info k="level" /></span>
               <div className="iris-rule" />
-              <span className="lbl">Insight <St n={5} /></span>
+              <span className="lbl">Insight <St n={5} /> <Info k="insight" /></span>
               <F f="insight" />
             </div>
           </div>
         </div>
 
         <div className="vitals">
-          <Vital head={<>TRANSFORMATION LVL <St n={5} /></>}>
+          <Vital head={<>TRANSFORMATION LVL <St n={5} /> <Info k="transformation" side="left" /></>}>
             <div className="minifields"><MF f="transformation" /></div>
           </Vital>
           <Vital
             head={
               <>
-                SANITY <St n={5} />
+                SANITY <St n={5} /> <Info k="sanity" side="left" />
                 <span style={{ marginLeft: "auto" }} className="sanity-insane"><Chk f="insane" /> INSANE</span>
               </>
             }
@@ -105,20 +106,20 @@ export function SheetPage1() {
               <MF f="sanityDice" lbl={<>SANITY DICE <St n={5} /></>} />
             </div>
           </Vital>
-          <Vital head={<>HIT POINTS <St n={5} /></>}>
+          <Vital head={<>HIT POINTS <St n={5} /> <Info k="hp" side="left" /></>}>
             <div className="minifields">
               <MF f="hpCur" lbl="CURRENT" />
               <MF f="hpMax" lbl="MAX" />
               <MF f="hpTemp" lbl="TEMP" tight />
             </div>
           </Vital>
-          <Vital head={<>HIT DICE <St n={5} /></>}>
+          <Vital head={<>HIT DICE <St n={5} /> <Info k="hitDice" side="left" /></>}>
             <div className="minifields">
               <MF f="hdSpent" lbl="SPENT" />
               <MF f="hdMax" lbl="MAX" />
             </div>
           </Vital>
-          <Vital head="DEATH SAVES">
+          <Vital head={<>DEATH SAVES <Info k="deathSaves" side="left" /></>}>
             <div className="deathsaves">
               <div className="ds-line">
                 <Chk f="dsS1" className="pip" /><Chk f="dsS2" className="pip" /><Chk f="dsS3" className="pip" />
@@ -138,7 +139,7 @@ export function SheetPage1() {
       <div className="statgrid">
         <div>
           <div className="abil" style={{ textAlign: "center" }}>
-            <h3>PROFICIENCY BONUS <St n={2} /></h3>
+            <h3>PROFICIENCY BONUS <St n={2} /> <Info k="profBonus" /></h3>
             <div className="profbox"><F f="profBonus" /></div>
           </div>
           <Ability title="STRENGTH" k="str" skills={[{ label: "Athletics", f: "skAthletics", step: 2 }]} />
@@ -167,7 +168,7 @@ export function SheetPage1() {
             ]}
           />
           <div className="tinge">
-            <h3>BLOOD TINGE <St n={5} /></h3>
+            <h3>BLOOD TINGE <St n={5} /> <Info k="bloodTinge" /></h3>
             <div className="drop">
               <svg viewBox="0 0 60 78" aria-hidden="true">
                 <path d="M30 3 C 30 3, 8 36, 8 52 a22 22 0 0 0 44 0 C 52 36, 30 3, 30 3 Z" stroke="#211d17" strokeWidth="4" fill="rgba(142,31,31,.10)" />
@@ -203,12 +204,12 @@ export function SheetPage1() {
       </div>
 
       <div className="p1-bottom">
-        <div className="bigstat"><div className="head">INITIATIVE <St n={5} /></div><F f="initiative" /></div>
+        <div className="bigstat"><div className="head">INITIATIVE <St n={5} /> <Info k="initiative" /></div><F f="initiative" /></div>
         <div>
-          <div className="bigstat"><div className="head">SPEED <St n={2} /></div><F f="speed" /></div>
+          <div className="bigstat"><div className="head">SPEED <St n={2} /> <Info k="speed" /></div><F f="speed" /></div>
           <div className="sizecap">( SIZE : MEDIUM )</div>
         </div>
-        <div className="bigstat"><div className="head">PASSIVE PERCEPTION <St n={5} /></div><F f="passivePerception" /></div>
+        <div className="bigstat"><div className="head">PASSIVE PERCEPTION <St n={5} /> <Info k="passivePerception" side="left" /></div><F f="passivePerception" /></div>
       </div>
       <div className="pageno">PAGE 1 · IDENTITY &amp; ABILITIES</div>
     </div>

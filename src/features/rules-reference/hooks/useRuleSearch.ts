@@ -1,11 +1,15 @@
 import { useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { RULES_REFERENCE } from "@/data/rulesReference";
 import { searchRules } from "../lib/searchRules";
 import type { RuleCategory } from "@/types";
 
-/** Search + category-filter state for the Rules Reference page. */
+/** Search + category-filter state for the Rules Reference page. `?q=` seeds
+ * the search box, so other pages (the sheet's info buttons) can deep-link
+ * straight to a rule. */
 export function useRuleSearch() {
-  const [query, setQuery] = useState("");
+  const [params] = useSearchParams();
+  const [query, setQuery] = useState(() => params.get("q") ?? "");
   const [category, setCategory] = useState<RuleCategory | "all">("all");
 
   const results = useMemo(() => {

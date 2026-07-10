@@ -924,6 +924,92 @@
   width: 26mm;
 }
 
+/* ================= info dots ================= */
+.papersheet .info {
+  position: relative;
+  display: inline-flex;
+  vertical-align: top;
+  margin: -3px 0 -3px 3px;
+}
+.papersheet .info > button {
+  font-family: "Alegreya Sans SC", sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 1;
+  width: 14px;
+  height: 14px;
+  border: 1.2px solid var(--marker-blue);
+  border-radius: 50%;
+  background: rgba(58, 99, 168, 0.08);
+  color: var(--marker-blue);
+  cursor: help;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.papersheet .info-pop {
+  display: none;
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 230px;
+  background: #fffdf7;
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 3px 3px 0 rgba(33, 29, 23, 0.18);
+  padding: 8px 10px;
+  text-align: left;
+  cursor: auto;
+}
+.papersheet .info.side-left .info-pop {
+  left: auto;
+  right: -4px;
+  transform: none;
+}
+.papersheet .info:hover .info-pop,
+.papersheet .info:focus-within .info-pop,
+.papersheet .info.open .info-pop {
+  display: block;
+}
+.papersheet .info-pop b {
+  display: block;
+  font-family: "Cinzel", serif;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  margin-bottom: 3px;
+  color: var(--ink);
+}
+.papersheet .info-pop .info-text {
+  display: block;
+  font-family: "Alegreya Sans SC", sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-transform: none;
+}
+.papersheet .info-pop .info-ref {
+  display: block;
+  margin-top: 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--blood);
+}
+.papersheet .info-pop a {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--marker-blue);
+  text-decoration: underline;
+}
+
 /* ================= print ================= */
 @media print {
   body.papersheet-open #root {
@@ -936,6 +1022,9 @@
     padding: 0;
   }
   .papersheet-toolbar {
+    display: none;
+  }
+  .papersheet .info {
     display: none;
   }
   .papersheet .page {

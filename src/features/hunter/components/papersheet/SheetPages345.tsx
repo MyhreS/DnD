@@ -1,9 +1,10 @@
 import { F, Ta, St, SheetTable } from "./sheetPrimitives";
+import { Info } from "./InfoDot";
 
 export function SheetPage3() {
   return (
     <div className="page">
-      <h2 className="sec">EQUIPMENT (ALL) <St n={2} /></h2>
+      <h2 className="sec">EQUIPMENT (ALL) <St n={2} /> <Info k="equipment" /></h2>
       <SheetTable
         prefix="eq"
         head={["ITEM", "CARRYING CATEGORY", "ITEM SLOT", "WEIGHT"]}
@@ -11,7 +12,7 @@ export function SheetPage3() {
         rows={20}
       />
 
-      <h2 className="sec" style={{ marginTop: "9mm" }}>WEAPON DAMAGE <St n={5} /></h2>
+      <h2 className="sec" style={{ marginTop: "9mm" }}>WEAPON DAMAGE <St n={5} /> <Info k="weaponDamage" /></h2>
       <SheetTable
         prefix="wd"
         head={["NAME", "ATTACK BONUS", "DAMAGE TYPE", "NOTES"]}
@@ -26,13 +27,13 @@ export function SheetPage3() {
 export function SheetPage4() {
   return (
     <div className="page">
-      <h2 className="sec">CLASS FEATURES <St n={5} /></h2>
+      <h2 className="sec">CLASS FEATURES <St n={5} /> <Info k="classFeatures" /></h2>
       <div className="features">
         <div className="col"><Ta f="features1" /></div>
         <div className="col"><Ta f="features2" /></div>
       </div>
 
-      <h2 className="centered">FEATS <St n={2} /></h2>
+      <h2 className="centered">FEATS <St n={2} /> <Info k="feats" /></h2>
       <div className="featsbox"><Ta f="feats" /></div>
       <div style={{ borderBottom: "2px solid var(--rule)" }} />
       <div className="pageno">PAGE 4 · CLASS FEATURES &amp; FEATS</div>
@@ -46,14 +47,14 @@ export function SheetPage5() {
       <div className="blue-rule" style={{ marginTop: 0, width: "60mm" }} />
       <div className="rites-grid">
         <div>
-          <h2 className="sec" style={{ fontSize: 16 }}>WHISPERS AND RITES <St n={5} /></h2>
+          <h2 className="sec" style={{ fontSize: 16 }}>WHISPERS AND RITES <St n={5} /> <Info k="rites" /></h2>
           <div className="riteline wide"><span className="lbl">RITE PERFORMING ABILITY</span><F f="riteAbility" /></div>
           <div className="riteline"><span className="lbl">RITE PERFORMING MODIFIER <St n={5} /></span><F f="riteMod" /></div>
           <div className="riteline"><span className="lbl">RITE SAVE DC <St n={5} /></span><F f="riteDC" /></div>
           <div className="riteline"><span className="lbl">RITE ATTACK BONUS <St n={5} /></span><F f="riteAttack" /></div>
         </div>
         <div>
-          <h2 className="sec">PREPARED WHISPERS <St n={5} /></h2>
+          <h2 className="sec">PREPARED WHISPERS <St n={5} /> <Info k="preparedWhispers" /></h2>
           <SheetTable
             prefix="wh"
             head={["LEVEL", "NAME", "PERFORMING", "RANGE", "DURATION", "ROUNDS"]}
