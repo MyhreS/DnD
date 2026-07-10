@@ -36,6 +36,8 @@
   align-items: center;
   flex-wrap: wrap;
   color: #d8cfbc;
+  /* anchor for the step-guidance popover */
+  position: relative;
 }
 .papersheet-toolbar h1 {
   font-family: "Cinzel", serif;
@@ -126,6 +128,68 @@
   background: var(--blood);
   border-color: #5e1414;
   color: #f3e9d8;
+}
+
+/* step guidance — "What to do in step N?" + its popover. The panel hangs off
+ * the TOOLBAR (position: relative above), not a sheet page, so the pages'
+ * overflow: hidden can never clip it; z-index lifts it over the paper. */
+.papersheet-toolbar .stepguide-pop {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(340px, 100%);
+  background: #fffdf7;
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 3px 3px 0 rgba(33, 29, 23, 0.28);
+  padding: 10px 12px;
+  text-align: left;
+  color: var(--ink-soft);
+}
+.papersheet-toolbar .stepguide-pop b {
+  display: block;
+  font-family: "Cinzel", serif;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  margin-bottom: 5px;
+  color: var(--ink);
+}
+.papersheet-toolbar .stepguide-pop ol {
+  margin: 0 0 6px;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.papersheet-toolbar .stepguide-pop li {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+.papersheet-toolbar .stepguide-pop li::marker {
+  color: var(--blood);
+  font-weight: 700;
+}
+.papersheet-toolbar .stepguide-pop .stepguide-ref {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--blood);
+}
+.papersheet-toolbar .stepguide-pop a {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: transparent;
+  border: none;
+  color: var(--marker-blue);
+  text-decoration: underline;
 }
 
 /* ---------- the sheet itself ---------- */
