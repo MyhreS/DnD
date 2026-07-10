@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from "react-router-dom";
+import { useSettings } from "@/app/settings";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCampaignSync } from "@/features/campaigns/hooks/useCampaignSync";
 import { useAuthInit } from "@/hooks/auth/useAuthInit";
@@ -23,6 +24,8 @@ import { RulesReferencePage } from "@/features/rules-reference/components/RulesR
 
 function AuthedApp() {
   useCampaignSync();
+  // Campaigns/sessions/live play are experimental — hidden unless enabled.
+  const experimental = useSettings((s) => s.experimental);
   return (
     <Routes>
       {/* Main menu: account home, hunters, handbook, profile — no campaign. */}
@@ -43,7 +46,7 @@ function AuthedApp() {
         <Route path="hunter" element={<CampaignHunterPage />} />
       </Route>
       {/* Chrome-less big-screen status board (its own full-bleed layout). */}
-      <Route path="status" element={<StatusPage />} />
+      <Route path="status" element={experimental ? <StatusPage /> : <Navigate to="/" replace />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

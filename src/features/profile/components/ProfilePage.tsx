@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { SignOutIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FightersToggle } from "./FightersToggle";
+import { ExperimentalToggle } from "./ExperimentalToggle";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { AllowlistManager } from "./AllowlistManager";
 
@@ -35,6 +36,8 @@ export function ProfilePage() {
       <ThemeToggle />
 
       <FightersToggle />
+
+      <ExperimentalToggle />
 
       <div className="card">
         <p className="eyebrow">App</p>

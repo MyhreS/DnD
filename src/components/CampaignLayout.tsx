@@ -1,4 +1,5 @@
 import { NavLink, Navigate } from "react-router-dom";
+import { useSettings } from "@/app/settings";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { useCampaignHunterSync } from "@/features/campaigns/hooks/useCampaignHunterSync";
 import { CampaignRoleBanner } from "@/features/campaigns/components/CampaignRoleBanner";
@@ -8,8 +9,10 @@ import { Shell } from "./Shell";
 
 /** Chrome for a campaign: Play, Sessions, Party, your Hunter, and a clear way
  * back to the main menu. Gated on an active campaign (so deep links / reloads
- * wait for campaigns to load before redirecting). */
+ * wait for campaigns to load before redirecting) and on the experimental
+ * setting — campaigns are still being tested and hidden by default. */
 export function CampaignLayout() {
+  const experimental = useSettings((s) => s.experimental);
   const active = useCampaignStore((s) => s.active);
   const activeId = useCampaignStore((s) => s.activeId);
   const status = useCampaignStore((s) => s.status);
@@ -17,6 +20,10 @@ export function CampaignLayout() {
 
   // Bring the hunter you chose for this campaign into play.
   useCampaignHunterSync();
+
+  // Experimental features off → the campaign surface doesn't exist (deep
+  // links bounce to the main menu).
+  if (!experimental) return <Navigate to="/" replace />;
 
   if (status === "idle" || status === "loading") {
     return <div className="app-main"><CardSkeleton lines={3} /></div>;

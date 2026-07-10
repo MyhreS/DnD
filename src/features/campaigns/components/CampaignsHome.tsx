@@ -1,0 +1,164 @@
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { AsyncButton } from "@/components/AsyncButton";
+import { useCampaignStore } from "../store/campaignStore";
+import { TestCampaignButton } from "./TestCampaignButton";
+import { DeleteCampaign } from "./DeleteCampaign";
+import { LeaveCampaign } from "./LeaveCampaign";
+import type { Campaign } from "@/types";
+
+/** The campaigns block of the main menu: invites, your campaigns, and the
+ * create/join/test-run actions. Rendered only when experimental features are
+ * on (campaigns are still being tested). */
+export function CampaignsHome() {
+  const user = useAuthStore((s) => s.user);
+  const campaigns = useCampaignStore((s) => s.campaigns);
+  const invitedAll = useCampaignStore((s) => s.invited);
+  const enter = useCampaignStore((s) => s.enter);
+  const accept = useCampaignStore((s) => s.accept);
+  const decline = useCampaignStore((s) => s.decline);
+  const navigate = useNavigate();
+
+  // Invites you haven't already joined.
+  const invited = invitedAll.filter((c) => !campaigns.some((mc) => mc.id === c.id));
+
+  function go(c: Campaign) {
+    enter(c.id);
+    navigate("/sessions");
+  }
+
+  return (
+    <>
+      {invited.length > 0 && (
+        <>
+          <p className="eyebrow" style={{ marginTop: 18, marginBottom: 8 }}>Campaign invites</p>
+          <div className="stack" style={{ gap: 10 }}>
+            {invited.map((c) => (
+              <div key={c.id} className="card row between" style={{ alignItems: "center", gap: 10 }}>
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{c.name}</div>
+                  <div className="faint" style={{ fontSize: "0.82rem" }}>DM {c.dmName} invited you</div>
+                </div>
+                <div className="row" style={{ gap: 8, flex: "none" }}>
+                  <button className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={() => decline(c)}>Decline</button>
+                  <AsyncButton
+                    className="btn-primary btn-sm"
+                    style={{ width: "auto" }}
+                    pendingText="…"
+                    showDone={false}
+                    onClick={async () => {
+                      const id = await accept(c);
+                      if (id) navigate("/sessions");
+                    }}
+                  >
+                    Accept
+                  </AsyncButton>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      <p className="eyebrow" style={{ marginTop: 18, marginBottom: 8 }}>Your campaigns</p>
+      {campaigns.length === 0 ? (
+        <div className="card"><p className="muted" style={{ margin: 0 }}>No campaigns yet — create one or join with a code below.</p></div>
+      ) : (
+        <div className="card-grid">
+          {campaigns.map((c) => (
+            <div key={c.id} className="stack" style={{ gap: 2 }}>
+              <button type="button" className="card card-hover" style={{ textAlign: "left", width: "100%" }} onClick={() => go(c)}>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.05rem" }}>{c.name}</div>
+                <div className="faint" style={{ fontSize: "0.82rem", marginTop: 2 }}>
+                  DM {c.dmName} · {c.memberUids.length} {c.memberUids.length === 1 ? "member" : "members"}
+                  {c.dmUid === user?.uid ? " · you're DM" : ""}
+                </div>
+                <div className="gold" style={{ fontSize: "0.8rem", marginTop: 6 }}>Enter →</div>
+              </button>
+              {c.dmUid === user?.uid ? <DeleteCampaign campaign={c} /> : <LeaveCampaign campaign={c} />}
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="row" style={{ gap: 10, marginTop: 12, flexWrap: "wrap" }}>
+        <CreateCampaign />
+        <JoinCampaign />
+      </div>
+      <TestCampaignButton />
+    </>
+  );
+}
+
+function CreateCampaign() {
+  const user = useAuthStore((s) => s.user);
+  const member = useAuthStore((s) => s.member);
+  const create = useCampaignStore((s) => s.create);
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState("");
+
+  if (!open) {
+    return <button className="btn btn-primary" style={{ flex: 1, minWidth: 150 }} onClick={() => setOpen(true)}>Create campaign</button>;
+  }
+  return (
+    <div className="card" style={{ width: "100%" }}>
+      <div className="field">
+        <label htmlFor="camp-name">Campaign name</label>
+        <input id="camp-name" className="input" value={name} maxLength={50} placeholder="e.g. The Sunless Vault" onChange={(e) => setName(e.target.value)} />
+      </div>
+      <div className="btn-row">
+        <button className="btn btn-ghost" onClick={() => setOpen(false)}>Cancel</button>
+        <AsyncButton
+          className="btn btn-primary"
+          pendingText="Creating…"
+          showDone={false}
+          disabled={!name.trim() || !user}
+          onClick={async () => {
+            if (!user || !name.trim()) return;
+            await create({ name: name.trim(), dmUid: user.uid, dmName: member?.firstName || user.displayName || "DM", dmEmail: user.email ?? "" });
+          }}
+        >
+          Create &amp; enter
+        </AsyncButton>
+      </div>
+    </div>
+  );
+}
+
+function JoinCampaign() {
+  const user = useAuthStore((s) => s.user);
+  const member = useAuthStore((s) => s.member);
+  const join = useCampaignStore((s) => s.join);
+  const error = useCampaignStore((s) => s.error);
+  const [open, setOpen] = useState(false);
+  const [code, setCode] = useState("");
+
+  if (!open) {
+    return <button className="btn btn-ghost" style={{ flex: 1, minWidth: 150 }} onClick={() => setOpen(true)}>Join with a code</button>;
+  }
+  return (
+    <div className="card" style={{ width: "100%" }}>
+      <div className="field">
+        <label htmlFor="camp-code">Invite code</label>
+        <input id="camp-code" className="input" value={code} maxLength={8} placeholder="e.g. VAULT7" style={{ textTransform: "uppercase" }} onChange={(e) => setCode(e.target.value)} />
+      </div>
+      {error && <div className="banner banner-error" style={{ marginBottom: 10 }}>{error}</div>}
+      <div className="btn-row">
+        <button className="btn btn-ghost" onClick={() => setOpen(false)}>Cancel</button>
+        <AsyncButton
+          className="btn btn-primary"
+          pendingText="Joining…"
+          showDone={false}
+          disabled={!code.trim() || !user}
+          onClick={async () => {
+            if (!user || !code.trim()) return;
+            await join({ code: code.trim(), uid: user.uid, name: member?.firstName || user.displayName || "Hunter", email: user.email ?? "" });
+          }}
+        >
+          Join
+        </AsyncButton>
+      </div>
+    </div>
+  );
+}
