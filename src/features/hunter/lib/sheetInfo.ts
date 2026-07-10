@@ -107,7 +107,7 @@ export const SHEET_INFO: Record<string, SheetInfo> = {
   },
   bloodTinge: {
     title: "Blood Tinge",
-    text: "The C&S take on heroic inspiration — the DM grants it; spend it to reroll. Mark whether you hold it in the drop.",
+    text: "The C&S take on heroic inspiration — the DM grants it; spend it to reroll. Tick the drop while you hold it.",
     refTitle: "Rules → Sanity, Madness & Blood Tinge → Blood Tinge",
     link: rules("sanity", "blood-tinge"),
   },

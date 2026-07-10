@@ -179,7 +179,7 @@ export function SheetPage1() {
               <svg viewBox="0 0 60 78" aria-hidden="true">
                 <path d="M30 3 C 30 3, 8 36, 8 52 a22 22 0 0 0 44 0 C 52 36, 30 3, 30 3 Z" stroke="#211d17" strokeWidth="4" fill="rgba(142,31,31,.10)" />
               </svg>
-              <F f="bloodTinge" />
+              <Chk f="bloodTinge" aria-label="Blood Tinge held" />
             </div>
           </div>
         </div>
