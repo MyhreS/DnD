@@ -93,6 +93,41 @@
   text-align: right;
 }
 
+/* the step selector — round numbered buttons echoing the sheet's red badges */
+.papersheet-toolbar .stepsel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.papersheet-toolbar .steplbl {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-right: 2px;
+}
+.papersheet-toolbar .stepbtn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #d8cfbc;
+  border: 1.4px solid #6b6353;
+  font-family: "Caveat", cursive;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.papersheet-toolbar .stepbtn.active {
+  background: var(--blood);
+  border-color: #5e1414;
+  color: #f3e9d8;
+}
+
 /* ---------- the sheet itself ---------- */
 .papersheet {
   font-family: "Alegreya Sans SC", sans-serif;
@@ -169,6 +204,44 @@
 .papersheet.hide-steps .st,
 .papersheet.hide-steps .st-note {
   display: none;
+}
+
+/* ---------- step spotlight (toolbar step selector) ----------
+ * Every sheet "unit" carries a `data-step` attribute (space-separated when it
+ * spans several steps). With a step active (`data-active-step` on the root),
+ * matching units get a blood-red outline + faint tint; everything else fades.
+ * The dim is applied exactly once per branch: only to children of an element
+ * that still contains a match (or to whole match-less pages) — so opacities
+ * never stack. Screen only: a printed sheet must always be full-ink. */
+@media screen {
+  .papersheet .page,
+  .papersheet .page * {
+    transition: opacity 0.18s ease;
+  }
+  .papersheet[data-active-step="1"] > .page:not(:has([data-step~="1"])),
+  .papersheet[data-active-step="2"] > .page:not(:has([data-step~="2"])),
+  .papersheet[data-active-step="3"] > .page:not(:has([data-step~="3"])),
+  .papersheet[data-active-step="4"] > .page:not(:has([data-step~="4"])),
+  .papersheet[data-active-step="5"] > .page:not(:has([data-step~="5"])),
+  .papersheet[data-active-step="1"] :has([data-step~="1"]) > :not([data-step~="1"]):not(:has([data-step~="1"])),
+  .papersheet[data-active-step="2"] :has([data-step~="2"]) > :not([data-step~="2"]):not(:has([data-step~="2"])),
+  .papersheet[data-active-step="3"] :has([data-step~="3"]) > :not([data-step~="3"]):not(:has([data-step~="3"])),
+  .papersheet[data-active-step="4"] :has([data-step~="4"]) > :not([data-step~="4"]):not(:has([data-step~="4"])),
+  .papersheet[data-active-step="5"] :has([data-step~="5"]) > :not([data-step~="5"]):not(:has([data-step~="5"])) {
+    opacity: 0.25;
+  }
+  .papersheet[data-active-step="1"] [data-step~="1"],
+  .papersheet[data-active-step="2"] [data-step~="2"],
+  .papersheet[data-active-step="3"] [data-step~="3"],
+  .papersheet[data-active-step="4"] [data-step~="4"],
+  .papersheet[data-active-step="5"] [data-step~="5"] {
+    outline: 1.6px solid rgba(142, 31, 31, 0.55);
+    outline-offset: 2px;
+    border-radius: 2px;
+    /* a whisper of red over the unit — background-image so units that set
+     * their own background-color (plaques, frames) keep it underneath */
+    background-image: linear-gradient(rgba(142, 31, 31, 0.05), rgba(142, 31, 31, 0.05));
+  }
 }
 
 /* ---------- generic fields ---------- */

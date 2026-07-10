@@ -6,6 +6,8 @@ import { usePaperSheetOpen } from "../../hooks/usePaperSheetOpen";
 import { usePaperSheetFocus } from "../../hooks/usePaperSheetFocus";
 import type { HunterCard } from "@/types";
 
+const STEPS = [1, 2, 3, 4, 5] as const;
+
 /** The paper sheet as a full-screen popup: dark desk background, the original
  * sheet toolbar (steps toggle, clear, PDF export) and autosave to Firestore.
  * `readOnly` is for looking at someone else's hunter (party view); `create`
@@ -23,6 +25,8 @@ export function PaperSheetModal({
 }) {
   const { data, setField, saveMsg, clear } = usePaperSheetAutosave(card, { readOnly, create });
   const [showSteps, setShowSteps] = useState(true);
+  // Which creation step (1–5) is spotlighted on the sheet; null = none.
+  const [activeStep, setActiveStep] = useState<number | null>(null);
   usePaperSheetOpen();
   const doneRef = usePaperSheetFocus(onClose);
 
@@ -32,6 +36,21 @@ export function PaperSheetModal({
         <button type="button" className="ghost" ref={doneRef} onClick={onClose}>← Done</button>
         <h1>CATACOMBS &amp; STARSPAWNS · CHARACTER SHEET</h1>
         <span className="savemsg">{readOnly ? "Read-only" : saveMsg}</span>
+        <div className="stepsel" role="group" aria-label="Highlight a character-creation step">
+          <span className="steplbl">Step</span>
+          {STEPS.map((n) => (
+            <button
+              key={n}
+              type="button"
+              className={activeStep === n ? "stepbtn active" : "stepbtn"}
+              aria-pressed={activeStep === n}
+              title={`Highlight everything you fill in during step ${n}`}
+              onClick={() => setActiveStep((s) => (s === n ? null : n))}
+            >
+              {n}
+            </button>
+          ))}
+        </div>
         <label>
           <input type="checkbox" checked={showSteps} onChange={(e) => setShowSteps(e.target.checked)} />
           Show step numbers
@@ -46,7 +65,7 @@ export function PaperSheetModal({
           Blank PDF
         </a>
       </div>
-      <PaperSheet data={data} setField={setField} readOnly={readOnly} hideSteps={!showSteps} />
+      <PaperSheet data={data} setField={setField} readOnly={readOnly} hideSteps={!showSteps} activeStep={activeStep} />
     </div>,
     document.body,
   );

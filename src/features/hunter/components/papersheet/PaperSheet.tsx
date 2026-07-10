@@ -11,14 +11,21 @@ export function PaperSheet({
   setField,
   readOnly = false,
   hideSteps = false,
+  activeStep = null,
 }: {
   data: SheetData;
   setField: (f: string, v: string | boolean) => void;
   readOnly?: boolean;
   hideSteps?: boolean;
+  /** Creation step (1–5) to spotlight: units tagged `data-step` with this
+   * number highlight, everything else dims (see papersheet.css). */
+  activeStep?: number | null;
 }) {
   return (
-    <div className={hideSteps ? "papersheet hide-steps" : "papersheet"}>
+    <div
+      className={hideSteps ? "papersheet hide-steps" : "papersheet"}
+      data-active-step={activeStep ?? undefined}
+    >
       <SheetProvider data={data} setField={setField} readOnly={readOnly}>
         <SheetPage1 />
         <SheetPage2 />
