@@ -1,5 +1,5 @@
 import { getClass } from "@/data/classes";
-import { maxHp, maxSanity, INSIGHT_THRESHOLDS } from "@/lib/character";
+import { maxHp, maxSanity, INSIGHT_THRESHOLDS, isSheetCard } from "@/lib/character";
 import { InventorySection } from "@/features/hunter/components/sheet/InventorySection";
 import { TransformationEditor } from "@/features/hunter/components/TransformationPanel";
 import { useCharactersStore } from "../store/charactersStore";
@@ -37,6 +37,21 @@ export function DMCharacterEditor({ card }: { card: HunterCard }) {
             ? Math.min(insight, INSIGHT_THRESHOLDS[level] - 1)
             : insight,
     });
+  }
+
+  // A sheet hunter lives on its paper sheet — HP/Sanity/Transformation/Blood
+  // Tinge/items/gold are tracked there, so app-side steppers would only fight
+  // the sheet. The DM keeps the Level grant (card.level is the mirror the
+  // lists read; Insight sits on the row outside this editor).
+  if (isSheetCard(card)) {
+    return (
+      <div style={{ marginTop: 8 }}>
+        <p className="faint" style={{ fontSize: "0.84rem", margin: "0 0 4px" }}>
+          This hunter lives on its paper sheet — HP, Sanity, gear and gold are tracked on the sheet, not here.
+        </p>
+        <Stepper label="Level" value={card.level} onChange={setLevel} />
+      </div>
+    );
   }
 
   return (

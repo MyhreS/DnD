@@ -103,6 +103,13 @@ async function visit(page, role, path, label) {
 }
 
 async function signIn(ctx, role) {
+  // Campaigns/sessions/play are hidden behind the per-device "Experimental
+  // features" toggle — the crawl must still exercise them.
+  await ctx.addInitScript(() => {
+    try {
+      localStorage.setItem("cs-experimental", "on");
+    } catch {}
+  });
   const page = await ctx.newPage();
   attach(page, role);
   const token = mint(role);

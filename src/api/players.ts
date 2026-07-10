@@ -16,7 +16,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { normalizeCard } from "@/lib/character";
-import { isPreviewActive, previewCard, previewArchive } from "@/dev/preview";
+import { isPreviewActive, previewCard, previewPartyCards, previewArchive } from "@/dev/preview";
 import { isTestEmail } from "@/config";
 import type { ArchivedCharacter, HunterCard, SheetData } from "@/types";
 
@@ -104,8 +104,10 @@ export function subscribeAllCharacters(
   cb: (cards: HunterCard[]) => void,
   onError?: (err: unknown) => void,
 ): () => void {
+  // Preview: the whole sample party (incl. the sheet-only hunter), so the
+  // roster / gallery / status board render every flavour of card.
   if (isPreviewActive()) {
-    cb([previewCard("preview-uid")]);
+    cb(previewPartyCards());
     return () => {};
   }
   return onSnapshot(

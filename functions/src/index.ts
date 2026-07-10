@@ -149,7 +149,8 @@ export const sendReminders = onCall(
       const hasCard = new Set(
         playersSnap.docs
           .map((d) => d.data())
-          .filter((p) => p.classId && p.name)
+          // A named hunter counts — sheet-made hunters have classId "" forever.
+          .filter((p) => p.name)
           .map((p) => String(p.ownerEmail).toLowerCase()),
       );
       const targets = members.filter(

@@ -3,6 +3,7 @@ import { ChevronIcon } from "@/components/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { AsyncButton } from "@/components/AsyncButton";
+import { sheetClassName } from "@/features/hunter/lib/papersheet";
 import { useGameStore } from "../store/gameStore";
 import { ParticipantList } from "./ParticipantList";
 import type { Game, GameParticipant } from "@/types";
@@ -21,7 +22,8 @@ export function Lobby({ game, participants }: { game: Game; participants: GamePa
   const uid = user?.uid ?? "";
   const isDM = uid === game.dmUid;
   const joined = participants.some((p) => p.uid === uid);
-  const hasCard = !!card && !!card.classId && !!card.name;
+  // A named hunter can join — sheet-made hunters have classId "" forever.
+  const hasCard = !!card && !!card.name;
 
   async function joinAsPlayer() {
     if (!user || !card) return;
@@ -30,6 +32,7 @@ export function Lobby({ game, participants }: { game: Game; participants: GamePa
       name: card.name || member?.firstName || "Hunter",
       classId: card.classId,
       subclassId: card.subclassId ?? null,
+      className: sheetClassName(card.sheet) || null,
       level: card.level,
       role: "player",
     });

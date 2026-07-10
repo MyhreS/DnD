@@ -1,18 +1,24 @@
 import type { Combatant, Game, HunterCard } from "@/types";
 import { getClass } from "@/data/classes";
-import { maxHp } from "@/lib/character";
+import { maxHp, isSheetCard } from "@/lib/character";
+import { sheetVitals } from "@/features/hunter/lib/papersheet";
 import { initiativeOrder } from "@/features/play/store/combatStore";
 import { CONDITION_NAME } from "@/data/conditions";
 
-/** Resolve a combatant's HP: monsters carry their own; PCs read live from the
- * HunterCard (one source of truth), mirroring the in-game CombatTracker. */
-function vitals(c: Combatant, party: HunterCard[]): { hp: number | null; max: number | null } {
-  if (c.kind === "monster") return { hp: c.currentHp ?? null, max: c.maxHp ?? null };
+/** Resolve a combatant's HP/AC: monsters carry their own; PCs read live from
+ * the HunterCard (one source of truth — sheet hunters parse off their paper
+ * sheet), mirroring the in-game CombatTracker. */
+function vitals(c: Combatant, party: HunterCard[]): { hp: number | null; max: number | null; ac: number | null } {
+  if (c.kind === "monster") return { hp: c.currentHp ?? null, max: c.maxHp ?? null, ac: c.ac ?? null };
   const card = c.characterId ? party.find((p) => p.id === c.characterId) : undefined;
-  if (!card) return { hp: null, max: null };
+  if (!card) return { hp: null, max: null, ac: c.ac ?? null };
+  if (isSheetCard(card)) {
+    const v = sheetVitals(card.sheet);
+    return { hp: v.hpCur, max: v.hpMax, ac: v.ac };
+  }
   const klass = getClass(card.classId);
   const max = klass ? maxHp(klass, card.abilities, card.level) : null;
-  return { hp: card.currentHp ?? max, max };
+  return { hp: card.currentHp ?? max, max, ac: c.ac ?? null };
 }
 
 /** Read-only initiative board for the big screen — order, whose turn, HP and
@@ -36,14 +42,14 @@ export function CombatBoard({ game, combatants, party }: { game: Game; combatant
       >
         {order.map((c) => {
           const v = vitals(c, party);
-          return <CombatRow key={c.id} c={c} hp={v.hp} max={v.max} active={c.id === activeId} round={round} />;
+          return <CombatRow key={c.id} c={c} hp={v.hp} max={v.max} ac={v.ac} active={c.id === activeId} round={round} />;
         })}
       </div>
     </div>
   );
 }
 
-function CombatRow({ c, hp, max, active, round }: { c: Combatant; hp: number | null; max: number | null; active: boolean; round: number }) {
+function CombatRow({ c, hp, max, ac, active, round }: { c: Combatant; hp: number | null; max: number | null; ac: number | null; active: boolean; round: number }) {
   // The shared big screen is a player view — a monster's health and AC stay
   // the DM's secret. Hunters show theirs as before.
   const monster = c.kind === "monster";
@@ -69,8 +75,8 @@ function CombatRow({ c, hp, max, active, round }: { c: Combatant; hp: number | n
       </div>
       <div className="faint" style={{ fontSize: "0.95rem", marginTop: 2 }}>
         Init {c.initiative}
-        {!monster && c.ac != null ? ` · AC ${c.ac}` : ""}
-        {!monster && hp != null && max != null ? ` · HP ${hp}/${max}` : ""}
+        {!monster && ac != null ? ` · AC ${ac}` : ""}
+        {!monster && (hp != null || max != null) ? ` · HP ${hp ?? "?"}/${max ?? "?"}` : ""}
       </div>
       {c.note && (
         <div className="muted" style={{ fontSize: "0.85rem", marginTop: 4 }}>{c.note}</div>

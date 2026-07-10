@@ -150,13 +150,14 @@ export function previewCombatants(): import("@/types").Combatant[] {
   ];
 }
 
-/** Sample participants so the lobby / DM board look populated in preview. */
+/** Sample participants so the lobby / DM board look populated in preview.
+ * Gascoigne is a sheet-made hunter: classId "" + the sheet's class text. */
 export function previewParticipants(): import("@/types").GameParticipant[] {
   const now = Date.now();
   return [
     { uid: "preview-dm", name: "Christoffer", classId: "", subclassId: null, level: 1, role: "dm", joinedAt: now, lastSeen: now },
-    { uid: "preview-uid", name: "Eileen the Crow", classId: "scout", subclassId: "marksman", level: 3, role: "player", joinedAt: now, lastSeen: now },
-    { uid: "preview-p2", name: "Gascoigne", classId: "brute", subclassId: "battle-master", level: 3, role: "player", joinedAt: now, lastSeen: now },
+    { uid: "preview-uid", name: "Eileen the Crow", classId: "scout", subclassId: "marksman", className: "Stalker", level: 3, role: "player", joinedAt: now, lastSeen: now },
+    { uid: "preview-p2", name: "Gascoigne", classId: "", subclassId: null, className: "Bloodbound", level: 3, role: "player", joinedAt: now, lastSeen: now },
   ];
 }
 
@@ -181,17 +182,36 @@ export function previewLoot(): import("@/types").LootPile[] {
   ];
 }
 
-/** Sample party cards for the DM's character board (one alive, one dying). */
+/** Sample party cards for the DM's character board. Gascoigne is SHEET-ONLY
+ * (classId "", no structured build) so play surfaces prove they read hunters
+ * through the paper sheet — vitals parse from its free-text boxes. */
 export function previewPartyCards(): import("@/types").HunterCard[] {
   const eileen = previewCard("preview-uid");
-  const gascoigne = {
+  const gascoigne: import("@/types").HunterCard = {
     ...previewCard("preview-p2"),
     name: "Gascoigne",
-    classId: "brute",
-    subclassId: "battle-master",
+    classId: "",
+    subclassId: null,
     level: 3,
-    currentHp: 0,
-    deathPending: true,
+    currentHp: undefined,
+    sanity: undefined,
+    deathPending: false,
+    transformationLevel: 0,
+    activeTransformations: [],
+    sheet: {
+      name: "Gascoigne",
+      background: "Cleric of the Old Ways",
+      class: "Bloodbound",
+      level: "3",
+      hpCur: "28",
+      hpMax: "31",
+      ac: "15",
+      sanityCur: "6",
+      sanityMax: "10",
+      initiative: "+1",
+      speed: "30 ft",
+      coins: "18",
+    },
   };
   return [eileen, gascoigne];
 }

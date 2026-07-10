@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { AsyncButton } from "@/components/AsyncButton";
 import { getClass } from "@/data/classes";
-import { maxHp, initiativeMod } from "@/lib/character";
+import { maxHp, initiativeMod, isSheetCard } from "@/lib/character";
+import { sheetVitals, sheetInitiative } from "@/features/hunter/lib/papersheet";
 import { useCombatStore, initiativeOrder } from "../store/combatStore";
 import { useCombatSync } from "../hooks/useCombatSync";
 import { useCharactersSync } from "../hooks/useCharactersSync";
@@ -51,22 +52,32 @@ export function CombatTracker({
       if (pt.role !== "player") continue;
       const characterId = members.find((m) => m.uid === pt.uid)?.characterId;
       if (!characterId || seen.has(characterId)) continue;
-      const card = party.find((c) => c.id === characterId && !!c.classId);
+      // Sheet-made hunters (classId "") count too — their initiative modifier
+      // comes from the sheet's Initiative box (0 when blank/unparseable).
+      const card = party.find((c) => c.id === characterId);
       if (!card) continue;
       seen.add(characterId);
-      pcs.push({ characterId: card.id, name: card.name, dexMod: initiativeMod(card.abilities) });
+      const dexMod = isSheetCard(card)
+        ? (sheetInitiative(card.sheet) ?? 0)
+        : initiativeMod(card.abilities);
+      pcs.push({ characterId: card.id, name: card.name, dexMod });
     }
     return pcs;
   }
 
-  /** PC HP from the live HunterCard; monsters self-contained. */
-  function vitals(c: Combatant): { hp: number | null; max: number | null } {
-    if (c.kind === "monster") return { hp: c.currentHp ?? null, max: c.maxHp ?? null };
+  /** PC HP/AC from the live HunterCard (sheet hunters: parsed off the paper
+   * sheet, null = "?" when unparseable); monsters self-contained. */
+  function vitals(c: Combatant): { hp: number | null; max: number | null; ac: number | null } {
+    if (c.kind === "monster") return { hp: c.currentHp ?? null, max: c.maxHp ?? null, ac: c.ac ?? null };
     const card = c.characterId ? party.find((p) => p.id === c.characterId) : undefined;
-    if (!card) return { hp: null, max: null };
+    if (!card) return { hp: null, max: null, ac: null };
+    if (isSheetCard(card)) {
+      const v = sheetVitals(card.sheet);
+      return { hp: v.hpCur, max: v.hpMax, ac: v.ac };
+    }
     const klass = getClass(card.classId);
     const max = klass ? maxHp(klass, card.abilities, card.level) : null;
-    return { hp: card.currentHp ?? max, max };
+    return { hp: card.currentHp ?? max, max, ac: c.ac ?? null };
   }
 
   if (!active) {
@@ -124,6 +135,7 @@ export function CombatTracker({
                 combatant={c}
                 hp={v.hp}
                 max={v.max}
+                ac={v.ac}
                 active={c.id === activeId}
                 isDM={isDM}
                 round={game.combat?.round ?? 1}

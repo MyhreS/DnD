@@ -48,9 +48,10 @@ export function RosterPanel({
   const rsvpByEmail = new Map(rsvps.map((r) => [r.email.toLowerCase(), r.status]));
 
   const playerMembers = members.filter((m) => m.role !== "dm");
+  // A named hunter counts — sheet-made hunters have classId "" forever.
   const missingCharacter = playerMembers.filter((m) => {
     const card = cardFor(m);
-    return !card || !card.classId || !card.name;
+    return !card || !card.name;
   });
   const notResponded = members.filter((m) => !rsvpByEmail.has(m.email.toLowerCase()));
 
@@ -65,7 +66,7 @@ export function RosterPanel({
         <ul className="list-reset pill-list">
           {members.map((m) => {
             const card = cardFor(m);
-            const hasCard = !!card && !!card.classId && !!card.name;
+            const hasCard = !!card && !!card.name;
             return (
               <li key={m.uid}>
                 <div className="row between" style={{ gap: 8 }}>
