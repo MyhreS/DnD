@@ -33,8 +33,10 @@ export function ParticipantList({
 
 function Row({ p, now }: { p: GameParticipant; now: number }) {
   const online = now - p.lastSeen < ONLINE_MS;
-  const klass = getClass(p.classId);
-  const sub = p.role === "dm" ? "Dungeon Master" : klass ? `${klass.name} · Lvl ${p.level}` : "Hunter";
+  // Sheet hunters carry a free-text class line (classId ""); prefer it — the
+  // paper sheet is the source of truth even when legacy structured fields exist.
+  const clsName = p.className || getClass(p.classId)?.name;
+  const sub = p.role === "dm" ? "Dungeon Master" : `${clsName || "Hunter"} · Lvl ${p.level}`;
   return (
     <div className="row between" style={{ padding: "8px 0", borderTop: "1px solid var(--border)", gap: 10 }}>
       <div className="row" style={{ gap: 10, minWidth: 0, alignItems: "center" }}>

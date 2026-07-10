@@ -34,8 +34,9 @@ export function SessionsPage() {
   useHunterCard();
   const card = usePlayerStore((s) => s.card);
   const cardStatus = usePlayerStore((s) => s.status);
+  // A named sheet hunter (classId "") is a finished hunter — no nag for them.
   const showNag =
-    needsCharacter(identity) && cardStatus === "loaded" && (!card || !card.classId || !card.name);
+    needsCharacter(identity) && cardStatus === "loaded" && (!card || !card.name);
 
   const [editing, setEditing] = useState<SessionEvent | "new" | null>(null);
 

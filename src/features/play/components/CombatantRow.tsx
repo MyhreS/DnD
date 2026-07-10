@@ -16,6 +16,7 @@ export function CombatantRow({
   combatant,
   hp,
   max,
+  ac,
   active,
   isDM,
   round,
@@ -26,6 +27,9 @@ export function CombatantRow({
   combatant: Combatant;
   hp: number | null;
   max: number | null;
+  /** Resolved AC — monsters carry their own; PCs read it live (sheet hunters:
+   * parsed off the paper sheet). Defaults to the combatant doc's ac. */
+  ac?: number | null;
   active: boolean;
   isDM: boolean;
   round: number;
@@ -33,6 +37,7 @@ export function CombatantRow({
   onToggleCondition: (conditionId: string) => void;
   onRemove: () => void;
 }) {
+  const shownAc = ac !== undefined ? ac : (combatant.ac ?? null);
   const [open, setOpen] = useState(false);
   const monster = combatant.kind === "monster";
   // Players never see a monster's health or AC — only the DM tracks those.
@@ -63,8 +68,9 @@ export function CombatantRow({
           </div>
           <div className="faint" style={{ fontSize: "0.76rem" }}>
             Init {combatant.initiative}
-            {showVitals && combatant.ac != null ? ` · AC ${combatant.ac}` : ""}
-            {showVitals && hp != null && max != null ? ` · HP ${hp}/${max}` : ""}
+            {showVitals && shownAc != null ? ` · AC ${shownAc}` : ""}
+            {/* "?" when a sheet hunter's box is blank/unparseable — never 0. */}
+            {showVitals && (hp != null || max != null) ? ` · HP ${hp ?? "?"}/${max ?? "?"}` : ""}
           </div>
           {combatant.note && (
             <div className="muted" style={{ fontSize: "0.76rem", marginTop: 2 }}>{combatant.note}</div>

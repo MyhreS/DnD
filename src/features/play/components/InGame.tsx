@@ -5,6 +5,8 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { CharacterTrackers } from "@/features/hunter/components/CharacterTrackers";
 import { InventorySection } from "@/features/hunter/components/sheet/InventorySection";
+import { sheetClassName } from "@/features/hunter/lib/papersheet";
+import { isSheetCard } from "@/lib/character";
 import { AsyncButton } from "@/components/AsyncButton";
 import { patchCharacter } from "@/api/players";
 import { useGameStore } from "../store/gameStore";
@@ -17,6 +19,7 @@ import { TradeLog } from "./TradeLog";
 import { DMCharacters } from "./DMCharacters";
 import { LootPanel } from "./LootPanel";
 import { RestPanel } from "./RestPanel";
+import { SheetHunterPanel } from "./SheetHunterPanel";
 import { CombatTracker } from "./CombatTracker";
 import { useTradesSync } from "../hooks/useTradesSync";
 import { useCharactersSync } from "../hooks/useCharactersSync";
@@ -44,7 +47,8 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
 
   // A player who arrives after the game has begun is auto-registered so the DM
   // and party see them (the lobby's explicit join only exists before "begin").
-  const hasHunter = !!card && !!card.classId && !!card.name;
+  // A named hunter is enough — sheet-made hunters have classId "" forever.
+  const hasHunter = !!card && !!card.name;
   useEffect(() => {
     if (!isDM && hasHunter && !joined && user && card) {
       void join(game.id, {
@@ -52,6 +56,7 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
         name: card.name,
         classId: card.classId,
         subclassId: card.subclassId ?? null,
+        className: sheetClassName(card.sheet) || null,
         level: card.level,
         role: "player",
       });
@@ -82,24 +87,33 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
       {isDM && <PhaseControl game={game} />}
       {isDM && <LocationControl game={game} />}
 
-      {!isDM && card && card.classId && card.name && (
-        <>
-          <CharacterTrackers card={card} />
-          {/* key on phase so each rest event gets a fresh panel — resets the
+      {!isDM &&
+        card &&
+        card.name &&
+        (isSheetCard(card) ? (
+          // A sheet hunter's HP/Sanity/gear live on the paper sheet — the
+          // structured trackers / rest math / inventory / trades don't apply.
+          <SheetHunterPanel card={card} />
+        ) : (
+          <>
+            <CharacterTrackers card={card} />
+            {/* key on phase so each rest event gets a fresh panel — resets the
               once-per-rest guard when the DM moves between phases. */}
-          <RestPanel key={game.phase} card={card} phase={game.phase} location={game.location ?? "wild"} />
-          <InventorySection
-            card={card}
-            onPatch={(p) => void patchCharacter(card.id, p)}
-            onDrop={(entry) => dropItem(entry, card, game.id)}
-          />
-          <TradePanel game={game} participants={participants} card={card} />
-        </>
-      )}
+            <RestPanel key={game.phase} card={card} phase={game.phase} location={game.location ?? "wild"} />
+            <InventorySection
+              card={card}
+              onPatch={(p) => void patchCharacter(card.id, p)}
+              onDrop={(entry) => dropItem(entry, card, game.id)}
+            />
+            <TradePanel game={game} participants={participants} card={card} />
+          </>
+        ))}
 
       {isDM && <DMSection gameId={game.id} />}
 
-      <LootPanel gameId={game.id} card={isDM ? undefined : card ?? undefined} />
+      {/* Sheet hunters can't claim into a structured inventory — loot stays
+          visible but read-only for them (settle it on paper at the table). */}
+      <LootPanel gameId={game.id} card={isDM || !card || isSheetCard(card) ? undefined : card} />
 
       <ParticipantList participants={participants} />
 

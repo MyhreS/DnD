@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getClass } from "@/data/classes";
-import { maxHp, earnedLevel, isLevelUpPending } from "@/lib/character";
+import { maxHp, earnedLevel, isLevelUpPending, isSheetCard } from "@/lib/character";
+import { sheetVitals, sheetClassName } from "@/features/hunter/lib/papersheet";
 import { AsyncButton } from "@/components/AsyncButton";
 import { DMCharacterEditor } from "./DMCharacterEditor";
 import { useCharactersStore } from "../store/charactersStore";
@@ -48,10 +49,18 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
   const [editing, setEditing] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
-  const klass = getClass(card.classId);
-  const hpMax = klass ? maxHp(klass, card.abilities, card.level) : 0;
-  const hp = card.currentHp ?? hpMax;
-  const dying = card.deathPending || hp <= 0;
+  // Sheet hunters live on their paper sheet: vitals parse from its free-text
+  // boxes (null = "?"), never the structured maxHp math (which would read 0/0).
+  const sheet = isSheetCard(card);
+  const klass = sheet ? undefined : getClass(card.classId);
+  const hpMax: number | null = sheet ? sheetVitals(card.sheet).hpMax : klass ? maxHp(klass, card.abilities, card.level) : 0;
+  const hp: number | null = sheet ? sheetVitals(card.sheet).hpCur : (card.currentHp ?? hpMax);
+  const dying = card.deathPending || (hp != null && hp <= 0);
+  const classLine = sheet
+    ? `${sheetClassName(card.sheet) || "Hunter"} · Lvl ${card.level}`
+    : klass
+      ? `${klass.name} · Lvl ${card.level}`
+      : "Hunter";
   const insight = card.insight ?? 0;
   const earnedLvl = earnedLevel(card);
   const pendingLevel = isLevelUpPending(card);
@@ -65,7 +74,7 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
             {card.deathPending && <span className="role-tag" style={{ marginLeft: 8, color: "var(--blood-bright)" }}>death pending</span>}
           </div>
           <div className="faint" style={{ fontSize: "0.78rem" }}>
-            {klass ? `${klass.name} · Lvl ${card.level}` : "Hunter"} · HP {hp}/{hpMax}
+            {classLine} · HP {hp ?? "?"}/{hpMax ?? "?"}
           </div>
         </div>
         <div className="row" style={{ gap: 6, flex: "none" }}>
@@ -142,12 +151,13 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
 function ArchivedRow({ a }: { a: ArchivedCharacter }) {
   const recover = useCharactersStore((s) => s.recover);
   const klass = getClass(a.card.classId);
+  const cls = klass?.name || sheetClassName(a.card.sheet);
   return (
     <div className="row between" style={{ padding: "8px 0", borderTop: "1px solid var(--border)", gap: 8 }}>
       <div style={{ minWidth: 0 }}>
         <div style={{ fontWeight: 600, fontSize: "0.92rem" }}>{a.card.name}</div>
         <div className="faint" style={{ fontSize: "0.78rem" }}>
-          {klass ? `${klass.name} · Lvl ${a.card.level}` : "Hunter"} · {a.reason}
+          {cls ? `${cls} · Lvl ${a.card.level}` : "Hunter"} · {a.reason}
         </div>
       </div>
       <AsyncButton className="btn btn-ghost btn-sm" style={{ width: "auto", flex: "none" }} pendingText="…" showDone={false} onClick={() => recover(a)}>

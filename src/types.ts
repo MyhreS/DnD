@@ -315,6 +315,9 @@ export interface GameParticipant {
   name: string;
   classId: string;
   subclassId?: string | null;
+  /** The paper sheet's free-text class line, snapshotted at join — sheet-made
+   * hunters have classId "" so this is their display class. */
+  className?: string | null;
   level: number;
   role: PlayerType;
   joinedAt: number;

@@ -152,6 +152,8 @@ export interface JoinInput {
   name: string;
   classId: string;
   subclassId?: string | null;
+  /** Sheet hunters: the sheet's free-text class line (classId stays ""). */
+  className?: string | null;
   level: number;
   role: GameParticipant["role"];
 }
@@ -164,6 +166,7 @@ export async function joinGame(gameId: string, p: JoinInput): Promise<void> {
       name: p.name,
       classId: p.classId,
       subclassId: p.subclassId ?? null,
+      className: p.className ?? null,
       level: p.level,
       role: p.role,
       joinedAt: serverTimestamp(),
@@ -294,6 +297,7 @@ export function subscribeParticipants(
             name: (data.name as string) ?? "Hunter",
             classId: (data.classId as string) ?? "",
             subclassId: (data.subclassId as string | null) ?? null,
+            className: (data.className as string | null) ?? null,
             level: (data.level as number) ?? 1,
             role: (data.role as GameParticipant["role"]) ?? "player",
             joinedAt: ms(data.joinedAt),

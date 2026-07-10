@@ -16,3 +16,38 @@ export function sheetClassName(sheet: SheetData | undefined): string {
   const v = sheet?.["class"];
   return typeof v === "string" ? v.trim() : "";
 }
+
+/** Parse an integer out of a sheet's free-text box ("22", "+2", "30 ft") —
+ * null when the box is empty, missing or unparseable. */
+function sheetInt(sheet: SheetData | undefined, key: string): number | null {
+  const v = sheet?.[key];
+  if (typeof v !== "string") return null;
+  const n = parseInt(v.trim(), 10);
+  return Number.isFinite(n) ? n : null;
+}
+
+export interface SheetVitals {
+  hpCur: number | null;
+  hpMax: number | null;
+  ac: number | null;
+  sanityCur: number | null;
+  sanityMax: number | null;
+}
+
+/** The sheet's play-relevant numbers, parsed from its free-text boxes — the ONE
+ * way play surfaces (combat tracker, DM board, status screen) read a sheet
+ * hunter's vitals. null = missing/unparseable (render as "?", never 0). */
+export function sheetVitals(sheet: SheetData | undefined): SheetVitals {
+  return {
+    hpCur: sheetInt(sheet, "hpCur"),
+    hpMax: sheetInt(sheet, "hpMax"),
+    ac: sheetInt(sheet, "ac"),
+    sanityCur: sheetInt(sheet, "sanityCur"),
+    sanityMax: sheetInt(sheet, "sanityMax"),
+  };
+}
+
+/** The sheet's initiative modifier ("+2") — seeds combat initiative rolls. */
+export function sheetInitiative(sheet: SheetData | undefined): number | null {
+  return sheetInt(sheet, "initiative");
+}
