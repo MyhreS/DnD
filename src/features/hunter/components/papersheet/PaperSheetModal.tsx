@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { PaperSheet } from "./PaperSheet";
+import { StepGuidance } from "./StepGuidance";
 import { usePaperSheetAutosave } from "../../hooks/usePaperSheetAutosave";
 import { usePaperSheetOpen } from "../../hooks/usePaperSheetOpen";
 import { usePaperSheetFocus } from "../../hooks/usePaperSheetFocus";
@@ -51,6 +52,7 @@ export function PaperSheetModal({
             </button>
           ))}
         </div>
+        {activeStep != null && <StepGuidance step={activeStep} />}
         <label>
           <input type="checkbox" checked={showSteps} onChange={(e) => setShowSteps(e.target.checked)} />
           Show step numbers
