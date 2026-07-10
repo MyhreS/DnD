@@ -2,7 +2,9 @@ import { F, Ta, Chk, St } from "./sheetPrimitives";
 import { HunterFigure } from "./HunterFigure";
 import { Info } from "./InfoDot";
 
-const ADDONS = [1, 2, 3, 4, 5] as const;
+// Six rows: five is the normal maximum, and a Balanced Fit Main Armor lets
+// one Add-on not count toward it (handbook Armor Types).
+const ADDONS = [1, 2, 3, 4, 5, 6] as const;
 
 const SLOTS = [
   { f: "slotHand", label: "OVERSIZED STORAGE SLOT (HAND)" },
