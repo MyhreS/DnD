@@ -23,9 +23,12 @@ page.on("pageerror", (e) => {
 });
 
 await page.goto(`${BASE}/character?preview=user.player`, { waitUntil: "load" });
-await page.waitForTimeout(1000);
+// The sample hunter's FILLED sheet auto-pops — close it, then open a fresh
+// blank draft (the "+ New hunter" flow IS the blank sheet now).
+await page.waitForSelector(".papersheet .page");
+await page.getByRole("button", { name: /Done/ }).click();
+await page.waitForSelector(".papersheet", { state: "detached" });
 await page.getByRole("button", { name: "+ New hunter" }).click();
-await page.getByRole("button", { name: /Character sheet way/ }).click();
 await page.waitForSelector(".papersheet .page");
 await page.evaluate(() => document.fonts.ready);
 await page.waitForTimeout(500);

@@ -627,14 +627,22 @@
 .papersheet .shield {
   position: relative;
   width: 24mm;
-  height: 28mm;
   flex: none;
 }
-.papersheet .shield svg {
+/* The graphic wrapper scopes the AC input's absolute centering so it can't
+ * catch the Shield Arm checkbox (it used to, stacking the checkbox — and its
+ * checked ✕ — on top of the AC number). */
+.papersheet .shield-gfx {
+  position: relative;
+  width: 100%;
+  height: 28mm;
+}
+.papersheet .shield-gfx svg {
   width: 100%;
   height: 100%;
+  display: block;
 }
-.papersheet .shield input {
+.papersheet .shield-gfx input {
   position: absolute;
   left: 50%;
   top: 44%;
@@ -653,14 +661,18 @@
   text-align: center;
   white-space: nowrap;
 }
+/* Anchored in flow directly under the shield graphic — the checked ✕ (which
+ * overflows its 13px box upward) lands in this gap, well clear of the AC. */
 .papersheet .shieldarm {
-  margin-top: 2mm;
+  margin-top: 2.5mm;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   font-size: 9.5px;
   font-weight: 700;
   letter-spacing: 0.08em;
+  white-space: nowrap;
 }
 .papersheet .armorcat {
   flex: 1;

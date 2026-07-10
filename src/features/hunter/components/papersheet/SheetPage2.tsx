@@ -22,10 +22,12 @@ export function SheetPage2() {
           <div className="ac-row">
             <div className="shield">
               <span className="lbl">ARMOR CLASS <St n={4} /> <Info k="ac" /></span>
-              <svg viewBox="0 0 90 104" aria-hidden="true">
-                <path d="M45 4 L 84 14 C 84 52, 74 84, 45 100 C 16 84, 6 52, 6 14 Z" stroke="#211d17" strokeWidth="5" fill="rgba(255,255,255,.35)" />
-              </svg>
-              <F f="ac" />
+              <div className="shield-gfx">
+                <svg viewBox="0 0 90 104" aria-hidden="true">
+                  <path d="M45 4 L 84 14 C 84 52, 74 84, 45 100 C 16 84, 6 52, 6 14 Z" stroke="#211d17" strokeWidth="5" fill="rgba(255,255,255,.35)" />
+                </svg>
+                <F f="ac" />
+              </div>
               <div className="shieldarm"><Chk f="shieldArm" /> SHIELD ARM <St n={4} /></div>
             </div>
             <div className="armorcat">

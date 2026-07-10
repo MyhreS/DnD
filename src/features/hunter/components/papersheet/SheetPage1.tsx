@@ -115,6 +115,7 @@ export function SheetPage1() {
           </Vital>
           <Vital head={<>HIT DICE <St n={5} /> <Info k="hitDice" side="left" /></>}>
             <div className="minifields">
+              <MF f="hdCur" lbl="CURRENT" />
               <MF f="hdSpent" lbl="SPENT" />
               <MF f="hdMax" lbl="MAX" />
             </div>
