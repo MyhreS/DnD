@@ -44,15 +44,16 @@ export function HunterFigure() {
           <path d="M372 944 L 368 1058 C 336 1064 314 1080 318 1096 Q 321 1106 342 1106 L 428 1106 L 424 946" fill="rgba(255,255,255,.4)" />
           <path d="M578 944 L 582 1058 C 614 1064 636 1080 632 1096 Q 629 1106 608 1106 L 522 1106 L 526 946" fill="rgba(255,255,255,.4)" />
         </g>
-        {/* leader lines */}
-        <g stroke="#8e1f1f" strokeWidth="3.5" strokeDasharray="10 9">
+        {/* leader lines — hidden on small screens, where the plaques leave
+          * the doll and stack below it (there is nothing to point at). */}
+        <g className="leaders" stroke="#8e1f1f" strokeWidth="3.5" strokeDasharray="10 9">
           <path d="M316 82 L 424 146" />
           <path d="M638 90 L 511 238" />
           <path d="M282 578 L 348 604" />
           <path d="M638 468 L 540 420" />
           <path d="M624 1064 L 546 1006" />
         </g>
-        <g fill="#8e1f1f">
+        <g className="leaders" fill="#8e1f1f">
           <circle cx="424" cy="146" r="9" />
           <circle cx="511" cy="238" r="9" />
           <circle cx="348" cy="604" r="9" />

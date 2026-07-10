@@ -1173,6 +1173,117 @@
   text-decoration: underline;
 }
 
+/* ================= small screens =================
+ * SCREEN ONLY — print (and the PDF generator, which renders print media)
+ * keeps the exact A4 mm layout above. On a phone the page stops being a
+ * fixed A4 canvas: everything reflows into ONE column and the user only
+ * ever scrolls vertically. */
+@media screen and (max-width: 700px) {
+  /* the page becomes a fluid column */
+  .papersheet .page {
+    width: auto;
+    height: auto;
+    overflow: visible;
+    padding: 8mm 4mm 10mm;
+    margin-bottom: 18px;
+  }
+
+  /* toolbar: title on its own line, controls wrap beneath */
+  .papersheet-toolbar h1 {
+    flex-basis: 100%;
+    order: -1;
+    text-align: center;
+    font-size: 13px;
+  }
+
+  /* every side-by-side grid collapses to one column */
+  .papersheet .p1-top,
+  .papersheet .statgrid,
+  .papersheet .p1-bottom,
+  .papersheet .p2-grid,
+  .papersheet .rites-grid,
+  .papersheet .features {
+    grid-template-columns: 1fr;
+  }
+  .papersheet .p1-top,
+  .papersheet .statgrid,
+  .papersheet .p1-bottom,
+  .papersheet .p2-grid,
+  .papersheet .rites-grid {
+    gap: 5mm;
+  }
+  /* the features divider turns horizontal when the columns stack */
+  .papersheet .features .col:first-child {
+    border-right: none;
+    border-bottom: 1.6px solid var(--rule);
+  }
+
+  /* AC row: shield (with its Shield Arm line) centered, fields below */
+  .papersheet .ac-row {
+    display: block;
+  }
+  .papersheet .shield {
+    margin: 0 auto 6mm;
+  }
+
+  /* paper-doll: the figure scales to fit up top, the gear plaques leave it
+   * and stack as a full-width list (their leader lines are hidden) */
+  .papersheet .figure {
+    aspect-ratio: auto;
+  }
+  .papersheet .figure > svg {
+    position: static;
+    display: block;
+    width: 58%;
+    max-width: 60mm;
+    height: auto;
+    margin: 0 auto 4mm;
+  }
+  .papersheet .figure .leaders {
+    display: none;
+  }
+  .papersheet .plaque {
+    /* relative, not static: it must stay the .plbl label's anchor */
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    margin: 0 0 3.5mm;
+  }
+
+  /* tables fit the column — except the six-column whispers table, which
+   * scrolls sideways inside its own frame instead of squeezing. The grid
+   * items must be allowed to shrink (min-width:auto would grow the track —
+   * and the page — to the table's min-width instead of scrolling). */
+  .papersheet .p2-grid > div,
+  .papersheet .rites-grid > div {
+    min-width: 0;
+  }
+  .papersheet .sheetwrap {
+    overflow-x: auto;
+  }
+  .papersheet .rites-grid table.sheet {
+    min-width: 520px;
+  }
+
+  /* thumb-sized fields: relax the print-tuned heights/font sizes */
+  .papersheet .minifields .mf input {
+    height: 8mm;
+    font-size: 17px;
+  }
+  .papersheet .skill input[type="text"] {
+    height: 6.5mm;
+    font-size: 16px;
+  }
+  .papersheet .slotbox {
+    width: 10mm;
+    height: 10mm;
+  }
+  .papersheet .slotbox input {
+    font-size: 16px;
+  }
+}
+
 /* ================= print ================= */
 @media print {
   body.papersheet-open #root {
