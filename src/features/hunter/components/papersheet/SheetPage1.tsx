@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
-import { F, Chk, St } from "./sheetPrimitives";
+import { F, Chk, St, Sel } from "./sheetPrimitives";
 import { Info } from "./InfoDot";
+import { ClassFigure } from "./ClassFigure";
+import { CLASSES } from "@/data/classes";
+
+const CLASS_NAMES = CLASSES.map((c) => c.name);
 
 interface SkillLine {
   label: string;
@@ -71,7 +75,7 @@ export function SheetPage1() {
             <span className="lbl">Your Name <Info k="name" /></span>
           </div>
           <div className="fld" data-step="2"><F f="background" /><span className="lbl">Background <St n={2} /> <Info k="background" /></span></div>
-          <div className="fld" data-step="1"><F f="class" /><span className="lbl">Class <St n={1} /> <Info k="class" side="right" /></span></div>
+          <div className="fld" data-step="1"><Sel f="class" options={CLASS_NAMES} /><span className="lbl">Class <St n={1} /> <Info k="class" side="right" /></span></div>
           <div className="fld" data-step="1"><F f="subclass" /><span className="lbl">Subclass <St n={1} /> <Info k="subclass" /></span></div>
         </div>
 
@@ -90,6 +94,7 @@ export function SheetPage1() {
               <F f="insight" />
             </div>
           </div>
+          <ClassFigure />
         </div>
 
         <div className="vitals">

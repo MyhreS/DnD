@@ -366,6 +366,42 @@
   opacity: 1;
   cursor: default;
 }
+
+/* the class dropdown — dressed as a handwriting line. The native arrow is
+ * replaced by a small inked chevron so it still reads as tappable. */
+.papersheet select {
+  font-family: "Caveat", cursive;
+  font-size: 19px;
+  font-weight: 500;
+  color: #2b2013;
+  border: none;
+  border-bottom: 1.4px solid var(--field);
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  width: 100%;
+  /* block + pinned height (a bare inline select gets ~3px of extra chrome
+   * and a baseline gap) so the Class line sits exactly where the old
+   * free-text field did — on screen AND in the printed PDF */
+  display: block;
+  height: 1.35em;
+  padding: 0 20px 1px 2px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 L6 6.5 L11 1.5' fill='none' stroke='%234a443a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 4px center / 11px 8px;
+}
+.papersheet select:focus {
+  border-bottom-color: var(--blood);
+}
+.papersheet select:disabled {
+  opacity: 1;
+  cursor: default;
+  color: #2b2013;
+  background-image: none; /* read-only (party view): no tap affordance */
+}
 .papersheet .lbl {
   font-size: 11px;
   font-weight: 700;
@@ -418,7 +454,8 @@
   margin-bottom: 6mm;
   position: relative;
 }
-.papersheet .idfields input {
+.papersheet .idfields input,
+.papersheet .idfields select {
   font-size: 21px;
 }
 .papersheet .idfields .lbl {
@@ -426,10 +463,11 @@
   margin-top: 2px;
 }
 
-/* the eye emblem */
+/* the eye emblem (and, under it, the little class figure) */
 .papersheet .eye-wrap {
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  align-items: center;
   padding-top: 2mm;
 }
 .papersheet .eye {
@@ -471,6 +509,95 @@
   height: 1.3px;
   background: var(--ink);
   margin: 1mm 0;
+}
+
+/* ---- the animated class figure (ClassFigure/classFigures.tsx) ----
+ * FIXED height in the eye column's slack space: whichever class is chosen (or
+ * none — then nothing renders), page 1's layout never moves. Screen-only
+ * decoration: @media print hides it so the PDFs stay exactly as before. */
+.papersheet .classfig {
+  height: 30mm;
+  margin-top: 2mm;
+  display: flex;
+  justify-content: center;
+}
+.papersheet .classfig svg {
+  height: 100%;
+  width: auto;
+  display: block;
+  overflow: visible; /* the waving hand strays past the viewBox */
+}
+/* idle motions — keyframed transforms on the figure's SVG groups */
+.papersheet .classfig .cf-bob {
+  animation: cf-bob 3.8s ease-in-out infinite;
+}
+.papersheet .classfig .cf-float {
+  animation: cf-bob 4.6s ease-in-out infinite;
+}
+.papersheet .classfig .cf-breathe {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: cf-breathe 3.8s ease-in-out infinite;
+}
+.papersheet .classfig .cf-wave {
+  transform-box: fill-box;
+  transform-origin: 4% 96%; /* the shoulder — bottom-left of the raised arm */
+  animation: cf-wave 2.6s ease-in-out infinite;
+}
+.papersheet .classfig .cf-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 0%; /* hangs from the waist */
+  animation: cf-sway 4.2s ease-in-out infinite;
+}
+.papersheet .classfig .cf-sway-b {
+  transform-box: fill-box;
+  transform-origin: 50% 100%; /* planted on the ground / held low */
+  animation: cf-sway-b 4.4s ease-in-out infinite;
+}
+.papersheet .classfig .cf-tent {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: cf-sway 3.4s ease-in-out infinite;
+}
+.papersheet .classfig .cf-pennant {
+  transform-box: fill-box;
+  transform-origin: 0% 50%; /* pinned to the spear shaft */
+  animation: cf-pennant 3.2s ease-in-out infinite;
+}
+.papersheet .classfig .d2 {
+  animation-delay: -1.1s;
+}
+.papersheet .classfig .d3 {
+  animation-delay: -2.3s;
+}
+@keyframes cf-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.6px); }
+}
+@keyframes cf-breathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.025); }
+}
+@keyframes cf-wave {
+  0%, 100% { transform: rotate(-6deg); }
+  50% { transform: rotate(12deg); }
+}
+@keyframes cf-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+@keyframes cf-sway-b {
+  0%, 100% { transform: rotate(-1.6deg); }
+  50% { transform: rotate(1.6deg); }
+}
+@keyframes cf-pennant {
+  0%, 100% { transform: scaleX(1) rotate(0deg); }
+  50% { transform: scaleX(0.82) rotate(4deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .papersheet .classfig * {
+    animation: none !important;
+  }
 }
 
 /* vitals column */
@@ -1305,6 +1432,10 @@
   .papersheet .info {
     display: none;
   }
+  /* screen decoration only — the printed/PDF sheet is unchanged */
+  .papersheet .classfig {
+    display: none;
+  }
   .papersheet .page {
     box-shadow: none;
     margin: 0;
@@ -1317,6 +1448,15 @@
   }
   .papersheet input[type="text"] {
     border-bottom-color: #8a7f6a;
+  }
+  /* the class dropdown prints as a plain handwriting line: no chevron, and
+   * an unchosen class ("—" on screen) prints blank like the old text field */
+  .papersheet select {
+    background-image: none;
+    border-bottom-color: #8a7f6a;
+  }
+  .papersheet select[data-empty] {
+    color: transparent;
   }
   /* The A4 @page rule is injected by usePaperSheetOpen only while a sheet is
    * open — @page can't be selector-scoped, and it must not hijack prints of
