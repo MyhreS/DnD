@@ -937,8 +937,7 @@
   .papersheet input[type="text"] {
     border-bottom-color: #8a7f6a;
   }
-  @page {
-    size: A4;
-    margin: 0;
-  }
+  /* The A4 @page rule is injected by usePaperSheetOpen only while a sheet is
+   * open — @page can't be selector-scoped, and it must not hijack prints of
+   * the rest of the app. */
 }

@@ -4,6 +4,7 @@ import {
   setDoc,
   updateDoc,
   deleteDoc,
+  deleteField,
   addDoc,
   getDocs,
   onSnapshot,
@@ -52,18 +53,38 @@ export async function patchCharacter(id: string, partial: Partial<HunterCard>): 
   await setDoc(doc(charsCol, id), partial, { merge: true });
 }
 
-/** Replace a sheet-made character's paper sheet plus its mirrored summary
- * fields (name/level/background). Uses updateDoc — NOT a merge — so sheet keys
- * removed by "Clear sheet" actually clear on the server instead of
- * deep-merging back in. The doc must already exist (first save goes through
+/** Replace a sheet-made character's WHOLE paper sheet (the "Clear sheet"
+ * flow) plus its mirrored summary fields. Uses updateDoc — NOT a merge — so
+ * removed sheet keys actually clear on the server instead of deep-merging
+ * back in. The doc must already exist (first save goes through
  * `saveCharacter` via the player store). */
-export async function saveCharacterSheet(
+export async function replaceCharacterSheet(
   id: string,
   sheet: SheetData,
   mirror: Partial<HunterCard>,
 ): Promise<void> {
   if (isPreviewActive()) return patchCharacter(id, { ...mirror, sheet });
   await updateDoc(doc(charsCol, id), { ...mirror, sheet, updatedAt: Date.now() });
+}
+
+/** Per-field paper-sheet autosave: writes ONLY the changed keys, as dotted
+ * `sheet.<key>` paths, so two open copies (phone + desktop, or the DM and the
+ * owner) merge per field instead of last-writer-wins on the whole map.
+ * `mirror` carries the denormalized name/level/background ONLY when those
+ * sheet boxes were among the changed keys. Fails (rather than resurrecting)
+ * if the doc was deleted meanwhile — updateDoc never creates. */
+export async function patchCharacterSheet(
+  id: string,
+  sheet: SheetData,
+  keys: string[],
+  mirror: Partial<HunterCard>,
+): Promise<void> {
+  if (isPreviewActive()) return patchCharacter(id, { ...mirror, sheet });
+  const update: Record<string, unknown> = { ...mirror, updatedAt: Date.now() };
+  for (const k of keys) {
+    update[`sheet.${k}`] = k in sheet ? sheet[k] : deleteField();
+  }
+  await updateDoc(doc(charsCol, id), update);
 }
 
 /** Atomically add (or subtract) Insight — DM award. Uses a server-side increment

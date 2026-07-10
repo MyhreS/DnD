@@ -158,10 +158,10 @@ export function CharacterPage() {
   }
 
   // Once autosave lands the draft in the store, follow the store's copy — a
-  // (dev-mode) remount of the modal must reload what was already written.
-  const draftCard = sheetDraft
-    ? characters.find((c) => c.id === sheetDraft.id) ?? sheetDraft
-    : null;
+  // (dev-mode) remount of the modal must reload what was already written, and
+  // only a draft NOT yet in the store may create the doc.
+  const storeDraft = sheetDraft ? characters.find((c) => c.id === sheetDraft.id) : undefined;
+  const draftCard = storeDraft ?? sheetDraft;
 
   return (
     <>
@@ -169,7 +169,7 @@ export function CharacterPage() {
       {choosing && (
         <CreateHunterChoice onSheet={startSheetWay} onApp={startAppWay} onCancel={() => setChoosing(false)} />
       )}
-      {draftCard && <PaperSheetModal card={draftCard} onClose={closeSheetDraft} />}
+      {draftCard && <PaperSheetModal card={draftCard} create={!storeDraft} onClose={closeSheetDraft} />}
     </>
   );
 }
