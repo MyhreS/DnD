@@ -20,7 +20,7 @@ export function SheetPage2() {
         {/* left column: armor */}
         <div>
           <div className="ac-row">
-            <div className="shield">
+            <div className="shield" data-step="4">
               <span className="lbl">ARMOR CLASS <St n={4} /> <Info k="ac" /></span>
               <div className="shield-gfx">
                 <svg viewBox="0 0 90 104" aria-hidden="true">
@@ -31,10 +31,10 @@ export function SheetPage2() {
               <div className="shieldarm"><Chk f="shieldArm" /> SHIELD ARM <St n={4} /></div>
             </div>
             <div className="armorcat">
-              <div className="fld"><F f="armorCategory" /><span className="lbl">ARMOR CATEGORY <St n={4} /> <Info k="armorCategory" /></span></div>
+              <div className="fld" data-step="4"><F f="armorCategory" /><span className="lbl">ARMOR CATEGORY <St n={4} /> <Info k="armorCategory" /></span></div>
               <div className="wt2">
-                <div className="fld"><F f="weight" /><span className="lbl">WEIGHT <St n={4} /> <Info k="weight" /></span></div>
-                <div className="fld"><F f="weightCondition" /><span className="lbl">WEIGHT CONDITION <St n={4} /> <Info k="weightCondition" /></span></div>
+                <div className="fld" data-step="4"><F f="weight" /><span className="lbl">WEIGHT <St n={4} /> <Info k="weight" /></span></div>
+                <div className="fld" data-step="4"><F f="weightCondition" /><span className="lbl">WEIGHT CONDITION <St n={4} /> <Info k="weightCondition" /></span></div>
               </div>
             </div>
           </div>
@@ -43,17 +43,17 @@ export function SheetPage2() {
 
           <HunterFigure />
 
-          <h2 className="sec" style={{ marginTop: "4mm" }}>ADD-ON ARMOR <St n={4} /> <Info k="addons" /></h2>
+          <h2 className="sec" style={{ marginTop: "4mm" }} data-step="4">ADD-ON ARMOR <St n={4} /> <Info k="addons" /></h2>
           <div className="addons">
             {ADDONS.map((i) => (
-              <div className="addon-row" key={i}>
+              <div className="addon-row" key={i} data-step="4">
                 <div className="frame"><F f={`addon${i}`} /></div>
                 <span className="studs"><Chk f={`studs${i}`} /> STUDS <St n={4} /></span>
               </div>
             ))}
           </div>
 
-          <div className="coins">
+          <div className="coins" data-step="2">
             <span className="lbl">COINS <St n={2} /> <Info k="coins" side="up" /></span>
             <div className="coinbox"><F f="coins" /></div>
             <span className="lbl">GP</span>
@@ -62,22 +62,22 @@ export function SheetPage2() {
 
         {/* right column */}
         <div className="rcol">
-          <div className="frame">
+          <div className="frame" data-step="4">
             <div className="head">IMPRESSIONS <St n={4} /> <Info k="impressions" side="left" /></div>
             <Ta rows={3} f="impressions" />
           </div>
-          <div className="frame">
+          <div className="frame" data-step="4">
             <div className="head">SPECIAL <St n={4} /> <Info k="special" side="left" /></div>
             <Ta rows={7} f="special" />
           </div>
-          <div className="frame">
+          <div className="frame" data-step="2">
             <div className="head">STORAGE ITEMS <St n={2} /> <Info k="storageItems" side="left" /></div>
             <Ta rows={4} f="storageItems" />
           </div>
 
           <div className="slots">
             {SLOTS.map((s, i) => (
-              <div className="slotline" key={s.f}>
+              <div className="slotline" key={s.f} data-step="2">
                 <span className="lbl">{s.label} <St n={2} /> {i === 0 && <Info k="slots" side="left" />}</span>
                 <div className="slotbox"><F f={s.f} /></div>
               </div>
@@ -86,20 +86,20 @@ export function SheetPage2() {
 
           <div className="training">
             <h2 className="sec">EQUIPMENT TRAINING &amp; PROFICIENCIES</h2>
-            <div className="trainline">
+            <div className="trainline" data-step="1">
               <span className="lbl">ARMOR TRAINING <St n={1} /> <Info k="training" side="left" /></span>
               <span className="chk"><Chk f="armorLight" /> LIGHT</span>
               <span className="chk"><Chk f="armorMedium" /> MEDIUM</span>
               <span className="chk"><Chk f="armorHeavy" /> HEAVY</span>
             </div>
-            <div className="trainline">
+            <div className="trainline" data-step="2">
               <span className="lbl">WEAPONS <St n={2} /> <Info k="weaponsProf" side="left" /></span>
               <span className="chk"><Chk f="wepSimple" /> SIMPLE</span>
               <span className="chk"><Chk f="wepMartial" /> MARTIAL</span>
             </div>
           </div>
 
-          <div className="frame" style={{ marginTop: "5mm" }}>
+          <div className="frame" style={{ marginTop: "5mm" }} data-step="2">
             <div className="head">TOOLS <St n={2} /> <Info k="tools" side="left" /></div>
             <Ta rows={4} f="tools" />
           </div>

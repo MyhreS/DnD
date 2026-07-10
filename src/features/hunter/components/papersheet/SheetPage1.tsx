@@ -9,26 +9,30 @@ interface SkillLine {
 }
 
 /** One ability block: score + modifier, saving throw, then its skills. Field
- * names match the original sheet (`strScore`, `strSave`, `skAthletics`, …). */
+ * names match the original sheet (`strScore`, `strSave`, `skAthletics`, …).
+ * `data-step` tags each unit with its creation step (per the red St badges)
+ * so the toolbar's step selector can spotlight it. */
 function Ability({ title, k, step = 3, skills }: { title: string; k: string; step?: number; skills: SkillLine[] }) {
   return (
     <div className="abil">
-      <h3>
-        {title} <St n={step} /> <Info k="abilities" />
-      </h3>
-      <div className="scoremod">
-        <div className="score"><F f={`${k}Score`} /></div>
-        <div className="mod"><F f={`${k}Mod`} /></div>
+      <div data-step={String(step)}>
+        <h3>
+          {title} <St n={step} /> <Info k="abilities" />
+        </h3>
+        <div className="scoremod">
+          <div className="score"><F f={`${k}Score`} /></div>
+          <div className="mod"><F f={`${k}Mod`} /></div>
+        </div>
+        <div className="sm-lbls"><span>SCORE</span><span>MODIFIER</span></div>
       </div>
-      <div className="sm-lbls"><span>SCORE</span><span>MODIFIER</span></div>
       <div style={{ height: "2mm" }} />
-      <div className="skill save">
+      <div className="skill save" data-step="5">
         <span className="sname">Saving Throw <St n={5} /></span>
         <F f={`${k}Save`} />
         <Chk f={`${k}SaveP`} className="prof" />
       </div>
       {skills.map((s) => (
-        <div className="skill" key={s.f}>
+        <div className="skill" key={s.f} data-step={s.step != null ? String(s.step) : undefined}>
           <span className="sname">
             {s.label} {s.step != null && <St n={s.step} />}
           </span>
@@ -40,9 +44,9 @@ function Ability({ title, k, step = 3, skills }: { title: string; k: string; ste
   );
 }
 
-function Vital({ head, children }: { head: ReactNode; children: ReactNode }) {
+function Vital({ head, step, children }: { head: ReactNode; step?: string; children: ReactNode }) {
   return (
-    <div className="vrow">
+    <div className="vrow" data-step={step}>
       <div className="rowhead">{head}</div>
       {children}
     </div>
@@ -66,9 +70,9 @@ export function SheetPage1() {
             <F f="name" />
             <span className="lbl">Your Name <Info k="name" /></span>
           </div>
-          <div className="fld"><F f="background" /><span className="lbl">Background <St n={2} /> <Info k="background" /></span></div>
-          <div className="fld"><F f="class" /><span className="lbl">Class <St n={1} /> <Info k="class" side="right" /></span></div>
-          <div className="fld"><F f="subclass" /><span className="lbl">Subclass <St n={1} /> <Info k="subclass" /></span></div>
+          <div className="fld" data-step="2"><F f="background" /><span className="lbl">Background <St n={2} /> <Info k="background" /></span></div>
+          <div className="fld" data-step="1"><F f="class" /><span className="lbl">Class <St n={1} /> <Info k="class" side="right" /></span></div>
+          <div className="fld" data-step="1"><F f="subclass" /><span className="lbl">Subclass <St n={1} /> <Info k="subclass" /></span></div>
         </div>
 
         <div className="eye-wrap">
@@ -78,7 +82,7 @@ export function SheetPage1() {
               <path d="M14 67 C 62 16, 178 16, 226 67" stroke="#211d17" strokeWidth="2.5" opacity=".35" fill="none" transform="translate(0,7)" />
               <circle cx="120" cy="67" r="53" stroke="#211d17" strokeWidth="3.5" fill="rgba(246,241,229,.95)" />
             </svg>
-            <div className="iris-stack">
+            <div className="iris-stack" data-step="1 5">
               <F f="level" />
               <span className="lbl">Level <St n={1} /> <Info k="level" /></span>
               <div className="iris-rule" />
@@ -89,10 +93,11 @@ export function SheetPage1() {
         </div>
 
         <div className="vitals">
-          <Vital head={<>TRANSFORMATION LVL <St n={5} /> <Info k="transformation" side="left" /></>}>
+          <Vital step="5" head={<>TRANSFORMATION LVL <St n={5} /> <Info k="transformation" side="left" /></>}>
             <div className="minifields"><MF f="transformation" /></div>
           </Vital>
           <Vital
+            step="5"
             head={
               <>
                 SANITY <St n={5} /> <Info k="sanity" side="left" />
@@ -106,14 +111,14 @@ export function SheetPage1() {
               <MF f="sanityDice" lbl={<>SANITY DICE <St n={5} /></>} />
             </div>
           </Vital>
-          <Vital head={<>HIT POINTS <St n={5} /> <Info k="hp" side="left" /></>}>
+          <Vital step="5" head={<>HIT POINTS <St n={5} /> <Info k="hp" side="left" /></>}>
             <div className="minifields">
               <MF f="hpCur" lbl="CURRENT" />
               <MF f="hpMax" lbl="MAX" />
               <MF f="hpTemp" lbl="TEMP" tight />
             </div>
           </Vital>
-          <Vital head={<>HIT DICE <St n={5} /> <Info k="hitDice" side="left" /></>}>
+          <Vital step="5" head={<>HIT DICE <St n={5} /> <Info k="hitDice" side="left" /></>}>
             <div className="minifields">
               <MF f="hdCur" lbl="CURRENT" />
               <MF f="hdSpent" lbl="SPENT" />
@@ -139,7 +144,7 @@ export function SheetPage1() {
 
       <div className="statgrid">
         <div>
-          <div className="abil" style={{ textAlign: "center" }}>
+          <div className="abil" style={{ textAlign: "center" }} data-step="2">
             <h3>PROFICIENCY BONUS <St n={2} /> <Info k="profBonus" /></h3>
             <div className="profbox"><F f="profBonus" /></div>
           </div>
@@ -168,7 +173,7 @@ export function SheetPage1() {
               { label: "Religion", f: "skReligion" },
             ]}
           />
-          <div className="tinge">
+          <div className="tinge" data-step="5">
             <h3>BLOOD TINGE <St n={5} /> <Info k="bloodTinge" /></h3>
             <div className="drop">
               <svg viewBox="0 0 60 78" aria-hidden="true">
@@ -205,12 +210,12 @@ export function SheetPage1() {
       </div>
 
       <div className="p1-bottom">
-        <div className="bigstat"><div className="head">INITIATIVE <St n={5} /> <Info k="initiative" /></div><F f="initiative" /></div>
+        <div className="bigstat" data-step="5"><div className="head">INITIATIVE <St n={5} /> <Info k="initiative" /></div><F f="initiative" /></div>
         <div>
-          <div className="bigstat"><div className="head">SPEED <St n={2} /> <Info k="speed" /></div><F f="speed" /></div>
+          <div className="bigstat" data-step="2"><div className="head">SPEED <St n={2} /> <Info k="speed" /></div><F f="speed" /></div>
           <div className="sizecap">( SIZE : MEDIUM )</div>
         </div>
-        <div className="bigstat"><div className="head">PASSIVE PERCEPTION <St n={5} /> <Info k="passivePerception" side="left" /></div><F f="passivePerception" /></div>
+        <div className="bigstat" data-step="5"><div className="head">PASSIVE PERCEPTION <St n={5} /> <Info k="passivePerception" side="left" /></div><F f="passivePerception" /></div>
       </div>
       <div className="pageno">PAGE 1 · IDENTITY &amp; ABILITIES</div>
     </div>
