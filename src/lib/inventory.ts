@@ -1,7 +1,7 @@
 // Pure helpers for a hunter's inventory: resolving catalog items, grouping by
 // carry significance, total weight, and the handbook carry-condition rule.
 
-import type { HunterCard, Item, CarrySignificance, DroppedItem } from "@/types";
+import type { HunterCard, Item, DroppedItem } from "@/types";
 import { ITEM_BY_ID } from "@/data/items";
 import { wornArmorWeight } from "@/lib/character";
 
@@ -27,23 +27,6 @@ export function resolveInventory(
       a.item.category.localeCompare(b.item.category) ||
       a.item.name.localeCompare(b.item.name),
   );
-}
-
-/** Carry groups in display order. */
-export const CARRY_ORDER: CarrySignificance[] = [
-  "Significant",
-  "Oversized",
-  "Insignificant",
-];
-
-/** Group resolved entries by carry significance (CARRY_ORDER, omit empty groups). */
-export function groupByCarry(
-  entries: ResolvedEntry[],
-): { carry: CarrySignificance; entries: ResolvedEntry[] }[] {
-  return CARRY_ORDER.map((carry) => ({
-    carry,
-    entries: entries.filter((e) => e.item.carry === carry),
-  })).filter((group) => group.entries.length > 0);
 }
 
 /** Total carried weight in lb (sum of weightLb * qty), rounded to 1 decimal. */

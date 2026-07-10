@@ -6,23 +6,17 @@ import { useIsDM } from "@/features/campaigns/hooks/useIsDM";
 import { useCharactersStore } from "@/features/play/store/charactersStore";
 import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
 import { useHunterCard } from "../hooks/useHunterCard";
-import { HunterCardView } from "./HunterCardView";
 import { HunterListCard } from "./HunterListCard";
-import { CharacterTrackers } from "./CharacterTrackers";
-import { InventorySection } from "./sheet/InventorySection";
-import { LevelUpModal } from "./LevelUpModal";
 import { SheetCharacterView } from "./SheetCharacterView";
 import { patchCharacter } from "@/api/players";
-import { isSheetCard } from "@/lib/character";
 import { CardSkeleton } from "@/components/Skeleton";
 import type { HunterCard } from "@/types";
 
-/** Playable in a campaign: a finished build, or any named sheet-made hunter. */
-const playable = (c: HunterCard) => (!!c.classId || isSheetCard(c)) && !!c.name;
+/** Playable in a campaign: any named hunter (every hunter is a paper sheet). */
+const playable = (c: HunterCard) => !!c.name;
 
-/** The in-campaign Hunter page. Players see their own brought hunter; the DM sees
- * a DM view and can step into any hunter ("play as") to test the game, then
- * return to DM. */
+/** The in-campaign Hunter page. Players see their own brought hunter; the DM
+ * sees a DM view and can step into any hunter's sheet, then return to DM. */
 export function CampaignHunterPage() {
   const user = useAuthStore((s) => s.user);
   const { characters, status } = usePlayerStore();
@@ -34,47 +28,20 @@ export function CampaignHunterPage() {
   const playingAsId = useCampaignStore((s) => s.playingAsId);
   const playAs = useCampaignStore((s) => s.playAs);
   const returnToDm = useCampaignStore((s) => s.returnToDm);
-  const dmPatch = useCharactersStore((s) => s.dmPatch);
   const party = useCharactersStore((s) => s.party);
   useHunterCard();
   useCharactersSync();
 
-  // --- DM view: run the table, or step into a hunter to test the game ---
+  // --- DM view: run the table, or step into a hunter's sheet ---
   if (isDM) {
-    const playing = playingAsId
-      ? party.find((c) => c.id === playingAsId && playable(c)) ?? null
-      : null;
+    const playing = playingAsId ? party.find((c) => c.id === playingAsId && playable(c)) ?? null : null;
 
-    if (playing && isSheetCard(playing)) {
-      return (
-        <div>
-          <p className="eyebrow" style={{ margin: 0 }}>Playing as · DM</p>
-          <h1 className="page-title" style={{ margin: "0 0 12px" }}>{playing.name}</h1>
-          <SheetCharacterView key={playing.id} card={playing} autoOpen={false} />
-          <button className="btn btn-ghost" style={{ marginTop: 14, maxWidth: 220 }} onClick={returnToDm}>
-            ← Return to DM
-          </button>
-        </div>
-      );
-    }
     if (playing) {
       return (
         <div>
           <p className="eyebrow" style={{ margin: 0 }}>Playing as · DM</p>
           <h1 className="page-title" style={{ margin: "0 0 12px" }}>{playing.name}</h1>
-          <div className="desk-2col">
-            <aside className="desk-aside no-print">
-              <CharacterTrackers card={playing} dmMode onPatch={(p) => void dmPatch(playing.id, p)} />
-            </aside>
-            <div className="desk-main">
-              <div className="print-sheet">
-                <HunterCardView card={playing} onPatch={(p) => void dmPatch(playing.id, p)} />
-              </div>
-              <div className="no-print" style={{ marginTop: 14 }}>
-                <InventorySection card={playing} dmMode onPatch={(p) => void dmPatch(playing.id, p)} />
-              </div>
-            </div>
-          </div>
+          <SheetCharacterView key={playing.id} card={playing} autoOpen={false} />
           <button className="btn btn-ghost" style={{ marginTop: 14, maxWidth: 220 }} onClick={returnToDm}>
             ← Return to DM
           </button>
@@ -128,42 +95,13 @@ export function CampaignHunterPage() {
     );
   }
 
-  // A sheet-made hunter in play — the paper sheet is its whole truth.
-  if (brought && isSheetCard(brought)) {
-    return (
-      <div>
-        <p className="eyebrow" style={{ margin: 0 }}>Your hunter in {campaign?.name}</p>
-        <h1 className="page-title" style={{ margin: "0 0 12px" }}>{brought.name}</h1>
-        <SheetCharacterView key={brought.id} card={brought} autoOpen={false} />
-        <p className="faint no-print" style={{ fontSize: "0.8rem", marginTop: 14 }}>
-          Manage or swap hunters from the <Link className="gold" to="/character">main menu → Hunters</Link>.
-        </p>
-      </div>
-    );
-  }
-
-  // Your hunter for this campaign — show the live sheet.
+  // Your hunter for this campaign — the paper sheet is its whole truth.
   if (brought) {
     return (
       <div>
         <p className="eyebrow" style={{ margin: 0 }}>Your hunter in {campaign?.name}</p>
         <h1 className="page-title" style={{ margin: "0 0 12px" }}>{brought.name}</h1>
-        {brought.lastSeenLevel != null && brought.level > brought.lastSeenLevel && (
-          <LevelUpModal card={brought} onPatch={(p) => void patchCharacter(brought.id, p)} />
-        )}
-        <div className="desk-2col">
-          <aside className="desk-aside no-print">
-            <CharacterTrackers card={brought} />
-          </aside>
-          <div className="desk-main">
-            <div className="print-sheet">
-              <HunterCardView card={brought} onPatch={(p) => void patchCharacter(brought.id, p)} />
-            </div>
-            <div className="no-print" style={{ marginTop: 14 }}>
-              <InventorySection card={brought} onPatch={(p) => void patchCharacter(brought.id, p)} />
-            </div>
-          </div>
-        </div>
+        <SheetCharacterView key={brought.id} card={brought} autoOpen={false} />
         <p className="faint no-print" style={{ fontSize: "0.8rem", marginTop: 14 }}>
           Manage or swap hunters from the <Link className="gold" to="/character">main menu → Hunters</Link>.
         </p>
@@ -194,7 +132,7 @@ export function CampaignHunterPage() {
         </>
       ) : (
         <div className="card center">
-          <p className="muted">You have no hunters yet. Forge one in the main menu, then bring it in.</p>
+          <p className="muted">You have no hunters yet. Write one on the sheet in the main menu, then bring it in.</p>
           <Link className="btn btn-primary" to="/character" style={{ maxWidth: 260, margin: "10px auto 0" }}>
             Go to Hunters
           </Link>

@@ -1,7 +1,6 @@
-import type { AbilityKey, AbilityScores, HunterCard, HunterClass } from "@/types";
+import type { AbilityScores, HunterCard, HunterClass } from "@/types";
 import { abilityModifier } from "@/data/abilities";
 import { acCategory, ARMOR_BY_ID } from "@/data/armor";
-import { skillAbility } from "@/data/skills";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 
 export const DEFAULT_ABILITIES: AbilityScores = {
@@ -67,20 +66,6 @@ export function levelForInsight(insight: number): number {
     if (insight >= INSIGHT_THRESHOLDS[i]) lvl = i + 1;
   }
   return lvl;
-}
-
-/**
- * Progress toward the next level, or null once level 20 is reached. Measured
- * from the hunter's APPLIED level too (a DM can grant levels directly, ahead
- * of Insight) — so a level 10 hunter counts toward level 11, never "Lv 2".
- */
-export function insightToNext(
-  card: Pick<HunterCard, "insight" | "level">,
-): { nextLevel: number; remaining: number } | null {
-  const insight = card.insight ?? 0;
-  const lvl = Math.max(card.level, levelForInsight(insight));
-  if (lvl >= 20) return null;
-  return { nextLevel: lvl + 1, remaining: Math.max(0, INSIGHT_THRESHOLDS[lvl] - insight) };
 }
 
 /** The highest level a card's Insight has earned (1–20). */
@@ -278,74 +263,6 @@ export function wornArmorWeight(card: WornArmor): number {
   const pieces = ids.reduce((sum, id) => sum + (ARMOR_BY_ID[id]?.weightLb ?? 0), 0);
   const studs = studdedAddonIdsOf(card).length * 3;
   return Math.round((pieces + studs) * 10) / 10;
-}
-
-/** Saving-throw modifier for one ability (adds proficiency if the class is proficient). */
-export function saveModifier(
-  klass: HunterClass,
-  abilities: AbilityScores,
-  key: AbilityKey,
-  level: number,
-): number {
-  const base = abilityModifier(abilities[key]);
-  return base + (klass.savingThrows.includes(key) ? proficiencyBonus(level) : 0);
-}
-
-/** Skill-check modifier (ability modifier + proficiency if proficient in the skill). */
-export function skillModifier(
-  abilities: AbilityScores,
-  skillName: string,
-  proficient: boolean,
-  level: number,
-): number {
-  const base = abilityModifier(abilities[skillAbility(skillName)]);
-  return base + (proficient ? proficiencyBonus(level) : 0);
-}
-
-export interface RiteStats {
-  ability: AbilityKey;
-  abilityLabel: string;
-  modifier: number;
-  saveDc: number;
-  attack: number;
-}
-
-/** Deepcaller rite stats: Save DC = 8 + INT + prof; Attack = INT + prof. */
-export function riteStats(abilities: AbilityScores, level: number): RiteStats {
-  const mod = abilityModifier(abilities.int);
-  const prof = proficiencyBonus(level);
-  return {
-    ability: "int",
-    abilityLabel: "Intelligence",
-    modifier: mod,
-    saveDc: 8 + mod + prof,
-    attack: mod + prof,
-  };
-}
-
-// --- Subclass path helpers ---
-
-/** Sentinel subclass id: the Deepcaller who explicitly STAYS on the base path
- * (rather than leaving it for the Hunter Zealot prestige class). Not a real
- * subclass in the data — it means "decided: no prestige". */
-export const DEEPCALLER_STAY_ID = "deepcaller-path";
-
-/** The Hunter Zealot prestige class id (the Deepcaller's only subclass). */
-export const ZEALOT_ID = "hunter-zealot";
-
-/** True when this hunter has burned the book — all Deepcaller class features
- * are replaced by the Zealot's (per Burn the Book). */
-export function isZealot(card: Pick<HunterCard, "subclassId">): boolean {
-  return card.subclassId === ZEALOT_ID;
-}
-
-/** Display name for a chosen path, covering the "stay Deepcaller" sentinel. */
-export function subclassDisplayName(
-  subclassName: string | undefined,
-  subclassId: string | null | undefined,
-): string | undefined {
-  if (subclassId === DEEPCALLER_STAY_ID) return "The Deepcaller Path";
-  return subclassName;
 }
 
 /** True when this hunter was created the "character sheet way" — a free-form

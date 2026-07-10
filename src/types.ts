@@ -9,12 +9,6 @@ export interface SkillChoice {
   options: string[];
 }
 
-/** A skill and the ability it keys off (C&S character sheet mapping). */
-export interface Skill {
-  name: string;
-  ability: AbilityKey;
-}
-
 /** A character Background (Chapter 3): the formative occupation before the hunt.
  *  Grants an Origin feat, two skills, one tool, ability points and equipment. */
 export interface Background {
@@ -166,19 +160,6 @@ export interface Item {
   unique?: boolean;
   /** Pinned slot location, e.g. Hunter Rifle = "Significant Item (back)". */
   slotLocation?: SlotLocation;
-}
-
-/** Stats for a catalog weapon, from master.json's Weapons table. */
-export interface WeaponStats {
-  itemId: string;
-  category: "Simple" | "Martial";
-  kind: "Melee" | "Ranged";
-  /** Damage dice, e.g. "1d10". */
-  damage: string;
-  /** Damage type, e.g. "Piercing". */
-  damageType: string;
-  properties: string[];
-  mastery: string;
 }
 
 /** A line in a hunter's inventory: a catalog item id + how many. */

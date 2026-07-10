@@ -74,43 +74,6 @@ export function wearArmor(card: HunterCard, armorId: string): EquipResult {
   return { error: `${piece.name} is an upgrade, not a wearable piece.` };
 }
 
-/** Take a worn armor piece off — back into the inventory. A studded Add-on
- * loses its Studs (re-stud it after wearing it again). */
-export function takeOffArmor(card: HunterCard, armorId: string): EquipResult {
-  const piece = ARMOR_BY_ID[armorId];
-  if (!piece) return { error: "Unknown armor piece." };
-  const inv = bump(card.inventory, armorId, 1);
-
-  if (card.mainArmorId === armorId) return { patch: { mainArmorId: null, inventory: inv } };
-  if ((card.addonArmorIds ?? []).includes(armorId)) {
-    const addons = (card.addonArmorIds ?? []).filter((id) => id !== armorId);
-    const studded = studdedAddonIdsOf(card).filter((id) => id !== armorId);
-    return {
-      patch: {
-        addonArmorIds: addons,
-        studdedAddonIds: studded,
-        studdedAddons: studded.length,
-        inventory: inv,
-      },
-    };
-  }
-  if ((card.extraArmorIds ?? []).includes(armorId)) {
-    return {
-      patch: { extraArmorIds: (card.extraArmorIds ?? []).filter((id) => id !== armorId), inventory: inv },
-    };
-  }
-  return { error: "Not currently worn." };
-}
-
-/** Toggle the Studs upgrade on a WORN Add-on piece. Always writes the legacy
- * `studdedAddons` count mirror alongside the per-piece ids. */
-export function toggleStud(card: HunterCard, addonId: string): EquipResult {
-  if (!(card.addonArmorIds ?? []).includes(addonId)) return { error: "Not currently worn." };
-  const cur = studdedAddonIdsOf(card);
-  const next = cur.includes(addonId) ? cur.filter((id) => id !== addonId) : [...cur, addonId];
-  return { patch: { studdedAddonIds: next, studdedAddons: next.length } };
-}
-
 /** Equip a storage item: it leaves the inventory and claims its base slot.
  * The base slot must be free of OTHER worn storage (backpack XOR carrying
  * harness on the back; one bandolier, tool belt, sack, holster each). */
@@ -154,15 +117,3 @@ export function equipStorage(card: HunterCard, itemId: string): EquipResult {
   };
 }
 
-/** Take a worn storage item off — back into the inventory. Items stowed in
- * its slots are re-assigned automatically (computeSlots derives, never stores). */
-export function unequipStorage(card: HunterCard, itemId: string): EquipResult {
-  const equipped = card.equippedStorageIds ?? [];
-  if (!equipped.includes(itemId)) return { error: "Not currently worn." };
-  return {
-    patch: {
-      equippedStorageIds: equipped.filter((id) => id !== itemId),
-      inventory: bump(card.inventory, itemId, 1),
-    },
-  };
-}

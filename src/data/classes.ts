@@ -537,8 +537,3 @@ export function getClass(id: string | null | undefined): HunterClass | undefined
   if (!id) return undefined;
   return CLASS_BY_ID[id];
 }
-
-export function getSubclass(classId: string, subId: string | null | undefined) {
-  if (!subId) return undefined;
-  return getClass(classId)?.subclasses.find((s) => s.id === subId);
-}
