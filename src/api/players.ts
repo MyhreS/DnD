@@ -2,6 +2,7 @@ import {
   collection,
   doc,
   setDoc,
+  updateDoc,
   deleteDoc,
   addDoc,
   getDocs,
@@ -16,7 +17,7 @@ import { db } from "@/lib/firebase";
 import { normalizeCard } from "@/lib/character";
 import { isPreviewActive, previewCard, previewArchive } from "@/dev/preview";
 import { isTestEmail } from "@/config";
-import type { ArchivedCharacter, HunterCard } from "@/types";
+import type { ArchivedCharacter, HunterCard, SheetData } from "@/types";
 
 // Characters live in /characters/{id} — a user (ownerUid) can own several.
 const charsCol = collection(db, "characters");
@@ -49,6 +50,20 @@ export async function patchCharacter(id: string, partial: Partial<HunterCard>): 
     return;
   }
   await setDoc(doc(charsCol, id), partial, { merge: true });
+}
+
+/** Replace a sheet-made character's paper sheet plus its mirrored summary
+ * fields (name/level/background). Uses updateDoc — NOT a merge — so sheet keys
+ * removed by "Clear sheet" actually clear on the server instead of
+ * deep-merging back in. The doc must already exist (first save goes through
+ * `saveCharacter` via the player store). */
+export async function saveCharacterSheet(
+  id: string,
+  sheet: SheetData,
+  mirror: Partial<HunterCard>,
+): Promise<void> {
+  if (isPreviewActive()) return patchCharacter(id, { ...mirror, sheet });
+  await updateDoc(doc(charsCol, id), { ...mirror, sheet, updatedAt: Date.now() });
 }
 
 /** Atomically add (or subtract) Insight — DM award. Uses a server-side increment

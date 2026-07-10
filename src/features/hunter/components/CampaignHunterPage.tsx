@@ -11,8 +11,14 @@ import { HunterListCard } from "./HunterListCard";
 import { CharacterTrackers } from "./CharacterTrackers";
 import { InventorySection } from "./sheet/InventorySection";
 import { LevelUpModal } from "./LevelUpModal";
+import { SheetCharacterView } from "./SheetCharacterView";
 import { patchCharacter } from "@/api/players";
+import { isSheetCard } from "@/lib/character";
 import { CardSkeleton } from "@/components/Skeleton";
+import type { HunterCard } from "@/types";
+
+/** Playable in a campaign: a finished build, or any named sheet-made hunter. */
+const playable = (c: HunterCard) => (!!c.classId || isSheetCard(c)) && !!c.name;
 
 /** The in-campaign Hunter page. Players see their own brought hunter; the DM sees
  * a DM view and can step into any hunter ("play as") to test the game, then
@@ -36,9 +42,21 @@ export function CampaignHunterPage() {
   // --- DM view: run the table, or step into a hunter to test the game ---
   if (isDM) {
     const playing = playingAsId
-      ? party.find((c) => c.id === playingAsId && c.classId && c.name) ?? null
+      ? party.find((c) => c.id === playingAsId && playable(c)) ?? null
       : null;
 
+    if (playing && isSheetCard(playing)) {
+      return (
+        <div>
+          <p className="eyebrow" style={{ margin: 0 }}>Playing as · DM</p>
+          <h1 className="page-title" style={{ margin: "0 0 12px" }}>{playing.name}</h1>
+          <SheetCharacterView key={playing.id} card={playing} autoOpen={false} />
+          <button className="btn btn-ghost" style={{ marginTop: 14, maxWidth: 220 }} onClick={returnToDm}>
+            ← Return to DM
+          </button>
+        </div>
+      );
+    }
     if (playing) {
       return (
         <div>
@@ -64,7 +82,7 @@ export function CampaignHunterPage() {
       );
     }
 
-    const campHunters = party.filter((c) => c.campaignId === activeId && c.classId && c.name);
+    const campHunters = party.filter((c) => c.campaignId === activeId && playable(c));
     return (
       <div className="reading">
         <p className="eyebrow">You're the DM</p>
@@ -90,7 +108,7 @@ export function CampaignHunterPage() {
 
   // --- Player view ---
   const myCharId = members.find((m) => m.uid === user?.uid)?.characterId ?? null;
-  const brought = characters.find((c) => c.id === myCharId && c.classId && c.name) ?? null;
+  const brought = characters.find((c) => c.id === myCharId && playable(c)) ?? null;
 
   function bring(id: string) {
     if (!user || !activeId) return;
@@ -106,6 +124,20 @@ export function CampaignHunterPage() {
         <p className="eyebrow">Your Hunter</p>
         <h1 className="page-title">Hunter</h1>
         <CardSkeleton lines={4} />
+      </div>
+    );
+  }
+
+  // A sheet-made hunter in play — the paper sheet is its whole truth.
+  if (brought && isSheetCard(brought)) {
+    return (
+      <div>
+        <p className="eyebrow" style={{ margin: 0 }}>Your hunter in {campaign?.name}</p>
+        <h1 className="page-title" style={{ margin: "0 0 12px" }}>{brought.name}</h1>
+        <SheetCharacterView key={brought.id} card={brought} autoOpen={false} />
+        <p className="faint no-print" style={{ fontSize: "0.8rem", marginTop: 14 }}>
+          Manage or swap hunters from the <Link className="gold" to="/character">main menu → Hunters</Link>.
+        </p>
       </div>
     );
   }
@@ -140,7 +172,7 @@ export function CampaignHunterPage() {
   }
 
   // No hunter chosen yet (new join, or yours died) → pick one you've created.
-  const ready = characters.filter((c) => c.classId && c.name);
+  const ready = characters.filter(playable);
   return (
     <div className="reading">
       <p className="eyebrow">Your Hunter</p>

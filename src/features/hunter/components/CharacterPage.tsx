@@ -1,19 +1,14 @@
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { useHunterCard } from "../hooks/useHunterCard";
 import { useEditorIntent } from "../hooks/useEditorIntent";
 import { CharacterEditor } from "./CharacterEditor";
-import { HunterCardView } from "./HunterCardView";
-import { CharacterTrackers } from "./CharacterTrackers";
-import { InventorySection } from "./sheet/InventorySection";
-import { CharacterLog } from "@/features/log/components/CharacterLog";
-import { LevelUpModal } from "./LevelUpModal";
-import { patchCharacter } from "@/api/players";
-import { emptyCard } from "@/lib/character";
-import { exportCharacterPdf } from "../lib/characterPdf";
+import { CharacterView } from "./CharacterView";
+import { CreateHunterChoice } from "./papersheet/CreateHunterChoice";
+import { PaperSheetModal } from "./papersheet/PaperSheetModal";
+import { emptyCard, emptySheetCard, isSheetCard } from "@/lib/character";
 import { CardSkeleton } from "@/components/Skeleton";
-import { AsyncButton } from "@/components/AsyncButton";
 import { Sigil } from "@/components/icons";
 import type { HunterCard } from "@/types";
 
@@ -22,51 +17,45 @@ export function CharacterPage() {
   const { card, characters, selectedId, select, status, saving, error, save, archive } = usePlayerStore();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState<HunterCard | null>(null);
+  // The "create character" fork, and a paper-sheet hunter being written.
+  const [choosing, setChoosing] = useState(false);
+  const [sheetDraft, setSheetDraft] = useState<HunterCard | null>(null);
+  // The sheet popup auto-opens when a sheet hunter is viewed; remember the one
+  // the user just closed so it doesn't immediately reopen.
+  const [sheetDismissedId, setSheetDismissedId] = useState<string | null>(null);
 
   useHunterCard();
 
-  function newDraft(): HunterCard {
-    return emptyCard({
-      ownerUid: user!.uid,
-      email: user!.email ?? "",
-      displayName: user!.displayName ?? user!.email ?? "Hunter",
-    });
-  }
+  const owner = () => ({
+    ownerUid: user!.uid,
+    email: user!.email ?? "",
+    displayName: user!.displayName ?? user!.email ?? "Hunter",
+  });
   function startNew() {
-    setDraft(newDraft());
     setEditing(false);
+    setChoosing(true);
+  }
+  function startAppWay() {
+    setChoosing(false);
+    setDraft(emptyCard(owner()));
+  }
+  function startSheetWay() {
+    const d = emptySheetCard(owner());
+    setChoosing(false);
+    // Pre-dismiss: the draft modal IS the sheet — the view underneath must not
+    // pop a second copy once autosave lands the hunter in the store.
+    setSheetDismissedId(d.id);
+    setSheetDraft(d);
+  }
+  function closeSheetDraft() {
+    const d = sheetDraft;
+    setSheetDraft(null);
+    if (d && usePlayerStore.getState().characters.some((c) => c.id === d.id)) select(d.id);
   }
 
-  // Main-menu deep links: ?new=1 → straight into creation, ?edit=1 → editor.
+  // Main-menu deep links: ?new=1 → the create fork, ?edit=1 → editor/sheet.
   useEditorIntent({ onNew: startNew, onEdit: () => setEditing(true) });
 
-  if (status === "idle" || status === "loading") {
-    return (
-      <div>
-        <p className="eyebrow">Your Hunter</p>
-        <h1 className="page-title">Character</h1>
-        <p className="page-intro">Unrolling your character sheet…</p>
-        <CardSkeleton lines={4} />
-      </div>
-    );
-  }
-
-  if (status === "error") {
-    return (
-      <div className="card center">
-        <p className="muted">{error ?? "Something went wrong."}</p>
-        <button
-          className="btn btn-ghost"
-          style={{ maxWidth: 200, margin: "12px auto 0" }}
-          onClick={() => user && usePlayerStore.getState().subscribe(user.uid)}
-        >
-          Try again
-        </button>
-      </div>
-    );
-  }
-
-  const hasCard = !!card && !!card.classId && !!card.name;
   const creating = !!draft;
 
   async function handleSave(next: HunterCard) {
@@ -80,18 +69,47 @@ export function CharacterPage() {
   async function handleDelete() {
     const ok = await archive(null);
     if (ok) setEditing(false);
+    return ok;
   }
 
-  // No characters at all → the welcome splash.
-  if (characters.length === 0 && !creating) {
-    return (
+  // The page body branches, but the overlays below stay at ONE stable tree
+  // position: the first autosave of a brand-new sheet flips the splash branch
+  // into the view branch, and an overlay rendered inside each branch would be
+  // remounted by that flip — resetting the sheet mid-writing.
+  let body: ReactNode;
+
+  if (status === "idle" || status === "loading") {
+    body = (
+      <div>
+        <p className="eyebrow">Your Hunter</p>
+        <h1 className="page-title">Character</h1>
+        <p className="page-intro">Unrolling your character sheet…</p>
+        <CardSkeleton lines={4} />
+      </div>
+    );
+  } else if (status === "error") {
+    body = (
+      <div className="card center">
+        <p className="muted">{error ?? "Something went wrong."}</p>
+        <button
+          className="btn btn-ghost"
+          style={{ maxWidth: 200, margin: "12px auto 0" }}
+          onClick={() => user && usePlayerStore.getState().subscribe(user.uid)}
+        >
+          Try again
+        </button>
+      </div>
+    );
+  } else if (characters.length === 0 && !creating) {
+    // No characters at all → the welcome splash.
+    body = (
       <div className="splash" style={{ minHeight: "60vh" }}>
         <Sigil width={72} height={72} />
         <div className="center" style={{ maxWidth: 320 }}>
           <h1 style={{ marginBottom: 6 }}>No hunter yet</h1>
           <p className="muted">
-            Create your character to join the hunt. We'll walk you through it step by step —
-            class, abilities, skills and armor. The maths is done for you.
+            Create your character to join the hunt — on the classic paper sheet,
+            or with the step-by-step builder.
           </p>
         </div>
         <button className="btn btn-primary" style={{ maxWidth: 280 }} onClick={startNew}>
@@ -99,14 +117,12 @@ export function CharacterPage() {
         </button>
       </div>
     );
-  }
-
-  // Creating a new hunter, or editing an existing one → the guided builder.
-  // (`editing` needs a loaded card — a ?edit=1 deep link with zero characters
-  // must fall through to the splash, not crash on `card!`.)
-  if (creating || (editing && card)) {
+  } else if (creating || (editing && card && !isSheetCard(card))) {
+    // Creating a new hunter the app way, or editing an existing one → the
+    // guided builder. (Sheet-made hunters never open the builder — their Edit
+    // IS the sheet popup, handled by CharacterView below.)
     const initial = creating ? draft! : card!;
-    return (
+    body = (
       <div className="reading">
         <p className="eyebrow">Your Hunter</p>
         <h1 className="page-title">{creating ? "Forge your hunter" : "Edit character"}</h1>
@@ -119,84 +135,41 @@ export function CharacterPage() {
           error={error}
           onSave={handleSave}
           onCancel={() => { setEditing(false); setDraft(null); }}
-          onDelete={creating ? undefined : handleDelete}
+          onDelete={creating ? undefined : async () => { await handleDelete(); }}
           lockClass={!creating && !!card?.classId}
         />
       </div>
     );
+  } else {
+    // Viewing a character → switcher + the play sheet (or the paper sheet).
+    body = (
+      <CharacterView
+        card={card}
+        characters={characters}
+        selectedId={selectedId}
+        sheetDismissedId={sheetDismissedId}
+        onSelect={(id) => { setEditing(false); select(id); }}
+        onEdit={() => setEditing(true)}
+        onNew={startNew}
+        onSheetDismiss={setSheetDismissedId}
+        onDelete={handleDelete}
+      />
+    );
   }
 
-  // Viewing a character → switcher + the play sheet.
+  // Once autosave lands the draft in the store, follow the store's copy — a
+  // (dev-mode) remount of the modal must reload what was already written.
+  const draftCard = sheetDraft
+    ? characters.find((c) => c.id === sheetDraft.id) ?? sheetDraft
+    : null;
+
   return (
-    <div>
-      <div className="row between no-print" style={{ marginBottom: 12 }}>
-        <div>
-          <p className="eyebrow" style={{ margin: 0 }}>Your Hunter</p>
-          <h1 className="page-title" style={{ margin: 0 }}>Character</h1>
-        </div>
-        <div className="row" style={{ gap: 8 }}>
-          <AsyncButton className="btn-ghost btn-sm" pendingText="Generating…" showDone={false} onClick={() => exportCharacterPdf(card!)}>
-            Export PDF
-          </AsyncButton>
-          <button className="btn btn-ghost btn-sm" onClick={() => setEditing(true)}>Edit</button>
-        </div>
-      </div>
-
-      <div className="chip-row no-print" style={{ marginBottom: 14 }}>
-        {characters.map((c) => (
-          <button
-            key={c.id}
-            className={`chip selectable${c.id === selectedId ? " selected" : ""}`}
-            onClick={() => select(c.id)}
-          >
-            {c.name || "Unnamed"}
-          </button>
-        ))}
-        <button className="chip selectable" onClick={startNew}>+ New hunter</button>
-      </div>
-
-      {hasCard && (
-        <div className="card no-print row between" style={{ marginBottom: 14, alignItems: "center" }}>
-          <div>
-            <span className="eyebrow" style={{ margin: 0 }}>Level</span>
-            <div className="faint" style={{ fontSize: "0.78rem" }}>
-              The DM rewards Insight and levels — they arrive here.
-            </div>
-          </div>
-          <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", flex: "none" }}>
-            {card!.level}
-          </span>
-        </div>
+    <>
+      {body}
+      {choosing && (
+        <CreateHunterChoice onSheet={startSheetWay} onApp={startAppWay} onCancel={() => setChoosing(false)} />
       )}
-
-      {hasCard && card!.lastSeenLevel != null && card!.level > card!.lastSeenLevel && (
-        // Partial patch (not a full-card save) so a concurrent DM award —
-        // insight, gold, HP — is never clobbered by this client's snapshot.
-        <LevelUpModal card={card!} onPatch={(p) => void patchCharacter(card!.id, p)} />
-      )}
-
-      {hasCard ? (
-        <div className="desk-2col">
-          <aside className="desk-aside no-print">
-            <CharacterTrackers card={card!} />
-          </aside>
-          <div className="desk-main">
-            <div className="print-sheet">
-              <HunterCardView card={card!} onPatch={(p) => void patchCharacter(card!.id, p)} />
-            </div>
-            <div className="no-print" style={{ marginTop: 14 }}>
-              <InventorySection card={card!} onPatch={(p) => void patchCharacter(card!.id, p)} />
-            </div>
-            <div className="no-print" style={{ marginTop: 14 }}>
-              <CharacterLog card={card!} />
-            </div>
-          </div>
-        </div>
-      ) : (
-        <div className="card center">
-          <p className="muted" style={{ margin: 0 }}>This hunter is a draft — tap Edit to finish it.</p>
-        </div>
-      )}
-    </div>
+      {draftCard && <PaperSheetModal card={draftCard} onClose={closeSheetDraft} />}
+    </>
   );
 }
