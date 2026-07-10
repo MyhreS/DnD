@@ -93,30 +93,35 @@ export function SheetTable({
   rows: number;
 }) {
   return (
-    <table className="sheet">
-      <colgroup>
-        {widths.map((w, i) => (
-          <col key={i} style={{ width: w }} />
-        ))}
-      </colgroup>
-      <thead>
-        <tr>
-          {head.map((h) => (
-            <th key={h}>{h}</th>
+    // The wrapper is invisible at full width; on small screens it lets a
+    // table that genuinely can't fit scroll sideways WITHIN its own frame
+    // (the page itself never scrolls horizontally).
+    <div className="sheetwrap">
+      <table className="sheet">
+        <colgroup>
+          {widths.map((w, i) => (
+            <col key={i} style={{ width: w }} />
           ))}
-        </tr>
-      </thead>
-      <tbody>
-        {Array.from({ length: rows }, (_, r) => (
-          <tr key={r}>
-            {head.map((_, c) => (
-              <td key={c}>
-                <F f={`${prefix}_${r}_${c}`} />
-              </td>
+        </colgroup>
+        <thead>
+          <tr>
+            {head.map((h) => (
+              <th key={h}>{h}</th>
             ))}
           </tr>
-        ))}
-      </tbody>
-    </table>
+        </thead>
+        <tbody>
+          {Array.from({ length: rows }, (_, r) => (
+            <tr key={r}>
+              {head.map((_, c) => (
+                <td key={c}>
+                  <F f={`${prefix}_${r}_${c}`} />
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
