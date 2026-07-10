@@ -1,4 +1,11 @@
-import { createContext, useContext, type InputHTMLAttributes, type ReactNode, type TextareaHTMLAttributes } from "react";
+import {
+  createContext,
+  useContext,
+  type InputHTMLAttributes,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from "react";
 import type { SheetData } from "@/types";
 
 /** The paper sheet's field bus: every field component reads/writes one key of
@@ -48,6 +55,47 @@ export function F({ f, ...rest }: { f: string } & InputHTMLAttributes<HTMLInputE
       onChange={(e) => setField(f, e.target.value)}
       {...rest}
     />
+  );
+}
+
+/** Renders one sheet value via a render prop — for consumers that aren't
+ * fields themselves (e.g. the class figure under the eye). */
+export function SheetValue({
+  f,
+  children,
+}: {
+  f: string;
+  children: (v: string | boolean | undefined) => ReactNode;
+}) {
+  const { data } = useSheet();
+  return <>{children(data[f])}</>;
+}
+
+/** A bound handwriting dropdown: fixed choices plus an empty "—". A saved
+ * value that isn't one of the options (legacy free-typed text) is kept and
+ * shown as an extra option rather than silently cleared. */
+export function Sel({ f, options, ...rest }: { f: string; options: string[] } & SelectHTMLAttributes<HTMLSelectElement>) {
+  const { data, setField, readOnly } = useSheet();
+  const raw = data[f];
+  const v = typeof raw === "string" ? raw : "";
+  const opts = v !== "" && !options.includes(v) ? [...options, v] : options;
+  return (
+    // data-empty lets print blank the "—" placeholder (papersheet.css), so a
+    // blank sheet still prints as an empty handwriting line.
+    <select
+      value={v}
+      disabled={readOnly}
+      data-empty={v === "" || undefined}
+      onChange={(e) => setField(f, e.target.value)}
+      {...rest}
+    >
+      <option value="">—</option>
+      {opts.map((o) => (
+        <option key={o} value={o}>
+          {o}
+        </option>
+      ))}
+    </select>
   );
 }
 
