@@ -1564,3 +1564,24 @@ input[type="range"].level-range {
     color: #14110d;
   }
 }
+
+/* Handbook deep-link landing: pulse the section the sheet's info dot pointed
+ * at, so the reader's eye finds it. Added/removed by useScrollToSection. */
+.hb-focus {
+  animation: hb-focus-pulse 2.6s ease both;
+  border-radius: 6px;
+}
+@keyframes hb-focus-pulse {
+  0% {
+    box-shadow: 0 0 0 3px var(--gold, #c9a866);
+    background: rgba(201, 168, 102, 0.14);
+  }
+  70% {
+    box-shadow: 0 0 0 3px var(--gold, #c9a866);
+    background: rgba(201, 168, 102, 0.14);
+  }
+  100% {
+    box-shadow: 0 0 0 3px transparent;
+    background: transparent;
+  }
+}

@@ -5,15 +5,22 @@ import { ChevronIcon } from "@/components/icons";
 import type { ArmorCategory } from "@/types";
 import { AsyncButton } from "@/components/AsyncButton";
 import { downloadHandbookPdf } from "../lib/handbookPdf";
+import { useHandbookIntent, useScrollToSection, sectionSlug } from "../hooks/useHandbookIntent";
 import { ClassesTab } from "./ClassesTab";
 import { RitesTab } from "./RitesTab";
 import { BackgroundsTab } from "./BackgroundsTab";
 import { FeatsTab } from "./FeatsTab";
 
 type Tab = "rules" | "classes" | "backgrounds" | "feats" | "rites" | "armory";
+const TABS: readonly Tab[] = ["rules", "classes", "backgrounds", "feats", "rites", "armory"];
 
 export function HandbookPage() {
-  const [tab, setTab] = useState<Tab>("rules");
+  // Deep links (`?tab=…&chapter=…&section=…`) pick the landing spot — the
+  // sheet's info dots open the handbook exactly where a topic is covered.
+  const intent = useHandbookIntent();
+  const [tab, setTab] = useState<Tab>(() =>
+    TABS.includes(intent.tab as Tab) ? (intent.tab as Tab) : "rules",
+  );
 
   return (
     <div className="reading">
@@ -30,7 +37,7 @@ export function HandbookPage() {
         <TabButton active={tab === "armory"} onClick={() => setTab("armory")}>Armory</TabButton>
       </div>
 
-      {tab === "rules" && <RulesTab />}
+      {tab === "rules" && <RulesTab focusChapter={intent.chapter} focusSection={intent.section} />}
       {tab === "classes" && <ClassesTab />}
       {tab === "backgrounds" && <BackgroundsTab />}
       {tab === "feats" && <FeatsTab />}
@@ -74,8 +81,16 @@ function TabButton({
   );
 }
 
-function RulesTab() {
-  const [open, setOpen] = useState<string | null>(HANDBOOK[0]?.id ?? null);
+function RulesTab({
+  focusChapter,
+  focusSection,
+}: {
+  focusChapter: string | null;
+  focusSection: string | null;
+}) {
+  const focused = HANDBOOK.some((c) => c.id === focusChapter) ? focusChapter : null;
+  const [open, setOpen] = useState<string | null>(focused ?? HANDBOOK[0]?.id ?? null);
+  useScrollToSection(focused, focusSection);
   return (
     <div className="stack" style={{ gap: 10 }}>
       {HANDBOOK.map((chapter) => {
@@ -102,7 +117,7 @@ function RulesTab() {
             {isOpen && (
               <div style={{ padding: "0 16px 16px" }} className="fade-in">
                 {chapter.sections.map((s) => (
-                  <div key={s.heading} style={{ marginTop: 12 }}>
+                  <div key={s.heading} id={`hb-${chapter.id}-${sectionSlug(s.heading)}`} style={{ marginTop: 12 }}>
                     <h3 style={{ fontSize: "0.98rem" }}>{s.heading}</h3>
                     {s.body.map((p, i) => (
                       <p key={i} className="muted" style={{ fontSize: "0.94rem" }}>{p}</p>

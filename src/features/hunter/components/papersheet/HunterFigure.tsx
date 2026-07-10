@@ -1,4 +1,5 @@
 import { F, Ta, St } from "./sheetPrimitives";
+import { Info } from "./InfoDot";
 
 /** Page 2's paper-doll: the hunter line-art with dashed leader lines to the
  * five gear plaques (head gear, scarf, main armor, gloves, boots). */
@@ -59,11 +60,11 @@ export function HunterFigure() {
           <circle cx="546" cy="1006" r="9" />
         </g>
       </svg>
-      <div className="plaque pl-head"><span className="plbl">HEAD GEAR <St n={4} /></span><F f="headGear" /></div>
-      <div className="plaque pl-scarf"><span className="plbl">SCARF <St n={4} /></span><F f="scarf" /></div>
-      <div className="plaque pl-gloves"><span className="plbl">GLOVES <St n={4} /></span><F f="gloves" /></div>
-      <div className="plaque pl-main"><span className="plbl">MAIN ARMOR <St n={4} /></span><Ta rows={3} f="mainArmor" /></div>
-      <div className="plaque pl-boots"><span className="plbl">BOOTS <St n={4} /></span><F f="boots" /></div>
+      <div className="plaque pl-head"><span className="plbl">HEAD GEAR <St n={4} /> <Info k="extras" /></span><F f="headGear" /></div>
+      <div className="plaque pl-scarf"><span className="plbl">SCARF <St n={4} /> <Info k="extras" side="left" /></span><F f="scarf" /></div>
+      <div className="plaque pl-gloves"><span className="plbl">GLOVES <St n={4} /> <Info k="extras" /></span><F f="gloves" /></div>
+      <div className="plaque pl-main"><span className="plbl">MAIN ARMOR <St n={4} /> <Info k="mainArmor" side="left" /></span><Ta rows={3} f="mainArmor" /></div>
+      <div className="plaque pl-boots"><span className="plbl">BOOTS <St n={4} /> <Info k="extras" side="left" /></span><F f="boots" /></div>
     </div>
   );
 }
