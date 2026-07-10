@@ -963,11 +963,25 @@
   padding: 8px 10px;
   text-align: left;
   cursor: auto;
+  /* Several dots live inside nowrap labels (the eye's iris, plaques, the
+   * shield) — without this the popover inherits nowrap and its text shoots
+   * out of the box. */
+  white-space: normal;
 }
 .papersheet .info.side-left .info-pop {
   left: auto;
   right: -4px;
   transform: none;
+}
+/* Dots at a page's LEFT edge: hang the popover to the right of the dot. */
+.papersheet .info.side-right .info-pop {
+  left: -4px;
+  transform: none;
+}
+/* Dots near a page's BOTTOM edge: open the popover above the dot. */
+.papersheet .info.side-up .info-pop {
+  top: auto;
+  bottom: calc(100% + 4px);
 }
 .papersheet .info:hover .info-pop,
 .papersheet .info:focus-within .info-pop,

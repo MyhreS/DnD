@@ -35,7 +35,7 @@ export const SHEET_INFO: Record<string, SheetInfo> = {
   },
   class: {
     title: "Class",
-    text: "Step 1: pick one of the six classes (Brute, Stalker, Warden, Bloodbound, Gunslinger, Deepcaller) and write it here. It sets your hit die, saves, training and features.",
+    text: "Step 1: pick one of the six classes (Brute, Scout, Stalker, Deepcaller, Bloodbound, Warden) and write it here. It sets your hit die, saves, training and features.",
     pdfPage: 3,
     refTitle: "Rules → Step 1 — Choose a Class · Classes tab",
     link: rules("step-1-class", "pick-your-hunter"),
