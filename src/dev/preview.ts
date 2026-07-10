@@ -361,6 +361,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
       sanityDice: "2d6",
       hpCur: "22",
       hpMax: "25",
+      hdCur: "3",
       hdSpent: "0",
       hdMax: "3",
       strScore: "12",
