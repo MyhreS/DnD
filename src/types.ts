@@ -527,6 +527,11 @@ export interface Rsvp {
 
 export type AbilityScores = Record<AbilityKey, number>;
 
+/** Free-form values of the paper character sheet, keyed by the sheet's field
+ * names (the original HTML's `data-f`). Text fields are strings; checkboxes
+ * are booleans. */
+export type SheetData = Record<string, string | boolean>;
+
 export interface HunterCard {
   /** Character doc id (in the /characters collection). */
   id: string;
@@ -616,6 +621,10 @@ export interface HunterCard {
   /** The campaign this hunter currently plays in (lets that campaign's DM
    * manage it — death/recover). Set when chosen for a campaign. */
   campaignId?: string | null;
+  /** The paper character sheet's raw field values — present only on hunters
+   * created the "character sheet way" (a free-form sheet instead of the
+   * structured builder; `name`/`level`/`background` are mirrored from it). */
+  sheet?: SheetData;
   notes: string;
   updatedAt: number;
   createdAt: number;

@@ -15,6 +15,7 @@ import { DMCharacters } from "@/features/play/components/DMCharacters";
 import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
 import { useGameStore, currentGame } from "@/features/play/store/gameStore";
 import { exportPartyPdf } from "@/features/hunter/lib/characterPdf";
+import { isSheetCard } from "@/lib/character";
 import { CardSkeleton } from "@/components/Skeleton";
 import { AsyncButton } from "@/components/AsyncButton";
 import type { HunterCard } from "@/types";
@@ -59,7 +60,7 @@ export function PartyPage() {
         (m.characterId ? byId.get(m.characterId) : undefined) ??
         (m.role === "dm" ? undefined : byOwner.get(m.uid)?.[0]),
       )
-      .filter((c): c is HunterCard => !!c && !!c.classId && !!c.name)
+      .filter((c): c is HunterCard => !!c && (!!c.classId || isSheetCard(c)) && !!c.name)
       .filter((c) => (seen.has(c.id) ? false : (seen.add(c.id), true)));
   }, [players, campaignMembers]);
 
@@ -76,7 +77,7 @@ export function PartyPage() {
               className="btn-ghost btn-sm"
               pendingText="Generating…"
               showDone={false}
-              onClick={() => exportPartyPdf(hunters)}
+              onClick={() => exportPartyPdf(hunters.filter((c) => !isSheetCard(c)))}
             >
               Export all PDF
             </AsyncButton>

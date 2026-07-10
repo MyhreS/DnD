@@ -348,6 +348,12 @@ export function subclassDisplayName(
   return subclassName;
 }
 
+/** True when this hunter was created the "character sheet way" — a free-form
+ * paper sheet (`card.sheet`) instead of the structured builder. */
+export function isSheetCard(card: Pick<HunterCard, "sheet">): boolean {
+  return !!card.sheet;
+}
+
 /** A fresh, unsaved card skeleton for a brand-new hunter. */
 export function emptyCard(params: {
   ownerUid: string;
@@ -386,4 +392,14 @@ export function emptyCard(params: {
     createdAt: now,
     updatedAt: now,
   };
+}
+
+/** A fresh card for a hunter built the "character sheet way": the free-form
+ * paper sheet (`sheet`) instead of the builder's structured fields. */
+export function emptySheetCard(params: {
+  ownerUid: string;
+  email: string;
+  displayName: string;
+}): HunterCard {
+  return { ...emptyCard(params), sheet: {} };
 }

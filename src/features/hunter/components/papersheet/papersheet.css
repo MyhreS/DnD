@@ -1,0 +1,943 @@
+/* The paper character sheet — a faithful digital port of the DM's hand-drawn
+ * R1.0 sheets (see resources). Everything is scoped under .papersheet / the
+ * .papersheet-modal overlay so the sheet's "aged paper" look never leaks into
+ * the app chrome (and vice versa). Sizes are in mm on purpose: the sheet IS
+ * an A4 document, on screen and in print. */
+
+.papersheet-modal,
+.papersheet {
+  --paper: #f6f1e5;
+  --ink: #211d17;
+  --ink-soft: #4a443a;
+  --blood: #8e1f1f;
+  --marker-blue: #3a63a8;
+  --rule: #211d17;
+  --field: #7a6f5c;
+}
+
+/* ---------- the full-screen overlay ---------- */
+.papersheet-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 70; /* above .modal-backdrop (50) */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #26221c;
+  padding: max(18px, env(safe-area-inset-top)) 8px calc(env(safe-area-inset-bottom) + 80px);
+  font-family: "Alegreya Sans SC", sans-serif;
+}
+
+/* ---------- toolbar ---------- */
+.papersheet-toolbar {
+  max-width: 210mm;
+  margin: 0 auto 18px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: #d8cfbc;
+}
+.papersheet-toolbar h1 {
+  font-family: "Cinzel", serif;
+  font-weight: 900;
+  font-size: 17px;
+  letter-spacing: 0.14em;
+  margin: 0 auto 0 0;
+  color: #e6ddc8;
+}
+.papersheet-toolbar button {
+  font-family: "Alegreya Sans SC", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  background: var(--blood);
+  color: #f3e9d8;
+  border: 1px solid #5e1414;
+  border-radius: 3px;
+  padding: 8px 16px;
+  cursor: pointer;
+  width: auto;
+}
+.papersheet-toolbar button.ghost {
+  background: transparent;
+  color: #d8cfbc;
+  border: 1px solid #6b6353;
+}
+.papersheet-toolbar button:hover {
+  filter: brightness(1.15);
+}
+.papersheet-toolbar label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  margin: 0;
+}
+.papersheet-toolbar label input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: var(--blood);
+}
+.papersheet-toolbar .savemsg {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: #9a917d;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* ---------- the sheet itself ---------- */
+.papersheet {
+  font-family: "Alegreya Sans SC", sans-serif;
+  color: var(--ink);
+}
+.papersheet * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---------- pages ---------- */
+.papersheet .page {
+  width: 210mm;
+  min-height: 297mm;
+  background: var(--paper);
+  margin: 0 auto 26px;
+  padding: 12mm 12mm 14mm;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+  background-image: radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.5), transparent 60%);
+}
+.papersheet .pageno {
+  position: absolute;
+  bottom: 5mm;
+  right: 12mm;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+}
+
+/* ---------- step badges (the red numbers) ---------- */
+.papersheet .st {
+  font-family: "Caveat", cursive;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--blood);
+  font-size: 15px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  height: 15px;
+  border: 1.2px solid var(--blood);
+  border-radius: 50%;
+  vertical-align: top;
+  margin-left: 4px;
+  transform: translateY(-2px);
+  padding: 0 2px;
+}
+/* The reference sheet's red handwritten hint above the name line. */
+.papersheet .st-note {
+  display: block;
+  font-family: "Caveat", cursive;
+  color: var(--blood);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  margin-bottom: 1mm;
+  text-transform: none;
+  white-space: nowrap;
+}
+.papersheet.hide-steps .st,
+.papersheet.hide-steps .st-note {
+  display: none;
+}
+
+/* ---------- generic fields ---------- */
+.papersheet input[type="text"],
+.papersheet textarea {
+  font-family: "Caveat", cursive;
+  font-size: 19px;
+  font-weight: 500;
+  color: #2b2013;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  width: 100%;
+}
+.papersheet input[type="text"] {
+  border-bottom: 1.4px solid var(--field);
+  padding: 0 2px 1px;
+}
+.papersheet input[type="text"]:focus {
+  border-bottom-color: var(--blood);
+}
+.papersheet textarea {
+  resize: none;
+  line-height: 1.35;
+  padding: 2px 4px;
+}
+.papersheet input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border: 1.6px solid var(--ink);
+  border-radius: 2px;
+  cursor: pointer;
+  flex: none;
+  vertical-align: middle;
+  position: relative;
+  background: var(--paper);
+}
+.papersheet input[type="checkbox"]::before {
+  content: none;
+}
+.papersheet input[type="checkbox"]:checked::after {
+  content: "✕";
+  position: absolute;
+  inset: -3px 0 0 0;
+  text-align: center;
+  font-family: "Caveat", cursive;
+  font-size: 15px;
+  color: var(--blood);
+  line-height: 13px;
+  font-weight: 600;
+}
+.papersheet input:disabled,
+.papersheet textarea:disabled {
+  opacity: 1;
+  cursor: default;
+}
+.papersheet .lbl {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+}
+.papersheet .lbl.small {
+  font-size: 9.5px;
+  color: var(--ink-soft);
+}
+
+/* section headers */
+.papersheet h2.sec {
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  border-bottom: 2px solid var(--rule);
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+
+/* framed boxes */
+.papersheet .frame {
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.28);
+}
+.papersheet .frame .head {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  border-bottom: 1.4px solid var(--rule);
+  padding: 3px 7px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(33, 29, 23, 0.05);
+}
+
+/* ================= PAGE 1 ================= */
+.papersheet .p1-top {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr 1.25fr;
+  gap: 8mm;
+  align-items: start;
+}
+.papersheet .idfields .fld {
+  margin-bottom: 6mm;
+}
+.papersheet .idfields input {
+  font-size: 21px;
+}
+.papersheet .idfields .lbl {
+  display: block;
+  margin-top: 2px;
+}
+
+/* the eye emblem */
+.papersheet .eye-wrap {
+  display: flex;
+  justify-content: center;
+  padding-top: 2mm;
+}
+.papersheet .eye {
+  position: relative;
+  width: 68mm;
+  height: 38mm;
+}
+.papersheet .eye svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.papersheet .eye .iris-stack {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.papersheet .eye .iris-stack input {
+  font-size: 19px;
+  text-align: center;
+  border-bottom: none;
+  font-weight: 600;
+  height: 6.5mm;
+  line-height: 1;
+}
+.papersheet .eye .iris-stack .lbl {
+  font-size: 7.5px;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  white-space: nowrap;
+}
+.papersheet .eye .iris-rule {
+  width: 15mm;
+  height: 1.3px;
+  background: var(--ink);
+  margin: 1mm 0;
+}
+
+/* vitals column */
+.papersheet .vitals {
+  display: flex;
+  flex-direction: column;
+  gap: 2.2mm;
+}
+.papersheet .vrow {
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.28);
+  padding: 1.6mm 3mm;
+}
+.papersheet .vrow .rowhead {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.8mm;
+}
+.papersheet .minifields {
+  display: flex;
+  gap: 3mm;
+  align-items: flex-end;
+}
+.papersheet .minifields .mf {
+  flex: 1;
+  text-align: center;
+}
+.papersheet .minifields .mf input {
+  text-align: center;
+  font-size: 15px;
+  height: 5.5mm;
+}
+.papersheet .minifields .mf .lbl.small {
+  display: block;
+  margin-top: 1px;
+}
+.papersheet .mf.tight {
+  flex: 0.8;
+}
+.papersheet .sanity-insane {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.papersheet .deathsaves {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5mm;
+}
+.papersheet .ds-line {
+  display: flex;
+  align-items: center;
+  gap: 2mm;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+/* Typed as input[type=checkbox].pip so the circle beats the generic checkbox
+ * square (the original HTML lost this specificity fight and drew squares —
+ * the hand-drawn reference sheet has circles). */
+.papersheet input[type="checkbox"].pip {
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  border: 1.6px solid var(--ink);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  background: var(--paper);
+}
+.papersheet input[type="checkbox"].pip:checked {
+  background: var(--blood);
+  border-color: var(--blood);
+}
+.papersheet input[type="checkbox"].pip:checked::after {
+  content: none;
+}
+.papersheet input[type="checkbox"].pip.fail {
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+}
+
+/* blue divider — nod to the marker line on the original */
+.papersheet .blue-rule {
+  height: 2.6px;
+  background: var(--marker-blue);
+  border-radius: 2px;
+  margin: 4.5mm 0;
+  opacity: 0.85;
+}
+
+/* stat grid */
+.papersheet .statgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 5mm 7mm;
+}
+.papersheet .profbox {
+  border: 1.8px solid var(--rule);
+  border-radius: 3px;
+  width: 26mm;
+  height: 16mm;
+  margin: 1mm auto 0;
+  background: rgba(255, 255, 255, 0.35);
+}
+.papersheet .profbox input {
+  height: 100%;
+  text-align: center;
+  font-size: 26px;
+  border-bottom: none;
+  font-weight: 600;
+}
+.papersheet .abil {
+  margin-bottom: 2.6mm;
+}
+.papersheet .abil h3 {
+  font-family: "Cinzel", serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 1.5mm;
+  color: var(--ink);
+}
+.papersheet .scoremod {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.4mm;
+}
+.papersheet .score {
+  width: 11mm;
+  height: 11mm;
+  border: 1.8px solid var(--rule);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  z-index: 1;
+}
+.papersheet .score input,
+.papersheet .mod input {
+  height: 100%;
+  text-align: center;
+  border-bottom: none;
+  font-size: 19px;
+}
+.papersheet .mod {
+  width: 13mm;
+  height: 13mm;
+  border: 1.8px solid var(--rule);
+  border-radius: 50%;
+  margin-left: -3mm;
+  background: var(--paper);
+}
+.papersheet .mod input {
+  font-size: 22px;
+  font-weight: 600;
+}
+.papersheet .sm-lbls {
+  display: flex;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  gap: 5mm;
+  margin-left: 1mm;
+}
+.papersheet .skill {
+  display: flex;
+  align-items: center;
+  gap: 1.6mm;
+  margin-bottom: 0.7mm;
+}
+.papersheet .skill .sname {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.papersheet .skill input[type="text"] {
+  width: 11mm;
+  flex: none;
+  text-align: center;
+  font-size: 14px;
+  height: 5mm;
+  margin-left: auto;
+}
+.papersheet .skill .prof {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+.papersheet .skill.save {
+  border-bottom: 1.2px solid rgba(33, 29, 23, 0.35);
+  padding-bottom: 0.9mm;
+  margin-bottom: 1.3mm;
+}
+
+/* blood tinge */
+.papersheet .tinge {
+  text-align: center;
+  margin-top: 3mm;
+}
+.papersheet .tinge h3 {
+  font-family: "Cinzel", serif;
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--ink);
+}
+.papersheet .drop {
+  position: relative;
+  width: 15mm;
+  height: 19mm;
+  margin: 1.5mm auto 0;
+}
+.papersheet .drop svg {
+  width: 100%;
+  height: 100%;
+}
+.papersheet .drop input {
+  position: absolute;
+  left: 50%;
+  top: 64%;
+  transform: translate(-50%, -50%);
+  width: 8mm;
+  height: 7mm;
+  text-align: center;
+  border: none;
+  border-bottom: 1.4px solid var(--ink);
+  background: transparent;
+  font-size: 17px;
+}
+.papersheet .p1-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 7mm;
+  margin-top: 5mm;
+}
+.papersheet .bigstat {
+  border: 1.8px solid var(--rule);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.3);
+}
+.papersheet .bigstat .head {
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  border-bottom: 1.4px solid var(--rule);
+  padding: 3px 7px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(33, 29, 23, 0.05);
+}
+.papersheet .bigstat input {
+  height: 12mm;
+  text-align: center;
+  font-size: 22px;
+  border-bottom: none;
+  font-weight: 600;
+}
+.papersheet .sizecap {
+  text-align: center;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  margin-top: 1mm;
+}
+
+/* ================= PAGE 2 ================= */
+.papersheet .p2-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 7mm;
+}
+.papersheet .ac-row {
+  display: flex;
+  gap: 6mm;
+  align-items: flex-start;
+  margin-bottom: 5mm;
+  padding-top: 4mm;
+}
+.papersheet .shield {
+  position: relative;
+  width: 24mm;
+  height: 28mm;
+  flex: none;
+}
+.papersheet .shield svg {
+  width: 100%;
+  height: 100%;
+}
+.papersheet .shield input {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
+  width: 13mm;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  border-bottom: none;
+}
+.papersheet .shield .lbl {
+  position: absolute;
+  top: -5.5mm;
+  left: -6mm;
+  right: -6mm;
+  text-align: center;
+  white-space: nowrap;
+}
+.papersheet .shieldarm {
+  margin-top: 2mm;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.papersheet .armorcat {
+  flex: 1;
+}
+.papersheet .armorcat .fld {
+  margin-bottom: 4mm;
+}
+.papersheet .wt2 {
+  display: flex;
+  gap: 5mm;
+}
+.papersheet .wt2 .fld {
+  flex: 1;
+}
+.papersheet .dashed-rule {
+  border-top: 2px dashed rgba(33, 29, 23, 0.4);
+  margin: 2mm 0 5mm;
+}
+
+/* ---- hunter figure: paper-doll gear layout ---- */
+.papersheet .figure {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 950 / 1200;
+  margin-top: 3mm;
+}
+.papersheet .figure > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.papersheet .plaque {
+  position: absolute;
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  background: var(--paper);
+  box-shadow: 2px 2px 0 rgba(33, 29, 23, 0.12);
+  padding: 2.6mm 2mm 1mm;
+}
+.papersheet .plaque .plbl {
+  position: absolute;
+  top: -2.4mm;
+  left: 2mm;
+  background: var(--paper);
+  padding: 0 1.4mm;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.papersheet .plaque input {
+  border-bottom: none;
+  font-size: 16px;
+  height: 6mm;
+}
+.papersheet .plaque textarea {
+  font-size: 16px;
+}
+.papersheet .pl-head { left: 0; top: 2%; width: 33%; }
+.papersheet .pl-scarf { left: 67%; top: 2%; width: 33%; }
+.papersheet .pl-gloves { left: 0; top: 44%; width: 29%; }
+.papersheet .pl-main { left: 68.5%; top: 31%; width: 31.5%; }
+.papersheet .pl-boots { left: 65%; top: 88%; width: 35%; }
+
+.papersheet .rcol .frame {
+  margin-bottom: 3.5mm;
+}
+.papersheet .rcol textarea {
+  width: 100%;
+}
+.papersheet .addons {
+  margin-top: 2mm;
+}
+.papersheet .addon-row {
+  display: flex;
+  align-items: center;
+  gap: 4mm;
+  margin-bottom: 2.6mm;
+}
+.papersheet .addon-row .frame {
+  flex: 1;
+  padding: 1mm 2mm;
+}
+.papersheet .addon-row input[type="text"] {
+  border-bottom: none;
+  font-size: 17px;
+}
+.papersheet .studs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.papersheet .slots {
+  margin-top: 1mm;
+}
+.papersheet .slotline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3mm;
+  margin-bottom: 2.2mm;
+}
+.papersheet .slotline .lbl {
+  font-size: 10px;
+}
+.papersheet .slotbox {
+  width: 8mm;
+  height: 8mm;
+  border: 1.6px solid var(--rule);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  flex: none;
+}
+.papersheet .slotbox input {
+  height: 100%;
+  text-align: center;
+  border-bottom: none;
+  font-size: 14px;
+}
+.papersheet .training {
+  margin-top: 4mm;
+}
+.papersheet .trainline {
+  display: flex;
+  align-items: center;
+  gap: 5mm;
+  border-bottom: 1.2px solid rgba(33, 29, 23, 0.35);
+  padding: 2mm 0;
+}
+.papersheet .trainline .lbl {
+  min-width: 20mm;
+}
+.papersheet .chk {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.papersheet .coins {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  margin-top: 6mm;
+}
+.papersheet .coinbox {
+  width: 20mm;
+  height: 11mm;
+  border: 1.8px solid var(--rule);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.35);
+}
+.papersheet .coinbox input {
+  height: 100%;
+  text-align: center;
+  border-bottom: none;
+  font-size: 19px;
+}
+
+/* ================= tables (pages 3 & 5) ================= */
+.papersheet table.sheet {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.papersheet table.sheet th {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-align: left;
+  border-bottom: 2px solid var(--rule);
+  border-left: 1.4px solid var(--rule);
+  padding: 1.5mm 2mm;
+}
+.papersheet table.sheet th:first-child {
+  border-left: none;
+}
+.papersheet table.sheet td {
+  border-bottom: 1px solid rgba(33, 29, 23, 0.3);
+  border-left: 1.4px solid var(--rule);
+  padding: 0 1mm;
+  height: 8.2mm;
+}
+.papersheet table.sheet td:first-child {
+  border-left: none;
+}
+.papersheet table.sheet input {
+  border-bottom: none;
+  font-size: 16px;
+  height: 100%;
+}
+
+/* ================= PAGE 4 ================= */
+.papersheet .features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  border-bottom: 2px solid var(--rule);
+}
+.papersheet .features .col {
+  padding: 2mm;
+}
+.papersheet .features .col:first-child {
+  border-right: 1.6px solid var(--rule);
+}
+.papersheet .features textarea {
+  height: 150mm;
+  font-size: 17px;
+  width: 100%;
+}
+.papersheet .featsbox textarea {
+  height: 85mm;
+  font-size: 17px;
+  width: 100%;
+}
+.papersheet h2.centered {
+  border-bottom: 2px solid var(--rule);
+  text-align: center;
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  padding: 2mm 0 2.5mm;
+  margin-top: 6mm;
+  color: var(--ink);
+}
+
+/* ================= PAGE 5 ================= */
+.papersheet .rites-grid {
+  display: grid;
+  grid-template-columns: 1fr 2.1fr;
+  gap: 7mm;
+  align-items: start;
+}
+.papersheet .riteline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3mm;
+  border-bottom: 1.4px solid var(--rule);
+  padding: 2.5mm 0;
+}
+.papersheet .riteline .lbl {
+  font-size: 10.5px;
+}
+.papersheet .riteline input {
+  width: 14mm;
+  flex: none;
+  text-align: center;
+  font-size: 18px;
+}
+.papersheet .riteline.wide input {
+  width: 26mm;
+}
+
+/* ================= print ================= */
+@media print {
+  body.papersheet-open #root {
+    display: none !important;
+  }
+  .papersheet-modal {
+    position: static;
+    overflow: visible;
+    background: #fff;
+    padding: 0;
+  }
+  .papersheet-toolbar {
+    display: none;
+  }
+  .papersheet .page {
+    box-shadow: none;
+    margin: 0;
+    width: auto;
+    min-height: auto;
+    page-break-after: always;
+  }
+  .papersheet .page:last-child {
+    page-break-after: auto;
+  }
+  .papersheet input[type="text"] {
+    border-bottom-color: #8a7f6a;
+  }
+  /* The A4 @page rule is injected by usePaperSheetOpen only while a sheet is
+   * open — @page can't be selector-scoped, and it must not hijack prints of
+   * the rest of the app. */
+}
