@@ -320,7 +320,3 @@ export const RITE_TYPES: RiteType[] = [
   "Evocation", "Mind Influence", "Illusion", "Summoning",
   "Traversal", "Detection", "Protection",
 ];
-
-export const RITE_BY_ID: Record<string, Rite> = Object.fromEntries(
-  RITES.map((r) => [r.id, r]),
-);
