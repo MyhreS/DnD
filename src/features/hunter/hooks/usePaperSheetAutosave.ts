@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { patchCharacterSheet, replaceCharacterSheet } from "@/api/players";
+import { patchCharacterSheet } from "@/api/players";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { sheetMirror } from "../lib/papersheet";
 import type { HunterCard, SheetData } from "@/types";
@@ -30,8 +30,6 @@ export function usePaperSheetAutosave(
   const latest = useRef(local);
   /** Keys edited since the last successful persist. */
   const dirty = useRef<Set<string>>(new Set());
-  /** A "Clear sheet" is pending — replace the whole map instead of patching. */
-  const cleared = useRef(false);
   const created = useRef(!create);
   const timer = useRef<number | null>(null);
   const cardRef = useRef(card);
@@ -39,12 +37,10 @@ export function usePaperSheetAutosave(
 
   const persist = useCallback(async () => {
     const keys = Array.from(dirty.current);
-    const wholesale = cleared.current;
-    if (!wholesale && keys.length === 0) return;
+    if (keys.length === 0) return;
     // Take ownership of the pending changes; restore them on failure so the
     // next edit retries.
     dirty.current = new Set();
-    cleared.current = false;
     const snapshot = latest.current;
     try {
       const base = cardRef.current;
@@ -54,8 +50,6 @@ export function usePaperSheetAutosave(
           .save({ ...base, ...sheetMirror(snapshot), sheet: snapshot });
         if (!ok) throw new Error("create failed");
         created.current = true;
-      } else if (wholesale) {
-        await replaceCharacterSheet(base.id, snapshot, sheetMirror(snapshot));
       } else {
         const mirror = keys.some((k) => MIRROR_KEYS.includes(k)) ? sheetMirror(snapshot) : {};
         await patchCharacterSheet(base.id, snapshot, keys, mirror);
@@ -64,7 +58,6 @@ export function usePaperSheetAutosave(
       window.setTimeout(() => setSaveMsg((m) => (m === "Saved" ? "" : m)), 1600);
     } catch (err) {
       for (const k of keys) dirty.current.add(k);
-      if (wholesale) cleared.current = true;
       console.error("Failed to save the character sheet", err);
       setSaveMsg("Save failed");
     }
@@ -95,17 +88,6 @@ export function usePaperSheetAutosave(
     [readOnly, persist],
   );
 
-  const clear = useCallback(() => {
-    if (readOnly) return;
-    if (!window.confirm("Clear every field on the sheet?")) return;
-    latest.current = {};
-    dirty.current = new Set();
-    cleared.current = true;
-    setLocal({});
-    setSaveMsg("…");
-    flush();
-  }, [readOnly, flush]);
-
   // Never lose typing: flush pending edits when the modal unmounts, the tab
   // hides (iOS PWA backgrounding/kill), or the page unloads.
   useEffect(() => {
@@ -124,5 +106,5 @@ export function usePaperSheetAutosave(
 
   // Read-only viewers follow the live doc; editors keep their working copy.
   const data = readOnly ? (card.sheet ?? {}) : local;
-  return { data, setField, saveMsg, clear };
+  return { data, setField, saveMsg };
 }
