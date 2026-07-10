@@ -45,7 +45,8 @@
   margin: 0 auto 0 0;
   color: #e6ddc8;
 }
-.papersheet-toolbar button {
+.papersheet-toolbar button,
+.papersheet-toolbar a {
   font-family: "Alegreya Sans SC", sans-serif;
   font-weight: 700;
   font-size: 13px;
@@ -57,13 +58,16 @@
   padding: 8px 16px;
   cursor: pointer;
   width: auto;
+  text-decoration: none;
+  display: inline-block;
 }
-.papersheet-toolbar button.ghost {
+.papersheet-toolbar .ghost {
   background: transparent;
   color: #d8cfbc;
   border: 1px solid #6b6353;
 }
-.papersheet-toolbar button:hover {
+.papersheet-toolbar button:hover,
+.papersheet-toolbar a:hover {
   filter: brightness(1.15);
 }
 .papersheet-toolbar label {
@@ -103,7 +107,10 @@
 /* ---------- pages ---------- */
 .papersheet .page {
   width: 210mm;
-  min-height: 297mm;
+  /* Exactly A4 — a page that silently grew would spill an extra sheet when
+   * printed. Overflowing content clips visibly instead. */
+  height: 297mm;
+  overflow: hidden;
   background: var(--paper);
   margin: 0 auto 26px;
   padding: 12mm 12mm 14mm;
@@ -136,20 +143,26 @@
   border: 1.2px solid var(--blood);
   border-radius: 50%;
   vertical-align: top;
-  margin-left: 4px;
+  /* Negative vertical margins keep the 15px badge from growing its (smaller)
+   * label's line box — with steps shown, page 1 would otherwise creep past
+   * 297mm and spill a sixth page into the printed PDF. */
+  margin: -3px 0 -3px 4px;
   transform: translateY(-2px);
   padding: 0 2px;
 }
-/* The reference sheet's red handwritten hint above the name line. */
+/* The reference sheet's red handwritten hint above the name line. Absolutely
+ * positioned into the field's slack space so showing/hiding step numbers
+ * never changes page 1's height (a taller page overflows the printed A4). */
 .papersheet .st-note {
-  display: block;
+  position: absolute;
+  top: -6mm;
+  left: 0;
   font-family: "Caveat", cursive;
   color: var(--blood);
   font-size: 16px;
   font-weight: 600;
   letter-spacing: 0.02em;
   line-height: 1;
-  margin-bottom: 1mm;
   text-transform: none;
   white-space: nowrap;
 }
@@ -266,6 +279,7 @@
 }
 .papersheet .idfields .fld {
   margin-bottom: 6mm;
+  position: relative;
 }
 .papersheet .idfields input {
   font-size: 21px;
