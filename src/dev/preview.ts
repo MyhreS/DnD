@@ -386,6 +386,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
       initiative: "+2",
       speed: "30 ft",
       passivePerception: "13",
+      bloodTinge: true,
       ac: "14",
       armorCategory: "Light",
       weight: "38 lb",

@@ -696,18 +696,22 @@
   width: 100%;
   height: 100%;
 }
-.papersheet .drop input {
+/* Blood Tinge is held or it isn't — a lone check inside the drop. */
+.papersheet .drop input[type="checkbox"] {
   position: absolute;
   left: 50%;
-  top: 64%;
+  top: 60%;
   transform: translate(-50%, -50%);
-  width: 8mm;
-  height: 7mm;
-  text-align: center;
-  border: none;
-  border-bottom: 1.4px solid var(--ink);
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+  border-radius: 3px;
   background: transparent;
-  font-size: 17px;
+}
+.papersheet .drop input[type="checkbox"]:checked::after {
+  font-size: 21px;
+  line-height: 16px;
+  inset: -2px 0 0 0;
 }
 .papersheet .p1-bottom {
   display: grid;
