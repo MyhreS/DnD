@@ -336,6 +336,14 @@
     {
       "topic": "Armor of Agathys renamed to Armor of The Drowned Star",
       "note": "The current handbook names the rite 'Armor of The Drowned Star' (Zealot feature 'Carved Armor of The Drowned Star', line 1581) and rites.bookOfDeepcaller carries the renamed rite; the standalone Protection Rite PDF (mirrored verbatim in rites.bySchool) still says 'Armor of Agathys'. App (classes.ts + rites.ts) and master's prestigeClass now use the Drowned Star name; bySchool keeps the verbatim older source."
+    },
+    {
+      "topic": "Call Starborn Horror — Madness values (standalone Summoning Rite PDF vs V1.0 Book of The Deepcaller)",
+      "note": "The two sources disagree on all four Madness figures for the Level 9 Summoning Rite 'Call Starborn Horror'. The standalone Summoning Rite PDF (mirrored verbatim in rites.bySchool and in resources/extracted/content.json → app src/data/rites.ts, id 'call-starborn-horror') gives the LOWER figures: on a failed save a creature suffers 6 Madness; on a success 2 Madness; each other creature that sees or hears the Horror suffers 2 Madness; the caster suffers 6 Madness. The (presumably newer) V1.0 Book of The Deepcaller (mirrored verbatim in rites.bookOfDeepcaller) gives the HIGHER figures: 10 / 5 / 4 / 10 respectively. The Mind damage (10d10), the Frightened condition and the 5-round duration are identical in both. App + master's bySchool/content.json currently carry the lower standalone-PDF figures. Confirm the canonical figures with the DM; if the Book of The Deepcaller wins, update content.json → src/data/rites.ts (via gen.py) and rites.bySchool to 10/5/4/10. Do not change unilaterally."
+    },
+    {
+      "topic": "Lesser Starborn / Starborn Horror stat blocks + Starborn Horror Behavior Table — missing from source",
+      "note": "Three Summoning Rites reference creature content that does NOT exist anywhere in the source corpus (extracted text, content.json, master.json, and the V1.0 Book of The Deepcaller / V1.0 Whispers appendix PDFs only REFERENCE it, never define it): 'Call Lesser Starborn' (Level 6) uses the 'Lesser Starborn stat block'; 'Call Starborn Horror' (Level 9) uses the 'Starborn Horror stat block' AND rolls each turn on a 'Starborn Horror Behavior Table'. None of these three (the two stat blocks or the behavior table) are defined in any source — the only complete creature stat block in the whole corpus is the Hound of Tindalos (embedded in the Scout 'Pact with a Beast' feature). A Deepcaller cannot actually resolve either summoning rite without them. These must be sourced from the DM; do not invent numbers. When provided, encode the stat blocks the way the Hound of Tindalos block is embedded in classes.ts (size/type, AC, HP, Speed, ability scores + saves, senses, traits, actions) and the Behavior Table as a searchable d-roll table."
     }
   ],
   "handbook": {
