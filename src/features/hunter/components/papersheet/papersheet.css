@@ -302,12 +302,15 @@
   height: 15px;
   border: 1.2px solid var(--blood);
   border-radius: 50%;
-  vertical-align: top;
-  /* Negative vertical margins keep the 15px badge from growing its (smaller)
-   * label's line box — with steps shown, page 1 would otherwise creep past
-   * 297mm and spill a sixth page into the printed PDF. */
-  margin: -3px 0 -3px 4px;
-  transform: translateY(-2px);
+  /* Centered on its label's TEXT line (middle alignment, symmetric negative
+   * margins): the 15px badge overflows its smaller line box EVENLY up and
+   * down, so it never reaches the writing line / heading above the label nor
+   * the field below (top-aligned + translateY(-2px), it used to sit ON the
+   * underlines — see the badge-overlap sweep). Negative vertical margins keep
+   * the badge from growing the line box — with steps shown, page 1 would
+   * otherwise creep past 297mm and spill a sixth page into the printed PDF. */
+  vertical-align: middle;
+  margin: -4px 0 -4px 4px;
   padding: 0 2px;
 }
 /* The reference sheet's red handwritten hint above the name line. Absolutely
@@ -568,6 +571,18 @@
   letter-spacing: 0.16em;
   line-height: 1;
   white-space: nowrap;
+  /* A flex row that grows to CONTAIN the guide badges (15px in a 7.5px text
+   * line — inline they'd bleed onto the level/insight writing lines). Safe
+   * here only because the iris-stack is absolutely centered in the eye: the
+   * extra height stays inside the iris and never moves page 1's layout. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.papersheet .eye .iris-stack .lbl .st,
+.papersheet .eye .iris-stack .lbl .info {
+  margin: 0;
 }
 .papersheet .eye .iris-rule {
   width: 15mm;
@@ -1383,8 +1398,11 @@
 .papersheet .info {
   position: relative;
   display: inline-flex;
-  vertical-align: top;
-  margin: -3px 0 -3px 3px;
+  /* Same centering trick as .st above: middle-aligned with symmetric negative
+   * margins, the dot rides its label's text line without touching the writing
+   * line above/below or growing the line box. */
+  vertical-align: middle;
+  margin: -4px 0 -4px 3px;
 }
 .papersheet .info > button {
   font-family: "Alegreya Sans SC", sans-serif;
