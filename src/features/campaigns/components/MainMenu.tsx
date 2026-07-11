@@ -1,23 +1,15 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useSettings } from "@/app/settings";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { usePlayerStore } from "@/features/hunter/store/playerStore";
-import { useHunterCard } from "@/features/hunter/hooks/useHunterCard";
-import { HunterListCard } from "@/features/hunter/components/HunterListCard";
 import { Sigil } from "@/components/icons";
-import { useCampaignStore } from "../store/campaignStore";
 import { CampaignsHome } from "./CampaignsHome";
 
-/** The "main menu" home: your hunters and the handbook — plus campaigns, once
- * experimental features are switched on (they're still being tested). */
+/** The "main menu" home — info only: what the game is and where everything
+ * lives in the app. Hunters are created & managed on the Hunters page; the
+ * campaigns block appears here once experimental features are switched on. */
 export function MainMenu() {
   const member = useAuthStore((s) => s.member);
-  const campaigns = useCampaignStore((s) => s.campaigns);
-  const characters = usePlayerStore((s) => s.characters);
-  const select = usePlayerStore((s) => s.select);
   const experimental = useSettings((s) => s.experimental);
-  const navigate = useNavigate();
-  useHunterCard();
 
   return (
     <div className="reading">
@@ -27,35 +19,51 @@ export function MainMenu() {
         <h1 className="page-title" style={{ marginBottom: 2 }}>
           Welcome{member?.firstName ? `, ${member.firstName}` : ""}
         </h1>
-        <p className="muted">
-          {experimental
-            ? "Join a campaign or start your own, then bring a hunter to the table."
-            : "Forge your hunters and study the handbook."}
+        <p className="muted">Your companion for the hunt.</p>
+      </div>
+
+      <p className="eyebrow" style={{ marginTop: 22, marginBottom: 8 }}>The game</p>
+      <div className="card">
+        <p className="muted" style={{ margin: 0 }}>
+          <em>Catacombs &amp; Starspawns</em> is a Bloodborne-flavoured dark-fantasy homebrew
+          where the adventurers are <em>Hunters</em>. Descend into the catacombs, cling to
+          your Sanity, and hunt what crawled out of the dark — knowing full well the dark
+          hunts back.
         </p>
       </div>
 
       {experimental && <CampaignsHome />}
 
-      <p className="eyebrow" style={{ marginTop: 22, marginBottom: 8 }}>Your hunters</p>
-      {characters.length === 0 ? (
-        <div className="card"><p className="muted" style={{ margin: 0 }}>No hunters yet. Forge one to play.</p></div>
-      ) : (
-        <div className="stack" style={{ gap: 10 }}>
-          {characters.map((c) => (
-            <HunterListCard
-              key={c.id}
-              card={c}
-              campaignName={experimental ? (campaigns.find((x) => x.id === c.campaignId)?.name ?? null) : null}
-              onOpen={() => { select(c.id); navigate("/character?edit=1"); }}
-              onEdit={() => { select(c.id); navigate("/character?edit=1"); }}
-            />
-          ))}
-        </div>
-      )}
-      <Link className="btn btn-primary" to="/character?new=1" style={{ marginTop: 12 }}>Create hunter</Link>
+      <p className="eyebrow" style={{ marginTop: 22, marginBottom: 8 }}>Find your way</p>
+      <div className="stack" style={{ gap: 10 }}>
+        <GuideCard to="/character" title="Hunters" body="Forge new hunters and manage the ones you have — a five-page paper sheet, saved as you write." />
+        <GuideCard to="/handbook" title="Handbook" body="The rules, all six classes, and the armory — plus the full PDF." />
+        <GuideCard to="/reference" title="Reference" body="Quick rules lookup for the table — actions, conditions, and the tables you reach for mid-fight." />
+        <GuideCard to="/profile" title="Profile" body="Your account and settings — tap your initial in the corner. Experimental features are switched on here." />
+        {experimental && (
+          <GuideCard title="Campaigns" body="Create or join one above, then enter it for Sessions, the Party, the Shop, the Log, and live Play." />
+        )}
+      </div>
 
       <div className="rule-ornament">◆</div>
       <Link className="btn btn-ghost" to="/handbook">Read the handbook</Link>
     </div>
+  );
+}
+
+/** One row of the app guide: where a page is and what it's for. */
+function GuideCard({ to, title, body }: { to?: string; title: string; body: string }) {
+  const inner = (
+    <>
+      <div style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{title}</div>
+      <div className="muted" style={{ fontSize: "0.88rem", marginTop: 2 }}>{body}</div>
+    </>
+  );
+  if (!to) return <div className="card">{inner}</div>;
+  return (
+    <Link to={to} className="card card-hover" style={{ display: "block", color: "inherit", textDecoration: "none" }}>
+      {inner}
+      <div className="gold" style={{ fontSize: "0.8rem", marginTop: 6 }}>Open →</div>
+    </Link>
   );
 }
