@@ -12,8 +12,10 @@ permissions are per-campaign (see "Access model & roles").
 
 - **Sessions** — next session with a live countdown + upcoming dates. Members
   RSVP (yes/maybe/no). Staff (admin/DM) add & edit dates. Backed by Firestore.
-- **Hunter** — build & save your hunter card (class, point-buy abilities, skills,
-  armor/AC, derived HP/speed). Saved per-user in Firestore.
+- **Hunter** — create & keep hunters as a digital **paper character sheet**
+  (`features/hunter/components/papersheet`): five A4 pages of free-form boxes,
+  autosaved per field, with creation-step guidance deep-linked into the Handbook.
+  Multiple per user, saved in Firestore; play mode reads HP/AC/Sanity off the sheet.
 - **Party** — gallery of everyone's hunters. Staff get a roster: who has a
   character, who's RSVP'd, with one-tap `mailto:` reminders.
 - **Handbook** — browsable rules, all six classes, and the armory, plus a link to
@@ -66,8 +68,9 @@ Rules:
   `src/hooks/<group>/`, feature-specific in `features/<f>/hooks/`). Components
   should read clean; side-effects are named hooks.
 - **No component file over ~200 lines.** If it grows past that, split it into
-  more components/files. Only a *few* deliberate exceptions are allowed (e.g.
-  `features/hunter/components/CharacterEditor.tsx`, the multi-step builder).
+  more components/files. Only a *few* deliberate exceptions are allowed
+  (e.g. `features/hunter/components/papersheet/SheetPage1.tsx`, the densest
+  paper-sheet page).
 - Imports use the `@/` alias (→ `src/`).
 
 ## Tooling / quality gates
@@ -291,12 +294,13 @@ The UI is fully data-driven, so content updates are localized to `src/data/`:
 - `classes.ts` — the six classes: traits (incl. **Max Sanity** + **Sanity Die**),
   full 1–20 **progression tables**, level-by-level **features**, and **subclasses**.
 - `rites.ts` — the Deepcaller's **Rites & Whispers**.
-- `skills.ts` — the C&S skill list + each skill's governing ability.
 - `armor.ts` — the armory (Main / Add-on / **Armor Upgrade** / Extra).
 - `handbook.ts` — the Rules chapters (creation steps, AC, carrying, Sanity).
-- `abilities.ts` — ability metadata + point-buy.
+- `abilities.ts` — ability names + the modifier formula.
+- …plus newer data files (`backgrounds.ts`, `feats.ts`, `conditions.ts`,
+  `creatures.ts`, `items.ts`, `rulesReference.ts`, …).
 
-The character builder, hunter sheet and handbook screens follow automatically.
+The paper sheet, handbook and rules-reference screens follow automatically.
 Replace the PDF in `public/handbook/` if a new one arrives.
 
 **Source of truth.** The DM's raw material lives in `resources/` (PDFs + CSVs).
@@ -318,7 +322,7 @@ Replace the PDF in `public/handbook/` if a new one arrives.
 ## Roadmap / later ideas
 
 Admin page (broader), atmospheric music, email reminders to make cards / before
-sessions (Cloud Functions on Blaze + scheduled triggers), session log, party
-view, AI narration / voice. A native iOS shell using Apple's on-device
-Foundation Models is a possible future direction. None of these are built yet.
+sessions (Cloud Functions on Blaze + scheduled triggers), AI narration / voice.
+A native iOS shell using Apple's on-device Foundation Models is a possible
+future direction. None of these are built yet.
 ```

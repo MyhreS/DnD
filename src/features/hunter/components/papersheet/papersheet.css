@@ -269,6 +269,10 @@
 .papersheet.hide-steps .st-note {
   display: none;
 }
+/* toolbar "Show info icons" toggle — hides the ⓘ dots (see InfoDot.tsx) */
+.papersheet.hide-info .info {
+  display: none;
+}
 
 /* ---------- step spotlight (toolbar step selector) ----------
  * Every sheet "unit" carries a `data-step` attribute (space-separated when it
