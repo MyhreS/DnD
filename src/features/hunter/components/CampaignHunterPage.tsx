@@ -19,7 +19,8 @@ const playable = (c: HunterCard) => !!c.name;
  * sees a DM view and can step into any hunter's sheet, then return to DM. */
 export function CampaignHunterPage() {
   const user = useAuthStore((s) => s.user);
-  const { characters, status } = usePlayerStore();
+  const characters = usePlayerStore((s) => s.characters);
+  const status = usePlayerStore((s) => s.status);
   const campaign = useCampaignStore((s) => s.active);
   const members = useCampaignStore((s) => s.members);
   const activeId = useCampaignStore((s) => s.activeId);
