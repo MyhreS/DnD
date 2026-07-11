@@ -10,16 +10,17 @@ import { CardSkeleton } from "@/components/Skeleton";
 import { Sigil } from "@/components/icons";
 import type { HunterCard } from "@/types";
 
-/** The main-menu Hunters page. Characters are created and viewed ONE way: the
- * paper character sheet (the old step-by-step builder is gone — no legacy). */
+/** The main-menu Hunters page. It ALWAYS lands on the LIST of your hunters —
+ * you click a hunter to open its paper sheet (the only view/creation flow; the
+ * old step-by-step builder is gone). */
 export function CharacterPage() {
   const user = useAuthStore((s) => s.user);
-  const { card, characters, selectedId, select, status, error, archive } = usePlayerStore();
+  const { characters, select, status, error, archive } = usePlayerStore();
   // A brand-new sheet being written (the only creation flow).
   const [sheetDraft, setSheetDraft] = useState<HunterCard | null>(null);
-  // The sheet popup auto-opens when a hunter is viewed; remember the one the
-  // user just closed so it doesn't immediately reopen.
-  const [sheetDismissedId, setSheetDismissedId] = useState<string | null>(null);
+  // Which hunter's sheet is open (detail); null = the list. Nothing opens on
+  // mount, so the page always lands on the list — never inside a hunter.
+  const [openId, setOpenId] = useState<string | null>(null);
 
   useHunterCard();
 
@@ -29,19 +30,26 @@ export function CharacterPage() {
       email: user!.email ?? "",
       displayName: user!.displayName ?? user!.email ?? "Hunter",
     });
-    // Pre-dismiss: the draft modal IS the sheet — the view underneath must not
-    // pop a second copy once autosave lands the hunter in the store.
-    setSheetDismissedId(d.id);
     setSheetDraft(d);
   }
   function closeSheetDraft() {
     const d = sheetDraft;
     setSheetDraft(null);
+    // Land on the freshly-written hunter's card in the list (don't auto-open it).
     if (d && usePlayerStore.getState().characters.some((c) => c.id === d.id)) select(d.id);
   }
+  function openHunter(id: string) {
+    select(id);
+    setOpenId(id);
+  }
+  async function deleteOpen() {
+    const ok = await archive(null); // archives the selected (== opened) hunter
+    if (ok) setOpenId(null);
+    return ok;
+  }
 
-  // Main-menu deep links: ?new=1 → a fresh sheet, ?edit=1 → pop the sheet open.
-  useEditorIntent({ onNew: startNew, onEdit: () => setSheetDismissedId(null) });
+  // Main-menu deep links: ?new=1 → a fresh sheet, ?edit=1 → open the selected hunter.
+  useEditorIntent({ onNew: startNew, onEdit: () => setOpenId(usePlayerStore.getState().selectedId) });
 
   let body: ReactNode;
 
@@ -49,8 +57,8 @@ export function CharacterPage() {
     body = (
       <div>
         <p className="eyebrow">Your Hunter</p>
-        <h1 className="page-title">Character</h1>
-        <p className="page-intro">Unrolling your character sheet…</p>
+        <h1 className="page-title">Hunters</h1>
+        <p className="page-intro">Unrolling your character sheets…</p>
         <CardSkeleton lines={4} />
       </div>
     );
@@ -87,14 +95,12 @@ export function CharacterPage() {
   } else {
     body = (
       <CharacterView
-        card={card}
         characters={characters}
-        selectedId={selectedId}
-        sheetDismissedId={sheetDismissedId}
-        onSelect={select}
+        openId={openId}
+        onOpen={openHunter}
+        onBack={() => setOpenId(null)}
         onNew={startNew}
-        onSheetDismiss={setSheetDismissedId}
-        onDelete={() => archive(null)}
+        onDelete={deleteOpen}
       />
     );
   }
