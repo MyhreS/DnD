@@ -99,10 +99,14 @@ export function subscribeMyCharacters(
   );
 }
 
-/** Live-subscribe to every character (party gallery / DM board). */
+/** Live-subscribe to characters. Pass a `campaignId` to stream only that
+ * campaign's hunters (party gallery / play board) — a `where` query whose cost
+ * scales with the campaign, not the whole app. Omit it for the global corpus
+ * (the DM search board, the idle fighter shows). */
 export function subscribeAllCharacters(
   cb: (cards: HunterCard[]) => void,
   onError?: (err: unknown) => void,
+  campaignId?: string | null,
 ): () => void {
   // Preview: the whole sample party (incl. the sheet-only hunter), so the
   // roster / gallery / status board render every flavour of card.
@@ -110,8 +114,9 @@ export function subscribeAllCharacters(
     cb(previewPartyCards());
     return () => {};
   }
+  const q = campaignId ? query(charsCol, where("campaignId", "==", campaignId)) : charsCol;
   return onSnapshot(
-    charsCol,
+    q,
     (snap) => cb(realCards(snap.docs.map((d) => normalizeCard(d.data() as HunterCard)))),
     (err) => {
       console.error("Party subscription failed", err);

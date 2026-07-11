@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { subscribeAllCharacters } from "@/api/players";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { useSessionRsvps } from "@/features/sessions/hooks/useSessionRsvps";
 import type { HunterCard } from "@/types";
 
@@ -16,10 +17,16 @@ export function usePartyData(opts: { sessionId?: string }): PartyData {
   const [players, setPlayers] = useState<HunterCard[] | null>(null);
   const [error, setError] = useState<string | null>(null);
   const rsvps = useSessionRsvps(sessionId);
+  const campaignId = useCampaignStore((s) => s.activeId);
 
   useEffect(() => {
-    return subscribeAllCharacters(setPlayers, () => setError("Could not load the party."));
-  }, []);
+    // The party gallery is a single campaign's roster — stream only its hunters.
+    return subscribeAllCharacters(
+      setPlayers,
+      () => setError("Could not load the party."),
+      campaignId,
+    );
+  }, [campaignId]);
 
   return { players, rsvps, error };
 }

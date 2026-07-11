@@ -11,6 +11,7 @@ import {
 import { createLoot } from "@/api/games";
 import { logEvent, describeLoot } from "@/api/activity";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { explain } from "@/lib/errors";
 import { isPreviewActive, previewPartyCards, previewArchive } from "@/dev/preview";
 import type { ActivityType } from "@/types";
@@ -91,9 +92,13 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         set({ preview: true, party: previewPartyCards(), archive: previewArchive() });
         return;
       }
+      // Scope to the active campaign: the play board / combat tracker only ever
+      // care about hunters brought into THIS campaign, so stream just those
+      // (a where('campaignId') query) instead of every hunter across the app.
       const unsubParty = subscribeAllCharacters(
         (party) => set({ party, error: null }), // a fresh snapshot clears any stale error
         (err) => set({ error: explain("Couldn't load characters", err) }),
+        useCampaignStore.getState().activeId,
       );
       const unsubArchive = subscribeArchive((archive) => set({ archive }));
       set({ _unsubParty: unsubParty, _unsubArchive: unsubArchive });
