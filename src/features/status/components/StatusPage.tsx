@@ -106,7 +106,7 @@ function VitalsCard({ card }: { card: HunterCard }) {
     <div className="card" style={{ marginTop: 0, opacity: dead ? 0.55 : 1, borderColor: dead ? "var(--blood-bright)" : undefined }}>
       <div className="row between" style={{ marginBottom: 10, gap: 8 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", minWidth: 0, overflowWrap: "anywhere" }}>
             {card.name}
           </div>
           <div className="faint" style={{ fontSize: "0.9rem" }}>
