@@ -474,6 +474,11 @@ export function previewCard(uid: string): import("@/types").HunterCard {
       wd_0_2: "Piercing",
       wd_0_3: "1d10, loud",
       feats: "Tough — +2 HP per level.",
+      // BOTH legacy Class Features columns filled — preview exercises the
+      // single-box lazy merge (MergeTa): display joins them, first edit
+      // persists the merged text and empties features2.
+      features1: "Deft Strike — once per turn, +1d6 damage when you have advantage.",
+      features2: "Marksman's Eye — no disadvantage on long-range rifle shots.",
     },
     createdAt: now,
     updatedAt: now,

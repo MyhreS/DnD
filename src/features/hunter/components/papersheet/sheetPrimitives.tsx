@@ -113,6 +113,34 @@ export function Ta({ f, ...rest }: { f: string } & TextareaHTMLAttributes<HTMLTe
   );
 }
 
+/** A bound multi-line field that also folds in a LEGACY second field — for
+ * the old two-column Class Features box (creator's ruling: it's just notes,
+ * one box). While BOTH fields hold text the textarea displays them joined by
+ * a blank line (lazy render-time merge — nothing is written for lookers-on);
+ * the first edit persists the combined text to `f` and empties `legacy`, so
+ * no hunter loses a word and the sheet converges to the single-field shape. */
+export function MergeTa({
+  f,
+  legacy,
+  ...rest
+}: { f: string; legacy: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  const { data, setField, readOnly } = useSheet();
+  const a = typeof data[f] === "string" ? (data[f] as string) : "";
+  const b = typeof data[legacy] === "string" ? (data[legacy] as string) : "";
+  const v = a !== "" && b !== "" ? `${a}\n\n${b}` : a !== "" ? a : b;
+  return (
+    <textarea
+      value={v}
+      readOnly={readOnly}
+      onChange={(e) => {
+        setField(f, e.target.value);
+        if (b !== "") setField(legacy, "");
+      }}
+      {...rest}
+    />
+  );
+}
+
 /** A bound checkbox (proficiency dots, death-save pips, studs, …). With
  * `truthyText`, a legacy non-empty STRING value also reads as checked — for
  * fields that used to be free text (the storage slots); toggling writes a

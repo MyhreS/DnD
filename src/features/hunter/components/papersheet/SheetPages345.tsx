@@ -1,4 +1,4 @@
-import { F, Ta, St, SheetTable } from "./sheetPrimitives";
+import { F, Ta, MergeTa, St, SheetTable } from "./sheetPrimitives";
 import { Info } from "./InfoDot";
 
 // `pblock` = one heading + its content, kept unbroken in print (papersheet.css).
@@ -34,9 +34,10 @@ export function SheetPage4() {
     <div className="page">
       <div className="pblock" data-step="5">
         <h2 className="sec">CLASS FEATURES <St n={5} /> <Info k="classFeatures" /></h2>
-        <div className="features">
-          <div className="col"><Ta f="features1" /></div>
-          <div className="col"><Ta f="features2" /></div>
+        {/* one big notes box (was two columns — legacy features2 text merges
+          * into features1 on the first edit, see MergeTa) */}
+        <div className="featuresbox">
+          <MergeTa f="features1" legacy="features2" aria-label="Class features" />
         </div>
       </div>
 

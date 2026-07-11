@@ -36,7 +36,7 @@ export function MainMenu() {
 
       <p className="eyebrow" style={{ marginTop: 22, marginBottom: 8 }}>Find your way</p>
       <div className="stack" style={{ gap: 10 }}>
-        <GuideCard to="/character" title="Hunters" body="Forge new hunters and manage the ones you have — a five-page paper sheet, saved as you write." />
+        <GuideCard to="/character" title="Hunters" body="Forge new hunters and manage the ones you have — a six-page paper sheet, saved as you write." />
         <GuideCard to="/handbook" title="Handbook" body="The rules, all six classes, and the armory — plus the full PDF." />
         <GuideCard to="/rules" title="Rules" body="Quick rules lookup for the table — actions, conditions, and the tables you reach for mid-fight." />
         <GuideCard to="/profile" title="Profile" body="Your account and settings — tap your initial in the corner. Experimental features are switched on here." />
