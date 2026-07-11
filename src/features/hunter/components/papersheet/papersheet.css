@@ -192,6 +192,30 @@
   text-decoration: underline;
 }
 
+/* the Guides menu — a compact popover with the two guidance toggles. Like the
+ * step-guidance panel it hangs off the TOOLBAR (position: relative above), so
+ * it can never be clipped, anchored to the right where the button sits. */
+.papersheet-toolbar .guides-pop {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: #fffdf7;
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 3px 3px 0 rgba(33, 29, 23, 0.28);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+.papersheet-toolbar .guides-pop label {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
 /* ---------- the sheet itself ---------- */
 .papersheet {
   font-family: "Alegreya Sans SC", sans-serif;
