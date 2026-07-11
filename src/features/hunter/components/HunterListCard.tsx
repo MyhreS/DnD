@@ -72,7 +72,7 @@ export function HunterListCard({
           </div>
           <div className="faint" style={{ fontSize: "0.82rem", marginTop: 2 }}>{classLine}</div>
           {klass && (
-            <div className="faint" style={{ fontSize: "0.82rem", marginTop: 2 }}>
+            <div className="muted" style={{ fontSize: "0.82rem", marginTop: 2 }}>
               HP {maxHp(klass, card.abilities, card.level)} · AC {armorClassFor(card).total}
             </div>
           )}
