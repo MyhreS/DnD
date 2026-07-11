@@ -216,41 +216,6 @@
   font-weight: 600;
 }
 
-/* the AI-help manual-copy popover (shown only when the automatic clipboard
- * write was blocked) + the transient aria-live confirmation line */
-.papersheet-toolbar .aihelp-live {
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  color: #b8ad94;
-}
-.papersheet-toolbar .aihelp-live:empty {
-  display: none;
-}
-.papersheet-toolbar .aihelp-pop {
-  min-width: min(360px, calc(100vw - 24px));
-  max-width: calc(100vw - 24px);
-}
-.papersheet-toolbar .aihelp-pop p {
-  margin: 0;
-  color: var(--ink-soft);
-  font-weight: 600;
-  font-size: 12.5px;
-}
-.papersheet-toolbar .aihelp-pop textarea {
-  width: 100%;
-  resize: vertical;
-  font: 11px/1.4 monospace;
-  color: var(--ink);
-  background: #f6f1e4;
-  border: 1px solid var(--rule);
-  border-radius: 3px;
-  padding: 6px;
-}
-.papersheet-toolbar .aihelp-pop-actions {
-  display: flex;
-  gap: 8px;
-}
-
 /* ---------- the sheet itself ---------- */
 .papersheet {
   font-family: "Alegreya Sans SC", sans-serif;

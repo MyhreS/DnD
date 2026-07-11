@@ -9,7 +9,6 @@ import { sendMail, sendMany } from "./email";
 import { inviteEmail, characterReminder, rsvpReminder } from "./templates";
 
 export { settleTrade } from "./trades";
-export { mintCharacterAiToken, aiApi } from "./aiHelp";
 
 initializeApp();
 const db = getFirestore();

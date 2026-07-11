@@ -204,16 +204,6 @@ await step("Player full-card save with unchanged Transformation (allowed)", asyn
   }, { merge: true });
 });
 
-// --- AI-help tokens are Functions-only: no client may read /apiTokens --------
-await step("Client cannot read /apiTokens (negative)", async () => {
-  let denied = false;
-  try {
-    await getDoc(doc(pl.db, "apiTokens", "any-token-hash"));
-  } catch {
-    denied = true;
-  }
-  if (!denied) throw new Error("player could read an /apiTokens doc (must be Functions-only)");
-});
 // Regression: a signed-in client can still read /characters (open-access read).
 await step("Client can still read /characters (regression)", async () => {
   await getDoc(doc(pl.db, "characters", `smoke-${dmUid}`));
