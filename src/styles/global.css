@@ -98,16 +98,6 @@
   border-color: rgba(47, 93, 55, 0.5);
   color: #2f5d37;
 }
-:root[data-theme="light"] .pick-counter {
-  background: rgba(154, 123, 46, 0.1);
-  border-color: rgba(138, 111, 46, 0.55);
-  color: #6d5620;
-}
-:root[data-theme="light"] .pick-counter.done {
-  background: rgba(47, 93, 55, 0.1);
-  border-color: rgba(47, 93, 55, 0.5);
-  color: #2f5d37;
-}
 
 * {
   box-sizing: border-box;
@@ -395,20 +385,6 @@ button {
   border-bottom-color: var(--blood-bright);
 }
 
-/* Two-column page wrapper. Single column by default (mobile, source order);
-   becomes side-by-side on desktop via the breakpoint below.
-   minmax(0, 1fr) + min-width: 0 matter: grid items default to min-width auto,
-   so the track would otherwise grow to the widest item's min-content (e.g. the
-   class-art <img> on the hunter sheet) and push the page past the viewport. */
-.desk-2col {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 16px;
-}
-.desk-2col > * {
-  min-width: 0;
-}
-
 /* Gallery grid — one column on phones, auto-fills on wider screens. */
 .card-grid {
   display: grid;
@@ -545,23 +521,6 @@ button {
   }
 }
 
-/* Wider desktop: two-column pages split, and an aside can stick. */
-@media (min-width: 1180px) {
-  .desk-2col {
-    grid-template-columns: minmax(0, 1.6fr) minmax(290px, 1fr);
-    align-items: start;
-    gap: 18px;
-  }
-  .desk-2col > .desk-main {
-    order: 1;
-  }
-  .desk-2col > .desk-aside {
-    order: 2;
-    position: sticky;
-    top: 28px;
-  }
-}
-
 /* ---------- Cards & panels ---------- */
 
 .card {
@@ -581,26 +540,6 @@ button {
 }
 .card-hover:active {
   transform: scale(0.99);
-}
-
-/* Detail region that expands inside a selected SelectCard (accordion). */
-.select-card-detail {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px solid var(--border);
-  cursor: default;
-  animation: detail-in 0.18s ease;
-}
-@keyframes detail-in {
-  from {
-    opacity: 0;
-    transform: translateY(-3px);
-  }
-}
-@media (prefers-reduced-motion: reduce) {
-  .select-card-detail {
-    animation: none;
-  }
 }
 
 .divider {
@@ -794,34 +733,8 @@ button {
   gap: 8px;
 }
 
-/* Live "X of N chosen" counter pill for the builder's pick-N choosers.
-   Warn-gold while incomplete; flips to the ok palette (with .done) when met. */
-.pick-counter {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--gold-dim);
-  background: rgba(201, 164, 90, 0.1);
-  color: var(--gold);
-  font-family: var(--font-display);
-  font-size: 0.8rem;
-  letter-spacing: 0.05em;
-}
-.pick-counter.done {
-  border-color: rgba(94, 158, 106, 0.5);
-  background: rgba(94, 158, 106, 0.12);
-  color: var(--ok);
-}
-
 /* ---------- Stat blocks ---------- */
 
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
 .stat {
   text-align: center;
   background: var(--bg-elev-2);
@@ -836,17 +749,6 @@ button {
   color: var(--gold-dim);
   text-transform: uppercase;
 }
-.stat .stat-value {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.1;
-  margin-top: 2px;
-}
-.stat .stat-sub {
-  font-size: 0.78rem;
-  color: var(--ink-dim);
-}
 
 .derived-grid {
   display: grid;
@@ -857,200 +759,6 @@ button {
   .derived-grid {
     grid-template-columns: repeat(4, 1fr);
   }
-}
-
-/* ---------- Ability tiles & points meter (builder Step 3) ---------- */
-
-/* The prominent two-budget block: buy meter on top, background-bonus
-   mini-meter below its gold dashed divider — two currencies, two looks. */
-.points-meter {
-  background: var(--bg-elev-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 12px 14px;
-  margin-bottom: 12px;
-}
-.meter-big {
-  font-family: var(--font-display);
-  font-size: 1.9rem;
-  font-weight: 600;
-  line-height: 1;
-}
-.meter-big.done {
-  color: var(--gold);
-}
-.meter-bar {
-  height: 8px;
-  margin-top: 8px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--bg-elev-3);
-  overflow: hidden;
-}
-.meter-fill {
-  height: 100%;
-  border-radius: 999px;
-  background: linear-gradient(90deg, var(--gold-dim), var(--gold));
-  transition: width 0.2s ease;
-}
-.meter-fill.done {
-  background: var(--ok);
-}
-
-.bg-meter {
-  margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed var(--gold-dim);
-}
-.bg-meter-title {
-  font-family: var(--font-display);
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--gold);
-}
-.bg-pip {
-  width: 9px;
-  height: 9px;
-  border-radius: 50%;
-  border: 1px solid var(--gold-dim);
-  display: inline-block;
-}
-.bg-pip.filled {
-  background: var(--gold);
-  border-color: var(--gold);
-}
-
-/* The six ability tiles: 2-up on phones, 3-up where the editor is wide. */
-.ability-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
-}
-@media (min-width: 700px) {
-  .ability-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-.ability-tile {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 2px;
-  text-align: center;
-  background: var(--bg-elev-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 6px;
-}
-.tile-head {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.2;
-}
-.tile-short {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-}
-.tile-name {
-  font-size: 0.66rem;
-}
-.tile-score {
-  font-family: var(--font-display);
-  font-size: 1.7rem;
-  font-weight: 600;
-  line-height: 1.05;
-  margin-top: 2px;
-}
-.tile-mod {
-  font-size: 0.85rem;
-}
-.tile-base {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  margin-top: 5px;
-}
-.tile-btn {
-  width: 40px;
-  min-height: 38px;
-  padding: 4px 0;
-  font-size: 1.05rem;
-  line-height: 1;
-}
-.tile-cost {
-  font-size: 0.7rem;
-  color: var(--gold);
-}
-.tile-base-value {
-  min-width: 26px;
-  font-family: var(--font-display);
-  line-height: 1.1;
-}
-.tile-base-value .tile-base-label {
-  display: block;
-  font-size: 0.58rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-/* Blocked but tappable: looks disabled, still answers with the reason. */
-.is-blocked {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-.tile-hint {
-  font-size: 0.72rem;
-  line-height: 1.35;
-  color: var(--blood-bright);
-  margin-top: 4px;
-}
-
-/* The background-bonus token — gold, so the second currency is unmistakable
-   next to the plain base steppers and the blood-red selection chips. */
-.bg-chip {
-  margin-top: 6px;
-  min-height: 30px;
-  padding: 3px 12px;
-  border-radius: 999px;
-  border: 1px solid var(--gold-dim);
-  background: rgba(201, 164, 90, 0.08);
-  color: var(--gold);
-  font-size: 0.78rem;
-  letter-spacing: 0.04em;
-  transition: all 0.15s ease;
-}
-.bg-chip.on {
-  background: var(--gold);
-  border-color: var(--gold);
-  color: #241d0e;
-  font-weight: 600;
-}
-.bg-slot {
-  min-height: 36px;
-}
-:root[data-theme="light"] .bg-chip {
-  background: rgba(154, 123, 46, 0.1);
-}
-:root[data-theme="light"] .bg-chip.on {
-  background: var(--gold);
-  color: #fffdf8;
-}
-
-/* The progression preview's 1–20 level slider. */
-input[type="range"].level-range {
-  flex: 1;
-  min-width: 0;
-  accent-color: var(--blood-bright);
-  cursor: pointer;
-}
-
-.skill-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  column-gap: 18px;
-  row-gap: 1px;
 }
 
 .meta-line {
@@ -1088,52 +796,6 @@ input[type="range"].level-range {
 .table-scroll {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
-}
-@media (min-width: 420px) {
-  .skill-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-/* ---------- Hunter sheet: armor & inventory (the #139 wireframe) ---------- */
-
-/* Top summary strip: AC + Shield Arm | weight + condition | impressions.
-   Column count follows the CONTAINER width (the sheet also renders inside
-   narrow party-gallery columns), so auto-fit instead of viewport queries. */
-.sheet-summary {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: 14px;
-  align-items: start;
-}
-
-/* Worn-armor panel beside the storage/training rail on wide containers. */
-.sheet-cols {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
-  gap: 14px;
-  align-items: start;
-}
-
-/* The body diagram: paired slot boxes with Main Armor spanning the row. */
-.body-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 8px;
-}
-.slot-box {
-  background: var(--bg-elev-2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  min-height: 58px;
-}
-.slot-box-wide {
-  grid-column: 1 / -1;
-}
-.slot-box-empty {
-  border-style: dashed;
-  opacity: 0.75;
 }
 
 /* ---------- Misc helpers ---------- */
@@ -1493,11 +1155,6 @@ input[type="range"].level-range {
   100% { background-position: -100% 0; }
 }
 
-/* Bundles that only exist when printing (e.g. "export all characters"). */
-.print-only {
-  display: none;
-}
-
 /* ---------- Print / PDF export ---------- */
 @media print {
   /* Paper is white: never paint the app's dark theme — nor its fixed
@@ -1531,15 +1188,6 @@ input[type="range"].level-range {
   .no-print {
     display: none !important;
   }
-  .print-only {
-    display: block !important;
-  }
-  .print-character {
-    break-after: page;
-  }
-  .print-character:last-child {
-    break-after: auto;
-  }
   body {
     background: #fff !important;
     color: #14110d !important;
@@ -1547,37 +1195,6 @@ input[type="range"].level-range {
   .app-main {
     padding: 0 !important;
     max-width: none;
-  }
-  .print-sheet .card {
-    background: #fff !important;
-    border: 1px solid #bbb !important;
-    box-shadow: none !important;
-    break-inside: avoid;
-  }
-  .print-sheet .card,
-  .print-sheet h1,
-  .print-sheet h2,
-  .print-sheet h3,
-  .print-sheet .stat-value,
-  .print-sheet .gold {
-    color: #14110d !important;
-  }
-  .print-sheet .muted,
-  .print-sheet .faint,
-  .print-sheet .stat-label,
-  .print-sheet .eyebrow {
-    color: #555 !important;
-  }
-  .print-sheet .stat,
-  .print-sheet .chip,
-  .print-sheet .slot-box {
-    border-color: #bbb !important;
-    background: #f6f3ec !important;
-  }
-  .print-sheet .level-table th,
-  .print-sheet .level-table td {
-    border-bottom-color: #ccc;
-    color: #14110d;
   }
 }
 
