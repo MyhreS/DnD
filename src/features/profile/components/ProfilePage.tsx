@@ -7,6 +7,7 @@ import { SignOutIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FightersToggle } from "./FightersToggle";
 import { ExperimentalToggle } from "./ExperimentalToggle";
+import { DMModeToggle } from "./DMModeToggle";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { AllowlistManager } from "./AllowlistManager";
 
@@ -38,6 +39,8 @@ export function ProfilePage() {
       <FightersToggle />
 
       <ExperimentalToggle />
+
+      <DMModeToggle />
 
       <div className="card">
         <p className="eyebrow">App</p>

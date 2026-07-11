@@ -19,6 +19,7 @@ import { ShopPage } from "@/features/shop/components/ShopPage";
 import { LogPage } from "@/features/log/components/LogPage";
 import { HandbookPage } from "@/features/handbook/components/HandbookPage";
 import { ProfilePage } from "@/features/profile/components/ProfilePage";
+import { DMOverviewPage } from "@/features/dm/components/DMOverviewPage";
 import { StatusPage } from "@/features/status/components/StatusPage";
 import { RulesReferencePage } from "@/features/rules-reference/components/RulesReferencePage";
 
@@ -26,6 +27,8 @@ function AuthedApp() {
   useCampaignSync();
   // Campaigns/sessions/live play are experimental — hidden unless enabled.
   const experimental = useSettings((s) => s.experimental);
+  // The DM overview only exists when Dungeon Master mode is on (Profile).
+  const dmMode = useSettings((s) => s.dmMode);
   return (
     <Routes>
       {/* Main menu: account home, hunters, handbook, profile — no campaign. */}
@@ -34,6 +37,7 @@ function AuthedApp() {
         <Route path="character" element={<CharacterPage />} />
         <Route path="handbook" element={<HandbookPage />} />
         <Route path="reference" element={<RulesReferencePage />} />
+        <Route path="dm" element={dmMode ? <DMOverviewPage /> : <Navigate to="/" replace />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
       {/* Campaign: gated on an active campaign by CampaignLayout. */}
