@@ -1,11 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { ChevronIcon } from "@/components/icons";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { CharacterTrackers } from "@/features/hunter/components/CharacterTrackers";
 import { InventorySection } from "@/features/hunter/components/sheet/InventorySection";
-import { sheetClassName } from "@/features/hunter/lib/papersheet";
 import { isSheetCard } from "@/lib/character";
 import { AsyncButton } from "@/components/AsyncButton";
 import { patchCharacter } from "@/api/players";
@@ -24,6 +23,7 @@ import { CombatTracker } from "./CombatTracker";
 import { useTradesSync } from "../hooks/useTradesSync";
 import { useCharactersSync } from "../hooks/useCharactersSync";
 import { useLootSync } from "../hooks/useLootSync";
+import { useAutoJoinGame } from "../hooks/useAutoJoinGame";
 import { PHASE_LABEL, PHASES, LOCATION_LABEL } from "../lib/phase";
 import type { Game, GameParticipant } from "@/types";
 
@@ -31,7 +31,6 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
   const user = useAuthStore((s) => s.user);
   const card = usePlayerStore((s) => s.card);
   const leave = useGameStore((s) => s.leave);
-  const join = useGameStore((s) => s.join);
   const error = useGameStore((s) => s.error);
   const dropItem = useLootStore((s) => s.drop);
   const navigate = useNavigate();
@@ -44,24 +43,7 @@ export function InGame({ game, participants }: { game: Game; participants: GameP
 
   useTradesSync(game.campaignId);
   useLootSync(game.id);
-
-  // A player who arrives after the game has begun is auto-registered so the DM
-  // and party see them (the lobby's explicit join only exists before "begin").
-  // A named hunter is enough — sheet-made hunters have classId "" forever.
-  const hasHunter = !!card && !!card.name;
-  useEffect(() => {
-    if (!isDM && hasHunter && !joined && user && card) {
-      void join(game.id, {
-        uid: user.uid,
-        name: card.name,
-        classId: card.classId,
-        subclassId: card.subclassId ?? null,
-        className: sheetClassName(card.sheet) || null,
-        level: card.level,
-        role: "player",
-      });
-    }
-  }, [isDM, hasHunter, joined, game.id, user, card, join]);
+  useAutoJoinGame(game.id, isDM, joined);
 
   return (
     <div className="stack" style={{ gap: 14 }}>
