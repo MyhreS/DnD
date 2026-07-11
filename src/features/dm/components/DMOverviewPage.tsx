@@ -6,7 +6,8 @@ import { CardSkeleton } from "@/components/Skeleton";
 
 /** The DM's board: an opt-in table of character sheets. It starts empty —
  * search across every player and hunter, add the ones you want at hand, and
- * dismiss them when the hunt moves on. Selection persists on this device.
+ * dismiss them when the hunt moves on. Selection persists on your account
+ * (the /users doc), so the board follows you across devices.
  * Reached from the main menu when Dungeon Master mode is on (Profile). */
 export function DMOverviewPage() {
   const { characters, error } = useAllCharacters();

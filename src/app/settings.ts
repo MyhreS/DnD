@@ -5,7 +5,6 @@ import { create } from "zustand";
 const FIGHTERS_KEY = "cs-fighters";
 const EXPERIMENTAL_KEY = "cs-experimental";
 const DM_KEY = "cs-dm";
-const DM_PICKS_KEY = "cs-dm-picks";
 
 function readFighters(): boolean {
   // Default on; only an explicit "off" disables them.
@@ -22,20 +21,6 @@ function readDmMode(): boolean {
   return localStorage.getItem(DM_KEY) === "on";
 }
 
-function readDmPicks(): string[] {
-  // A JSON array of character ids; anything malformed reads as "no picks".
-  try {
-    const parsed: unknown = JSON.parse(localStorage.getItem(DM_PICKS_KEY) ?? "[]");
-    return Array.isArray(parsed) ? parsed.filter((x): x is string => typeof x === "string") : [];
-  } catch {
-    return [];
-  }
-}
-
-function writeDmPicks(ids: string[]) {
-  localStorage.setItem(DM_PICKS_KEY, JSON.stringify(ids));
-}
-
 interface SettingsState {
   /** Whether the occasional 3D fighter shows are allowed to play. */
   fighters: boolean;
@@ -45,16 +30,10 @@ interface SettingsState {
   experimental: boolean;
   setExperimental: (on: boolean) => void;
   /** Dungeon Master mode: unlocks the DM overview page (every hunter's
-   * character sheet, read-only). Off by default — players never see it. */
+   * character sheet, read-only). Off by default — players never see it.
+   * (The board's PICKS live on the /users doc — see features/dm/useDmPicks.) */
   dmMode: boolean;
   setDmMode: (on: boolean) => void;
-  /** Character ids the DM has summoned to their board (/dm). Per-device, like
-   * every setting here; syncing via the /users doc is a possible future upgrade. */
-  dmPicks: string[];
-  addDmPick: (id: string) => void;
-  removeDmPick: (id: string) => void;
-  /** Replace the picks wholesale — used to prune ids whose character is gone. */
-  setDmPicks: (ids: string[]) => void;
 }
 
 export const useSettings = create<SettingsState>((set) => ({
@@ -72,23 +51,5 @@ export const useSettings = create<SettingsState>((set) => ({
   setDmMode: (on) => {
     localStorage.setItem(DM_KEY, on ? "on" : "off");
     set({ dmMode: on });
-  },
-  dmPicks: readDmPicks(),
-  addDmPick: (id) =>
-    set((s) => {
-      if (s.dmPicks.includes(id)) return s;
-      const next = [...s.dmPicks, id];
-      writeDmPicks(next);
-      return { dmPicks: next };
-    }),
-  removeDmPick: (id) =>
-    set((s) => {
-      const next = s.dmPicks.filter((x) => x !== id);
-      writeDmPicks(next);
-      return { dmPicks: next };
-    }),
-  setDmPicks: (ids) => {
-    writeDmPicks(ids);
-    set({ dmPicks: ids });
   },
 }));
