@@ -50,6 +50,7 @@ export function F({ f, ...rest }: { f: string } & InputHTMLAttributes<HTMLInputE
   return (
     <input
       type="text"
+      data-f={f}
       value={typeof v === "string" ? v : ""}
       readOnly={readOnly}
       onChange={(e) => setField(f, e.target.value)}
@@ -83,6 +84,7 @@ export function Sel({ f, options, ...rest }: { f: string; options: string[] } & 
     // data-empty lets print blank the "—" placeholder (papersheet.css), so a
     // blank sheet still prints as an empty handwriting line.
     <select
+      data-f={f}
       value={v}
       disabled={readOnly}
       data-empty={v === "" || undefined}
@@ -105,6 +107,7 @@ export function Ta({ f, ...rest }: { f: string } & TextareaHTMLAttributes<HTMLTe
   const v = data[f];
   return (
     <textarea
+      data-f={f}
       value={typeof v === "string" ? v : ""}
       readOnly={readOnly}
       onChange={(e) => setField(f, e.target.value)}
@@ -156,6 +159,7 @@ export function Chk({
   return (
     <input
       type="checkbox"
+      data-f={f}
       checked={checked}
       disabled={readOnly}
       onChange={(e) => setField(f, e.target.checked)}
@@ -173,7 +177,7 @@ function CellF({ f }: { f: string }) {
   const s = typeof v === "string" ? v : "";
   return (
     <div className="cellgrow" data-v={s}>
-      <textarea rows={1} value={s} readOnly={readOnly} onChange={(e) => setField(f, e.target.value)} />
+      <textarea rows={1} data-f={f} value={s} readOnly={readOnly} onChange={(e) => setField(f, e.target.value)} />
     </div>
   );
 }

@@ -12,6 +12,14 @@ const SAVE_DEBOUNCE_MS = 700;
  * silently reverted by the player scribbling in an unrelated field. */
 const MIRROR_KEYS = ["name", "level", "background"];
 
+/** The sheet key bound to the currently focused element — every sheet field
+ * primitive carries `data-f` (the original HTML's field names). Null when
+ * focus is elsewhere (toolbar, body, …). */
+function focusedSheetField(): string | null {
+  const el = document.activeElement;
+  return el instanceof HTMLElement ? el.getAttribute("data-f") : null;
+}
+
 /** Local state + debounced Firestore autosave for the paper sheet, mirroring
  * the original HTML's behaviour (type → "…" → "Saved").
  *
@@ -105,6 +113,49 @@ export function usePaperSheetAutosave(
     },
     [readOnly, persist],
   );
+
+  // LIVE SYNC — fold remote sheet edits (the AI helper, the DM, another open
+  // tab) into the OPEN editor, per key, last-write-wins:
+  //  - keys with in-flight local typing (dirty, unsaved) keep the local value —
+  //    it wins by persisting over the remote one on the next save;
+  //  - the FOCUSED field is skipped so the caret is never hijacked mid-edit,
+  //    and catches up on blur (the focusout re-fold below);
+  //  - a remote DELETION of a non-dirty key clears it locally;
+  //  - seeding cards (no sheet yet) are untouched: their derived local sheet
+  //    stays authoritative until the first persist converts them.
+  // Because `latest` absorbs the remote values too, a later local edit
+  // computes its name/level/background mirror from a fresh snapshot.
+  const foldRemote = useCallback((remote: SheetData | undefined) => {
+    if (!remote || seeding.current) return;
+    const focused = focusedSheetField();
+    const prev = latest.current;
+    let next: SheetData | null = null;
+    for (const k of new Set([...Object.keys(remote), ...Object.keys(prev)])) {
+      if (dirty.current.has(k) || k === focused) continue;
+      const rv = k in remote ? remote[k] : undefined;
+      if (rv === prev[k]) continue;
+      next ??= { ...prev };
+      if (rv === undefined) delete next[k];
+      else next[k] = rv;
+    }
+    if (next) {
+      latest.current = next;
+      setLocal(next);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!readOnly) foldRemote(card.sheet);
+  }, [readOnly, foldRemote, card.sheet]);
+
+  // A field skipped because it was focused catches up when focus leaves it
+  // (deferred a tick so document.activeElement reflects the NEW focus).
+  useEffect(() => {
+    if (readOnly) return;
+    const onFocusOut = () => window.setTimeout(() => foldRemote(cardRef.current.sheet), 0);
+    document.addEventListener("focusout", onFocusOut);
+    return () => document.removeEventListener("focusout", onFocusOut);
+  }, [readOnly, foldRemote]);
 
   // Never lose typing: flush pending edits when the modal unmounts, the tab
   // hides (iOS PWA backgrounding/kill), or the page unloads.
