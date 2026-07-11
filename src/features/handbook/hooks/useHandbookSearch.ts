@@ -1,17 +1,19 @@
-import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useMemo } from "react";
 import { searchEntries } from "@/lib/search";
-import { HANDBOOK_INDEX, type HandbookGroup, type HandbookHit } from "../lib/handbookIndex";
+import { HANDBOOK_INDEX, type HandbookHit } from "../lib/handbookIndex";
+import { useHandbookViewStore } from "../store/handbookViewStore";
 
 const MAX_RESULTS = 30;
 
-/** Search + group-filter state for the Handbook. `?q=` seeds the box (same
- * contract as the Rules page), so other pages can deep-link a search. While a
- * query is active the page shows ranked results instead of the tabs. */
+/** Search + group-filter state for the Handbook, backed by the session view
+ * store so an in-progress search survives navigating away and back. `?q=`
+ * deep links seed it via useHandbookView (same contract as the Rules page).
+ * While a query is active the page shows ranked results instead of the tabs. */
 export function useHandbookSearch() {
-  const [params] = useSearchParams();
-  const [query, setQuery] = useState(() => params.get("q") ?? "");
-  const [group, setGroup] = useState<HandbookGroup | "all">("all");
+  const query = useHandbookViewStore((s) => s.query);
+  const setQuery = useHandbookViewStore((s) => s.setQuery);
+  const group = useHandbookViewStore((s) => s.group);
+  const setGroup = useHandbookViewStore((s) => s.setGroup);
 
   const active = query.trim().length > 0;
   const results = useMemo<HandbookHit[]>(() => {

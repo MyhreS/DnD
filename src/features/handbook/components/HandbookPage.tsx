@@ -1,8 +1,8 @@
-import { useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { AsyncButton } from "@/components/AsyncButton";
 import { downloadHandbookPdf } from "../lib/handbookPdf";
 import { useHandbookIntent } from "../hooks/useHandbookIntent";
+import { useHandbookView } from "../hooks/useHandbookView";
 import { useHandbookSearch } from "../hooks/useHandbookSearch";
 import { HANDBOOK_TABS, type HandbookHit, type HandbookTab } from "../lib/handbookIndex";
 import { HandbookSearch } from "./HandbookSearch";
@@ -27,16 +27,15 @@ export function HandbookPage() {
   // sheet's info dots open the handbook exactly where a topic is covered.
   const intent = useHandbookIntent();
   const [, setParams] = useSearchParams();
-  const [tab, setTab] = useState<HandbookTab>(() =>
-    HANDBOOK_TABS.includes(intent.tab as HandbookTab) ? (intent.tab as HandbookTab) : "rules",
-  );
+  // Session memory: plain /handbook restores where the reader left off (tab,
+  // open cards, search, scroll); explicit deep links override + replace it.
+  const { tab, setTab, openChapter, setOpenChapter, openClass, setOpenClass } = useHandbookView();
   const search = useHandbookSearch();
 
-  // A search hit jumps into the content: switch tabs, and for chapter sections
-  // reuse the deep-link params so the accordion opens + scrolls + pulses.
+  // A search hit jumps into the content: it becomes the deep-link params, so
+  // useHandbookView switches tab + opens the card, and for chapter sections
+  // useScrollToSection scrolls + pulses.
   function openHit(hit: HandbookHit) {
-    search.setQuery("");
-    setTab(hit.tab);
     setParams(
       (prev) => {
         const next = new URLSearchParams(prev);
@@ -79,9 +78,18 @@ export function HandbookPage() {
               key={`${intent.chapter}:${intent.section}`}
               focusChapter={intent.chapter}
               focusSection={intent.section}
+              open={openChapter}
+              onOpen={setOpenChapter}
             />
           )}
-          {tab === "classes" && <ClassesTab key={intent.item} focusClass={intent.item} />}
+          {tab === "classes" && (
+            <ClassesTab
+              key={intent.item}
+              focusClass={intent.item}
+              open={openClass}
+              onOpen={setOpenClass}
+            />
+          )}
           {tab === "backgrounds" && <BackgroundsTab />}
           {tab === "feats" && <FeatsTab />}
           {tab === "rites" && <RitesTab />}

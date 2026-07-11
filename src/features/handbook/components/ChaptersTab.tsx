@@ -1,19 +1,22 @@
-import { useState } from "react";
 import { HANDBOOK } from "@/data/handbook";
 import { ChevronIcon } from "@/components/icons";
 import { useScrollToSection, sectionSlug } from "../hooks/useHandbookIntent";
 
 /** The rules chapters (creation steps, AC, carrying, Sanity) as an accordion.
- * A focused chapter/section (deep link or search hit) opens + scrolls there. */
+ * The open card is controlled (session view store) so it survives navigating
+ * away; a focused chapter/section (deep link or search hit) scrolls + pulses. */
 export function ChaptersTab({
   focusChapter,
   focusSection,
+  open,
+  onOpen,
 }: {
   focusChapter: string | null;
   focusSection: string | null;
+  open: string | null;
+  onOpen: (id: string | null) => void;
 }) {
   const focused = HANDBOOK.some((c) => c.id === focusChapter) ? focusChapter : null;
-  const [open, setOpen] = useState<string | null>(focused ?? HANDBOOK[0]?.id ?? null);
   useScrollToSection(focused, focusSection);
   return (
     <div className="stack" style={{ gap: 10 }}>
@@ -23,7 +26,7 @@ export function ChaptersTab({
           <div className="card" key={chapter.id} style={{ padding: 0, overflow: "hidden" }}>
             <button
               type="button"
-              onClick={() => setOpen(isOpen ? null : chapter.id)}
+              onClick={() => onOpen(isOpen ? null : chapter.id)}
               style={{ width: "100%", textAlign: "left", background: "transparent", border: 0, padding: 16, color: "var(--ink)" }}
             >
               <div className="row between">
