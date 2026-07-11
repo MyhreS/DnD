@@ -259,7 +259,7 @@
   "sourceConflicts": [
     {
       "topic": "Sanity (Max Sanity / Sanity Die)",
-      "note": "The canonical Player's Handbook Ch.2 Core Traits (read directly from the PDF) differ from the standalone class boards (per-class PDFs + 'Classes Boards for send' CSVs, captured in classes[].coreTraits) and from the app's current data (src/data/classes.ts via gen.py) for several classes. Confirm with the DM.",
+      "note": "The canonical Player's Handbook Ch.2 Core Traits (read directly from the PDF) differ from the standalone class boards (per-class PDFs + 'Classes Boards for send' CSVs, captured in classes[].coreTraits) for several classes. The app's data (src/data/classes.ts via gen.py) follows the handbook values. Confirm with the DM.",
       "perClass": [
         {
           "class": "brute",
