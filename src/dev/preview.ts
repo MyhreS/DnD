@@ -83,7 +83,7 @@ export function previewCampaign(): import("@/types").Campaign {
     dmUid: "preview-dm",
     dmName: "Christoffer",
     inviteCode: "VAULT7",
-    memberUids: ["preview-dm", "preview-uid", "preview-p2"],
+    memberUids: ["preview-dm", "preview-uid", "preview-p2", "preview-p4"],
     invitedEmails: ["newhunter@example.com"],
     createdAt: Date.now(),
   };
@@ -95,6 +95,7 @@ export function previewMembers(): import("@/types").CampaignMember[] {
     { uid: "preview-dm", name: "Christoffer", email: "dm@local.dev", role: "dm", characterId: null, joinedAt: now },
     { uid: "preview-uid", name: "Eileen the Crow", email: "you@local.dev", role: "player", characterId: "preview-uid-char", joinedAt: now },
     { uid: "preview-p2", name: "Gascoigne", email: "p2@local.dev", role: "player", characterId: "preview-p2-char", joinedAt: now },
+    { uid: "preview-p4", name: "Henryk", email: "p4@local.dev", role: "player", characterId: "preview-p4-char", joinedAt: now },
   ];
 }
 
@@ -213,7 +214,44 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
       coins: "18",
     },
   };
-  return [eileen, gascoigne];
+  // Henryk is a LEGACY structured-builder card: real fields, NO `sheet` map —
+  // exactly what pre-papersheet hunters and test-run bot cards look like. He
+  // proves the derived-sheet fallback (a sheet-less card must never render a
+  // blank paper sheet).
+  const henrykBase = previewCard("preview-p4");
+  delete henrykBase.sheet;
+  const henryk: import("@/types").HunterCard = {
+    ...henrykBase,
+    name: "Henryk",
+    classId: "stalker",
+    subclassId: null,
+    background: "Old Hunter",
+    level: 4,
+    lastSeenLevel: 4,
+    feats: [],
+    abilities: { str: 10, dex: 16, con: 12, int: 10, wis: 14, cha: 8 },
+    baseAbilities: { str: 10, dex: 16, con: 12, int: 10, wis: 14, cha: 8 },
+    skillProficiencies: ["Stealth", "Perception"],
+    mainArmorId: "hunter-leather-coat",
+    addonArmorIds: [],
+    studdedAddonIds: [],
+    studdedAddons: 0,
+    extraArmorIds: [],
+    currentHp: 21,
+    sanity: 8,
+    transformationLevel: 0,
+    activeTransformations: [],
+    insight: 32,
+    bloodTinge: false,
+    preparedWhispers: [],
+    coins: 14,
+    equippedStorageIds: [],
+    inventory: [{ itemId: "dagger", qty: 2 }],
+    droppedItems: [],
+    deathPending: false,
+    notes: "",
+  };
+  return [eileen, gascoigne, henryk];
 }
 
 /** A sample archived (dead) character so the DM's character board renders. */

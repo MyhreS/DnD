@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PaperSheetModal } from "./papersheet/PaperSheetModal";
-import { sheetClassName } from "../lib/papersheet";
+import { cardClassName } from "../lib/papersheet";
 import type { HunterCard } from "@/types";
 
 /** The view for a sheet-made hunter: a small summary card, with the filled-in
@@ -21,7 +21,7 @@ export function SheetCharacterView({
   onDelete?: () => Promise<boolean> | void;
 }) {
   const [open, setOpen] = useState(autoOpen);
-  const cls = sheetClassName(card.sheet);
+  const cls = cardClassName(card);
 
   function close() {
     setOpen(false);
