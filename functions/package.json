@@ -8,7 +8,7 @@
     "node": "22"
   },
   "scripts": {
-    "build": "node scripts/copy-master.cjs && tsc",
+    "build": "tsc",
     "build:watch": "tsc --watch",
     "serve": "npm run build && firebase emulators:start --only functions",
     "deploy": "firebase deploy --only functions"

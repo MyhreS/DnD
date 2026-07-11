@@ -3,7 +3,6 @@ import { createPortal } from "react-dom";
 import { PaperSheet } from "./PaperSheet";
 import { StepGuidance } from "./StepGuidance";
 import { GuidesMenu } from "./GuidesMenu";
-import { AiHelpButton } from "./AiHelpButton";
 import { usePaperSheetAutosave } from "../../hooks/usePaperSheetAutosave";
 import { usePaperSheetOpen } from "../../hooks/usePaperSheetOpen";
 import { usePaperSheetFocus } from "../../hooks/usePaperSheetFocus";
@@ -12,7 +11,7 @@ import type { HunterCard } from "@/types";
 const STEPS = [1, 2, 3, 4, 5] as const;
 
 /** The paper sheet as a full-screen popup: dark desk background, the sheet
- * toolbar (Back, step selector, AI help, Guides menu, Print) and autosave to
+ * toolbar (Back, step selector, Guides menu, Print) and autosave to
  * Firestore.
  * `readOnly` is for looking at someone else's hunter (party view / DM board) —
  * it strips the toolbar down to just Back; `create` marks the one surface
@@ -65,7 +64,6 @@ export function PaperSheetModal({
               </div>
             )}
             {showSteps && activeStep != null && <StepGuidance step={activeStep} />}
-            <AiHelpButton characterId={card.id} />
             <GuidesMenu
               showSteps={showSteps}
               showInfo={showInfo}
