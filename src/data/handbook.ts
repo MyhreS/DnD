@@ -89,8 +89,12 @@ export const HANDBOOK: HandbookChapter[] = [
       {
         heading: "Alternative: the Maduhausu point buy",
         body: [
-          "Your table may instead use the DM's more ambitious min-maxing variant — the “Maduhausu” point buy. You have 57 points to spend and can buy scores from 3 to 16 (Ability Score Point Costs V2).",
-          "Scores 3–13 always cost the same: score − 3 points (a 10 costs 7). Buying 14+ gets pricier each time you buy that same score again: a 14 costs 12, then 14, then 17; a 15 costs 14, then 18, then 23; a 16 costs 20, then 26 — and a third 16 is simply too expensive.",
+          "Your table may instead use the DM's more ambitious min-maxing variant — the “Maduhausu” point buy. You have 57 points to spend and can buy scores from 3 to 16, using the Ability Score Point Costs V2 table below.",
+          "The table has three columns — First Cost, Second Cost and Third Cost + — because buying the same score more than once gets pricier. The first purchase of a given score uses its First Cost, the second purchase of that same score uses its Second Cost, and the third or later purchase uses its Third Cost +.",
+          "Scores 3–13 cost the same in every column — the score minus 3: 3 → 0, 4 → 1, 5 → 2, 6 → 3, 7 → 4, 8 → 5, 9 → 6, 10 → 7, 11 → 8, 12 → 9, 13 → 10.",
+          "Score 14 — First Cost 12, Second Cost 14, Third Cost + 17.",
+          "Score 15 — First Cost 14, Second Cost 18, Third Cost + 23.",
+          "Score 16 — First Cost 20, Second Cost 26, Third Cost + too expensive (a score of 16 cannot be bought a third time).",
           "Under this method, no Ability Score may be higher than 17 as a level 1 character — that includes the extra points from your background or anything else.",
         ],
       },
