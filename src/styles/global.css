@@ -281,8 +281,13 @@ button {
   flex: 1 1 auto;
   min-width: 0;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  /* Wrap to (at most) two lines rather than clamping the campaign name to
+   * "Th…" — the narrow desktop sidebar has ample vertical room. Falls back to
+   * one line on wider layouts (e.g. the mobile top-bar strip). */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   font-family: var(--font-display);
   letter-spacing: 0.02em;
 }
