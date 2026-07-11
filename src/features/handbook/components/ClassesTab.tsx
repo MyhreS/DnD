@@ -10,15 +10,23 @@ import { DEEPCALLER_BOOK_PDF_PATH } from "@/data/handbook";
 import { LevelTable, FeatureList, SubclassBlock } from "./ClassDetail";
 import type { HunterClass } from "@/types";
 
-export function ClassesTab({ focusClass }: { focusClass?: string | null }) {
-  // A search hit deep-links a class (`?item=`) — arrive with its card open,
-  // scrolled into view and pulsed (same treatment as chapter sections).
-  const [open, setOpen] = useState<string | null>(focusClass ?? null);
+export function ClassesTab({
+  focusClass,
+  open,
+  onOpen,
+}: {
+  focusClass?: string | null;
+  open: string | null;
+  onOpen: (id: string | null) => void;
+}) {
+  // The open card is controlled (session view store) so it survives navigating
+  // away. A search hit deep-links a class (`?item=`) — arrive with its card
+  // open, scrolled into view and pulsed (same treatment as chapter sections).
   useScrollToSection(focusClass ? "class" : null, focusClass ?? null);
   return (
     <div className="stack" style={{ gap: 10 }}>
       {CLASSES.map((c) => (
-        <ClassCard key={c.id} c={c} isOpen={open === c.id} onToggle={() => setOpen(open === c.id ? null : c.id)} />
+        <ClassCard key={c.id} c={c} isOpen={open === c.id} onToggle={() => onOpen(open === c.id ? null : c.id)} />
       ))}
     </div>
   );
