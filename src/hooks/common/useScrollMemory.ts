@@ -26,19 +26,27 @@ export function useScrollMemory(store: ScrollMemoryStore) {
       });
     });
 
+    // `disposed` guards a save frame still pending at unmount: it would fire
+    // after cleanup stored the final scrollY and overwrite it with the *next*
+    // page's position.
+    let disposed = false;
     let ticking = false;
+    let saveRaf = 0;
     const onScroll = () => {
       if (ticking) return;
       ticking = true;
-      requestAnimationFrame(() => {
+      saveRaf = requestAnimationFrame(() => {
         ticking = false;
+        if (disposed) return;
         store.setState({ scrollY: window.scrollY });
       });
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => {
+      disposed = true;
       cancelAnimationFrame(raf1);
       cancelAnimationFrame(raf2);
+      cancelAnimationFrame(saveRaf);
       window.removeEventListener("scroll", onScroll);
       store.setState({ scrollY: window.scrollY });
     };

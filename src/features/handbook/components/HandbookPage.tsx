@@ -1,4 +1,4 @@
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { AsyncButton } from "@/components/AsyncButton";
 import { downloadHandbookPdf } from "../lib/handbookPdf";
 import { useHandbookIntent } from "../hooks/useHandbookIntent";
@@ -27,6 +27,9 @@ export function HandbookPage() {
   // sheet's info dots open the handbook exactly where a topic is covered.
   const intent = useHandbookIntent();
   const [, setParams] = useSearchParams();
+  // location.key changes on every navigation — even a repeat click on the same
+  // hit (identical URL) — so keying the tabs on it re-runs the scroll + pulse.
+  const location = useLocation();
   // Session memory: plain /handbook restores where the reader left off (tab,
   // open cards, search, scroll); explicit deep links override + replace it.
   const { tab, setTab, openChapter, setOpenChapter, openClass, setOpenClass } = useHandbookView();
@@ -36,6 +39,10 @@ export function HandbookPage() {
   // useHandbookView switches tab + opens the card, and for chapter sections
   // useScrollToSection scrolls + pulses.
   function openHit(hit: HandbookHit) {
+    // Clear the query directly too: re-clicking a hit whose params already
+    // match the URL must still close the results view, whatever the router
+    // does with an identical navigation.
+    search.setQuery("");
     setParams(
       (prev) => {
         const next = new URLSearchParams(prev);
@@ -75,7 +82,7 @@ export function HandbookPage() {
 
           {tab === "rules" && (
             <ChaptersTab
-              key={`${intent.chapter}:${intent.section}`}
+              key={location.key}
               focusChapter={intent.chapter}
               focusSection={intent.section}
               open={openChapter}
@@ -84,7 +91,7 @@ export function HandbookPage() {
           )}
           {tab === "classes" && (
             <ClassesTab
-              key={intent.item}
+              key={location.key}
               focusClass={intent.item}
               open={openClass}
               onOpen={setOpenClass}

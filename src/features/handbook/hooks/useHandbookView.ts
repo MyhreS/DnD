@@ -11,10 +11,13 @@ import { useHandbookViewStore } from "../store/handbookViewStore";
  * `?item=`, `?q=` — the sheet's info dots, search-hit jumps) wins over that
  * memory and replaces it, applied before paint so nothing flashes. */
 export function useHandbookView() {
-  const { search } = useLocation();
+  // The whole location (not just `search`): a new object per navigation, so a
+  // repeat click on the same search hit — identical params, same URL — still
+  // re-fires the effect and closes the results view.
+  const location = useLocation();
 
   useLayoutEffect(() => {
-    const params = new URLSearchParams(search);
+    const params = new URLSearchParams(location.search);
     const tab = params.get("tab");
     const chapter = params.get("chapter");
     const section = params.get("section");
@@ -37,7 +40,10 @@ export function useHandbookView() {
       openClass: item ?? s.openClass,
       scrollY: 0,
     }));
-  }, [search]);
+    // Land at the top even when the page doesn't remount (useScrollMemory only
+    // scrolls on mount); chapter/section hits then scroll on to their target.
+    window.scrollTo(0, 0);
+  }, [location]);
 
   useScrollMemory(useHandbookViewStore);
 

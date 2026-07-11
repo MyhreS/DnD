@@ -10,13 +10,18 @@ import { useRulesViewStore } from "../store/rulesViewStore";
  * away and back. An explicit `?q=` deep link — the sheet's info buttons, the
  * legacy /reference redirect — wins over that memory and replaces it. */
 export function useRuleSearch() {
-  const { search } = useLocation();
+  // The whole location (new object per navigation): a repeat deep link with an
+  // identical URL still re-applies, and same-pathname history moves re-fire.
+  const location = useLocation();
 
   useLayoutEffect(() => {
-    const q = new URLSearchParams(search).get("q");
+    const q = new URLSearchParams(location.search).get("q");
     if (q === null) return; // plain /rules → restore the remembered lookup
     useRulesViewStore.setState({ query: q, category: "all", scrollY: 0 });
-  }, [search]);
+    // Land at the top even when the page doesn't remount (useScrollMemory only
+    // scrolls on mount — e.g. history moves between /rules and /rules?q=…).
+    window.scrollTo(0, 0);
+  }, [location]);
 
   useScrollMemory(useRulesViewStore);
 
