@@ -140,18 +140,27 @@ export const useCampaignStore = create<CampaignState>((set, get) => {
         const ui = subscribeInvitedCampaigns(email, (invited) => set({ invited }));
         set({ _unsubInvited: ui });
       }
-      const stored = localStorage.getItem(ACTIVE_KEY);
       const unsub = subscribeMyCampaigns(
         uid,
         (campaigns) => {
-          const activeId = campaigns.some((c) => c.id === stored) ? stored : get().activeId;
           set({ campaigns, status: "loaded" });
-          if (activeId && activeId !== get().activeId) {
-            set({ activeId });
-            watchActive(activeId);
-          } else if (!campaigns.some((c) => c.id === get().activeId)) {
-            // active campaign no longer ours
-            if (get().activeId && !get().active) watchActive(get().activeId);
+          // Auto-select the stored campaign, but ONLY on first load (before the
+          // user has an active campaign). Re-read localStorage fresh each fire —
+          // never close over a stale value — so a campaign the user switched to
+          // via enter() survives later re-fires (member joins/leaves, an
+          // invite/name/lastPlayed edit, a new campaign). Those must preserve the
+          // chosen activeId; the active campaign's own doc + members refresh via
+          // their dedicated subscriptions in watchActive().
+          if (get().activeId === null) {
+            const stored = localStorage.getItem(ACTIVE_KEY);
+            if (stored && campaigns.some((c) => c.id === stored)) {
+              set({ activeId: stored });
+              watchActive(stored);
+            }
+          } else if (!campaigns.some((c) => c.id === get().activeId) && !get().active) {
+            // We have an active campaign that isn't in the freshly-loaded list
+            // yet (e.g. membership-query lag) and its doc hasn't loaded — watch it.
+            watchActive(get().activeId);
           }
         },
         () => set({ status: "error", error: "Couldn't load your campaigns." }),
