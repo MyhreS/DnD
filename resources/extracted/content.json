@@ -76,6 +76,11 @@
        "text": "Your experience on the battlefield has refined your fighting techniques. You learn maneuvers that are fueled by special dice called Superiority Dice.\n\nManeuvers. You learn three maneuvers of your choice from the \"Maneuver Options\" section later in this subclass's description. Many maneuvers enhance an attack in some way. You can use only one maneuver per attack. You learn two additional maneuvers of your choice when you reach Hunter Brute levels 7, 10, and 15. Each time you learn new maneuvers, you can also replace one maneuver you know with a different one.\n\nSuperiority Dice. You have four Superiority Dice, which are d8s. A Superiority Die is expended when you use it. You regain all expended Superiority Dice when you finish a Short or Long Rest. You gain an additional Superiority Die when you reach Hunter Brute levels 7 (five dice total) and 15 (six dice total).\n\nSaving Throws. If a maneuver requires a saving throw, the DC equals 8 plus your Strength or Dexterity modifier (your choice) and Proficiency Bonus."
       },
       {
+       "level": 3,
+       "name": "Maneuver Options",
+       "text": "The maneuvers are presented here in alphabetical order.\n\nBait and Switch. When you're within 5 feet of a creature on your turn, you can expend one Superiority Die and switch places with that creature, provided you spend at least 5 feet of movement and the creature is willing and doesn't have the Incapacitated condition. This movement doesn't provoke Opportunity Attacks. Roll the Superiority Die. Until the start of your next turn, you or the other creature (your choice) gains a bonus to AC equal to the number rolled.\n\nDisarming Attack. When you hit a creature with an attack roll, you can expend one Superiority Die to attempt to disarm the target. Add the Superiority Die roll to the attack's damage roll. The target must succeed on a Strength saving throw or drop one object of your choice that it's holding, with the object landing in its space.\n\nDistracting Strike. When you hit a creature with an attack roll, you can expend one Superiority Die to distract the target. Add the Superiority Die roll to the attack's damage roll. The next attack roll against the target by an attacker other than you has Advantage if the attack is made before the start of your next turn.\n\nEvasive Footwork. As a Bonus Action, you can expend one Superiority Die and take the Disengage action. You also roll the die and add the number rolled to your AC until the start of your next turn.\n\nFeinting Attack. As a Bonus Action, you can expend one Superiority Die to feint, choosing one creature within 5 feet of yourself as your target. You have Advantage on your next attack roll against that target this turn. If that attack hits, add the Superiority Die to the attack's damage roll.\n\nGoading Attack. When you hit a creature with an attack roll, you can expend one Superiority Die to attempt to goad the target into attacking you. Add the Superiority Die to the attack's damage roll. The target must succeed on a Wisdom saving throw or have Disadvantage on attack rolls against targets other than you until the end of your next turn.\n\nLunging Attack. As a Bonus Action, you can expend one Superiority Die and take the Dash action. If you move at least 5 feet in a straight line immediately before hitting with a melee attack as part of the Attack action on this turn, you can add the Superiority Die to the attack's damage roll.\n\nManeuvering Attack. When you hit a creature with an attack roll, you can expend one Superiority Die to maneuver one of your comrades into another position. Add the Superiority Die roll to the attack's damage roll, and choose a willing creature who can see or hear you. That creature can use its Reaction to move up to half its Speed without provoking an Opportunity Attack from the target of your attack.\n\nMenacing Attack. When you hit a creature with an attack roll, you can expend one Superiority Die to attempt to frighten the target. Add the Superiority Die to the attack's damage roll. The target must succeed on a Wisdom saving throw or have the Frightened condition until the end of your next turn.\n\nPrecision Attack. When you miss with an attack roll, you can expend one Superiority Die, roll that die, and add it to the attack roll, potentially causing the attack to hit.\n\nPushing Attack. When you hit a creature with an attack roll using a weapon or an Unarmed Strike, you can expend one Superiority Die to attempt to drive the target back. Add the Superiority Die to the attack's damage roll. If the target is Large or smaller, it must succeed on a Strength saving throw or be pushed up to 15 feet directly away from you.\n\nRiposte. When a creature misses you with a melee attack roll, you can take a Reaction and expend one Superiority Die to make a melee attack roll with a weapon or an Unarmed Strike against the creature. If you hit, add the Superiority Die to the attack's damage.\n\nSweeping Attack. When you hit a creature with a melee attack roll using a weapon or an Unarmed Strike, you can expend one Superiority Die to attempt to damage another creature. Choose another creature within 5 feet of the original target and within your reach. If the original attack roll would hit the second creature, it takes damage equal to the number you roll on your Superiority Die. The damage is of the same type dealt by the original attack.\n\nTrip Attack. When you hit a creature with an attack roll using a weapon or an Unarmed Strike, you can expend one Superiority Die and add the die to the attack's damage roll. If the target is Large or smaller, it must succeed on a Strength saving throw or have the Prone condition."
+      },
+      {
        "level": 7,
        "name": "Student of War",
        "text": "You gain proficiency in one skill of your choice from the skills available to Hunter Brutes at level 1."
@@ -249,7 +254,7 @@
       {
        "level": 3,
        "name": "Deadly Rifleman",
-       "text": "If you are using a Hunter's Rifle, it now changes to Trained Hunter's Rifle.\n\nTrained Hunter's Rifle: Damage 1d12 Piercing, Properties: Ammunition (Range 150/600; Bullet), Two-Handed, Mastery: Slow, Weight: 10 lb.\n\nIf you are using a Pistol, it now changes to Trained Pistol.\n\nTrained Pistol: Damage 1d10 Piercing, Properties: Ammunition (Range 30/90; Bullet), Light, Loading, Mastery: Vex, Weight: 3 lb."
+       "text": "If you are using a Hunter's Rifle, it now changes to Trained Hunter's Rifle.\n\nTrained Hunter's Rifle: Damage 1d12 Piercing, Properties: Ammunition (Range 150/600; Bullet), Two-Handed, Mastery: Slow, Weight: 10 lb.\n\nIf you are using a Pistol, it now changes to Trained Pistol.\n\nTrained Pistol: Damage 1d10 Piercing, Properties: Ammunition (Range 30/90; Bullet), Light, Mastery: Vex, Weight: 3 lb."
       },
       {
        "level": 3,
@@ -364,8 +369,8 @@
     {
      "id": "assassin",
      "name": "Assassin",
-     "tagline": "Practice the Grim Art of Death",
-     "blurb": "An Assassin's training focuses on using stealth, poison, and disguise to eliminate foes with deadly efficiency. While some Hunter Stalkers who follow this path are hired killers, spies, or bounty hunters, the capabilities of this subclass are equally useful for adventurers facing a variety of monstrous enemies.",
+     "tagline": "Practice the Grim Art of Death.",
+     "blurb": "An Assassin's training focuses on using stealth, and disguise to eliminate foes with deadly efficiency. While some Hunter Stalkers who follow this path are hired killers, spies, or bounty hunters, the capabilities of this subclass are equally useful for Hunters facing a variety of monstrous enemies.",
      "features": [
       {
        "level": 3,
@@ -392,8 +397,8 @@
     {
      "id": "shadow",
      "name": "Shadow",
-     "tagline": "Hunt for Treasure as a Classic Adventurer",
-     "blurb": "A mix of burglar, treasure hunter, and explorer, you are the epitome of an adventurer. In addition to improving your agility and stealth, you gain abilities useful for delving into ruins and getting maximum benefit from the magic items you find there.",
+     "tagline": "Practice the arts of a Shadow.",
+     "blurb": "A Shadow is a hunter of silence, murder, and unseen paths. You do not charge into the horrors of Mens Rea \u2014 you creep beneath them, stalk them, and strike when their attention is elsewhere. Your craft is built on patience, trespass, and escape.",
      "features": [
       {
        "level": 3,
@@ -499,7 +504,7 @@
     {
      "level": 15,
      "name": "Calm Band",
-     "text": "During a short or long rest you and the other creatures that have a Bands Directive die may roll that die in addition to their Sanity die."
+     "text": "During a short or long rest you and the other creatures that have a Bands Directive die may roll that die in addition to their Sanity die, or as its own Sanity die."
     },
     {
      "level": 18,
@@ -521,8 +526,8 @@
     {
      "id": "commander",
      "name": "Commander",
-     "tagline": "",
-     "blurb": "Text.",
+     "tagline": "Command the Band with Cold Precision.",
+     "blurb": "A Commander's power comes from discipline, tactics, and the ability to remain calm when fear should have taken hold. Wardens who follow this path turn panic into formation, hesitation into action, and scattered Hunters into a killing force. They read the battlefield like a bloodstained map, placing allies where they must stand and enemies where they must die. While other Hunters may be stronger, faster, or more savage, a Commander is often the reason the band survives long enough to matter.",
      "features": [
       {
        "level": 3,
@@ -544,8 +549,8 @@
     {
      "id": "warbringer",
      "name": "Warbringer",
-     "tagline": "",
-     "blurb": "Text.",
+     "tagline": "Drive the Band into Relentless War.",
+     "blurb": "A Warbringer does not merely command battle; they ignite it. Wardens who follow this path lead from the front, turning their presence into a brutal call to advance. Their orders carry the weight of violence, pushing allies beyond caution and forcing enemies to break under pressure. Where a Commander controls the battlefield with discipline, a Warbringer overwhelms it with momentum, fury, and the certainty that retreat is just another kind of death.",
      "features": [
       {
        "level": 3,
@@ -659,8 +664,8 @@
     {
      "id": "path-of-the-berserker",
      "name": "Path of the Berserker",
-     "tagline": "Channel Blood Frenzy into Violent Fury",
-     "blurb": "Hunter Bloodbounds who walk the Path of the Berserker direct their Blood Frenzy primarily toward violence. Their path is one of untrammeled fury, and they thrill in the chaos of battle as they allow their Blood Frenzy to seize and empower them.",
+     "tagline": "Channel Blood Frenzy into Violent Fury.",
+     "blurb": "A Berserker's power comes from surrendering to the violence of the blood without fully becoming its slave. Hunters who follow this path turn Blood Frenzy into a weapon, hurling themselves into battle with brutal strength, reckless speed, and terrifying endurance. While many Hunters see Berserkers as unstable and dangerous, few deny their usefulness when a Dreadblood must be torn apart before it can tear the band apart first.",
      "features": [
       {
        "level": 3,
@@ -687,8 +692,8 @@
     {
      "id": "path-of-the-blood-drunk",
      "name": "Path of the Blood Drunk",
-     "tagline": "Channel the power of the old blood",
-     "blurb": "Text.",
+     "tagline": "Channel the Power of the Old Blood.",
+     "blurb": "A Blood-Drunk Hunter does not merely endure the old blood; they crave it, study it, and let it reshape them. Hunters who follow this path walk a thin and hated line, drawing power from the same cursed source that birthed the Dreadbloods. Some see them as necessary monsters, others as doomed addicts already halfway lost. Whatever the truth, the Blood-Drunk wield the old blood with frightening precision, turning corruption, hunger, and forbidden vitality against the horrors they hunt.",
      "features": [
       {
        "level": 3,
@@ -720,12 +725,12 @@
     {
      "level": 1,
      "name": "Eldritch Comprehension",
-     "text": "Through occult rituals, you have expanded your mind beyond mortal limits, gaining the ability to comprehend eldritch passages and speak words no sane creature was meant to understand. These forbidden words allow you to read and perform Rites.\n\nWhispers. You know two Whispers of your choice. Whispers are lesser fragments of forbidden knowledge that are not written in the Book of the Deepcaller and must be memorized. Whenever you gain a Hunter Deepcaller level, you can replace one Whisper you know with another Whisper of your choice. When you reach Hunter Deepcaller levels 4 and 10, you learn another Whisper of your choice.\n\nStrains. The Hunter Deepcaller Features table shows how many Strains you have to perform your Rites of Levels 1-5. The table also shows the level of those Strains, all of which are the same level. You regain all expended Strains when you finish a Short or Long Rest.\n\nThe Book of the Deepcaller. Your Book of the Deepcaller contains the forbidden passages needed to perform Hunter Deepcaller Rites of level 1-5. You do not prepare these Rites. Any Hunter Deepcaller Rite in your book is available for you to perform, provided you have a Strain of a high enough level to perform it. As your Strain level increases, your mind becomes capable of comprehending deeper and more dangerous passages within the book. You can perform any Hunter Deepcaller Rite of a level equal to or lower than your current Strain level.\n\nRite Performing Ability. Intelligence is the Rite Performing ability for your Hunter Deepcaller Rites.\n\nPerforming a Rite. Unless otherwise stated, performing a Rite requires you to hold a Book of the Deepcaller in one hand and speak the Rite's words aloud. Each time you perform a Rite, you suffer 2 Madness, unless a feature or effect says otherwise.\n\nPerforming a Whisper. Whispers are an exception to the normal rules for performing Rites. Performing a Whisper requires only a hushed recitation of its words. You do not need a Book of the Deepcaller to perform a Whisper, and performing a Whisper does not cause you to suffer Madness unless an effect says otherwise.\n\nBreak the Limits of Your Mind. If you perform a Rite using a Strain level higher than your current Strain level, you suffer Madness equal to your maximum Sanity immediately after the Rite is performed."
+     "text": "Through occult rituals, you have expanded your mind beyond mortal limits, gaining the ability to comprehend eldritch passages and speak words no sane creature was meant to understand. These forbidden words allow you to read and perform Rites.\n\nWhispers. You know two Whispers of your choice. Whispers are lesser fragments of forbidden knowledge that are not written in the Book of the Deepcaller and must be memorized. Whenever you gain a Hunter Deepcaller level, you can replace one Whisper you know with another Whisper of your choice. When you reach Hunter Deepcaller levels 4 and 10, you learn another Whisper of your choice.\n\nStrains. The Hunter Deepcaller Features table shows how many Strains you have to perform your Rites of Levels 1-5. The table also shows the level of those Strains, all of which are the same level. You regain all expended Strains when you finish a Short or Long Rest.\n\nThe Book of the Deepcaller. Your Book of the Deepcaller contains the forbidden passages needed to perform Hunter Deepcaller Rites of level 1-5. You do not prepare these Rites. Any Hunter Deepcaller Rite in your book is available for you to perform, provided you have a Strain of a high enough level to perform it. As your Strain level increases, your mind becomes capable of comprehending deeper and more dangerous passages within the book. You can perform any Hunter Deepcaller Rite of a level equal to or lower than your current Strain level.\n\nRite Performing Ability. Intelligence is the Rite Performing ability for your Hunter Deepcaller Rites.\n\nPerforming a Rite. Unless otherwise stated, performing a Rite requires you to hold a Book of the Deepcaller in one hand and speak the Rite's words aloud. Each time you perform a Rite, you suffer 2 Madness, unless a feature or effect says otherwise.\n\nPerforming a Whisper. Whispers are an exception to the normal rules for performing Rites. Performing a Whisper requires only a hushed recitation of its words. You do not need a Book of the Deepcaller to perform a Whisper, and performing a Whisper does not cause you to suffer Madness unless an effect says otherwise.\n\nBreak the Limits of Your Mind. If you perform a Rite using a Strain level higher than your current Strain level, you suffer Madness equal to your maximum Sanity immediately after the Rite is performed. This is not recommended."
     },
     {
      "level": 1,
      "name": "Fracturing Mind",
-     "text": "Every time you level up suffer 2 Madness and permanently gain 1 max Sanity."
+     "text": "Every time you level up suffer 2 Madness. When you level up permanently gain 1 Max Sanity to a maximum of 26 Max Sanity."
     },
     {
      "level": 2,
@@ -736,6 +741,11 @@
      "level": 2,
      "name": "Veiled Truth",
      "text": "You no longer suffer Madness from performing Level 1 Rites unless an effect specifically says so."
+    },
+    {
+     "level": 3,
+     "name": "The Hunter Zealot Prestige Class",
+     "text": "At 3rd level, you may enter the Path of the Zealot Prestige Class, abandoning the traditional path of the Deepcaller.\nIf you choose this Prestige Class, you gain no further features from the Hunter Deepcaller class. Instead, whenever you would gain a Hunter Deepcaller feature, you gain the corresponding feature from the Path of the Zealot Prestige Class.\nYou lose all Hunter Deepcaller features gained before entering this Prestige Class unless a Zealot feature specifically says otherwise.\nThe Path of the Zealot Prestige Class is detailed after the Hunter Deepcaller class description.\nA Prestige Class is an alternative progression path that replaces your existing class path with a specialized set of abilities."
     },
     {
      "level": 3,
@@ -837,8 +847,8 @@
       },
       {
        "level": 3,
-       "name": "Carved Armor of Agathys",
-       "text": "You always have Armor of Agathys prepared. For you, Armor of Agathys is treated as a Whisper. It does not count against the number of Whispers you can prepare."
+       "name": "Carved Armor of The Drowned Star",
+       "text": "You always have Armor of The Drowned Star prepared. For you, Armor of The Drowned Star is treated as a Whisper. It does not count against the number of Whispers you can prepare."
       },
       {
        "level": 3,
@@ -1208,8 +1218,8 @@
    "upgrade": ""
   },
   {
-   "id": "armor-of-agathys",
-   "name": "ARMOR OF AGATHYS",
+   "id": "armor-of-the-drowned-star",
+   "name": "ARMOR OF THE DROWNED STAR",
    "level": 1,
    "whisper": false,
    "type": "Protection",

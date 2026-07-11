@@ -76,8 +76,8 @@ export const RITES: Rite[] = [
     text: "A spectral, floating hand not from this world appears at a point you choose within range. The hand lasts for the duration. The hand vanishes if it is ever more than 30 feet away from you or if you perform this rite again. When you perform the rite, you can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial. As a Rite action on your later turns, you can control the hand thus again. As part of that action, you can move the hand up to 30 feet. The hand can't attack, or carry more than 10 pounds.",
   },
   {
-    id: "armor-of-agathys",
-    name: "ARMOR OF AGATHYS",
+    id: "armor-of-the-drowned-star",
+    name: "ARMOR OF THE DROWNED STAR",
     level: 1,
     whisper: false,
     type: "Protection",

@@ -303,11 +303,39 @@
     },
     {
       "topic": "Class starting equipment",
-      "note": "The handbook's Class Overview Part 1 defers equipment to 'See chapter 2'; the authoritative per-class equipment lives in classes[].overview.startingEquipment / coreTraits. Exact counts (blood vials, bullets, daggers, hunting traps) differ between the handbook overview, the Ch.2 Core Traits, and the standalone boards for every class."
+      "note": "The handbook's Class Overview Part 1 defers equipment to 'See chapter 2'; the authoritative per-class equipment lives in classes[].overview.startingEquipment / coreTraits. Exact counts (blood vials, bullets, daggers, hunting traps) differ between the handbook overview, the Ch.2 Core Traits, and the standalone boards for every class. The current handbook's Ch.2 Core Traits tables give the verbatim lists recorded in handbookCh2CoreTraits below; the app (src/data/classes.ts) mirrors them for every class EXCEPT the Scout, whose Ch.2 list says 'Shortsword' and 'Bullets (20)' where the older boards (and the app) say Hunter Cleaver (a unique Scout item) and 18 bullets — confirm with the DM before changing the Scout.",
+      "handbookCh2CoreTraits": {
+        "brute": "Greatsword, Shortsword, Bloodvial (1), Toolbelt and Rope",
+        "scout": "Hunter Rifle, Shortsword, Bloodvial (1), Bullets (20) Toolbelt, Bandolier and Pistol",
+        "stalker": "Scimitar, 4 Daggers, Pistol, Bullets (5) Toolbelt, Ankle Holster and Thieves Tools",
+        "deepcaller": "Sickle, Dagger, Bloodvial (1), Toolbelt Book of the Deepcaller and Deepcallers Robe",
+        "bloodbound": "Greataxe, 2 Handaxes, Blood-drainer's Tools, Blood Vials (4), and Tool Belt",
+        "warden": "Hunter Rifle, Longsword, Navigators Tools, Bell, 1 Hunting Trap, Tool Belt, Bandolier, Bullets (14)"
+      }
     },
     {
       "topic": "Hunter Cleaver — no weapon stats",
       "note": "The weapons tables define no damage/properties for the Hunter Cleaver (unique Scout starting item). The app's weapon-damage table (issue #139) ships it with damage \"—\" and the note \"stats set by the DM\". Confirm the real stats with the DM and add a weapons row here when ruled."
+    },
+    {
+      "topic": "Beast Caller — Deepened Pact feature level",
+      "note": "The current handbook (PDF p.32) prints 'LEVEL 3: DEEPENED PACT', but the standalone Scout board (Scout.txt) prints 'LEVEL 7: DEEPENED PACT' and the Hunter Scout Features table grants Subclass Features at levels 7/11/15 (Pact with a Beast is already the level-3 feature). App + master keep level 7; the handbook's 'LEVEL 3' looks like a typo. Confirm with the DM."
+    },
+    {
+      "topic": "Warden level-1 feature name — 'Feel Your Enemy' vs 'Sense Your Enemy'",
+      "note": "The Hunter Warden Features table (and the older sources) call the level-1 feature 'Feel Your Enemy', but the feature heading in the current handbook (line 1883) reads 'LEVEL 1: SENSE YOUR ENEMY'. The feature text is identical. App + master keep 'Feel Your Enemy' (matching the features table). Confirm the intended name with the DM."
+    },
+    {
+      "topic": "Marksman — Trained Pistol properties (Loading)",
+      "note": "Older extracts of Deadly Rifleman listed the Trained Pistol's properties as 'Ammunition (Range 30/90; Bullet), Light, Loading'; the current handbook (lines 1076-1088) lists only 'Ammunition (Range 30/90; Bullet) Light' — no Loading (plausibly intentional: a trained shooter ignores Loading). App + master now follow the current handbook. Confirm with the DM."
+    },
+    {
+      "topic": "Rite type naming — 'Teleportation Rite' vs 'Traversal'",
+      "note": "The handbook's Types of Rites table (line 1545) lists 'Teleportation Rite', while the standalone rite-school PDFs (and the app's RiteType/rites data) use 'Traversal'. Same category; record only — confirm the canonical name with the DM."
+    },
+    {
+      "topic": "Armor of Agathys renamed to Armor of The Drowned Star",
+      "note": "The current handbook names the rite 'Armor of The Drowned Star' (Zealot feature 'Carved Armor of The Drowned Star', line 1581) and rites.bookOfDeepcaller carries the renamed rite; the standalone Protection Rite PDF (mirrored verbatim in rites.bySchool) still says 'Armor of Agathys'. App (classes.ts + rites.ts) and master's prestigeClass now use the Drowned Star name; bySchool keeps the verbatim older source."
     }
   ],
   "handbook": {
@@ -2661,7 +2689,7 @@
             {
               "level": 3,
               "name": "Deadly Rifleman",
-              "text": "If you are using a Hunters Rifle, it now changes to Trained Hunters Rifle.\nTrained Hunters Rifle — Damage: 1d12 Piercing; Properties: Ammunition (Range 150/600; Bullet), Two-Handed; Mastery: Slow; Weight: 10 lb.\nIf you are using a Pistol, it now changes to Trained Pistol.\nTrained Pistol — Damage: 1d10 Piercing; Properties: Ammunition (Range 30/90; Bullet), Light, Loading; Mastery: Vex; Weight: 3 lb."
+              "text": "If you are using a Hunters Rifle, it now changes to Trained Hunters Rifle.\nTrained Hunters Rifle — Damage: 1d12 Piercing; Properties: Ammunition (Range 150/600; Bullet), Two-Handed; Mastery: Slow; Weight: 10 lb.\nIf you are using a Pistol, it now changes to Trained Pistol.\nTrained Pistol — Damage: 1d10 Piercing; Properties: Ammunition (Range 30/90; Bullet), Light; Mastery: Vex; Weight: 3 lb."
             },
             {
               "level": 3,
@@ -2691,7 +2719,7 @@
     {
       "id": "stalker",
       "name": "Hunter Stalker",
-      "flavorText": "BECOMING A HUNTER STALKER ... As a level 1 character, gain all the traits in the Core Hunter Stalker Traits table and gain the Hunter Stalker's level 1 features, which are listed in the Hunter Stalker Features table.",
+      "flavorText": "When brute force and rifle fire were not enough, the bands turned to assassins, cutthroats, and thieves. Stalkers are the knives in the blind corner: silent murderers who learned that some horrors must be killed before they know the hunt has begun.",
       "overview": {
         "primaryAbility": "Dexterity",
         "savingThrows": [
@@ -3006,7 +3034,7 @@
       "subclasses": [
         {
           "name": "Assassin",
-          "description": "Practice the Grim Art of Death. An Assassin's training focuses on using stealth, poison, and disguise to eliminate foes with deadly efficiency. While some Hunter Stalkers who follow this path are hired killers, spies, or bounty hunters, the capabilities of this subclass are equally useful for adventurers facing a variety of monstrous enemies.",
+          "description": "Practice the Grim Art of Death. An Assassin's training focuses on using stealth, and disguise to eliminate foes with deadly efficiency. While some Hunter Stalkers who follow this path are hired killers, spies, or bounty hunters, the capabilities of this subclass are equally useful for Hunters facing a variety of monstrous enemies.",
           "features": [
             {
               "level": 3,
@@ -3032,7 +3060,7 @@
         },
         {
           "name": "Shadow",
-          "description": "Hunt for Treasure as a Classic Adventurer. A mix of burglar, treasure hunter, and explorer, you are the epitome of an adventurer. In addition to improving your agility and stealth, you gain abilities useful for delving into ruins and getting maximum benefit from the magic items you find there.",
+          "description": "Practice the arts of a Shadow. A Shadow is a hunter of silence, murder, and unseen paths. You do not charge into the horrors of Mens Rea — you creep beneath them, stalk them, and strike when their attention is elsewhere. Your craft is built on patience, trespass, and escape.",
           "features": [
             {
               "level": 3,
@@ -3067,7 +3095,7 @@
     {
       "id": "deepcaller",
       "name": "Hunter Deepcaller",
-      "flavorText": "Most Deepcallers seek power through forbidden study, reading from the Book of the Deepcaller and calling upon many Patrons. Through occult rituals, the Deepcaller has expanded their mind beyond mortal limits, gaining the ability to comprehend eldritch passages and speak words no sane creature was meant to understand.",
+      "flavorText": "Every Deepcaller carries a Book of the Deepcaller, though no one knows who wrote the first, or why copies find their way to those willing to listen. Feared as lunatics and tolerated only for the impossible power they bring, Deepcallers open their minds to the things beneath thought—and sometimes, those things answer.",
       "overview": {
         "primaryAbility": "Intelligence",
         "savingThrows": [
@@ -3347,7 +3375,7 @@
         {
           "level": 1,
           "name": "Fracturing Mind",
-          "text": "Every time you level up suffer 2 Madness and permanently gain 1 max Sanity."
+          "text": "Every time you level up suffer 2 Madness. When you level up permanently gain 1 Max Sanity to a maximum of 26 Max Sanity."
         },
         {
           "level": 2,
@@ -3531,8 +3559,8 @@
           },
           {
             "level": 3,
-            "name": "Carved Armor of Agathys",
-            "text": "You always have Armor of Agathys prepared. For you, Armor of Agathys is treated as a Whisper. It does not count against the number of Whispers you can prepare."
+            "name": "Carved Armor of The Drowned Star",
+            "text": "You always have Armor of The Drowned Star prepared. For you, Armor of The Drowned Star is treated as a Whisper. It does not count against the number of Whispers you can prepare."
           },
           {
             "level": 3,
@@ -3577,7 +3605,7 @@
     {
       "id": "bloodbound",
       "name": "Hunter Bloodbound",
-      "flavorText": "BECOMING A HUNTER BLOODBOUND ... AS A LEVEL 1 CHARACTER\n• Gain all the traits in the Core Hunter Bloodbound Traits table.\n• Gain the Hunter Bloodbound's level 1 features, which are listed in the Hunter Bloodbound Features table.",
+      "flavorText": "Some hunters curse the Bloodbound as fanatics, and perhaps they are right. These hunters drink from the edge of damnation, forcing Dreadblood transformations through their own flesh for a few terrible moments of power, always one heartbeat from becoming the very thing they hunt.",
       "overview": {
         "primaryAbility": "Constitution",
         "savingThrows": [
@@ -3898,7 +3926,7 @@
       "subclasses": [
         {
           "name": "Path of the Berserker",
-          "description": "Channel Blood Frenzy into Violent Fury. Hunter Bloodbounds who walk the Path of the Berserker direct their Blood Frenzy primarily toward violence. Their path is one of untrammeled fury, and they thrill in the chaos of battle as they allow their Blood Frenzy to seize and empower them.",
+          "description": "Channel Blood Frenzy into Violent Fury. A Berserker's power comes from surrendering to the violence of the blood without fully becoming its slave. Hunters who follow this path turn Blood Frenzy into a weapon, hurling themselves into battle with brutal strength, reckless speed, and terrifying endurance. While many Hunters see Berserkers as unstable and dangerous, few deny their usefulness when a Dreadblood must be torn apart before it can tear the band apart first.",
           "features": [
             {
               "level": 3,
@@ -3924,7 +3952,7 @@
         },
         {
           "name": "Path of the Blood Drunk",
-          "description": "Channel the power of the old blood.",
+          "description": "Channel the Power of the Old Blood. A Blood-Drunk Hunter does not merely endure the old blood; they crave it, study it, and let it reshape them. Hunters who follow this path walk a thin and hated line, drawing power from the same cursed source that birthed the Dreadbloods. Some see them as necessary monsters, others as doomed addicts already halfway lost. Whatever the truth, the Blood-Drunk wield the old blood with frightening precision, turning corruption, hunger, and forbidden vitality against the horrors they hunt.",
           "features": [
             {
               "level": 3,
@@ -3954,7 +3982,7 @@
     {
       "id": "warden",
       "name": "Hunter Warden",
-      "flavorText": "You read the battlefield with a commander's eye, identifying openings, weaknesses, and moments of hesitation. Through sharp orders and tactical insight, you rally your hunter band and guide them toward decisive action.",
+      "flavorText": "Wardens are the steady hand in a world gone mad. Trusted more than most Hunters, they are often seen as the commanders of Hunter Bands. When they lead, they do so through discipline, tactics, and cold battlefield judgment, turning frightened killers into something sharper than fear. A band without a Warden at the front rarely lasts long.",
       "overview": {
         "primaryAbility": "Wisdom and Charisma",
         "savingThrows": [
@@ -4263,7 +4291,7 @@
         {
           "level": 15,
           "name": "Calm Band",
-          "text": "During a short or long rest you and the other creatures that has a Bands Directive die may roll that die in addition to their Sanity die."
+          "text": "During a short or long rest you and the other creatures that has a Bands Directive die may roll that die in addition to their Sanity die, or as its own Sanity die."
         },
         {
           "level": 18,
@@ -4284,7 +4312,7 @@
       "subclasses": [
         {
           "name": "Commander",
-          "description": "A Hunter Warden subclass focused on directing companions in battle — studying enemies to grant allies advantage, fueling the band with Commander's Strike, Commanding Presence, and Rally, and revealing fatal openings in foes.",
+          "description": "Command the Band with Cold Precision. A Commander's power comes from discipline, tactics, and the ability to remain calm when fear should have taken hold. Wardens who follow this path turn panic into formation, hesitation into action, and scattered Hunters into a killing force. They read the battlefield like a bloodstained map, placing allies where they must stand and enemies where they must die. While other Hunters may be stronger, faster, or more savage, a Commander is often the reason the band survives long enough to matter.",
           "features": [
             {
               "level": 3,
@@ -4305,7 +4333,7 @@
         },
         {
           "name": "Warbringer",
-          "description": "A Hunter Warden subclass focused on aggressive battlefield tactics — turning Bands Directive dice into defensive and offensive boosts, gaining Extra Attack, and empowering allies with War Chant.",
+          "description": "Drive the Band into Relentless War. A Warbringer does not merely command battle; they ignite it. Wardens who follow this path lead from the front, turning their presence into a brutal call to advance. Their orders carry the weight of violence, pushing allies beyond caution and forcing enemies to break under pressure. Where a Commander controls the battlefield with discipline, a Warbringer overwhelms it with momentum, fury, and the certainty that retreat is just another kind of death.",
           "features": [
             {
               "level": 3,
