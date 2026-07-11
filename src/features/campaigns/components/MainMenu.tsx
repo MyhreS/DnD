@@ -46,7 +46,7 @@ export function MainMenu() {
               key={c.id}
               card={c}
               campaignName={experimental ? (campaigns.find((x) => x.id === c.campaignId)?.name ?? null) : null}
-              onOpen={() => { select(c.id); navigate("/character"); }}
+              onOpen={() => { select(c.id); navigate("/character?edit=1"); }}
               onEdit={() => { select(c.id); navigate("/character?edit=1"); }}
             />
           ))}
