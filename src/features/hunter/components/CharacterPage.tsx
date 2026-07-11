@@ -1,20 +1,14 @@
-import { Suspense, lazy, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { useHunterCard } from "../hooks/useHunterCard";
 import { useEditorIntent } from "../hooks/useEditorIntent";
 import { CharacterView } from "./CharacterView";
+import { PaperSheetModal } from "./papersheet/PaperSheetModal";
 import { emptySheetCard } from "@/lib/character";
 import { CardSkeleton } from "@/components/Skeleton";
 import { Sigil } from "@/components/icons";
 import type { HunterCard } from "@/types";
-
-// The paper sheet (and its ~49KB papersheet.css) is heavy and only needed once a
-// sheet actually opens — lazy-load it so Vite splits it into its own chunk fetched
-// on demand instead of shipping it in the eager entry bundle.
-const PaperSheetModal = lazy(() =>
-  import("./papersheet/PaperSheetModal").then((m) => ({ default: m.PaperSheetModal })),
-);
 
 /** The main-menu Hunters page. It ALWAYS lands on the LIST of your hunters —
  * you click a hunter to open its paper sheet (the only view/creation flow; the
@@ -124,11 +118,7 @@ export function CharacterPage() {
   return (
     <>
       {body}
-      {draftCard && (
-        <Suspense fallback={null}>
-          <PaperSheetModal card={draftCard} create={!storeDraft} onClose={closeSheetDraft} />
-        </Suspense>
-      )}
+      {draftCard && <PaperSheetModal card={draftCard} create={!storeDraft} onClose={closeSheetDraft} />}
     </>
   );
 }

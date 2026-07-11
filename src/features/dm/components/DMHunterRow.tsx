@@ -1,15 +1,8 @@
-import { Suspense, lazy, useState } from "react";
+import { useState } from "react";
+import { PaperSheetModal } from "@/features/hunter/components/papersheet/PaperSheetModal";
 import { cardClassName } from "@/features/hunter/lib/papersheet";
 import { ChevronIcon } from "@/components/icons";
 import type { HunterCard } from "@/types";
-
-// Lazy-load the paper sheet (+ its ~49KB papersheet.css) so it lands in its own
-// chunk, fetched only when the DM actually opens a hunter's read-only sheet.
-const PaperSheetModal = lazy(() =>
-  import("@/features/hunter/components/papersheet/PaperSheetModal").then((m) => ({
-    default: m.PaperSheetModal,
-  })),
-);
 
 /** One hunter on the DM's board — tap to open the read-only paper sheet
  * (the same mechanism the Party page uses to view someone else's hunter).
@@ -69,11 +62,7 @@ export function DMHunterRow({ card, onRemove }: { card: HunterCard; onRemove?: (
           ×
         </button>
       )}
-      {show && (
-        <Suspense fallback={null}>
-          <PaperSheetModal card={card} readOnly onClose={() => setShow(false)} />
-        </Suspense>
-      )}
+      {show && <PaperSheetModal card={card} readOnly onClose={() => setShow(false)} />}
     </div>
   );
 }
