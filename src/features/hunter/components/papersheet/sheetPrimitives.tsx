@@ -113,17 +113,40 @@ export function Ta({ f, ...rest }: { f: string } & TextareaHTMLAttributes<HTMLTe
   );
 }
 
-/** A bound checkbox (proficiency dots, death-save pips, studs, …). */
-export function Chk({ f, ...rest }: { f: string } & InputHTMLAttributes<HTMLInputElement>) {
+/** A bound checkbox (proficiency dots, death-save pips, studs, …). With
+ * `truthyText`, a legacy non-empty STRING value also reads as checked — for
+ * fields that used to be free text (the storage slots); toggling writes a
+ * real boolean. */
+export function Chk({
+  f,
+  truthyText = false,
+  ...rest
+}: { f: string; truthyText?: boolean } & InputHTMLAttributes<HTMLInputElement>) {
   const { data, setField, readOnly } = useSheet();
+  const v = data[f];
+  const checked = v === true || (truthyText && typeof v === "string" && v.trim() !== "");
   return (
     <input
       type="checkbox"
-      checked={data[f] === true}
+      checked={checked}
       disabled={readOnly}
       onChange={(e) => setField(f, e.target.checked)}
       {...rest}
     />
+  );
+}
+
+/** One table cell: a textarea stacked on an invisible replica of its value
+ * (`data-v`) so long entries WRAP and grow the row instead of clipping — see
+ * papersheet.css `.cellgrow`. */
+function CellF({ f }: { f: string }) {
+  const { data, setField, readOnly } = useSheet();
+  const v = data[f];
+  const s = typeof v === "string" ? v : "";
+  return (
+    <div className="cellgrow" data-v={s}>
+      <textarea rows={1} value={s} readOnly={readOnly} onChange={(e) => setField(f, e.target.value)} />
+    </div>
   );
 }
 
@@ -163,7 +186,7 @@ export function SheetTable({
             <tr key={r}>
               {head.map((_, c) => (
                 <td key={c}>
-                  <F f={`${prefix}_${r}_${c}`} />
+                  <CellF f={`${prefix}_${r}_${c}`} />
                 </td>
               ))}
             </tr>

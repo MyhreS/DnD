@@ -206,9 +206,11 @@
 /* ---------- pages ---------- */
 .papersheet .page {
   width: 210mm;
-  /* Exactly A4 — a page that silently grew would spill an extra sheet when
-   * printed. Overflowing content clips visibly instead. */
-  height: 297mm;
+  /* A4-proportioned, but allowed to GROW: print reflows pages at natural
+   * height anyway (see @media print), and a fixed 297mm let overgrown
+   * content run under the absolutely-anchored .pageno footer on screen.
+   * min-height keeps short pages looking like full sheets. */
+  min-height: 297mm;
   overflow: hidden;
   background: var(--paper);
   margin: 0 auto 26px;
@@ -756,7 +758,9 @@
 }
 .papersheet .profbox input {
   height: 100%;
-  text-align: center;
+  /* left-aligned like every other box's value (it printed dead-centre) */
+  text-align: left;
+  padding-left: 3mm;
   font-size: 26px;
   border-bottom: none;
   font-weight: 600;
@@ -898,6 +902,10 @@
   gap: 7mm;
   /* Tight enough that the row clears the absolutely-anchored page footer. */
   margin-top: 2.5mm;
+  /* Natural (equal) box heights: the SPEED box's "(SIZE: MEDIUM)" caption
+   * lives in a wrapper div — without this the two neighbouring boxes
+   * stretch to the wrapper's height and render taller than SPEED. */
+  align-items: start;
 }
 .papersheet .bigstat {
   border: 1.8px solid var(--rule);
@@ -1106,19 +1114,22 @@
 .papersheet .slotline .lbl {
   font-size: 10px;
 }
-.papersheet .slotbox {
+/* A storage slot is used or it isn't — the box IS a checkbox (same look as
+ * the old text box; the checked ✕ scales up to fill it). */
+.papersheet input[type="checkbox"].slotbox {
   width: 8mm;
   height: 8mm;
   border: 1.6px solid var(--rule);
   border-radius: 2px;
   background: rgba(255, 255, 255, 0.35);
-  flex: none;
 }
-.papersheet .slotbox input {
-  height: 100%;
-  text-align: center;
-  border-bottom: none;
-  font-size: 14px;
+.papersheet input[type="checkbox"].slotbox:checked::after {
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  line-height: 1;
 }
 .papersheet .training {
   margin-top: 4mm;
@@ -1183,15 +1194,36 @@
   border-bottom: 1px solid rgba(33, 29, 23, 0.3);
   border-left: 1.4px solid var(--rule);
   padding: 0 1mm;
+  /* acts as a MIN height on a table cell — a wrapping entry grows its row */
   height: 8.2mm;
 }
 .papersheet table.sheet td:first-child {
   border-left: none;
 }
-.papersheet table.sheet input {
-  border-bottom: none;
+/* Table cells are textareas so a long entry WRAPS (the row grows) instead of
+ * clipping. The .cellgrow grid stacks the textarea on an invisible ::after
+ * replica of its value; the replica's natural (wrapped) height sizes both —
+ * the classic CSS auto-growing-textarea trick, no JS. The two layers must
+ * share EXACT font metrics. */
+.papersheet table.sheet .cellgrow {
+  display: grid;
+  width: 100%;
+}
+.papersheet table.sheet .cellgrow::after {
+  content: attr(data-v) " ";
+  visibility: hidden;
+}
+.papersheet table.sheet .cellgrow > textarea,
+.papersheet table.sheet .cellgrow::after {
+  grid-area: 1 / 1 / 2 / 2;
+  font-family: "Caveat", cursive;
   font-size: 16px;
-  height: 100%;
+  font-weight: 500;
+  line-height: 1.35;
+  padding: 1px 2px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: hidden;
 }
 
 /* ================= PAGE 4 ================= */
@@ -1435,19 +1467,21 @@
     margin: 0 0 3.5mm;
   }
 
-  /* tables fit the column — except the six-column whispers table, which
-   * scrolls sideways inside its own frame instead of squeezing. The grid
-   * items must be allowed to shrink (min-width:auto would grow the track —
-   * and the page — to the table's min-width instead of scrolling). */
+  /* EVERY fill-in table keeps usable column widths and scrolls sideways
+   * inside its own frame (momentum scroll) instead of squeezing its columns
+   * to unfillable slivers. The grid items must be allowed to shrink
+   * (min-width:auto would grow the track — and the page — to the table's
+   * min-width instead of scrolling). */
   .papersheet .p2-grid > div,
   .papersheet .rites-grid > div {
     min-width: 0;
   }
   .papersheet .sheetwrap {
     overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
-  .papersheet .rites-grid table.sheet {
-    min-width: 520px;
+  .papersheet .sheetwrap table.sheet {
+    min-width: 560px;
   }
 
   /* thumb-sized fields: relax the print-tuned heights/font sizes */
@@ -1459,12 +1493,12 @@
     height: 6.5mm;
     font-size: 16px;
   }
-  .papersheet .slotbox {
+  .papersheet input[type="checkbox"].slotbox {
     width: 10mm;
     height: 10mm;
   }
-  .papersheet .slotbox input {
-    font-size: 16px;
+  .papersheet input[type="checkbox"].slotbox:checked::after {
+    font-size: 30px;
   }
 
   /* Info popovers: on phones the sheet reflows into one narrow column, so the

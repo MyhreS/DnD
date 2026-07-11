@@ -208,7 +208,7 @@ export const SHEET_INFO: Record<string, SheetInfo> = {
   },
   slots: {
     title: "Storage Slots",
-    text: "Significant items each occupy a body slot (hand, back, hip, chest, ankle); oversized items need a hand. Write what sits where.",
+    text: "Significant items each occupy a body slot (hand, back, hip, chest, ankle); oversized items need a hand. Check the slots that are occupied.",
     pdfPage: 13,
     refTitle: "Rules → Carrying & Encumbrance → Item slots",
     link: rules("carrying", "item-slots"),

@@ -82,7 +82,9 @@ export function SheetPage2() {
             {SLOTS.map((s, i) => (
               <div className="slotline" key={s.f} data-step="2">
                 <span className="lbl">{s.label} <St n={2} /> {i === 0 && <Info k="slots" side="left" />}</span>
-                <div className="slotbox"><F f={s.f} /></div>
+                {/* the slot is used or it isn't — a check, not a text field
+                 * (legacy free-text values read as checked via truthyText) */}
+                <Chk f={s.f} className="slotbox" truthyText aria-label={s.label} />
               </div>
             ))}
           </div>
