@@ -4,7 +4,7 @@
 // SDK so the run is robust (no character-builder automation), then exercises the
 // in-game flow through the UI.
 //
-//   doppler run -- bun run scripts/test-play.mjs
+//   doppler run -- node scripts/test-play.mjs        # run under NODE (Windows)
 //
 // Needs AGENT_TEST_SA in env. Drives http://localhost:5173 (run `bun run dev`).
 import { initializeApp, cert } from "firebase-admin/app";
@@ -40,7 +40,7 @@ await db.doc(`characters/${charId}`).set({
   inventory: [{ itemId: "pistol", qty: 1 }], coins: 10, notes: "", createdAt: Date.now(), updatedAt: Date.now(),
 });
 
-const browser = await chromium.launch();
+let browser;
 const errors = [];
 function watch(page, who) {
   page.on("console", (m) => { if (m.type() === "error" && /permission|denied/i.test(m.text())) errors.push(`${who}: ${m.text()}`); });
@@ -48,6 +48,9 @@ function watch(page, who) {
 }
 async function ctx(token) {
   const c = await browser.newContext({ ...devices["Desktop Chrome"], viewport: { width: 1280, height: 900 } });
+  // Campaigns/sessions/play are hidden behind the per-device "Experimental
+  // features" toggle — seed it on so the Test Play campaign + /play render.
+  await c.addInitScript(() => { try { localStorage.setItem("cs-experimental", "on"); } catch {} });
   const p = await c.newPage();
   await p.goto(`${BASE}/?testToken=${token}`, { waitUntil: "domcontentloaded" });
   await sl(2500); // sign in with the custom token + load campaigns
@@ -56,6 +59,7 @@ async function ctx(token) {
 const log = (s) => console.log(s);
 
 try {
+  browser = await chromium.launch();
   const dm = await ctx(dmToken); watch(dm.p, "DM");
   const pl = await ctx(plToken); watch(pl.p, "PLAYER");
 
@@ -91,7 +95,7 @@ try {
   errors.slice(0, 8).forEach((e) => log(" - " + e));
   log(errors.length === 0 ? "✅ test play OK" : "❌ saw permission errors");
 } finally {
-  await browser.close();
+  await browser?.close();
   // cleanup
   const subs = await db.collection(`games`).where("campaignId", "==", cid).get();
   for (const g of subs.docs) {
