@@ -46,7 +46,7 @@ export const HANDBOOK: HandbookChapter[] = [
         heading: "Pick your hunter",
         body: [
           "In C&S you have six classes to choose from: Brute, Scout, Stalker, Deepcaller, Bloodbound and Warden.",
-          "Browse them on the Hunters screen or in the character builder. For now, simply choose your class and note your Armor Training, Saving Throws and starting equipment — we come back to your class in later steps.",
+          "Browse them on the Classes tab of this Handbook. For now, simply choose your class on page 1 of your character sheet and note your Armor Training, Saving Throws and starting equipment — we come back to your class in later steps.",
         ],
       },
     ],
@@ -104,7 +104,7 @@ export const HANDBOOK: HandbookChapter[] = [
         heading: "Determine ability modifiers",
         body: [
           "Finally, find each modifier: 3 → −4, 4–5 → −3, 6–7 → −2, 8–9 → −1, 10–11 → +0, 12–13 → +1, 14–15 → +2, 16–17 → +3, 18–19 → +4, 20 → +5.",
-          "The character builder in this app does all of this maths for you.",
+          "Write each score and its modifier on page 1 of your character sheet — the sheet's step guidance and info dots repeat this maths whenever you need it.",
         ],
       },
     ],
@@ -137,7 +137,7 @@ export const HANDBOOK: HandbookChapter[] = [
         body: [
           "Start with 10 (unarmored) or your Main Armor value. Add bonuses from Add-on Armor and Armor Upgrades to get your base armor AC.",
           "That base determines your category: Unarmored (10) and Light (11–12) add your full Dex modifier; Medium (13–14) adds Dex up to +2; Heavy (15+) adds no Dex. Then add Dex accordingly and record your final AC.",
-          "The character builder computes your AC from your chosen Main Armor and Dexterity automatically.",
+          "Record your Main Armor, add-ons and final AC on page 2 of your character sheet — the sheet's step guidance walks you through the calculation.",
         ],
       },
     ],
