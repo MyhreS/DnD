@@ -217,6 +217,15 @@ service cloud.firestore {
       allow delete: if isCampaignDM(resource.data.campaignId);
     }
 
+    // /apiTokens/{hash} — opaque AI-help bearer tokens, stored hashed at rest.
+    // Minted and read ONLY by the Cloud Functions backend (Admin SDK, which
+    // bypasses these rules). No client may ever read or write them. The
+    // catch-all below already denies this, but we lock it down EXPLICITLY so the
+    // intent is obvious and can never be loosened by accident.
+    match /apiTokens/{id} {
+      allow read, write: if false;
+    }
+
     // Lock everything else down by default.
     match /{document=**} {
       allow read, write: if false;

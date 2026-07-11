@@ -1,5 +1,7 @@
 node_modules/
 lib/
+# Generated at build by scripts/copy-master.cjs (source of truth: resources/master.json).
+master.json
 *.local
 .runtimeconfig.json
 bun.lock
