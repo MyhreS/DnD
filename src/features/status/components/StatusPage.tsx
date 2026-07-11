@@ -11,7 +11,7 @@ import { useWakeLock } from "@/hooks/common/useWakeLock";
 import { useFullscreen } from "@/hooks/common/useFullscreen";
 import { getClass } from "@/data/classes";
 import { maxHp, maxSanity, isSheetCard } from "@/lib/character";
-import { sheetVitals, sheetClassName } from "@/features/hunter/lib/papersheet";
+import { sheetVitals, cardClassName } from "@/features/hunter/lib/papersheet";
 import type { HunterCard } from "@/types";
 import { CombatBoard } from "./CombatBoard";
 
@@ -100,7 +100,7 @@ function VitalsCard({ card }: { card: HunterCard }) {
   const san = sheet ? v.sanityCur : Math.min(sanMax ?? 0, card.sanity ?? sanMax ?? 0);
   const dead = card.deathPending || (hp != null && hp <= 0);
   const transform = card.transformationLevel ?? 0;
-  const cls = sheet ? sheetClassName(card.sheet) : klass?.name;
+  const cls = cardClassName(card);
 
   return (
     <div className="card" style={{ marginTop: 0, opacity: dead ? 0.55 : 1, borderColor: dead ? "var(--blood-bright)" : undefined }}>
