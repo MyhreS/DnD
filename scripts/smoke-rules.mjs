@@ -159,11 +159,9 @@ await step("Player removes the monster from battle (delete)", async () => {
 });
 
 // --- Transformation: DM-recorded; owners may only REDUCE the level / CLEAR the
-// list (rests). The NEGATIVE cases assert the new owner-write constraints and
-// only hold once the updated firestore.rules are DEPLOYED (rules ship on merge,
-// never on preview channels). Until then they are skipped — after
-// `bun run deploy:rules`, run with SMOKE_NEW_RULES=1 to enable them.
-const newRules = process.env.SMOKE_NEW_RULES === "1";
+// list (rests). The NEGATIVE cases assert the owner-write constraints in the
+// DEPLOYED rules — live since the Transformation feature merged — so they
+// always run.
 const plCharId = `smoke-${plUid}`;
 await step("Player creates own character (with Transformation)", async () => {
   await setDoc(doc(pl.db, "characters", plCharId), {
@@ -175,24 +173,20 @@ await step("Player creates own character (with Transformation)", async () => {
     createdAt: Date.now(), updatedAt: Date.now(),
   });
 });
-if (newRules) {
-  await step("Player cannot raise own Transformation Level (negative)", async () => {
-    let denied = false;
-    try {
-      await updateDoc(doc(pl.db, "characters", plCharId), { transformationLevel: 3 });
-    } catch { denied = true; }
-    if (!denied) throw new Error("player could raise their own transformationLevel (DM-only)");
-  });
-  await step("Player cannot add a Transformation result (negative)", async () => {
-    let denied = false;
-    try {
-      await updateDoc(doc(pl.db, "characters", plCharId), { activeTransformations: ["mutatedArm", "bloodFangs"] });
-    } catch { denied = true; }
-    if (!denied) throw new Error("player could add to activeTransformations (DM-only)");
-  });
-} else {
-  results.push("skip Transformation negatives — deploy the new rules, then rerun with SMOKE_NEW_RULES=1");
-}
+await step("Player cannot raise own Transformation Level (negative)", async () => {
+  let denied = false;
+  try {
+    await updateDoc(doc(pl.db, "characters", plCharId), { transformationLevel: 3 });
+  } catch { denied = true; }
+  if (!denied) throw new Error("player could raise their own transformationLevel (DM-only)");
+});
+await step("Player cannot add a Transformation result (negative)", async () => {
+  let denied = false;
+  try {
+    await updateDoc(doc(pl.db, "characters", plCharId), { activeTransformations: ["mutatedArm", "bloodFangs"] });
+  } catch { denied = true; }
+  if (!denied) throw new Error("player could add to activeTransformations (DM-only)");
+});
 await step("Player rest-reduces own Transformation (allowed)", async () => {
   await updateDoc(doc(pl.db, "characters", plCharId), { transformationLevel: 1, activeTransformations: [] });
 });

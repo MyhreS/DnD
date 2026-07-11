@@ -119,6 +119,17 @@ function buildBotCard(botUid: string, campaignId: string, classId: string, name:
  * (they take no actions) so the DM can see how the populated app looks & plays.
  * Requires the relaxed /characters create rule (campaign DM authors bot cards). */
 export async function createTestCampaign(dm: { uid: string; name: string; email: string }): Promise<string> {
+  // A DM only ever needs one Test Run at a time: delete previous sandboxes
+  // (and their bot hunters) first, so abandoned Test Runs can't pile up in the
+  // world-readable hunter gallery. Best-effort — a failed purge must never
+  // block the new Test Run; the next one retries it.
+  try {
+    const mine = await getDocs(query(campaignsCol, where("memberUids", "array-contains", dm.uid)));
+    const stale = mine.docs.filter((d) => d.data().sandbox === true && d.data().dmUid === dm.uid);
+    for (const d of stale) await deleteCampaign(d.id);
+  } catch (err) {
+    console.warn("Couldn't clean up a previous Test Run", err);
+  }
   const campaignId = await createCampaign({
     name: "Test Run",
     dmUid: dm.uid,
