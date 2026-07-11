@@ -11,6 +11,7 @@ import {
 import { createLoot } from "@/api/games";
 import { logEvent, describeLoot } from "@/api/activity";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { explain } from "@/lib/errors";
 import { isPreviewActive, previewPartyCards, previewArchive } from "@/dev/preview";
 import type { ActivityType } from "@/types";
@@ -91,9 +92,14 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         set({ preview: true, party: previewPartyCards(), archive: previewArchive() });
         return;
       }
+      // Scope the play + DM control board to the active campaign's hunters, so
+      // the subscription streams this campaign's cards — not every hunter in
+      // the app. Falls back to the global corpus if no campaign is active.
+      const campaignId = useCampaignStore.getState().activeId;
       const unsubParty = subscribeAllCharacters(
         (party) => set({ party, error: null }), // a fresh snapshot clears any stale error
         (err) => set({ error: explain("Couldn't load characters", err) }),
+        campaignId,
       );
       const unsubArchive = subscribeArchive((archive) => set({ archive }));
       set({ _unsubParty: unsubParty, _unsubArchive: unsubArchive });
