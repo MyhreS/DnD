@@ -2,10 +2,11 @@ import { SheetProvider } from "./sheetPrimitives";
 import { SheetPage1 } from "./SheetPage1";
 import { SheetPage2 } from "./SheetPage2";
 import { SheetPage3, SheetPage4, SheetPage5 } from "./SheetPages345";
+import { SheetPageNotes } from "./SheetPageNotes";
 import type { SheetData } from "@/types";
 import "./papersheet.css";
 
-/** The five A4 pages of the paper character sheet, bound to a SheetData map. */
+/** The six A4 pages of the paper character sheet, bound to a SheetData map. */
 export function PaperSheet({
   data,
   setField,
@@ -37,6 +38,7 @@ export function PaperSheet({
         <SheetPage3 />
         <SheetPage4 />
         <SheetPage5 />
+        <SheetPageNotes />
       </SheetProvider>
     </div>
   );

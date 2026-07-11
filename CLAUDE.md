@@ -13,7 +13,7 @@ permissions are per-campaign (see "Access model & roles").
 - **Sessions** — next session with a live countdown + upcoming dates. Members
   RSVP (yes/maybe/no). Staff (admin/DM) add & edit dates. Backed by Firestore.
 - **Hunter** — create & keep hunters as a digital **paper character sheet**
-  (`features/hunter/components/papersheet`): five A4 pages of free-form boxes,
+  (`features/hunter/components/papersheet`): six A4 pages of free-form boxes,
   autosaved per field, with creation-step guidance deep-linked into the Handbook.
   Multiple per user, saved in Firestore; play mode reads HP/AC/Sanity off the sheet.
 - **Party** — gallery of everyone's hunters. Staff get a roster: who has a

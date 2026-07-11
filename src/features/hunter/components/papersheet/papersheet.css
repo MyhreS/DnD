@@ -1227,19 +1227,13 @@
 }
 
 /* ================= PAGE 4 ================= */
-.papersheet .features {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0;
+/* Class Features is ONE big notes box (creator's ruling) — no columns, no
+ * divider; the old features2 column merges into it on first edit (MergeTa). */
+.papersheet .featuresbox {
   border-bottom: 2px solid var(--rule);
-}
-.papersheet .features .col {
   padding: 2mm;
 }
-.papersheet .features .col:first-child {
-  border-right: 1.6px solid var(--rule);
-}
-.papersheet .features textarea {
+.papersheet .featuresbox textarea {
   height: 150mm;
   font-size: 17px;
   width: 100%;
@@ -1287,6 +1281,43 @@
 }
 .papersheet .riteline.wide input {
   width: 26mm;
+}
+
+/* ================= PAGE 6 — NOTES ================= */
+/* The whole page is one ruled free-writing area: notebook lines drawn on the
+ * textarea's background at the exact line-height, so writing sits on them
+ * (background-attachment: local keeps the lines glued to overflowing text).
+ * .noteslines is the PRINT variant of the same ruling (element borders —
+ * Chromium mispaints repeating gradients on paginated boxes); hidden here. */
+.papersheet .notesarea {
+  position: relative;
+}
+.papersheet .noteslines {
+  display: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.papersheet .noteslines i {
+  display: block;
+  height: 9mm;
+  border-bottom: 1px solid rgba(33, 29, 23, 0.35);
+}
+.papersheet .notesarea textarea {
+  width: 100%;
+  height: 243mm; /* 27 ruled lines of 9mm */
+  font-size: 18px;
+  line-height: 9mm;
+  padding: 0 2px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent calc(9mm - 1px),
+    rgba(33, 29, 23, 0.35) calc(9mm - 1px),
+    rgba(33, 29, 23, 0.35) 9mm
+  );
+  background-attachment: local;
 }
 
 /* ================= info dots ================= */
@@ -1417,21 +1448,9 @@
   .papersheet .statgrid,
   .papersheet .p1-bottom,
   .papersheet .p2-grid,
-  .papersheet .rites-grid,
-  .papersheet .features {
-    grid-template-columns: 1fr;
-  }
-  .papersheet .p1-top,
-  .papersheet .statgrid,
-  .papersheet .p1-bottom,
-  .papersheet .p2-grid,
   .papersheet .rites-grid {
+    grid-template-columns: 1fr;
     gap: 5mm;
-  }
-  /* the features divider turns horizontal when the columns stack */
-  .papersheet .features .col:first-child {
-    border-right: none;
-    border-bottom: 1.6px solid var(--rule);
   }
 
   /* AC row: shield (with its Shield Arm line) centered, fields below */
@@ -1499,6 +1518,40 @@
   }
   .papersheet input[type="checkbox"].slotbox:checked::after {
     font-size: 30px;
+  }
+
+  /* ---- thumb-sized TAP TARGETS ----
+   * The check circles/boxes are print-scale (11–13px) — precise to a mouse,
+   * hopeless for a thumb. An invisible ::before overlay (generated boxes
+   * hit-test to their originating input, same mechanism as the checked ✕
+   * ::after) widens the touch area toward 44px without changing the drawn
+   * circle, the desktop look, or print. Tightly packed groups (death-save
+   * pips sit ~19px apart) get smaller overlays so a tap on one circle can
+   * never land on a neighbour's. */
+  .papersheet input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 44px;
+    height: 32px;
+    transform: translate(-50%, -50%);
+    background: transparent;
+  }
+  .papersheet input[type="checkbox"].pip::before {
+    width: 17px;
+    height: 17px;
+  }
+  .papersheet input[type="checkbox"].slotbox::before {
+    /* the box itself is already 10mm — widen mostly sideways (the slot rows
+     * sit ~46px apart, so a taller overlay would bleed into the next slot) */
+    width: 58px;
+    height: 50px;
+  }
+
+  /* the full-page notes area needn't be a whole A4 of empty on a phone */
+  .papersheet .notesarea textarea {
+    height: 150mm;
   }
 
   /* Info popovers: on phones the sheet reflows into one narrow column, so the
@@ -1680,8 +1733,16 @@
   .papersheet table.sheet td {
     height: 7.9mm;
   }
-  .papersheet .features textarea {
+  .papersheet .featuresbox textarea {
     height: 146mm;
+  }
+  /* printed notes ruling: real element borders (the screen gradient
+   * mispaints when Chromium paginates) — same 9mm rhythm as the writing */
+  .papersheet .notesarea textarea {
+    background-image: none;
+  }
+  .papersheet .noteslines {
+    display: block;
   }
   .papersheet input[type="text"] {
     border-bottom-color: #8a7f6a;
