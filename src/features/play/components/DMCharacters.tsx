@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getClass } from "@/data/classes";
 import { maxHp, earnedLevel, isLevelUpPending, isSheetCard } from "@/lib/character";
-import { sheetVitals, sheetClassName } from "@/features/hunter/lib/papersheet";
+import { sheetVitals, cardClassName } from "@/features/hunter/lib/papersheet";
 import { AsyncButton } from "@/components/AsyncButton";
 import { DMCharacterEditor } from "./DMCharacterEditor";
 import { useCharactersStore } from "../store/charactersStore";
@@ -56,11 +56,8 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
   const hpMax: number | null = sheet ? sheetVitals(card.sheet).hpMax : klass ? maxHp(klass, card.abilities, card.level) : 0;
   const hp: number | null = sheet ? sheetVitals(card.sheet).hpCur : (card.currentHp ?? hpMax);
   const dying = card.deathPending || (hp != null && hp <= 0);
-  const classLine = sheet
-    ? `${sheetClassName(card.sheet) || "Hunter"} · Lvl ${card.level}`
-    : klass
-      ? `${klass.name} · Lvl ${card.level}`
-      : "Hunter";
+  const cls = cardClassName(card);
+  const classLine = cls ? `${cls} · Lvl ${card.level}` : "Hunter";
   const insight = card.insight ?? 0;
   const earnedLvl = earnedLevel(card);
   const pendingLevel = isLevelUpPending(card);
@@ -150,8 +147,7 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
 
 function ArchivedRow({ a }: { a: ArchivedCharacter }) {
   const recover = useCharactersStore((s) => s.recover);
-  const klass = getClass(a.card.classId);
-  const cls = klass?.name || sheetClassName(a.card.sheet);
+  const cls = cardClassName(a.card);
   return (
     <div className="row between" style={{ padding: "8px 0", borderTop: "1px solid var(--border)", gap: 8 }}>
       <div style={{ minWidth: 0 }}>
