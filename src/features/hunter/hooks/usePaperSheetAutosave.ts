@@ -48,6 +48,12 @@ export function usePaperSheetAutosave(
    * snapshot — a DM "playing as" a legacy hunter can never blank its card. */
   const seeding = useRef(!card.sheet);
   const timer = useRef<number | null>(null);
+  /** The "Saved" → "" reset timeout; cleared on unmount so it can't fire into
+   * a dead component (the unmount flush may resolve after we're gone). */
+  const savedTimer = useRef<number | null>(null);
+  /** False after unmount so an in-flight persist (from the unmount flush) skips
+   * its setState calls instead of warning about updating an unmounted hook. */
+  const mounted = useRef(true);
   const cardRef = useRef(card);
   cardRef.current = card;
 
@@ -80,12 +86,17 @@ export function usePaperSheetAutosave(
         await patchCharacterSheet(base.id, snapshot, keys, mirror);
       }
       seeding.current = false;
+      if (!mounted.current) return;
       setSaveMsg("Saved");
-      window.setTimeout(() => setSaveMsg((m) => (m === "Saved" ? "" : m)), 1600);
+      if (savedTimer.current) window.clearTimeout(savedTimer.current);
+      savedTimer.current = window.setTimeout(() => {
+        savedTimer.current = null;
+        if (mounted.current) setSaveMsg((m) => (m === "Saved" ? "" : m));
+      }, 1600);
     } catch (err) {
       for (const k of dirtyKeys) dirty.current.add(k);
       console.error("Failed to save the character sheet", err);
-      setSaveMsg("Save failed");
+      if (mounted.current) setSaveMsg("Save failed");
     }
   }, []);
 
@@ -172,6 +183,24 @@ export function usePaperSheetAutosave(
       flush();
     };
   }, [readOnly, flush]);
+
+  // On unmount, stop any deferred setState: the flush below may kick off a
+  // persist that resolves after we're gone, and the "Saved" reset timeout
+  // would otherwise fire into a dead component.
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      if (savedTimer.current) {
+        window.clearTimeout(savedTimer.current);
+        savedTimer.current = null;
+      }
+      if (timer.current) {
+        window.clearTimeout(timer.current);
+        timer.current = null;
+      }
+    };
+  }, []);
 
   // Read-only viewers follow the live doc; editors keep their working copy.
   // Sheet-less cards read through the derived fallback here too.

@@ -1,6 +1,10 @@
 import {
   createContext,
+  useCallback,
   useContext,
+  useEffect,
+  useState,
+  useSyncExternalStore,
   type InputHTMLAttributes,
   type ReactNode,
   type SelectHTMLAttributes,
@@ -8,15 +12,69 @@ import {
 } from "react";
 import type { SheetData } from "@/types";
 
-/** The paper sheet's field bus: every field component reads/writes one key of
- * the free-form `SheetData` map (the original HTML's `data-f` names). */
-interface SheetContextValue {
-  data: SheetData;
-  setField: (f: string, v: string | boolean) => void;
-  readOnly: boolean;
+/** The paper sheet's field bus. Every field component reads/writes ONE key of
+ * the free-form `SheetData` map (the original HTML's `data-f` names). Values
+ * live in a small external store so a keystroke re-renders only the field that
+ * changed (via `useSyncExternalStore`) instead of every one of the ~220 bound
+ * fields — the context object itself never changes identity. */
+type Listener = () => void;
+
+class SheetStore {
+  private values: SheetData;
+  private listeners = new Map<string, Set<Listener>>();
+  /** Keys whose value changed during render, flushed to listeners on commit. */
+  private pending = new Set<string>();
+  /** Kept current every render — assigning is cheap and keeps identity stable. */
+  setFieldImpl: (f: string, v: string | boolean) => void = () => {};
+
+  constructor(initial: SheetData) {
+    this.values = initial;
+  }
+
+  get = (f: string): string | boolean | undefined => this.values[f];
+
+  subscribe = (f: string, cb: Listener): (() => void) => {
+    let set = this.listeners.get(f);
+    if (!set) {
+      set = new Set();
+      this.listeners.set(f, set);
+    }
+    set.add(cb);
+    return () => {
+      set.delete(cb);
+      if (set.size === 0) this.listeners.delete(f);
+    };
+  };
+
+  setField = (f: string, v: string | boolean): void => this.setFieldImpl(f, v);
+
+  /** Adopt the latest `data` snapshot, queuing changed keys for notification.
+   * Called during render so field snapshots are always fresh (no controlled-
+   * input caret jump); idempotent so a re-run (StrictMode) queues nothing. */
+  sync(next: SheetData): void {
+    if (next === this.values) return;
+    const prev = this.values;
+    for (const k of new Set([...Object.keys(prev), ...Object.keys(next)])) {
+      if (prev[k] !== next[k]) this.pending.add(k);
+    }
+    this.values = next;
+  }
+
+  /** Notify subscribers of keys changed since the last flush (called in an
+   * effect, after commit). */
+  flush(): void {
+    if (this.pending.size === 0) return;
+    const keys = Array.from(this.pending);
+    this.pending.clear();
+    for (const k of keys) {
+      const set = this.listeners.get(k);
+      if (set) for (const cb of set) cb();
+    }
+  }
 }
 
-const SheetContext = createContext<SheetContextValue | null>(null);
+const StoreContext = createContext<SheetStore | null>(null);
+const ReadOnlyContext = createContext(false);
 
 export function SheetProvider({
   data,
@@ -29,13 +87,32 @@ export function SheetProvider({
   readOnly?: boolean;
   children: ReactNode;
 }) {
-  return <SheetContext.Provider value={{ data, setField, readOnly }}>{children}</SheetContext.Provider>;
+  const [store] = useState(() => new SheetStore(data));
+  // Keep the store's write path current + adopt the latest snapshot (render-
+  // time so descendant field snapshots are fresh in this same pass).
+  store.setFieldImpl = setField;
+  store.sync(data);
+  // Deliver the queued per-key notifications after the render commits.
+  useEffect(() => store.flush());
+  return (
+    <StoreContext.Provider value={store}>
+      <ReadOnlyContext.Provider value={readOnly}>{children}</ReadOnlyContext.Provider>
+    </StoreContext.Provider>
+  );
 }
 
-function useSheet(): SheetContextValue {
-  const ctx = useContext(SheetContext);
-  if (!ctx) throw new Error("Sheet fields must be rendered inside <SheetProvider>");
-  return ctx;
+function useStore(): SheetStore {
+  const store = useContext(StoreContext);
+  if (!store) throw new Error("Sheet fields must be rendered inside <SheetProvider>");
+  return store;
+}
+
+/** Subscribe to a single sheet key — re-renders only when THAT key changes. */
+function useField(f: string): string | boolean | undefined {
+  const store = useStore();
+  const subscribe = useCallback((cb: Listener) => store.subscribe(f, cb), [store, f]);
+  const get = useCallback(() => store.get(f), [store, f]);
+  return useSyncExternalStore(subscribe, get);
 }
 
 /** The red numbered step badge from the DM's tutorial ("numbered") sheet. */
@@ -45,15 +122,16 @@ export function St({ n }: { n: number }) {
 
 /** A bound handwriting text field. */
 export function F({ f, ...rest }: { f: string } & InputHTMLAttributes<HTMLInputElement>) {
-  const { data, setField, readOnly } = useSheet();
-  const v = data[f];
+  const store = useStore();
+  const readOnly = useContext(ReadOnlyContext);
+  const v = useField(f);
   return (
     <input
       type="text"
       data-f={f}
       value={typeof v === "string" ? v : ""}
       readOnly={readOnly}
-      onChange={(e) => setField(f, e.target.value)}
+      onChange={(e) => store.setField(f, e.target.value)}
       {...rest}
     />
   );
@@ -68,16 +146,17 @@ export function SheetValue({
   f: string;
   children: (v: string | boolean | undefined) => ReactNode;
 }) {
-  const { data } = useSheet();
-  return <>{children(data[f])}</>;
+  const v = useField(f);
+  return <>{children(v)}</>;
 }
 
 /** A bound handwriting dropdown: fixed choices plus an empty "—". A saved
  * value that isn't one of the options (legacy free-typed text) is kept and
  * shown as an extra option rather than silently cleared. */
 export function Sel({ f, options, ...rest }: { f: string; options: string[] } & SelectHTMLAttributes<HTMLSelectElement>) {
-  const { data, setField, readOnly } = useSheet();
-  const raw = data[f];
+  const store = useStore();
+  const readOnly = useContext(ReadOnlyContext);
+  const raw = useField(f);
   const v = typeof raw === "string" ? raw : "";
   const opts = v !== "" && !options.includes(v) ? [...options, v] : options;
   return (
@@ -88,7 +167,7 @@ export function Sel({ f, options, ...rest }: { f: string; options: string[] } & 
       value={v}
       disabled={readOnly}
       data-empty={v === "" || undefined}
-      onChange={(e) => setField(f, e.target.value)}
+      onChange={(e) => store.setField(f, e.target.value)}
       {...rest}
     >
       <option value="">—</option>
@@ -103,14 +182,15 @@ export function Sel({ f, options, ...rest }: { f: string; options: string[] } & 
 
 /** A bound multi-line handwriting field. */
 export function Ta({ f, ...rest }: { f: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  const { data, setField, readOnly } = useSheet();
-  const v = data[f];
+  const store = useStore();
+  const readOnly = useContext(ReadOnlyContext);
+  const v = useField(f);
   return (
     <textarea
       data-f={f}
       value={typeof v === "string" ? v : ""}
       readOnly={readOnly}
-      onChange={(e) => setField(f, e.target.value)}
+      onChange={(e) => store.setField(f, e.target.value)}
       {...rest}
     />
   );
@@ -127,17 +207,20 @@ export function MergeTa({
   legacy,
   ...rest
 }: { f: string; legacy: string } & TextareaHTMLAttributes<HTMLTextAreaElement>) {
-  const { data, setField, readOnly } = useSheet();
-  const a = typeof data[f] === "string" ? (data[f] as string) : "";
-  const b = typeof data[legacy] === "string" ? (data[legacy] as string) : "";
+  const store = useStore();
+  const readOnly = useContext(ReadOnlyContext);
+  const av = useField(f);
+  const bv = useField(legacy);
+  const a = typeof av === "string" ? av : "";
+  const b = typeof bv === "string" ? bv : "";
   const v = a !== "" && b !== "" ? `${a}\n\n${b}` : a !== "" ? a : b;
   return (
     <textarea
       value={v}
       readOnly={readOnly}
       onChange={(e) => {
-        setField(f, e.target.value);
-        if (b !== "") setField(legacy, "");
+        store.setField(f, e.target.value);
+        if (b !== "") store.setField(legacy, "");
       }}
       {...rest}
     />
@@ -153,8 +236,9 @@ export function Chk({
   truthyText = false,
   ...rest
 }: { f: string; truthyText?: boolean } & InputHTMLAttributes<HTMLInputElement>) {
-  const { data, setField, readOnly } = useSheet();
-  const v = data[f];
+  const store = useStore();
+  const readOnly = useContext(ReadOnlyContext);
+  const v = useField(f);
   const checked = v === true || (truthyText && typeof v === "string" && v.trim() !== "");
   return (
     <input
@@ -162,7 +246,7 @@ export function Chk({
       data-f={f}
       checked={checked}
       disabled={readOnly}
-      onChange={(e) => setField(f, e.target.checked)}
+      onChange={(e) => store.setField(f, e.target.checked)}
       {...rest}
     />
   );
@@ -172,12 +256,13 @@ export function Chk({
  * (`data-v`) so long entries WRAP and grow the row instead of clipping — see
  * papersheet.css `.cellgrow`. */
 function CellF({ f }: { f: string }) {
-  const { data, setField, readOnly } = useSheet();
-  const v = data[f];
+  const store = useStore();
+  const readOnly = useContext(ReadOnlyContext);
+  const v = useField(f);
   const s = typeof v === "string" ? v : "";
   return (
     <div className="cellgrow" data-v={s}>
-      <textarea rows={1} data-f={f} value={s} readOnly={readOnly} onChange={(e) => setField(f, e.target.value)} />
+      <textarea rows={1} data-f={f} value={s} readOnly={readOnly} onChange={(e) => store.setField(f, e.target.value)} />
     </div>
   );
 }
