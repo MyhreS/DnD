@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getClass } from "@/data/classes";
 import { maxHp, earnedLevel, isLevelUpPending, isSheetCard } from "@/lib/character";
@@ -14,7 +14,11 @@ import type { ArchivedCharacter, HunterCard } from "@/types";
  * active campaign so the DM only sees (and can only act on) hunters it manages. */
 export function DMCharacters({ gameId }: { gameId: string | null }) {
   const activeId = useCampaignStore((s) => s.activeId);
-  const party = useCharactersStore((s) => s.party).filter((c) => c.campaignId === activeId);
+  const allParty = useCharactersStore((s) => s.party);
+  const party = useMemo(
+    () => allParty.filter((c) => c.campaignId === activeId),
+    [allParty, activeId],
+  );
   const archive = useCharactersStore((s) => s.archive);
   const error = useCharactersStore((s) => s.error);
 
@@ -100,7 +104,7 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
             <button
               key={d}
               className="btn btn-ghost btn-sm"
-              style={{ width: "auto", padding: "4px 8px" }}
+              style={{ width: "auto", minHeight: 42, padding: "8px 12px" }}
               onClick={() => award(card.id, d)}
             >
               +{d}
@@ -108,7 +112,7 @@ function CharacterRow({ card, gameId }: { card: HunterCard; gameId: string | nul
           ))}
           <button
             className="btn btn-ghost btn-sm"
-            style={{ width: "auto", padding: "4px 8px" }}
+            style={{ width: "auto", minHeight: 42, minWidth: 42, padding: "8px 14px" }}
             disabled={insight <= 0}
             onClick={() => award(card.id, -1)}
             aria-label="decrease Insight"
