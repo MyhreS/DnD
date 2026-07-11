@@ -22,7 +22,7 @@
     "token": "doppler run -- bun scripts/mint-test-token.mjs",
     "e2e": "doppler run -- bun scripts/e2e.mjs",
     "smoke": "doppler run -- bun scripts/smoke-rules.mjs",
-    "test:play": "doppler run -- bun scripts/test-play.mjs",
+    "test:play": "doppler run -- node scripts/test-play.mjs",
     "icons": "bun run scripts/generate-icons.mjs",
     "art:classes": "node scripts/build-class-art.mjs",
     "deploy": "bun run build && firebase deploy",
