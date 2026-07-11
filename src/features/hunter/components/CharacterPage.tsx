@@ -15,7 +15,11 @@ import type { HunterCard } from "@/types";
  * old step-by-step builder is gone). */
 export function CharacterPage() {
   const user = useAuthStore((s) => s.user);
-  const { characters, select, status, error, archive } = usePlayerStore();
+  const characters = usePlayerStore((s) => s.characters);
+  const select = usePlayerStore((s) => s.select);
+  const status = usePlayerStore((s) => s.status);
+  const error = usePlayerStore((s) => s.error);
+  const archive = usePlayerStore((s) => s.archive);
   // A brand-new sheet being written (the only creation flow).
   const [sheetDraft, setSheetDraft] = useState<HunterCard | null>(null);
   // Which hunter's sheet is open (detail); null = the list. Nothing opens on
