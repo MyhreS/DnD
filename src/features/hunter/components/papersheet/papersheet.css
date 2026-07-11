@@ -1540,6 +1540,40 @@
   .papersheet .sheetwrap {
     overflow-x: auto;
     -webkit-overflow-scrolling: touch;
+    /* Scroll affordance. The wide fill-in tables (page 3 EQUIPMENT / WEAPON
+     * DAMAGE, page 5 PREPARED WHISPERS) overflow this frame on a phone, but a
+     * touch device's overlay scrollbar stays hidden until you drag — so nothing
+     * cues that columns exist off the right edge and a user filling their sheet
+     * misses them. Lea Verou's pure-CSS scroll-shadow: two opaque paper "cover"
+     * gradients that scroll WITH the content (background-attachment: local) sit
+     * over two fixed edge-shadow gradients, hiding each shadow only when that
+     * edge is fully reached. So the right shadow shows "more → scroll" and
+     * disappears once you scroll to the last column. It is a background, so it
+     * paints BEHIND the transparent cells (the ink fields stay fully legible,
+     * never faded). --paper is a fixed light constant here, so no dark variant
+     * is needed. @media print never sets overflow/background on .sheetwrap, so
+     * the printed PDF is untouched; desktop (>700px) never enters this block. */
+    background:
+      linear-gradient(to right, var(--paper) 32%, rgba(246, 241, 229, 0)) left
+        center,
+      linear-gradient(to left, var(--paper) 32%, rgba(246, 241, 229, 0)) right
+        center,
+      radial-gradient(
+          farthest-side at 0 50%,
+          rgba(33, 29, 23, 0.5),
+          rgba(33, 29, 23, 0)
+        )
+        left center,
+      radial-gradient(
+          farthest-side at 100% 50%,
+          rgba(33, 29, 23, 0.5),
+          rgba(33, 29, 23, 0)
+        )
+        right center;
+    background-repeat: no-repeat;
+    background-size: 38px 100%, 38px 100%, 24px 100%, 24px 100%;
+    background-attachment: local, local, scroll, scroll;
+    scrollbar-width: thin; /* a persistent thin bar where the OS honours it */
   }
   .papersheet .sheetwrap table.sheet {
     min-width: 560px;
