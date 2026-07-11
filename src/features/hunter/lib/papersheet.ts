@@ -1,3 +1,4 @@
+import { getClass } from "@/data/classes";
 import type { HunterCard, SheetData } from "@/types";
 
 /** Card fields mirrored from the free-form sheet so lists, party views and
@@ -15,6 +16,13 @@ export function sheetMirror(sheet: SheetData): Pick<HunterCard, "name" | "level"
 export function sheetClassName(sheet: SheetData | undefined): string {
   const v = sheet?.["class"];
   return typeof v === "string" ? v.trim() : "";
+}
+
+/** A card's display class: the sheet's free-text class line, falling back to
+ * the structured `classId` for hunters that predate the sheet (legacy builder
+ * cards, test-run bots) — so list rows never show a classless hunter. */
+export function cardClassName(card: Pick<HunterCard, "sheet" | "classId">): string {
+  return sheetClassName(card.sheet) || getClass(card.classId)?.name || "";
 }
 
 /** Parse an integer out of a sheet's free-text box ("22", "+2", "30 ft") —

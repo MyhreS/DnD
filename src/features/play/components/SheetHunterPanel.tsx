@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PaperSheetModal } from "@/features/hunter/components/papersheet/PaperSheetModal";
-import { sheetClassName } from "@/features/hunter/lib/papersheet";
+import { cardClassName } from "@/features/hunter/lib/papersheet";
 import type { HunterCard } from "@/types";
 
 /** The in-game panel for a sheet-made hunter: the paper sheet IS the tracker —
@@ -8,7 +8,7 @@ import type { HunterCard } from "@/types";
  * instead of the structured trackers / rest / inventory panels. */
 export function SheetHunterPanel({ card }: { card: HunterCard }) {
   const [open, setOpen] = useState(false);
-  const cls = sheetClassName(card.sheet);
+  const cls = cardClassName(card);
 
   return (
     <>

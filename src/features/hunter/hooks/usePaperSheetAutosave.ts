@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { patchCharacterSheet } from "@/api/players";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { sheetMirror } from "../lib/papersheet";
+import { deriveSheetFromCard } from "../lib/deriveSheetFromCard";
 import type { HunterCard, SheetData } from "@/types";
 
 const SAVE_DEBOUNCE_MS = 700;
@@ -25,23 +26,35 @@ export function usePaperSheetAutosave(
   card: HunterCard,
   { readOnly = false, create = false }: { readOnly?: boolean; create?: boolean } = {},
 ) {
-  const [local, setLocal] = useState<SheetData>(() => card.sheet ?? {});
+  // Sheet-less cards (legacy builder hunters, test-run bots) start from a
+  // sheet DERIVED from their structured fields — never a blank page.
+  const [local, setLocal] = useState<SheetData>(() => card.sheet ?? deriveSheetFromCard(card));
   const [saveMsg, setSaveMsg] = useState("");
   const latest = useRef(local);
   /** Keys edited since the last successful persist. */
   const dirty = useRef<Set<string>>(new Set());
   const created = useRef(!create);
+  /** True until a sheet-less card's FIRST persist: that write carries the
+   * whole derived sheet (not just the edited key), converting the card, so
+   * the name/level/background mirror always computes from a complete
+   * snapshot — a DM "playing as" a legacy hunter can never blank its card. */
+  const seeding = useRef(!card.sheet);
   const timer = useRef<number | null>(null);
   const cardRef = useRef(card);
   cardRef.current = card;
 
   const persist = useCallback(async () => {
-    const keys = Array.from(dirty.current);
-    if (keys.length === 0) return;
+    if (dirty.current.size === 0) return;
+    const dirtyKeys = Array.from(dirty.current);
+    const seedingNow = seeding.current;
+    const snapshot = latest.current;
+    // The first save of a sheet-less card persists every derived key too.
+    const keys = seedingNow
+      ? Array.from(new Set([...Object.keys(snapshot), ...dirtyKeys]))
+      : dirtyKeys;
     // Take ownership of the pending changes; restore them on failure so the
     // next edit retries.
     dirty.current = new Set();
-    const snapshot = latest.current;
     try {
       const base = cardRef.current;
       if (!created.current) {
@@ -51,13 +64,18 @@ export function usePaperSheetAutosave(
         if (!ok) throw new Error("create failed");
         created.current = true;
       } else {
-        const mirror = keys.some((k) => MIRROR_KEYS.includes(k)) ? sheetMirror(snapshot) : {};
+        // Mirrors compute from the FULL local snapshot (derived + edits) —
+        // when seeding they're written regardless, since the derived values
+        // restate the card's own fields (idempotent, never blanking).
+        const mirror =
+          seedingNow || keys.some((k) => MIRROR_KEYS.includes(k)) ? sheetMirror(snapshot) : {};
         await patchCharacterSheet(base.id, snapshot, keys, mirror);
       }
+      seeding.current = false;
       setSaveMsg("Saved");
       window.setTimeout(() => setSaveMsg((m) => (m === "Saved" ? "" : m)), 1600);
     } catch (err) {
-      for (const k of keys) dirty.current.add(k);
+      for (const k of dirtyKeys) dirty.current.add(k);
       console.error("Failed to save the character sheet", err);
       setSaveMsg("Save failed");
     }
@@ -105,6 +123,7 @@ export function usePaperSheetAutosave(
   }, [readOnly, flush]);
 
   // Read-only viewers follow the live doc; editors keep their working copy.
-  const data = readOnly ? (card.sheet ?? {}) : local;
+  // Sheet-less cards read through the derived fallback here too.
+  const data = readOnly ? (card.sheet ?? deriveSheetFromCard(card)) : local;
   return { data, setField, saveMsg };
 }

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PaperSheetModal } from "@/features/hunter/components/papersheet/PaperSheetModal";
-import { sheetClassName } from "@/features/hunter/lib/papersheet";
+import { cardClassName } from "@/features/hunter/lib/papersheet";
 import { ChevronIcon } from "@/components/icons";
 import type { HunterCard } from "@/types";
 
@@ -8,7 +8,7 @@ import type { HunterCard } from "@/types";
 export function HunterRow({ card }: { card: HunterCard }) {
   const [open, setOpen] = useState(false);
   const [show, setShow] = useState(false);
-  const cls = sheetClassName(card.sheet);
+  const cls = cardClassName(card);
   return (
     <div className="card" style={{ padding: 0, overflow: "hidden" }}>
       <button
