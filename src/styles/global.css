@@ -1500,6 +1500,22 @@ input[type="range"].level-range {
 
 /* ---------- Print / PDF export ---------- */
 @media print {
+  /* Paper is white: never paint the app's dark theme — nor its fixed
+   * gradient layer, which Chromium repaints on EVERY printed page — onto
+   * printouts ("Background graphics" would otherwise print black pages).
+   * color-scheme must go light too: with `dark`, Chromium fills every
+   * printed page's whole canvas #121212 (:root, not html, to outrank the
+   * theme's own `:root { color-scheme: dark }`). */
+  :root {
+    background: #fff !important;
+    color-scheme: light;
+  }
+  body {
+    background: #fff !important;
+  }
+  body::before {
+    display: none !important;
+  }
   /* Undo the one-viewport app shell so the whole sheet paginates. */
   .app-shell {
     position: static !important;

@@ -1,10 +1,11 @@
 import { F, Ta, St, SheetTable } from "./sheetPrimitives";
 import { Info } from "./InfoDot";
 
+// `pblock` = one heading + its content, kept unbroken in print (papersheet.css).
 export function SheetPage3() {
   return (
     <div className="page">
-      <div data-step="2">
+      <div className="pblock" data-step="2">
         <h2 className="sec">EQUIPMENT (ALL) <St n={2} /> <Info k="equipment" /></h2>
         <SheetTable
           prefix="eq"
@@ -14,7 +15,7 @@ export function SheetPage3() {
         />
       </div>
 
-      <div style={{ marginTop: "9mm" }} data-step="5">
+      <div className="pblock" style={{ marginTop: "9mm" }} data-step="5">
         <h2 className="sec">WEAPON DAMAGE <St n={5} /> <Info k="weaponDamage" /></h2>
         <SheetTable
           prefix="wd"
@@ -31,7 +32,7 @@ export function SheetPage3() {
 export function SheetPage4() {
   return (
     <div className="page">
-      <div data-step="5">
+      <div className="pblock" data-step="5">
         <h2 className="sec">CLASS FEATURES <St n={5} /> <Info k="classFeatures" /></h2>
         <div className="features">
           <div className="col"><Ta f="features1" /></div>
@@ -39,7 +40,7 @@ export function SheetPage4() {
         </div>
       </div>
 
-      <div data-step="2">
+      <div className="pblock" data-step="2">
         <h2 className="centered">FEATS <St n={2} /> <Info k="feats" /></h2>
         <div className="featsbox"><Ta f="feats" /></div>
       </div>
@@ -54,14 +55,14 @@ export function SheetPage5() {
     <div className="page">
       <div className="blue-rule" style={{ marginTop: 0, width: "60mm" }} />
       <div className="rites-grid">
-        <div data-step="5">
+        <div className="pblock" data-step="5">
           <h2 className="sec" style={{ fontSize: 16 }}>WHISPERS AND RITES <St n={5} /> <Info k="rites" side="right" /></h2>
           <div className="riteline wide"><span className="lbl">RITE PERFORMING ABILITY</span><F f="riteAbility" /></div>
           <div className="riteline"><span className="lbl">RITE PERFORMING MODIFIER <St n={5} /></span><F f="riteMod" /></div>
           <div className="riteline"><span className="lbl">RITE SAVE DC <St n={5} /></span><F f="riteDC" /></div>
           <div className="riteline"><span className="lbl">RITE ATTACK BONUS <St n={5} /></span><F f="riteAttack" /></div>
         </div>
-        <div data-step="5">
+        <div className="pblock" data-step="5">
           <h2 className="sec">PREPARED WHISPERS <St n={5} /> <Info k="preparedWhispers" /></h2>
           <SheetTable
             prefix="wh"
