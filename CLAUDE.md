@@ -77,7 +77,12 @@ Rules:
 
 ```bash
 bun run typecheck     # tsc -b
-bun run lint          # eslint (incl. react-hooks + react-compiler rules)
+bun run lint          # eslint: rules-of-hooks (error) + the React Compiler
+                      #   bailout rules from eslint-plugin-react-hooks v7
+                      #   (immutability/purity/set-state-in-effect/refs/…) as
+                      #   *warnings* — they report bailouts without failing the
+                      #   gate. There is a backlog of pre-existing bailouts;
+                      #   tighten a rule back to "error" once its hotspots clear.
 bun run lint:fix
 bun run deadcode      # knip — unused files/exports/deps
 bun run deadcode:fix  # knip --fix (auto-remove dead code)

@@ -48,7 +48,7 @@
     "@vitejs/plugin-react": "^4.3.4",
     "babel-plugin-react-compiler": "^19.0.0-beta-3229e95-20250315",
     "eslint": "^9.18.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
     "eslint-plugin-react-refresh": "^0.4.18",
     "firebase-admin": "^13.0.0",
     "globals": "^15.14.0",
