@@ -1489,15 +1489,142 @@
   .papersheet .classfig {
     display: none;
   }
+
+  /* ---- pagination ----
+   * On screen each sheet page is a fixed 297mm A4 canvas. Printed, that is
+   * brittle: ANY printable height under 297mm (dialog margins, printer hard
+   * margins, Letter paper, Safari ignoring @page size) fragments the fixed
+   * box into a sliced page followed by a near-blank orphan strip. So in
+   * print the sheet reflows instead: pages take their natural height, the
+   * paper's whitespace comes from the injected `@page` 10mm margins (see
+   * usePaperSheetOpen) rather than page padding, and a slight uniform
+   * shrink gives every sheet page ~10mm of slack inside an A4 printable
+   * area even when the dialog forces its own 10mm margins. */
+  .papersheet {
+    zoom: 0.94;
+  }
   .papersheet .page {
     box-shadow: none;
-    margin: 0;
-    width: auto;
-    min-height: auto;
+    margin: 0 auto;
+    /* the screen design's content width — identical wrapping/proportions */
+    width: 186mm;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    /* 2mm of top padding keeps the first heading's red step badge (negative
+     * margins + translateY(-2px)) inside the page box — poking above it
+     * paints a stray arc at the bottom of the PREVIOUS paper page. The 5mm
+     * bottom padding reserves room for the absolutely-pinned .pageno footer
+     * so it stays out of flow and can never fragment onto a page alone. */
+    padding: 2mm 0 5mm;
+    /* the sheen is screen decoration — and Chromium mispaints gradient
+     * backgrounds on paginated boxes (it smeared over the left text edge) */
+    background-image: none;
     page-break-after: always;
   }
   .papersheet .page:last-child {
     page-break-after: auto;
+  }
+  /* Still absolutely positioned, but with NO top/bottom offset: it renders
+   * at its static position (right after the page's last section, inside the
+   * reserved bottom padding) while adding no flow height. Crucially, when a
+   * page is forced to fragment (e.g. Letter paper) the footer then paints in
+   * the fragment its static position falls in — always alongside content,
+   * never alone on an otherwise blank paper page (a bottom-pinned footer
+   * rides the sliced-off bottom padding onto a page of its own). */
+  .papersheet .pageno {
+    position: absolute;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    right: 0;
+    line-height: 1;
+    margin-top: 1mm;
+  }
+  /* A hair of extra height headroom so page 2 stays one page even under
+   * generous dialog margins — 7% off the paper doll is invisible. */
+  .papersheet .figure {
+    width: 93%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  /* If the printable area is still shorter than a sheet page (e.g. Letter
+   * paper), break BETWEEN the sheet's boxes — never through one. */
+  .papersheet .p1-top,
+  .papersheet .p1-bottom,
+  .papersheet .abil,
+  .papersheet .vrow,
+  .papersheet .bigstat,
+  .papersheet .fld,
+  .papersheet .tinge,
+  .papersheet .ac-row,
+  .papersheet .figure,
+  .papersheet .addon-row,
+  .papersheet .coins,
+  .papersheet .frame,
+  .papersheet .slotline,
+  .papersheet .training,
+  .papersheet .featsbox,
+  .papersheet .riteline,
+  .papersheet .pblock,
+  .papersheet table.sheet thead,
+  .papersheet table.sheet tr {
+    break-inside: avoid;
+  }
+  /* …and a section heading never sits alone at the bottom of a page. */
+  .papersheet h2.sec,
+  .papersheet h2.centered,
+  .papersheet .sec-title,
+  .papersheet .col-title {
+    break-after: avoid;
+    break-inside: avoid;
+  }
+
+  /* ---- Letter headroom ----
+   * US Letter is ~18mm shorter than A4. Millimetre-scale trims (invisible
+   * on paper) pull sheet pages 2-4 under Letter's printable height too, so
+   * they stay one paper page each even there. Sheet page 1 is left alone:
+   * its abilities grid can't lose 8mm, so on Letter its bottom row + footer
+   * flow together onto a continuation page instead. */
+  .papersheet .ac-row {
+    padding-top: 3mm;
+    margin-bottom: 3.5mm;
+  }
+  .papersheet .dashed-rule {
+    margin: 1.5mm 0 3.5mm;
+  }
+  .papersheet .figure {
+    margin-top: 2mm;
+  }
+  .papersheet .addons {
+    margin-top: 1.2mm;
+  }
+  .papersheet .addon-row {
+    margin-bottom: 1.2mm;
+  }
+  .papersheet .coins {
+    margin-top: 1.5mm;
+  }
+  .papersheet .rcol .frame {
+    margin-bottom: 2.5mm;
+  }
+  .papersheet .slots {
+    margin-top: 0.5mm;
+  }
+  .papersheet .slotline {
+    margin-bottom: 1.2mm;
+  }
+  .papersheet .training {
+    margin-top: 2.5mm;
+  }
+  .papersheet .trainline {
+    padding: 1mm 0;
+  }
+  .papersheet table.sheet td {
+    height: 7.9mm;
+  }
+  .papersheet .features textarea {
+    height: 146mm;
   }
   .papersheet input[type="text"] {
     border-bottom-color: #8a7f6a;

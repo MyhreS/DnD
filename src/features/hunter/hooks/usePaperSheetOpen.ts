@@ -8,15 +8,18 @@ let openCount = 0;
 let prevOverflow = "";
 
 // @page cannot be scoped by selector, so an always-loaded stylesheet would
-// force A4/no-margin onto EVERY print in the app. Inject it only while a
-// sheet overlay is actually open.
+// force A4 onto EVERY print in the app. Inject it only while a sheet overlay
+// is actually open. Real 10mm margins (not 0): printers have unprintable
+// borders and print dialogs impose margins anyway — the print stylesheet
+// reflows each sheet page to fit INSIDE them (papersheet.css "print"),
+// instead of pretending the full 297mm is printable and getting fragmented.
 const PAGE_STYLE_ID = "papersheet-page-style";
 
 function addPageStyle() {
   if (document.getElementById(PAGE_STYLE_ID)) return;
   const style = document.createElement("style");
   style.id = PAGE_STYLE_ID;
-  style.textContent = "@page { size: A4; margin: 0; }";
+  style.textContent = "@page { size: A4; margin: 10mm; }";
   document.head.appendChild(style);
 }
 
