@@ -18,6 +18,7 @@ export function useHandbookIntent() {
     tab: params.get("tab"),
     chapter: params.get("chapter"),
     section: params.get("section"),
+    item: params.get("item"),
   };
 }
 

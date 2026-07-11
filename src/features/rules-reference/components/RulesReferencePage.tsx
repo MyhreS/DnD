@@ -31,7 +31,7 @@ export function RulesReferencePage() {
       ) : (
         <div className="stack" style={{ gap: 10 }}>
           {results.map((e) => (
-            <RuleEntryCard key={e.id} entry={e} />
+            <RuleEntryCard key={e.id} entry={e} query={query} />
           ))}
         </div>
       )}

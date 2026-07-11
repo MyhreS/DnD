@@ -1,4 +1,5 @@
 import { SearchControls } from "@/components/SearchControls";
+import { bodySnippet } from "@/lib/search";
 import { HANDBOOK_GROUPS, type HandbookHit } from "../lib/handbookIndex";
 import type { useHandbookSearch } from "../hooks/useHandbookSearch";
 
@@ -29,7 +30,7 @@ export function HandbookSearch({
         ) : (
           <div className="stack" style={{ gap: 10 }}>
             {results.map((h) => (
-              <ResultCard key={h.id} hit={h} onOpen={() => onOpen(h)} />
+              <ResultCard key={h.id} hit={h} query={query} onOpen={() => onOpen(h)} />
             ))}
           </div>
         ))}
@@ -37,7 +38,17 @@ export function HandbookSearch({
   );
 }
 
-function ResultCard({ hit, onOpen }: { hit: HandbookHit; onOpen: () => void }) {
+function ResultCard({
+  hit,
+  query,
+  onOpen,
+}: {
+  hit: HandbookHit;
+  query: string;
+  onOpen: () => void;
+}) {
+  // When the match lives in the body (not the title), show where it hit.
+  const snip = bodySnippet(hit, query);
   return (
     <button
       type="button"
@@ -50,6 +61,13 @@ function ResultCard({ hit, onOpen }: { hit: HandbookHit; onOpen: () => void }) {
         <span className="chip" style={{ flex: "none", fontSize: "0.7rem" }}>{hit.group}</span>
       </div>
       <p className="muted" style={{ margin: "4px 0 0", fontSize: "0.86rem" }}>{hit.context}</p>
+      {snip && (
+        <p className="faint" style={{ margin: "6px 0 0", fontSize: "0.82rem" }}>
+          {snip.before}
+          <strong className="gold">{snip.match}</strong>
+          {snip.after}
+        </p>
+      )}
       <div className="gold" style={{ fontSize: "0.8rem", marginTop: 6 }}>Open →</div>
     </button>
   );
