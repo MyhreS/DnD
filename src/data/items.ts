@@ -177,7 +177,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 4,
-    note: "Storage: uses the chest slot, gives 4 Significant slots (chest).",
+    note: "Storage: uses the front slot, gives 4 Significant slots (front).",
   },
   {
     id: "backpack",

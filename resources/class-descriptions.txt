@@ -5,7 +5,7 @@ HUNTER SCOUT
 Before rifles became the hunter’s sacred thunder, Scouts were the first to prove that a Dreadblood could be studied, stalked, and dropped from afar. They are pathfinders, marksmen, and survivalists who read the land like scripture and kill before the dark can close its jaws.
 
 HUNTER WARDEN
-Wardens are the steady hand in a world gone mad. Trusted more than most hunters, they command bands through discipline, tactics, and cold battlefield judgment, turning frightened killers into something sharper than fear.
+Wardens are the steady hand in a world gone mad. Trusted more than most Hunters, they are often seen as the commanders of Hunter Bands. When they lead, they do so through discipline, tactics, and cold battlefield judgment, turning frightened killers into something sharper than fear. A band without a Warden at the front rarely lasts long.
 
 HUNTER STALKER
 When brute force and rifle fire were not enough, the bands turned to assassins, cutthroats, and thieves. Stalkers are the knives in the blind corner: silent murderers who learned that some horrors must be killed before they know the hunt has begun.

@@ -61,38 +61,47 @@ META = {
     primary="STR or DEX", saves=["str","con"], hitDie=10, maxSanity=12, sanityDie="2d6", speed=30,
     armor=["Light armor","Medium armor","Heavy armor"], weapons="Simple and Martial weapons",
     tools="—", skills=2, skillOpts=["Acrobatics","Athletics","Grit","Perception","Survival","Intimidation"],
-    equip=["Tool Belt","2 Blood vials","Greatsword","Shortsword","Rope"], base="Fighter",
+    # Handbook Ch.2 Core Traits: "Greatsword, Shortsword, Bloodvial (1), Toolbelt and Rope"
+    equip=["Greatsword","Shortsword","1 Blood vial","Tool Belt","Rope"], base="Fighter",
     sig="Refuse the Bleeding — when you take damage, use your reaction to reduce it by 1d10 + your Hunter Brute level."),
   "scout": dict(name="Scout", title="Hunter Scout", tagline="Eyes of the hunt, finger on the trigger.",
     primary="DEX and WIS", saves=["str","dex"], hitDie=10, maxSanity=12, sanityDie="2d6", speed=35,
     armor=["Light armor","Medium armor"], weapons="Simple and Martial weapons",
     tools="—", skills=3, skillOpts=["Animal Handling","Athletics","Stealth","Survival","Investigation","Perception"],
+    # NOTE: Handbook Ch.2 Core Traits say "Hunter Rifle, Shortsword, Bloodvial (1), Bullets (20)
+    # Toolbelt, Bandolier and Pistol" — Shortsword (not Hunter Cleaver) + 20 bullets. Conflicts with
+    # the older boards (Hunter Cleaver is a unique Scout item). Kept as-is pending DM confirmation;
+    # see resources/master.json sourceConflicts["Class starting equipment"].
     equip=["Tool Belt","1 Blood vial","18 bullets","Hunter Rifle","Hunter Cleaver","Pistol","Bandolier"], base="Ranger",
     sig="Hunter's Mark — Bonus Action, mark a creature within 90 ft: +1d6 on your hits against it and Advantage to track it."),
   "stalker": dict(name="Stalker", title="Hunter Stalker", tagline="A whisper, a glint, a slit throat.",
     primary="DEX", saves=["dex","int"], hitDie=8, maxSanity=12, sanityDie="1d12", speed=30,
     armor=["Light armor"], weapons="Simple weapons and Martial weapons with the Finesse or Light property",
     tools="Thieves' Tools", skills=2, skillOpts=["Acrobatics","Athletics","Deception","Insight","Intimidation","Investigation","Perception","Sleight of Hand","Stealth"],
-    equip=["Tool Belt","1 Blood vial","4 bullets","Scimitar","4 Daggers","Pistol","Thieves' Tools"], base="Rogue",
+    # Handbook Ch.2 Core Traits: "Scimitar, 4 Daggers, Pistol, Bullets (5) Toolbelt, Ankle Holster and Thieves Tools"
+    equip=["Scimitar","4 Daggers","Pistol","5 bullets","Tool Belt","Ankle Holster","Thieves' Tools"], base="Rogue",
     sig="Sneak Attack — once per turn, deal extra damage (1d6, scaling to 10d6) to a target you have Advantage against."),
   "deepcaller": dict(name="Deepcaller", title="Hunter Deepcaller", tagline="Knowledge man was not meant to hold.",
     primary="INT", saves=["int","wis"], hitDie=6, maxSanity=16, sanityDie="1d20", speed=30,
     armor=["Light armor"], weapons="Simple weapons",
     tools="—", skills=2, skillOpts=["Eldritch Knowledge","Old World History","Investigation","Insight","Blood Nature","Religion","Deception"],
-    equip=["Tool Belt","1 Blood vial","Sickle","2 Daggers","Book of eldritch knowledge","Robe"], base="Warlock",
+    # Handbook Ch.2 Core Traits: "Sickle, Dagger, Bloodvial (1), Toolbelt Book of the Deepcaller and Deepcallers Robe"
+    equip=["Sickle","Dagger","1 Blood vial","Tool Belt","Book of the Deepcaller","Deepcallers Robe"], base="Warlock",
     sig="Rites & Whispers — perform forbidden Rites from your Book of the Deepcaller, fuelled by Strain and paid for in Madness.",
     caster=True),
   "bloodbound": dict(name="Bloodbound", title="Hunter Bloodbound", tagline="The hunt sings in their veins.",
     primary="CON", saves=["str","con"], hitDie=12, maxSanity=20, sanityDie="1d20", speed=30,
     armor=["Light armor","Medium armor"], weapons="Simple and Martial weapons",
     tools="Blood-drainer's Tools (unique item)", skills=2, skillOpts=["Grit","Blood Nature","Athletics","Intimidation","Medicine","Perception","Survival"],
-    equip=["Tool Belt","3 Blood vials","Greataxe","2 Handaxes","Blood-drainer's Tools (unique item)"], base="Barbarian",
+    # Handbook Ch.2 Core Traits: "Greataxe, 2 Handaxes, Blood-drainer's Tools, Blood Vials (4), and Tool Belt"
+    equip=["Greataxe","2 Handaxes","Blood-drainer's Tools (unique item)","4 Blood vials","Tool Belt"], base="Barbarian",
     sig="Blood Frenzy — enter a frenzy for bonus damage and resilience: frenzied, but sane."),
   "warden": dict(name="Warden", title="Hunter Warden", tagline="The lantern that others follow.",
     primary="WIS and CHA", saves=["wis","cha"], hitDie=10, maxSanity=14, sanityDie="4d4", speed=30,
     armor=["Light armor","Medium armor","Heavy armor"], weapons="Simple and Martial weapons",
     tools="—", skills=2, skillOpts=["Perception","Investigation","Animal Handling","Survival","Presence","Persuasion"],
-    equip=["Tool Belt","1 Blood vial","Hunter Rifle","10 bullets","Longsword","Navigator's Tools","Bell","Bandolier","2 Hunting Traps"], base="Fighter",
+    # Handbook Ch.2 Core Traits: "Hunter Rifle, Longsword, Navigators Tools, Bell, 1 Hunting Trap, Tool Belt, Bandolier, Bullets (14)"
+    equip=["Hunter Rifle","Longsword","Navigator's Tools","Bell","1 Hunting Trap","Tool Belt","Bandolier","14 bullets"], base="Fighter",
     sig="Bands Directive — direct your band in battle with a Directive Die (d6→d12), turning fear into discipline."),
 }
 
@@ -175,10 +184,8 @@ out.write("\n];\n\n")
 out.write("export const CLASS_BY_ID: Record<string, HunterClass> = Object.fromEntries(\n")
 out.write("  CLASSES.map((c) => [c.id, c]),\n);\n\n")
 out.write("export function getClass(id: string | null | undefined): HunterClass | undefined {\n")
-out.write("  if (!id) return undefined;\n  return CLASS_BY_ID[id];\n}\n\n")
-out.write("export function getSubclass(classId: string, subId: string | null | undefined) {\n")
-out.write("  if (!subId) return undefined;\n")
-out.write("  return getClass(classId)?.subclasses.find((s) => s.id === subId);\n}\n")
+out.write("  if (!id) return undefined;\n  return CLASS_BY_ID[id];\n}\n")
+# (getSubclass is intentionally not emitted — the app doesn't use it; knip flags it as dead code.)
 open(os.path.join(SRC, "classes.ts"), "w", encoding="utf-8").write(out.getvalue())
 print("wrote classes.ts (%d chars)" % len(out.getvalue()))
 
@@ -210,8 +217,7 @@ ro.write("\n".join(emit_rite(r) for r in rites_sorted))
 ro.write("\n];\n\n")
 ro.write("export const RITE_TYPES: RiteType[] = [\n")
 ro.write('  "Evocation", "Mind Influence", "Illusion", "Summoning",\n')
-ro.write('  "Traversal", "Detection", "Protection",\n];\n\n')
-ro.write("export const RITE_BY_ID: Record<string, Rite> = Object.fromEntries(\n")
-ro.write("  RITES.map((r) => [r.id, r]),\n);\n")
+ro.write('  "Traversal", "Detection", "Protection",\n];\n')
+# (RITE_BY_ID is intentionally not emitted — the app doesn't use it; knip flags it as dead code.)
 open(os.path.join(SRC, "rites.ts"), "w", encoding="utf-8").write(ro.getvalue())
 print("wrote rites.ts (%d chars, %d rites)" % (len(ro.getvalue()), len(rites_sorted)))

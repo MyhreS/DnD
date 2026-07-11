@@ -575,10 +575,10 @@ export const RULES_REFERENCE: RuleEntry[] = [
     id: "hit-dice",
     term: "Hit Dice",
     category: "Damage & Healing",
-    aliases: ["hd", "hit die", "spend hit dice"],
+    aliases: ["hd", "hit die", "spend hit dice", "hit point dice"],
     body: [
-      "A pool tied to your level (one die of your class's type per level). On a Short Rest you can spend Hit Dice, rolling each + your Constitution modifier to regain HP.",
-      "You recover some spent Hit Dice on a Long Rest.",
+      "A pool tied to your level (one die of your class's type per level). During a Short Rest you can spend a number of Hit Point Dice up to your Proficiency Bonus, rolling each + your Constitution modifier to regain HP — but only if the Short Rest takes place in a Safe Zone.",
+      "A Long Rest inside the Hunters Lodge recovers all expended Hit Dice; a Long Rest outside it recovers none.",
     ],
   },
   {
@@ -674,19 +674,22 @@ export const RULES_REFERENCE: RuleEntry[] = [
     id: "long-rest",
     term: "Long Rest",
     category: "General",
-    aliases: ["rest", "full rest", "sleep"],
+    aliases: ["rest", "full rest", "sleep", "hunters lodge", "hunter's lodge"],
     body: [
-      "An extended rest (about 8 hours) that restores all hit points, returns roughly half your spent Hit Dice, and removes one level of Exhaustion.",
-      "In this campaign, where you can safely take a long rest is location-dependent — confirm with the DM.",
+      "An extended rest (about 8 hours) that removes one level of Exhaustion.",
+      "A Long Rest inside the Hunters Lodge recovers all Hit Points and expended Hit Dice.",
+      "When you finish a Long Rest outside the Hunter's Lodge, you regain Hit Points equal to half your Hit Point maximum, up to your Hit Point maximum. You do not regain any expended Hit Point Dice from this Long Rest.",
+      "You can roll your one Sanity Die on every Long Rest: roll the die and add your Wisdom modifier — you regain Sanity equal to the total.",
     ],
   },
   {
     id: "short-rest",
     term: "Short Rest",
     category: "General",
-    aliases: ["breather", "quick rest"],
+    aliases: ["breather", "quick rest", "safe zone"],
     body: [
-      "A break of at least 1 hour of light activity. You can spend Hit Dice (roll + Constitution modifier) to heal, and you regain certain abilities.",
+      "A break of at least 1 hour of light activity. You can spend a number of Hit Point Dice up to your Proficiency Bonus (roll each + your Constitution modifier) to heal, and you regain certain abilities.",
+      "You can spend Hit Point Dice only if the Short Rest takes place in a Safe Zone.",
     ],
   },
   {
