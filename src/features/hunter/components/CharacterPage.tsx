@@ -1,10 +1,12 @@
-import { useState, type ReactNode } from "react";
+import { lazy, Suspense, useState, type ReactNode } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { useHunterCard } from "../hooks/useHunterCard";
 import { useEditorIntent } from "../hooks/useEditorIntent";
 import { CharacterView } from "./CharacterView";
-import { PaperSheetModal } from "./papersheet/PaperSheetModal";
+const PaperSheetModal = lazy(() =>
+  import("./papersheet/PaperSheetModal").then((m) => ({ default: m.PaperSheetModal })),
+);
 import { emptySheetCard } from "@/lib/character";
 import { CardSkeleton } from "@/components/Skeleton";
 import { Sigil } from "@/components/icons";
@@ -118,7 +120,11 @@ export function CharacterPage() {
   return (
     <>
       {body}
-      {draftCard && <PaperSheetModal card={draftCard} create={!storeDraft} onClose={closeSheetDraft} />}
+      {draftCard && (
+        <Suspense fallback={null}>
+          <PaperSheetModal card={draftCard} create={!storeDraft} onClose={closeSheetDraft} />
+        </Suspense>
+      )}
     </>
   );
 }

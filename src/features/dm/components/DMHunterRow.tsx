@@ -1,6 +1,10 @@
-import { useState } from "react";
-import { PaperSheetModal } from "@/features/hunter/components/papersheet/PaperSheetModal";
+import { lazy, Suspense, useState } from "react";
 import { cardClassName } from "@/features/hunter/lib/papersheet";
+const PaperSheetModal = lazy(() =>
+  import("@/features/hunter/components/papersheet/PaperSheetModal").then((m) => ({
+    default: m.PaperSheetModal,
+  })),
+);
 import { ChevronIcon } from "@/components/icons";
 import type { HunterCard } from "@/types";
 
@@ -62,7 +66,11 @@ export function DMHunterRow({ card, onRemove }: { card: HunterCard; onRemove?: (
           ×
         </button>
       )}
-      {show && <PaperSheetModal card={card} readOnly onClose={() => setShow(false)} />}
+      {show && (
+        <Suspense fallback={null}>
+          <PaperSheetModal card={card} readOnly onClose={() => setShow(false)} />
+        </Suspense>
+      )}
     </div>
   );
 }
