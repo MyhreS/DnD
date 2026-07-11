@@ -1,18 +1,18 @@
 import { useEffect, type RefObject } from "react";
 
-/** Popover behaviour for the toolbar's Guides menu: while open, focus moves to
- * the first toggle, Escape closes it (captured BEFORE the sheet's own
- * Escape-to-close so the modal stays open) and returns focus to the button,
- * and any tap outside dismisses it. */
-export function useGuidesPopover(
+/** Popover behaviour for the sheet-toolbar menus (Guides, AI-help fallback):
+ * while open, focus moves to the first control, Escape closes it (captured
+ * BEFORE the sheet's own Escape-to-close so the modal stays open) and returns
+ * focus to the anchor, and any tap outside dismisses it. */
+export function useGuidesPopover<E extends HTMLElement>(
   open: boolean,
   close: () => void,
   popRef: RefObject<HTMLDivElement | null>,
-  btnRef: RefObject<HTMLButtonElement | null>,
+  btnRef: RefObject<E | null>,
 ) {
   useEffect(() => {
     if (!open) return;
-    popRef.current?.querySelector("input")?.focus();
+    popRef.current?.querySelector<HTMLElement>("input, textarea, button")?.focus();
     const onKey = (e: KeyboardEvent) => {
       if (e.key !== "Escape") return;
       e.stopPropagation(); // don't let the sheet's document-level Escape close the modal

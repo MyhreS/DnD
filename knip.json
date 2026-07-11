@@ -3,8 +3,5 @@
   "entry": ["scripts/*.mjs"],
   "project": ["src/**/*.{ts,tsx}"],
   "ignoreExportsUsedInFile": true,
-  "ignoreBinaries": ["doppler", "firebase"],
-  "ignore": [
-    "src/api/aiHelp.ts"
-  ]
+  "ignoreBinaries": ["doppler", "firebase"]
 }
