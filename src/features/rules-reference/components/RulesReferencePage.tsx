@@ -1,4 +1,5 @@
 import { RULE_CATEGORIES } from "@/data/rulesReference";
+import { SearchControls } from "@/components/SearchControls";
 import { useRuleSearch } from "../hooks/useRuleSearch";
 import { RuleEntryCard } from "./RuleEntryCard";
 
@@ -9,40 +10,21 @@ export function RulesReferencePage() {
   return (
     <div className="stack" style={{ gap: 14 }}>
       <div>
-        <p className="eyebrow">Reference</p>
-        <h1 style={{ margin: 0 }}>Rules Reference</h1>
+        <p className="eyebrow">Quick Lookup</p>
+        <h1 style={{ margin: 0 }}>Rules</h1>
         <p className="muted" style={{ marginTop: 4, marginBottom: 0 }}>
           The 5e (2024) glossary — conditions, actions, and combat terms. Search anything.
         </p>
       </div>
 
-      <input
-        className="input"
-        type="search"
+      <SearchControls
+        query={query}
+        onQuery={setQuery}
         placeholder="Search rules… (e.g. grapple, frightened, cover)"
-        value={query}
-        onChange={(e) => setQuery(e.target.value)}
+        categories={RULE_CATEGORIES}
+        category={category}
+        onCategory={setCategory}
       />
-
-      <div className="chip-row">
-        <button
-          type="button"
-          className={`chip selectable${category === "all" ? " selected" : ""}`}
-          onClick={() => setCategory("all")}
-        >
-          All
-        </button>
-        {RULE_CATEGORIES.map((c) => (
-          <button
-            key={c}
-            type="button"
-            className={`chip selectable${category === c ? " selected" : ""}`}
-            onClick={() => setCategory(c)}
-          >
-            {c}
-          </button>
-        ))}
-      </div>
 
       {results.length === 0 ? (
         <p className="faint">No rules match “{query}”.</p>

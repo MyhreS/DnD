@@ -1,26 +1,58 @@
 import { useState } from "react";
-import { HANDBOOK } from "@/data/handbook";
-import { ARMOR } from "@/data/armor";
-import { ChevronIcon } from "@/components/icons";
-import type { ArmorCategory } from "@/types";
+import { useSearchParams } from "react-router-dom";
 import { AsyncButton } from "@/components/AsyncButton";
 import { downloadHandbookPdf } from "../lib/handbookPdf";
-import { useHandbookIntent, useScrollToSection, sectionSlug } from "../hooks/useHandbookIntent";
+import { useHandbookIntent } from "../hooks/useHandbookIntent";
+import { useHandbookSearch } from "../hooks/useHandbookSearch";
+import { HANDBOOK_TABS, type HandbookHit, type HandbookTab } from "../lib/handbookIndex";
+import { HandbookSearch } from "./HandbookSearch";
+import { ChaptersTab } from "./ChaptersTab";
 import { ClassesTab } from "./ClassesTab";
 import { RitesTab } from "./RitesTab";
 import { BackgroundsTab } from "./BackgroundsTab";
 import { FeatsTab } from "./FeatsTab";
+import { ArmoryTab } from "./ArmoryTab";
 
-type Tab = "rules" | "classes" | "backgrounds" | "feats" | "rites" | "armory";
-const TABS: readonly Tab[] = ["rules", "classes", "backgrounds", "feats", "rites", "armory"];
+const TAB_LABEL: Record<HandbookTab, string> = {
+  rules: "Chapters",
+  classes: "Classes",
+  backgrounds: "Backgrounds",
+  feats: "Feats",
+  rites: "Rites",
+  armory: "Armory",
+};
 
 export function HandbookPage() {
   // Deep links (`?tab=…&chapter=…&section=…`) pick the landing spot — the
   // sheet's info dots open the handbook exactly where a topic is covered.
   const intent = useHandbookIntent();
-  const [tab, setTab] = useState<Tab>(() =>
-    TABS.includes(intent.tab as Tab) ? (intent.tab as Tab) : "rules",
+  const [, setParams] = useSearchParams();
+  const [tab, setTab] = useState<HandbookTab>(() =>
+    HANDBOOK_TABS.includes(intent.tab as HandbookTab) ? (intent.tab as HandbookTab) : "rules",
   );
+  const search = useHandbookSearch();
+
+  // A search hit jumps into the content: switch tabs, and for chapter sections
+  // reuse the deep-link params so the accordion opens + scrolls + pulses.
+  function openHit(hit: HandbookHit) {
+    search.setQuery("");
+    setTab(hit.tab);
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("q");
+        next.delete("chapter");
+        next.delete("section");
+        next.set("tab", hit.tab);
+        if (hit.chapter && hit.section) {
+          next.set("chapter", hit.chapter);
+          next.set("section", hit.section);
+        }
+        return next;
+      },
+      { replace: true },
+    );
+  }
 
   return (
     <div className="reading">
@@ -28,21 +60,32 @@ export function HandbookPage() {
       <h1 className="page-title">Player's Handbook</h1>
       <p className="page-intro">Everything you need to play Catacombs &amp; Starspawns.</p>
 
-      <div className="row" style={{ gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
-        <TabButton active={tab === "rules"} onClick={() => setTab("rules")}>Rules</TabButton>
-        <TabButton active={tab === "classes"} onClick={() => setTab("classes")}>Classes</TabButton>
-        <TabButton active={tab === "backgrounds"} onClick={() => setTab("backgrounds")}>Backgrounds</TabButton>
-        <TabButton active={tab === "feats"} onClick={() => setTab("feats")}>Feats</TabButton>
-        <TabButton active={tab === "rites"} onClick={() => setTab("rites")}>Rites</TabButton>
-        <TabButton active={tab === "armory"} onClick={() => setTab("armory")}>Armory</TabButton>
-      </div>
+      <HandbookSearch search={search} onOpen={openHit} />
 
-      {tab === "rules" && <RulesTab focusChapter={intent.chapter} focusSection={intent.section} />}
-      {tab === "classes" && <ClassesTab />}
-      {tab === "backgrounds" && <BackgroundsTab />}
-      {tab === "feats" && <FeatsTab />}
-      {tab === "rites" && <RitesTab />}
-      {tab === "armory" && <ArmoryTab />}
+      {!search.active && (
+        <>
+          <div className="row" style={{ gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+            {HANDBOOK_TABS.map((t) => (
+              <TabButton key={t} active={tab === t} onClick={() => setTab(t)}>
+                {TAB_LABEL[t]}
+              </TabButton>
+            ))}
+          </div>
+
+          {tab === "rules" && (
+            <ChaptersTab
+              key={`${intent.chapter}:${intent.section}`}
+              focusChapter={intent.chapter}
+              focusSection={intent.section}
+            />
+          )}
+          {tab === "classes" && <ClassesTab />}
+          {tab === "backgrounds" && <BackgroundsTab />}
+          {tab === "feats" && <FeatsTab />}
+          {tab === "rites" && <RitesTab />}
+          {tab === "armory" && <ArmoryTab />}
+        </>
+      )}
 
       <div className="rule-ornament">◆</div>
       <AsyncButton
@@ -78,91 +121,5 @@ function TabButton({
     >
       {children}
     </button>
-  );
-}
-
-function RulesTab({
-  focusChapter,
-  focusSection,
-}: {
-  focusChapter: string | null;
-  focusSection: string | null;
-}) {
-  const focused = HANDBOOK.some((c) => c.id === focusChapter) ? focusChapter : null;
-  const [open, setOpen] = useState<string | null>(focused ?? HANDBOOK[0]?.id ?? null);
-  useScrollToSection(focused, focusSection);
-  return (
-    <div className="stack" style={{ gap: 10 }}>
-      {HANDBOOK.map((chapter) => {
-        const isOpen = open === chapter.id;
-        return (
-          <div className="card" key={chapter.id} style={{ padding: 0, overflow: "hidden" }}>
-            <button
-              type="button"
-              onClick={() => setOpen(isOpen ? null : chapter.id)}
-              style={{ width: "100%", textAlign: "left", background: "transparent", border: 0, padding: 16, color: "var(--ink)" }}
-            >
-              <div className="row between">
-                <div>
-                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>{chapter.title}</div>
-                  <div className="faint" style={{ fontSize: "0.84rem" }}>{chapter.summary}</div>
-                </div>
-                <ChevronIcon
-                  width={18}
-                  height={18}
-                  style={{ transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.2s ease", color: "var(--gold-dim)", flex: "none" }}
-                />
-              </div>
-            </button>
-            {isOpen && (
-              <div style={{ padding: "0 16px 16px" }} className="fade-in">
-                {chapter.sections.map((s) => (
-                  <div key={s.heading} id={`hb-${chapter.id}-${sectionSlug(s.heading)}`} style={{ marginTop: 12 }}>
-                    <h3 style={{ fontSize: "0.98rem" }}>{s.heading}</h3>
-                    {s.body.map((p, i) => (
-                      <p key={i} className="muted" style={{ fontSize: "0.94rem" }}>{p}</p>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-const ARMOR_GROUPS: ArmorCategory[] = ["Main Armor", "Add-on Armor", "Armor Upgrade", "Extra"];
-
-function ArmoryTab() {
-  return (
-    <div className="stack" style={{ gap: 14 }}>
-      {ARMOR_GROUPS.map((group) => (
-        <div key={group}>
-          <p className="eyebrow" style={{ marginBottom: 8 }}>{group}</p>
-          <div className="card">
-            {group === "Extra" && (
-              <p className="faint" style={{ fontSize: "0.82rem", marginTop: 0 }}>
-                You may wear only one Extra per subcategory.
-              </p>
-            )}
-            <ul className="list-reset pill-list">
-              {ARMOR.filter((a) => a.category === group).map((a) => (
-                <li key={a.id}>
-                  <div className="row between">
-                    <span style={{ fontWeight: 600 }}>{a.name}</span>
-                    <span className="gold" style={{ flex: "none" }}>{a.ac}</span>
-                  </div>
-                  <div className="faint" style={{ fontSize: "0.84rem", marginTop: 2 }}>
-                    {a.subcategory ? `${a.subcategory} · ` : ""}{a.weightLb} lb · {a.special}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ))}
-    </div>
   );
 }

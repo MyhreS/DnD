@@ -1,9 +1,15 @@
-import type { RuleEntry } from "@/types";
+/** The minimal shape the shared search can rank: a primary term, optional
+ * aliases (synonyms / parent titles), and body paragraphs. */
+export interface Searchable {
+  term: string;
+  aliases?: string[];
+  body: string[];
+}
 
 /** Rank entries against a query. Every whitespace token must match somewhere
  * (term / alias / body) for an entry to appear (AND), with term matches ranked
  * far above body matches. An empty query returns the list unchanged. */
-export function searchRules(entries: RuleEntry[], query: string): RuleEntry[] {
+export function searchEntries<T extends Searchable>(entries: T[], query: string): T[] {
   const q = query.trim().toLowerCase();
   if (!q) return entries;
   const tokens = q.split(/\s+/);
@@ -14,7 +20,7 @@ export function searchRules(entries: RuleEntry[], query: string): RuleEntry[] {
     .map((x) => x.e);
 }
 
-function scoreEntry(entry: RuleEntry, tokens: string[]): number {
+function scoreEntry(entry: Searchable, tokens: string[]): number {
   const term = entry.term.toLowerCase();
   const aliases = (entry.aliases ?? []).map((a) => a.toLowerCase());
   const body = entry.body.join(" ").toLowerCase();

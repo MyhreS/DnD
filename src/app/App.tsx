@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useSettings } from "@/app/settings";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCampaignSync } from "@/features/campaigns/hooks/useCampaignSync";
@@ -23,6 +23,13 @@ import { DMOverviewPage } from "@/features/dm/components/DMOverviewPage";
 import { StatusPage } from "@/features/status/components/StatusPage";
 import { RulesReferencePage } from "@/features/rules-reference/components/RulesReferencePage";
 
+/** The Reference page became Rules — keep old bookmarks and the sheet's
+ * deep links (`/reference?q=…`) working, query string included. */
+function LegacyReferenceRedirect() {
+  const { search } = useLocation();
+  return <Navigate to={{ pathname: "/rules", search }} replace />;
+}
+
 function AuthedApp() {
   useCampaignSync();
   // Campaigns/sessions/live play are experimental — hidden unless enabled.
@@ -36,7 +43,8 @@ function AuthedApp() {
         <Route path="/" element={<MainMenu />} />
         <Route path="character" element={<CharacterPage />} />
         <Route path="handbook" element={<HandbookPage />} />
-        <Route path="reference" element={<RulesReferencePage />} />
+        <Route path="rules" element={<RulesReferencePage />} />
+        <Route path="reference" element={<LegacyReferenceRedirect />} />
         <Route path="dm" element={dmMode ? <DMOverviewPage /> : <Navigate to="/" replace />} />
         <Route path="profile" element={<ProfilePage />} />
       </Route>
@@ -72,7 +80,8 @@ export default function App() {
         <Route element={<PublicLayout />}>
           <Route index element={<Landing />} />
           <Route path="handbook" element={<HandbookPage />} />
-          <Route path="reference" element={<RulesReferencePage />} />
+          <Route path="rules" element={<RulesReferencePage />} />
+          <Route path="reference" element={<LegacyReferenceRedirect />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

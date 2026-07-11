@@ -1,7 +1,7 @@
 /** What every part of the paper sheet means, how to fill it in, and where the
  * handbook covers it. `pdfPage` cites the printable handbook PDF (it only
  * covers character creation, pp. 3–14); `link` deep-links into the app's
- * Handbook (or the Rules Reference) — opened in a new tab by the info dots. */
+ * Handbook (or the Rules page) — opened in a new tab by the info dots. */
 export interface SheetInfo {
   title: string;
   text: string;
@@ -9,35 +9,35 @@ export interface SheetInfo {
   pdfPage?: number;
   /** Human-readable "where to read more": tab / chapter → section. */
   refTitle: string;
-  /** App deep link (Handbook tab/chapter/section, or Rules Reference query). */
+  /** App deep link (Handbook tab/chapter/section, or Rules-page query). */
   link: string;
 }
 
 const rules = (chapter: string, section: string) =>
   `/handbook?tab=rules&chapter=${chapter}&section=${section}`;
 const tab = (t: string) => `/handbook?tab=${t}`;
-const ref = (q: string) => `/reference?q=${encodeURIComponent(q)}`;
+const ref = (q: string) => `/rules?q=${encodeURIComponent(q)}`;
 
 export const SHEET_INFO: Record<string, SheetInfo> = {
   name: {
     title: "Your Name",
     text: "Your real name — so the table knows whose sheet this is. Your hunter takes shape through the numbered steps.",
     pdfPage: 3,
-    refTitle: "Rules → Welcome, Hunter → The five steps",
+    refTitle: "Handbook → Welcome, Hunter → The five steps",
     link: rules("intro", "the-five-steps"),
   },
   background: {
     title: "Background",
     text: "What your hunter was before the hunt. A background grants an Origin feat, two skill proficiencies, one tool and ability points — write its name here.",
     pdfPage: 4,
-    refTitle: "Rules → Step 2 — Determine a Background",
+    refTitle: "Handbook → Step 2 — Determine a Background",
     link: rules("step-2-background", "what-you-were-before"),
   },
   class: {
     title: "Class",
     text: "Step 1: pick one of the six classes (Brute, Scout, Stalker, Deepcaller, Bloodbound, Warden) and write it here. It sets your hit die, saves, training and features.",
     pdfPage: 3,
-    refTitle: "Rules → Step 1 — Choose a Class · Classes tab",
+    refTitle: "Handbook → Step 1 — Choose a Class · Classes tab",
     link: rules("step-1-class", "pick-your-hunter"),
   },
   subclass: {
@@ -62,13 +62,13 @@ export const SHEET_INFO: Record<string, SheetInfo> = {
   transformation: {
     title: "Transformation Level",
     text: "How far the hunt has changed you (0–10). Gains are rolled at the table and recorded by the DM; rests reduce it. Starts at 0.",
-    refTitle: "Rules → Transformation",
+    refTitle: "Handbook → Transformation",
     link: rules("transformation", "transformation-level"),
   },
   sanity: {
     title: "Sanity",
     text: "Your mind's hit points. Max Sanity = class base + WIS modifier; your class also sets your Sanity Dice. At 0 you gain the Insane condition — tick the box.",
-    refTitle: "Rules → Sanity, Madness & Blood Tinge",
+    refTitle: "Handbook → Sanity, Madness & Blood Tinge",
     link: rules("sanity", "your-sanity-pool"),
   },
   hp: {
@@ -88,33 +88,33 @@ export const SHEET_INFO: Record<string, SheetInfo> = {
   deathSaves: {
     title: "Death Saves",
     text: "At 0 HP, roll a d20 each turn: 10+ is a success, else a failure. Three successes stabilize you; three failures and the hunt ends.",
-    refTitle: "Rules Reference → Death Saving Throws",
+    refTitle: "Rules → Death Saving Throws",
     link: ref("death saving throw"),
   },
   profBonus: {
     title: "Proficiency Bonus",
     text: "+2 at level 1, rising with level (see your class table). Add it to rolls you're proficient in — marked skills, saves, weapons.",
     pdfPage: 4,
-    refTitle: "Rules → Step 2 → Record your feat & proficiencies",
+    refTitle: "Handbook → Step 2 → Record your feat & proficiencies",
     link: rules("step-2-background", "record-your-feat-proficiencies"),
   },
   abilities: {
     title: "Ability Scores",
     text: "Step 3: buy scores with the 27-point buy, add your background's points, then write each modifier ((score − 10) ÷ 2, round down). Fill each skill line with modifier (+ proficiency bonus if its dot is marked).",
     pdfPage: 5,
-    refTitle: "Rules → Step 3 — Determine Ability Scores",
+    refTitle: "Handbook → Step 3 — Determine Ability Scores",
     link: rules("step-3-abilities", "assign-ability-scores-point-buy"),
   },
   bloodTinge: {
     title: "Blood Tinge",
     text: "The C&S take on heroic inspiration — the DM grants it; spend it to reroll. Tick the drop while you hold it.",
-    refTitle: "Rules → Sanity, Madness & Blood Tinge → Blood Tinge",
+    refTitle: "Handbook → Sanity, Madness & Blood Tinge → Blood Tinge",
     link: rules("sanity", "blood-tinge"),
   },
   initiative: {
     title: "Initiative",
     text: "Your Dexterity modifier — added to the d20 roll that sets combat order.",
-    refTitle: "Rules Reference → Initiative",
+    refTitle: "Rules → Initiative",
     link: ref("initiative"),
   },
   speed: {
@@ -127,35 +127,35 @@ export const SHEET_INFO: Record<string, SheetInfo> = {
   passivePerception: {
     title: "Passive Perception",
     text: "10 + your Perception modifier — what you notice without actively searching.",
-    refTitle: "Rules Reference → Perception",
+    refTitle: "Rules → Perception",
     link: ref("passive perception"),
   },
   ac: {
     title: "Armor Class",
     text: "Unarmored: 10 + DEX. Otherwise: Main Armor base + Add-on bonuses + Studs, then DEX by weight class. A pauldron + vambrace on the same arm completes a Shield Arm.",
     pdfPage: 13,
-    refTitle: "Rules → Step 4 → Calculate your Armor Class",
+    refTitle: "Handbook → Step 4 → Calculate your Armor Class",
     link: rules("step-4-armor", "calculate-your-armor-class"),
   },
   armorCategory: {
     title: "Armor Category",
     text: "Light, Medium or Heavy — decided by your total base armor AC. It sets how much DEX applies to your AC.",
     pdfPage: 13,
-    refTitle: "Rules → Step 4 → Calculate your Armor Class",
+    refTitle: "Handbook → Step 4 → Calculate your Armor Class",
     link: rules("step-4-armor", "calculate-your-armor-class"),
   },
   weight: {
     title: "Weight",
     text: "Everything you carry, in pounds — worn armor counts. Compare it against your carrying capacity.",
     pdfPage: 13,
-    refTitle: "Rules → Carrying & Encumbrance → Carried weight",
+    refTitle: "Handbook → Carrying & Encumbrance → Carried weight",
     link: rules("carrying", "carried-weight"),
   },
   weightCondition: {
     title: "Weight Condition",
     text: "How loaded you are (fine / heavy / over-encumbered) from the carried-weight table — heavy loads slow you down.",
     pdfPage: 13,
-    refTitle: "Rules → Carrying & Encumbrance → Carried weight",
+    refTitle: "Handbook → Carrying & Encumbrance → Carried weight",
     link: rules("carrying", "carried-weight"),
   },
   mainArmor: {
@@ -189,7 +189,7 @@ export const SHEET_INFO: Record<string, SheetInfo> = {
     title: "Impressions",
     text: "What your worn gear says about you — each Extra lists the impression it gives off. NPCs read you by these lines.",
     pdfPage: 11,
-    refTitle: "Rules → Step 4 → See your hunter in the world",
+    refTitle: "Handbook → Step 4 → See your hunter in the world",
     link: rules("step-4-armor", "see-your-hunter-in-the-world"),
   },
   special: {
@@ -203,14 +203,14 @@ export const SHEET_INFO: Record<string, SheetInfo> = {
     title: "Storage Items",
     text: "Worn containers — sack, backpack, bandolier, tool belt. They occupy body slots and expand what you can carry.",
     pdfPage: 14,
-    refTitle: "Rules → Carrying & Encumbrance → Item slots",
+    refTitle: "Handbook → Carrying & Encumbrance → Item slots",
     link: rules("carrying", "item-slots"),
   },
   slots: {
     title: "Storage Slots",
     text: "Significant items each occupy a body slot (hand, back, hip, chest, ankle); oversized items need a hand. Write what sits where.",
     pdfPage: 13,
-    refTitle: "Rules → Carrying & Encumbrance → Item slots",
+    refTitle: "Handbook → Carrying & Encumbrance → Item slots",
     link: rules("carrying", "item-slots"),
   },
   training: {
@@ -238,13 +238,13 @@ export const SHEET_INFO: Record<string, SheetInfo> = {
     title: "Equipment (All)",
     text: "Every item you own: its carrying category (insignificant / significant / oversized), the slot it occupies, and its weight.",
     pdfPage: 13,
-    refTitle: "Rules → Carrying & Encumbrance",
+    refTitle: "Handbook → Carrying & Encumbrance",
     link: rules("carrying", "carried-weight"),
   },
   weaponDamage: {
     title: "Weapon Damage",
     text: "One line per weapon: attack bonus = ability modifier + proficiency (if trained), the damage dice + type, and any properties in notes.",
-    refTitle: "Rules Reference → Attack rolls",
+    refTitle: "Rules → Attack rolls",
     link: ref("attack roll"),
   },
   classFeatures: {
