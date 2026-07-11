@@ -5,6 +5,7 @@ import { FEATS } from "@/data/feats";
 import { RITES } from "@/data/rites";
 import { ARMOR } from "@/data/armor";
 import { sectionSlug } from "../hooks/useHandbookIntent";
+import type { HunterClass } from "@/types";
 
 export type HandbookTab = "rules" | "classes" | "backgrounds" | "feats" | "rites" | "armory";
 export const HANDBOOK_TABS: readonly HandbookTab[] = [
@@ -40,11 +41,14 @@ export interface HandbookHit {
   tab: HandbookTab;
   chapter?: string;
   section?: string;
+  /** For class hits: the class card to auto-open on arrival (`?item=`). */
+  item?: string;
 }
 
-/** Everything on the Handbook page, flattened for search: every rules-chapter
- * section plus each class, background, feat, rite and armor piece. Pure data —
- * built once at module load. */
+/** Everything on the Handbook page, flattened for search — full user-visible
+ * text, not just titles: every rules-chapter section body, each class with all
+ * its level features + subclass text, and complete background / feat / rite /
+ * armor descriptions. Pure data — built once at module load. */
 export const HANDBOOK_INDEX: HandbookHit[] = [
   ...HANDBOOK.flatMap((ch) =>
     ch.sections.map(
@@ -65,18 +69,19 @@ export const HANDBOOK_INDEX: HandbookHit[] = [
     (c): HandbookHit => ({
       id: `class-${c.id}`,
       term: c.name,
-      aliases: [c.title],
-      body: [c.tagline, c.blurb],
+      aliases: [c.title, ...(c.baseClass ? [c.baseClass] : []), ...c.subclasses.map((s) => s.name)],
+      body: classBody(c),
       group: "Classes",
       context: c.tagline,
       tab: "classes",
+      item: c.id,
     }),
   ),
   ...BACKGROUNDS.map(
     (b): HandbookHit => ({
       id: `background-${b.id}`,
       term: b.name,
-      body: [b.text, b.skills.join(" "), b.feat ?? ""],
+      body: [b.text, b.skills.join(" "), b.feat ?? "", b.tool ?? "", b.equipment.join(", ")],
       group: "Backgrounds",
       context: `Background · ${b.skills.join(", ")}`,
       tab: "backgrounds",
@@ -86,7 +91,7 @@ export const HANDBOOK_INDEX: HandbookHit[] = [
     (f): HandbookHit => ({
       id: `feat-${f.id}`,
       term: f.name,
-      body: [f.text],
+      body: [f.text, f.prerequisite ?? "", f.category],
       group: "Feats",
       context: `${f.category} feat`,
       tab: "feats",
@@ -96,7 +101,7 @@ export const HANDBOOK_INDEX: HandbookHit[] = [
     (r): HandbookHit => ({
       id: `rite-${r.id}`,
       term: titleCase(r.name),
-      body: [r.text, r.type],
+      body: [r.text, r.upgrade ?? "", r.special ?? "", r.type, r.performing, r.range, r.duration],
       group: "Rites",
       context: `${r.whisper ? "Whisper" : `Level ${r.level} Rite`} · ${r.type}`,
       tab: "rites",
@@ -106,13 +111,36 @@ export const HANDBOOK_INDEX: HandbookHit[] = [
     (a): HandbookHit => ({
       id: `armor-${a.id}`,
       term: a.name,
-      body: [a.special, a.category, a.subcategory ?? ""],
+      body: [a.special, a.impression ?? "", a.category, a.subcategory ?? "", a.ac],
       group: "Armory",
       context: `${a.category} · ${a.ac}`,
       tab: "armory",
     }),
   ),
 ];
+
+/** Every visible line of a class's detail view: stats, equipment, core
+ * features level by level, and each subclass with its features. A hit inside
+ * any feature lands on the class card (feature-level anchors don't exist). */
+function classBody(c: HunterClass): string[] {
+  return [
+    c.tagline,
+    c.blurb,
+    c.signature ?? "",
+    c.primaryAbility,
+    c.weaponProficiencies,
+    c.toolProficiencies,
+    c.skillChoices.options.join(", "),
+    c.startingEquipment.join(", "),
+    ...(c.features ?? []).map(featureLine),
+    ...c.subclasses.flatMap((s) => [s.tagline, s.blurb, ...s.features.map(featureLine)]),
+  ].filter(Boolean);
+}
+
+/** "Name. text" so a body snippet shows which feature matched. */
+function featureLine(f: { level: number; name: string; text: string }): string {
+  return `${f.name} (level ${f.level}). ${f.text}`;
+}
 
 /** Rite names arrive ALL-CAPS from the source PDFs — soften for result cards. */
 function titleCase(s: string): string {

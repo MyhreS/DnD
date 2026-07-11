@@ -43,11 +43,13 @@ export function HandbookPage() {
         next.delete("q");
         next.delete("chapter");
         next.delete("section");
+        next.delete("item");
         next.set("tab", hit.tab);
         if (hit.chapter && hit.section) {
           next.set("chapter", hit.chapter);
           next.set("section", hit.section);
         }
+        if (hit.item) next.set("item", hit.item);
         return next;
       },
       { replace: true },
@@ -79,7 +81,7 @@ export function HandbookPage() {
               focusSection={intent.section}
             />
           )}
-          {tab === "classes" && <ClassesTab />}
+          {tab === "classes" && <ClassesTab key={intent.item} focusClass={intent.item} />}
           {tab === "backgrounds" && <BackgroundsTab />}
           {tab === "feats" && <FeatsTab />}
           {tab === "rites" && <RitesTab />}

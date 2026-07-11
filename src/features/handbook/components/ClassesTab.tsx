@@ -5,12 +5,16 @@ import { ChevronIcon } from "@/components/icons";
 import { AsyncButton } from "@/components/AsyncButton";
 import { classArt } from "@/data/classArt";
 import { openDocument } from "../lib/handbookPdf";
+import { useScrollToSection } from "../hooks/useHandbookIntent";
 import { DEEPCALLER_BOOK_PDF_PATH } from "@/data/handbook";
 import { LevelTable, FeatureList, SubclassBlock } from "./ClassDetail";
 import type { HunterClass } from "@/types";
 
-export function ClassesTab() {
-  const [open, setOpen] = useState<string | null>(null);
+export function ClassesTab({ focusClass }: { focusClass?: string | null }) {
+  // A search hit deep-links a class (`?item=`) — arrive with its card open,
+  // scrolled into view and pulsed (same treatment as chapter sections).
+  const [open, setOpen] = useState<string | null>(focusClass ?? null);
+  useScrollToSection(focusClass ? "class" : null, focusClass ?? null);
   return (
     <div className="stack" style={{ gap: 10 }}>
       {CLASSES.map((c) => (
@@ -23,7 +27,7 @@ export function ClassesTab() {
 function ClassCard({ c, isOpen, onToggle }: { c: HunterClass; isOpen: boolean; onToggle: () => void }) {
   const art = classArt(c.id);
   return (
-    <div className="card">
+    <div className="card" id={`hb-class-${c.id}`}>
       <button
         type="button"
         onClick={onToggle}
