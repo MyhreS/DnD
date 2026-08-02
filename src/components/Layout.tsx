@@ -9,6 +9,7 @@ export function Layout() {
   const user = useAuthStore((s) => s.user);
   // Players build a hunter; the DM doesn't, so they don't get the Character tab.
   const showCharacter = useAuthStore((s) => s.identity.playerType === "player");
+  const showCombat = useAuthStore((s) => s.caps.oversight);
   const location = useLocation();
 
   const firstName = member?.firstName || user?.displayName || user?.email || "Hunter";
@@ -31,6 +32,7 @@ export function Layout() {
           <NavLink to="/" end>Sessions</NavLink>
           {showCharacter && <NavLink to="/character">Character</NavLink>}
           <NavLink to="/party">Party</NavLink>
+          {showCombat && <NavLink to="/combat">Combat</NavLink>}
           <NavLink to="/handbook">Handbook</NavLink>
         </nav>
 

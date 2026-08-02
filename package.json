@@ -17,6 +17,8 @@
     "check": "tsc -b && eslint . && knip",
     "token": "doppler run -- bun scripts/mint-test-token.mjs",
     "e2e": "doppler run -- bun scripts/e2e.mjs",
+    "e2e:combat": "bun scripts/e2e-combat.mjs",
+    "test:combat": "bun scripts/combat-rules-test.ts",
     "icons": "bun run scripts/generate-icons.mjs",
     "deploy": "bun run build && firebase deploy",
     "deploy:hosting": "bun run build && firebase deploy --only hosting",

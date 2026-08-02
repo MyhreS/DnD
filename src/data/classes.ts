@@ -270,6 +270,8 @@ export const CLASSES: HunterClass[] = [
     armorTraining: ["Light armor", "Medium armor", "Heavy armor"],
     weaponProficiencies: "Simple and Martial weapons",
     toolProficiencies: "Navigator's Tools",
+    signature:
+      "Tactical Command: at the beginning of your turn, the party may discuss strategy without a time limit. Your 90-second turn begins when you choose to start, or as soon as you move, roll, or begin resolving any part of the turn. If several Wardens are present, the party designates one Warden to use this feature.",
     skillChoices: {
       count: 2,
       options: [

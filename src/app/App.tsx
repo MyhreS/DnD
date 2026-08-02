@@ -10,6 +10,8 @@ import { CharacterPage } from "@/features/hunter/components/CharacterPage";
 import { PartyPage } from "@/features/party/components/PartyPage";
 import { HandbookPage } from "@/features/handbook/components/HandbookPage";
 import { ProfilePage } from "@/features/profile/components/ProfilePage";
+import { CombatPage } from "@/features/combat/components/CombatPage";
+import { BattleScreenPage } from "@/features/combat/components/BattleScreenPage";
 
 export default function App() {
   useAuthInit();
@@ -30,12 +32,14 @@ export default function App() {
   // status === "allowed"
   return (
     <Routes>
+      <Route path="combat/display" element={<BattleScreenPage />} />
       <Route element={<Layout />}>
         <Route index element={<SessionsPage />} />
         <Route path="character" element={<CharacterPage />} />
         <Route path="hunter" element={<Navigate to="/character" replace />} />
         <Route path="party" element={<PartyPage />} />
         <Route path="handbook" element={<HandbookPage />} />
+        <Route path="combat" element={<CombatPage />} />
         <Route path="profile" element={<ProfilePage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
