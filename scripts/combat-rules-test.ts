@@ -10,6 +10,7 @@ import {
   startTurnTimer,
 } from "../src/features/combat/lib/combatRules";
 import type { Combatant } from "../src/features/combat/types";
+import { decodeCombatSession } from "../src/features/combat/lib/combatSessionCodec";
 
 const warden: Combatant = {
   id: "warden",
@@ -71,3 +72,9 @@ assert.equal(nextRound.activeCombatantId, warden.id);
 assert.equal(nextRound.timerPhase, "briefing");
 
 console.log("Combat rule tests passed");
+
+assert.deepEqual(decodeCombatSession(base), base, "valid cached/remote sessions should decode");
+assert.equal(decodeCombatSession({ ...base, turnDurationSeconds: 60 }), null);
+assert.equal(decodeCombatSession({ ...base, combatants: [{ ...warden, name: "" }] }), null);
+assert.equal(decodeCombatSession({ ...base, timerEndsAt: Number.NaN }), null);
+console.log("Combat Firestore payload validation tests passed");

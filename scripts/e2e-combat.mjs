@@ -52,6 +52,7 @@ async function run() {
 
   await control.goto(`${BASE}/combat?preview=admin.dm`, { waitUntil: "networkidle" });
   await requireText(control, "Run initiative, damage, conditions");
+  await requireText(control, "Local preview mode");
   const gameCardResponse = await context.request.get(`${BASE}/game-card/players-game-card.pdf`);
   if (!gameCardResponse.ok() || !gameCardResponse.headers()["content-type"]?.includes("pdf")) {
     throw new Error("Player's game card PDF is not served correctly");

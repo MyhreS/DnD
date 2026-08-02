@@ -6,7 +6,7 @@ import { BattleCombatantRow } from "./BattleCombatantRow";
 import { CombatTimerPanel } from "./CombatTimerPanel";
 
 export function BattleScreenPage() {
-  useCombatSync();
+  const syncStatus = useCombatSync(false);
   const session = useCombatStore((s) => s.session);
   const seconds = useCombatClock();
   const current = activeCombatant(session);
@@ -38,7 +38,12 @@ export function BattleScreenPage() {
           <span>Round {session.round}</span>
           <h1>{session.title}</h1>
         </div>
-        <button className="battle-fullscreen-button" type="button" onClick={fullscreen}>Fullscreen</button>
+        <div className="battle-header-actions">
+          <span className="battle-sync-status">
+            {syncStatus === "live" ? "Live" : syncStatus === "local" ? "Preview" : "Reconnecting"}
+          </span>
+          <button className="battle-fullscreen-button" type="button" onClick={fullscreen}>Fullscreen</button>
+        </div>
       </header>
 
       <div className="battle-layout">

@@ -87,6 +87,40 @@ service cloud.firestore {
       }
     }
 
+    // /combat/active
+    // The active encounter is visible to the whole party so a battle screen can
+    // run on another signed-in device. Only staff may control or replace it.
+    match /combat/{combatId} {
+      allow read: if combatId == "active" && isAllowlisted();
+      allow create, update: if combatId == "active" && isStaff() && validCombatSession();
+      allow delete: if combatId == "active" && isStaff();
+    }
+
+    function validCombatSession() {
+      let data = request.resource.data;
+      return data.keys().hasAll([
+          "title", "combatants", "round", "activeCombatantId",
+          "designatedWardenId", "turnDurationSeconds", "timerPhase",
+          "timerEndsAt", "pausedRemainingMs", "started", "updatedAt"
+        ])
+        && data.keys().hasOnly([
+          "title", "combatants", "round", "activeCombatantId",
+          "designatedWardenId", "turnDurationSeconds", "timerPhase",
+          "timerEndsAt", "pausedRemainingMs", "started", "updatedAt"
+        ])
+        && data.title is string && data.title.size() <= 120
+        && data.combatants is list && data.combatants.size() <= 60
+        && data.round is int && data.round >= 0
+        && (data.activeCombatantId == null || data.activeCombatantId is string)
+        && (data.designatedWardenId == null || data.designatedWardenId is string)
+        && data.turnDurationSeconds == 90
+        && data.timerPhase in ["idle", "briefing", "running", "paused", "untimed", "expired"]
+        && (data.timerEndsAt == null || data.timerEndsAt is int)
+        && (data.pausedRemainingMs == null || data.pausedRemainingMs is int)
+        && data.started is bool
+        && data.updatedAt is int;
+    }
+
     // Lock everything else down by default.
     match /{document=**} {
       allow read, write: if false;

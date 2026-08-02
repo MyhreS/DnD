@@ -899,6 +899,21 @@ button {
   flex: none;
 }
 
+.combat-sync {
+  margin: 2px 0 8px;
+  color: var(--ink-faint);
+  font-size: 0.82rem;
+}
+
+.combat-sync-live,
+.combat-sync-local {
+  color: var(--gold-dim);
+}
+
+.combat-sync-error {
+  color: var(--danger);
+}
+
 .combat-control-stack {
   display: flex;
   flex-direction: column;
@@ -1352,6 +1367,18 @@ button {
   color: #c9a45a;
   background: transparent;
   font-size: 0.92rem;
+}
+
+.battle-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.battle-header .battle-sync-status {
+  color: #8f8777;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
 }
 
 .battle-layout {

@@ -9,8 +9,8 @@ import { CombatTracker } from "./CombatTracker";
 const PLAYER_CARD_PATH = "/game-card/players-game-card.pdf";
 
 export function CombatPage() {
-  useCombatSync();
   const canControl = useAuthStore((s) => s.caps.oversight);
+  const syncStatus = useCombatSync(canControl);
   const started = useCombatStore((s) => s.session.started);
   const { players } = usePartyData({ oversight: false });
 
@@ -35,6 +35,13 @@ export function CombatPage() {
           Open battle screen
         </button>
       </div>
+      <p className={`combat-sync combat-sync-${syncStatus}`} data-testid="combat-sync-status">
+        {syncStatus === "live" && "Live across devices"}
+        {syncStatus === "connecting" && "Connecting to live combat..."}
+        {syncStatus === "offline" && "Offline - changes will sync after reconnecting"}
+        {syncStatus === "local" && "Local preview mode"}
+        {syncStatus === "error" && "Live combat unavailable"}
+      </p>
       <p className="page-intro">Run initiative, damage, conditions, and the 90-second turn clock.</p>
 
       {started ? <CombatTracker /> : <CombatSetup hunters={players ?? []} />}
@@ -47,4 +54,3 @@ export function CombatPage() {
     </div>
   );
 }
-
