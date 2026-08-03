@@ -13,7 +13,7 @@
       "publicPath": "/docs/book-of-the-deepcaller.pdf",
       "downloads": [
         {
-          "label": "V1.0 Book of The Deepcaller",
+          "label": "Book of the Deepcaller",
           "publicPath": "/docs/book-of-the-deepcaller.pdf"
         }
       ],
@@ -35,15 +35,15 @@
       "pageCount": 11,
       "downloads": [
         {
-          "label": "R1.0 Character Sheet",
+          "label": "Blank Character Sheet",
           "publicPath": "/source-library/character-sheets/r1-0-character-sheet.pdf"
         },
         {
-          "label": "R1.0 Numbered Character Sheet",
+          "label": "Numbered Character Creation Sheet",
           "publicPath": "/source-library/character-sheets/r1-0-numbered-character-sheet.pdf"
         },
         {
-          "label": "Character Sheet For Sim",
+          "label": "Character Sheet Field Guide",
           "publicPath": "/source-library/character-sheets/character-sheet-for-sim.pdf"
         }
       ],
@@ -73,11 +73,11 @@
       "pageCount": 4,
       "downloads": [
         {
-          "label": "Bloodbound",
+          "label": "Bloodbound Class Board",
           "publicPath": "/source-library/bloodbound/bloodbound.pdf"
         },
         {
-          "label": "Classes Boards for send",
+          "label": "All Hunter Classes (combined PDF)",
           "publicPath": "/source-library/bloodbound/classes-boards-for-send.pdf"
         }
       ],
@@ -111,11 +111,11 @@
       "pageCount": 4,
       "downloads": [
         {
-          "label": "Brute",
+          "label": "Brute Class Board",
           "publicPath": "/source-library/brute/brute.pdf"
         },
         {
-          "label": "Classes Boards for send",
+          "label": "All Hunter Classes (combined PDF)",
           "publicPath": "/source-library/brute/classes-boards-for-send.pdf"
         }
       ],
@@ -149,11 +149,11 @@
       "pageCount": 7,
       "downloads": [
         {
-          "label": "Deepcaller",
+          "label": "Deepcaller Class Board",
           "publicPath": "/source-library/deepcaller/deepcaller.pdf"
         },
         {
-          "label": "Classes Boards for send",
+          "label": "All Hunter Classes (combined PDF)",
           "publicPath": "/source-library/deepcaller/classes-boards-for-send.pdf"
         }
       ],
@@ -187,11 +187,11 @@
       "pageCount": 5,
       "downloads": [
         {
-          "label": "Scout",
+          "label": "Scout Class Board",
           "publicPath": "/source-library/scout/scout.pdf"
         },
         {
-          "label": "Classes Boards for send",
+          "label": "All Hunter Classes (combined PDF)",
           "publicPath": "/source-library/scout/classes-boards-for-send.pdf"
         }
       ],
@@ -225,11 +225,11 @@
       "pageCount": 3,
       "downloads": [
         {
-          "label": "Staker",
+          "label": "Stalker Class Board",
           "publicPath": "/source-library/stalker/staker.pdf"
         },
         {
-          "label": "Classes Boards for send",
+          "label": "All Hunter Classes (combined PDF)",
           "publicPath": "/source-library/stalker/classes-boards-for-send.pdf"
         }
       ],
@@ -263,11 +263,11 @@
       "pageCount": 4,
       "downloads": [
         {
-          "label": "Warden",
+          "label": "Warden Class Board",
           "publicPath": "/source-library/warden/warden.pdf"
         },
         {
-          "label": "Classes Boards for send",
+          "label": "All Hunter Classes (combined PDF)",
           "publicPath": "/source-library/warden/classes-boards-for-send.pdf"
         }
       ],
@@ -302,7 +302,7 @@
       "publicPath": "/handbook/catacombs-and-starspawns-handbook.pdf",
       "downloads": [
         {
-          "label": "CATACOMBS & STARSPAWNS Players Handbook",
+          "label": "Player's Handbook",
           "publicPath": "/handbook/catacombs-and-starspawns-handbook.pdf"
         }
       ],
@@ -400,7 +400,7 @@
       "pageCount": 18,
       "downloads": [
         {
-          "label": "Rules Reference Scan",
+          "label": "Rules Glossary",
           "publicPath": "/source-library/rules-reference-scan/rules-reference-scan.pdf"
         }
       ],
@@ -423,7 +423,7 @@
       "publicPath": "/docs/whispers.pdf",
       "downloads": [
         {
-          "label": "V1.0 Whispers",
+          "label": "Hushed Whispers",
           "publicPath": "/docs/whispers.pdf"
         }
       ],
@@ -445,7 +445,7 @@
       "pageCount": 2,
       "downloads": [
         {
-          "label": "Transformation Table Final Version",
+          "label": "Transformation Table",
           "publicPath": "/source-library/transformation-table/transformation-table-final-version.pdf"
         }
       ],
@@ -469,7 +469,7 @@
       "pageCount": 1,
       "downloads": [
         {
-          "label": "ability-score-point-costs-v2",
+          "label": "Ability Score Point Costs",
           "publicPath": "/source-library/ability-point-costs-v2/ability-score-point-costs-v2.pdf"
         }
       ],
@@ -516,7 +516,7 @@
       "pageCount": 0,
       "downloads": [
         {
-          "label": "master-content-reconciliation-notes",
+          "label": "Reconciliation Notes",
           "publicPath": "/source-library/master-notes/master-content-reconciliation-notes.pdf"
         }
       ],

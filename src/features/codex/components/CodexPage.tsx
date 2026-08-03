@@ -190,10 +190,13 @@ function SourceLibrary() {
               <span className="codex-document-index">Document {String(index + 1).padStart(2, "0")}</span>
               <h3>{item.title}</h3>
               <p>{item.description}</p>
-              <small>{item.pageCount > 0 ? `${item.pageCount} ${item.pageCount === 1 ? "page" : "pages"}` : "Structured record"} · {item.fileLabels.join(" · ")}</small>
+              <small>
+                {item.pageCount > 0 ? `${item.pageCount} ${item.pageCount === 1 ? "page" : "pages"}` : "Structured record"}
+                {` · ${item.downloads.length} downloadable ${item.downloads.length === 1 ? "PDF" : "PDFs"}`}
+              </small>
             </div>
             <div className="codex-source-actions">
-              <Link to={`/codex?source=${encodeURIComponent(item.id)}`}>Search source</Link>
+              <Link to={`/codex?source=${encodeURIComponent(item.id)}`}>Search in Codex</Link>
               {item.downloads.map((download) => (
                 <a download href={download.publicPath} key={download.publicPath}>Download {download.label}</a>
               ))}
