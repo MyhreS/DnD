@@ -9,34 +9,6 @@ export interface SkillChoice {
   options: string[];
 }
 
-/** A character Background (Chapter 3): the formative occupation before the hunt.
- *  Grants an Origin feat, two skills, one tool, ability points and equipment. */
-export interface Background {
-  id: string;
-  name: string;
-  text: string;
-  /** The three abilities the background's points may be assigned to. */
-  abilityScores: AbilityKey[];
-  /** The granted Origin feat, or null when the background grants NO feat (its
-   * other perks — equipment, gold, proficiencies — are the trade-off). */
-  feat: string | null;
-  /** The two granted skill proficiencies. */
-  skills: string[];
-  tool: string | null;
-  equipment: string[];
-}
-
-export type FeatCategory = "Origin" | "General" | "Fighting Style" | "Epic Boon";
-
-/** A feat (Chapter 4), with verbatim benefit text. */
-export interface Feat {
-  id: string;
-  name: string;
-  category: FeatCategory;
-  prerequisite: string | null;
-  text: string;
-}
-
 /** A feature a class or subclass gains at a given level. */
 export interface LevelFeature {
   level: number;
@@ -99,36 +71,6 @@ export interface HunterClass {
   subclasses: Subclass[];
   /** True for the Deepcaller — performs Rites & Whispers with Strain. */
   caster?: boolean;
-}
-
-// --- Rites (the Deepcaller's spell-like system) ---
-
-export type RiteType =
-  | "Evocation"
-  | "Mind Influence"
-  | "Illusion"
-  | "Summoning"
-  | "Traversal"
-  | "Detection"
-  | "Protection";
-
-export interface Rite {
-  id: string;
-  name: string;
-  /** Rite level 1–9; 0 marks a Whisper (lesser fragment, no Strain/Madness). */
-  level: number;
-  whisper: boolean;
-  type: RiteType;
-  /** Performing time, e.g. "Action", "Bonus Action", "Reaction". */
-  performing: string;
-  range: string;
-  duration: string;
-  /** Special Requirements line, if any. */
-  special?: string;
-  /** The effect text. */
-  text: string;
-  /** "Using Higher-Level Strain" / "Whisper Upgrade" scaling text, if any. */
-  upgrade?: string;
 }
 
 // --- Items & inventory (catalog-based) ---
@@ -206,39 +148,6 @@ export interface ArmorPiece {
   impression?: string;
   /** Unique item (e.g. the Robe) — found in play, not offered at creation. */
   unique?: boolean;
-}
-
-export interface HandbookSection {
-  heading: string;
-  /** Paragraphs of body text. */
-  body: string[];
-}
-
-export interface HandbookChapter {
-  id: string;
-  title: string;
-  summary: string;
-  sections: HandbookSection[];
-}
-
-// --- Rules reference (searchable 5e 2024 glossary) ---
-
-export type RuleCategory =
-  | "Condition"
-  | "Action"
-  | "Combat"
-  | "Damage & Healing"
-  | "General";
-
-/** One searchable rules-glossary entry. */
-export interface RuleEntry {
-  id: string;
-  term: string;
-  category: RuleCategory;
-  /** Alternative search terms (synonyms, related keywords). */
-  aliases?: string[];
-  /** Body paragraphs / bullet lines. */
-  body: string[];
 }
 
 // --- Live games (Play mode) ---
@@ -539,7 +448,7 @@ export interface HunterCard {
   subclassId?: string | null;
   /** Background display name (e.g. "Cultist"); free text on legacy cards. */
   background: string;
-  /** Structured background id (from data/backgrounds.ts), when chosen. */
+  /** Structured background id (from resources/master.json), when chosen. */
   backgroundId?: string;
   /** Origin feat granted via the background; null when the background grants
    * none (an explicit null so saves CLEAR a previously stored feat). */

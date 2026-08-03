@@ -2,7 +2,7 @@
  * panel. Steps 1–4 are distilled from the Handbook's step chapters
  * (`src/data/handbook.ts`, `step-1-class` … `step-4-armor`); step 5 ("Fill in
  * Details") summarises the derived values the sheet asks for. Each guide
- * deep-links into the app's Handbook, opened in a new tab like the info dots. */
+ * deep-links into the unified Codex, opened in a new tab like the info dots. */
 export interface StepGuide {
   /** Chapter title, e.g. "Step 1 — Choose a Class". */
   title: string;
@@ -10,11 +10,11 @@ export interface StepGuide {
   todo: string[];
   /** Human-readable "read more" caption. */
   refTitle: string;
-  /** Handbook deep link (tab / chapter), opened in a new tab. */
+  /** Codex deep link, opened in a new tab. */
   link: string;
 }
 
-const rules = (chapter: string) => `/handbook?tab=rules&chapter=${chapter}`;
+const rules = (chapter: string) => `/codex?source=handbook&q=${encodeURIComponent(chapter.replaceAll("-", " "))}`;
 
 export const STEP_GUIDES: Record<number, StepGuide> = {
   1: {
@@ -68,6 +68,6 @@ export const STEP_GUIDES: Record<number, StepGuide> = {
       "Copy your class features (page 4); Deepcallers also fill in rites and prepared whispers (page 5).",
     ],
     refTitle: "Handbook → Classes tab",
-    link: "/handbook?tab=classes",
+    link: "/codex?group=Classes",
   },
 };

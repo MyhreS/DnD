@@ -1,7 +1,7 @@
 /** What every part of the paper sheet means, how to fill it in, and where the
  * handbook covers it. `pdfPage` cites the printable handbook PDF (it only
  * covers character creation, pp. 3–14); `link` deep-links into the app's
- * Handbook (or the Rules page) — opened in a new tab by the info dots. */
+ * unified Codex — opened in a new tab by the info dots. */
 export interface SheetInfo {
   title: string;
   text: string;
@@ -9,14 +9,14 @@ export interface SheetInfo {
   pdfPage?: number;
   /** Human-readable "where to read more": tab / chapter → section. */
   refTitle: string;
-  /** App deep link (Handbook tab/chapter/section, or Rules-page query). */
+  /** App deep link into a Codex source or topic search. */
   link: string;
 }
 
-const rules = (chapter: string, section: string) =>
-  `/handbook?tab=rules&chapter=${chapter}&section=${section}`;
-const tab = (t: string) => `/handbook?tab=${t}`;
-const ref = (q: string) => `/rules?q=${encodeURIComponent(q)}`;
+const rules = (_chapter: string, section: string) =>
+  `/codex?source=handbook&q=${encodeURIComponent(section.replaceAll("-", " "))}`;
+const tab = (value: string) => `/codex?group=${value === "classes" ? "Classes" : value === "rites" ? "Rites" : "Handbook"}`;
+const ref = (query: string) => `/codex?source=rules-reference-scan&q=${encodeURIComponent(query)}`;
 
 export const SHEET_INFO: Record<string, SheetInfo> = {
   name: {

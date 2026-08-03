@@ -3,7 +3,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { Sigil, GoogleIcon } from "@/components/icons";
 
 /** Shell for signed-out visitors: a slim bar (brand + sign in) over public
- * content (landing + handbook). Reuses the app shell so it's responsive. */
+ * content (landing + Codex). Reuses the app shell so it's responsive. */
 export function PublicLayout() {
   const signIn = useAuthStore((s) => s.signIn);
   const signingIn = useAuthStore((s) => s.signingIn);

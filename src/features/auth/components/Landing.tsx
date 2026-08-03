@@ -33,7 +33,7 @@ export function Landing() {
             <><GoogleIcon /> Continue with Google</>
           )}
         </button>
-        <Link className="btn btn-ghost" to="/handbook">Read the handbook</Link>
+        <Link className="btn btn-ghost" to="/codex">Open the Codex</Link>
       </div>
       <p className="faint center" style={{ fontSize: "0.82rem", marginTop: -6 }}>
         No account needed to look around — sign in when you're ready to build a hunter or join a game.

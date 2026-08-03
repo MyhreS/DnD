@@ -37,10 +37,10 @@ Lower the friction of playing together:
 | **Sessions** | The next session with a live countdown + upcoming dates. RSVP (in / maybe / can't). The DM can add & edit dates. |
 | **Hunter** | Build & save your hunter card — class, point-buy abilities, skills, armor → auto-calculated AC, HP, speed, saves. |
 | **Party** | See everyone's hunters. The DM gets a roster: who's made a character, who's RSVP'd, with one-tap email reminders. |
-| **Handbook** | Browse the rules, all six classes, and the armory — plus the full PDF. |
+| **Codex** | Search the handbook, D&D rules, classes, rites, character guidance, appendices, and the Player's Game Card—with provenance for every result. |
 
-All game content (classes, armory, rules) is **premade in code** and easy to
-swap when the handbook is updated.
+All searchable game content is generated from `resources/master.json`, so the
+app has one maintained content source even when several original books disagree.
 
 ### The six hunter classes
 

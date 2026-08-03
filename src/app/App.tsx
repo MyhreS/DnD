@@ -18,16 +18,11 @@ import { PartyPage } from "@/features/party/components/PartyPage";
 import { ProfilePage } from "@/features/profile/components/ProfilePage";
 
 // Heavy, rarely-first routes are code-split so their content data
-// (handbookIndex / rulesReference / creature art / play scene) defers out of
+// (generated Codex data / creature art / play scene) defers out of
 // the first-paint bundle. Named exports are adapted to the default-export
 // shape React.lazy expects.
-const HandbookPage = lazy(() =>
-  import("@/features/handbook/components/HandbookPage").then((m) => ({ default: m.HandbookPage })),
-);
-const RulesReferencePage = lazy(() =>
-  import("@/features/rules-reference/components/RulesReferencePage").then((m) => ({
-    default: m.RulesReferencePage,
-  })),
+const CodexPage = lazy(() =>
+  import("@/features/codex/components/CodexPage").then((m) => ({ default: m.CodexPage })),
 );
 const PlayPage = lazy(() =>
   import("@/features/play/components/PlayPage").then((m) => ({ default: m.PlayPage })),
@@ -44,15 +39,42 @@ const DMOverviewPage = lazy(() =>
 const StatusPage = lazy(() =>
   import("@/features/status/components/StatusPage").then((m) => ({ default: m.StatusPage })),
 );
-const GameCardPage = lazy(() =>
-  import("@/features/game-card/components/GameCardPage").then((m) => ({ default: m.GameCardPage })),
-);
+/** Preserve old bookmarks and character-sheet deep links while bringing every
+ * reference into the unified Codex. The old location determines the source;
+ * specific chapter/section/item links become focused searches. */
+function LegacyCodexRedirect() {
+  const { pathname, search } = useLocation();
+  const previous = new URLSearchParams(search);
+  const next = new URLSearchParams();
+  const previousQuery = previous.get("q");
+  if (previousQuery) next.set("q", previousQuery);
 
-/** The Reference page became Rules — keep old bookmarks and the sheet's
- * deep links (`/reference?q=…`) working, query string included. */
-function LegacyReferenceRedirect() {
-  const { search } = useLocation();
-  return <Navigate to={{ pathname: "/rules", search }} replace />;
+  if (pathname === "/rules" || pathname === "/reference") {
+    next.set("source", "rules-reference-scan");
+  } else if (pathname === "/game-card") {
+    next.set("source", "game-card");
+  } else {
+    const item = previous.get("item");
+    const section = previous.get("section");
+    const tab = previous.get("tab");
+    if (item) {
+      next.set("q", item.replaceAll("-", " "));
+      next.set("source", item);
+    } else if (section) {
+      next.set("q", section.replaceAll("-", " "));
+      next.set("source", "handbook");
+    } else if (tab === "classes") {
+      next.set("group", "Classes");
+    } else if (tab === "rites") {
+      next.set("group", "Rites");
+    } else if (tab === "backgrounds" || tab === "feats" || tab === "armory") {
+      next.set("q", tab === "armory" ? "equipment" : tab);
+      next.set("source", "handbook");
+    } else {
+      next.set("source", "handbook");
+    }
+  }
+  return <Navigate to={{ pathname: "/codex", search: next.toString() }} replace />;
 }
 
 function AuthedApp() {
@@ -68,10 +90,11 @@ function AuthedApp() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<MainMenu />} />
           <Route path="character" element={<CharacterPage />} />
-          <Route path="handbook" element={<HandbookPage />} />
-          <Route path="rules" element={<RulesReferencePage />} />
-          <Route path="game-card" element={<GameCardPage />} />
-          <Route path="reference" element={<LegacyReferenceRedirect />} />
+          <Route path="codex" element={<CodexPage />} />
+          <Route path="handbook" element={<LegacyCodexRedirect />} />
+          <Route path="rules" element={<LegacyCodexRedirect />} />
+          <Route path="game-card" element={<LegacyCodexRedirect />} />
+          <Route path="reference" element={<LegacyCodexRedirect />} />
           <Route path="dm" element={dmMode ? <DMOverviewPage /> : <Navigate to="/" replace />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
@@ -101,17 +124,18 @@ export default function App() {
     return <Splash message={status === "checking" ? "Checking the ledger…" : undefined} />;
   }
 
-  // Signed-out visitors get a public landing + handbook (deferred sign-in).
+  // Signed-out visitors get a public landing + Codex (deferred sign-in).
   if (status === "signedOut") {
     return (
       <Suspense fallback={<Splash />}>
         <Routes>
           <Route element={<PublicLayout />}>
             <Route index element={<Landing />} />
-            <Route path="handbook" element={<HandbookPage />} />
-            <Route path="rules" element={<RulesReferencePage />} />
-            <Route path="game-card" element={<GameCardPage />} />
-            <Route path="reference" element={<LegacyReferenceRedirect />} />
+            <Route path="codex" element={<CodexPage />} />
+            <Route path="handbook" element={<LegacyCodexRedirect />} />
+            <Route path="rules" element={<LegacyCodexRedirect />} />
+            <Route path="game-card" element={<LegacyCodexRedirect />} />
+            <Route path="reference" element={<LegacyCodexRedirect />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>
         </Routes>

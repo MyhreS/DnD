@@ -37,9 +37,7 @@ export function MainMenu() {
       <p className="eyebrow" style={{ marginTop: 22, marginBottom: 8 }}>Find your way</p>
       <div className="stack" style={{ gap: 10 }}>
         <GuideCard to="/character" title="Hunters" body="Forge new hunters and manage the ones you have — a six-page paper sheet, saved as you write." />
-        <GuideCard to="/handbook" title="Handbook" body="The rules, all six classes, and the armory — plus the full PDF." />
-        <GuideCard to="/rules" title="Rules" body="Quick rules lookup for the table — actions, conditions, and the tables you reach for mid-fight." />
-        <GuideCard to="/game-card" title="Game Card" body="Search the nine-page table reference — combat, movement, equipment, Transformation, doors and chases." />
+        <GuideCard to="/codex" title="Codex" body="Search the handbook, D&D rules, class boards, rites, character guidance, and the Player's Game Card in one place—with the source shown for every answer." />
         <GuideCard to="/profile" title="Profile" body="Your account and settings — tap your initial in the corner. Experimental features are switched on here." />
         {experimental && (
           <GuideCard title="Campaigns" body="Create or join one above, then enter it for Sessions, the Party, the Shop, the Log, and live Play." />
@@ -47,7 +45,7 @@ export function MainMenu() {
       </div>
 
       <div className="rule-ornament">◆</div>
-      <Link className="btn btn-ghost" to="/handbook">Read the handbook</Link>
+      <Link className="btn btn-ghost" to="/codex">Open the Codex</Link>
     </div>
   );
 }

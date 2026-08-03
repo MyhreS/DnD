@@ -5,9 +5,9 @@
 > derivations the app is generated from, a single consolidated **`master.json`**,
 > and an **`images/`** library of art/figures extracted from the books.
 >
-> The app's UI is data-driven from `src/data/` (generated — see
-> [`extracted/gen.py`](extracted/gen.py)); these files are where that content
-> originates. When the DM ships new material, it lands here first.
+> The searchable Codex is generated from `master.json` by
+> [`scripts/generate-codex-data.mjs`](../scripts/generate-codex-data.mjs).
+> When the DM ships new material, it lands here first.
 
 ## TL;DR — where to look
 
@@ -17,7 +17,7 @@
 | The **original documents** (authoritative) | [`pdf/`](pdf/) |
 | **Art & figures** (emblem, class splashes, armor, weapons, creatures, sheets) | [`images/`](images/) |
 | The **tables that feed the app** | [`csv/`](csv/), [`extracted/`](extracted/) |
-| How the app's `classes.ts`/`rites.ts` are generated | [`extracted/gen.py`](extracted/gen.py) |
+| How the unified app Codex is generated | [`../scripts/generate-codex-data.mjs`](../scripts/generate-codex-data.mjs) |
 
 ## Layout
 
@@ -38,7 +38,7 @@ resources/
   extracted/                 machine-readable derivations
     text/                    pdftotext mirror of each PDF (grep-friendly)
     content.json             structured classes + rites that gen.py consumes
-    gen.py                   regenerates src/data/classes.ts + rites.ts
+    gen.py                   regenerates src/data/classes.ts
   images/                    art/figures pulled out of the PDFs (see "Image library")
     branding/ covers/ classes/ armor/ items-weapons/ creatures/ scenes/ character-sheets/
 ```
@@ -69,6 +69,7 @@ Top-level keys:
 | `rites` | `bySchool` (27 rites across 7 schools), `bookOfDeepcaller` (21 leveled rites), `whispers` (6 cantrip-like rites) |
 | `characterSheets` | the R1.0 sheets (per-page fields + numbered creation-step mapping) and the sim sheet legend |
 | `rulesReference` | the 18-page Rules Glossary (Appendix C), 188 entries + 14 tables, verbatim |
+| `gameCard` | the complete 9-page Player's Game Card, 83 entries + 24 tables, with page-level provenance |
 | `images` | index of the `images/` library (path, category, source page, description) |
 
 ---
@@ -96,6 +97,10 @@ Features table + subclasses, one PDF each.
   Glossary" the DM included as reference. *Image-only — no text layer* (transcribed
   into `master.json` from page images).
 
+**`game-card/`**
+- `Player's Game Card.pdf` — the 9-page player-created table aid. Its complete
+  player-facing transcription lives in `master.json` → `gameCard`.
+
 **`character-sheets/`**
 - `R1.0 Character Sheet.pdf` — the hand-drawn 5-page printable sheet.
 - `R1.0 Numbered Character Sheet.pdf` — same, with red 1–5 marks mapping fields to
@@ -114,10 +119,8 @@ Features table + subclasses, one PDF each.
 - **`text/`** — a `pdftotext` mirror of each PDF (handy for grep/diff). The
   handbook mirror is the **full** re-extraction (≈2873 lines).
 - **`content.json`** — structured `classes` + `rites` that `gen.py` consumes.
-- **`gen.py`** — regenerates `src/data/classes.ts` + `src/data/rites.ts` from
-  `content.json`, the Features CSVs, and `class-descriptions.txt`. After a content
-  refresh: re-run `pdftotext`, update `content.json`, then
-  `python3 resources/extracted/gen.py`.
+- **`gen.py`** — regenerates `src/data/classes.ts` from `content.json`, the
+  Features CSVs, and `class-descriptions.txt`.
 
 ## `class-descriptions.txt`
 
@@ -193,7 +196,9 @@ records each. **Confirm with the DM before treating any of these as final:**
 
 ## Regenerating
 
-- **App content** (`src/data/classes.ts`, `rites.ts`): `python3 resources/extracted/gen.py`.
+- **Character-class app data** (`src/data/classes.ts`): `python3 resources/extracted/gen.py`.
+- **Unified Codex + Game Card app data**: `bun run codex:generate`. Never edit
+  `src/data/codex.generated.json` or `src/data/gameCard.generated.json` by hand.
 - **`master.json` + `images/`**: produced by a one-time extraction pass over the
   sources (per-source structured extraction, image-PDF transcription from page
   renders, and embedded-image extraction). Re-run that pass if the source PDFs change.
