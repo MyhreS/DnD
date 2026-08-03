@@ -28,6 +28,7 @@
     "test:combat": "bun scripts/combat-rules-test.ts",
     "test:game-card": "bun scripts/game-card-data-test.ts",
     "test:character-automation": "bun scripts/character-automation-test.ts",
+    "migrate:character-sheets": "bun scripts/migrate-character-sheets.ts",
     "codex:generate": "node scripts/generate-codex-data.mjs",
     "test:codex": "bun scripts/codex-data-test.ts",
     "smoke": "doppler run -- bun scripts/smoke-rules.mjs",

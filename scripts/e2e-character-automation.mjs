@@ -70,34 +70,12 @@ try {
 
   await page.getByRole("button", { name: "Back" }).first().click();
   await page.getByRole("button", { name: /Open Eileen the Crow/ }).click();
-  await page.getByTestId("legacy-conversion-wizard").waitFor();
-  await page.getByRole("button", { name: "Continue" }).click();
-  await page.getByTestId("legacy-conversion-wizard").getByRole("button", { name: "Cancel for now" }).click();
-  await page.getByTestId("legacy-conversion-wizard").waitFor({ state: "detached" });
-  await page.getByRole("heading", { name: "Hunters" }).waitFor();
-  await page.getByRole("button", { name: /Open Eileen the Crow/ }).click();
-  await page.getByTestId("legacy-conversion-wizard").waitFor();
-  await page.getByRole("button", { name: "Continue" }).click();
-  if (await page.getByTestId("legacy-conversion-wizard").getByLabel("Class").inputValue() !== "stalker") throw new Error("Legacy class suggestion failed");
-  await page.getByTestId("legacy-conversion-wizard").getByRole("button", { name: "Continue" }).click();
-  if (await page.getByTestId("legacy-conversion-wizard").getByLabel("Level").inputValue() !== "3") throw new Error("Legacy level suggestion failed");
-  await page.getByTestId("legacy-conversion-wizard").getByRole("button", { name: "Continue" }).click();
-  await page.getByTestId("legacy-conversion-wizard").getByLabel("Background").selectOption("criminal");
-  for (let guard = 0; guard < 25; guard += 1) {
-    const finish = page.getByTestId("legacy-conversion-wizard").getByRole("button", { name: "Connect and fill sheet" });
-    if (await finish.isVisible().catch(() => false)) {
-      await finish.click();
-      break;
-    }
-    await page.getByTestId("legacy-conversion-wizard").getByRole("button", { name: "Continue" }).click();
-  }
-  await page.getByTestId("legacy-conversion-wizard").waitFor({ state: "detached" });
-  if (await page.locator('[data-f="hpMax"]').inputValue() !== "25") throw new Error("Legacy manual HP was overwritten during conversion");
+  await page.locator('[data-f="name"]').waitFor();
+  if (await page.getByTestId("legacy-conversion-wizard").count()) throw new Error("Legacy sheets still show a player-facing migration popup");
 
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "Build & calculate" }).click();
   await page.getByTestId("character-automation-panel").waitFor();
-  if (!(await page.getByTestId("automation-main-armor").isDisabled())) throw new Error("Converted character could mint creation armor");
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   if (overflow) throw new Error("Character automation causes horizontal page scrolling on mobile");
   await page.screenshot({ path: "screenshots/character-automation-mobile.png", fullPage: true });

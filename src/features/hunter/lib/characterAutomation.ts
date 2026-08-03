@@ -256,12 +256,6 @@ export function matchCatalogItem(value: string): string | null {
   return catalogIdForName(value);
 }
 
-export function hasLegacySheetToConvert(card: HunterCard): boolean {
-  return !card.sheetAutomation && !!card.sheet && Object.values(card.sheet).some(
-    (value) => value === true || (typeof value === "string" && value.trim() !== ""),
-  );
-}
-
 export function structuredCardFromSheet(card: HunterCard): { card: HunterCard; legacyEquipment: LegacyEquipmentLine[] } {
   const sheet = card.sheet ?? {};
   const classId = classIdFromName(sheet.class) || card.classId;

@@ -11,6 +11,7 @@ import {
   matchCatalogItem,
   structuredCardFromSheet,
 } from "../src/features/hunter/lib/characterAutomation";
+import { migrateLegacyCharacter } from "../src/features/hunter/lib/legacyMigration";
 
 const base = emptySheetCard({ ownerUid: "test", email: "test@example.com", displayName: "Tester" });
 const warden = {
@@ -146,6 +147,33 @@ assert.equal(migrated.card.level, 3);
 assert.equal(migrated.card.abilities.wis, 15);
 assert.deepEqual(migrated.card.inventory, [{ itemId: "hunter-rifle", qty: 1 }]);
 assert.deepEqual(migrated.legacyEquipment.map((item) => item.name), ["Grandfather's charm"]);
+
+const centralMigration = migrateLegacyCharacter({
+  ...base,
+  sheet: {
+    name: "Old Bloodbound",
+    class: "Bloodbound",
+    level: "3",
+    mainArmor: "Robe of the deepcaller",
+    headGear: "No",
+    eq_0_0: "Vile",
+    eq_1_0: "Bullets (14-1)",
+    eq_2_0: "Reinforced Hunter Leather Coat",
+  },
+}, 1234);
+assert.equal(centralMigration.patch.classId, "bloodbound");
+assert.equal(centralMigration.patch.backgroundId, "blood-collector", "blank background uses the closest thematic rules entry");
+assert.equal(centralMigration.patch.subclassId, CLASSES.find((entry) => entry.id === "bloodbound")?.subclasses[0].id);
+assert.equal(centralMigration.patch.mainArmorId, null, "a robe is not guessed to be main armor");
+assert.deepEqual(centralMigration.patch.extraArmorIds, [], '"No" is not guessed to be worn equipment');
+assert.deepEqual(centralMigration.patch.inventory, [
+  { itemId: "blood-vial", qty: 1 },
+  { itemId: "bullets", qty: 13 },
+  { itemId: "reinforced-hunter-leather-coat", qty: 1 },
+]);
+assert.equal(centralMigration.patch.sheetAutomation?.setupComplete, true);
+assert.equal(centralMigration.patch.sheetAutomation?.migratedAt, 1234);
+assert.equal(centralMigration.patch.sheetAutomation?.migrationOriginalEquipment?.length, 3);
 
 const atomicUpdate = characterSheetUpdate(
   { class: "Warden", hpMax: "12", untouched: "old" },
