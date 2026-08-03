@@ -39,6 +39,7 @@ export function MainMenu() {
         <GuideCard to="/character" title="Hunters" body="Forge new hunters and manage the ones you have — a six-page paper sheet, saved as you write." />
         <GuideCard to="/handbook" title="Handbook" body="The rules, all six classes, and the armory — plus the full PDF." />
         <GuideCard to="/rules" title="Rules" body="Quick rules lookup for the table — actions, conditions, and the tables you reach for mid-fight." />
+        <GuideCard to="/game-card" title="Game Card" body="Search the nine-page table reference — combat, movement, equipment, Transformation, doors and chases." />
         <GuideCard to="/profile" title="Profile" body="Your account and settings — tap your initial in the corner. Experimental features are switched on here." />
         {experimental && (
           <GuideCard title="Campaigns" body="Create or join one above, then enter it for Sessions, the Party, the Shop, the Log, and live Play." />

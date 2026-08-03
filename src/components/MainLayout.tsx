@@ -17,6 +17,7 @@ export function MainLayout() {
           <NavLink to="/character">Hunters</NavLink>
           <NavLink to="/handbook">Handbook</NavLink>
           <NavLink to="/rules">Rules</NavLink>
+          <NavLink to="/game-card">Game Card</NavLink>
           {dmMode && <NavLink to="/dm">DM</NavLink>}
         </>
       }
