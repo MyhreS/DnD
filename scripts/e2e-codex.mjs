@@ -11,6 +11,34 @@ function watch(page) {
   });
 }
 
+async function assertNoPageOverflow(page, label) {
+  const report = await page.evaluate(() => {
+    const viewportWidth = document.documentElement.clientWidth;
+    const offenders = [...document.querySelectorAll("*")]
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return {
+          element: `${element.tagName.toLowerCase()}.${element.className}`,
+          right: Math.round(rect.right),
+          text: (element.textContent ?? "").trim().slice(0, 80),
+        };
+      })
+      .filter((item) => item.right > viewportWidth + 1)
+      .slice(0, 5);
+
+    return {
+      viewportWidth,
+      documentWidth: document.documentElement.scrollWidth,
+      bodyWidth: document.body.scrollWidth,
+      offenders,
+    };
+  });
+
+  if (report.documentWidth > report.viewportWidth || report.bodyWidth > report.viewportWidth) {
+    throw new Error(`${label} overflows horizontally: ${JSON.stringify(report)}`);
+  }
+}
+
 try {
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   watch(desktop);
@@ -56,11 +84,31 @@ try {
   const mobileContext = await browser.newContext({ ...devices["iPhone 13"] });
   const mobile = await mobileContext.newPage();
   watch(mobile);
-  await mobile.goto(`${BASE}/codex?q=grappled`, { waitUntil: "domcontentloaded" });
+  await mobile.goto(`${BASE}/codex`, { waitUntil: "domcontentloaded" });
+  await mobile.getByRole("heading", { name: "Source library" }).waitFor();
+  await assertNoPageOverflow(mobile, "Codex mobile source library");
+
+  const mobileSearch = mobile.getByLabel("Search every rule and reference");
+  await mobileSearch.fill("hunter rifle");
+  const mobileWeapons = mobile.getByTestId("codex-topic").filter({ hasText: "Weapons" }).first();
+  await mobileWeapons.waitFor();
+  await mobileWeapons.locator("summary").click();
+  await mobileWeapons.getByText("Hunter Rifle", { exact: true }).first().waitFor();
+  const tableDimensions = await mobileWeapons.locator(".codex-table-wrap").first().evaluate((element) => ({
+    clientWidth: element.clientWidth,
+    scrollWidth: element.scrollWidth,
+  }));
+  if (tableDimensions.scrollWidth <= tableDimensions.clientWidth) {
+    throw new Error(`Expected the wide Codex table to scroll inside its container: ${JSON.stringify(tableDimensions)}`);
+  }
+  await assertNoPageOverflow(mobile, "Codex mobile table results");
+
+  await mobileSearch.fill("grappled");
   const mobileTopic = mobile.getByTestId("codex-topic").filter({ hasText: "Grappled" }).first();
   await mobileTopic.waitFor();
   await mobileTopic.getByText("D&D Rules", { exact: true }).first().waitFor();
   await mobileTopic.getByText("Game Card", { exact: true }).first().waitFor();
+  await assertNoPageOverflow(mobile, "Codex mobile search results");
   await mobile.screenshot({ path: "screenshots/codex-mobile.png", fullPage: true });
   await mobileContext.close();
 
