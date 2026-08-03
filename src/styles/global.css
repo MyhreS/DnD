@@ -1282,6 +1282,14 @@ button {
 .codex-heading { max-width: 780px; padding-bottom: 20px; }
 .codex-heading h1 { margin: 0; font-size: clamp(2.1rem, 6vw, 4.2rem); line-height: 1; }
 .codex-heading > p:last-child { margin: 8px 0 0; color: var(--ink-dim); font-size: 1.05rem; }
+.codex-back-link {
+  display: inline-block;
+  margin-bottom: 20px;
+  color: var(--gold);
+  font-size: 0.82rem;
+  text-decoration: none;
+}
+.codex-documents-heading { padding-bottom: 4px; }
 
 .codex-search {
   position: sticky;
@@ -1335,7 +1343,7 @@ button {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   border-top: 1px solid var(--border-strong);
 }
-.codex-collection-list button {
+.codex-collection-item {
   display: flex;
   align-items: baseline;
   justify-content: space-between;
@@ -1349,10 +1357,11 @@ button {
   cursor: pointer;
   font: inherit;
   text-align: left;
+  text-decoration: none;
 }
-.codex-collection-list button:nth-child(odd) { padding-right: 18px; border-right: 1px solid var(--border); }
-.codex-collection-list button:nth-child(even) { padding-left: 18px; }
-.codex-collection-list button:hover span { color: var(--gold); }
+.codex-collection-item:nth-child(odd) { padding-right: 18px; border-right: 1px solid var(--border); }
+.codex-collection-item:nth-child(even) { padding-left: 18px; }
+.codex-collection-item:hover span { color: var(--gold); }
 .codex-collection-list small { color: var(--ink-faint); font-size: 0.74rem; white-space: nowrap; }
 .codex-source-list small {
   color: var(--ink-faint);
@@ -1371,6 +1380,15 @@ button {
 .codex-source-list article > div { min-width: 0; }
 .codex-source-list h3 { margin: 0; font-size: 1rem; }
 .codex-source-list p { max-width: 780px; margin: 3px 0 5px; color: var(--ink-dim); font-size: 0.86rem; }
+.codex-document-index {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--gold-dim);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.codex-source-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .codex-source-list a,
 .codex-version header a { align-self: start; color: var(--gold); font-size: 0.8rem; text-decoration: none; }
 
@@ -1487,9 +1505,10 @@ button {
   .codex-filter-row { grid-template-columns: 1fr auto; }
   .codex-filter-row > label { grid-column: 1 / -1; }
   .codex-collection-list { grid-template-columns: 1fr; }
-  .codex-collection-list button:nth-child(odd),
-  .codex-collection-list button:nth-child(even) { padding-inline: 4px; border-right: 0; }
+  .codex-collection-item:nth-child(odd),
+  .codex-collection-item:nth-child(even) { padding-inline: 4px; border-right: 0; }
   .codex-source-list article { grid-template-columns: minmax(0, 1fr); gap: 7px; }
+  .codex-source-actions { flex-direction: row; gap: 18px; }
   .codex-topic > summary { gap: 10px; }
   .codex-version-count { display: none; }
   .codex-topic-body { padding-left: 24px; }

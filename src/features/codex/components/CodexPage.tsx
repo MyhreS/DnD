@@ -1,5 +1,5 @@
 import { Fragment, useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import {
   CODEX_GROUPS,
   CODEX_SOURCE_BY_ID,
@@ -11,6 +11,43 @@ import {
 import { bodySnippet, highlightSegments, normalizeText, searchEntries } from "@/lib/search";
 
 const MAX_RESULTS = 100;
+const DOCUMENT_SOURCE_ORDER = [
+  "handbook",
+  "character-sheets",
+  "game-card",
+  "rules-reference-scan",
+  "ability-point-costs-v2",
+  "bloodbound",
+  "brute",
+  "deepcaller",
+  "scout",
+  "stalker",
+  "warden",
+  "rites-by-school",
+  "book-of-deepcaller",
+  "whispers",
+  "transformation-table",
+  "master-notes",
+];
+const DOCUMENT_SOURCE_RANK = new Map(DOCUMENT_SOURCE_ORDER.map((id, index) => [id, index]));
+const DOCUMENT_SOURCES = [...CODEX_SOURCES].sort((left, right) =>
+  (DOCUMENT_SOURCE_RANK.get(left.id) ?? Number.MAX_SAFE_INTEGER)
+  - (DOCUMENT_SOURCE_RANK.get(right.id) ?? Number.MAX_SAFE_INTEGER),
+);
+
+export function CodexDocumentsPage() {
+  return (
+    <div className="codex-page">
+      <Link className="codex-back-link" to="/codex">← Back to Codex</Link>
+      <header className="codex-heading codex-documents-heading">
+        <p className="eyebrow">Documents</p>
+        <h1>Source library</h1>
+        <p>Player handbooks, character sheets, class boards, rules references, and game aids. Each document remains separate so its origin is always clear.</p>
+      </header>
+      <SourceLibrary />
+    </div>
+  );
+}
 
 export function CodexPage() {
   const [params, setParams] = useSearchParams();
@@ -122,43 +159,43 @@ function CodexHome({ onBrowse }: { onBrowse: (group: string) => void }) {
   }
 
   return (
-    <>
-      <section className="codex-browse" aria-labelledby="codex-browse-title">
-        <div className="codex-section-heading">
-          <p className="eyebrow">Browse</p>
-          <h2 id="codex-browse-title">Start with a part of the library</h2>
-        </div>
-        <div className="codex-collection-list">
-          {CODEX_GROUPS.filter((item) => item !== "Source Notes").map((item) => (
-            <button type="button" key={item} onClick={() => onBrowse(item)}>
-              <span>{item}</span>
-              <small>{groupedCounts.get(item) ?? 0} topics</small>
-            </button>
-          ))}
-        </div>
-      </section>
-      <SourceLibrary />
-    </>
+    <section className="codex-browse" aria-labelledby="codex-browse-title">
+      <div className="codex-section-heading">
+        <p className="eyebrow">Browse</p>
+        <h2 id="codex-browse-title">Start with a part of the library</h2>
+      </div>
+      <div className="codex-collection-list">
+        {CODEX_GROUPS.filter((item) => item !== "Source Notes").map((item) => (
+          <button className="codex-collection-item" type="button" key={item} onClick={() => onBrowse(item)}>
+            <span>{item}</span>
+            <small>{groupedCounts.get(item) ?? 0} topics</small>
+          </button>
+        ))}
+        <Link className="codex-collection-item" to="/codex/documents">
+          <span>Source library</span>
+          <small>{CODEX_SOURCES.length} documents</small>
+        </Link>
+      </div>
+    </section>
   );
 }
 
 function SourceLibrary() {
   return (
-    <section className="codex-sources" aria-labelledby="codex-sources-title">
-      <div className="codex-section-heading">
-        <p className="eyebrow">Provenance</p>
-        <h2 id="codex-sources-title">Source library</h2>
-        <p>Original documents remain separate underneath the Codex. Search results cite these sources instead of blending their wording.</p>
-      </div>
+    <section className="codex-sources codex-sources-page" aria-label="Source documents">
       <div className="codex-source-list">
-        {CODEX_SOURCES.map((item) => (
-          <article key={item.id}>
+        {DOCUMENT_SOURCES.map((item, index) => (
+          <article data-testid="codex-document" key={item.id}>
             <div>
+              <span className="codex-document-index">Document {String(index + 1).padStart(2, "0")}</span>
               <h3>{item.title}</h3>
               <p>{item.description}</p>
               <small>{item.pageCount > 0 ? `${item.pageCount} ${item.pageCount === 1 ? "page" : "pages"}` : "Structured record"} · {item.fileLabels.join(" · ")}</small>
             </div>
-            {item.publicPath && <a href={item.publicPath} target="_blank" rel="noreferrer">Open PDF</a>}
+            <div className="codex-source-actions">
+              <Link to={`/codex?source=${encodeURIComponent(item.id)}`}>Search source</Link>
+              {item.publicPath && <a href={item.publicPath} target="_blank" rel="noreferrer">Open PDF</a>}
+            </div>
           </article>
         ))}
       </div>

@@ -44,7 +44,16 @@ try {
   watch(desktop);
   await desktop.goto(`${BASE}/codex`, { waitUntil: "domcontentloaded" });
   await desktop.getByRole("heading", { name: "Codex", exact: true }).waitFor();
+  if (await desktop.getByTestId("codex-document").count()) throw new Error("Source documents remained on the Codex home");
+  await desktop.getByRole("link", { name: /Source library/ }).click();
+  await desktop.waitForURL(/\/codex\/documents$/);
   await desktop.getByRole("heading", { name: "Source library" }).waitFor();
+  if (await desktop.getByTestId("codex-document").count() !== 16) throw new Error("Dedicated source library is incomplete");
+  await desktop.getByTestId("codex-document").nth(0).getByRole("heading", { name: "Player's Handbook" }).waitFor();
+  await desktop.getByTestId("codex-document").nth(1).getByRole("heading", { name: "Character Sheets" }).waitFor();
+  await desktop.getByTestId("codex-document").nth(2).getByRole("heading", { name: "Player's Game Card" }).waitFor();
+  await desktop.getByRole("link", { name: "Back to Codex" }).click();
+  await desktop.waitForURL(/\/codex$/);
 
   const search = desktop.getByLabel("Search every rule and reference");
   await search.fill("grappled");
@@ -85,8 +94,17 @@ try {
   const mobile = await mobileContext.newPage();
   watch(mobile);
   await mobile.goto(`${BASE}/codex`, { waitUntil: "domcontentloaded" });
+  const mobileSourceLibrary = mobile.getByRole("link", { name: /Source library/ });
+  await mobileSourceLibrary.waitFor();
+  await assertNoPageOverflow(mobile, "Codex mobile home");
+  await mobileSourceLibrary.click();
+  await mobile.waitForURL(/\/codex\/documents$/);
   await mobile.getByRole("heading", { name: "Source library" }).waitFor();
+  if (await mobile.getByTestId("codex-document").count() !== 16) throw new Error("Mobile source library is incomplete");
   await assertNoPageOverflow(mobile, "Codex mobile source library");
+  await mobile.screenshot({ path: "screenshots/codex-documents-mobile.png", fullPage: true });
+  await mobile.getByRole("link", { name: "Back to Codex" }).click();
+  await mobile.waitForURL(/\/codex$/);
 
   const mobileSearch = mobile.getByLabel("Search every rule and reference");
   await mobileSearch.fill("hunter rifle");
