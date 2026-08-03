@@ -9,6 +9,24 @@ export interface SkillChoice {
   options: string[];
 }
 
+export interface Skill {
+  name: string;
+  ability: AbilityKey;
+}
+
+/** Player-facing background data reconciled from master.json. A null feat is
+ * deliberate: the source scan is illegible, so the app asks instead of guessing. */
+export interface Background {
+  id: string;
+  name: string;
+  text: string;
+  abilityScores: AbilityKey[];
+  feat: string | null;
+  skills: string[];
+  tool: string | null;
+  equipment: string[];
+}
+
 /** A feature a class or subclass gains at a given level. */
 export interface LevelFeature {
   level: number;
@@ -435,6 +453,33 @@ export type AbilityScores = Record<AbilityKey, number>;
  * are booleans. */
 export type SheetData = Record<string, string | boolean>;
 
+export interface LegacyEquipmentLine {
+  name: string;
+  carrying?: string;
+  slot?: string;
+  weight?: string;
+}
+
+/** Versioned state for the rules-driven paper sheet. Only player decisions
+ * live here; every calculated field is derived again from canonical data. */
+export interface SheetAutomationState {
+  version: 1;
+  classSkills: string[];
+  expertiseSkills?: string[];
+  weaponMasteries?: string[];
+  backgroundBonuses: Partial<Record<AbilityKey, number>>;
+  startingKitApplied?: boolean;
+  setupComplete?: boolean;
+  /** Exact catalog quantities and GP granted by the currently selected class
+   * + background, so changing either can replace only the old free kit while
+   * preserving equipment the player added later. */
+  startingKitInventory?: InventoryEntry[];
+  startingKitCoins?: number;
+  migratedAt?: number;
+  manualOverrides?: string[];
+  legacyEquipment?: LegacyEquipmentLine[];
+}
+
 export interface HunterCard {
   /** Character doc id (in the /characters collection). */
   id: string;
@@ -528,6 +573,8 @@ export interface HunterCard {
    * created the "character sheet way" (a free-form sheet instead of the
    * structured builder; `name`/`level`/`background` are mirrored from it). */
   sheet?: SheetData;
+  /** Structured decisions and migration metadata for automatic sheet filling. */
+  sheetAutomation?: SheetAutomationState;
   notes: string;
   updatedAt: number;
   createdAt: number;

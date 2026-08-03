@@ -39,7 +39,13 @@ export function CharacterView({
         >
           ← All hunters
         </button>
-        <SheetCharacterView key={openCard.id} card={openCard} autoOpen onDelete={onDelete} />
+        <SheetCharacterView
+          key={openCard.id}
+          card={openCard}
+          autoOpen
+          onDismiss={onBack}
+          onDelete={onDelete}
+        />
         {experimental && (
           <div className="no-print" style={{ marginTop: 14 }}>
             <CharacterLog card={openCard} />

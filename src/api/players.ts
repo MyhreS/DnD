@@ -19,6 +19,7 @@ import { normalizeCard } from "@/lib/character";
 import { isPreviewActive, previewCard, previewPartyCards, previewArchive } from "@/dev/preview";
 import { isTestEmail } from "@/config";
 import type { ArchivedCharacter, HunterCard, SheetData } from "@/types";
+import { characterSheetUpdate } from "@/features/hunter/lib/sheetPersistence";
 
 // Characters live in /characters/{id} — a user (ownerUid) can own several.
 const charsCol = collection(db, "characters");
@@ -64,12 +65,10 @@ export async function patchCharacterSheet(
   sheet: SheetData,
   keys: string[],
   mirror: Partial<HunterCard>,
+  cardPatch: Partial<HunterCard> = {},
 ): Promise<void> {
-  if (isPreviewActive()) return patchCharacter(id, { ...mirror, sheet });
-  const update: Record<string, unknown> = { ...mirror, updatedAt: Date.now() };
-  for (const k of keys) {
-    update[`sheet.${k}`] = k in sheet ? sheet[k] : deleteField();
-  }
+  if (isPreviewActive()) return patchCharacter(id, { ...cardPatch, ...mirror, sheet });
+  const update = characterSheetUpdate(sheet, keys, mirror, cardPatch, deleteField(), Date.now());
   await updateDoc(doc(charsCol, id), update);
 }
 

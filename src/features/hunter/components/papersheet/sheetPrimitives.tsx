@@ -75,16 +75,21 @@ class SheetStore {
 
 const StoreContext = createContext<SheetStore | null>(null);
 const ReadOnlyContext = createContext(false);
+const AutomationContext = createContext<{ reasons: Record<string, string>; overrides: Set<string> }>({ reasons: {}, overrides: new Set() });
 
 export function SheetProvider({
   data,
   setField,
   readOnly = false,
+  automationReasons = {},
+  manualOverrides = [],
   children,
 }: {
   data: SheetData;
   setField: (f: string, v: string | boolean) => void;
   readOnly?: boolean;
+  automationReasons?: Record<string, string>;
+  manualOverrides?: string[];
   children: ReactNode;
 }) {
   const [store] = useState(() => new SheetStore(data));
@@ -96,9 +101,19 @@ export function SheetProvider({
   useEffect(() => store.flush());
   return (
     <StoreContext.Provider value={store}>
-      <ReadOnlyContext.Provider value={readOnly}>{children}</ReadOnlyContext.Provider>
+      <ReadOnlyContext.Provider value={readOnly}>
+        <AutomationContext.Provider value={{ reasons: automationReasons, overrides: new Set(manualOverrides) }}>
+          {children}
+        </AutomationContext.Provider>
+      </ReadOnlyContext.Provider>
     </StoreContext.Provider>
   );
+}
+
+function useAutomation(f: string) {
+  const { reasons, overrides } = useContext(AutomationContext);
+  const reason = overrides.has(f) ? undefined : reasons[f];
+  return reason ? { "data-automated": true, "data-auto-reason": reason, title: `Automatically set · ${reason}` } : {};
 }
 
 function useStore(): SheetStore {
@@ -132,6 +147,7 @@ export function F({ f, ...rest }: { f: string } & InputHTMLAttributes<HTMLInputE
       value={typeof v === "string" ? v : ""}
       readOnly={readOnly}
       onChange={(e) => store.setField(f, e.target.value)}
+      {...useAutomation(f)}
       {...rest}
     />
   );
@@ -168,6 +184,7 @@ export function Sel({ f, options, ...rest }: { f: string; options: string[] } & 
       disabled={readOnly}
       data-empty={v === "" || undefined}
       onChange={(e) => store.setField(f, e.target.value)}
+      {...useAutomation(f)}
       {...rest}
     >
       <option value="">—</option>
@@ -191,6 +208,7 @@ export function Ta({ f, ...rest }: { f: string } & TextareaHTMLAttributes<HTMLTe
       value={typeof v === "string" ? v : ""}
       readOnly={readOnly}
       onChange={(e) => store.setField(f, e.target.value)}
+      {...useAutomation(f)}
       {...rest}
     />
   );
@@ -214,14 +232,17 @@ export function MergeTa({
   const a = typeof av === "string" ? av : "";
   const b = typeof bv === "string" ? bv : "";
   const v = a !== "" && b !== "" ? `${a}\n\n${b}` : a !== "" ? a : b;
+  const automation = useAutomation(f);
   return (
     <textarea
+      data-f={f}
       value={v}
       readOnly={readOnly}
       onChange={(e) => {
         store.setField(f, e.target.value);
         if (b !== "") store.setField(legacy, "");
       }}
+      {...automation}
       {...rest}
     />
   );
@@ -247,6 +268,7 @@ export function Chk({
       checked={checked}
       disabled={readOnly}
       onChange={(e) => store.setField(f, e.target.checked)}
+      {...useAutomation(f)}
       {...rest}
     />
   );
@@ -262,7 +284,7 @@ function CellF({ f }: { f: string }) {
   const s = typeof v === "string" ? v : "";
   return (
     <div className="cellgrow" data-v={s}>
-      <textarea rows={1} data-f={f} value={s} readOnly={readOnly} onChange={(e) => store.setField(f, e.target.value)} />
+      <textarea rows={1} data-f={f} value={s} readOnly={readOnly} onChange={(e) => store.setField(f, e.target.value)} {...useAutomation(f)} />
     </div>
   );
 }
