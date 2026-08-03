@@ -113,8 +113,17 @@ export function HandbookPage() {
       >
         Download the full handbook (PDF)
       </AsyncButton>
+      <a
+        className="btn btn-ghost"
+        style={{ marginTop: 10 }}
+        href="/game-card/players-game-card.pdf"
+        target="_blank"
+        rel="noreferrer"
+      >
+        Open player's game card (PDF)
+      </a>
       <p className="faint center" style={{ fontSize: "0.76rem", marginTop: 8 }}>
-        Saves the PDF so you can read it in Files / your PDF app.
+        Keep the handbook and the quick-reference game card beside you during play.
       </p>
     </div>
   );

@@ -25,8 +25,9 @@ function ms(v: unknown): number {
 
 export type NewCombatant = Omit<Combatant, "id" | "createdAt">;
 
-export async function addCombatant(gameId: string, data: NewCombatant): Promise<void> {
-  await addDoc(combatantsCol(gameId), { ...data, createdAt: serverTimestamp() });
+export async function addCombatant(gameId: string, data: NewCombatant): Promise<string> {
+  const ref = await addDoc(combatantsCol(gameId), { ...data, createdAt: serverTimestamp() });
+  return ref.id;
 }
 
 export async function patchCombatant(
@@ -71,6 +72,7 @@ export function subscribeCombatants(
             conditions: (data.conditions as string[]) ?? [],
             conditionSince: (data.conditionSince as Record<string, number>) ?? {},
             note: (data.note as string | null) ?? null,
+            isWarden: data.isWarden === true,
             createdAt: ms(data.createdAt),
           } satisfies Combatant;
         }),

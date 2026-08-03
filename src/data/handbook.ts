@@ -366,6 +366,37 @@ export const HANDBOOK: HandbookChapter[] = [
     ],
   },
   {
+    id: "combat-turn-timer",
+    title: "Playtest Rule — Combat Turn Timer",
+    summary: "90-second player turns and the Warden's Tactical Command.",
+    sections: [
+      {
+        heading: "The 90-second turn",
+        body: [
+          "During combat, each player has 90 seconds to complete their turn. The timer begins when the DM announces the start of that player's turn. Movement, Action, Bonus Action, item interactions, and other abilities must be both declared and resolved within the time.",
+          "When time expires, the player cannot begin any new movement, action, Bonus Action, item interaction, attack, or optional effect. They may finish resolving an action or effect already begun, and then the turn immediately ends.",
+          "An action has begun at its first mechanical step: rolling an attack, causing a saving throw, rolling a required ability check, or fully declaring the target, area, and effect of an action with no roll.",
+          "Each attack in an Attack action with multiple attacks is a separate resolution. An attack already rolled may finish; an additional attack not yet begun is lost when time expires.",
+        ],
+      },
+      {
+        heading: "Pausing the clock",
+        body: [
+          "The DM may pause the timer to clarify a rule, adjudicate an uncertain interaction, roll saving throws, or resolve something outside the player's control. Searching through your own features or deciding what to do does not pause the timer.",
+          "The DM and creatures controlled by the DM are not subject to this timer.",
+        ],
+      },
+      {
+        heading: "Warden — Tactical Command",
+        body: [
+          "At the beginning of the designated Hunter Warden's turn, the timer does not begin automatically. The Warden may take unlimited time to discuss strategy with the other Hunters. This period is for planning only: no movement, dice, actions, or game effects.",
+          "The Warden starts their 90-second timer when ready. The timer also begins automatically if the Warden starts moving, rolls a die, or begins resolving any part of the turn.",
+          "If several Hunters have the Warden class, the party chooses one of them to receive Tactical Command.",
+        ],
+      },
+    ],
+  },
+  {
     id: "transformation",
     title: "Transformation",
     summary: "How far the blood has shifted — and what crawls out when it does.",

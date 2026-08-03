@@ -4,6 +4,8 @@ import { maxHp, isSheetCard } from "@/lib/character";
 import { sheetVitals } from "@/features/hunter/lib/papersheet";
 import { initiativeOrder } from "@/features/play/store/combatStore";
 import { CONDITION_NAME } from "@/data/conditions";
+import { CombatTurnTimer } from "@/features/play/components/CombatTurnTimer";
+import { emptyEncounter } from "@/features/play/lib/turnTimer";
 
 /** Resolve a combatant's HP/AC: monsters carry their own; PCs read live from
  * the HunterCard (one source of truth — sheet hunters parse off their paper
@@ -28,10 +30,12 @@ export function CombatBoard({ game, combatants, party }: { game: Game; combatant
   if (order.length === 0) return null;
   const activeId = game.combat?.turnId ?? order[0]?.id ?? null;
   const round = game.combat?.round ?? 1;
+  const current = order.find((combatant) => combatant.id === activeId);
 
   return (
     <div style={{ marginBottom: 28 }}>
       <p className="eyebrow" style={{ fontSize: "1.05rem", marginBottom: 12 }}>Combat · Round {round}</p>
+      <CombatTurnTimer encounter={game.combat ?? emptyEncounter()} combatantName={current?.name} />
       <div
         style={{
           display: "grid",

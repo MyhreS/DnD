@@ -251,12 +251,20 @@ export type GamePhase = "exploration" | "combat" | "short_rest" | "long_rest";
  * = spend Hit Dice on a Short Rest (and a half Long Rest); the Wild = neither. */
 export type GameLocation = "lodge" | "safe" | "wild";
 
+export type TurnTimerPhase = "idle" | "briefing" | "running" | "paused" | "untimed" | "expired";
+
 /** Live combat encounter state, stored on the Game doc. */
 export interface EncounterState {
   active: boolean;
   round: number;
   /** The combatant whose turn it is, or null. */
   turnId: string | null;
+  /** Exactly one Warden may receive Tactical Command for this encounter. */
+  designatedWardenId: string | null;
+  timerPhase: TurnTimerPhase;
+  /** Absolute client epoch so every subscribed screen renders the same clock. */
+  timerEndsAt: number | null;
+  pausedRemainingMs: number | null;
 }
 
 /** One combatant in the initiative tracker. Lives at
@@ -279,6 +287,8 @@ export interface Combatant {
   conditionSince?: Record<string, number>;
   /** Optional DM note for a monster — its attack / special / damage. */
   note?: string | null;
+  /** True when this PC's class is Hunter Warden. */
+  isWarden?: boolean;
   createdAt: number;
 }
 

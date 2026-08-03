@@ -9,6 +9,14 @@ import {
 } from "@/api/combat";
 import { useGameStore } from "./gameStore";
 import { isPreviewActive, previewCombatants } from "@/dev/preview";
+import {
+  effectiveTimerPhase,
+  emptyEncounter,
+  pauseTurnTimer,
+  resumeTurnTimer,
+  startTurnTimer,
+  timerForCombatant,
+} from "../lib/turnTimer";
 
 function rollD20(): number {
   return Math.floor(Math.random() * 20) + 1;
@@ -29,6 +37,7 @@ export interface PcSeed {
   characterId: string;
   name: string;
   dexMod: number;
+  isWarden: boolean;
 }
 export interface MonsterInput {
   name: string;
@@ -65,6 +74,10 @@ interface CombatState {
     round: number,
   ) => Promise<boolean>;
   nextTurn: (gameId: string, game: Game, combatants: Combatant[]) => Promise<boolean>;
+  designateWarden: (gameId: string, game: Game, combatants: Combatant[], id: string) => Promise<boolean>;
+  startTimer: (gameId: string, game: Game) => Promise<boolean>;
+  pauseTimer: (gameId: string, game: Game) => Promise<boolean>;
+  resumeTimer: (gameId: string, game: Game) => Promise<boolean>;
   endEncounter: (gameId: string) => Promise<boolean>;
 }
 
@@ -128,24 +141,44 @@ export const useCombatStore = create<CombatState>((set, get) => {
         maxHp: null,
         currentHp: null,
         conditions: [] as string[],
+        isWarden: p.isWarden,
       }));
       if (get().preview) {
         const local: Combatant[] = seeded.map((s) => ({ ...s, id: previewId(), createdAt: Date.now() }));
         set({ combatants: local });
-        const top = initiativeOrder(local)[0];
-        await setCombat(gameId, { active: true, round: 1, turnId: top?.id ?? null });
+        const order = initiativeOrder(local);
+        const top = order[0];
+        const designatedWardenId = order.find((c) => c.isWarden)?.id ?? null;
+        await setCombat(gameId, {
+          active: true,
+          round: 1,
+          turnId: top?.id ?? null,
+          designatedWardenId,
+          ...timerForCombatant(top, designatedWardenId),
+        });
         return true;
       }
-      const ok =
-        (await run(async () => {
+      const created = await run(async () => {
           await clearCombatants(gameId);
-          await Promise.all(seeded.map((s) => addCombatant(gameId, s)));
-        }, "Couldn't start the encounter.")) !== null;
-      // Only mark combat active if the combatant writes succeeded — else we'd
-      // leave the game "in combat" with no (or partial) combatants. turnId is
-      // resolved by the tracker (top of initiative when null).
-      if (ok) await setCombat(gameId, { active: true, round: 1, turnId: null });
-      return ok;
+          return Promise.all(
+            seeded.map(async (combatant) => ({
+              ...combatant,
+              id: await addCombatant(gameId, combatant),
+              createdAt: Date.now(),
+            })),
+          );
+        }, "Couldn't start the encounter.");
+      if (!created) return false;
+      const order = initiativeOrder(created);
+      const top = order[0];
+      const designatedWardenId = order.find((c) => c.isWarden)?.id ?? null;
+      return setCombat(gameId, {
+        active: true,
+        round: 1,
+        turnId: top?.id ?? null,
+        designatedWardenId,
+        ...timerForCombatant(top, designatedWardenId),
+      });
     },
 
     addMonster: async (gameId, m) => {
@@ -159,6 +192,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
         currentHp: m.maxHp,
         conditions: [] as string[],
         note: m.note ?? null,
+        isWarden: false,
       };
       if (get().preview) {
         set((s) => ({ combatants: [...s.combatants, { ...data, id: previewId(), createdAt: Date.now() }] }));
@@ -179,21 +213,41 @@ export const useCombatStore = create<CombatState>((set, get) => {
       // Deleting the combatant whose turn it is would orphan game.combat.turnId
       // (no highlight; Next turn restarts from the top without bumping the
       // round). Hand the turn to the next in order first.
-      if (game?.combat?.active && game.combat.turnId === id && combatants) {
+      if (game?.combat?.active && combatants) {
         const order = initiativeOrder(combatants);
         const idx = order.findIndex((c) => c.id === id);
         const rest = order.filter((c) => c.id !== id);
+        const designatedWardenId = game.combat.designatedWardenId === id
+          ? rest.find((combatant) => combatant.isWarden)?.id ?? null
+          : game.combat.designatedWardenId;
         let round = game.combat.round ?? 1;
-        let turnId: string | null = null;
-        if (rest.length > 0 && idx >= 0) {
-          if (idx >= rest.length) {
-            round += 1; // the removed combatant was last in the round
-            turnId = rest[0].id;
-          } else {
-            turnId = rest[idx].id; // whoever slid into its slot is up next
+        let turnId = game.combat.turnId;
+        if (game.combat.turnId === id) {
+          turnId = null;
+          if (rest.length > 0 && idx >= 0) {
+            if (idx >= rest.length) {
+              round += 1; // the removed combatant was last in the round
+              turnId = rest[0].id;
+            } else {
+              turnId = rest[idx].id; // whoever slid into its slot is up next
+            }
           }
         }
-        await setCombat(gameId, { active: true, round, turnId });
+        const next = rest.find((c) => c.id === turnId);
+        const timerChanged = game.combat.turnId === id
+          || (game.combat.designatedWardenId !== designatedWardenId && next?.id === designatedWardenId);
+        await setCombat(gameId, {
+          ...game.combat,
+          active: true,
+          round,
+          turnId,
+          designatedWardenId,
+          ...(timerChanged
+            ? next
+              ? timerForCombatant(next, designatedWardenId)
+              : { timerPhase: "idle" as const, timerEndsAt: null, pausedRemainingMs: null }
+            : {}),
+        });
       }
       if (get().preview) {
         set((s) => ({ combatants: s.combatants.filter((c) => c.id !== id) }));
@@ -231,19 +285,57 @@ export const useCombatStore = create<CombatState>((set, get) => {
       } else {
         turnId = order[nextIdx].id;
       }
-      return setCombat(gameId, { active: true, round, turnId });
+      const next = order.find((c) => c.id === turnId);
+      const encounter = game.combat ?? emptyEncounter();
+      return setCombat(gameId, {
+        ...encounter,
+        active: true,
+        round,
+        turnId,
+        ...timerForCombatant(next, encounter.designatedWardenId),
+      });
+    },
+
+    designateWarden: async (gameId, game, combatants, id) => {
+      const encounter = game.combat ?? emptyEncounter();
+      const designatedWardenId = combatants.some((c) => c.id === id && c.isWarden) ? id : null;
+      const current = combatants.find((c) => c.id === encounter.turnId);
+      const affected = current?.id === encounter.designatedWardenId || current?.id === designatedWardenId;
+      return setCombat(gameId, {
+        ...encounter,
+        designatedWardenId,
+        ...(affected ? timerForCombatant(current, designatedWardenId) : {}),
+      });
+    },
+
+    startTimer: async (gameId, game) => {
+      const encounter = game.combat ?? emptyEncounter();
+      if (encounter.timerPhase !== "briefing") return false;
+      return setCombat(gameId, startTurnTimer(encounter));
+    },
+
+    pauseTimer: async (gameId, game) => {
+      const encounter = game.combat ?? emptyEncounter();
+      if (effectiveTimerPhase(encounter) !== "running") return false;
+      return setCombat(gameId, pauseTurnTimer(encounter));
+    },
+
+    resumeTimer: async (gameId, game) => {
+      const encounter = game.combat ?? emptyEncounter();
+      if (encounter.timerPhase !== "paused") return false;
+      return setCombat(gameId, resumeTurnTimer(encounter));
     },
 
     endEncounter: async (gameId) => {
       if (get().preview) {
         set({ combatants: [] });
-        await setCombat(gameId, { active: false, round: 0, turnId: null });
+        await setCombat(gameId, emptyEncounter());
         return true;
       }
       const ok = (await run(() => clearCombatants(gameId), "Couldn't end the encounter.")) !== null;
       // Keep combat marked active if the clear failed, so we never show
       // "not in combat" while orphan combatants linger.
-      if (ok) await setCombat(gameId, { active: false, round: 0, turnId: null });
+      if (ok) await setCombat(gameId, emptyEncounter());
       return ok;
     },
   };

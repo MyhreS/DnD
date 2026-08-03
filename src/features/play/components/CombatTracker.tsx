@@ -2,7 +2,7 @@ import { useState } from "react";
 import { AsyncButton } from "@/components/AsyncButton";
 import { getClass } from "@/data/classes";
 import { maxHp, initiativeMod, isSheetCard } from "@/lib/character";
-import { sheetVitals, sheetInitiative } from "@/features/hunter/lib/papersheet";
+import { sheetVitals, sheetInitiative, cardClassName } from "@/features/hunter/lib/papersheet";
 import { useCombatStore, initiativeOrder } from "../store/combatStore";
 import { useCombatSync } from "../hooks/useCombatSync";
 import { useCharactersSync } from "../hooks/useCharactersSync";
@@ -10,6 +10,8 @@ import { useCharactersStore } from "../store/charactersStore";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { CombatantRow } from "./CombatantRow";
 import { AddMonsterForm } from "./AddMonsterForm";
+import { CombatTurnTimer } from "./CombatTurnTimer";
+import { WardenDesignation } from "./WardenDesignation";
 import type { Combatant, Game, GameParticipant } from "@/types";
 
 /** Live initiative tracker shown to EVERYONE during the combat phase. The DM
@@ -35,19 +37,25 @@ export function CombatTracker({
   const remove = useCombatStore((s) => s.remove);
   const toggleCondition = useCombatStore((s) => s.toggleCondition);
   const nextTurn = useCombatStore((s) => s.nextTurn);
+  const designateWarden = useCombatStore((s) => s.designateWarden);
+  const startTimer = useCombatStore((s) => s.startTimer);
+  const pauseTimer = useCombatStore((s) => s.pauseTimer);
+  const resumeTimer = useCombatStore((s) => s.resumeTimer);
   const endEncounter = useCombatStore((s) => s.endEncounter);
   const [adding, setAdding] = useState(false);
 
   const active = game.combat?.active ?? false;
   const order = initiativeOrder(combatants);
   const activeId = game.combat?.turnId ?? order[0]?.id ?? null;
+  const current = order.find((combatant) => combatant.id === activeId);
+  const wardens = order.filter((combatant) => combatant.kind === "pc" && combatant.isWarden);
 
   /** Seed PC combatants from each player participant's campaign character.
    * Authoritative join: participant.uid → member.characterId → party card by id
    * (party is the global /characters collection, so don't match by ownerUid). */
   function seedPcs() {
     const seen = new Set<string>();
-    const pcs: { characterId: string; name: string; dexMod: number }[] = [];
+    const pcs: { characterId: string; name: string; dexMod: number; isWarden: boolean }[] = [];
     for (const pt of participants) {
       if (pt.role !== "player") continue;
       const characterId = members.find((m) => m.uid === pt.uid)?.characterId;
@@ -60,7 +68,8 @@ export function CombatTracker({
       const dexMod = isSheetCard(card)
         ? (sheetInitiative(card.sheet) ?? 0)
         : initiativeMod(card.abilities);
-      pcs.push({ characterId: card.id, name: card.name, dexMod });
+      const className = isSheetCard(card) ? cardClassName(card) : card.classId;
+      pcs.push({ characterId: card.id, name: card.name, dexMod, isWarden: /warden/i.test(className) });
     }
     return pcs;
   }
@@ -123,6 +132,17 @@ export function CombatTracker({
         )}
       </div>
 
+      {game.combat && (
+        <CombatTurnTimer
+          encounter={game.combat}
+          combatantName={current?.name}
+          controls={isDM}
+          onStart={() => void startTimer(game.id, game)}
+          onPause={() => void pauseTimer(game.id, game)}
+          onResume={() => void resumeTimer(game.id, game)}
+        />
+      )}
+
       {order.length === 0 ? (
         <p className="faint" style={{ fontSize: "0.88rem", margin: 0 }}>No combatants yet.</p>
       ) : (
@@ -153,6 +173,11 @@ export function CombatTracker({
 
       {isDM && (
         <div style={{ marginTop: 10, borderTop: "1px solid var(--border)", paddingTop: 10 }}>
+          <WardenDesignation
+            wardens={wardens}
+            designatedId={game.combat?.designatedWardenId ?? null}
+            onChange={(id) => void designateWarden(game.id, game, combatants, id)}
+          />
           <div className="btn-row">
             <button type="button" className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={() => setAdding((a) => !a)}>
               {adding ? "Cancel" : "+ Monster"}

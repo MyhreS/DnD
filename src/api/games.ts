@@ -24,6 +24,7 @@ import type {
   InventoryEntry,
   LootPile,
 } from "@/types";
+import { emptyEncounter, normalizeEncounterState } from "@/features/play/lib/turnTimer";
 
 const gamesCol = collection(db, "games");
 
@@ -45,7 +46,7 @@ function toGame(id: string, data: Record<string, unknown>): Game {
     status: (data.status as Game["status"]) ?? "lobby",
     phase: (data.phase as GamePhase) ?? "exploration",
     location: (data.location as GameLocation) ?? "wild",
-    combat: (data.combat as EncounterState) ?? { active: false, round: 0, turnId: null },
+    combat: normalizeEncounterState(data.combat),
     sandbox: (data.sandbox as boolean) ?? false,
     createdAt: ms(data.createdAt),
     startedAt: data.startedAt ? ms(data.startedAt) : null,
@@ -92,7 +93,7 @@ export async function createGame(input: CreateGameInput): Promise<string> {
     status: "lobby",
     phase: "exploration",
     location: "wild",
-    combat: { active: false, round: 0, turnId: null },
+    combat: emptyEncounter(),
     sandbox: input.sandbox ?? false,
     createdAt: serverTimestamp(),
     startedAt: null,

@@ -1,6 +1,6 @@
 {
   "$schema": "https://unpkg.com/knip@5/schema.json",
-  "entry": ["scripts/*.mjs"],
+  "entry": ["scripts/*.{mjs,ts}"],
   "project": ["src/**/*.{ts,tsx}"],
   "ignoreExportsUsedInFile": true,
   "ignoreBinaries": ["doppler", "firebase"]

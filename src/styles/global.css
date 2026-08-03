@@ -39,6 +39,122 @@
   color-scheme: dark;
 }
 
+/* ---------- Live combat clock ---------- */
+
+.combat-turn-clock {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 18px;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--gold);
+  background: rgba(201, 150, 47, 0.08);
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.combat-turn-clock-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.combat-turn-clock-copy span {
+  overflow: hidden;
+  color: var(--ink-dim);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.combat-turn-clock-copy strong {
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 7vw, 4.8rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 0.98;
+}
+
+.combat-turn-clock p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.combat-turn-clock-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+}
+
+.combat-turn-clock-actions .btn {
+  width: auto;
+}
+
+.combat-turn-clock-expired {
+  border-color: var(--blood-bright);
+  background: rgba(179, 18, 26, 0.14);
+}
+
+.combat-turn-clock-expired .combat-turn-clock-copy strong {
+  color: var(--blood-bright);
+}
+
+.combat-turn-clock-paused {
+  border-color: var(--ink-faint);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.combat-turn-clock-briefing .combat-turn-clock-copy strong {
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+}
+
+.combat-warden-select {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.combat-warden-select > span {
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-transform: uppercase;
+}
+
+.combat-warden-select .input {
+  margin: 0;
+}
+
+.combat-warden-select small {
+  grid-column: 1 / -1;
+  color: var(--ink-faint);
+  line-height: 1.4;
+}
+
+@media (max-width: 560px) {
+  .combat-turn-clock {
+    grid-template-columns: 1fr;
+  }
+
+  .combat-turn-clock-copy strong {
+    font-size: 3.4rem;
+  }
+
+  .combat-warden-select {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Light theme ---------- */
 :root[data-theme="light"] {
   --bg: #f3efe6;

@@ -34,7 +34,7 @@ await db.doc(`campaigns/${cid}/members/${dmUid}`).set({ uid: dmUid, name: "Agent
 await db.doc(`campaigns/${cid}/members/${plUid}`).set({ uid: plUid, name: "Agent Player", email: "p@x", role: "player", characterId: charId, joinedAt: FieldValue.serverTimestamp() });
 await db.doc(`characters/${charId}`).set({
   id: charId, ownerUid: plUid, ownerEmail: "p@x", ownerName: "Agent Player",
-  name: "Testra the Bold", classId: "scout", subclassId: "marksman", background: "Scout", level: 3,
+  name: "Testra the Bold", classId: "warden", subclassId: "commander", background: "Scout", level: 3,
   abilities: { str: 12, dex: 15, con: 13, int: 10, wis: 12, cha: 8 },
   skillProficiencies: ["Stealth"], mainArmorId: null, campaignId: cid, currentHp: 22,
   inventory: [{ itemId: "pistol", qty: 1 }], coins: 10, notes: "", createdAt: Date.now(), updatedAt: Date.now(),
@@ -88,8 +88,29 @@ try {
   const playerSeen = /Testra the Bold|Agent Player/.test(dmText);
   log(`DM sees the player in the game: ${playerSeen}`);
 
+  // DM enters combat and rolls initiative. The only hunter is a Warden, so
+  // Tactical Command must appear on both the controller and a separate status
+  // page before the shared 90-second Firestore clock begins.
+  await dm.p.getByRole("button", { name: "Combat", exact: true }).click();
+  await dm.p.getByRole("button", { name: "Roll initiative" }).click();
+  await dm.p.getByText("Tactical briefing", { exact: false }).first().waitFor({ state: "visible" });
+
+  const status = await pl.c.newPage(); watch(status, "STATUS");
+  await status.goto(`${BASE}/status`, { waitUntil: "domcontentloaded" });
+  await status.getByText("Tactical briefing", { exact: false }).first().waitFor({ state: "visible" });
+  log("Status screen received the Warden briefing through Firestore");
+
+  await dm.p.getByTestId("start-warden-timer").click();
+  await status.getByText("Turn in progress", { exact: false }).first().waitFor({ state: "visible" });
+  const statusTimer = await status.getByTestId("combat-timer").textContent();
+  if (!statusTimer || !/1:(?:30|29|28)/.test(statusTimer)) {
+    errors.push(`STATUS: expected synced 90-second timer, got ${statusTimer}`);
+  }
+  log(`Cross-device timer on status screen: ${statusTimer}`);
+
   await dm.p.screenshot({ path: "screenshots/testplay-dm.png", fullPage: true });
   await pl.p.screenshot({ path: "screenshots/testplay-player.png", fullPage: true });
+  await status.screenshot({ path: "screenshots/testplay-status.png", fullPage: true });
 
   log(`\npermission errors: ${errors.length}`);
   errors.slice(0, 8).forEach((e) => log(" - " + e));
@@ -100,6 +121,7 @@ try {
   const subs = await db.collection(`games`).where("campaignId", "==", cid).get();
   for (const g of subs.docs) {
     for (const pd of (await g.ref.collection("participants").get()).docs) await pd.ref.delete();
+    for (const cd of (await g.ref.collection("combatants").get()).docs) await cd.ref.delete();
     await g.ref.delete();
   }
   for (const m of (await db.collection(`campaigns/${cid}/members`).get()).docs) await m.ref.delete();
