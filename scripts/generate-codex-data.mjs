@@ -5,6 +5,26 @@ const MASTER_PATH = "resources/master.json";
 const OUTPUT_PATH = "src/data/codex.generated.json";
 const GAME_CARD_OUTPUT_PATH = "src/data/gameCard.generated.json";
 const PUBLIC_DOCUMENT_ROOT = "public/source-library";
+const DOWNLOAD_LABELS = new Map([
+  ["CATACOMBS & STARSPAWNS Players Handbook.pdf", "Player's Handbook"],
+  ["R1.0 Character Sheet.pdf", "Blank Character Sheet"],
+  ["R1.0 Numbered Character Sheet.pdf", "Numbered Character Creation Sheet"],
+  ["Character Sheet For Sim.pdf", "Character Sheet Field Guide"],
+  ["Player's Game Card.pdf", "Player's Game Card"],
+  ["Rules Reference Scan.pdf", "Rules Glossary"],
+  ["ability-score-point-costs-v2.pdf", "Ability Score Point Costs"],
+  ["Bloodbound.pdf", "Bloodbound Class Board"],
+  ["Brute.pdf", "Brute Class Board"],
+  ["Deepcaller.pdf", "Deepcaller Class Board"],
+  ["Scout.pdf", "Scout Class Board"],
+  ["Staker.pdf", "Stalker Class Board"],
+  ["Warden.pdf", "Warden Class Board"],
+  ["Classes Boards for send.pdf", "All Hunter Classes (combined PDF)"],
+  ["V1.0 Book of The Deepcaller.pdf", "Book of the Deepcaller"],
+  ["V1.0 Whispers.pdf", "Hushed Whispers"],
+  ["Transformation Table Final Version.pdf", "Transformation Table"],
+  ["master-content-reconciliation-notes.pdf", "Reconciliation Notes"],
+]);
 
 const master = JSON.parse(readFileSync(MASTER_PATH, "utf8"));
 const sourceById = new Map(master.index.map((source) => [source.id, source]));
@@ -21,6 +41,10 @@ function slug(value) {
 
 function publicDocumentPath(sourceId, file) {
   return `/source-library/${sourceId}/${slug(basename(file, ".pdf"))}.pdf`;
+}
+
+function downloadLabel(file) {
+  return DOWNLOAD_LABELS.get(basename(file)) ?? basename(file, ".pdf");
 }
 
 function paragraphs(value) {
@@ -374,7 +398,7 @@ const sources = master.index
     const pdfFiles = item.sourceFiles.filter((file) => file.toLowerCase().endsWith(".pdf"));
     const downloadRecords = pdfFiles.map((file) => ({
       sourceFile: file,
-      label: basename(file, ".pdf"),
+      label: downloadLabel(file),
       publicPath: item.publicPath && pdfFiles.length === 1 ? item.publicPath : publicDocumentPath(item.id, file),
     }));
     if (downloadRecords.length === 0) throw new Error(`Player-facing Codex source has no PDF download: ${item.id}`);

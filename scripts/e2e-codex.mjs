@@ -62,12 +62,24 @@ try {
     links.map((link) => link.getAttribute("href")).filter(Boolean),
   );
   if (downloadPaths.length !== 30) throw new Error(`Expected 30 source PDFs, found ${downloadPaths.length}`);
+  const actionColumns = await documentRows.locator(".codex-source-actions").evaluateAll((columns) =>
+    columns.map((column) => column.getBoundingClientRect().left),
+  );
+  if (Math.max(...actionColumns) - Math.min(...actionColumns) > 1) {
+    throw new Error(`Source actions do not share one column: ${JSON.stringify(actionColumns)}`);
+  }
+  const actionText = await documentRows.locator(".codex-source-actions").allTextContents();
+  if (actionText.some((text) => /for send|ability-score-point-costs|CATACOMBS & STARSPAWNS Players Handbook/i.test(text))) {
+    throw new Error(`Source actions expose internal filenames: ${JSON.stringify(actionText)}`);
+  }
+  await documentRows.filter({ hasText: "Hunter Bloodbound" }).getByText("Download All Hunter Classes (combined PDF)", { exact: true }).waitFor();
   for (const path of new Set(downloadPaths)) {
     const response = await desktop.request.get(new URL(path, BASE).href);
     if (!response.ok() || !response.headers()["content-type"]?.includes("application/pdf")) {
       throw new Error(`Broken PDF download: ${path} (${response.status()})`);
     }
   }
+  await desktop.screenshot({ path: "screenshots/codex-documents-desktop.png", fullPage: true });
   await desktop.getByRole("link", { name: "Back to Codex" }).click();
   await desktop.waitForURL(/\/codex$/);
 

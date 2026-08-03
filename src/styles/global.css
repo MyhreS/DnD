@@ -1372,8 +1372,9 @@ button {
 .codex-source-list { border-top: 1px solid var(--border-strong); }
 .codex-source-list article {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) 260px;
+  gap: 28px;
+  align-items: start;
   padding: 15px 2px;
   border-bottom: 1px solid var(--border);
 }
@@ -1393,7 +1394,7 @@ button {
   flex-direction: column;
   gap: 6px;
   align-items: flex-start;
-  max-width: 260px;
+  width: 100%;
   overflow-wrap: anywhere;
 }
 .codex-source-list a,
