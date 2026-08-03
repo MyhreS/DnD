@@ -1301,8 +1301,7 @@ button {
   background: color-mix(in srgb, var(--bg) 92%, transparent);
   backdrop-filter: blur(12px);
 }
-.codex-search > label,
-.codex-filter-row > label {
+.codex-search > label {
   display: block;
   margin-bottom: 5px;
   color: var(--gold-dim);
@@ -1311,16 +1310,12 @@ button {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.codex-search > .input { margin: 0; font-size: 1rem; }
-.codex-filter-row {
-  display: grid;
-  grid-template-columns: auto minmax(180px, 300px) auto;
-  gap: 8px 12px;
+.codex-search-row {
+  display: flex;
+  gap: 12px;
   align-items: center;
-  margin-top: 10px;
 }
-.codex-filter-row > label { margin: 0; }
-.codex-filter-row .input { width: 100%; margin: 0; }
+.codex-search-row .input { min-width: 0; flex: 1; margin: 0; font-size: 1rem; }
 .codex-clear {
   border: 0;
   background: transparent;
@@ -1339,17 +1334,16 @@ button {
 .codex-section-heading > p:last-child { margin: 5px 0 0; color: var(--ink-dim); }
 
 .codex-collection-list {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   border-top: 1px solid var(--border-strong);
 }
 .codex-collection-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 180px;
   align-items: baseline;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 54px;
-  padding: 12px 8px;
+  gap: 28px;
+  width: 100%;
+  min-height: 52px;
+  padding: 13px 2px;
   border: 0;
   border-bottom: 1px solid var(--border);
   background: transparent;
@@ -1359,10 +1353,9 @@ button {
   text-align: left;
   text-decoration: none;
 }
-.codex-collection-item:nth-child(odd) { padding-right: 18px; border-right: 1px solid var(--border); }
-.codex-collection-item:nth-child(even) { padding-left: 18px; }
+.codex-collection-item > span { font-family: var(--font-display); font-size: 1rem; font-weight: 600; }
 .codex-collection-item:hover span { color: var(--gold); }
-.codex-collection-list small { color: var(--ink-faint); font-size: 0.74rem; white-space: nowrap; }
+.codex-collection-list small { color: var(--ink-faint); font-size: 0.74rem; text-align: left; white-space: nowrap; }
 .codex-source-list small {
   color: var(--ink-faint);
   font-size: 0.74rem;
@@ -1510,11 +1503,7 @@ button {
 
 @media (max-width: 620px) {
   .codex-heading > p:last-child { font-size: 0.95rem; }
-  .codex-filter-row { grid-template-columns: 1fr auto; }
-  .codex-filter-row > label { grid-column: 1 / -1; }
-  .codex-collection-list { grid-template-columns: 1fr; }
-  .codex-collection-item:nth-child(odd),
-  .codex-collection-item:nth-child(even) { padding-inline: 4px; border-right: 0; }
+  .codex-collection-item { grid-template-columns: minmax(0, 1fr) auto; gap: 12px; padding-inline: 4px; }
   .codex-source-list article { grid-template-columns: minmax(0, 1fr); gap: 7px; }
   .codex-topic > summary { gap: 10px; }
   .codex-version-count { display: none; }

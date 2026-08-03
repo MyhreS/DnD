@@ -45,6 +45,17 @@ try {
   await desktop.goto(`${BASE}/codex`, { waitUntil: "domcontentloaded" });
   await desktop.getByRole("heading", { name: "Codex", exact: true }).waitFor();
   if (await desktop.getByTestId("codex-document").count()) throw new Error("Source documents remained on the Codex home");
+  await desktop.getByRole("heading", { name: "Browse", exact: true }).waitFor();
+  if (await desktop.getByText("Start with a part of the library", { exact: true }).count()) throw new Error("Old Codex browse prompt remains visible");
+  if (await desktop.getByLabel("Search within").count()) throw new Error("Source filter remains on Codex home");
+  if (await desktop.getByText("All sources", { exact: true }).count()) throw new Error("All sources label remains on Codex home");
+  const browseMetadataColumns = await desktop.locator(".codex-collection-item small").evaluateAll((items) =>
+    items.map((item) => item.getBoundingClientRect().left),
+  );
+  if (Math.max(...browseMetadataColumns) - Math.min(...browseMetadataColumns) > 1) {
+    throw new Error(`Browse metadata does not share one column: ${JSON.stringify(browseMetadataColumns)}`);
+  }
+  await desktop.screenshot({ path: "screenshots/codex-home-desktop.png", fullPage: true });
   await desktop.getByRole("link", { name: /Source library/ }).click();
   await desktop.waitForURL(/\/codex\/documents$/);
   await desktop.getByRole("heading", { name: "Source library" }).waitFor();
@@ -92,7 +103,8 @@ try {
   await grappled.getByText("This topic appears in multiple sources", { exact: false }).waitFor();
   if (!desktop.url().includes("q=grappled")) throw new Error("Codex query was not reflected in the URL");
 
-  await desktop.getByLabel("Search within").selectOption("game-card");
+  await desktop.goto(`${BASE}/codex?source=game-card&q=grappled`, { waitUntil: "domcontentloaded" });
+  await desktop.getByRole("heading", { name: "Results for “grappled”", exact: true }).waitFor();
   await grappled.getByText("Game Card", { exact: true }).first().waitFor();
   if (await grappled.getByText("D&D Rules", { exact: true }).count()) throw new Error("source filter kept a D&D version");
 
@@ -103,7 +115,7 @@ try {
   await weapons.getByText("Hunter Rifle", { exact: true }).waitFor();
 
   await search.fill("Madness Die");
-  await desktop.getByTestId("codex-empty").waitFor();
+  await desktop.getByTestId("codex-empty").getByText("No Codex entries match this search.", { exact: true }).waitFor();
 
   await desktop.goto(`${BASE}/rules?q=prone`, { waitUntil: "domcontentloaded" });
   await desktop.waitForURL(/\/codex\?.*source=rules-reference-scan/);
@@ -125,6 +137,7 @@ try {
   const mobileSourceLibrary = mobile.getByRole("link", { name: /Source library/ });
   await mobileSourceLibrary.waitFor();
   await assertNoPageOverflow(mobile, "Codex mobile home");
+  await mobile.screenshot({ path: "screenshots/codex-home-mobile.png", fullPage: true });
   await mobileSourceLibrary.click();
   await mobile.waitForURL(/\/codex\/documents$/);
   await mobile.getByRole("heading", { name: "Source library" }).waitFor();

@@ -86,9 +86,11 @@ export function CodexPage() {
   }
 
   const active = Boolean(query.trim() || sourceId || group);
-  const selectedLabel = sourceId
-    ? CODEX_SOURCE_BY_ID.get(sourceId)?.shortLabel
-    : group || "All sources";
+  const resultsTitle = query
+    ? `Results for “${query}”`
+    : sourceId
+      ? CODEX_SOURCE_BY_ID.get(sourceId)?.shortLabel ?? "Browse entries"
+      : group || "Browse entries";
 
   return (
     <div className="codex-page">
@@ -100,26 +102,16 @@ export function CodexPage() {
 
       <div className="codex-search" role="search">
         <label htmlFor="codex-query">Search every rule and reference</label>
-        <input
-          id="codex-query"
-          className="input"
-          type="search"
-          placeholder="Try grapple, sanity, Hunter Rifle, or Blood Frenzy…"
-          value={query}
-          onChange={(event) => setParam("q", event.target.value)}
-          autoComplete="off"
-        />
-        <div className="codex-filter-row">
-          <label htmlFor="codex-source">Search within</label>
-          <select
-            id="codex-source"
+        <div className="codex-search-row">
+          <input
+            id="codex-query"
             className="input"
-            value={sourceId}
-            onChange={(event) => setParam("source", event.target.value)}
-          >
-            <option value="">All sources</option>
-            {CODEX_SOURCES.map((item) => <option key={item.id} value={item.id}>{item.shortLabel}</option>)}
-          </select>
+            type="search"
+            placeholder="Try grapple, sanity, Hunter Rifle, or Blood Frenzy…"
+            value={query}
+            onChange={(event) => setParam("q", event.target.value)}
+            autoComplete="off"
+          />
           {active && (
             <button type="button" className="codex-clear" onClick={() => setParams({}, { replace: true })}>
               Clear
@@ -133,14 +125,11 @@ export function CodexPage() {
       ) : (
         <section className="codex-results" aria-labelledby="codex-results-title">
           <div className="codex-results-heading">
-            <div>
-              <p className="eyebrow">{selectedLabel}</p>
-              <h2 id="codex-results-title">{query ? `Results for “${query}”` : "Browse entries"}</h2>
-            </div>
+            <h2 id="codex-results-title">{resultsTitle}</h2>
             <span aria-live="polite">{results.length}{results.length === MAX_RESULTS ? "+" : ""} {results.length === 1 ? "topic" : "topics"}</span>
           </div>
           {results.length === 0 ? (
-            <p className="codex-empty" data-testid="codex-empty">No Codex entries match this search and source.</p>
+            <p className="codex-empty" data-testid="codex-empty">No Codex entries match this search.</p>
           ) : (
             <div className="codex-topic-list">
               {results.map((topic) => <CodexTopicRow key={topic.topicKey} topic={topic} query={query} />)}
@@ -161,8 +150,7 @@ function CodexHome({ onBrowse }: { onBrowse: (group: string) => void }) {
   return (
     <section className="codex-browse" aria-labelledby="codex-browse-title">
       <div className="codex-section-heading">
-        <p className="eyebrow">Browse</p>
-        <h2 id="codex-browse-title">Start with a part of the library</h2>
+        <h2 id="codex-browse-title">Browse</h2>
       </div>
       <div className="codex-collection-list">
         {CODEX_GROUPS.filter((item) => item !== "Source Notes").map((item) => (
