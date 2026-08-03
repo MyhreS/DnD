@@ -128,27 +128,6 @@ export function previewGame(): import("@/types").Game {
   };
 }
 
-/** Sample chronicle lines so the Log page / character history render in preview. */
-export function previewActivity(): import("@/types").ActivityEvent[] {
-  const now = Date.now();
-  const base = {
-    campaignId: "preview-campaign",
-    campaignName: "The Sunless Vault",
-    actorUid: "preview-dm",
-    actorName: "Christoffer",
-    characterId: null as string | null,
-    ownerUid: null as string | null,
-  };
-  return [
-    { ...base, id: "prev-log-1", type: "game.phase", message: "The party entered Combat.", at: now - 5 * 60 * 1000 },
-    { ...base, id: "prev-log-2", type: "loot.claimed", message: "Eileen the Crow claimed 1× Rope, 12 gp from Gascoigne.", actorUid: "preview-uid", actorName: "Eileen the Crow", characterId: "preview-uid-char", ownerUid: "preview-uid", at: now - 42 * 60 * 1000 },
-    { ...base, id: "prev-log-3", type: "game.started", message: "The hunt began — «The Sunless Vault».", at: now - 60 * 60 * 1000 },
-    { ...base, id: "prev-log-4", type: "session.created", message: "Christoffer scheduled a session — «Session 4» on 12 Jul 2026, 18:00.", at: now - 26 * 60 * 60 * 1000 },
-    { ...base, id: "prev-log-5", type: "member.joined", message: "Gascoigne joined the campaign (invite code).", at: now - 3 * 24 * 60 * 60 * 1000 },
-    { ...base, id: "prev-log-6", type: "campaign.created", message: "Christoffer founded the campaign «The Sunless Vault».", at: now - 4 * 24 * 60 * 60 * 1000 },
-  ];
-}
-
 /** Sample combatants so the combat tracker renders in preview mode. */
 export function previewCombatants(): import("@/types").Combatant[] {
   const now = Date.now();
@@ -167,27 +146,6 @@ export function previewParticipants(): import("@/types").GameParticipant[] {
     { uid: "preview-dm", name: "Christoffer", classId: "", subclassId: null, level: 1, role: "dm", joinedAt: now, lastSeen: now },
     { uid: "preview-uid", name: "Eileen the Crow", classId: "scout", subclassId: "marksman", className: "Stalker", level: 3, role: "player", joinedAt: now, lastSeen: now },
     { uid: "preview-p2", name: "Gascoigne", classId: "", subclassId: null, className: "Bloodbound", level: 3, role: "player", joinedAt: now, lastSeen: now },
-  ];
-}
-
-/** Sample dropped loot so the loot UI renders in preview mode. */
-export function previewLoot(): import("@/types").LootPile[] {
-  return [
-    {
-      id: "preview-loot-1",
-      fromUid: "preview-p3",
-      fromName: "Viktor the Lost",
-      items: [
-        { itemId: "sickle", qty: 1 },
-        { itemId: "dagger", qty: 2 },
-        { itemId: "blood-vial", qty: 1 },
-      ],
-      coins: 12,
-      status: "unclaimed",
-      claimedByUid: null,
-      claimedByName: null,
-      createdAt: Date.now(),
-    },
   ];
 }
 
@@ -282,75 +240,6 @@ export function previewArchive(): import("@/types").ArchivedCharacter[] {
         currentHp: 0,
         preparedWhispers: ["eldritch-blast", "mindcrack"],
       },
-    },
-  ];
-}
-
-/** Sample storefront listings so the shop renders populated in preview mode. */
-export function previewShopListings(): import("@/types").ShopListing[] {
-  const now = Date.now();
-  return [
-    { id: "preview-listing-1", campaignId: "preview-campaign", itemId: "blood-vial", priceGp: 8, createdBy: "preview-dm", createdAt: now },
-    { id: "preview-listing-2", campaignId: "preview-campaign", itemId: "bullets", priceGp: 5, createdBy: "preview-dm", createdAt: now - 1 },
-    { id: "preview-listing-3", campaignId: "preview-campaign", itemId: "rope", priceGp: 12, createdBy: "preview-dm", createdAt: now - 2 },
-    { id: "preview-listing-4", campaignId: "preview-campaign", itemId: "lantern", priceGp: 18, createdBy: "preview-dm", createdAt: now - 3 },
-  ];
-}
-
-/** Sample sell requests (one awaiting a price, one priced) so the sell UI
- * renders for both the player (their own request) and the DM (the queue). */
-export function previewSellRequests(): import("@/types").SellRequest[] {
-  const now = Date.now();
-  return [
-    {
-      id: "preview-sell-1",
-      campaignId: "preview-campaign",
-      sellerUid: "preview-uid",
-      sellerName: "Eileen the Crow",
-      characterId: "preview-uid-char",
-      itemId: "blood-vial",
-      qty: 2,
-      priceGp: null,
-      status: "requested",
-      createdAt: now,
-      updatedAt: now,
-      settledAt: null,
-    },
-    {
-      id: "preview-sell-2",
-      campaignId: "preview-campaign",
-      sellerUid: "preview-p2",
-      sellerName: "Gascoigne",
-      characterId: "preview-p2-char",
-      itemId: "greataxe",
-      qty: 1,
-      priceGp: 15,
-      status: "priced",
-      createdAt: now - 1,
-      updatedAt: now - 1,
-      settledAt: null,
-    },
-  ];
-}
-
-/** A sample incoming trade so the trade UI renders in preview mode. */
-export function previewTrades(): import("@/types").Trade[] {
-  const now = Date.now();
-  return [
-    {
-      id: "preview-trade-1",
-      campaignId: "preview-campaign",
-      gameId: "preview-game",
-      fromUid: "preview-p2",
-      fromName: "Gascoigne",
-      toUid: "preview-uid",
-      toName: "Eileen the Crow",
-      offer: { items: [{ itemId: "greataxe", qty: 1 }], coins: 0 },
-      request: { items: [{ itemId: "blood-vial", qty: 2 }], coins: 5 },
-      status: "pending",
-      createdAt: now,
-      updatedAt: now,
-      settledAt: null,
     },
   ];
 }

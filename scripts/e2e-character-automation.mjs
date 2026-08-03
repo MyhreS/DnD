@@ -38,6 +38,10 @@ const errors = [];
 try {
   await ready();
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  await context.addInitScript(() => {
+    localStorage.setItem("cs-experimental", "on");
+    localStorage.setItem("cs-fighters", "on");
+  });
   const page = await context.newPage();
   page.on("pageerror", (error) => errors.push(String(error)));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().includes("Failed to load resource")) errors.push(message.text()); });
@@ -79,6 +83,17 @@ try {
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
   if (overflow) throw new Error("Character automation causes horizontal page scrolling on mobile");
   await page.screenshot({ path: "screenshots/character-automation-mobile.png", fullPage: true });
+
+  const retired = await context.newPage();
+  await retired.goto(`${BASE}/profile?preview=user.player`, { waitUntil: "domcontentloaded" });
+  await retired.locator("h1").waitFor();
+  if (await retired.getByText("Experimental features", { exact: true }).count()) throw new Error("Experimental features setting is still visible");
+  if (await retired.getByText("Animated fighters", { exact: true }).count()) throw new Error("Animated fighters setting is still visible");
+  if (await retired.locator(".fighters").count()) throw new Error("Fighting characters still render when an old device preference is on");
+  for (const route of ["play", "sessions", "party", "shop", "log", "hunter"]) {
+    await retired.goto(`${BASE}/${route}?preview=user.player`, { waitUntil: "domcontentloaded" });
+    await retired.waitForURL((url) => url.pathname === "/");
+  }
 
   if (errors.length) throw new Error(`Browser errors: ${errors.join(" | ")}`);
   console.log("Character automation Playwright checks passed.");

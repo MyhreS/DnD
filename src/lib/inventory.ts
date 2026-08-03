@@ -1,7 +1,7 @@
 // Pure helpers for a hunter's inventory: resolving catalog items, grouping by
 // carry significance, total weight, and the handbook carry-condition rule.
 
-import type { HunterCard, Item, DroppedItem } from "@/types";
+import type { HunterCard, Item } from "@/types";
 import { ITEM_BY_ID } from "@/data/items";
 import { wornArmorWeight } from "@/lib/character";
 
@@ -62,68 +62,6 @@ export function totalCarriedWeight(
   const storage = resolveStorage(card).reduce((sum, i) => sum + i.weightLb, 0);
   const sum = totalWeight(resolveInventory(card)) + wornArmorWeight(card) + storage;
   return Math.round(sum * 10) / 10;
-}
-
-// --- Recently dropped (#136): drop-confirmed lines stay recoverable for 15
-// minutes of real time, tracked on the card itself (no server timer). ---
-
-/** How long a dropped line stays recoverable. */
-export const DROPPED_TTL_MS = 15 * 60 * 1000;
-
-/** Dropped entries still inside the recovery window (unknown catalog ids and
- * empty quantities are dropped, like resolveInventory). A `droppedAt` in the
- * future (another device's clock ran ahead) counts as ACTIVE; an entry aged
- * exactly DROPPED_TTL_MS is expired. */
-export function activeDropped(
-  list: DroppedItem[] | undefined,
-  nowMs: number,
-): DroppedItem[] {
-  return (list ?? []).filter(
-    (d) => d.qty > 0 && !!ITEM_BY_ID[d.itemId] && nowMs - d.droppedAt < DROPPED_TTL_MS,
-  );
-}
-
-/** ONE merge-patch that moves a whole inventory line into "Recently dropped":
- * the line leaves `inventory`; expired dropped entries are pruned (the
- * purge-on-write); re-dropping an item already in the window merges into one
- * entry — quantities add up, `droppedAt` refreshes to now. */
-export function dropInventoryLine(
-  card: Pick<HunterCard, "inventory" | "droppedItems">,
-  itemId: string,
-  nowMs: number,
-): Pick<HunterCard, "inventory" | "droppedItems"> {
-  const line = (card.inventory ?? []).find((e) => e.itemId === itemId);
-  const qty = line?.qty ?? 0;
-  const inventory = (card.inventory ?? []).filter((e) => e.itemId !== itemId);
-  const kept = activeDropped(card.droppedItems, nowMs);
-  if (qty <= 0) return { inventory, droppedItems: kept };
-  const already = kept.find((d) => d.itemId === itemId)?.qty ?? 0;
-  return {
-    inventory,
-    droppedItems: [
-      ...kept.filter((d) => d.itemId !== itemId),
-      { itemId, qty: qty + already, droppedAt: nowMs },
-    ],
-  };
-}
-
-/** ONE merge-patch that returns a recently dropped entry to the inventory
- * (also prunes expired entries). Expired or unknown ids restore nothing. */
-export function pickUpDropped(
-  card: Pick<HunterCard, "inventory" | "droppedItems">,
-  itemId: string,
-  nowMs: number,
-): Pick<HunterCard, "inventory" | "droppedItems"> {
-  const active = activeDropped(card.droppedItems, nowMs);
-  const entry = active.find((d) => d.itemId === itemId);
-  const droppedItems = active.filter((d) => d.itemId !== itemId);
-  if (!entry) return { inventory: card.inventory ?? [], droppedItems };
-  const rest = (card.inventory ?? []).filter((e) => e.itemId !== itemId);
-  const held = (card.inventory ?? []).find((e) => e.itemId === itemId)?.qty ?? 0;
-  return {
-    inventory: [...rest, { itemId, qty: held + entry.qty }],
-    droppedItems,
-  };
 }
 
 /** Carry condition from Strength score + carried weight, per the handbook

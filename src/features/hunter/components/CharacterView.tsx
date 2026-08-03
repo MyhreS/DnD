@@ -1,12 +1,10 @@
-import { useSettings } from "@/app/settings";
 import { HunterListCard } from "./HunterListCard";
 import { SheetCharacterView } from "./SheetCharacterView";
-import { CharacterLog } from "@/features/log/components/CharacterLog";
 import type { HunterCard } from "@/types";
 
 /** The /character "Hunters" screen. It ALWAYS lands on the LIST of your hunters
  * (it never auto-opens one); click a card to view/edit that hunter's paper
- * sheet. The cross-campaign log is experimental — hidden unless enabled. */
+ * sheet. */
 export function CharacterView({
   characters,
   openId,
@@ -23,11 +21,10 @@ export function CharacterView({
   onNew: () => void;
   onDelete: () => Promise<boolean>;
 }) {
-  const experimental = useSettings((s) => s.experimental);
   const openCard = openId ? characters.find((c) => c.id === openId) ?? null : null;
 
   // Detail: a single opened hunter — the paper sheet (view/edit) auto-pops, with
-  // deletion below and (experimental only) its cross-campaign log. This is the
+  // deletion below. This is the
   // old "view a hunter" behaviour, now reached only by clicking a card.
   if (openCard) {
     return (
@@ -46,11 +43,6 @@ export function CharacterView({
           onDismiss={onBack}
           onDelete={onDelete}
         />
-        {experimental && (
-          <div className="no-print" style={{ marginTop: 14 }}>
-            <CharacterLog card={openCard} />
-          </div>
-        )}
       </div>
     );
   }

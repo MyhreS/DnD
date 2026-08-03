@@ -22,7 +22,6 @@ import type {
   EncounterState,
   HunterCard,
   InventoryEntry,
-  LootPile,
 } from "@/types";
 import { emptyEncounter, normalizeEncounterState } from "@/features/play/lib/turnTimer";
 
@@ -198,10 +197,6 @@ export async function seedSandboxParticipants(gameId: string, campaignId: string
   );
 }
 
-export async function pingPresence(gameId: string, uid: string): Promise<void> {
-  await setDoc(doc(participantsCol(gameId), uid), { lastSeen: serverTimestamp() }, { merge: true });
-}
-
 export async function leaveGame(gameId: string, uid: string): Promise<void> {
   await deleteDoc(doc(participantsCol(gameId), uid));
 }
@@ -233,53 +228,9 @@ export async function createLoot(gameId: string, pile: LootInput): Promise<void>
   });
 }
 
-export async function claimLoot(
-  gameId: string,
-  lootId: string,
-  by: { uid: string; name: string },
-): Promise<void> {
-  await setDoc(
-    doc(lootCol(gameId), lootId),
-    { status: "claimed", claimedByUid: by.uid, claimedByName: by.name },
-    { merge: true },
-  );
-}
-
 export async function purgeLoot(gameId: string): Promise<void> {
   const snap = await getDocs(lootCol(gameId));
   await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
-}
-
-export function subscribeLoot(
-  gameId: string,
-  cb: (loot: LootPile[]) => void,
-  onError?: (err: unknown) => void,
-): () => void {
-  return onSnapshot(
-    lootCol(gameId),
-    (snap) =>
-      cb(
-        snap.docs.map((d) => {
-          const data = d.data();
-          return {
-            id: d.id,
-            fromUid: (data.fromUid as string) ?? "",
-            fromName: (data.fromName as string) ?? "A fallen hunter",
-            items: (data.items as InventoryEntry[]) ?? [],
-            coins: (data.coins as number) ?? 0,
-            status: (data.status as LootPile["status"]) ?? "unclaimed",
-            dropped: (data.dropped as boolean) ?? false,
-            claimedByUid: (data.claimedByUid as string | null) ?? null,
-            claimedByName: (data.claimedByName as string | null) ?? null,
-            createdAt: ms(data.createdAt),
-          } satisfies LootPile;
-        }),
-      ),
-    (err) => {
-      console.error("Loot subscription failed", err);
-      onError?.(err);
-    },
-  );
 }
 
 export function subscribeParticipants(

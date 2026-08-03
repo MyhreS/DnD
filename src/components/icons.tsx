@@ -15,17 +15,6 @@ const base = (props: IconProps): IconProps => ({
   ...props,
 });
 
-export function HunterIcon(props: IconProps) {
-  // A stylised hunter mask / skull-ish sigil.
-  return (
-    <svg {...base(props)}>
-      <path d="M12 3c-4 0-6.5 2.6-6.5 6.4 0 2 .8 3.4 2 4.7.7.8.9 1.4.9 2.6V19a2 2 0 0 0 2 2h3.2a2 2 0 0 0 2-2v-2.3c0-1.2.2-1.8.9-2.6 1.2-1.3 2-2.7 2-4.7C18.5 5.6 16 3 12 3Z" />
-      <path d="M9.3 10.2c.6-.5 1.4-.5 2 0M12.7 10.2c.6-.5 1.4-.5 2 0" />
-      <path d="M12 14v2.4" />
-    </svg>
-  );
-}
-
 export function SignOutIcon(props: IconProps) {
   return (
     <svg {...base(props)}>
@@ -36,36 +25,10 @@ export function SignOutIcon(props: IconProps) {
   );
 }
 
-export function PlusIcon(props: IconProps) {
-  return (
-    <svg {...base(props)}>
-      <path d="M12 5v14M5 12h14" />
-    </svg>
-  );
-}
-
 export function ChevronIcon(props: IconProps) {
   return (
     <svg {...base(props)}>
       <path d="M9 6l6 6-6 6" />
-    </svg>
-  );
-}
-
-export function MailIcon(props: IconProps) {
-  return (
-    <svg {...base(props)}>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="m3.5 6.5 8.5 6 8.5-6" />
-    </svg>
-  );
-}
-
-export function MapPinIcon(props: IconProps) {
-  return (
-    <svg {...base(props)}>
-      <path d="M12 21s-6-5.2-6-10a6 6 0 1 1 12 0c0 4.8-6 10-6 10Z" />
-      <circle cx="12" cy="11" r="2.2" />
     </svg>
   );
 }

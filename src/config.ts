@@ -62,11 +62,6 @@ export function isStaff(identity: Identity): boolean {
   return c.oversight || c.email || c.manageSessions;
 }
 
-/** Players bring a character; the DM does not. */
-export function needsCharacter(identity: Identity): boolean {
-  return identity.playerType === "player";
-}
-
 // --- Display names -----------------------------------------------------------
 
 export function fullName(m: { firstName?: string; lastName?: string; email?: string }): string {

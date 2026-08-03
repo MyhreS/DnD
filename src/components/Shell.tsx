@@ -2,10 +2,7 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { Sigil } from "./icons";
-import { Fighters } from "./fighters/Fighters";
 import { UpdateBar } from "./UpdateBar";
-import { usePlaySync } from "@/features/play/hooks/usePlaySync";
-import { LiveGameBanner } from "@/features/play/components/LiveGameBanner";
 
 /** The app frame (sidebar on desktop, top bar on mobile). The two contexts —
  * the main menu and a campaign — supply their own title + nav via this shell. */
@@ -26,9 +23,6 @@ export function Shell({
   const member = useAuthStore((s) => s.member);
   const user = useAuthStore((s) => s.user);
   const location = useLocation();
-
-  // Keep the active campaign's live-game subscription running (powers the banner).
-  usePlaySync();
 
   const firstName = member?.firstName || user?.displayName || user?.email || "Hunter";
   const initial = firstName.trim().charAt(0).toUpperCase() || "H";
@@ -54,7 +48,6 @@ export function Shell({
         </nav>
 
         <div className="sidebar-foot">
-          <LiveGameBanner />
           <UpdateBar />
           <Link to="/profile" className="sidebar-profile" aria-label="Your profile & settings">
             <span className="avatar">{initial}</span>
@@ -70,7 +63,6 @@ export function Shell({
         </div>
       </main>
 
-      <Fighters />
     </div>
   );
 }

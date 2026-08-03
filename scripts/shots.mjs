@@ -16,7 +16,7 @@ const OUT = "screenshots";
 await mkdir(OUT, { recursive: true });
 
 const routes = process.argv.slice(2);
-if (routes.length === 0) routes.push("/", "/character", "/party", "/handbook");
+if (routes.length === 0) routes.push("/", "/character", "/codex", "/profile");
 
 const VIEWPORTS = [
   { name: "mobile", opts: { ...devices["iPhone 15"] } },

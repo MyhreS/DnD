@@ -1,7 +1,49 @@
+import { spawn, spawnSync } from "node:child_process";
+import { setTimeout as sleep } from "node:timers/promises";
 import { chromium, devices } from "playwright";
 
-const BASE = process.env.BASE ?? "http://127.0.0.1:4173";
-const browser = await chromium.launch();
+const PORT = 5198;
+const BASE = process.env.BASE ?? `http://127.0.0.1:${PORT}`;
+let server = null;
+
+if (!process.env.BASE) {
+  const appsResult = spawnSync("firebase", ["apps:list", "--json"], { encoding: "utf8" });
+  if (appsResult.status !== 0) throw new Error(`Could not read Firebase app config: ${appsResult.stderr}`);
+  const webApp = JSON.parse(appsResult.stdout).result.find((app) => app.platform === "WEB");
+  if (!webApp) throw new Error("No Firebase web app found");
+  const configResult = spawnSync(
+    "firebase",
+    ["apps:sdkconfig", "WEB", webApp.appId, "--json"],
+    { encoding: "utf8" },
+  );
+  if (configResult.status !== 0) throw new Error(`Could not read Firebase SDK config: ${configResult.stderr}`);
+  const firebase = JSON.parse(configResult.stdout).result.sdkConfig;
+  server = spawn("bunx", ["vite", "--host", "127.0.0.1", "--port", String(PORT)], {
+    stdio: ["ignore", "pipe", "pipe"],
+    env: {
+      ...process.env,
+      VITE_FIREBASE_API_KEY: firebase.apiKey,
+      VITE_FIREBASE_AUTH_DOMAIN: firebase.authDomain,
+      VITE_FIREBASE_PROJECT_ID: firebase.projectId,
+      VITE_FIREBASE_STORAGE_BUCKET: firebase.storageBucket,
+      VITE_FIREBASE_MESSAGING_SENDER_ID: firebase.messagingSenderId,
+      VITE_FIREBASE_APP_ID: firebase.appId,
+      VITE_FIREBASE_MEASUREMENT_ID: firebase.measurementId,
+    },
+  });
+
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    try {
+      if ((await fetch(BASE)).ok) break;
+    } catch {
+      // Vite is still starting.
+    }
+    if (attempt === 79) throw new Error("Vite did not start");
+    await sleep(250);
+  }
+}
+
+let browser = null;
 const errors = [];
 
 function watch(page) {
@@ -40,6 +82,7 @@ async function assertNoPageOverflow(page, label) {
 }
 
 try {
+  browser = await chromium.launch();
   const desktop = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   watch(desktop);
   await desktop.goto(`${BASE}/codex`, { waitUntil: "domcontentloaded" });
@@ -174,5 +217,6 @@ try {
   if (errors.length) throw new Error(errors.join("\n"));
   console.log("Unified Codex E2E passed. Screenshots: screenshots/codex-*.png");
 } finally {
-  await browser.close();
+  await browser?.close();
+  server?.kill("SIGTERM");
 }

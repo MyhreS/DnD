@@ -54,8 +54,3 @@ export function sheetVitals(sheet: SheetData | undefined): SheetVitals {
     sanityMax: sheetInt(sheet, "sanityMax"),
   };
 }
-
-/** The sheet's initiative modifier ("+2") — seeds combat initiative rolls. */
-export function sheetInitiative(sheet: SheetData | undefined): number | null {
-  return sheetInt(sheet, "initiative");
-}
