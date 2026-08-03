@@ -478,6 +478,9 @@ export interface SheetAutomationState {
   migratedAt?: number;
   manualOverrides?: string[];
   legacyEquipment?: LegacyEquipmentLine[];
+  /** Original handwritten equipment rows retained for migration auditing after
+   * the closest catalog entries have been selected centrally. */
+  migrationOriginalEquipment?: LegacyEquipmentLine[];
 }
 
 export interface HunterCard {

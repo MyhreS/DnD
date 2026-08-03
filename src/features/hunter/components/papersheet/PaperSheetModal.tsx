@@ -7,9 +7,8 @@ import { usePaperSheetAutosave } from "../../hooks/usePaperSheetAutosave";
 import { usePaperSheetOpen } from "../../hooks/usePaperSheetOpen";
 import { usePaperSheetFocus } from "../../hooks/usePaperSheetFocus";
 import type { HunterCard } from "@/types";
-import { automationFor, hasLegacySheetToConvert } from "../../lib/characterAutomation";
+import { automationFor } from "../../lib/characterAutomation";
 import { CharacterAutomationPanel } from "./CharacterAutomationPanel";
-import { LegacySheetWizard } from "./LegacySheetWizard";
 
 const STEPS = [1, 2, 3, 4, 5] as const;
 
@@ -39,7 +38,6 @@ export function PaperSheetModal({
   // Which creation step (1–5) is spotlighted on the sheet; null = none.
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [showBuilder, setShowBuilder] = useState(create);
-  const [showMigration, setShowMigration] = useState(() => !readOnly && hasLegacySheetToConvert(card));
   const startedAsCreate = useRef(create);
   const automated = automationFor(workingCard);
   const automationState = workingCard.sheetAutomation;
@@ -125,14 +123,6 @@ export function PaperSheetModal({
       />
       {!readOnly && showBuilder && (
         <CharacterAutomationPanel card={workingCard} onApply={setFields} onClose={() => setShowBuilder(false)} />
-      )}
-      {showMigration && (
-        <LegacySheetWizard
-          card={workingCard}
-          onApply={setFields}
-          onCancel={closeModal}
-          onComplete={() => setShowMigration(false)}
-        />
       )}
     </div>,
     document.body,
