@@ -44,7 +44,20 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
-      - uses: dopplerhq/cli-action@v3
+      # Doppler's action performs a single CLI download and can fail on a brief
+      # network stall. The official shell installer is recommended for ephemeral
+      # CI jobs; fetch it with retries and install into the runner temp directory.
+      - name: Install Doppler CLI
+        run: |
+          mkdir -p "$RUNNER_TEMP/doppler-bin"
+          curl -Ls --fail --tlsv1.2 --proto "=https" \
+            --retry 5 --retry-all-errors --retry-delay 2 \
+            --connect-timeout 20 --max-time 180 \
+            https://cli.doppler.com/install.sh \
+            -o "$RUNNER_TEMP/install-doppler.sh"
+          sh "$RUNNER_TEMP/install-doppler.sh" --install-path "$RUNNER_TEMP/doppler-bin"
+          echo "$RUNNER_TEMP/doppler-bin" >> "$GITHUB_PATH"
+          "$RUNNER_TEMP/doppler-bin/doppler" --version
 
       - name: Build
         run: doppler run --token="$DOPPLER_TOKEN" -- bun run build:ci
