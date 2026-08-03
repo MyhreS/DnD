@@ -326,7 +326,8 @@
       "section": "abilityPointCostsV2",
       "description": "The DM's min-maxing point-buy variant: 57 points, per-score costs that escalate when the same score is bought a second and third time (16 buyable at most twice), and an absolute cap of 17 on any final ability score at level 1 including background bonuses.",
       "sourceFiles": [
-        "resources/images/ability-score-point-costs-v2.jpg"
+        "resources/images/ability-score-point-costs-v2.jpg",
+        "output/pdf/ability-score-point-costs-v2.pdf"
       ],
       "shortLabel": "Point Buy",
       "kind": "creation-aid",
@@ -359,7 +360,8 @@
       "audience": "player",
       "description": "Maintainer notes recording unresolved conflicts, current app choices, missing source material, and places where original documents disagree. These notes do not silently replace either source version.",
       "sourceFiles": [
-        "resources/master.json"
+        "resources/master.json",
+        "output/pdf/master-content-reconciliation-notes.pdf"
       ]
     }
   ],

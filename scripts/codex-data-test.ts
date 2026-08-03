@@ -26,9 +26,15 @@ for (const path of filesUnder("resources/pdf")) assert(registered.has(path), `PD
 for (const source of CODEX_SOURCES) {
   assert.equal(source.audience, "player");
   assert(source.sourceFiles.length > 0, `${source.id} has no provenance files`);
+  assert(source.downloads.length > 0, `${source.id} has no PDF downloads`);
   for (const path of source.sourceFiles) assert(existsSync(path), `${source.id} source is missing: ${path}`);
+  for (const download of source.downloads) {
+    assert(download.publicPath.endsWith(".pdf"), `${source.id} has a non-PDF download`);
+    assert(existsSync(join("public", download.publicPath)), `${source.id} download is missing: ${download.publicPath}`);
+  }
   if (source.publicPath) assert(existsSync(join("public", source.publicPath)), `${source.id} public PDF is missing`);
 }
+assert.equal(CODEX_SOURCES.flatMap((source) => source.downloads).length, 30, "expected every player PDF in the source library");
 
 for (const entry of CODEX_ENTRIES) {
   const source = CODEX_SOURCE_BY_ID.get(entry.sourceId);

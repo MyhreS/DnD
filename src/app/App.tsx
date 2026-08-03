@@ -24,6 +24,9 @@ import { ProfilePage } from "@/features/profile/components/ProfilePage";
 const CodexPage = lazy(() =>
   import("@/features/codex/components/CodexPage").then((m) => ({ default: m.CodexPage })),
 );
+const CodexDocumentsPage = lazy(() =>
+  import("@/features/codex/components/CodexPage").then((m) => ({ default: m.CodexDocumentsPage })),
+);
 const PlayPage = lazy(() =>
   import("@/features/play/components/PlayPage").then((m) => ({ default: m.PlayPage })),
 );
@@ -91,6 +94,7 @@ function AuthedApp() {
           <Route path="/" element={<MainMenu />} />
           <Route path="character" element={<CharacterPage />} />
           <Route path="codex" element={<CodexPage />} />
+          <Route path="codex/documents" element={<CodexDocumentsPage />} />
           <Route path="handbook" element={<LegacyCodexRedirect />} />
           <Route path="rules" element={<LegacyCodexRedirect />} />
           <Route path="game-card" element={<LegacyCodexRedirect />} />
@@ -132,6 +136,7 @@ export default function App() {
           <Route element={<PublicLayout />}>
             <Route index element={<Landing />} />
             <Route path="codex" element={<CodexPage />} />
+            <Route path="codex/documents" element={<CodexDocumentsPage />} />
             <Route path="handbook" element={<LegacyCodexRedirect />} />
             <Route path="rules" element={<LegacyCodexRedirect />} />
             <Route path="game-card" element={<LegacyCodexRedirect />} />

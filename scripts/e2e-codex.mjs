@@ -44,7 +44,32 @@ try {
   watch(desktop);
   await desktop.goto(`${BASE}/codex`, { waitUntil: "domcontentloaded" });
   await desktop.getByRole("heading", { name: "Codex", exact: true }).waitFor();
+  if (await desktop.getByTestId("codex-document").count()) throw new Error("Source documents remained on the Codex home");
+  await desktop.getByRole("link", { name: /Source library/ }).click();
+  await desktop.waitForURL(/\/codex\/documents$/);
   await desktop.getByRole("heading", { name: "Source library" }).waitFor();
+  if (await desktop.getByTestId("codex-document").count() !== 16) throw new Error("Dedicated source library is incomplete");
+  await desktop.getByTestId("codex-document").nth(0).getByRole("heading", { name: "Player's Handbook" }).waitFor();
+  await desktop.getByTestId("codex-document").nth(1).getByRole("heading", { name: "Character Sheets" }).waitFor();
+  await desktop.getByTestId("codex-document").nth(2).getByRole("heading", { name: "Player's Game Card" }).waitFor();
+  const documentRows = desktop.getByTestId("codex-document");
+  for (let index = 0; index < await documentRows.count(); index += 1) {
+    if (await documentRows.nth(index).locator("a[download]").count() === 0) {
+      throw new Error(`Source document ${index + 1} has no PDF download`);
+    }
+  }
+  const downloadPaths = await documentRows.locator("a[download]").evaluateAll((links) =>
+    links.map((link) => link.getAttribute("href")).filter(Boolean),
+  );
+  if (downloadPaths.length !== 30) throw new Error(`Expected 30 source PDFs, found ${downloadPaths.length}`);
+  for (const path of new Set(downloadPaths)) {
+    const response = await desktop.request.get(new URL(path, BASE).href);
+    if (!response.ok() || !response.headers()["content-type"]?.includes("application/pdf")) {
+      throw new Error(`Broken PDF download: ${path} (${response.status()})`);
+    }
+  }
+  await desktop.getByRole("link", { name: "Back to Codex" }).click();
+  await desktop.waitForURL(/\/codex$/);
 
   const search = desktop.getByLabel("Search every rule and reference");
   await search.fill("grappled");
@@ -85,8 +110,17 @@ try {
   const mobile = await mobileContext.newPage();
   watch(mobile);
   await mobile.goto(`${BASE}/codex`, { waitUntil: "domcontentloaded" });
+  const mobileSourceLibrary = mobile.getByRole("link", { name: /Source library/ });
+  await mobileSourceLibrary.waitFor();
+  await assertNoPageOverflow(mobile, "Codex mobile home");
+  await mobileSourceLibrary.click();
+  await mobile.waitForURL(/\/codex\/documents$/);
   await mobile.getByRole("heading", { name: "Source library" }).waitFor();
+  if (await mobile.getByTestId("codex-document").count() !== 16) throw new Error("Mobile source library is incomplete");
   await assertNoPageOverflow(mobile, "Codex mobile source library");
+  await mobile.screenshot({ path: "screenshots/codex-documents-mobile.png", fullPage: true });
+  await mobile.getByRole("link", { name: "Back to Codex" }).click();
+  await mobile.waitForURL(/\/codex$/);
 
   const mobileSearch = mobile.getByLabel("Search every rule and reference");
   await mobileSearch.fill("hunter rifle");

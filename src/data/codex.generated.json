@@ -11,6 +11,12 @@
       "description": "Appendix B for Catacombs & Starspawns: the Deepcaller's leveled Rites (eldritch spells), grouped by school/type (Evocation, Protection, Illusion, Mind Influence, Detection, Summoning, Traversal), spanning levels 1-9 including a 'Hidden Truths' section of higher-level rites.",
       "pageCount": 13,
       "publicPath": "/docs/book-of-the-deepcaller.pdf",
+      "downloads": [
+        {
+          "label": "V1.0 Book of The Deepcaller",
+          "publicPath": "/docs/book-of-the-deepcaller.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/pdf/appendices/V1.0 Book of The Deepcaller.pdf"
       ],
@@ -27,6 +33,20 @@
       "audience": "player",
       "description": "The Catacombs & Starspawns character sheets: the 5-page hand-drawn R1.0 sheet, its 'numbered' companion that maps each field group to a creation step (1-5), and the typeset 'Character Sheet For Sim' reference describing every region of the sheet plus the six-ability skill layout.",
       "pageCount": 11,
+      "downloads": [
+        {
+          "label": "R1.0 Character Sheet",
+          "publicPath": "/source-library/character-sheets/r1-0-character-sheet.pdf"
+        },
+        {
+          "label": "R1.0 Numbered Character Sheet",
+          "publicPath": "/source-library/character-sheets/r1-0-numbered-character-sheet.pdf"
+        },
+        {
+          "label": "Character Sheet For Sim",
+          "publicPath": "/source-library/character-sheets/character-sheet-for-sim.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/pdf/character-sheets/R1.0 Character Sheet.pdf",
         "resources/pdf/character-sheets/R1.0 Numbered Character Sheet.pdf",
@@ -51,6 +71,16 @@
       "audience": "player",
       "description": "A Strength-fueled frontline Hunter who channels the old blood into a primal Blood Frenzy, gaining damage resistance, bonus damage, and unstoppable ferocity. Subclasses turn that fury toward violence (Berserker) or the transformative power of the blood (Blood Drunk).",
       "pageCount": 4,
+      "downloads": [
+        {
+          "label": "Bloodbound",
+          "publicPath": "/source-library/bloodbound/bloodbound.pdf"
+        },
+        {
+          "label": "Classes Boards for send",
+          "publicPath": "/source-library/bloodbound/classes-boards-for-send.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/extracted/text/Bloodbound.txt",
         "resources/csv/Classes Boards for send/Classes-Core Hunter Bloodbound Traits.csv",
@@ -79,6 +109,16 @@
       "audience": "player",
       "description": "A martial powerhouse Hunter built on the 5e Fighter chassis: heavy-armored, weapon-mastering front-liner who pushes past limits with Action Surge and shrugs off blows by Refusing the Bleeding.",
       "pageCount": 4,
+      "downloads": [
+        {
+          "label": "Brute",
+          "publicPath": "/source-library/brute/brute.pdf"
+        },
+        {
+          "label": "Classes Boards for send",
+          "publicPath": "/source-library/brute/classes-boards-for-send.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/extracted/text/Brute.txt",
         "resources/pdf/classes/Brute.pdf",
@@ -107,6 +147,16 @@
       "audience": "player",
       "description": "An Intelligence-based occult caster who reads forbidden passages from the Book of the Deepcaller to perform Rites and Whispers, balancing power against accumulating Madness and Sanity loss. May abandon the path at level 3 for the martial Path of the Zealot Prestige Class.",
       "pageCount": 7,
+      "downloads": [
+        {
+          "label": "Deepcaller",
+          "publicPath": "/source-library/deepcaller/deepcaller.pdf"
+        },
+        {
+          "label": "Classes Boards for send",
+          "publicPath": "/source-library/deepcaller/classes-boards-for-send.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/extracted/text/Deepcaller.txt",
         "resources/csv/Classes Boards for send/Classes-Core Hunter Deepcaller Traits.csv",
@@ -135,6 +185,16 @@
       "audience": "player",
       "description": "A pathfinder, marksman and survivalist who marks prey with the Hunter's Mark and hunts it down from afar; subclasses bond with a timeless beast or master long-ranged firearms.",
       "pageCount": 5,
+      "downloads": [
+        {
+          "label": "Scout",
+          "publicPath": "/source-library/scout/scout.pdf"
+        },
+        {
+          "label": "Classes Boards for send",
+          "publicPath": "/source-library/scout/classes-boards-for-send.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/extracted/text/Scout.txt",
         "resources/pdf/classes/Scout.pdf",
@@ -163,6 +223,16 @@
       "audience": "player",
       "description": "The Hunter Stalker is a Dexterity-based skirmisher and skill expert who exploits distraction and stealth to land devastating Sneak Attacks, refining them with Cunning Strike effects, and choosing the Assassin or Shadow subclass.",
       "pageCount": 3,
+      "downloads": [
+        {
+          "label": "Staker",
+          "publicPath": "/source-library/stalker/staker.pdf"
+        },
+        {
+          "label": "Classes Boards for send",
+          "publicPath": "/source-library/stalker/classes-boards-for-send.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/extracted/text/Staker.txt",
         "resources/pdf/classes/Staker.pdf",
@@ -191,6 +261,16 @@
       "audience": "player",
       "description": "The Hunter Warden is a tactical commander who reads the battlefield with a commander's eye, rallying their hunter band through the Bands Directive die and exposing enemy strengths and weaknesses. A Wisdom/Charisma martial leader with full armor training and the Commander or Warbringer subclasses.",
       "pageCount": 4,
+      "downloads": [
+        {
+          "label": "Warden",
+          "publicPath": "/source-library/warden/warden.pdf"
+        },
+        {
+          "label": "Classes Boards for send",
+          "publicPath": "/source-library/warden/classes-boards-for-send.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/extracted/text/Warden.txt",
         "resources/pdf/classes/Warden.pdf",
@@ -220,6 +300,12 @@
       "description": "The complete Catacombs & Starspawns Player's Handbook: a Bloodborne-flavoured 5e-based dark-fantasy ruleset where adventurers are Hunters. Covers character creation, classes overview, backgrounds, feats, and equipment.",
       "pageCount": 94,
       "publicPath": "/handbook/catacombs-and-starspawns-handbook.pdf",
+      "downloads": [
+        {
+          "label": "CATACOMBS & STARSPAWNS Players Handbook",
+          "publicPath": "/handbook/catacombs-and-starspawns-handbook.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/pdf/handbook/CATACOMBS & STARSPAWNS Players Handbook.pdf",
         "resources/extracted/text/CATACOMBS & STARSPAWNS Players Handbook.txt",
@@ -240,6 +326,36 @@
       "audience": "player",
       "description": "The Deepcaller's Rites and Whispers organized by school (Detection, Evocation, Illusion, Mind Influence, Protection, Summoning, Traversal), with full verbatim rules text, stat fields, and upgrade/higher-level scaling for each.",
       "pageCount": 12,
+      "downloads": [
+        {
+          "label": "Detection Rite",
+          "publicPath": "/source-library/rites-by-school/detection-rite.pdf"
+        },
+        {
+          "label": "Evocation Rite",
+          "publicPath": "/source-library/rites-by-school/evocation-rite.pdf"
+        },
+        {
+          "label": "Illusion Rite",
+          "publicPath": "/source-library/rites-by-school/illusion-rite.pdf"
+        },
+        {
+          "label": "Mind Influence Rite",
+          "publicPath": "/source-library/rites-by-school/mind-influence-rite.pdf"
+        },
+        {
+          "label": "Protection Rite",
+          "publicPath": "/source-library/rites-by-school/protection-rite.pdf"
+        },
+        {
+          "label": "Summoning Rite",
+          "publicPath": "/source-library/rites-by-school/summoning-rite.pdf"
+        },
+        {
+          "label": "Traversal Rite",
+          "publicPath": "/source-library/rites-by-school/traversal-rite.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/extracted/text/Detection Rite.txt",
         "resources/extracted/text/Evocation Rite.txt",
@@ -282,6 +398,12 @@
       "audience": "player",
       "description": "A verbatim transcription of the 18-page scanned \"Appendix C: Rules Glossary\" (book pages 360-377): a standard fifth-edition-style rules glossary the DM included as reference, defining core tabletop terms, conditions, actions, hazards, area-of-effect shapes, and stat-block conventions. 188 glossary entries and 14 tables across 18 pages.",
       "pageCount": 18,
+      "downloads": [
+        {
+          "label": "Rules Reference Scan",
+          "publicPath": "/source-library/rules-reference-scan/rules-reference-scan.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/pdf/appendices/Rules Reference Scan.pdf"
       ],
@@ -299,6 +421,12 @@
       "description": "The Deepcaller's lesser spell fragments (cantrip-like Rites), each at Whisper level, with casting/range/duration stats and a Whisper Upgrade that scales at higher character levels.",
       "pageCount": 2,
       "publicPath": "/docs/whispers.pdf",
+      "downloads": [
+        {
+          "label": "V1.0 Whispers",
+          "publicPath": "/docs/whispers.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/pdf/appendices/V1.0 Whispers.pdf"
       ],
@@ -315,6 +443,12 @@
       "audience": "player",
       "description": "The full Transformation system: Transformation Level 0-10, the 1d20 x level Transformation Table (Blood Lust, Mutated Arm, Blood Fangs, Dreadblood Eyes/Ears, Nothing Happens, Lost), and the rules for reducing Transformation Level (Short Rest, Long Rest, Unconscious).",
       "pageCount": 2,
+      "downloads": [
+        {
+          "label": "Transformation Table Final Version",
+          "publicPath": "/source-library/transformation-table/transformation-table-final-version.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/pdf/appendices/Transformation Table Final Version.pdf",
         "resources/extracted/text/Transformation Table Final Version.txt"
@@ -333,11 +467,19 @@
       "audience": "player",
       "description": "The DM's min-maxing point-buy variant: 57 points, per-score costs that escalate when the same score is bought a second and third time (16 buyable at most twice), and an absolute cap of 17 on any final ability score at level 1 including background bonuses.",
       "pageCount": 1,
+      "downloads": [
+        {
+          "label": "ability-score-point-costs-v2",
+          "publicPath": "/source-library/ability-point-costs-v2/ability-score-point-costs-v2.pdf"
+        }
+      ],
       "sourceFiles": [
-        "resources/images/ability-score-point-costs-v2.jpg"
+        "resources/images/ability-score-point-costs-v2.jpg",
+        "output/pdf/ability-score-point-costs-v2.pdf"
       ],
       "fileLabels": [
-        "ability-score-point-costs-v2.jpg"
+        "ability-score-point-costs-v2.jpg",
+        "ability-score-point-costs-v2.pdf"
       ]
     },
     {
@@ -350,6 +492,12 @@
       "description": "Nine-page player-created table reference covering turn actions, conditions, movement and exploration, character advancement, rites, equipment, transformation, doors, and chases. Player-facing entries are concise transcriptions; DM-only Insane and Lost mechanics remain hidden.",
       "pageCount": 9,
       "publicPath": "/game-card/players-game-card.pdf",
+      "downloads": [
+        {
+          "label": "Player's Game Card",
+          "publicPath": "/game-card/players-game-card.pdf"
+        }
+      ],
       "sourceFiles": [
         "resources/pdf/game-card/Player's Game Card.pdf"
       ],
@@ -366,11 +514,19 @@
       "audience": "player",
       "description": "Maintainer notes recording unresolved conflicts, current app choices, missing source material, and places where original documents disagree. These notes do not silently replace either source version.",
       "pageCount": 0,
+      "downloads": [
+        {
+          "label": "master-content-reconciliation-notes",
+          "publicPath": "/source-library/master-notes/master-content-reconciliation-notes.pdf"
+        }
+      ],
       "sourceFiles": [
-        "resources/master.json"
+        "resources/master.json",
+        "output/pdf/master-content-reconciliation-notes.pdf"
       ],
       "fileLabels": [
-        "master.json"
+        "master.json",
+        "master-content-reconciliation-notes.pdf"
       ]
     }
   ],
