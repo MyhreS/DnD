@@ -47,37 +47,6 @@ export function maxSanity(klass: HunterClass, abilities: AbilityScores, level = 
   return Math.max(0, classBase + abilityModifier(abilities.wis));
 }
 
-/**
- * Cumulative Insight required to REACH each level (index 0 → level 1), from the
- * handbook's Character Advancement table. Insight is the DM-awarded XP currency.
- */
-export const INSIGHT_THRESHOLDS = [
-  0, 6, 15, 30, 50, 75, 105, 140, 180, 225, 275, 330, 390, 455, 525, 600, 680, 765, 855, 950,
-] as const;
-
-/**
- * The highest level a hunter has EARNED for a total Insight (1–20).
- * Rulebook gate: this level only takes effect after a Long Rest — so the
- * applied `card.level` may lag this value until the hunter rests.
- */
-export function levelForInsight(insight: number): number {
-  let lvl = 1;
-  for (let i = 0; i < INSIGHT_THRESHOLDS.length; i++) {
-    if (insight >= INSIGHT_THRESHOLDS[i]) lvl = i + 1;
-  }
-  return lvl;
-}
-
-/** The highest level a card's Insight has earned (1–20). */
-export function earnedLevel(card: Pick<HunterCard, "insight">): number {
-  return levelForInsight(card.insight ?? 0);
-}
-
-/** Whether a level-up is owed. Per the rulebook it only applies after a Long Rest. */
-export function isLevelUpPending(card: Pick<HunterCard, "insight" | "level">): boolean {
-  return earnedLevel(card) > card.level;
-}
-
 /** Initiative modifier (Dexterity), per the handbook. */
 export function initiativeMod(abilities: AbilityScores): number {
   return abilityModifier(abilities.dex);
@@ -146,9 +115,8 @@ function dedupeExtras(ids: string[]): string[] {
  * shape: the legacy `studdedAddons` count becomes per-piece `studdedAddonIds`
  * (first-N worn add-ons; same AC and weight), `extraArmorIds` is deduped to
  * one Extra per subcategory, and `equippedStorageIds` is filtered to known
- * storage items (missing on legacy docs → nothing equipped). `droppedItems`
- * (#136) defaults to [] and sheds malformed entries; TTL expiry stays a
- * render/write concern (lib/inventory.ts activeDropped). Docs are not
+ * storage items (missing on legacy docs → nothing equipped), and
+ * `droppedItems` defaults to [] while shedding malformed entries. Docs are not
  * rewritten — the next save persists the new shape (plus the legacy count
  * mirror for stale clients). */
 export function normalizeCard(raw: HunterCard): HunterCard {

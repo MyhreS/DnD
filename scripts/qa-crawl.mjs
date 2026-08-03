@@ -170,13 +170,6 @@ async function visit(page, role, path, label) {
 }
 
 async function signIn(ctx, role) {
-  // Campaigns/sessions/play are hidden behind the per-device "Experimental
-  // features" toggle — the crawl must still exercise them.
-  await ctx.addInitScript(() => {
-    try {
-      localStorage.setItem("cs-experimental", "on");
-    } catch {}
-  });
   const page = await ctx.newPage();
   attach(page, role);
   const token = mint(role);
@@ -224,11 +217,7 @@ async function main() {
     } catch (e) {
       errors.push(`[dm] could not create test campaign: ${String(e).split("\n")[0].slice(0, 120)}`);
     }
-    for (const [p, l] of [["/play", "play"], ["/sessions", "sessions"], ["/party", "party"], ["/shop", "shop"], ["/log", "log"], ["/hunter", "hunter"]])
-      await visit(page, "dm", p, l);
-    // Play: begin the game + exercise combat, a second pass after state changes.
-    await visit(page, "dm", "/play", "play-2");
-    // Big-screen status board (chrome-less, experimental) — with the game live.
+    // The big-screen status board remains a standalone table display.
     await visit(page, "dm", "/status", "status");
     await ctx.close();
   }

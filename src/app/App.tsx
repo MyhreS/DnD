@@ -6,15 +6,11 @@ import { useCampaignSync } from "@/features/campaigns/hooks/useCampaignSync";
 import { useAuthInit } from "@/hooks/auth/useAuthInit";
 import { Splash } from "@/components/Splash";
 import { MainLayout } from "@/components/MainLayout";
-import { CampaignLayout } from "@/components/CampaignLayout";
 import { Landing } from "@/features/auth/components/Landing";
 import { PublicLayout } from "@/features/auth/components/PublicLayout";
 import { Onboarding } from "@/features/auth/components/Onboarding";
 import { MainMenu } from "@/features/campaigns/components/MainMenu";
-import { SessionsPage } from "@/features/sessions/components/SessionsPage";
 import { CharacterPage } from "@/features/hunter/components/CharacterPage";
-import { CampaignHunterPage } from "@/features/hunter/components/CampaignHunterPage";
-import { PartyPage } from "@/features/party/components/PartyPage";
 import { ProfilePage } from "@/features/profile/components/ProfilePage";
 
 // Heavy, rarely-first routes are code-split so their content data
@@ -26,15 +22,6 @@ const CodexPage = lazy(() =>
 );
 const CodexDocumentsPage = lazy(() =>
   import("@/features/codex/components/CodexPage").then((m) => ({ default: m.CodexDocumentsPage })),
-);
-const PlayPage = lazy(() =>
-  import("@/features/play/components/PlayPage").then((m) => ({ default: m.PlayPage })),
-);
-const ShopPage = lazy(() =>
-  import("@/features/shop/components/ShopPage").then((m) => ({ default: m.ShopPage })),
-);
-const LogPage = lazy(() =>
-  import("@/features/log/components/LogPage").then((m) => ({ default: m.LogPage })),
 );
 const DMOverviewPage = lazy(() =>
   import("@/features/dm/components/DMOverviewPage").then((m) => ({ default: m.DMOverviewPage })),
@@ -82,8 +69,6 @@ function LegacyCodexRedirect() {
 
 function AuthedApp() {
   useCampaignSync();
-  // Campaigns/sessions/live play are experimental — hidden unless enabled.
-  const experimental = useSettings((s) => s.experimental);
   // The DM overview only exists when Dungeon Master mode is on (Profile).
   const dmMode = useSettings((s) => s.dmMode);
   return (
@@ -102,17 +87,8 @@ function AuthedApp() {
           <Route path="dm" element={dmMode ? <DMOverviewPage /> : <Navigate to="/" replace />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
-        {/* Campaign: gated on an active campaign by CampaignLayout. */}
-        <Route element={<CampaignLayout />}>
-          <Route path="play" element={<PlayPage />} />
-          <Route path="sessions" element={<SessionsPage />} />
-          <Route path="party" element={<PartyPage />} />
-          <Route path="shop" element={<ShopPage />} />
-          <Route path="log" element={<LogPage />} />
-          <Route path="hunter" element={<CampaignHunterPage />} />
-        </Route>
         {/* Chrome-less big-screen status board (its own full-bleed layout). */}
-        <Route path="status" element={experimental ? <StatusPage /> : <Navigate to="/" replace />} />
+        <Route path="status" element={<StatusPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>

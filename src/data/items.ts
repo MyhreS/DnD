@@ -1,4 +1,4 @@
-import type { Item, ItemCategory } from "@/types";
+import type { Item } from "@/types";
 import { ARMOR } from "@/data/armor";
 
 // Tradeable-item catalog for Catacombs & Starspawns.
@@ -376,13 +376,3 @@ export const ITEMS: Item[] = [
 export const ITEM_BY_ID: Record<string, Item> = Object.fromEntries(
   ITEMS.map((i) => [i.id, i]),
 );
-
-export const ITEM_CATEGORIES: ItemCategory[] = [
-  "Weapon",
-  "Armor",
-  "Ammunition",
-  "Tool",
-  "Gear",
-  "Consumable",
-  "Valuable",
-];

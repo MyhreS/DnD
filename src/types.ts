@@ -262,61 +262,6 @@ export interface GameParticipant {
   lastSeen: number;
 }
 
-// --- Trades (player ↔ player, settled by a Cloud Function) ---
-
-export type TradeStatus =
-  | "pending" // offered, awaiting the other player
-  | "accepted" // accepted; the Cloud Function will settle it
-  | "settled" // items/coins transferred
-  | "declined"
-  | "cancelled"
-  | "failed"; // settlement failed (e.g. an item was no longer owned)
-
-/** One side of a trade: items given + coins. */
-export interface TradeSide {
-  items: InventoryEntry[];
-  coins: number;
-}
-
-export interface Trade {
-  id: string;
-  /** The campaign this trade belongs to (for member-scoped access). */
-  campaignId: string | null;
-  /** The game this trade belongs to (for the DM's log). */
-  gameId: string | null;
-  fromUid: string;
-  fromName: string;
-  toUid: string;
-  toName: string;
-  /** What the offerer (fromUid) gives. */
-  offer: TradeSide;
-  /** What the offerer asks for from toUid. */
-  request: TradeSide;
-  status: TradeStatus;
-  error?: string | null;
-  sandbox?: boolean;
-  createdAt: number;
-  updatedAt: number;
-  settledAt?: number | null;
-}
-
-/** Items on the shared loot pile, claimable by others until the session ends.
- * Lives at /games/{gameId}/loot/{id}. Either a fallen hunter's remains or an
- * item a living hunter chose to drop (`dropped`). */
-export interface LootPile {
-  id: string;
-  fromUid: string;
-  fromName: string;
-  items: InventoryEntry[];
-  coins: number;
-  status: "unclaimed" | "claimed";
-  /** True when a living hunter dropped this (vs. a fallen hunter's remains). */
-  dropped?: boolean;
-  claimedByUid?: string | null;
-  claimedByName?: string | null;
-  createdAt: number;
-}
-
 /** A character removed from play (dead or deleted), kept so the DM can recover
  * it during the session. Lives in its own `/archive` collection — purged when
  * the game ends. */
@@ -327,41 +272,6 @@ export interface ArchivedCharacter {
   reason: "dead" | "deleted";
   archivedAt: number;
   card: HunterCard;
-}
-
-// --- Shop (the DM's per-campaign storefront) ---
-
-/** One catalog item the DM has stocked for sale, at a GP price. Lives in the
- * top-level /shopListings collection, scoped by campaignId. Infinite stock. */
-export interface ShopListing {
-  id: string;
-  campaignId: string;
-  /** Catalog item id (see src/data/items.ts). */
-  itemId: string;
-  priceGp: number;
-  /** The DM uid who stocked it. */
-  createdBy: string;
-  createdAt: number;
-}
-
-/** A player's request to sell an item back to the shop. The DM must enter a
- * price before it can be approved (which credits the seller's gold). Lives in
- * the top-level /sellRequests collection, scoped by campaignId. */
-export interface SellRequest {
-  id: string;
-  campaignId: string;
-  sellerUid: string;
-  sellerName: string;
-  /** The seller's character to debit the item from / credit the gold to. */
-  characterId: string;
-  itemId: string;
-  qty: number;
-  /** Set by the DM; null until priced. The gate on approval. */
-  priceGp: number | null;
-  status: "requested" | "priced" | "approved" | "declined";
-  createdAt: number;
-  updatedAt: number;
-  settledAt?: number | null;
 }
 
 // --- Campaigns (a "server"/party you create or join) ---
@@ -392,19 +302,6 @@ export interface CampaignMember {
   joinedAt: number;
 }
 
-export interface SessionEvent {
-  id: string;
-  /** The campaign this session belongs to. */
-  campaignId?: string | null;
-  /** ISO date-time string (local), e.g. "2026-06-20T18:00:00". */
-  date: string;
-  title: string;
-  location: string;
-  notes?: string;
-  createdBy?: string;
-  updatedAt?: number;
-}
-
 // --- Membership & roles ---
 //
 // Two independent axes:
@@ -430,18 +327,6 @@ export interface UserProfile {
   firstName: string;
   lastName: string;
   email: string;
-}
-
-// --- Session attendance (RSVP) ---
-
-export type RsvpStatus = "yes" | "no" | "maybe";
-
-export interface Rsvp {
-  uid: string;
-  name: string;
-  email: string;
-  status: RsvpStatus;
-  at: number;
 }
 
 // --- The hunter card a player builds and saves to Firestore ---
@@ -546,12 +431,10 @@ export interface HunterCard {
    * app never rolls. Short Rest −1 (+1 more on a DC 13 CON (Grit) check) and
    * Long Rest → 0 — every reduction also clears all active Transformations. */
   transformationLevel?: number;
-  /** Active Transformation result keys (see src/data/transformation.ts),
-   * recorded by the DM from physical table rolls (duplicates allowed). Cleared
-   * whenever the Transformation Level is reduced. */
+  /** Active Transformation result keys recorded by the DM from physical table
+   * rolls (duplicates allowed). Cleared when Transformation Level is reduced. */
   activeTransformations?: string[];
-  /** Insight — the rulebook's XP currency, awarded by the DM. Crossing a
-   * threshold only raises `level` after a Long Rest (see levelForInsight). */
+  /** Insight — the rulebook's XP currency, awarded by the DM. */
   insight?: number;
   /** Blood Tinge — the C&S take on heroic inspiration. */
   bloodTinge?: boolean;
@@ -610,21 +493,3 @@ export type ActivityType =
   | "insight.awarded"
   | "item.given"
   | "gold.changed";
-
-/** One line in a campaign's chronicle. `characterId`/`ownerUid` are set when
- * the event is about a specific hunter, so the owner can read their hunter's
- * history across campaigns. */
-export interface ActivityEvent {
-  id: string;
-  campaignId: string;
-  /** Denormalized so a hunter's history can name campaigns you've since left. */
-  campaignName: string;
-  type: ActivityType;
-  /** Ready-to-display line, rendered at write time. */
-  message: string;
-  actorUid: string;
-  actorName: string;
-  characterId: string | null;
-  ownerUid: string | null;
-  at: number;
-}
