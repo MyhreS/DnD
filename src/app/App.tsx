@@ -44,6 +44,9 @@ const DMOverviewPage = lazy(() =>
 const StatusPage = lazy(() =>
   import("@/features/status/components/StatusPage").then((m) => ({ default: m.StatusPage })),
 );
+const GameCardPage = lazy(() =>
+  import("@/features/game-card/components/GameCardPage").then((m) => ({ default: m.GameCardPage })),
+);
 
 /** The Reference page became Rules — keep old bookmarks and the sheet's
  * deep links (`/reference?q=…`) working, query string included. */
@@ -67,6 +70,7 @@ function AuthedApp() {
           <Route path="character" element={<CharacterPage />} />
           <Route path="handbook" element={<HandbookPage />} />
           <Route path="rules" element={<RulesReferencePage />} />
+          <Route path="game-card" element={<GameCardPage />} />
           <Route path="reference" element={<LegacyReferenceRedirect />} />
           <Route path="dm" element={dmMode ? <DMOverviewPage /> : <Navigate to="/" replace />} />
           <Route path="profile" element={<ProfilePage />} />
@@ -106,6 +110,7 @@ export default function App() {
             <Route index element={<Landing />} />
             <Route path="handbook" element={<HandbookPage />} />
             <Route path="rules" element={<RulesReferencePage />} />
+            <Route path="game-card" element={<GameCardPage />} />
             <Route path="reference" element={<LegacyReferenceRedirect />} />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Route>

@@ -1276,6 +1276,185 @@ button {
   100% { background-position: -100% 0; }
 }
 
+/* Searchable Player's Game Card. The source PDF is a dense set of reference
+ * tables, so this surface uses plain sections and ruled rows instead of the
+ * app's general-purpose card treatment. */
+.game-card-reference {
+  max-width: 1040px;
+  margin: 0 auto;
+}
+.game-card-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--border-strong);
+}
+.game-card-heading h1 {
+  margin: 0;
+}
+.game-card-heading p {
+  max-width: 660px;
+  margin: 5px 0 0;
+  color: var(--ink-dim);
+}
+.game-card-heading .btn {
+  width: auto;
+  flex: none;
+}
+.game-card-search {
+  margin: 18px 0 8px;
+}
+.game-card-result-count {
+  margin: 8px 0 0;
+  color: var(--ink-faint);
+  font-size: 0.8rem;
+}
+.game-card-groups {
+  display: grid;
+  gap: 28px;
+  margin-top: 22px;
+}
+.game-card-groups section > h2 {
+  margin: 0 0 6px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 1rem;
+}
+.game-card-entry-list {
+  border-bottom: 1px solid var(--border);
+}
+.game-card-entry {
+  border-top: 1px solid var(--border);
+}
+.game-card-entry:first-child {
+  border-top: 0;
+}
+.game-card-entry summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 46px;
+  padding: 10px 2px;
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 600;
+  list-style: none;
+}
+.game-card-entry summary::-webkit-details-marker {
+  display: none;
+}
+.game-card-entry summary::before {
+  content: "+";
+  width: 16px;
+  flex: none;
+  color: var(--gold-dim);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-weight: 400;
+}
+.game-card-entry[open] summary::before {
+  content: "−";
+}
+.game-card-entry summary > :first-child {
+  flex: 1;
+}
+.game-card-page {
+  flex: none;
+  color: var(--ink-faint);
+  font-size: 0.72rem;
+  font-weight: 400;
+}
+.game-card-entry-body {
+  padding: 0 2px 16px 18px;
+}
+.game-card-entry-body > p {
+  margin: 0 0 8px;
+  color: var(--ink-dim);
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+.game-card-entry mark {
+  padding: 0 1px;
+  background: rgba(201, 164, 90, 0.26);
+  color: var(--ink);
+}
+.game-card-table-wrap {
+  max-width: 100%;
+  margin-top: 10px;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+}
+.game-card-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+.game-card-table caption {
+  padding: 9px 10px;
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--gold);
+  text-align: left;
+  font-weight: 600;
+}
+.game-card-table th,
+.game-card-table td {
+  padding: 7px 9px;
+  border-right: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  text-align: left;
+  vertical-align: top;
+}
+.game-card-table th:last-child,
+.game-card-table td:last-child {
+  border-right: 0;
+}
+.game-card-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.game-card-table th {
+  background: var(--bg-elev-2);
+  color: var(--ink);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.game-card-table tbody tr:nth-child(even) td {
+  background: color-mix(in srgb, var(--bg-elev-2) 45%, transparent);
+}
+.game-card-source-note {
+  margin: 28px 0 0;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  color: var(--ink-faint);
+  font-size: 0.78rem;
+}
+@media (max-width: 640px) {
+  .game-card-heading {
+    display: block;
+  }
+  .game-card-heading .btn {
+    width: 100%;
+    margin-top: 14px;
+  }
+  .game-card-groups {
+    gap: 22px;
+  }
+  .game-card-entry summary {
+    gap: 8px;
+  }
+  .game-card-entry-body {
+    padding-left: 0;
+  }
+  .game-card-page {
+    display: none;
+  }
+}
+
 /* ---------- Print / PDF export ---------- */
 @media print {
   /* Paper is white: never paint the app's dark theme — nor its fixed

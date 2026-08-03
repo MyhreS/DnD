@@ -1,4 +1,4 @@
-import { useLocation, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { AsyncButton } from "@/components/AsyncButton";
 import { downloadHandbookPdf } from "../lib/handbookPdf";
 import { useHandbookIntent } from "../hooks/useHandbookIntent";
@@ -113,15 +113,13 @@ export function HandbookPage() {
       >
         Download the full handbook (PDF)
       </AsyncButton>
-      <a
+      <Link
         className="btn btn-ghost"
         style={{ marginTop: 10 }}
-        href="/game-card/players-game-card.pdf"
-        target="_blank"
-        rel="noreferrer"
+        to="/game-card"
       >
-        Open player's game card (PDF)
-      </a>
+        Search the player&rsquo;s game card
+      </Link>
       <p className="faint center" style={{ fontSize: "0.76rem", marginTop: 8 }}>
         Keep the handbook and the quick-reference game card beside you during play.
       </p>
