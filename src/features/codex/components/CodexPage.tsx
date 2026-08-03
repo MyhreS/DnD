@@ -42,7 +42,7 @@ export function CodexDocumentsPage() {
       <header className="codex-heading codex-documents-heading">
         <p className="eyebrow">Documents</p>
         <h1>Source library</h1>
-        <p>Player handbooks, character sheets, class boards, rules references, and game aids. Each document remains separate so its origin is always clear.</p>
+        <p>Player handbooks, character sheets, class boards, rules references, and game aids. Each source remains separate so its origin is always clear.</p>
       </header>
       <SourceLibrary />
     </div>
@@ -173,7 +173,7 @@ function CodexHome({ onBrowse }: { onBrowse: (group: string) => void }) {
         ))}
         <Link className="codex-collection-item" to="/codex/documents">
           <span>Source library</span>
-          <small>{CODEX_SOURCES.length} documents</small>
+          <small>{CODEX_SOURCES.length} sources · {CODEX_SOURCES.flatMap((source) => source.downloads).length} PDFs</small>
         </Link>
       </div>
     </section>
@@ -194,7 +194,9 @@ function SourceLibrary() {
             </div>
             <div className="codex-source-actions">
               <Link to={`/codex?source=${encodeURIComponent(item.id)}`}>Search source</Link>
-              {item.publicPath && <a href={item.publicPath} target="_blank" rel="noreferrer">Open PDF</a>}
+              {item.downloads.map((download) => (
+                <a download href={download.publicPath} key={download.publicPath}>Download {download.label}</a>
+              ))}
             </div>
           </article>
         ))}
@@ -231,6 +233,7 @@ function CodexTopicRow({ topic, query }: { topic: CodexTopic; query: string }) {
 function CodexVersion({ entry, query }: { entry: CodexEntry; query: string }) {
   const source = CODEX_SOURCE_BY_ID.get(entry.sourceId);
   if (!source) return null;
+  const sourcePath = source.publicPath ?? source.downloads[0]?.publicPath;
   const pages = entry.sourcePages?.length ? ` · PDF ${entry.sourcePages.length === 1 ? "p." : "pp."} ${entry.sourcePages.join("–")}` : "";
   return (
     <section className="codex-version" aria-label={`${source.shortLabel}: ${entry.locator}`}>
@@ -239,8 +242,8 @@ function CodexVersion({ entry, query }: { entry: CodexEntry; query: string }) {
           <p>{source.shortLabel}</p>
           <small>{entry.locator}{pages}</small>
         </div>
-        {source.publicPath && (
-          <a href={`${source.publicPath}${entry.sourcePages?.[0] ? `#page=${entry.sourcePages[0]}` : ""}`} target="_blank" rel="noreferrer">
+        {sourcePath && (
+          <a href={`${sourcePath}${entry.sourcePages?.[0] ? `#page=${entry.sourcePages[0]}` : ""}`} target="_blank" rel="noreferrer">
             View source
           </a>
         )}

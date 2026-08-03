@@ -1,9 +1,10 @@
-import { readFileSync, writeFileSync } from "node:fs";
+import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { basename } from "node:path";
 
 const MASTER_PATH = "resources/master.json";
 const OUTPUT_PATH = "src/data/codex.generated.json";
 const GAME_CARD_OUTPUT_PATH = "src/data/gameCard.generated.json";
+const PUBLIC_DOCUMENT_ROOT = "public/source-library";
 
 const master = JSON.parse(readFileSync(MASTER_PATH, "utf8"));
 const sourceById = new Map(master.index.map((source) => [source.id, source]));
@@ -16,6 +17,10 @@ function slug(value) {
     .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-")
     .replace(/^-+|-+$/g, "");
+}
+
+function publicDocumentPath(sourceId, file) {
+  return `/source-library/${sourceId}/${slug(basename(file, ".pdf"))}.pdf`;
 }
 
 function paragraphs(value) {
@@ -359,23 +364,43 @@ function titleCase(value) {
   return String(value).toLowerCase().replace(/(^|[\s-])\w/g, (match) => match.toUpperCase());
 }
 
+// This directory is generated entirely from the canonical source list. Clear
+// only this ignored output folder so renamed or removed downloads cannot linger.
+rmSync(PUBLIC_DOCUMENT_ROOT, { recursive: true, force: true });
+
 const sources = master.index
   .filter((item) => item.audience !== "dm")
-  .map((item) => ({
-    id: item.id,
-    title: item.title,
-    shortLabel: item.shortLabel,
-    kind: item.kind,
-    authority: item.authority,
-    audience: item.audience,
-    description: item.description,
-    pageCount: item.pageCount ?? 0,
-    publicPath: item.publicPath,
-    sourceFiles: item.sourceFiles,
-    fileLabels: item.sourceFiles.map((file) => basename(file)),
-  }));
+  .map((item) => {
+    const pdfFiles = item.sourceFiles.filter((file) => file.toLowerCase().endsWith(".pdf"));
+    const downloadRecords = pdfFiles.map((file) => ({
+      sourceFile: file,
+      label: basename(file, ".pdf"),
+      publicPath: item.publicPath && pdfFiles.length === 1 ? item.publicPath : publicDocumentPath(item.id, file),
+    }));
+    if (downloadRecords.length === 0) throw new Error(`Player-facing Codex source has no PDF download: ${item.id}`);
+    for (const download of downloadRecords) {
+      if (download.publicPath === item.publicPath) continue;
+      mkdirSync(`${PUBLIC_DOCUMENT_ROOT}/${item.id}`, { recursive: true });
+      copyFileSync(download.sourceFile, `public${download.publicPath}`);
+    }
+    const downloads = downloadRecords.map(({ label, publicPath }) => ({ label, publicPath }));
+    return {
+      id: item.id,
+      title: item.title,
+      shortLabel: item.shortLabel,
+      kind: item.kind,
+      authority: item.authority,
+      audience: item.audience,
+      description: item.description,
+      pageCount: item.pageCount ?? 0,
+      publicPath: item.publicPath,
+      downloads,
+      sourceFiles: item.sourceFiles,
+      fileLabels: item.sourceFiles.map((file) => basename(file)),
+    };
+  });
 
 const output = { schemaVersion: 1, sources, entries };
 writeFileSync(OUTPUT_PATH, `${JSON.stringify(output, null, 2)}\n`);
 writeFileSync(GAME_CARD_OUTPUT_PATH, `${JSON.stringify(master.gameCard, null, 2)}\n`);
-console.log(`Generated ${OUTPUT_PATH}: ${entries.length} entries from ${sources.length} player-facing sources.`);
+console.log(`Generated ${OUTPUT_PATH}: ${entries.length} entries and ${sources.flatMap((item) => item.downloads).length} PDF downloads from ${sources.length} player-facing sources.`);

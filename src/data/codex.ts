@@ -16,6 +16,7 @@ export interface CodexSource {
   description: string;
   pageCount: number;
   publicPath?: string;
+  downloads: Array<{ label: string; publicPath: string }>;
   sourceFiles: string[];
   fileLabels: string[];
 }

@@ -15,6 +15,10 @@ dev-dist
 /playwright-report
 /blob-report
 /screenshots
+/tmp/pdfs/
+/public/source-library/
+__pycache__/
+*.pyc
 
 # env / secrets — never commit these
 .env

@@ -52,6 +52,22 @@ try {
   await desktop.getByTestId("codex-document").nth(0).getByRole("heading", { name: "Player's Handbook" }).waitFor();
   await desktop.getByTestId("codex-document").nth(1).getByRole("heading", { name: "Character Sheets" }).waitFor();
   await desktop.getByTestId("codex-document").nth(2).getByRole("heading", { name: "Player's Game Card" }).waitFor();
+  const documentRows = desktop.getByTestId("codex-document");
+  for (let index = 0; index < await documentRows.count(); index += 1) {
+    if (await documentRows.nth(index).locator("a[download]").count() === 0) {
+      throw new Error(`Source document ${index + 1} has no PDF download`);
+    }
+  }
+  const downloadPaths = await documentRows.locator("a[download]").evaluateAll((links) =>
+    links.map((link) => link.getAttribute("href")).filter(Boolean),
+  );
+  if (downloadPaths.length !== 30) throw new Error(`Expected 30 source PDFs, found ${downloadPaths.length}`);
+  for (const path of new Set(downloadPaths)) {
+    const response = await desktop.request.get(new URL(path, BASE).href);
+    if (!response.ok() || !response.headers()["content-type"]?.includes("application/pdf")) {
+      throw new Error(`Broken PDF download: ${path} (${response.status()})`);
+    }
+  }
   await desktop.getByRole("link", { name: "Back to Codex" }).click();
   await desktop.waitForURL(/\/codex$/);
 

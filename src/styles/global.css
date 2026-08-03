@@ -1388,7 +1388,14 @@ button {
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
-.codex-source-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.codex-source-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+  max-width: 260px;
+  overflow-wrap: anywhere;
+}
 .codex-source-list a,
 .codex-version header a { align-self: start; color: var(--gold); font-size: 0.8rem; text-decoration: none; }
 
@@ -1508,7 +1515,6 @@ button {
   .codex-collection-item:nth-child(odd),
   .codex-collection-item:nth-child(even) { padding-inline: 4px; border-right: 0; }
   .codex-source-list article { grid-template-columns: minmax(0, 1fr); gap: 7px; }
-  .codex-source-actions { flex-direction: row; gap: 18px; }
   .codex-topic > summary { gap: 10px; }
   .codex-version-count { display: none; }
   .codex-topic-body { padding-left: 24px; }
