@@ -14,6 +14,8 @@ export function PaperSheet({
   hideSteps = false,
   hideInfo = false,
   activeStep = null,
+  automationReasons = {},
+  manualOverrides = [],
 }: {
   data: SheetData;
   setField: (f: string, v: string | boolean) => void;
@@ -24,6 +26,8 @@ export function PaperSheet({
   /** Creation step (1–5) to spotlight: units tagged `data-step` with this
    * number highlight, everything else dims (see papersheet.css). */
   activeStep?: number | null;
+  automationReasons?: Record<string, string>;
+  manualOverrides?: string[];
 }) {
   return (
     <div
@@ -32,7 +36,7 @@ export function PaperSheet({
         .join(" ")}
       data-active-step={activeStep ?? undefined}
     >
-      <SheetProvider data={data} setField={setField} readOnly={readOnly}>
+      <SheetProvider data={data} setField={setField} readOnly={readOnly} automationReasons={automationReasons} manualOverrides={manualOverrides}>
         <SheetPage1 />
         <SheetPage2 />
         <SheetPage3 />

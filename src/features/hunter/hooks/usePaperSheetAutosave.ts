@@ -37,10 +37,17 @@ export function usePaperSheetAutosave(
   // Sheet-less cards (legacy builder hunters, test-run bots) start from a
   // sheet DERIVED from their structured fields — never a blank page.
   const [local, setLocal] = useState<SheetData>(() => card.sheet ?? deriveSheetFromCard(card));
+  const [workingCard, setWorkingCard] = useState<HunterCard>(card);
   const [saveMsg, setSaveMsg] = useState("");
   const latest = useRef(local);
   /** Keys edited since the last successful persist. */
   const dirty = useRef<Set<string>>(new Set());
+  /** Structured choices changed alongside the visible sheet fields. */
+  const pendingCard = useRef<Partial<HunterCard>>({});
+  /** Structured values currently inside an updateDoc request. Remote snapshots
+   * must not temporarily roll these back while that request is in flight. */
+  const inFlightCard = useRef<Partial<HunterCard>>({});
+  const latestCard = useRef(card);
   const created = useRef(!create);
   /** True until a sheet-less card's FIRST persist: that write carries the
    * whole derived sheet (not just the edited key), converting the card, so
@@ -55,13 +62,18 @@ export function usePaperSheetAutosave(
    * its setState calls instead of warning about updating an unmounted hook. */
   const mounted = useRef(true);
   const cardRef = useRef(card);
-  cardRef.current = card;
+
+  useEffect(() => {
+    cardRef.current = card;
+    latestCard.current = workingCard;
+  }, [card, workingCard]);
 
   const persist = useCallback(async () => {
-    if (dirty.current.size === 0) return;
+    if (dirty.current.size === 0 && Object.keys(pendingCard.current).length === 0) return;
     const dirtyKeys = Array.from(dirty.current);
     const seedingNow = seeding.current;
     const snapshot = latest.current;
+    const structured = pendingCard.current;
     // The first save of a sheet-less card persists every derived key too.
     const keys = seedingNow
       ? Array.from(new Set([...Object.keys(snapshot), ...dirtyKeys]))
@@ -69,12 +81,14 @@ export function usePaperSheetAutosave(
     // Take ownership of the pending changes; restore them on failure so the
     // next edit retries.
     dirty.current = new Set();
+    pendingCard.current = {};
+    inFlightCard.current = { ...inFlightCard.current, ...structured };
     try {
-      const base = cardRef.current;
+      const base = latestCard.current;
       if (!created.current) {
         const ok = await usePlayerStore
           .getState()
-          .save({ ...base, ...sheetMirror(snapshot), sheet: snapshot });
+          .save({ ...base, ...structured, ...sheetMirror(snapshot), sheet: snapshot });
         if (!ok) throw new Error("create failed");
         created.current = true;
       } else {
@@ -83,9 +97,12 @@ export function usePaperSheetAutosave(
         // restate the card's own fields (idempotent, never blanking).
         const mirror =
           seedingNow || keys.some((k) => MIRROR_KEYS.includes(k)) ? sheetMirror(snapshot) : {};
-        await patchCharacterSheet(base.id, snapshot, keys, mirror);
+        await patchCharacterSheet(base.id, snapshot, keys, mirror, structured);
       }
       seeding.current = false;
+      for (const [key, value] of Object.entries(structured)) {
+        if (inFlightCard.current[key as keyof HunterCard] === value) delete inFlightCard.current[key as keyof HunterCard];
+      }
       if (!mounted.current) return;
       setSaveMsg("Saved");
       if (savedTimer.current) window.clearTimeout(savedTimer.current);
@@ -95,6 +112,10 @@ export function usePaperSheetAutosave(
       }, 1600);
     } catch (err) {
       for (const k of dirtyKeys) dirty.current.add(k);
+      pendingCard.current = { ...structured, ...pendingCard.current };
+      for (const [key, value] of Object.entries(structured)) {
+        if (inFlightCard.current[key as keyof HunterCard] === value) delete inFlightCard.current[key as keyof HunterCard];
+      }
       console.error("Failed to save the character sheet", err);
       if (mounted.current) setSaveMsg("Save failed");
     }
@@ -114,6 +135,28 @@ export function usePaperSheetAutosave(
       const next = { ...latest.current, [f]: v };
       latest.current = next;
       dirty.current.add(f);
+      setLocal(next);
+      setSaveMsg("…");
+      if (timer.current) window.clearTimeout(timer.current);
+      timer.current = window.setTimeout(() => {
+        timer.current = null;
+        void persist();
+      }, SAVE_DEBOUNCE_MS);
+    },
+    [readOnly, persist],
+  );
+
+  /** Apply a rules decision and all fields derived from it as one local change
+   * and one Firestore update. This prevents other devices seeing a selected
+   * class before its HP, proficiencies, features, and explanations arrive. */
+  const setFields = useCallback(
+    (changes: SheetData, cardPatch: Partial<HunterCard> = {}) => {
+      if (readOnly) return;
+      const next = { ...latest.current, ...changes };
+      latest.current = next;
+      for (const key of Object.keys(changes)) dirty.current.add(key);
+      pendingCard.current = { ...pendingCard.current, ...cardPatch };
+      setWorkingCard((current) => ({ ...current, ...cardPatch, sheet: next }));
       setLocal(next);
       setSaveMsg("…");
       if (timer.current) window.clearTimeout(timer.current);
@@ -158,6 +201,11 @@ export function usePaperSheetAutosave(
   useEffect(() => {
     if (!readOnly) foldRemote(card.sheet);
   }, [readOnly, foldRemote, card.sheet]);
+
+  useEffect(() => {
+    if (readOnly) return;
+    setWorkingCard((current) => ({ ...current, ...card, ...inFlightCard.current, ...pendingCard.current, sheet: latest.current }));
+  }, [card, readOnly]);
 
   // A field skipped because it was focused catches up when focus leaves it
   // (deferred a tick so document.activeElement reflects the NEW focus).
@@ -205,5 +253,5 @@ export function usePaperSheetAutosave(
   // Read-only viewers follow the live doc; editors keep their working copy.
   // Sheet-less cards read through the derived fallback here too.
   const data = readOnly ? (card.sheet ?? deriveSheetFromCard(card)) : local;
-  return { data, setField, saveMsg };
+  return { data, setField, setFields, workingCard, saveMsg };
 }
