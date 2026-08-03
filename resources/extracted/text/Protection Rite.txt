@@ -1,0 +1,38 @@
+ARMOR OF AGATHYS
+Level 1
+
+Type: Protection Rite
+Performing: Bonus Action
+Range: Self
+Duration: 20 rounds
+
+You call upon a Patron of frozen ruin, wreathing your body in otherworldly frost. You gain 5
+Temporary Hit Points.
+If a creature hits you with a melee attack while you have these Temporary Hit Points, that creature
+takes 5 Cold damage. This Rite ends early if you have no Temporary Hit Points remaining.
+Using Higher-Level Strain. The Temporary Hit Points and Cold damage both increase by 5 for
+each Strain level above 1.
+
+
+
+
+FORESIGHT
+Level 9
+
+Type: Protection Rite
+Performing: Three Actions
+Range: Touch
+Duration: 10 rounds
+
+You call upon a Patron that peers beyond the veil of time and fate. By its guidance, a willing
+creature you touch is granted eeting glimpses of the immediate future, allowing it to perceive
+danger moments before it occurs.
+For the duration, the target has Advantage on all D20 Tests, and other creatures have
+Disadvantage on attack rolls against it.
+This Rite ends early if you perform it again.
+
+
+
+
+                  fl
+

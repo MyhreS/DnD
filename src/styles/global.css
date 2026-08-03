@@ -39,6 +39,122 @@
   color-scheme: dark;
 }
 
+/* ---------- Live combat clock ---------- */
+
+.combat-turn-clock {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px 18px;
+  align-items: center;
+  margin: 0 0 14px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--gold);
+  background: rgba(201, 150, 47, 0.08);
+  transition: border-color 180ms ease, background 180ms ease;
+}
+
+.combat-turn-clock-copy {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.combat-turn-clock-copy span {
+  overflow: hidden;
+  color: var(--ink-dim);
+  font-size: 0.78rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.combat-turn-clock-copy strong {
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 7vw, 4.8rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 0.98;
+}
+
+.combat-turn-clock p {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--ink-faint);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.combat-turn-clock-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 8px;
+}
+
+.combat-turn-clock-actions .btn {
+  width: auto;
+}
+
+.combat-turn-clock-expired {
+  border-color: var(--blood-bright);
+  background: rgba(179, 18, 26, 0.14);
+}
+
+.combat-turn-clock-expired .combat-turn-clock-copy strong {
+  color: var(--blood-bright);
+}
+
+.combat-turn-clock-paused {
+  border-color: var(--ink-faint);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.combat-turn-clock-briefing .combat-turn-clock-copy strong {
+  font-size: clamp(1.8rem, 5vw, 3.2rem);
+}
+
+.combat-warden-select {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) minmax(0, 1fr);
+  gap: 4px 10px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.combat-warden-select > span {
+  color: var(--gold);
+  font-size: 0.78rem;
+  font-weight: 650;
+  text-transform: uppercase;
+}
+
+.combat-warden-select .input {
+  margin: 0;
+}
+
+.combat-warden-select small {
+  grid-column: 1 / -1;
+  color: var(--ink-faint);
+  line-height: 1.4;
+}
+
+@media (max-width: 560px) {
+  .combat-turn-clock {
+    grid-template-columns: 1fr;
+  }
+
+  .combat-turn-clock-copy strong {
+    font-size: 3.4rem;
+  }
+
+  .combat-warden-select {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ---------- Light theme ---------- */
 :root[data-theme="light"] {
   --bg: #f3efe6;
@@ -83,6 +199,20 @@
 }
 :root[data-theme="light"] .avatar {
   background: radial-gradient(circle at 30% 25%, #f6e9d6, var(--bg-elev-3));
+}
+:root[data-theme="light"] .banner-warn {
+  background: rgba(179, 18, 26, 0.08);
+  border-color: rgba(163, 17, 26, 0.45);
+  color: #7a0d12;
+}
+:root[data-theme="light"] .banner-error {
+  background: rgba(179, 18, 26, 0.1);
+  color: #7a0d12;
+}
+:root[data-theme="light"] .banner-ok {
+  background: rgba(47, 93, 55, 0.1);
+  border-color: rgba(47, 93, 55, 0.5);
+  color: #2f5d37;
 }
 
 * {
@@ -232,8 +362,71 @@ button {
   0%, 100% { background: var(--blood); box-shadow: inset 0 0 0 rgba(0, 0, 0, 0); }
   50% { background: var(--blood-bright); box-shadow: inset 0 0 24px rgba(255, 120, 120, 0.45); }
 }
+.update-bar:active {
+  filter: brightness(0.9);
+}
+/* On tap: stop the urgent flash and show a steady spinner so it's obvious the
+   press registered while the reload is prepared. */
+.update-bar-busy,
+.update-bar-busy:active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  animation: none;
+  filter: none;
+  background: var(--blood-deep);
+  cursor: default;
+}
 @media (prefers-reduced-motion: reduce) {
   .update-bar { animation: none; background: var(--blood-bright); }
+}
+
+/* "Return to the live game" strip — shown app-wide while a game is running. */
+.live-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: var(--bg-elev-2);
+  border-bottom: 1px solid var(--border-strong);
+  color: var(--ink);
+  font-size: 0.82rem;
+}
+.live-banner-text {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  /* Wrap to (at most) two lines rather than clamping the campaign name to
+   * "Th…" — the narrow desktop sidebar has ample vertical room. Falls back to
+   * one line on wider layouts (e.g. the mobile top-bar strip). */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  font-family: var(--font-display);
+  letter-spacing: 0.02em;
+}
+.live-banner-cta {
+  flex: none;
+  color: var(--gold);
+  font-weight: 600;
+}
+.live-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex: none;
+  background: var(--blood-bright);
+  box-shadow: 0 0 6px var(--blood-bright);
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+@keyframes live-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot { animation: none; }
 }
 
 .app-header {
@@ -311,6 +504,142 @@ button {
 .top-tabs a.active {
   color: var(--gold);
   border-bottom-color: var(--blood-bright);
+}
+
+/* Gallery grid — one column on phones, auto-fills on wider screens. */
+.card-grid {
+  display: grid;
+  gap: 12px;
+}
+@media (min-width: 820px) {
+  .card-grid {
+    grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+    align-items: start;
+  }
+}
+
+/* Cap line length for reading/forms so they don't stretch on wide desktops. */
+.reading {
+  max-width: 780px;
+  margin-inline: auto;
+}
+
+/* ============================================================
+   Desktop layout — power-user wide view. The mobile top bar
+   becomes a left sidebar and content gets a roomier column.
+   ============================================================ */
+@media (min-width: 980px) {
+  .app-shell {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+
+  .app-topbar {
+    position: sticky;
+    top: 0;
+    height: 100dvh;
+    width: 238px;
+    flex: none;
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-elev);
+    border-right: 1px solid var(--border-strong);
+    overflow-y: auto;
+  }
+
+  .app-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
+    padding: calc(env(safe-area-inset-top) + 22px) 18px 18px;
+    background: transparent;
+    backdrop-filter: none;
+  }
+  .app-header .brand {
+    gap: 12px;
+  }
+  .app-header .brand-mark {
+    width: 36px;
+    height: 36px;
+  }
+  .app-header .brand-title {
+    font-size: 1.05rem;
+    white-space: normal;
+    line-height: 1.2;
+  }
+
+  .top-tabs {
+    flex-direction: column;
+    gap: 4px;
+    padding: 10px;
+    border-bottom: 0;
+    overflow: visible;
+    flex: 1 1 auto;
+  }
+  .top-tabs a {
+    flex: none;
+    text-align: left;
+    padding: 12px 14px;
+    font-size: 0.8rem;
+    border-bottom: 0;
+    border-left: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease;
+  }
+  .top-tabs a:hover {
+    color: var(--ink-dim);
+    background: var(--bg-elev-2);
+  }
+  .top-tabs a.active {
+    color: var(--gold);
+    background: var(--bg-elev-2);
+    border-bottom-color: transparent;
+    border-left-color: var(--blood-bright);
+  }
+
+  .app-main {
+    max-width: 1120px;
+    padding: 36px 44px 64px;
+  }
+
+  /* Avatar moves from the header to a profile row pinned at the sidebar bottom.
+   * (.app-topbar prefix keeps these winning over the later base rules.) */
+  .top-tabs {
+    flex: 0 0 auto;
+  }
+  .top-tabs a.nav-back {
+    border-top: 1px solid var(--border);
+    margin-top: 6px;
+    padding-top: 14px;
+  }
+  .app-topbar .sidebar-foot {
+    display: flex;
+    flex-direction: column;
+    margin-top: auto;
+  }
+  .app-header .avatar-top {
+    display: none;
+  }
+  .app-topbar .sidebar-profile {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-top: 1px solid var(--border);
+    color: var(--ink-dim);
+    text-decoration: none;
+    transition: background 0.15s ease, color 0.15s ease;
+  }
+  .app-topbar .sidebar-profile:hover {
+    background: var(--bg-elev-2);
+    color: var(--ink);
+  }
+  .app-topbar .sidebar-profile-name {
+    font-size: 0.85rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
 }
 
 /* ---------- Cards & panels ---------- */
@@ -416,6 +745,37 @@ button {
   flex: 1;
 }
 
+/* RSVP selected states — distinct per choice so a registered answer is obvious */
+.btn-yes-on {
+  background: linear-gradient(180deg, var(--ok), #3f7a4b);
+  border-color: var(--ok);
+  color: #fff;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  box-shadow: 0 6px 20px rgba(94, 158, 106, 0.35);
+}
+.btn-no-on {
+  background: linear-gradient(180deg, var(--blood), var(--blood-deep));
+  border-color: var(--blood-bright);
+  color: #fff;
+  font-family: var(--font-display);
+  letter-spacing: 0.06em;
+  box-shadow: 0 6px 20px rgba(179, 18, 26, 0.35);
+}
+
+.rsvp-status {
+  text-align: center;
+  font-size: 0.82rem;
+  margin: 10px 0 0;
+}
+.rsvp-status .rsvp-status-yes { color: var(--ok); font-weight: 600; }
+.rsvp-status .rsvp-status-no { color: var(--ink-dim); }
+.rsvp-status-flash { animation: rsvp-flash 0.9s ease-out; }
+@keyframes rsvp-flash {
+  0% { opacity: 0; transform: translateY(-3px); }
+  35% { opacity: 1; transform: translateY(0); }
+}
+
 .btn-sm {
   width: auto;
   padding: 8px 14px;
@@ -496,11 +856,6 @@ button {
 
 /* ---------- Stat blocks ---------- */
 
-.stat-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-}
 .stat {
   text-align: center;
   background: var(--bg-elev-2);
@@ -515,17 +870,6 @@ button {
   color: var(--gold-dim);
   text-transform: uppercase;
 }
-.stat .stat-value {
-  font-family: var(--font-display);
-  font-size: 1.5rem;
-  font-weight: 600;
-  line-height: 1.1;
-  margin-top: 2px;
-}
-.stat .stat-sub {
-  font-size: 0.78rem;
-  color: var(--ink-dim);
-}
 
 .derived-grid {
   display: grid;
@@ -536,6 +880,43 @@ button {
   .derived-grid {
     grid-template-columns: repeat(4, 1fr);
   }
+}
+
+.meta-line {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin-top: 10px;
+}
+
+.level-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+.level-table th,
+.level-table td {
+  text-align: left;
+  padding: 5px 8px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+.level-table th {
+  font-family: var(--font-display);
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  white-space: nowrap;
+}
+.level-table .lvl-col {
+  text-align: center;
+  font-family: var(--font-display);
+  white-space: nowrap;
+}
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ---------- Misc helpers ---------- */
@@ -685,8 +1066,12 @@ button {
 
 /* ---------- 3D fighter overlay (occasional, click-through) ---------- */
 .fighters {
+  /* A low stage strip along the bottom of the screen — the hunters perform
+     small, underfoot, never over the content. The fighters' on-screen size
+     scales with this strip's height (fixed vertical fov). */
   position: fixed;
-  inset: 0;
+  inset: auto 0 0 0;
+  height: min(22vh, 200px);
   pointer-events: none;
   overflow: hidden;
   z-index: 18;
@@ -706,6 +1091,16 @@ button {
   white-space: nowrap;
   box-shadow: var(--shadow);
   pointer-events: none;
+}
+/* Desktop has far more room — let the hunters stand taller. */
+@media (min-width: 900px) {
+  .fighters {
+    height: min(32vh, 320px);
+  }
+  .fighter-name {
+    font-size: 0.74rem;
+    max-width: 180px;
+  }
 }
 
 .page-intro {
@@ -803,6 +1198,67 @@ button {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.4);
 }
 
+/* Profile link at the bottom of the desktop sidebar (hidden on mobile, where the
+ * header avatar is used instead). */
+.sidebar-profile {
+  display: none;
+}
+/* On mobile the footer is transparent (banner/update bar flow in the top bar). */
+.sidebar-foot {
+  display: contents;
+}
+
+/* "Campaign" label above the campaign name in the sidebar/header. */
+.brand-eyebrow {
+  display: block;
+  font-size: 0.6rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  font-family: var(--font-body);
+  font-weight: 600;
+  margin-bottom: 1px;
+}
+
+/* Back-to-main-menu item in the campaign nav — gold-tinted, set apart. */
+.top-tabs a.nav-back {
+  color: var(--gold-dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.top-tabs a.nav-back:hover {
+  color: var(--gold);
+}
+.top-tabs a.nav-back.active {
+  color: var(--gold);
+}
+
+/* Back-to-menu action — gold-tinted + a left chevron so it reads as "go back". */
+.btn-menu {
+  background: transparent;
+  border-color: var(--gold-dim);
+  color: var(--gold);
+}
+.btn-menu:hover {
+  background: var(--bg-elev-2);
+}
+.btn-menu .icon-flip {
+  transform: rotate(180deg);
+}
+
+/* Campaign join code — prominent + easy to read out / copy. */
+.invite-code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 1.25rem;
+  letter-spacing: 0.22em;
+  color: var(--gold);
+  background: var(--bg-elev-3);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 6px 12px;
+}
+
 /* skeleton loaders keep layout stable while data fetches */
 .skeleton {
   border-radius: var(--radius-sm);
@@ -820,13 +1276,24 @@ button {
   100% { background-position: -100% 0; }
 }
 
-/* Bundles that only exist when printing (e.g. "export all characters"). */
-.print-only {
-  display: none;
-}
-
 /* ---------- Print / PDF export ---------- */
 @media print {
+  /* Paper is white: never paint the app's dark theme — nor its fixed
+   * gradient layer, which Chromium repaints on EVERY printed page — onto
+   * printouts ("Background graphics" would otherwise print black pages).
+   * color-scheme must go light too: with `dark`, Chromium fills every
+   * printed page's whole canvas #121212 (:root, not html, to outrank the
+   * theme's own `:root { color-scheme: dark }`). */
+  :root {
+    background: #fff !important;
+    color-scheme: light;
+  }
+  body {
+    background: #fff !important;
+  }
+  body::before {
+    display: none !important;
+  }
   /* Undo the one-viewport app shell so the whole sheet paginates. */
   .app-shell {
     position: static !important;
@@ -842,15 +1309,6 @@ button {
   .no-print {
     display: none !important;
   }
-  .print-only {
-    display: block !important;
-  }
-  .print-character {
-    break-after: page;
-  }
-  .print-character:last-child {
-    break-after: auto;
-  }
   body {
     background: #fff !important;
     color: #14110d !important;
@@ -859,707 +1317,25 @@ button {
     padding: 0 !important;
     max-width: none;
   }
-  .print-sheet .card {
-    background: #fff !important;
-    border: 1px solid #bbb !important;
-    box-shadow: none !important;
-    break-inside: avoid;
+}
+
+/* Handbook deep-link landing: pulse the section the sheet's info dot pointed
+ * at, so the reader's eye finds it. Added/removed by useScrollToSection. */
+.hb-focus {
+  animation: hb-focus-pulse 2.6s ease both;
+  border-radius: 6px;
+}
+@keyframes hb-focus-pulse {
+  0% {
+    box-shadow: 0 0 0 3px var(--gold, #c9a866);
+    background: rgba(201, 168, 102, 0.14);
   }
-  .print-sheet .card,
-  .print-sheet h1,
-  .print-sheet h2,
-  .print-sheet h3,
-  .print-sheet .stat-value,
-  .print-sheet .gold {
-    color: #14110d !important;
+  70% {
+    box-shadow: 0 0 0 3px var(--gold, #c9a866);
+    background: rgba(201, 168, 102, 0.14);
   }
-  .print-sheet .muted,
-  .print-sheet .faint,
-  .print-sheet .stat-label,
-  .print-sheet .eyebrow {
-    color: #555 !important;
-  }
-  .print-sheet .stat,
-  .print-sheet .chip {
-    border-color: #bbb !important;
-    background: #f6f3ec !important;
-  }
-}
-
-/* ---------- Combat control ---------- */
-
-.combat-page-heading {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 16px;
-}
-
-.combat-page-heading .btn {
-  flex: none;
-}
-
-.combat-sync {
-  margin: 2px 0 8px;
-  color: var(--ink-faint);
-  font-size: 0.82rem;
-}
-
-.combat-sync-live,
-.combat-sync-local {
-  color: var(--gold-dim);
-}
-
-.combat-sync-error {
-  color: var(--danger);
-}
-
-.combat-control-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-}
-
-.combat-section {
-  padding-top: 16px;
-  border-top: 1px solid var(--border-strong);
-}
-
-.combat-section h2,
-.combat-section .row h2 {
-  margin: 0 0 12px;
-}
-
-.combat-add-form {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 10px;
-  padding: 14px;
-  background: var(--bg-elev);
-  border: 1px solid var(--border);
-}
-
-.combat-add-form .field {
-  margin: 0;
-}
-
-.combat-name-field,
-.combat-add-button {
-  grid-column: 1 / -1;
-}
-
-.combat-check {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 46px;
-  color: var(--ink-dim);
-}
-
-.combat-check input,
-.combat-warden-choice input {
-  width: 18px;
-  height: 18px;
-  accent-color: var(--blood-bright);
-}
-
-.combat-setup-list,
-.combat-control-list {
-  border-top: 1px solid var(--border);
-}
-
-.combat-setup-row {
-  display: grid;
-  grid-template-columns: auto minmax(120px, 1fr) repeat(3, 62px) auto;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--border);
-}
-
-.combatant-glyph {
-  display: grid;
-  place-items: center;
-  flex: none;
-}
-
-.combat-setup-identity {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-}
-
-.combat-setup-identity strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.combat-setup-identity span,
-.combat-inline-field span {
-  color: var(--ink-faint);
-  font-size: 0.72rem;
-}
-
-.combat-inline-field {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.combat-inline-field input {
-  width: 100%;
-  min-width: 0;
-  padding: 7px;
-  border: 1px solid var(--border-strong);
-  border-radius: 4px;
-  color: var(--ink);
-  background: var(--bg);
-  font: inherit;
-}
-
-.combat-warden-choice {
-  grid-column: 2 / -1;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  color: var(--gold);
-  font-size: 0.84rem;
-}
-
-.combat-remove {
-  grid-column: -2 / -1;
-}
-
-.combat-note,
-.combat-empty {
-  margin: 12px 0 0;
-  padding: 12px;
-  border-left: 2px solid var(--gold-dim);
-  color: var(--ink-dim);
-  background: var(--bg-elev);
-}
-
-.combat-primary-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.combat-live-heading {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  align-items: stretch;
-  gap: 16px;
-  padding: 16px;
-  border: 1px solid var(--border-strong);
-  background: var(--bg-elev);
-}
-
-.combat-live-heading > div:first-child {
-  align-self: center;
-}
-
-.combat-live-heading span {
-  color: var(--gold);
-  font-family: var(--font-display);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-}
-
-.combat-live-heading h2 {
-  margin: 4px 0 0;
-  font-size: 1.45rem;
-}
-
-.combat-timer {
-  display: flex;
-  min-width: 280px;
-  min-height: 240px;
-  flex-direction: column;
-  justify-content: center;
-  padding: 24px;
-  border: 1px solid rgba(201, 164, 90, 0.38);
-  background: #0b0a0d;
-  text-align: center;
-}
-
-.combat-timer-compact {
-  min-width: 132px;
-  min-height: 96px;
-  padding: 12px;
-}
-
-.combat-timer-label {
-  color: var(--gold);
-  font-family: var(--font-display);
-  font-size: 0.78rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-}
-
-.combat-timer-value,
-.combat-timer-briefing {
-  color: var(--ink);
-  font-family: var(--font-display);
-  font-size: clamp(4.6rem, 9vw, 8.5rem);
-  font-variant-numeric: tabular-nums;
-  font-weight: 600;
-  line-height: 1;
-  margin-top: 12px;
-}
-
-.combat-timer-briefing {
-  color: var(--gold);
-  font-size: clamp(2rem, 4vw, 4rem);
-  letter-spacing: 0.08em;
-}
-
-.combat-timer-compact .combat-timer-label {
-  font-size: 0.62rem;
-}
-
-.combat-timer-compact .combat-timer-value {
-  margin-top: 5px;
-  font-size: 2.4rem;
-}
-
-.combat-timer-compact .combat-timer-briefing {
-  margin-top: 5px;
-  font-size: 1rem;
-}
-
-.combat-timer-warning .combat-timer-value,
-.combat-timer-expired .combat-timer-value {
-  color: #ff4049;
-}
-
-.combat-timer-paused {
-  border-color: rgba(201, 164, 90, 0.65);
-}
-
-.combat-turn-controls {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.combat-control-row {
-  border-bottom: 1px solid var(--border);
-  background: transparent;
-}
-
-.combat-control-row.is-active {
-  background: rgba(179, 18, 26, 0.1);
-  box-shadow: inset 3px 0 0 var(--blood-bright);
-}
-
-.combat-control-row summary {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 10px;
-  cursor: pointer;
-  list-style: none;
-}
-
-.combat-control-row summary::-webkit-details-marker {
-  display: none;
-}
-
-.combat-control-name,
-.combat-control-hp {
-  display: flex;
-  flex-direction: column;
-}
-
-.combat-control-name {
-  min-width: 0;
-  flex: 1;
-}
-
-.combat-control-name strong {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.combat-control-name span,
-.combat-control-hp span {
-  color: var(--ink-faint);
-  font-size: 0.72rem;
-}
-
-.combat-control-hp {
-  text-align: right;
-  font-variant-numeric: tabular-nums;
-}
-
-.combat-control-details {
-  padding: 0 12px 14px 64px;
-}
-
-.combat-hp-controls {
-  display: grid;
-  grid-template-columns: repeat(2, 40px) 1fr repeat(2, 40px);
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 12px;
-}
-
-.combat-hp-controls button,
-.combat-condition-list button {
-  border: 1px solid var(--border-strong);
-  border-radius: 5px;
-  color: var(--ink);
-  background: var(--bg-elev-2);
-  font: inherit;
-}
-
-.combat-hp-controls button {
-  min-height: 38px;
-}
-
-.combat-hp-controls span {
-  text-align: center;
-  font-family: var(--font-display);
-}
-
-.combat-condition-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  min-height: 30px;
-}
-
-.combat-condition-list button {
-  padding: 4px 8px;
-  color: var(--gold);
-  font-size: 0.8rem;
-}
-
-.combat-condition-add {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: 8px;
-  margin-top: 9px;
-}
-
-.combat-delete-link {
-  margin-top: 12px;
-  padding: 0;
-  border: 0;
-  color: var(--ink-faint);
-  background: transparent;
-  text-decoration: underline;
-}
-
-.combat-resource-links {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  margin-top: 24px;
-  padding: 14px 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
-  font-size: 0.9rem;
-}
-
-.combat-rules {
-  margin-top: 16px;
-  border-bottom: 1px solid var(--border);
-}
-
-.combat-rules summary {
-  padding: 14px 0;
-  color: var(--gold);
-  cursor: pointer;
-  font-family: var(--font-display);
-}
-
-.combat-rules > div {
-  padding: 0 0 16px;
-  color: var(--ink-dim);
-  font-size: 0.92rem;
-}
-
-.combat-rules h3 {
-  margin-top: 16px;
-}
-
-@media (max-width: 620px) {
-  .combat-page-heading {
-    align-items: center;
-  }
-  .combat-page-heading .btn {
-    max-width: 150px;
-  }
-  .combat-setup-row {
-    grid-template-columns: auto 1fr repeat(3, 48px);
-  }
-  .combat-setup-row .combat-remove {
-    grid-column: 2 / -1;
-    justify-self: start;
-  }
-  .combat-live-heading {
-    grid-template-columns: minmax(0, 1fr) auto;
-    padding: 12px;
-  }
-  .combat-control-details {
-    padding-left: 12px;
-  }
-}
-
-@media (max-width: 390px) {
-  .combat-page-heading {
-    display: block;
-  }
-  .combat-page-heading .btn {
-    width: 100%;
-    max-width: none;
-    margin: 8px 0 12px;
-  }
-  .combat-resource-links {
-    flex-direction: column;
-  }
-}
-
-/* ---------- Dedicated battle screen ---------- */
-
-.battle-screen {
-  min-height: 100dvh;
-  padding: clamp(20px, 3vw, 52px);
-  color: #eee8da;
-  background:
-    linear-gradient(rgba(10, 10, 12, 0.96), rgba(10, 10, 12, 0.96)),
-    repeating-linear-gradient(0deg, transparent 0 3px, rgba(201, 164, 90, 0.08) 3px 4px);
-}
-
-.battle-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
-  padding-bottom: 18px;
-  border-bottom: 1px solid rgba(201, 164, 90, 0.45);
-}
-
-.battle-header span,
-.battle-turn-name span {
-  color: #c9a45a;
-  font-family: var(--font-display);
-  font-size: clamp(0.85rem, 1.2vw, 1.2rem);
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.battle-header h1 {
-  margin: 4px 0 0;
-  color: #eee8da;
-  font-size: clamp(2rem, 4vw, 4.4rem);
-}
-
-.battle-fullscreen-button {
-  padding: 10px 14px;
-  border: 1px solid rgba(201, 164, 90, 0.42);
-  border-radius: 4px;
-  color: #c9a45a;
-  background: transparent;
-  font-size: 0.92rem;
-}
-
-.battle-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.battle-header .battle-sync-status {
-  color: #8f8777;
-  font-size: 0.78rem;
-  letter-spacing: 0.08em;
-}
-
-.battle-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(300px, 30vw);
-  gap: clamp(24px, 4vw, 72px);
-  align-items: start;
-  margin-top: 24px;
-}
-
-.battle-order {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-
-.battle-combatant {
-  display: grid;
-  grid-template-columns: 42px 76px minmax(150px, 1fr) minmax(150px, auto) minmax(160px, 1.3fr);
-  align-items: center;
-  gap: 14px;
-  min-height: 94px;
-  padding: 8px 16px 8px 0;
-  border-bottom: 1px solid rgba(201, 164, 90, 0.18);
-  opacity: 0.66;
-  transition: opacity 180ms ease, background 180ms ease;
-}
-
-.battle-combatant.is-active {
-  opacity: 1;
-  background: linear-gradient(90deg, rgba(179, 18, 26, 0.35), rgba(179, 18, 26, 0.04));
-  box-shadow: inset 4px 0 0 #d6202a;
-}
-
-.battle-combatant.is-defeated {
-  opacity: 0.4;
-}
-
-.battle-position {
-  color: #c9a45a;
-  font-family: var(--font-display);
-  font-size: 1.3rem;
-  text-align: center;
-}
-
-.battle-identity h2 {
-  margin: 0;
-  color: #eee8da;
-  font-size: clamp(1.15rem, 2vw, 2rem);
-}
-
-.battle-identity span {
-  color: #918a7b;
-  font-size: 0.9rem;
-}
-
-.battle-vitals {
-  display: flex;
-  gap: 24px;
-  margin: 0;
-}
-
-.battle-vitals div {
-  min-width: 54px;
-}
-
-.battle-vitals dt {
-  color: #918a7b;
-  font-size: 0.78rem;
-}
-
-.battle-vitals dd {
-  margin: 0;
-  font-family: var(--font-display);
-  font-size: 1.7rem;
-  font-variant-numeric: tabular-nums;
-}
-
-.battle-conditions {
-  color: #c9a45a;
-  font-size: clamp(0.86rem, 1.1vw, 1.05rem);
-}
-
-.battle-conditions strong {
-  color: #ff4049;
-}
-
-.battle-turn {
-  position: sticky;
-  top: 24px;
-}
-
-.battle-turn-name {
-  margin-bottom: 16px;
-}
-
-.battle-turn-name h2 {
-  margin: 5px 0 0;
-  color: #eee8da;
-  font-size: clamp(1.8rem, 3vw, 3.4rem);
-}
-
-.battle-turn .combat-timer {
-  width: 100%;
-}
-
-.battle-turn > p {
-  margin: 14px 0 0;
-  padding-left: 12px;
-  border-left: 2px solid #b3121a;
-  color: #aaa293;
-  font-size: clamp(0.95rem, 1.2vw, 1.2rem);
-}
-
-.battle-screen-empty {
-  display: grid;
-  place-content: center;
-  text-align: center;
-}
-
-.battle-screen-empty h1 {
-  margin: 14px 0 0;
-  color: #eee8da;
-  font-size: clamp(3rem, 8vw, 8rem);
-}
-
-.battle-screen-empty p {
-  color: #c9a45a;
-  font-family: var(--font-display);
-  font-size: clamp(1.4rem, 3vw, 3rem);
-}
-
-.battle-empty-mark {
-  color: #b3121a;
-  font-size: 3rem;
-}
-
-.battle-screen-empty .battle-fullscreen-button {
-  position: fixed;
-  top: 20px;
-  right: 20px;
-}
-
-@media (max-width: 1050px) {
-  .battle-layout {
-    grid-template-columns: 1fr;
-  }
-  .battle-turn {
-    position: static;
-    grid-row: 1;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    align-items: center;
-  }
-  .battle-turn-name {
-    margin: 0;
-  }
-  .battle-turn > p {
-    grid-column: 1 / -1;
-  }
-}
-
-@media (max-width: 720px) {
-  .battle-combatant {
-    grid-template-columns: 28px 54px minmax(100px, 1fr) auto;
-  }
-  .battle-combatant .combatant-glyph svg {
-    width: 52px;
-    height: 52px;
-  }
-  .battle-conditions {
-    grid-column: 3 / -1;
-  }
-  .battle-vitals {
-    gap: 12px;
-  }
-  .battle-turn {
-    grid-template-columns: 1fr;
+  100% {
+    box-shadow: 0 0 0 3px transparent;
+    background: transparent;
   }
 }

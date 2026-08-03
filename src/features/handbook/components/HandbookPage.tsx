@@ -1,39 +1,108 @@
-import { useState } from "react";
-import { HANDBOOK } from "@/data/handbook";
-import { CLASSES } from "@/data/classes";
-import { ARMOR } from "@/data/armor";
-import { ABILITY_NAME } from "@/data/abilities";
-import { ChevronIcon } from "@/components/icons";
-import type { ArmorCategory } from "@/types";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { AsyncButton } from "@/components/AsyncButton";
 import { downloadHandbookPdf } from "../lib/handbookPdf";
+import { useHandbookIntent } from "../hooks/useHandbookIntent";
+import { useHandbookView } from "../hooks/useHandbookView";
+import { useHandbookSearch } from "../hooks/useHandbookSearch";
+import { HANDBOOK_TABS, type HandbookHit, type HandbookTab } from "../lib/handbookIndex";
+import { HandbookSearch } from "./HandbookSearch";
+import { ChaptersTab } from "./ChaptersTab";
+import { ClassesTab } from "./ClassesTab";
+import { RitesTab } from "./RitesTab";
+import { BackgroundsTab } from "./BackgroundsTab";
+import { FeatsTab } from "./FeatsTab";
+import { ArmoryTab } from "./ArmoryTab";
 
-type Tab = "rules" | "classes" | "armory";
+const TAB_LABEL: Record<HandbookTab, string> = {
+  rules: "Chapters",
+  classes: "Classes",
+  backgrounds: "Backgrounds",
+  feats: "Feats",
+  rites: "Rites",
+  armory: "Armory",
+};
 
 export function HandbookPage() {
-  const [tab, setTab] = useState<Tab>("rules");
+  // Deep links (`?tab=…&chapter=…&section=…`) pick the landing spot — the
+  // sheet's info dots open the handbook exactly where a topic is covered.
+  const intent = useHandbookIntent();
+  const [, setParams] = useSearchParams();
+  // location.key changes on every navigation — even a repeat click on the same
+  // hit (identical URL) — so keying the tabs on it re-runs the scroll + pulse.
+  const location = useLocation();
+  // Session memory: plain /handbook restores where the reader left off (tab,
+  // open cards, search, scroll); explicit deep links override + replace it.
+  const { tab, setTab, openChapter, setOpenChapter, openClass, setOpenClass } = useHandbookView();
+  const search = useHandbookSearch();
+
+  // A search hit jumps into the content: it becomes the deep-link params, so
+  // useHandbookView switches tab + opens the card, and for chapter sections
+  // useScrollToSection scrolls + pulses.
+  function openHit(hit: HandbookHit) {
+    // Clear the query directly too: re-clicking a hit whose params already
+    // match the URL must still close the results view, whatever the router
+    // does with an identical navigation.
+    search.setQuery("");
+    setParams(
+      (prev) => {
+        const next = new URLSearchParams(prev);
+        next.delete("q");
+        next.delete("chapter");
+        next.delete("section");
+        next.delete("item");
+        next.set("tab", hit.tab);
+        if (hit.chapter && hit.section) {
+          next.set("chapter", hit.chapter);
+          next.set("section", hit.section);
+        }
+        if (hit.item) next.set("item", hit.item);
+        return next;
+      },
+      { replace: true },
+    );
+  }
 
   return (
-    <div>
+    <div className="reading">
       <p className="eyebrow">The Codex</p>
       <h1 className="page-title">Player's Handbook</h1>
       <p className="page-intro">Everything you need to play Catacombs &amp; Starspawns.</p>
 
-      <div className="row" style={{ gap: 8, marginBottom: 18 }}>
-        <TabButton active={tab === "rules"} onClick={() => setTab("rules")}>
-          Rules
-        </TabButton>
-        <TabButton active={tab === "classes"} onClick={() => setTab("classes")}>
-          Classes
-        </TabButton>
-        <TabButton active={tab === "armory"} onClick={() => setTab("armory")}>
-          Armory
-        </TabButton>
-      </div>
+      <HandbookSearch search={search} onOpen={openHit} />
 
-      {tab === "rules" && <RulesTab />}
-      {tab === "classes" && <ClassesTab />}
-      {tab === "armory" && <ArmoryTab />}
+      {!search.active && (
+        <>
+          <div className="row" style={{ gap: 8, marginBottom: 18, flexWrap: "wrap" }}>
+            {HANDBOOK_TABS.map((t) => (
+              <TabButton key={t} active={tab === t} onClick={() => setTab(t)}>
+                {TAB_LABEL[t]}
+              </TabButton>
+            ))}
+          </div>
+
+          {tab === "rules" && (
+            <ChaptersTab
+              key={location.key}
+              focusChapter={intent.chapter}
+              focusSection={intent.section}
+              open={openChapter}
+              onOpen={setOpenChapter}
+            />
+          )}
+          {tab === "classes" && (
+            <ClassesTab
+              key={location.key}
+              focusClass={intent.item}
+              open={openClass}
+              onOpen={setOpenClass}
+            />
+          )}
+          {tab === "backgrounds" && <BackgroundsTab />}
+          {tab === "feats" && <FeatsTab />}
+          {tab === "rites" && <RitesTab />}
+          {tab === "armory" && <ArmoryTab />}
+        </>
+      )}
 
       <div className="rule-ornament">◆</div>
       <AsyncButton
@@ -78,203 +147,5 @@ function TabButton({
     >
       {children}
     </button>
-  );
-}
-
-function RulesTab() {
-  const [open, setOpen] = useState<string | null>(HANDBOOK[0]?.id ?? null);
-  return (
-    <div className="stack" style={{ gap: 10 }}>
-      {HANDBOOK.map((chapter) => {
-        const isOpen = open === chapter.id;
-        return (
-          <div className="card" key={chapter.id} style={{ padding: 0, overflow: "hidden" }}>
-            <button
-              type="button"
-              onClick={() => setOpen(isOpen ? null : chapter.id)}
-              style={{
-                width: "100%",
-                textAlign: "left",
-                background: "transparent",
-                border: 0,
-                padding: 16,
-                color: "var(--ink)",
-              }}
-            >
-              <div className="row between">
-                <div>
-                  <div style={{ fontFamily: "var(--font-display)", fontWeight: 600 }}>
-                    {chapter.title}
-                  </div>
-                  <div className="faint" style={{ fontSize: "0.84rem" }}>
-                    {chapter.summary}
-                  </div>
-                </div>
-                <ChevronIcon
-                  width={18}
-                  height={18}
-                  style={{
-                    transform: isOpen ? "rotate(90deg)" : "none",
-                    transition: "transform 0.2s ease",
-                    color: "var(--gold-dim)",
-                    flex: "none",
-                  }}
-                />
-              </div>
-            </button>
-            {isOpen && (
-              <div style={{ padding: "0 16px 16px" }} className="fade-in">
-                {chapter.sections.map((s) => (
-                  <div key={s.heading} style={{ marginTop: 12 }}>
-                    <h3 style={{ fontSize: "0.98rem" }}>{s.heading}</h3>
-                    {s.body.map((p, i) => (
-                      <p key={i} className="muted" style={{ fontSize: "0.94rem" }}>
-                        {p}
-                      </p>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-function ClassesTab() {
-  const [open, setOpen] = useState<string | null>(null);
-  return (
-    <div className="stack" style={{ gap: 10 }}>
-      {CLASSES.map((c) => {
-        const isOpen = open === c.id;
-        return (
-          <div className="card" key={c.id}>
-            <button
-              type="button"
-              onClick={() => setOpen(isOpen ? null : c.id)}
-              style={{ width: "100%", textAlign: "left", background: "transparent", border: 0, color: "var(--ink)", padding: 0 }}
-            >
-              <div className="row between">
-                <div>
-                  <div style={{ fontFamily: "var(--font-display)", fontSize: "1.1rem", fontWeight: 600 }}>
-                    {c.name}
-                  </div>
-                  <div className="gold" style={{ fontSize: "0.86rem" }}>{c.tagline}</div>
-                </div>
-                <ChevronIcon
-                  width={18}
-                  height={18}
-                  style={{
-                    transform: isOpen ? "rotate(90deg)" : "none",
-                    transition: "transform 0.2s ease",
-                    color: "var(--gold-dim)",
-                    flex: "none",
-                  }}
-                />
-              </div>
-            </button>
-
-            <div className="derived-grid" style={{ marginTop: 12 }}>
-              <Mini label="Hit Die" value={`d${c.hitDie}`} />
-              <Mini label="Speed" value={`${c.speedFt}ft`} />
-              <Mini label="Primary" value={c.primaryAbility} />
-              <Mini label="Saves" value={c.savingThrows.map((k) => ABILITY_NAME[k].slice(0, 3)).join("·")} />
-            </div>
-
-            {isOpen && (
-              <div className="fade-in" style={{ marginTop: 12 }}>
-                <p className="muted" style={{ fontSize: "0.94rem" }}>{c.blurb}</p>
-                {c.signature && (
-                  <div className="banner banner-warn" style={{ marginBottom: 12 }}>
-                    <strong className="gold">Signature.</strong> {c.signature}
-                  </div>
-                )}
-                {c.baseClass && <Field label="Built on" value={`${c.baseClass} (5e)`} />}
-                <Field label="Saving throws" value={c.savingThrows.map((k) => ABILITY_NAME[k]).join(", ")} />
-                <Field label="Skills" value={`Choose ${c.skillChoices.count}: ${c.skillChoices.options.join(", ")}`} />
-                <Field label="Weapons" value={c.weaponProficiencies} />
-                <Field label="Tools" value={c.toolProficiencies} />
-                <Field label="Armor training" value={c.armorTraining.join(", ")} />
-                <hr className="divider" />
-                <p className="eyebrow" style={{ marginBottom: 8 }}>Starting equipment</p>
-                <div className="chip-row">
-                  {c.startingEquipment.map((i) => (
-                    <span className="chip" key={i}>{i}</span>
-                  ))}
-                </div>
-                {c.features && c.features.length > 0 && (
-                  <>
-                    <hr className="divider" />
-                    <p className="eyebrow" style={{ marginBottom: 8 }}>Level progression</p>
-                    <ul className="list-reset pill-list">
-                      {c.features.map((f, i) => (
-                        <li key={i}>
-                          <div className="row" style={{ gap: 8, alignItems: "baseline" }}>
-                            <span className="role-tag" style={{ flex: "none" }}>Lv {f.level}</span>
-                            <span style={{ fontWeight: 600 }}>{f.name}</span>
-                          </div>
-                          <div className="muted" style={{ fontSize: "0.88rem", marginTop: 2 }}>{f.text}</div>
-                        </li>
-                      ))}
-                    </ul>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-const ARMOR_GROUPS: ArmorCategory[] = ["Main Armor", "Add-on Armor", "Extra"];
-
-function ArmoryTab() {
-  return (
-    <div className="stack" style={{ gap: 14 }}>
-      {ARMOR_GROUPS.map((group) => (
-        <div key={group}>
-          <p className="eyebrow" style={{ marginBottom: 8 }}>{group}</p>
-          <div className="card">
-            <ul className="list-reset pill-list">
-              {ARMOR.filter((a) => a.category === group).map((a) => (
-                <li key={a.id}>
-                  <div className="row between">
-                    <span style={{ fontWeight: 600 }}>{a.name}</span>
-                    <span className="gold" style={{ flex: "none" }}>{a.ac}</span>
-                  </div>
-                  <div className="faint" style={{ fontSize: "0.84rem", marginTop: 2 }}>
-                    {a.weightLb} lb · {a.special}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function Mini({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="stat" style={{ padding: "8px 4px" }}>
-      <div className="stat-label">{label}</div>
-      <div style={{ fontFamily: "var(--font-display)", fontSize: "0.92rem", marginTop: 2 }}>{value}</div>
-    </div>
-  );
-}
-
-function Field({ label, value }: { label: string; value: string }) {
-  return (
-    <div style={{ marginTop: 8 }}>
-      <span className="faint" style={{ fontSize: "0.78rem", letterSpacing: "0.08em", textTransform: "uppercase" }}>
-        {label}
-      </span>
-      <div style={{ fontSize: "0.94rem" }}>{value}</div>
-    </div>
   );
 }

@@ -126,47 +126,79 @@ export const ARMOR: ArmorPiece[] = [
       "*Only grants AC while worn underneath Main Armor. Can conceal Insignificant items, making them harder to steal or strip away.",
   },
 
-  // --- Extras (flavour / utility, AC 0) ---
+  // --- Armor Upgrades (modify armor pieces; not Add-on pieces) ---
+  {
+    id: "studs",
+    name: "Studs",
+    category: "Armor Upgrade",
+    ac: "+1 / +2 AC",
+    acValue: 1,
+    weightLb: 3,
+    special:
+      "Added to Add-on Armor pieces (+3 lb. each). One studded piece grants +1 AC; five studded pieces grant +2 AC. While wearing studded armor you have disadvantage on Dexterity (Stealth) checks to hide or move silently.",
+  },
+
+  // --- Extras (flavour / utility, AC 0; only ONE worn per subcategory) ---
   {
     id: "tricorn",
     name: "Tricorn",
     category: "Extra",
+    subcategory: "Head Gear",
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations. Reads as a hard-hitting brawler.",
+    special: "May hide face transformations.",
+    impression: "Reads as a hard-hitting brawler.",
   },
   {
     id: "cavalier-hat",
     name: "Cavalier Hat",
     category: "Extra",
+    subcategory: "Head Gear",
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations. Reads as someone dexterous.",
+    special: "May hide face transformations.",
+    impression: "Reads as someone dexterous.",
   },
   {
     id: "cowl",
     name: "Cowl",
     category: "Extra",
+    subcategory: "Head Gear",
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations. Reads as someone with old knowledge.",
+    special: "May hide face transformations.",
+    impression: "Reads as someone with old knowledge.",
   },
   {
     id: "wide-brim-hat",
     name: "Wide Brim Hat",
     category: "Extra",
+    subcategory: "Head Gear",
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations. Reads as a skilled marksman.",
+    special: "May hide face transformations.",
+    impression: "Reads as a skilled marksman.",
+  },
+  {
+    id: "small-scarf",
+    name: "Small Scarf",
+    category: "Extra",
+    subcategory: "Scarf",
+    ac: "0",
+    acValue: 0,
+    weightLb: 1,
+    special:
+      "May hide face transformations, but gives little protection against smoke, ash, cold or stench.",
   },
   {
     id: "large-scarf",
     name: "Large Scarf",
     category: "Extra",
+    subcategory: "Scarf",
     ac: "0",
     acValue: 0,
     weightLb: 2,
@@ -177,6 +209,7 @@ export const ARMOR: ArmorPiece[] = [
     id: "leather-gloves",
     name: "Leather Gloves",
     category: "Extra",
+    subcategory: "Gloves",
     ac: "0",
     acValue: 0,
     weightLb: 2,
@@ -187,14 +220,29 @@ export const ARMOR: ArmorPiece[] = [
     id: "leather-boots",
     name: "Leather Boots",
     category: "Extra",
+    subcategory: "Boots",
     ac: "0",
     acValue: 0,
     weightLb: 2,
     special: "Prevents barefoot penalties.",
   },
+  // The Robe of the Deepcallers is a UNIQUE item that "is also under the
+  // Equipment Category: Armor. You can equip this as any other Armor" (Unique
+  // Items). It reuses the legacy catalog item id `robe` so existing Deepcaller
+  // inventories keep resolving; being `unique`, it's never offered at creation.
+  {
+    id: "robe",
+    name: "Robe of the Deepcallers",
+    category: "Extra",
+    subcategory: "Robe",
+    ac: "0",
+    acValue: 0,
+    weightLb: 4,
+    special:
+      "If worn continuously since your previous Long Rest, add +2 to your Sanity Die roll when rolling it during a Long Rest.",
+    unique: true,
+  },
 ];
-
-export const MAIN_ARMOR = ARMOR.filter((a) => a.category === "Main Armor");
 
 export const ARMOR_BY_ID: Record<string, ArmorPiece> = Object.fromEntries(
   ARMOR.map((a) => [a.id, a]),

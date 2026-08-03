@@ -1,0 +1,1838 @@
+/* The paper character sheet — a faithful digital port of the DM's hand-drawn
+ * R1.0 sheets (see resources). Everything is scoped under .papersheet / the
+ * .papersheet-modal overlay so the sheet's "aged paper" look never leaks into
+ * the app chrome (and vice versa). Sizes are in mm on purpose: the sheet IS
+ * an A4 document, on screen and in print. */
+
+.papersheet-modal,
+.papersheet {
+  --paper: #f6f1e5;
+  --ink: #211d17;
+  --ink-soft: #4a443a;
+  --blood: #8e1f1f;
+  --marker-blue: #3a63a8;
+  --rule: #211d17;
+  --field: #7a6f5c;
+}
+
+/* ---------- the full-screen overlay ---------- */
+.papersheet-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 70; /* above .modal-backdrop (50) */
+  overflow: auto;
+  -webkit-overflow-scrolling: touch;
+  background: #26221c;
+  padding: max(18px, env(safe-area-inset-top)) 8px calc(env(safe-area-inset-bottom) + 80px);
+  font-family: "Alegreya Sans SC", sans-serif;
+}
+
+/* ---------- toolbar ---------- */
+.papersheet-toolbar {
+  max-width: 210mm;
+  margin: 0 auto 18px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  color: #d8cfbc;
+  /* anchor for the step-guidance popover */
+  position: relative;
+}
+.papersheet-toolbar h1 {
+  font-family: "Cinzel", serif;
+  font-weight: 900;
+  font-size: 17px;
+  letter-spacing: 0.14em;
+  margin: 0 auto 0 0;
+  color: #e6ddc8;
+}
+.papersheet-toolbar button,
+.papersheet-toolbar a {
+  font-family: "Alegreya Sans SC", sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  background: var(--blood);
+  color: #f3e9d8;
+  border: 1px solid #5e1414;
+  border-radius: 3px;
+  padding: 8px 16px;
+  cursor: pointer;
+  width: auto;
+  text-decoration: none;
+  display: inline-block;
+}
+.papersheet-toolbar .ghost {
+  background: transparent;
+  color: #d8cfbc;
+  border: 1px solid #6b6353;
+}
+.papersheet-toolbar button:hover,
+.papersheet-toolbar a:hover {
+  filter: brightness(1.15);
+}
+.papersheet-toolbar label {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  font-size: 12.5px;
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  margin: 0;
+}
+.papersheet-toolbar label input[type="checkbox"] {
+  width: 13px;
+  height: 13px;
+  margin: 0;
+  accent-color: var(--blood);
+}
+.papersheet-toolbar .savemsg {
+  font-size: 12px;
+  letter-spacing: 0.06em;
+  color: #9a917d;
+  min-width: 60px;
+  text-align: right;
+}
+
+/* the step selector — round numbered buttons echoing the sheet's red badges */
+.papersheet-toolbar .stepsel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.papersheet-toolbar .steplbl {
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-right: 2px;
+}
+.papersheet-toolbar .stepbtn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #d8cfbc;
+  border: 1.4px solid #6b6353;
+  font-family: "Caveat", cursive;
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.papersheet-toolbar .stepbtn.active {
+  background: var(--blood);
+  border-color: #5e1414;
+  color: #f3e9d8;
+}
+
+/* step guidance — "What to do in step N?" + its popover. The panel hangs off
+ * the TOOLBAR (position: relative above), not a sheet page, so the pages'
+ * overflow: hidden can never clip it; z-index lifts it over the paper. */
+.papersheet-toolbar .stepguide-pop {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  left: 0;
+  width: min(340px, 100%);
+  background: #fffdf7;
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 3px 3px 0 rgba(33, 29, 23, 0.28);
+  padding: 10px 12px;
+  text-align: left;
+  color: var(--ink-soft);
+}
+.papersheet-toolbar .stepguide-pop b {
+  display: block;
+  font-family: "Cinzel", serif;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  margin-bottom: 5px;
+  color: var(--ink);
+}
+.papersheet-toolbar .stepguide-pop ol {
+  margin: 0 0 6px;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.papersheet-toolbar .stepguide-pop li {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.4;
+}
+.papersheet-toolbar .stepguide-pop li::marker {
+  color: var(--blood);
+  font-weight: 700;
+}
+.papersheet-toolbar .stepguide-pop .stepguide-ref {
+  display: block;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--blood);
+}
+.papersheet-toolbar .stepguide-pop a {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 0;
+  font-size: 11.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  background: transparent;
+  border: none;
+  color: var(--marker-blue);
+  text-decoration: underline;
+}
+
+/* the Guides menu — a compact popover with the two guidance toggles. Like the
+ * step-guidance panel it hangs off the TOOLBAR (position: relative above), so
+ * it can never be clipped, anchored to the right where the button sits. */
+.papersheet-toolbar .guides-pop {
+  position: absolute;
+  z-index: 10;
+  top: calc(100% + 6px);
+  right: 0;
+  min-width: 180px;
+  background: #fffdf7;
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 3px 3px 0 rgba(33, 29, 23, 0.28);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  text-align: left;
+}
+.papersheet-toolbar .guides-pop label {
+  color: var(--ink-soft);
+  font-weight: 600;
+}
+
+/* ---------- the sheet itself ---------- */
+.papersheet {
+  font-family: "Alegreya Sans SC", sans-serif;
+  color: var(--ink);
+}
+.papersheet * {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ---------- pages ---------- */
+.papersheet .page {
+  width: 210mm;
+  /* A4-proportioned, but allowed to GROW: print reflows pages at natural
+   * height anyway (see @media print), and a fixed 297mm let overgrown
+   * content run under the absolutely-anchored .pageno footer on screen.
+   * min-height keeps short pages looking like full sheets. */
+  min-height: 297mm;
+  overflow: hidden;
+  background: var(--paper);
+  margin: 0 auto 26px;
+  padding: 12mm 12mm 14mm;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+  background-image: radial-gradient(ellipse at 20% 0%, rgba(255, 255, 255, 0.5), transparent 60%);
+}
+.papersheet .pageno {
+  position: absolute;
+  bottom: 4.5mm;
+  right: 12mm;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+}
+
+/* ---------- step badges (the red numbers) ---------- */
+.papersheet .st {
+  font-family: "Caveat", cursive;
+  font-weight: 600;
+  font-style: normal;
+  color: var(--blood);
+  font-size: 15px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 15px;
+  height: 15px;
+  border: 1.2px solid var(--blood);
+  border-radius: 50%;
+  /* Centered on its label's TEXT line (middle alignment, symmetric negative
+   * margins): the 15px badge overflows its smaller line box EVENLY up and
+   * down, so it never reaches the writing line / heading above the label nor
+   * the field below (top-aligned + translateY(-2px), it used to sit ON the
+   * underlines — see the badge-overlap sweep). Negative vertical margins keep
+   * the badge from growing the line box — with steps shown, page 1 would
+   * otherwise creep past 297mm and spill a sixth page into the printed PDF. */
+  vertical-align: middle;
+  margin: -4px 0 -4px 4px;
+  padding: 0 2px;
+}
+/* The reference sheet's red handwritten hint above the name line. Absolutely
+ * positioned into the field's slack space so showing/hiding step numbers
+ * never changes page 1's height (a taller page overflows the printed A4). */
+.papersheet .st-note {
+  position: absolute;
+  top: -6mm;
+  left: 0;
+  font-family: "Caveat", cursive;
+  color: var(--blood);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-transform: none;
+  white-space: nowrap;
+}
+.papersheet.hide-steps .st,
+.papersheet.hide-steps .st-note {
+  display: none;
+}
+/* toolbar "Show info icons" toggle — hides the ⓘ dots (see InfoDot.tsx) */
+.papersheet.hide-info .info {
+  display: none;
+}
+
+/* ---------- step spotlight (toolbar step selector) ----------
+ * Every sheet "unit" carries a `data-step` attribute (space-separated when it
+ * spans several steps). With a step active (`data-active-step` on the root),
+ * matching units get a blood-red outline + faint tint; everything else fades.
+ * The dim is applied exactly once per branch: only to children of an element
+ * that still contains a match (or to whole match-less pages) — so opacities
+ * never stack. Screen only: a printed sheet must always be full-ink. */
+@media screen {
+  .papersheet .page,
+  .papersheet .page * {
+    transition: opacity 0.18s ease;
+  }
+  .papersheet[data-active-step="1"] > .page:not(:has([data-step~="1"])),
+  .papersheet[data-active-step="2"] > .page:not(:has([data-step~="2"])),
+  .papersheet[data-active-step="3"] > .page:not(:has([data-step~="3"])),
+  .papersheet[data-active-step="4"] > .page:not(:has([data-step~="4"])),
+  .papersheet[data-active-step="5"] > .page:not(:has([data-step~="5"])),
+  .papersheet[data-active-step="1"] :has([data-step~="1"]) > :not([data-step~="1"]):not(:has([data-step~="1"])),
+  .papersheet[data-active-step="2"] :has([data-step~="2"]) > :not([data-step~="2"]):not(:has([data-step~="2"])),
+  .papersheet[data-active-step="3"] :has([data-step~="3"]) > :not([data-step~="3"]):not(:has([data-step~="3"])),
+  .papersheet[data-active-step="4"] :has([data-step~="4"]) > :not([data-step~="4"]):not(:has([data-step~="4"])),
+  .papersheet[data-active-step="5"] :has([data-step~="5"]) > :not([data-step~="5"]):not(:has([data-step~="5"])) {
+    opacity: 0.25;
+  }
+  .papersheet[data-active-step="1"] [data-step~="1"],
+  .papersheet[data-active-step="2"] [data-step~="2"],
+  .papersheet[data-active-step="3"] [data-step~="3"],
+  .papersheet[data-active-step="4"] [data-step~="4"],
+  .papersheet[data-active-step="5"] [data-step~="5"] {
+    outline: 1.6px solid rgba(142, 31, 31, 0.55);
+    outline-offset: 2px;
+    border-radius: 2px;
+    /* a whisper of red over the unit — background-image so units that set
+     * their own background-color (plaques, frames) keep it underneath */
+    background-image: linear-gradient(rgba(142, 31, 31, 0.05), rgba(142, 31, 31, 0.05));
+  }
+}
+
+/* ---------- generic fields ---------- */
+.papersheet input[type="text"],
+.papersheet textarea {
+  font-family: "Caveat", cursive;
+  font-size: 19px;
+  font-weight: 500;
+  color: #2b2013;
+  background: transparent;
+  border: none;
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  width: 100%;
+}
+.papersheet input[type="text"] {
+  border-bottom: 1.4px solid var(--field);
+  padding: 0 2px 1px;
+}
+.papersheet input[type="text"]:focus {
+  border-bottom-color: var(--blood);
+}
+.papersheet textarea {
+  resize: none;
+  line-height: 1.35;
+  padding: 2px 4px;
+}
+.papersheet input[type="checkbox"] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 13px;
+  height: 13px;
+  border: 1.6px solid var(--ink);
+  border-radius: 2px;
+  cursor: pointer;
+  flex: none;
+  vertical-align: middle;
+  position: relative;
+  background: var(--paper);
+}
+.papersheet input[type="checkbox"]::before {
+  content: none;
+}
+.papersheet input[type="checkbox"]:checked::after {
+  content: "✕";
+  position: absolute;
+  inset: -3px 0 0 0;
+  text-align: center;
+  font-family: "Caveat", cursive;
+  font-size: 15px;
+  color: var(--blood);
+  line-height: 13px;
+  font-weight: 600;
+}
+.papersheet input:disabled,
+.papersheet textarea:disabled {
+  opacity: 1;
+  cursor: default;
+}
+
+/* the class dropdown — dressed as a handwriting line. The native arrow is
+ * replaced by a small inked chevron so it still reads as tappable. */
+.papersheet select {
+  font-family: "Caveat", cursive;
+  font-size: 19px;
+  font-weight: 500;
+  color: #2b2013;
+  border: none;
+  border-bottom: 1.4px solid var(--field);
+  border-radius: 0;
+  outline: none;
+  box-shadow: none;
+  width: 100%;
+  /* block + pinned height (a bare inline select gets ~3px of extra chrome
+   * and a baseline gap) so the Class line sits exactly where the old
+   * free-text field did — on screen AND in the printed PDF */
+  display: block;
+  height: 1.35em;
+  padding: 0 20px 1px 2px;
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+  background: transparent
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 L6 6.5 L11 1.5' fill='none' stroke='%234a443a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")
+    no-repeat right 4px center / 11px 8px;
+}
+.papersheet select:focus {
+  border-bottom-color: var(--blood);
+}
+.papersheet select:disabled {
+  opacity: 1;
+  cursor: default;
+  color: #2b2013;
+  background-image: none; /* read-only (party view): no tap affordance */
+}
+.papersheet .lbl {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--ink);
+}
+.papersheet .lbl.small {
+  font-size: 9.5px;
+  color: var(--ink-soft);
+}
+
+/* section headers */
+.papersheet h2.sec {
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+  border-bottom: 2px solid var(--rule);
+  padding-bottom: 3px;
+  margin-bottom: 6px;
+  color: var(--ink);
+}
+
+/* framed boxes */
+.papersheet .frame {
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.28);
+}
+.papersheet .frame .head {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  border-bottom: 1.4px solid var(--rule);
+  padding: 3px 7px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(33, 29, 23, 0.05);
+}
+
+/* ================= PAGE 1 ================= */
+.papersheet .p1-top {
+  display: grid;
+  grid-template-columns: 1fr 1.05fr 1.25fr;
+  gap: 8mm;
+  align-items: start;
+}
+.papersheet .idfields .fld {
+  margin-bottom: 6mm;
+  position: relative;
+}
+.papersheet .idfields input,
+.papersheet .idfields select {
+  font-size: 21px;
+}
+.papersheet .idfields .lbl {
+  display: block;
+  margin-top: 2px;
+}
+
+/* the eye emblem (and, under it, the little class figure) */
+.papersheet .eye-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 2mm;
+}
+.papersheet .eye {
+  position: relative;
+  width: 68mm;
+  height: 38mm;
+}
+.papersheet .eye svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.papersheet .eye .iris-stack {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 20mm;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.papersheet .eye .iris-stack input {
+  font-size: 19px;
+  text-align: center;
+  border-bottom: none;
+  font-weight: 600;
+  height: 6.5mm;
+  line-height: 1;
+}
+.papersheet .eye .iris-stack .lbl {
+  font-size: 7.5px;
+  letter-spacing: 0.16em;
+  line-height: 1;
+  white-space: nowrap;
+  /* A flex row that grows to CONTAIN the guide badges (15px in a 7.5px text
+   * line — inline they'd bleed onto the level/insight writing lines). Safe
+   * here only because the iris-stack is absolutely centered in the eye: the
+   * extra height stays inside the iris and never moves page 1's layout. */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+}
+.papersheet .eye .iris-stack .lbl .st,
+.papersheet .eye .iris-stack .lbl .info {
+  margin: 0;
+}
+.papersheet .eye .iris-rule {
+  width: 15mm;
+  height: 1.3px;
+  background: var(--ink);
+  margin: 1mm 0;
+}
+
+/* ---- the animated class figure (ClassFigure/classFigures.tsx) ----
+ * FIXED height in the eye column's slack space: whichever class is chosen (or
+ * none — then nothing renders), page 1's layout never moves. Screen-only
+ * decoration: @media print hides it so the PDFs stay exactly as before. */
+.papersheet .classfig {
+  height: 30mm;
+  margin-top: 2mm;
+  display: flex;
+  justify-content: center;
+}
+.papersheet .classfig svg {
+  height: 100%;
+  width: auto;
+  display: block;
+  overflow: visible; /* the waving hand strays past the viewBox */
+}
+/* idle motions — keyframed transforms on the figure's SVG groups */
+.papersheet .classfig .cf-bob {
+  animation: cf-bob 3.8s ease-in-out infinite;
+}
+.papersheet .classfig .cf-float {
+  animation: cf-bob 4.6s ease-in-out infinite;
+}
+.papersheet .classfig .cf-breathe {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: cf-breathe 3.8s ease-in-out infinite;
+}
+.papersheet .classfig .cf-wave {
+  transform-box: fill-box;
+  transform-origin: 4% 96%; /* the shoulder — bottom-left of the raised arm */
+  animation: cf-wave 2.6s ease-in-out infinite;
+}
+.papersheet .classfig .cf-sway {
+  transform-box: fill-box;
+  transform-origin: 50% 0%; /* hangs from the waist */
+  animation: cf-sway 4.2s ease-in-out infinite;
+}
+.papersheet .classfig .cf-sway-b {
+  transform-box: fill-box;
+  transform-origin: 50% 100%; /* planted on the ground / held low */
+  animation: cf-sway-b 4.4s ease-in-out infinite;
+}
+.papersheet .classfig .cf-tent {
+  transform-box: fill-box;
+  transform-origin: 50% 100%;
+  animation: cf-sway 3.4s ease-in-out infinite;
+}
+.papersheet .classfig .cf-pennant {
+  transform-box: fill-box;
+  transform-origin: 0% 50%; /* pinned to the spear shaft */
+  animation: cf-pennant 3.2s ease-in-out infinite;
+}
+.papersheet .classfig .d2 {
+  animation-delay: -1.1s;
+}
+.papersheet .classfig .d3 {
+  animation-delay: -2.3s;
+}
+@keyframes cf-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-1.6px); }
+}
+@keyframes cf-breathe {
+  0%, 100% { transform: scaleY(1); }
+  50% { transform: scaleY(1.025); }
+}
+@keyframes cf-wave {
+  0%, 100% { transform: rotate(-6deg); }
+  50% { transform: rotate(12deg); }
+}
+@keyframes cf-sway {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+@keyframes cf-sway-b {
+  0%, 100% { transform: rotate(-1.6deg); }
+  50% { transform: rotate(1.6deg); }
+}
+@keyframes cf-pennant {
+  0%, 100% { transform: scaleX(1) rotate(0deg); }
+  50% { transform: scaleX(0.82) rotate(4deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .papersheet .classfig * {
+    animation: none !important;
+  }
+}
+
+/* vitals column */
+.papersheet .vitals {
+  display: flex;
+  flex-direction: column;
+  gap: 2.2mm;
+}
+.papersheet .vrow {
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.28);
+  padding: 1.6mm 3mm;
+}
+.papersheet .vrow .rowhead {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 0.8mm;
+}
+.papersheet .minifields {
+  display: flex;
+  gap: 3mm;
+  align-items: flex-end;
+}
+.papersheet .minifields .mf {
+  flex: 1;
+  text-align: center;
+}
+.papersheet .minifields .mf input {
+  text-align: center;
+  font-size: 15px;
+  height: 5.5mm;
+}
+.papersheet .minifields .mf .lbl.small {
+  display: block;
+  margin-top: 1px;
+}
+.papersheet .mf.tight {
+  flex: 0.8;
+}
+.papersheet .sanity-insane {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+.papersheet .deathsaves {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5mm;
+}
+.papersheet .ds-line {
+  display: flex;
+  align-items: center;
+  gap: 2mm;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+/* Typed as input[type=checkbox].pip so the circle beats the generic checkbox
+ * square (the original HTML lost this specificity fight and drew squares —
+ * the hand-drawn reference sheet has circles). */
+.papersheet input[type="checkbox"].pip {
+  appearance: none;
+  width: 11px;
+  height: 11px;
+  border: 1.6px solid var(--ink);
+  border-radius: 50%;
+  cursor: pointer;
+  position: relative;
+  background: var(--paper);
+}
+.papersheet input[type="checkbox"].pip:checked {
+  background: var(--blood);
+  border-color: var(--blood);
+}
+.papersheet input[type="checkbox"].pip:checked::after {
+  content: none;
+}
+.papersheet input[type="checkbox"].pip.fail {
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+}
+
+/* blue divider — nod to the marker line on the original */
+.papersheet .blue-rule {
+  height: 2.6px;
+  background: var(--marker-blue);
+  border-radius: 2px;
+  margin: 4.5mm 0;
+  opacity: 0.85;
+}
+
+/* Section title: names what lives below a divider ("ABILITIES & SKILLS").
+ * Sits tight under the blue rule; ornaments keep it in the sheet's voice. */
+.papersheet .sec-title {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  margin: -3mm 0 1mm;
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  font-size: 11.5px;
+  letter-spacing: 0.22em;
+  color: var(--ink-soft);
+  text-align: center;
+  justify-content: center;
+}
+.papersheet .sec-title::before,
+.papersheet .sec-title::after {
+  content: "";
+  flex: 1;
+  max-width: 18mm;
+  height: 1.2px;
+  background: rgba(33, 29, 23, 0.35);
+}
+
+/* Column eyebrows for the unlabelled top-of-page regions. */
+.papersheet .col-title {
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+  margin-bottom: 1.5mm;
+}
+/* The name field's red "Your ACTUAL name" note floats 6mm above it — leave
+ * that much air under this column's title so they never overlap. */
+.papersheet .idfields .col-title {
+  margin-bottom: 7mm;
+}
+
+/* stat grid */
+.papersheet .statgrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 5mm 7mm;
+}
+.papersheet .profbox {
+  border: 1.8px solid var(--rule);
+  border-radius: 3px;
+  width: 26mm;
+  height: 16mm;
+  margin: 1mm auto 0;
+  background: rgba(255, 255, 255, 0.35);
+}
+.papersheet .profbox input {
+  height: 100%;
+  /* left-aligned like every other box's value (it printed dead-centre) */
+  text-align: left;
+  padding-left: 3mm;
+  font-size: 26px;
+  border-bottom: none;
+  font-weight: 600;
+}
+.papersheet .abil {
+  margin-bottom: 2.6mm;
+}
+.papersheet .abil h3 {
+  font-family: "Cinzel", serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  margin-bottom: 1.5mm;
+  color: var(--ink);
+}
+.papersheet .scoremod {
+  display: flex;
+  align-items: center;
+  margin-bottom: 1.4mm;
+}
+.papersheet .score {
+  width: 11mm;
+  height: 11mm;
+  border: 1.8px solid var(--rule);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.35);
+  z-index: 1;
+}
+.papersheet .score input,
+.papersheet .mod input {
+  height: 100%;
+  text-align: center;
+  border-bottom: none;
+  font-size: 19px;
+}
+/* The mod circle overlaps the score box's right edge (the reference's look) —
+ * pad the score's digits away from the overlap so "14" never touches the
+ * circle, and nudge the modifier's digits toward the circle's visible centre. */
+.papersheet .score input {
+  padding-right: 3.5mm;
+}
+.papersheet .mod input {
+  padding-left: 1.5mm;
+}
+.papersheet .mod {
+  width: 13mm;
+  height: 13mm;
+  border: 1.8px solid var(--rule);
+  border-radius: 50%;
+  margin-left: -3mm;
+  background: var(--paper);
+}
+.papersheet .mod input {
+  font-size: 22px;
+  font-weight: 600;
+}
+.papersheet .sm-lbls {
+  display: flex;
+  font-size: 8px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  gap: 5mm;
+  margin-left: 1mm;
+}
+.papersheet .skill {
+  display: flex;
+  align-items: center;
+  gap: 1.6mm;
+  margin-bottom: 0.5mm;
+}
+.papersheet .skill .sname {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  white-space: nowrap;
+}
+.papersheet .skill input[type="text"] {
+  width: 11mm;
+  flex: none;
+  text-align: center;
+  font-size: 14px;
+  height: 5mm;
+  margin-left: auto;
+}
+.papersheet .skill .prof {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+}
+.papersheet .skill.save {
+  border-bottom: 1.2px solid rgba(33, 29, 23, 0.35);
+  padding-bottom: 0.9mm;
+  margin-bottom: 1.3mm;
+}
+
+/* blood tinge */
+.papersheet .tinge {
+  text-align: center;
+  margin-top: 3mm;
+}
+.papersheet .tinge h3 {
+  font-family: "Cinzel", serif;
+  font-size: 12.5px;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  color: var(--ink);
+}
+.papersheet .drop {
+  position: relative;
+  width: 15mm;
+  height: 19mm;
+  margin: 1.5mm auto 0;
+}
+.papersheet .drop svg {
+  width: 100%;
+  height: 100%;
+}
+/* Blood Tinge is held or it isn't — a lone check inside the drop. */
+.papersheet .drop input[type="checkbox"] {
+  position: absolute;
+  left: 50%;
+  top: 60%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  border-width: 2px;
+  border-radius: 3px;
+  background: transparent;
+}
+.papersheet .drop input[type="checkbox"]:checked::after {
+  font-size: 21px;
+  line-height: 16px;
+  inset: -2px 0 0 0;
+}
+.papersheet .p1-bottom {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 7mm;
+  /* Tight enough that the row clears the absolutely-anchored page footer. */
+  margin-top: 2.5mm;
+  /* Natural (equal) box heights: the SPEED box's "(SIZE: MEDIUM)" caption
+   * lives in a wrapper div — without this the two neighbouring boxes
+   * stretch to the wrapper's height and render taller than SPEED. */
+  align-items: start;
+}
+.papersheet .bigstat {
+  border: 1.8px solid var(--rule);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.3);
+}
+.papersheet .bigstat .head {
+  justify-content: center;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  border-bottom: 1.4px solid var(--rule);
+  padding: 3px 7px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(33, 29, 23, 0.05);
+}
+.papersheet .bigstat input {
+  height: 10.5mm;
+  text-align: center;
+  font-size: 22px;
+  border-bottom: none;
+  font-weight: 600;
+}
+.papersheet .sizecap {
+  text-align: center;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink-soft);
+  margin-top: 1mm;
+}
+
+/* ================= PAGE 2 ================= */
+.papersheet .p2-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 7mm;
+}
+.papersheet .ac-row {
+  display: flex;
+  gap: 6mm;
+  align-items: flex-start;
+  margin-bottom: 5mm;
+  padding-top: 4mm;
+}
+.papersheet .shield {
+  position: relative;
+  width: 24mm;
+  flex: none;
+}
+/* The graphic wrapper scopes the AC input's absolute centering so it can't
+ * catch the Shield Arm checkbox (it used to, stacking the checkbox — and its
+ * checked ✕ — on top of the AC number). */
+.papersheet .shield-gfx {
+  position: relative;
+  width: 100%;
+  height: 28mm;
+}
+.papersheet .shield-gfx svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+.papersheet .shield-gfx input {
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  transform: translate(-50%, -50%);
+  width: 13mm;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  border-bottom: none;
+}
+.papersheet .shield .lbl {
+  position: absolute;
+  top: -5.5mm;
+  left: -6mm;
+  right: -6mm;
+  text-align: center;
+  white-space: nowrap;
+}
+/* Anchored in flow directly under the shield graphic — the checked ✕ (which
+ * overflows its 13px box upward) lands in this gap, well clear of the AC. */
+.papersheet .shieldarm {
+  margin-top: 2.5mm;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.papersheet .armorcat {
+  flex: 1;
+}
+.papersheet .armorcat .fld {
+  margin-bottom: 4mm;
+}
+.papersheet .wt2 {
+  display: flex;
+  gap: 5mm;
+}
+.papersheet .wt2 .fld {
+  flex: 1;
+}
+.papersheet .dashed-rule {
+  border-top: 2px dashed rgba(33, 29, 23, 0.4);
+  margin: 2mm 0 5mm;
+}
+
+/* ---- hunter figure: paper-doll gear layout ---- */
+.papersheet .figure {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 950 / 1200;
+  margin-top: 3mm;
+}
+.papersheet .figure > svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.papersheet .plaque {
+  position: absolute;
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  background: var(--paper);
+  box-shadow: 2px 2px 0 rgba(33, 29, 23, 0.12);
+  padding: 2.6mm 2mm 1mm;
+}
+.papersheet .plaque .plbl {
+  position: absolute;
+  top: -2.4mm;
+  left: 2mm;
+  background: var(--paper);
+  padding: 0 1.4mm;
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  white-space: nowrap;
+  line-height: 1.4;
+}
+.papersheet .plaque input {
+  border-bottom: none;
+  font-size: 16px;
+  height: 6mm;
+}
+.papersheet .plaque textarea {
+  font-size: 16px;
+}
+.papersheet .pl-head { left: 0; top: 2%; width: 33%; }
+.papersheet .pl-scarf { left: 67%; top: 2%; width: 33%; }
+.papersheet .pl-gloves { left: 0; top: 44%; width: 29%; }
+.papersheet .pl-main { left: 68.5%; top: 31%; width: 31.5%; }
+.papersheet .pl-boots { left: 65%; top: 88%; width: 35%; }
+
+.papersheet .rcol .frame {
+  margin-bottom: 3.5mm;
+}
+.papersheet .rcol textarea {
+  width: 100%;
+}
+.papersheet .addons {
+  margin-top: 2mm;
+}
+.papersheet .addon-row {
+  display: flex;
+  align-items: center;
+  gap: 4mm;
+  margin-bottom: 2.2mm;
+}
+.papersheet .addon-row .frame {
+  flex: 1;
+  padding: 1mm 2mm;
+}
+.papersheet .addon-row input[type="text"] {
+  border-bottom: none;
+  font-size: 17px;
+}
+.papersheet .studs {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  white-space: nowrap;
+}
+.papersheet .slots {
+  margin-top: 1mm;
+}
+.papersheet .slotline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3mm;
+  margin-bottom: 2.2mm;
+}
+.papersheet .slotline .lbl {
+  font-size: 10px;
+}
+/* A storage slot is used or it isn't — the box IS a checkbox (same look as
+ * the old text box; the checked ✕ scales up to fill it). */
+.papersheet input[type="checkbox"].slotbox {
+  width: 8mm;
+  height: 8mm;
+  border: 1.6px solid var(--rule);
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.35);
+}
+.papersheet input[type="checkbox"].slotbox:checked::after {
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  line-height: 1;
+}
+.papersheet .training {
+  margin-top: 4mm;
+}
+.papersheet .trainline {
+  display: flex;
+  align-items: center;
+  gap: 5mm;
+  border-bottom: 1.2px solid rgba(33, 29, 23, 0.35);
+  padding: 2mm 0;
+}
+.papersheet .trainline .lbl {
+  min-width: 20mm;
+}
+.papersheet .chk {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+.papersheet .coins {
+  display: flex;
+  align-items: center;
+  gap: 3mm;
+  margin-top: 4mm;
+}
+.papersheet .coinbox {
+  width: 20mm;
+  height: 11mm;
+  border: 1.8px solid var(--rule);
+  border-radius: 3px;
+  background: rgba(255, 255, 255, 0.35);
+}
+.papersheet .coinbox input {
+  height: 100%;
+  text-align: center;
+  border-bottom: none;
+  font-size: 19px;
+}
+
+/* ================= tables (pages 3 & 5) ================= */
+.papersheet table.sheet {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+.papersheet table.sheet th {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-align: left;
+  border-bottom: 2px solid var(--rule);
+  border-left: 1.4px solid var(--rule);
+  padding: 1.5mm 2mm;
+}
+.papersheet table.sheet th:first-child {
+  border-left: none;
+}
+.papersheet table.sheet td {
+  border-bottom: 1px solid rgba(33, 29, 23, 0.3);
+  border-left: 1.4px solid var(--rule);
+  padding: 0 1mm;
+  /* acts as a MIN height on a table cell — a wrapping entry grows its row */
+  height: 8.2mm;
+}
+.papersheet table.sheet td:first-child {
+  border-left: none;
+}
+/* Table cells are textareas so a long entry WRAPS (the row grows) instead of
+ * clipping. The .cellgrow grid stacks the textarea on an invisible ::after
+ * replica of its value; the replica's natural (wrapped) height sizes both —
+ * the classic CSS auto-growing-textarea trick, no JS. The two layers must
+ * share EXACT font metrics. */
+.papersheet table.sheet .cellgrow {
+  display: grid;
+  width: 100%;
+}
+.papersheet table.sheet .cellgrow::after {
+  content: attr(data-v) " ";
+  visibility: hidden;
+}
+.papersheet table.sheet .cellgrow > textarea,
+.papersheet table.sheet .cellgrow::after {
+  grid-area: 1 / 1 / 2 / 2;
+  font-family: "Caveat", cursive;
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.35;
+  padding: 1px 2px;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow: hidden;
+}
+
+/* ================= PAGE 4 ================= */
+/* Class Features is ONE big notes box (creator's ruling) — no columns, no
+ * divider; the old features2 column merges into it on first edit (MergeTa). */
+.papersheet .featuresbox {
+  border-bottom: 2px solid var(--rule);
+  padding: 2mm;
+}
+.papersheet .featuresbox textarea {
+  height: 150mm;
+  font-size: 17px;
+  width: 100%;
+}
+.papersheet .featsbox textarea {
+  height: 85mm;
+  font-size: 17px;
+  width: 100%;
+}
+.papersheet h2.centered {
+  border-bottom: 2px solid var(--rule);
+  text-align: center;
+  font-family: "Cinzel", serif;
+  font-weight: 700;
+  font-size: 14px;
+  letter-spacing: 0.14em;
+  padding: 2mm 0 2.5mm;
+  margin-top: 6mm;
+  color: var(--ink);
+}
+
+/* ================= PAGE 5 ================= */
+.papersheet .rites-grid {
+  display: grid;
+  grid-template-columns: 1fr 2.1fr;
+  gap: 7mm;
+  align-items: start;
+}
+.papersheet .riteline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 3mm;
+  border-bottom: 1.4px solid var(--rule);
+  padding: 2.5mm 0;
+}
+.papersheet .riteline .lbl {
+  font-size: 10.5px;
+}
+.papersheet .riteline input {
+  width: 14mm;
+  flex: none;
+  text-align: center;
+  font-size: 18px;
+}
+.papersheet .riteline.wide input {
+  width: 26mm;
+}
+
+/* ================= PAGE 6 — NOTES ================= */
+/* The whole page is one ruled free-writing area: notebook lines drawn on the
+ * textarea's background at the exact line-height, so writing sits on them
+ * (background-attachment: local keeps the lines glued to overflowing text).
+ * .noteslines is the PRINT variant of the same ruling (element borders —
+ * Chromium mispaints repeating gradients on paginated boxes); hidden here. */
+.papersheet .notesarea {
+  position: relative;
+}
+.papersheet .noteslines {
+  display: none;
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.papersheet .noteslines i {
+  display: block;
+  height: 9mm;
+  border-bottom: 1px solid rgba(33, 29, 23, 0.35);
+}
+.papersheet .notesarea textarea {
+  width: 100%;
+  height: 243mm; /* 27 ruled lines of 9mm */
+  font-size: 18px;
+  line-height: 9mm;
+  padding: 0 2px;
+  background-image: repeating-linear-gradient(
+    to bottom,
+    transparent,
+    transparent calc(9mm - 1px),
+    rgba(33, 29, 23, 0.35) calc(9mm - 1px),
+    rgba(33, 29, 23, 0.35) 9mm
+  );
+  background-attachment: local;
+}
+
+/* ================= info dots ================= */
+.papersheet .info {
+  position: relative;
+  display: inline-flex;
+  /* Same centering trick as .st above: middle-aligned with symmetric negative
+   * margins, the dot rides its label's text line without touching the writing
+   * line above/below or growing the line box. */
+  vertical-align: middle;
+  margin: -4px 0 -4px 3px;
+}
+.papersheet .info > button {
+  font-family: "Alegreya Sans SC", sans-serif;
+  font-weight: 700;
+  font-size: 10px;
+  line-height: 1;
+  width: 14px;
+  height: 14px;
+  border: 1.2px solid var(--marker-blue);
+  border-radius: 50%;
+  background: rgba(58, 99, 168, 0.08);
+  color: var(--marker-blue);
+  cursor: help;
+  padding: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.papersheet .info-pop {
+  display: none;
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 4px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 230px;
+  background: #fffdf7;
+  border: 1.6px solid var(--rule);
+  border-radius: 3px;
+  box-shadow: 3px 3px 0 rgba(33, 29, 23, 0.18);
+  padding: 8px 10px;
+  text-align: left;
+  cursor: auto;
+  /* Several dots live inside nowrap labels (the eye's iris, plaques, the
+   * shield) — without this the popover inherits nowrap and its text shoots
+   * out of the box. */
+  white-space: normal;
+}
+.papersheet .info.side-left .info-pop {
+  left: auto;
+  right: -4px;
+  transform: none;
+}
+/* Dots at a page's LEFT edge: hang the popover to the right of the dot. */
+.papersheet .info.side-right .info-pop {
+  left: -4px;
+  transform: none;
+}
+/* Dots near a page's BOTTOM edge: open the popover above the dot. */
+.papersheet .info.side-up .info-pop {
+  top: auto;
+  bottom: calc(100% + 4px);
+}
+.papersheet .info:hover .info-pop,
+.papersheet .info:focus-within .info-pop,
+.papersheet .info.open .info-pop {
+  display: block;
+}
+.papersheet .info-pop b {
+  display: block;
+  font-family: "Cinzel", serif;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  margin-bottom: 3px;
+  color: var(--ink);
+}
+.papersheet .info-pop .info-text {
+  display: block;
+  font-family: "Alegreya Sans SC", sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  color: var(--ink-soft);
+  text-transform: none;
+}
+.papersheet .info-pop .info-ref {
+  display: block;
+  margin-top: 5px;
+  font-size: 9.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--blood);
+}
+.papersheet .info-pop a {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--marker-blue);
+  text-decoration: underline;
+}
+
+/* ================= small screens =================
+ * SCREEN ONLY — print (and the PDF generator, which renders print media)
+ * keeps the exact A4 mm layout above. On a phone the page stops being a
+ * fixed A4 canvas: everything reflows into ONE column and the user only
+ * ever scrolls vertically. */
+@media screen and (max-width: 700px) {
+  /* the page becomes a fluid column */
+  .papersheet .page {
+    width: auto;
+    height: auto;
+    overflow: visible;
+    padding: 8mm 4mm 10mm;
+    margin-bottom: 18px;
+  }
+
+  /* toolbar: title on its own line, controls wrap beneath */
+  .papersheet-toolbar h1 {
+    flex-basis: 100%;
+    order: -1;
+    text-align: center;
+    font-size: 13px;
+  }
+
+  /* every side-by-side grid collapses to one column */
+  .papersheet .p1-top,
+  .papersheet .statgrid,
+  .papersheet .p1-bottom,
+  .papersheet .p2-grid,
+  .papersheet .rites-grid {
+    grid-template-columns: 1fr;
+    gap: 5mm;
+  }
+
+  /* AC row: shield (with its Shield Arm line) centered, fields below */
+  .papersheet .ac-row {
+    display: block;
+  }
+  .papersheet .shield {
+    margin: 0 auto 6mm;
+  }
+
+  /* paper-doll: the figure scales to fit up top, the gear plaques leave it
+   * and stack as a full-width list (their leader lines are hidden) */
+  .papersheet .figure {
+    aspect-ratio: auto;
+  }
+  .papersheet .figure > svg {
+    position: static;
+    display: block;
+    width: 58%;
+    max-width: 60mm;
+    height: auto;
+    margin: 0 auto 4mm;
+  }
+  .papersheet .figure .leaders {
+    display: none;
+  }
+  .papersheet .plaque {
+    /* relative, not static: it must stay the .plbl label's anchor */
+    position: relative;
+    left: auto;
+    top: auto;
+    width: auto;
+    margin: 0 0 3.5mm;
+  }
+
+  /* EVERY fill-in table keeps usable column widths and scrolls sideways
+   * inside its own frame (momentum scroll) instead of squeezing its columns
+   * to unfillable slivers. The grid items must be allowed to shrink
+   * (min-width:auto would grow the track — and the page — to the table's
+   * min-width instead of scrolling). */
+  .papersheet .p2-grid > div,
+  .papersheet .rites-grid > div {
+    min-width: 0;
+  }
+  .papersheet .sheetwrap {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    /* Scroll affordance. The wide fill-in tables (page 3 EQUIPMENT / WEAPON
+     * DAMAGE, page 5 PREPARED WHISPERS) overflow this frame on a phone, but a
+     * touch device's overlay scrollbar stays hidden until you drag — so nothing
+     * cues that columns exist off the right edge and a user filling their sheet
+     * misses them. Lea Verou's pure-CSS scroll-shadow: two opaque paper "cover"
+     * gradients that scroll WITH the content (background-attachment: local) sit
+     * over two fixed edge-shadow gradients, hiding each shadow only when that
+     * edge is fully reached. So the right shadow shows "more → scroll" and
+     * disappears once you scroll to the last column. It is a background, so it
+     * paints BEHIND the transparent cells (the ink fields stay fully legible,
+     * never faded). --paper is a fixed light constant here, so no dark variant
+     * is needed. @media print never sets overflow/background on .sheetwrap, so
+     * the printed PDF is untouched; desktop (>700px) never enters this block. */
+    background:
+      linear-gradient(to right, var(--paper) 32%, rgba(246, 241, 229, 0)) left
+        center,
+      linear-gradient(to left, var(--paper) 32%, rgba(246, 241, 229, 0)) right
+        center,
+      radial-gradient(
+          farthest-side at 0 50%,
+          rgba(33, 29, 23, 0.5),
+          rgba(33, 29, 23, 0)
+        )
+        left center,
+      radial-gradient(
+          farthest-side at 100% 50%,
+          rgba(33, 29, 23, 0.5),
+          rgba(33, 29, 23, 0)
+        )
+        right center;
+    background-repeat: no-repeat;
+    background-size: 38px 100%, 38px 100%, 24px 100%, 24px 100%;
+    background-attachment: local, local, scroll, scroll;
+    scrollbar-width: thin; /* a persistent thin bar where the OS honours it */
+  }
+  .papersheet .sheetwrap table.sheet {
+    min-width: 560px;
+  }
+
+  /* thumb-sized fields: relax the print-tuned heights/font sizes */
+  .papersheet .minifields .mf input {
+    height: 8mm;
+    font-size: 17px;
+  }
+  .papersheet .skill input[type="text"] {
+    height: 6.5mm;
+    font-size: 16px;
+  }
+  .papersheet input[type="checkbox"].slotbox {
+    width: 10mm;
+    height: 10mm;
+  }
+  .papersheet input[type="checkbox"].slotbox:checked::after {
+    font-size: 30px;
+  }
+
+  /* ---- thumb-sized TAP TARGETS ----
+   * The check circles/boxes are print-scale (11–13px) — precise to a mouse,
+   * hopeless for a thumb. An invisible ::before overlay (generated boxes
+   * hit-test to their originating input, same mechanism as the checked ✕
+   * ::after) widens the touch area toward 44px without changing the drawn
+   * circle, the desktop look, or print. Tightly packed groups (death-save
+   * pips sit ~19px apart) get smaller overlays so a tap on one circle can
+   * never land on a neighbour's. */
+  .papersheet input[type="checkbox"]::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 44px;
+    height: 32px;
+    transform: translate(-50%, -50%);
+    background: transparent;
+  }
+  .papersheet input[type="checkbox"].pip::before {
+    width: 17px;
+    height: 17px;
+  }
+  .papersheet input[type="checkbox"].slotbox::before {
+    /* the box itself is already 10mm — widen mostly sideways (the slot rows
+     * sit ~46px apart, so a taller overlay would bleed into the next slot) */
+    width: 58px;
+    height: 50px;
+  }
+
+  /* the full-page notes area needn't be a whole A4 of empty on a phone */
+  .papersheet .notesarea textarea {
+    height: 150mm;
+  }
+
+  /* Info popovers: on phones the sheet reflows into one narrow column, so the
+   * print-tuned side hints (side-left / -right / -up) no longer keep the card
+   * on the page — dots near an edge push it off-screen (part of the card was
+   * unreadable). Detach the card from the dot and pin it to the bottom of the
+   * viewport, clamped to the screen width, so it is ALWAYS fully on-screen no
+   * matter which dot was tapped; a very tall card scrolls within itself. */
+  .papersheet .info .info-pop,
+  .papersheet .info.side-left .info-pop,
+  .papersheet .info.side-right .info-pop,
+  .papersheet .info.side-up .info-pop {
+    position: fixed;
+    left: 8px;
+    right: 8px;
+    top: auto;
+    bottom: calc(env(safe-area-inset-bottom) + 12px);
+    transform: none;
+    width: auto;
+    max-width: 460px;
+    margin-inline: auto;
+    max-height: 70vh;
+    overflow-y: auto;
+  }
+}
+
+/* ================= print ================= */
+@media print {
+  body.papersheet-open #root {
+    display: none !important;
+  }
+  .papersheet-modal {
+    position: static;
+    overflow: visible;
+    background: #fff;
+    padding: 0;
+  }
+  .papersheet-toolbar {
+    display: none;
+  }
+  .papersheet .info {
+    display: none;
+  }
+  /* screen decoration only — the printed/PDF sheet is unchanged */
+  .papersheet .classfig {
+    display: none;
+  }
+
+  /* ---- pagination ----
+   * On screen each sheet page is a fixed 297mm A4 canvas. Printed, that is
+   * brittle: ANY printable height under 297mm (dialog margins, printer hard
+   * margins, Letter paper, Safari ignoring @page size) fragments the fixed
+   * box into a sliced page followed by a near-blank orphan strip. So in
+   * print the sheet reflows instead: pages take their natural height, the
+   * paper's whitespace comes from the injected `@page` 10mm margins (see
+   * usePaperSheetOpen) rather than page padding, and a slight uniform
+   * shrink gives every sheet page ~10mm of slack inside an A4 printable
+   * area even when the dialog forces its own 10mm margins. */
+  .papersheet {
+    zoom: 0.94;
+  }
+  .papersheet .page {
+    box-shadow: none;
+    margin: 0 auto;
+    /* the screen design's content width — identical wrapping/proportions */
+    width: 186mm;
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    /* 2mm of top padding keeps the first heading's red step badge (negative
+     * margins + translateY(-2px)) inside the page box — poking above it
+     * paints a stray arc at the bottom of the PREVIOUS paper page. The 5mm
+     * bottom padding reserves room for the absolutely-pinned .pageno footer
+     * so it stays out of flow and can never fragment onto a page alone. */
+    padding: 2mm 0 5mm;
+    /* the sheen is screen decoration — and Chromium mispaints gradient
+     * backgrounds on paginated boxes (it smeared over the left text edge) */
+    background-image: none;
+    page-break-after: always;
+  }
+  .papersheet .page:last-child {
+    page-break-after: auto;
+  }
+  /* Still absolutely positioned, but with NO top/bottom offset: it renders
+   * at its static position (right after the page's last section, inside the
+   * reserved bottom padding) while adding no flow height. Crucially, when a
+   * page is forced to fragment (e.g. Letter paper) the footer then paints in
+   * the fragment its static position falls in — always alongside content,
+   * never alone on an otherwise blank paper page (a bottom-pinned footer
+   * rides the sliced-off bottom padding onto a page of its own). */
+  .papersheet .pageno {
+    position: absolute;
+    top: auto;
+    bottom: auto;
+    left: auto;
+    right: 0;
+    line-height: 1;
+    margin-top: 1mm;
+  }
+  /* A hair of extra height headroom so page 2 stays one page even under
+   * generous dialog margins — 7% off the paper doll is invisible. */
+  .papersheet .figure {
+    width: 93%;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  /* If the printable area is still shorter than a sheet page (e.g. Letter
+   * paper), break BETWEEN the sheet's boxes — never through one. */
+  .papersheet .p1-top,
+  .papersheet .p1-bottom,
+  .papersheet .abil,
+  .papersheet .vrow,
+  .papersheet .bigstat,
+  .papersheet .fld,
+  .papersheet .tinge,
+  .papersheet .ac-row,
+  .papersheet .figure,
+  .papersheet .addon-row,
+  .papersheet .coins,
+  .papersheet .frame,
+  .papersheet .slotline,
+  .papersheet .training,
+  .papersheet .featsbox,
+  .papersheet .riteline,
+  .papersheet .pblock,
+  .papersheet table.sheet thead,
+  .papersheet table.sheet tr {
+    break-inside: avoid;
+  }
+  /* …and a section heading never sits alone at the bottom of a page. */
+  .papersheet h2.sec,
+  .papersheet h2.centered,
+  .papersheet .sec-title,
+  .papersheet .col-title {
+    break-after: avoid;
+    break-inside: avoid;
+  }
+
+  /* ---- Letter headroom ----
+   * US Letter is ~18mm shorter than A4. Millimetre-scale trims (invisible
+   * on paper) pull sheet pages 2-4 under Letter's printable height too, so
+   * they stay one paper page each even there. Sheet page 1 is left alone:
+   * its abilities grid can't lose 8mm, so on Letter its bottom row + footer
+   * flow together onto a continuation page instead. */
+  .papersheet .ac-row {
+    padding-top: 3mm;
+    margin-bottom: 3.5mm;
+  }
+  .papersheet .dashed-rule {
+    margin: 1.5mm 0 3.5mm;
+  }
+  .papersheet .figure {
+    margin-top: 2mm;
+  }
+  .papersheet .addons {
+    margin-top: 1.2mm;
+  }
+  .papersheet .addon-row {
+    margin-bottom: 1.2mm;
+  }
+  .papersheet .coins {
+    margin-top: 1.5mm;
+  }
+  .papersheet .rcol .frame {
+    margin-bottom: 2.5mm;
+  }
+  .papersheet .slots {
+    margin-top: 0.5mm;
+  }
+  .papersheet .slotline {
+    margin-bottom: 1.2mm;
+  }
+  .papersheet .training {
+    margin-top: 2.5mm;
+  }
+  .papersheet .trainline {
+    padding: 1mm 0;
+  }
+  .papersheet table.sheet td {
+    height: 7.9mm;
+  }
+  .papersheet .featuresbox textarea {
+    height: 146mm;
+  }
+  /* printed notes ruling: real element borders (the screen gradient
+   * mispaints when Chromium paginates) — same 9mm rhythm as the writing */
+  .papersheet .notesarea textarea {
+    background-image: none;
+  }
+  .papersheet .noteslines {
+    display: block;
+  }
+  .papersheet input[type="text"] {
+    border-bottom-color: #8a7f6a;
+  }
+  /* the class dropdown prints as a plain handwriting line: no chevron, and
+   * an unchosen class ("—" on screen) prints blank like the old text field */
+  .papersheet select {
+    background-image: none;
+    border-bottom-color: #8a7f6a;
+  }
+  .papersheet select[data-empty] {
+    color: transparent;
+  }
+  /* The A4 @page rule is injected by usePaperSheetOpen only while a sheet is
+   * open — @page can't be selector-scoped, and it must not hijack prints of
+   * the rest of the app. */
+}

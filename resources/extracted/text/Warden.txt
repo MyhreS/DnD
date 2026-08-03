@@ -1,0 +1,212 @@
+          BECOMING A HUNTER WARDEN ...
+
+          AS A LEVEL 1 CHARACTER
+          • Gain all the traits in the Core Hunter Warden Traits table.
+          • Gain the Hunter Warden's level 1 features, which are listed in the Hunter Warden Features table.
+
+          LEVEL 1: BANDS DIRECTIVE
+          You read the battle eld with a commander’s eye, identifying openings, weaknesses, and moments
+          of hesitation. Through sharp orders and tactical insight, you rally your hunter band and guide
+          them toward decisive action.
+          This command is represented by your Bands Directive die, which is a d6.
+          Using Bands Directive. As a Bonus Action, you can choose one creature other than yourself
+          within 60 feet of you that can see or hear you. That creature gains one of your Bands Directive
+          dice.
+          A creature can have only one Bands Directive die at a time.
+          Once, when the creature fails a d20 Test, it can roll the Bands Directive die and add the number
+          rolled to the d20, potentially turning the failure into a success.
+          The Bands Directive die is expended when it is rolled or after a long or short rest.
+          Number of Uses. You can grant a Bands Directive die a number of times equal to your Wisdom
+          modi er, minimum of once. You regain all expended uses when you nish a Long Rest.
+          At Higher Levels. Your Bands Directive die changes when you reach certain Hunter Warden
+          levels, as shown in the Bands Directive Die column of the Hunter Warden Features table.
+          The die becomes a d8 at level 5, a d10 at level 10, and a d12 at level 15.
+
+          LEVEL 1: FEEL YOUR ENEMY
+          As a Bonus Action, you can discern certain strengths of a creature you can see within 30 feet of
+          yourself; you can tell the creatures Challenge Rating (CR) or Level (Lvl.) Once you use this feature,
+          you can't do so again until you nish a Short Rest or Long Rest. You can also restore a use of the
+          feature by expending one Bands Directive die (no action required).
+
+          LEVEL 2: TACTICAL MIND
+          You have a mind for tactics on and o the battle eld. When you fail an ability check, you can
+          expend a use tactical mind to push yourself toward success. Rather than giving a Bands Directive
+          die to a player you can roll it yourself and add the number rolled to the ability check, potentially
+          turning it into a success. The Bands Directive die is expended when it is rolled.
+
+          LEVEL 2: EXPERTISE
+          You gain Expertise (see the rules glossary) in two of your skill pro ciencies of your choice.
+          Performance and Persuasion are recommended if you have pro ciency in them.
+          At Hunter Warden level 9, you gain Expertise in two more of your skill pro ciencies of your choice.
+
+          LEVEL 2: EXPERIENCE
+          You can add half your Pro ciency Bonus (round down) to any ability check you make that uses a
+          skill pro ciency you lack and that doesn't otherwise use your Pro ciency Bonus.
+          For example, if you make a Strength (Athletics) check and lack Athletics pro ciency, you can add
+          half your Pro ciency Bonus to the check.
+
+          LEVEL 3: HUNTER WARDEN SUBCLASS
+          You gain a Hunter Warden subclass of your choice. The Commander or the Warbringer
+          subclasses are detailed after this class's description. A subclass is a specialization that grants
+          you features at certain Hunter Warden levels.
+
+          LEVEL 4: ABILITY SCORE IMPROVEMENT
+          You gain the Ability Score Improvement feat (see chapter 4) or another feat of your choice for
+          which you qualify. You gain this feature again at Hunter Warden levels 8, 12, and 16.
+
+          LEVEL 5: EFFECTIVENESS
+          You now regain all your expended uses of Bands Directive when you nish a Short or Long Rest.
+          In addition, you now have uses of Bands Directive die equal to your Wisdom modi er x 2
+
+
+
+
+                                                                                                  fi
+                                                                                             fi
+                                                                                        fi
+                                                                                   fi
+                                                                              fi
+                                                                         fi
+                                                                    fi
+                                                               fi
+                                               fi
+                                    ff
+                              fi
+                        fi
+                 fi
+           fi
+     fi
+fi
+     LEVEL 7: KNOW YOUR ENEMY
+     As a Bonus Action, you can discern certain strengths and weaknesses of a creature you can see
+     within 30 feet of yourself; you know whether that creature has any Immunities, Resistances, or
+     Vulnerabilities, and if the creature has any, you know what they are.
+     Once you use this feature, you can't do so again until you nish a Long Rest. You can also restore
+     a use of the feature by expending one Bands Directive die (no action required).
+
+     LEVEL 7: COUNTER
+     You have seen it all before. You know how to disrupt mind-in uencing e ects. If you or a creature
+     within 30 feet of you fails a saving throw against an e ect that applies the Charmed or Frightened
+     condition, you can take a Reaction to cause the save to be rerolled, and the new roll has
+     Advantage.
+
+     LEVELE 9: INDOMITABLE
+     If you fail a saving throw, you can reroll it with a bonus equal to your Hunter Warden level. You
+     must use the new roll, and you can't use this feature again until you nish a Long Rest.You can
+     use this feature twice before a Long Rest starting at level 13 and three times before a Long Rest
+     starting at level 17.
+
+     LEVEL 10: WEAPON MASTERY
+     Your training with weapons allows you to use the mastery properties of three kinds of Simple or
+     Martial Melee weapons of your choice. Whenever you nish a Long Rest, you can practice
+     weapon drills and change one of those weapon choices.
+
+     LEVEL 11: SUPERIOR EFFECTIVENESS
+     You now have uses of Bands Directive die equal to your Wisdom modi er x 3
+
+     LEVEL 13: EXPECT YOUR ENEMY
+     As a Bonus Action, you can discern what a creature you can see within 30 feet of yourself indents
+     to do on its next turn; your DM has to tell you (if able) what the creature intends to do on its turn
+     including rst movement and rst action if any. If the creature intends to use an action the DM
+     also has to tell you (if able) all available info about that speci c rst action. Once you use this
+     feature, you can't do so again until you nish a Long Rest. You can also restore a use of the
+     feature by expending one Bands Directive die (no action required).
+
+     LEVEL 15: CALM BAND
+     During a short or long rest you and the other creatures that has a Bands Directive die may roll that
+     die in addition to their Sanity die.
+
+     LEVEL 18: SUPERIOR DIRECTIVE
+     When you roll Initiative, you regain expended uses of Bands Directive until you have two if you
+     have fewer than that.
+
+     LEVEL 19: EPIC BOON
+     You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you qualify.
+
+     LEVEL 20: PRESENCE OF POWER
+     You very presence can be overwhelming. You have mastered words that rings with power in your
+     enemies ears: as an action you can expand a Bands Directive die to command a creature within
+     30ft of you that can hear and see you to forfeit their next turn. This can not be used on the same
+     creature twice.
+
+
+
+
+                                                                                       ff
+                                                                                  fi
+                                                                             fi
+                                                                        fi
+                                                                   fl
+                                                              fi
+                                                         fi
+                                                    fi
+                                               ff
+                                 fi
+                       fi
+fi
+     COMMANDER
+     Text
+
+     Text.
+
+     LEVEL 3: STUDIED ENEMY
+     You can spend an action to study your opponents and learn from each attack they make. One
+     creature other than yourself within 60 feet of you that can see or hear you will have Advantage on
+     their next attack roll against another creature before the start of your next turn.
+
+     LEVEL 6: BAND COMMANDER
+     Primal forces now help fuel you on your journeys, granting you the following bene ts.
+     Commander's Strike. When you take the Attack action on your turn, you can replace one of your
+     attacks to direct one of your companions to strike.
+     When you do so, choose a willing creature who can see or hear you and expend one Bands
+     Directive Die. That creature can immediately use its Reaction to make one attack with a weapon
+     or an Unarmed Strike, adding the Bands Directive Die to the attack’s damage roll on a hit.
+     Commanding Presence. As a Bonus Action you can spend a Bands Directive Die to give another
+     creature within 30 feet of yourself who can see or hear you Blood Tinge.
+     Rally. As a Bonus Action, you can expend one Bands Directive Die to bolster the resolve of a
+     companion.
+     Choose an ally of yours within 30 feet of yourself who can see or hear you. That creature gains
+     Temporary Hit Points equal to the Bands Directive Die roll plus half your Hunter Warden level
+     (round down).
+
+     LEVEL 14: MASTER THE ENEMY
+     As an action, you can spend one Band’s Directive die to study an enemy and reveal a fatal
+     opening in its defenses.
+     Choose one creature other than yourself within 60 feet of you that can see or hear you. The rst
+     time that creature makes an attack roll before the start of your next turn, a roll of 14 or higher on
+     the d20 counts as a 20.
+
+
+
+
+     WARBRINGER
+     Text.
+
+     Text.
+
+     LEVEL 3: COMBAT INSPIRATION
+     You can use your wit to turn the tide of battle. A creature that has a Bands Directive die from you
+     can use it for one of the following e ects.
+     Defense. When the creature is hit by an attack roll, that creature can use its Reaction to roll the
+     Bands Directive die and add the number rolled to its AC against that attack, potentially causing
+     the attack to miss.
+     O ense. Immediately after the creature hits a target with an attack roll, the creature can roll the
+     Bands Directive die and add the number rolled to the attack's damage against the target.
+
+     LEVEL 6: EXTRA ATTACK
+     You can attack twice instead of once whenever you take the Attack action on your turn.
+
+     LEVEL 14: WAR CHANT
+
+
+
+
+                                                                                         fi
+                                                                              fi
+                             ff
+ff
+When a creature that has a Band’s Directive die from you takes the Attack action on its turn, it can
+expend that die to make one additional attack as part of the same action.
+This additional attack is made in addition to any attacks granted by Extra Attack or similar
+features.
+

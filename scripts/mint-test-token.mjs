@@ -1,7 +1,7 @@
 // Mint a Firebase custom token for an agent test user, so the agent can sign in
 // to a REAL session (real Firestore + rules) and test authenticated screens.
 //
-//   doppler run -- bun run scripts/mint-test-token.mjs [player|admin|dm]
+//   doppler run -- bun run scripts/mint-test-token.mjs [player|player2|admin|dm]
 //
 // Reads the service-account JSON from the AGENT_TEST_SA env var (in Doppler).
 // Ensures the test Auth user + allowlist entry exist, then prints a custom token.
@@ -18,6 +18,7 @@ if (!sa) {
 
 const ROLES = {
   player: { uid: "agent-player", email: "agent-player@dandd-ea955.web.app", firstName: "Agent", lastName: "Player", accessRole: "user", playerType: "player" },
+  player2: { uid: "agent-player2", email: "agent-player2@dandd-ea955.web.app", firstName: "Agent", lastName: "Player Two", accessRole: "user", playerType: "player" },
   admin: { uid: "agent-admin", email: "agent-admin@dandd-ea955.web.app", firstName: "Agent", lastName: "Admin", accessRole: "admin", playerType: "player" },
   dm: { uid: "agent-dm", email: "agent-dm@dandd-ea955.web.app", firstName: "Agent", lastName: "Dungeon", accessRole: "moderator", playerType: "dm" },
 };
@@ -25,7 +26,7 @@ const ROLES = {
 const role = process.argv[2] ?? "player";
 const t = ROLES[role];
 if (!t) {
-  console.error(`Unknown role "${role}". Use: player | admin | dm`);
+  console.error(`Unknown role "${role}". Use: player | player2 | admin | dm`);
   process.exit(1);
 }
 

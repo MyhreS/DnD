@@ -1,0 +1,107 @@
+MINDCRACK
+Whisper
+
+Type: Mind In uence Rite
+Performing: Action
+Range: 60 feet
+Duration: 1 round
+
+You try to temporarily break the mind of one creature you can see within range, opening their
+minds to the words of your patron through whispers. The target must succeed on an Intelligence
+saving throw or take 1d6 Mind damage and subtract 1d4 from the next saving throw it makes
+before the end of your next turn.
+Whisper Upgrade. The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17
+(4d6).
+
+
+MINDGRAB
+Level 2
+
+Type: Mind In uence Rite
+Performing: Action
+Range: 120 feet
+Duration: Concentration
+
+By your words a patron will attach itself onto the mind of one creature you can see within range.
+The target makes a Wisdom saving throw, taking 3d8 Mind damage on a failed save or half as
+much damage on a successful one. On a failed save, you also always know the target's location
+until the spell ends, but only while the two of you are on the same plane of existence. While you
+have this knowledge, the target can't become hidden from you, and if it has the Invisible
+condition, it gains no bene t from that condition against you.
+Using a Higher-Level Strain. The damage increases by 1d8 for each Strain level above 2.
+
+
+
+ENTHRALL
+Level 2
+
+Type: Mind In uence Rite
+Performing: Action
+Range: 60 feet
+Duration: Concentration, up to 10 rounds
+
+You word out forbidden truths gifted by a Patron whose words mortal minds struggle to
+comprehend. You su er 1 Madness. Creatures of your choice that you can see within range must
+make a Wisdom saving throw. A creature currently ghting you or your allies automatically
+succeeds on this saving throw. On a failed save, a creature becomes captivated by the impossible
+words and su ers a –10 penalty to Perception checks and Passive Perception until the Rite ends.
+
+
+
+
+                                       fi
+               fi
+         ff
+  ff
+   fl
+   fl
+   fl
+          ELDRITCH CACOPHONY
+          Level 5
+
+          Type: Mind In uence Rite
+          Performing: Action
+          Range: 120 feet
+          Duration: Instantaneous
+
+          You invoke a Patron of forbidden knowledge, ooding the minds of nearby creatures with
+          fragments of truths they were never meant to comprehend.
+          Each creature in a 20-foot-radius Sphere centered on a point within range must make an
+          Intelligence saving throw.
+          On a failed save, a creature takes 8d6 Mind damage, and its thoughts become muddled for 10
+          rounds. While muddled, it subtracts 1d6 from Attack Rolls, Ability Checks, and Constitution
+          saving throws made to maintain Concentration.
+          At the end of each of its turns, the creature may repeat the Intelligence saving throw, ending the
+          muddled e ect on itself on a success.
+          On a successful save, a creature takes half as much damage and su ers no additional e ects.
+          Using Higher-Level Strain. If this Rite is performed with a Strain above Level 5, the damage
+          increases by 2d6 for each Strain level above 5.
+
+
+
+          MIND SHATTER
+          Level 8
+
+          Type: Mind In uence Rite
+          Performing: Action
+          Range: 150 feet
+          Duration: Instantaneous
+
+          You invoke a Patron of unfathomable power, unleashing a fragment of its eldritch knowledge into
+          the mind of a creature you can see within range.
+          The target must make an Intelligence saving throw. On a failed save, it takes 10d12 Mind damage.
+          For the next 10 rounds, the target can't perform Rites, and its Intelligence, Wisdom, and Charisma
+          modi ers become -5.
+          On a successful save, the target takes half as much damage and su ers no additional e ects.
+
+
+
+
+                                                                                       ff   ff
+                                                                   ff   ff
+                                            fl
+            fl
+            fl
+     ff
+fi
+

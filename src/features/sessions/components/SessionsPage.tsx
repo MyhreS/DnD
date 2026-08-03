@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { sortUpcoming } from "@/data/sessions";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
+import { useIsDM } from "@/features/campaigns/hooks/useIsDM";
 import { useSessionStore } from "../store/sessionStore";
 import { useSessionsLive } from "../hooks/useSessionsLive";
 import { useHunterCard } from "@/features/hunter/hooks/useHunterCard";
@@ -19,23 +21,27 @@ export function SessionsPage() {
   const now = useNow();
   const user = useAuthStore((s) => s.user);
   const identity = useAuthStore((s) => s.identity);
-  const canManage = useAuthStore((s) => s.caps.manageSessions);
+  const canManage = useIsDM();
 
   useSessionsLive();
-  const { sessions, status } = useSessionStore();
+  const activeId = useCampaignStore((s) => s.activeId);
+  const allSessions = useSessionStore((s) => s.sessions);
+  const status = useSessionStore((s) => s.status);
+  const sessions = useMemo(() => allSessions.filter((s) => s.campaignId === activeId), [allSessions, activeId]);
   const upcoming = useMemo(() => sortUpcoming(sessions, now), [sessions, now]);
   const next = upcoming[0];
 
   useHunterCard();
   const card = usePlayerStore((s) => s.card);
   const cardStatus = usePlayerStore((s) => s.status);
+  // A named sheet hunter (classId "") is a finished hunter — no nag for them.
   const showNag =
-    needsCharacter(identity) && cardStatus === "loaded" && (!card || !card.classId || !card.name);
+    needsCharacter(identity) && cardStatus === "loaded" && (!card || !card.name);
 
   const [editing, setEditing] = useState<SessionEvent | "new" | null>(null);
 
   return (
-    <div>
+    <div className="reading">
       <div className="row between">
         <div>
           <p className="eyebrow">The Hunt</p>

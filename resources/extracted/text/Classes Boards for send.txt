@@ -1,0 +1,251 @@
+                                   Core Hunter Brute Traits                                  Core Hunter Scout Traits
+
+                                   Hit Point Die              D10 per Hunter Brute           Hit Point Die              D10 per Hunter Scout
+                                                              level                                                     level
+
+                                   Max Sanity                 12                             Max Sanity                 12
+
+                                   Sanity Die                 D12                            Sanity Die                 D12
+
+                                   Saving Throw Pro ciencies Strength and                    Saving Throw Pro ciencies Strength and Dexterity
+                                                             Constitution
+                                                                                             Skill Pro ciencies         Choose 3: Animal
+                                   Skill Pro ciencies         Choose 2: Acrobatics,                                     Handling, Athletics,
+                                                              Athletics, Grit,                                          Stealth, Survival,
+                                                              Perception, Survival or                                   Investigation or
+                                                              Intimidation                                              Perception
+
+                                   Wapon Pro ciencies         Simple and Martial             Wapon Pro ciencies         Simple and Martial
+                                                              weapons                                                   weapons
+
+                                   Tool Pro ciencies          None                           Tool Pro ciencies          None
+
+                                   Armor Training             Light, Medium, and             Armor Training             Light and Medium
+                                                              Heavy armor                                               armor
+
+                                   Starting Equipment         Greatsword,                    Starting Equipment         Hunter Ri e (unique           Hunter Brute Features
+                                                              Shortsword and Rope                                       item), Hunter Cleaver
+                                                                                                                        (unique item) and             Level Pro ciency Bonus Class Features                                       Refuse the Bleeding Weapon Mastery
+                                   Speed                      30ft (6 sq)                                               Pistol
+                                                                                                                                                        1           +2             Fighting Style, Weapon Mastery                         2                    3
+                                                                                             Speed                      35ft (7 sq)
+                                                                                                                                                        2           +2             Action Surge (one use), Refuse the Bleeding            2                    3
+                                                                                                                                                        3           +2             Hunter Brute Subclass                                  2                    3
+                                                                                                                                                        4           +2             Ability Score Improvement                              3                    4
+                                   Core Hunter Stalker Traits                                Core Hunter Deepcaller Traits
+                                                                                                                                                        5           +3             Extra Attack                                           3                    4
+                                   Hit Point Die              D10 per Hunter Stalker         Hit Point Die              D6 per Hunter
+                                                              level                                                     Deepcaller level                6           +3             Ability Score Improvement                              3                    4
+
+                                   Max Sanity                 10                             Max Sanity                 20                              7           +3             Subclass Feature                                       3                    4
+
+                                   Sanity Die                 D10                            Sanity Die                 D20                             8           +3             Ability Score Improvement                              3                    4
+
+                                   Saving Throw Pro ciencies Dexterity and                   Saving Throw Pro ciencies Intelligence and                 9           +4             War Master                                             3                    4
+                                                             Intelligence                                              Wisdom                          10           +4             Subclass Feature                                       4                    5
+                                   Skill Pro ciencies         Choose 2: Acrobatics,          Skill Pro ciencies         Choose 2: Eldrich              11           +4             Two Extra Attacks                                      4                    5
+                                                              Athletics, Deception,                                     Knowledge, Old World
+                                                              Insight, Intimidation,                                    History, Investigation,        12           +4             Ability Score Improvement                              4                    5
+                                                              Investigation,                                            Insight, Blood Nature,
+                                                              Perception, Sleight of                                    Religion or Deception          13           +5             Studied Attacks                                        4                    5
+                                                              Hand or Stealth                                                                          14           +5             Ability Score Improvement                              4                    5
+                                                                                             Wapon Pro ciencies         Simple weapons
+                                   Wapon Pro ciencies         Simple weapons and                                                                       15           +5             Subclass Feature                                       4                    5
+                                                              Martial weapons that           Tool Pro ciencies          None
+                                                              have the Finesse or            Armor Training             Light armor                    16           +5             Ability Score Improvement                              4                    6
+                                                              Light property
+                                                                                             Starting Equipment         Sickle, 2 Daggers,             17           +6             Action Surge (two uses)                                4                    6
+                                   Tool Pro ciencies          Thieves Tools                                             Book (eldrich                  18           +6             Subclass Feature                                       4                    6
+                                   Armor Training             Light armor                                               knowledge) and Robe
+                                                                                                                                                       19           +6             Epic Boon                                              4                    6
+                                   Starting Equipment         Scimitar, 4 Daggers,           Speed                      30ft (6 sq)
+                                                                                                                                                       20           +6             Three Extra Attacks                                    4                    6
+                                                              Pistol and Thieves
+                                                              Tools
+                                   Speed                      30ft (6 sq)                                                                             Hunter Scout Features
+
+                                                                                                                                                        Level        Pro ciency Bonus              Class Features                                    Hunters Mark
+                                                                                                                                                            1                 +2                   Hunters Mark, Weapon Mastery                            4
+                                                                                                                                                            2                 +2                   Expertise, Fighting Style                               4
+                                     Core Hunter Bloodbound Traits                           Core Hunter Warden Traits
+                                                                                                                                                            3                 +2                   Hunter Scout Subclass                                   5
+                                     Hit Point Die                 D12 per Hunter            Hit Point Die              D10 per Hunter                      4                 +2                   Ability Score Improvement                               5
+                                                                   Bloodbound level                                     Warden level
+                                                                                                                                                            5                 +3                   Extra Attack                                            9
+                                     Max Sanity                    18                        Max Sanity                 15
+                                                                                                                                                            6                 +3                   Roving                                                  9
+                                     Sanity Die                    D12                       Sanity Die                 D12
+                                                                                                                                                            7                 +3                   Subclass Feature                                       10
+                                     Saving Throw Pro ciencies Intelligence and              Saving Throw Pro ciencies Wisdom + Charizma
+                                                               Wisdom                                                                                       8                 +3                   Ability Score Improvement                              10
+                                                                                             Skill Pro ciencies         Choose 2: Perception,
+                                     Skill Pro ciencies            Choose 2: Grit, Blood                                Investigation, Animal               9                 +4                   Expertise                                              13
+                                                                   Nature, Athletics,                                   Handling, Survival,
+                                                                                                                                                            10                +4                   Tireless                                               13
+                                                                   Intimidation, Medicine,                              Presence or
+                                                                   Perception or Survival                               Persuasion                          11                +4                   Subclass Feature                                       14
+                                     Wapon Pro ciencies            Simple and Martial        Wapon Pro ciencies         Simple and Martial                  12                +4                   Ability Score Improvement                              14
+                                                                   weapons                                              weapons
+                                                                                                                                                            13                +5                   Relentless Hunter                                      16
+                                     Tool Pro ciencies             Blood-drainer’s Tools     Tool Pro ciencies          None
+                                                                   (unique item)                                                                            14                +5                   —                                                      16
+                                                                                             Armor Training             Light, Medium, and
+                                     Armor Training                Light and Medium                                     Heavy armor                         15                +5                   Subclass Feature                                       17
+                                                                   armor                                                                                    16                +5                   Ability Score Improvement                              17
+                                                                                             Starting Equipment         Hunter Ri e (unique
+                                     Starting Equipment            Greataxe, 2 Handaxes                                 item), Longsword,                   17                +6                   Precise Hunter                                         20
+                                                                   and Blood-drainer’s                                  Navigators Tools, Bell,
+                                                                   Tools (unique item)                                  Backpack and 2                      18                +6                   Feral Senses                                           20
+                                                                                                                        Hunting Traps
+                                     Speed                         30ft (6 sq)                                                                              19                +6                   Epic Boon                                              20
+                                                                                             Speed                      30ft (6 sq)
+                                                                                                                                                            20                +6                   Foe Slayer                                             20
+
+
+
+                                                                                                                                                      Hunter Warden Features
+
+                                                                                                                                                       Level     Pro ciency Bonus         Class Features                                      Bands Directive Die
+                                                                                                                                                         1               +2               Bands Directive, Feel Your Enemy                    D6
+                                                                                                                                                         2               +2               Tactical Mind, Expertise, Experience                D6
+                                                                                                                                                         3               +2               Hunter Warden Subclass                              D6
+                                                                                                                                                         4               +2               Ability Score Improvement                           D6
+                                                                                                                                                         5               +3               E ectiveness                                        D8
+                                                                                                                                                         6               +3               Subclass Feature                                    D8
+                                                                                                                                                         7               +3               Know Your Enemy, Counter                            D8
+                                                                                                                                                         8               +3               Ability Score Improvement                           D8
+                                                                                                                                                         9               +4               Indomitable (one use)                               D8
+                                                                                                                                                        10               +4               Weapon Mastery                                      D10
+                                                                                                                                                        11               +4               Superior E ectiveness                               D10
+                                                                                                                                                        12               +4               Ability Score Improvement                           D10
+                                                                                                                                                        13               +5               Expect Your Enemy, Indomitable (two uses)           D10
+                                                                                                                                                        14               +5               Subclass Feature                                    D10
+                                                                                                                                                        15               +5               Calm Band                                           D12
+                                                                                                                                                        16               +5               Ability Score Improvement                           D12
+                                                                                                                                                        17               +6               Indomitable (three uses)                            D12
+                                                                                                                                                        18               +6               Superior Directive                                  D12
+                                                                                                                                                        19               +6               Epic Boon                                           D12
+                                                                                                                                                        20               +6               Presence of Power                                   D12
+
+
+
+
+                                                                                                                                                      Hunter Bloodbound Features
+                                                                                                                                                      Level Pro ciency Bonus Class Features                                                              Blood Frenzy
+                                                                                                                                                        1           +2             Blood Frenzy, Frenzied But Sane                                             2
+                                                                                                                                                        2           +2             Danger Sense, Reckless Attack                                               2
+                                                                                                                                                        3           +2             Hunter Bloodbound Subclass                                                  3
+                                                                                                                                                        4           +2             Ability Score Improvement                                                   3
+                                                                                                                                                        5           +3             Extra Attack                                                                3
+                                                                                                                                                        6           +3             Subclass Feature                                                            4
+                                                                                                                                                        7           +3             Instinctive Pounce                                                          4
+                                                                                                                                                        8           +3             Ability Score Improvement                                                   4
+                                                                                                                                                        9           +4             Brutal Strike                                                               4
+                                                                                                                                                       10           +4             Subclass Feature                                                            4
+                                                                                                                                                       11           +4             Relentless Blood Frenzy                                                     4
+
+
+
+
+                                                                                                                                                  1
+
+     fi   fi
+     fi
+     fi   fi
+          fi
+          fi
+          fi
+          fi
+          fi
+          fi
+          fi
+          fi
+          fi
+          fi   fl
+               fl   ff   fi
+                         fi
+                         fi
+                         fi
+                         fi
+                         fi   fi
+                              fi
+                              fi
+                              fi
+                              fi
+                              fi
+     fi
+ff
+          12          +4          Weapon Mastery, Ability Score Improvement                                        5
+          13          +5          Improved Brutal Strike                                                           5
+          14          +5          Subclass Feature                                                                 5
+          15          +5          Persistent Blood Frenzy                                                          5
+          16          +5          Ability Score Improvement                                                        5
+          17          +6          Improved Brutal Strike                                                           6
+          18          +6          Indomitable Might                                                                6
+          19          +6          Epic Boon                                                                        6
+          20          +6          Primal Champion                                                                  6
+
+
+
+
+         Hunter Stalker Features
+
+           Level      Pro ciency Bonus         Class Features                                            Sneak Attack
+               1             +2                Expertise, Sneak Attack                                       1d6
+               2             +2                Weapon Mastery, Cunning Action                                1d6
+               3             +2                Hunter Stalker Subclass, Steady Aim                           2d6
+               4             +2                Ability Score Improvement                                     2d6
+               5             +3                Cunning Strike                                                3d6
+               6             +3                Expertise                                                     3d6
+               7             +3                Evasion, Repliable Tallent                                    4d6
+               8             +3                Ability Score Improvement                                     4d6
+               9             +4                Subclass Feature                                              5d6
+            10               +4                Ability Score Improvement                                     5d6
+            11               +4                Improved Cunning Strike                                       6d6
+            12               +4                Ability Score Improvement                                     6d6
+            13               +5                Subclass Feature                                              7d6
+            14               +5                Devious Strikes                                               7d6
+            15               +5                Slippery Mind                                                 8d6
+            16               +5                Ability Score Improvement                                     8d6
+            17               +6                Subclass Feature                                              9d6
+            18               +6                Elusive                                                       9d6
+            19               +6                Epic Boon                                                    10d6
+            20               +6                Stroke of Luck                                               10d6
+
+
+
+
+         Hunter Deepcaller Features
+         Level Pro ciency Bonus Class Features                                  Prepared Whispers Strains    Strain Level
+           1          +2          Eldritch Comprehension, Fracturing Mind               2            2             1
+           2          +2          Braced Mind, Vailed Truth                             2            2             1
+           3          +2          Hunter Zealot Prestige Class (optional),              2            2             2
+                                  Opened Mind
+           4          +2          Ability Score Improvement                             3            3             2
+           5          +3          Endured Truth                                         3            3             3
+           6          +3          Opened Mind Combatant,                                3            3             3
+           7          +3          —                                                     3            3             4
+           8          +3          Ability Score Improvement                             3            3             4
+           9          +4          Accepted Truth                                        3            3             5
+          10          +4          Fragments of a Eldritch Mind                          4            3             5
+          11          +4          Forbidden Revelation (Level 6 Rite)                   4            3             5
+          12          +4          Ability Score Improvement                             4            4             5
+          13          +5          Embraced Truth, Forbidden Revelation                  4            4             5
+                                  (Level 7 Rite)
+          14          +5          Great Summoning                                       4            4             5
+          15          +5          Forbidden Revelation (Level 8 Rite)                   4            4             5
+          16          +5          Ability Score Improvement                             4            4             5
+          17          +6          Absolute Truth, Forbidden Revelation (Level           4            5             5
+                                  9 Rite)
+          18          +6          —                                                     4            5             5
+          19          +6          Epic Boon                                             4            5             5
+          20          +6          Eldritch Mastery                                      4            5             5
+
+
+
+
+     2
+
+fi
+fi
+

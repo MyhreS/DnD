@@ -7,15 +7,15 @@ const FighterScene = lazy(() => import("./FighterScene"));
 
 /**
  * Occasional 3D fighter overlay. Renders nothing (no canvas, no WebGL) between
- * shows; during a show it mounts a single fighter that walks in, attacks, and
- * walks off, then the canvas is torn down again until the next show.
+ * shows; during a show it mounts a hero (solo) or a duel that performs its
+ * choreography and then tears the canvas down again until the next show.
  */
 export function Fighters() {
   const { show, endShow } = useFighterShows();
   if (!show) return null;
   return (
     <Suspense fallback={null}>
-      <FighterScene key={show.key} fighter={show.fighter} name={show.name} onDone={endShow} />
+      <FighterScene key={show.key} show={show} onDone={endShow} />
     </Suspense>
   );
 }

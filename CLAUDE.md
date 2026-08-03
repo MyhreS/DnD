@@ -1,8 +1,9 @@
 # Catacombs & Starspawns — Companion App
 
-A private, mobile-first PWA for our **Catacombs & Starspawns** tabletop campaign
+A mobile-first PWA for our **Catacombs & Starspawns** tabletop campaign
 (a Bloodborne-flavoured dark-fantasy homebrew where adventurers are *Hunters*).
-It's for Simon and friends only — access is gated by Google sign-in + an allowlist.
+Open access: anyone signs in with Google, then creates or joins **campaigns**;
+permissions are per-campaign (see "Access model & roles").
 
 > This is a **public repo**. Never commit secrets. Real config/secrets live in
 > **Doppler** (project `dnd`) and GitHub Actions secrets — not in the repo.
@@ -11,8 +12,10 @@ It's for Simon and friends only — access is gated by Google sign-in + an allow
 
 - **Sessions** — next session with a live countdown + upcoming dates. Members
   RSVP (yes/maybe/no). Staff (admin/DM) add & edit dates. Backed by Firestore.
-- **Hunter** — build & save your hunter card (class, point-buy abilities, skills,
-  armor/AC, derived HP/speed). Saved per-user in Firestore.
+- **Hunter** — create & keep hunters as a digital **paper character sheet**
+  (`features/hunter/components/papersheet`): six A4 pages of free-form boxes,
+  autosaved per field, with creation-step guidance deep-linked into the Handbook.
+  Multiple per user, saved in Firestore; play mode reads HP/AC/Sanity off the sheet.
 - **Party** — gallery of everyone's hunters. Staff get a roster: who has a
   character, who's RSVP'd, with one-tap `mailto:` reminders.
 - **Handbook** — browsable rules, all six classes, and the armory, plus a link to
@@ -43,7 +46,8 @@ src/
   config.ts            Constants + role model (Identity, capabilities, names)
   types.ts             Shared domain types
   api/                 ONE FILE PER API — all Firestore/Functions access
-    allowlist.ts  players.ts  sessions.ts  rsvp.ts  notifications.ts
+    users.ts  players.ts (characters)  campaigns.ts  games.ts  sessions.ts
+    rsvp.ts  trades.ts  notifications.ts  allowlist.ts (legacy)
   hooks/               Shared hooks, grouped in subfolders
     auth/useAuthInit.ts   common/useNow.ts
   features/<feature>/  e.g. auth, sessions, hunter, party, handbook, profile
@@ -64,15 +68,21 @@ Rules:
   `src/hooks/<group>/`, feature-specific in `features/<f>/hooks/`). Components
   should read clean; side-effects are named hooks.
 - **No component file over ~200 lines.** If it grows past that, split it into
-  more components/files. Only a *few* deliberate exceptions are allowed (e.g.
-  `features/hunter/components/CharacterEditor.tsx`, the multi-step builder).
+  more components/files. Only a *few* deliberate exceptions are allowed
+  (e.g. `features/hunter/components/papersheet/SheetPage1.tsx`, the densest
+  paper-sheet page).
 - Imports use the `@/` alias (→ `src/`).
 
 ## Tooling / quality gates
 
 ```bash
 bun run typecheck     # tsc -b
-bun run lint          # eslint (incl. react-hooks + react-compiler rules)
+bun run lint          # eslint: rules-of-hooks (error) + the React Compiler
+                      #   bailout rules from eslint-plugin-react-hooks v7
+                      #   (immutability/purity/set-state-in-effect/refs/…) as
+                      #   *warnings* — they report bailouts without failing the
+                      #   gate. There is a backlog of pre-existing bailouts;
+                      #   tighten a rule back to "error" once its hotspots clear.
 bun run lint:fix
 bun run deadcode      # knip — unused files/exports/deps
 bun run deadcode:fix  # knip --fix (auto-remove dead code)
@@ -83,68 +93,51 @@ Keep all three green before opening a PR.
 
 ## Access model & roles (important)
 
-Two **independent** axes (`src/config.ts`, mirrored in `firestore.rules`):
+**Open access, per-campaign permissions.** Anyone can sign in with a verified
+Google account — there is **no allowlist gate**. Permissions are scoped to each
+campaign (see `firestore.rules`):
 
-- **accessRole**: `user` | `moderator` | `admin` — what you can *do*.
-- **playerType**: `player` | `dm` — how you sit at the *table*.
+- **First login** → an **onboarding** screen captures the user's name, saved to
+  `/users/{uid}` (`authStore.needsOnboarding` / `saveProfile`). Display names come
+  from this profile (synthesized into `member`); a legacy `/allowlist` entry is
+  used if present but never required.
+- **DM** = whoever **created** a campaign (`campaign.dmUid`). `useIsDM()`
+  (`features/campaigns/hooks`) gates DM controls — start/stop games, edit
+  sessions, the Party roster, invites. There is no global "staff" role anymore.
+- **Membership** is per-campaign: `/campaigns/{id}` + `/campaigns/{id}/members/{uid}`.
+  You see/read a campaign's games/sessions/trades only if you're a member
+  (`isMember`); only its DM controls it (`isCampaignDM`).
+- **Super-admin** bootstrap (`SUPER_ADMIN_EMAILS`, `simonmyhre1@gmail.com`) still
+  exists for the legacy `/allowlist` admin tools, but isn't needed for normal use.
 
-Capabilities are derived in `capabilities(identity)`:
-- `manageMembers` — admin only (add/remove members + roles).
-- `manageSessions` — admin, moderator, or DM (edit dates).
-- `email` — **admin or DM** (send invites/reminders).
-- `oversight` — admin, moderator, or DM (see the Party roster).
-- `needsCharacter(identity)` — true for `playerType: "player"` (players build a
-  hunter; the DM doesn't, and doesn't get the Hunter tab).
+**Two chromes** (`src/components/`): `MainLayout` (the main menu — account home,
+**Hunters** create/manage, **Handbook**, Profile; no campaign) and `CampaignLayout`
+(inside a campaign — **Play / Sessions / Party / Hunter** + a "Main menu" back
+link, gated on an active campaign, with a "CAMPAIGN" badge + name).
 
-Other notes:
-- Must sign in with Google **and** be on the allowlist (`/allowlist/{email}`).
-- **Super-admin** bootstrap (`SUPER_ADMIN_EMAILS`) is always allowed and can
-  manage members. First admin `simonmyhre1@gmail.com`; first DM Christoffer
-  (`myhrefjeld@gmail.com`). Change the email in **both** `config.ts` and
-  `firestore.rules`.
-- **Names**: members have `firstName`/`lastName` (required when adding). Show
-  `displayName(member, all)` — first name only, last name added on collision.
-- **Role switcher**: admins (and dev preview) get a "View as" switcher on the
-  Profile screen (`setViewAs`) to preview any role. Real Firestore writes are
-  still governed by actual permissions.
-- **Dev preview (for local AI navigation)**: in `bun run dev`, open
-  `?preview=admin.dm` (or `user.player`, `moderator`, `dm`, …) to run as any role
-  **without Google sign-in** — see `src/dev/preview.ts`. `?preview=off` clears it.
-  Data calls hit Firestore and may show empty states; it's for inspecting
-  layout & role-gated UI.
+**Characters** live in the main menu (`/character`, multiple per user). You bring
+one *into* a campaign on the in-campaign **Hunter** page (`/hunter`,
+`CampaignHunterPage`): it sets `membership.characterId` + `character.campaignId`
+(so the campaign DM can manage it / handle death). No character creation
+in-campaign; if your hunter dies you bring a fresh one (level 1).
 
-Firestore data:
-- `/allowlist/{email}` — `{ email, firstName, lastName, accessRole, playerType,
-  addedBy, addedAt }`. Admin writes only; staff read the roster.
-- `/players/{uid}` — a `HunterCard`. Any member reads; owner writes.
-- `/sessions/{id}` — `{ title, date, location, notes, createdBy }`. Members read;
-  staff write.
-- `/sessions/{id}/rsvps/{uid}` — `{ uid, name, email, status, at }`. You write
-  your own; the party reads.
+- **Invites**: DM invites by **email** (`campaign.invitedEmails`) or shares the
+  **code** (`CampaignInvitePanel`, on the Party page — copy + regenerate). Invited
+  users see the campaign in the main menu and **Accept/Decline**.
+- **Dev preview**: `?preview=admin.dm` (or `user.player`, …) runs as a role
+  **without sign-in** — see `src/dev/preview.ts`. Preview seeds a sample campaign
+  (DM-aware), so campaign chrome + DM controls render. `?preview=off` clears it.
 
-## Access model (important)
-
-- Must sign in with Google **and** be on the allowlist to use the app.
-- The allowlist is the Firestore collection `/allowlist/{email}`, each with a
-  **role**: `admin` | `dm` | `player`. "Staff" = admin or dm.
-- **Super-admins** (`SUPER_ADMIN_EMAILS` in `src/config.ts`, mirrored in
-  `firestore.rules`) are always allowed and can add/remove members + set roles
-  from the **Profile** screen. First/bootstrap admin: `simonmyhre1@gmail.com`.
-  First DM: `myhrefjeld@gmail.com` (Christoffer).
-- Roles drive the UI: players build a hunter and RSVP; **DM/admin** don't need a
-  character, get the **Party roster**, can edit session dates and send reminders.
-- Security is enforced in `firestore.rules`, not just the client. If you change
-  the super-admin email, change it in **both** `src/config.ts` and
-  `firestore.rules` (the `isSuperAdmin()` list).
-
-Firestore data:
-- `/allowlist/{email}` — `{ email, role, addedBy, addedAt }`. Super-admin writes
-  only; staff can read the whole roster.
-- `/players/{uid}` — a `HunterCard`. Readable by any party member, writable by owner.
-- `/sessions/{id}` — a session `{ title, date, location, notes, createdBy }`.
-  Readable by all members; writable by staff.
-- `/sessions/{id}/rsvps/{uid}` — `{ uid, name, email, status, at }`. You write
-  your own; everyone in the party can read (so the DM sees who's missing).
+Firestore data (all campaign data is **member-scoped** in the rules):
+- `/users/{uid}` — `{ firstName, lastName, email }`. Owner only.
+- `/characters/{id}` — a `HunterCard` (`ownerUid`, optional `campaignId`). Any
+  signed-in user reads; owner writes; the campaign's DM may also write (death/recover).
+- `/campaigns/{id}` — `{ name, dmUid, dmName, inviteCode, memberUids[],
+  invitedEmails[] }` + `/members/{uid}` (`{ uid, name, email, role, characterId }`).
+- `/games/{id}` (+ `/participants`, `/loot`), `/sessions/{id}` (+ `/rsvps`),
+  `/trades/{id}` — all carry `campaignId` and are readable only by that campaign's
+  members; games are owned/controlled by their DM.
+- `/allowlist/{email}` — **legacy**, optional (super-admin only).
 
 ## Working in this repo (agent workflow)
 
@@ -175,20 +168,57 @@ it can't show the notch/home-indicator behaviour).
 
 ### Dev sign-in for testing (two options, both DEV-only)
 
-- **`?preview=<role>`** — fake session, **no real data** (Firestore calls fail).
-  Good for inspecting layout & role-gated UI. `?preview=admin.dm`, `user.player`, …
+- **`?preview=<role>`** — fake session, **no real data** (real Firestore calls
+  fail, but Character/Party/**Play** views are seeded with mock data so the UI
+  renders). Good for inspecting layout & role-gated UI without auth.
+  `?preview=admin.dm`, `user.player`, `moderator.dm`, … (`?preview=off` clears it.)
 - **`?testToken=<token>`** — a **REAL** Firebase session (real Firestore + rules),
   so you can test authenticated screens with live data. Mint a token with the
   `agent-test` service account (key in Doppler `AGENT_TEST_SA`):
   ```bash
-  bun run token player    # or: admin | dm   → prints a custom token
+  bun run token player    # or: player2 | admin | dm   → prints a custom token
   ```
   Then open `http://localhost:5173/?testToken=<token>` (it's saved to
   localStorage; `?testToken=off` clears it). Tokens last ~1h — re-mint as needed.
-  The script ensures the `agent-{player,admin,dm}@…` Auth user + allowlist entry
-  exist. **Both paths are stripped from production builds** (gated on
+  The script ensures the `agent-{player,player2,admin,dm}@…` Auth user + allowlist
+  entry exist. **Both paths are stripped from production builds** (gated on
   `import.meta.env.DEV`). This is the agent's "log in and test" — Google OAuth
   itself can't be automated.
+
+### Always check BOTH mobile and desktop
+
+The app is mobile-first **and** has a first-class desktop layout (sidebar nav,
+wide two-column views). Verify every UI change at **both** sizes:
+
+```bash
+bun run scripts/shots.mjs                       # default routes, preview mode
+bun run scripts/shots.mjs /character /handbook  # specific routes
+BASE=https://dandd-ea955.web.app bun run scripts/shots.mjs   # against prod
+```
+Screenshots each route at **iPhone 15** and **1440×900 desktop**, writes
+`screenshots/<route>-{mobile,desktop}.png`, and reports console errors (the
+`/sessions` + `/party` "insufficient permissions" lines are expected in preview —
+no real auth). Read both images; don't trust that it merely compiles.
+
+### Testing Play mode / multiplayer / the simulation
+
+`?preview=` shows **mock** game data (a lobby with sample hunters) — fine for
+layout, but it doesn't exercise real sync. For a real live game, drive **three**
+identities with `?testToken=` in separate browser contexts (Playwright
+`browser.newContext()` per identity): `dm` starts a game, `player` + `player2`
+join and trade. This is also how the admin **test-run simulation** is exercised.
+
+Two real-auth verifiers exercise the live DB + **security rules** + Cloud
+Function (they sign in with custom tokens, run the flow, and clean up after):
+
+```bash
+bun run smoke       # exercises every core rule path (campaign/character/game/
+                    # join/lobby) + a negative test — fast, authoritative for rules
+bun run test:play   # Playwright: DM + player drive a live game through the real UI
+```
+Run `bun run smoke` after **any firestore.rules change** — it caught two scoping
+bugs that preview/check can't (rules only deploy on merge, so preview channels
+still run the old rules).
 
 ### Automated screenshot gallery (one command)
 
@@ -265,11 +295,28 @@ git anyway.) First-time on a new machine: `doppler login && doppler setup -p dnd
 
 ## Updating game content
 
-The handbook/classes/character-creation will be **updated later** (Simon will
-provide a new table). The UI is fully data-driven, so updates are localized:
-edit `src/data/classes.ts`, `src/data/armor.ts`, `src/data/handbook.ts`,
-`src/data/abilities.ts`. The character builder and handbook screens follow
-automatically. Replace the PDF in `public/handbook/` if a new one arrives.
+The UI is fully data-driven, so content updates are localized to `src/data/`:
+- `classes.ts` — the six classes: traits (incl. **Max Sanity** + **Sanity Die**),
+  full 1–20 **progression tables**, level-by-level **features**, and **subclasses**.
+- `rites.ts` — the Deepcaller's **Rites & Whispers**.
+- `armor.ts` — the armory (Main / Add-on / **Armor Upgrade** / Extra).
+- `handbook.ts` — the Rules chapters (creation steps, AC, carrying, Sanity).
+- `abilities.ts` — ability names + the modifier formula.
+- …plus newer data files (`backgrounds.ts`, `feats.ts`, `conditions.ts`,
+  `creatures.ts`, `items.ts`, `rulesReference.ts`, …).
+
+The paper sheet, handbook and rules-reference screens follow automatically.
+Replace the PDF in `public/handbook/` if a new one arrives.
+
+**Source of truth.** The DM's raw material lives in `resources/` (PDFs + CSVs).
+`resources/extracted/` holds the clean `pdftotext` output, the structured
+`content.json`, and `gen.py`, which regenerates `classes.ts` + `rites.ts` from
+`content.json` + the level-table CSVs. After a content refresh, re-run
+`pdftotext`, update `content.json`, and `python3 resources/extracted/gen.py`.
+
+> A few source tables conflict with the handbook's Class Overview; resolved in
+> favour of the Overview + 5e basis: Stalker Hit Die = **d8** (per Rogue), Bloodbound
+> saves = **STR/CON**, Warden has **no** tool proficiency. Confirm with the DM.
 
 ## One-time manual setup (Firebase console)
 
@@ -280,7 +327,7 @@ automatically. Replace the PDF in `public/handbook/` if a new one arrives.
 ## Roadmap / later ideas
 
 Admin page (broader), atmospheric music, email reminders to make cards / before
-sessions (Cloud Functions on Blaze + scheduled triggers), session log, party
-view, AI narration / voice. A native iOS shell using Apple's on-device
-Foundation Models is a possible future direction. None of these are built yet.
+sessions (Cloud Functions on Blaze + scheduled triggers), AI narration / voice.
+A native iOS shell using Apple's on-device Foundation Models is a possible
+future direction. None of these are built yet.
 ```

@@ -1,11 +1,13 @@
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { fullName, capabilities } from "@/config";
+import { fullName, capabilities, isSuperAdmin } from "@/config";
 import { isPreviewActive } from "@/dev/preview";
 import { format } from "date-fns";
 import { SignOutIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { FightersToggle } from "./FightersToggle";
+import { ExperimentalToggle } from "./ExperimentalToggle";
+import { DMModeToggle } from "./DMModeToggle";
 import { RoleSwitcher } from "./RoleSwitcher";
 import { AllowlistManager } from "./AllowlistManager";
 
@@ -24,7 +26,7 @@ export function ProfilePage() {
   const showSwitcher = capabilities(realIdentity).oversight || isPreviewActive();
 
   return (
-    <div>
+    <div className="reading">
       <p className="eyebrow">Profile</p>
       <h1 className="page-title">{name}</h1>
       <p className="page-intro">
@@ -35,6 +37,10 @@ export function ProfilePage() {
       <ThemeToggle />
 
       <FightersToggle />
+
+      <ExperimentalToggle />
+
+      <DMModeToggle />
 
       <div className="card">
         <p className="eyebrow">App</p>
@@ -50,7 +56,11 @@ export function ProfilePage() {
       </div>
 
       {showSwitcher && <RoleSwitcher />}
-      {canManageMembers && <AllowlistManager adminEmail={user?.email ?? ""} />}
+      {/* Legacy allowlist tools: Firestore only permits the super-admin, so
+          don't render (and query) them for other admin-role accounts. */}
+      {canManageMembers && isSuperAdmin(user?.email) && (
+        <AllowlistManager adminEmail={user?.email ?? ""} />
+      )}
 
       <button
         className="btn btn-ghost"

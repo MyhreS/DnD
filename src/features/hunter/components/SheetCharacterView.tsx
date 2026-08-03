@@ -1,0 +1,57 @@
+import { useState } from "react";
+import { PaperSheetModal } from "./papersheet/PaperSheetModal";
+import { cardClassName } from "../lib/papersheet";
+import type { HunterCard } from "@/types";
+
+/** The view for a sheet-made hunter: a small summary card, with the filled-in
+ * paper sheet popping up on top (auto-opened when the hunter is first viewed —
+ * key this component by card id). */
+export function SheetCharacterView({
+  card,
+  autoOpen = true,
+  onDismiss,
+  onDelete,
+}: {
+  card: HunterCard;
+  /** Pop the sheet open immediately (the "view a sheet character" behaviour). */
+  autoOpen?: boolean;
+  /** Called when the popup closes, so the caller can stop re-auto-opening. */
+  onDismiss?: () => void;
+  /** When given, offers deletion (main-menu Hunters only). */
+  onDelete?: () => Promise<boolean> | void;
+}) {
+  const [open, setOpen] = useState(autoOpen);
+  const cls = cardClassName(card);
+
+  function close() {
+    setOpen(false);
+    onDismiss?.();
+  }
+  async function del() {
+    if (!window.confirm(`Delete ${card.name || "this hunter"}? The DM can recover it during a live game.`)) return;
+    await onDelete?.();
+  }
+
+  return (
+    <>
+      <div className="card">
+        <p className="eyebrow" style={{ margin: 0 }}>Paper character sheet</p>
+        <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.15rem" }}>
+          {card.name || "Unnamed hunter"}
+        </div>
+        <p className="faint" style={{ fontSize: "0.84rem", margin: "2px 0 0" }}>
+          {cls ? `${cls} · ` : ""}Level {card.level} · written on the classic sheet
+        </p>
+        <button type="button" className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => setOpen(true)}>
+          Open character sheet
+        </button>
+        {onDelete && (
+          <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => void del()}>
+            Delete hunter
+          </button>
+        )}
+      </div>
+      {open && <PaperSheetModal card={card} onClose={close} />}
+    </>
+  );
+}

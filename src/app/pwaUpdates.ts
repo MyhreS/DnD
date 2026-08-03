@@ -27,6 +27,8 @@ export function setupPwaUpdates(): void {
   if ("caches" in window) caches.delete("handbook-pdf").catch(() => {});
   if (!("serviceWorker" in navigator)) return;
 
+  let swRegistration: ServiceWorkerRegistration | undefined;
+
   const updateSW = registerSW({
     immediate: true,
     onNeedRefresh() {
@@ -37,6 +39,7 @@ export function setupPwaUpdates(): void {
       updateSW(true).catch(() => usePwaUpdate.setState({ needRefresh: true }));
     },
     onRegisteredSW(_swUrl, registration) {
+      swRegistration = registration;
       if (!registration) return;
       const check = () => {
         if (document.visibilityState === "visible") registration.update().catch(() => {});
@@ -47,5 +50,35 @@ export function setupPwaUpdates(): void {
     },
   });
 
-  usePwaUpdate.setState({ update: () => void updateSW(true) });
+  // Tapping the pill must *guarantee* a reload. In "prompt" mode updateSW(true)
+  // only posts SKIP_WAITING and leaves the reload to the service worker's
+  // `controllerchange` event — which iOS standalone PWAs frequently never fire.
+  // Worse, the auto-attempt above has usually already activated the new worker
+  // by the time the pill shows, so there's nothing left "waiting" to message and
+  // the call is a silent no-op (this is the "tap does nothing" bug). So: if a
+  // worker is still waiting, activate it and reload the moment it reports
+  // `activated`; otherwise the new build is already the active worker and a plain
+  // reload picks it up.
+  usePwaUpdate.setState({
+    update: () => {
+      const waiting = swRegistration?.waiting;
+      if (!waiting) {
+        window.location.reload();
+        return;
+      }
+      let reloaded = false;
+      const reload = () => {
+        if (reloaded) return;
+        reloaded = true;
+        window.location.reload();
+      };
+      // Reload on the worker's real activation, not a blind timer, so we never
+      // reload under the old controller and serve a stale page.
+      waiting.addEventListener("statechange", () => {
+        if (waiting.state === "activated") reload();
+      });
+      void updateSW(true); // posts SKIP_WAITING to the waiting worker
+      window.setTimeout(reload, 3000); // last-resort backstop if statechange never fires
+    },
+  });
 }

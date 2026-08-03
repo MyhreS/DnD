@@ -1,0 +1,526 @@
+     BECOMING A HUNTER DEEPCALLER...
+     AS A LEVEL 1 CHARACTER
+     • Gain all the traits in the Core Hunter Deepcaller Traits table.
+     • Gain the Hunter Deepcaller's level 1 features, which are listed in the Hunter Deepcaller Features
+     table.
+
+     HUNTER DEEPCALLER CLASS FEATURES
+     As a Hunter Deepcaller, you gain the following class features when you reach the speci ed Hunter
+     Deepcaller levels. These features are listed in the Hunter Deepcaller Features table.
+
+     LEVEL 1: ELDRITCH COMPREHENSION
+     Through occult rituals, you have expanded your mind beyond mortal limits, gaining the ability to
+     comprehend eldritch passages and speak words no sane creature was meant to understand.
+     These forbidden words allow you to read and perform Rites.
+
+     See at the end of this class description for the rules on Rite-performing. The information below
+     details how you use those rules with Hunter Deepcaller Rites, which appear in Appendix B “The
+     Book of the Deepcaller” And Appendix C “Hushed Whispers”.
+
+     Whispers. You know two Whispers of your choice. Whispers are lesser fragments of forbidden
+     knowledge that are not written in the Book of the Deepcaller and must be memorized.
+     Whenever you gain a Hunter Deepcaller level, you can replace one Whisper you know with
+     another Whisper of your choice.
+     When you reach Hunter Deepcaller levels 4 and 10, you learn another Whisper of your choice, as
+     shown in the Whispers column of the Hunter Deepcaller Features table.
+     Strains. The Hunter Deepcaller Features table shows how many Strains you have to perform your
+     Rites of Levels 1–5. The table also shows the level of those Strains, all of which are the same
+     level. You regain all expended Strains when you nish a Short or Long Rest.
+     For example, when you are a level 5 Hunter Deepcaller, you have two Level 3 Strains. To perform
+     a Level 1 Rite, you must spend one of those Strains, and the Rite is performed as a Level 3 Rite.
+     The Book of the Deepcaller. Your Book of the Deepcaller contains the forbidden passages
+     needed to perform Hunter Deepcaller Rites of level 1-5. You do not prepare these Rites. Any
+     Hunter Deepcaller Rite in your book is available for you to perform, provided you have a Strain of
+     a high enough level to perform it.
+     As your Strain level increases, your mind becomes capable of comprehending deeper and more
+     dangerous passages within the book. You can perform any Hunter Deepcaller Rite of a level equal
+     to or lower than your current Strain level.
+     For example, when your Strain level is 3, you can perform Hunter Deepcaller Rites of Levels 1, 2,
+     and 3, but not Rites of Levels 4 or 5.
+     Rite Performing Ability. Intelligence is the Rite Performing ability for your Hunter Deepcaller
+     Rites.
+     Performing a Rite. Unless otherwise stated, performing a Rite requires you to hold a Book of the
+     Deepcaller in one hand and speak the Rite's words aloud. Each time you perform a Rite, you
+     su er 2 Madness, unless a feature or e ect says otherwise.
+     Performing a Whisper. Whispers are an exception to the normal rules for performing Rites.
+     Performing a Whisper requires only a hushed recitation of its words. You do not need a Book of
+     the Deepcaller to perform a Whisper, and performing a Whisper does not cause you to su er
+     Madness unless an e ect says otherwise.
+     Break the Limits of Your Mind. If you perform a Rite using a Strain level higher than your current
+     Strain level, you su er Madness equal to your maximum Sanity immediately after the Rite is
+     performed. This is not recommended.
+
+     LEVEL 1: FRACTURING MIND
+     Every time you level up su er 2 Madness and permanently gain 1 max Sanity.
+
+     LEVEL 2: BRACED MIND
+     As an Action, you steady your mind through an esoteric rite, forcing forbidden knowledge back
+     into shape.
+     When you do so, you su er 1 Madness and regain a number of expended Strains equal to half
+     your maximum number of Strains, rounded up.
+
+
+
+
+                                                                                      ff
+                                                                                 fi
+                                          fi
+                                ff
+                           ff
+                      ff
+                 ff
+            ff
+ff
+Once you use this feature, you cannot use it again until you nish a Long Rest.
+
+LEVEL 2: VAILED TRUTH
+You no longer su er Madness from performing Level 1 Rites unless an e ect speci cally says so.
+
+LEVEL 3: THE HUNTER ZEALOT PRESTIGE CLASS
+At 3rd level, you may enter the Path of the Zealot Prestige Class, abandoning the traditional path
+of the Deepcaller.
+If you choose this Prestige Class, you gain no further features from the Hunter Deepcaller class.
+Instead, whenever you would gain a Hunter Deepcaller feature, you gain the corresponding
+feature from the Path of the Zealot Prestige Class.
+You lose all Hunter Deepcaller features gained before entering this Prestige Class unless a Zealot
+feature speci cally says otherwise.
+The Path of the Zealot Prestige Class is detailed after the Hunter Deepcaller class description.
+A Prestige Class is an alternative progression path that replaces your existing class path with a
+specialized set of abilities.
+
+LEVEL 3: OPENED MIND
+As a Bonus Action, you can establish a telepathic link between yourself and up to eight willing
+creatures you can see within 60 feet.
+The link lasts for 1 round (the start of your next round). While linked, each creature may
+communicate telepathically with the others. When the link is established, each linked creature
+may contribute once to the conversation. The order is determined by the participants themselves.
+Once a creature has nished communicating, the next creature may speak.
+This communication occurs outside the normal ow of time and does not consume Actions,
+Bonus Actions, Reactions, or movement.
+Once you use this feature, you can't use it again until you nish a Short or Long Rest unless you
+expend a Strain (no action required) to restore your use of it.
+
+LEVEL 4: ABILITY SCORE IMPROVEMENT
+You gain the Ability Score Improvement feat (see chapter 4) or another feat of your choice for
+which you qualify. You gain this feature again at Hunter Deepcaller levels 8, 12, and 16.
+
+LEVEL 5: ENDURED TRUTH
+You no longer su er Madness from performing Level 2 Rites unless an e ect speci cally says so.
+
+LEVEL 6: OPENED MIND COMBATANT
+When you use your Opened Mind feature, you may choose one creature within 60 feet that you
+can see. The creature must succeed on a Wisdom saving throw against your Rite Save DC.
+On a failed save, you glimpse fragments of its immediate future and perceive its intentions before
+they unfold.
+For the duration of 10 rounds, the chosen creature has Disadvantage on attack rolls against you,
+and you have Advantage on attack rolls against it.
+
+LEVEL 9: ACCEPTED TRUTH
+You no longer su er Madness from performing Level 3 Rites unless an e ect speci cally says so.
+
+LEVEL 10: FRAGMENTS OF A ELDRITCH MIND
+You have Resistance to Mind damage, and whenever a creature deals Mind damage to you, that
+creature takes the same amount of damage that you take.
+
+LEVEL 11: FORBIDDEN REVELATION
+Your studies uncover a fragment of knowledge that few minds can endure. The Book of the
+Deepcaller begins to reveal hidden passages that were always there, but impossible for you to
+perceive until now.
+Choose one Level 6 Rite. This Rite becomes one of your Forbidden Revelations.
+You can perform this Rite once without expending Strain. Once you perform it in this way, you
+cannot do so again until you nish a Long Rest.
+At Hunter Deepcaller levels 13, 15, and 17, the Book reveals another Forbidden Revelation to you.
+These Revelations must be chosen from Hunter Deepcaller Rites of the following levels:
+
+
+
+
+                                                                       fi
+                                                                       fi
+                                                             ff
+                                                             ff
+                                                             ff
+                                                   fi
+                                              fi
+                                    fl
+                 fi
+           fi
+      ff
+      ff
+      ff
+ fi                                                                    fi
+     Level 13: one Level 7 Rite
+     Level 15: one Level 8 Rite
+     Level 17: one Level 9 Rite
+     You can also use a Forbidden Revelation for a 1-5 Level Rite that has the option to use Higher
+     Level Strains. That Rite then becomes the level of which Forbidden Revelation you choose.
+     Whenever you nish a Long Rest, you may replace all of your Forbidden Revelations with another
+     Hunter Deepcaller Rite of the same level.
+     You regain all uses of your Forbidden Revelations when you nish a Long Rest.
+
+     LEVEL 13: EMBRACED TRUTH
+     You no longer su er Madness from performing Level 4 Rites unless an e ect speci cally says so.
+
+     LEVEL 14: GREAT SUMMONING
+     When you perform Call Lesser Starborn, you can choose to forgo Concentration. If you do, the
+     Rite's duration becomes 10 rounds, and the summoned Lesser Starborn gains Temporary Hit
+     Points equal to your Hunter Deepcaller level + your Intelligence modi er.
+     In addition, the rst time each turn the Lesser Starborn hits a creature a ected by your Eldritch
+     Chain of Bolts, the attack deals an extra 1d6 Mind damage.
+     The rst time the Lesser Starborn hits a creature a ected by your Eldritch Chain of Bolts, choose
+     one Ability. For as long as that creature remains a ected by your Eldritch Chain of Bolts, it has
+     Disadvantage on Ability Checks made using that chosen Ability.
+
+     LEVEL 17: ABSOLUTE TRUTH
+     You no longer su er Madness from performing Level 5 Rites unless an e ect speci cally says so.
+
+     LEVEL 19: EPIC BOON
+     You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you qualify.
+
+     LEVEL 20: ELDRITCH MASTERY
+     When you use your Braced Mind feature, you regain all of your expended Strains instead of only
+     half.
+
+
+
+     THE DEEPCALLERS RITES
+
+     TYPES OF RITES
+     Each Rite has a type. The types are listed in the Types of Rites table. These categories help
+     describe Rites but have no rules of their own, although some other rules refer to them.
+
+     LONGER PERFORMING THAN ONE ACTION
+     Certain Rites require more Actions to perform. While you perform a Rite with a Performing of two
+     or more Actions, you must take the Rite action on each of your turns until the requirement is met,
+     and you must maintain Concentration (see further down) while you do so.
+     If your Concentration is broken, the Rite fails, but you don't expend a Strain. To perform the Rite
+     again, you must start over.
+
+     RANGE
+     A Rite’s range indicates how far from the performer of the Rite the Rites e ect can originate, and
+     the Rites description speci es which part of the e ect is limited by the range.
+     A range usually takes one of the following forms:
+     Distance. The range is expressed in feet.
+     Touch. The Rite’s e ect originates on something, as de ned by the Rite, that the performer of the
+     Rite must touch within their reach.
+     Self. The Rite is performed on the performer self, or emanates from them, as speci ed in the Rite.
+     If a Rite has movable e ects, they aren't restricted by its range unless the Rite’s description says
+     otherwise.
+
+
+
+
+                                                                                   fi
+                                                                              ff
+                                                                         ff
+                                                                         ff        fi
+                                                               fi
+                                                          fi
+                                                     fi
+                                                ff
+                                           ff
+                                           ff
+                                 fi
+                            ff
+                       ff
+                  ff
+                  ff
+             fi
+        fi
+fi                                                                                      fi
+                                                                    ff
+                                   DURATION
+                                   A Rites's duration is the length the Rites persists after it is performed. A duration typically takes
+                                   one of the following forms:
+                                   Concentration. A duration that requires Concentration follows the Concentration rules. (see
+                                   further down).
+                                   Instantaneous. An instantaneous duration means the Rites's outcome appears only for a
+                                   moment and then disappears.
+                                   Span. A duration that provides a span speci es how many rounds the Rite lasts. While span Rite
+                                   that you perform is ongoing, you can dismiss it (no action required) if you don't have the
+                                   Incapacitated condition or it is a Summoning Rite.
+
+                                   CONCENTRATION
+                                   Some Rites and other e ects require Concentration to remain active, as speci ed in their
+                                   descriptions.
+                                   If the e ect's creator loses Concentration, the e ect ends. If the e ect has a maximum duration,
+                                   the e ect's description speci es for how many rounds the performer can concentrate on it. The
+                                   creator can end Concentration at any time (no action required).
+                                   The following factors break Concentration.
+                                   Another Concentration E ect. You lose Concentration on an e ect the moment you start
+                                   performing a Rite that requires Concentration or activate another e ect that requires
+                                   Concentration.
+                                   Damage. If you take damage, you must succeed on a Constitution saving throw to maintain
+                                   Concentration. The DC equals 10 or half the damage taken (round down), whichever number is
+                                   higher, up to a maximum DC of 30.
+                                   Incapacitated or Dead. Your Concentration ends if you have the Incapacitated condition or you
+                                   die.
+
+                                   RITE EFFECTS
+                                   The e ects of a Rite are detailed after its Duration entry. These e ects describe exactly what the
+                                   Rite does, often ignoring the normal laws of nature. Any outcomes beyond those e ects are
+                                   determined by the DM. A Rite's e ects typically involve targets, saving throws, Rite attacks, or a
+                                   combination of the three.
+
+                                   TARGETS
+                                   Most Rites require you to choose one or more targets. A Rite's description speci es whether it
+                                   targets creatures, objects, areas, or something else.
+                                   A Clear Path to the Target. To target something with a Rite, you must have a clear path to it. A
+                                   target behind Total Cover cannot be targeted unless the Rite states otherwise.
+                                   Targeting Yourself. If a Rite targets a creature of your choice, you may choose yourself unless
+                                   the Rite speci es a hostile creature or a creature other than yourself.
+                                   Areas of E ect. Some Rites a ect an area rather than a speci c target. The Rite's description
+                                   speci es the shape of the a ected area, which is typically one of the following: Cone, Cube,
+                                   Cylinder, Emanation, Line, Sphere. A creature or object within the area is a ected as described by
+                                   the Rite.
+                                   Awareness of Being Targeted. Unless a Rite produces an obvious e ect, a creature is unaware
+                                   it was targeted. E ects such as lightning, explosions, or summoned horrors are obvious. More
+                                   subtle e ects, such as reading thoughts or in uencing the mind, typically go unnoticed unless the
+                                   Rite states otherwise.
+                                   Invalid Targets. If you perform a Rite on a creature or object that cannot be a ected by it, the
+                                   Rite has no e ect on that target. Any Strain spent to perform the Rite is still expended.
+
+                                   If the Rite normally allows a saving throw and has no e ect on a successful save, an invalid target
+                                   appears to have succeeded on its saving throw. Otherwise, you perceive that the Rite had no
+                                   e ect.
+
+                                   SAVING THROWS
+                                   Many Rites allow a target to make a saving throw to avoid some or all of their e ects. The Rite
+                                   speci es which ability is used and what happens on a success or failure. The saving throw DC for
+                                   your Rites is calculated as follows:
+
+
+
+
+                                                                                                                                                    ff
+                                                                                                                                               fi
+                                                                                                                                          ff
+                                                                                                                                    ff
+                                                                                                                                     fi
+                                                                                                                               ff
+                                                                                                                          ff
+                                                                                                                     ff
+                                                                                                                ff
+                                                                                                           ff
+                                                                                                          ff
+                                                                                                     fi
+                                                                                                ff
+                                                                                           ff
+                                                                                      fl
+                                                                                 fi
+                                                                            ff
+                                                                       ff
+                                                                  fi
+                                                             ff
+                                                        ff
+                                                   ff
+                                              ff
+                                    ff   fi
+                              ff
+                         ff
+                    ff
+          fi
+          fi   ff
+     ff
+ff
+          Rite Save DC = 8 + your Rite Performing Ability Modi er + your Pro ciency Bonus
+
+
+          Your Rite Performing Ability is determined by your class.
+
+
+          RITE ATTACKS
+          Some Rites require you to make a Rite Attack to determine whether the Rite hits its target. Your
+          Rite Attack modi er is calculated as follows:
+
+          Rite Attack Modi er = your Rite Performing Ability Modi er + your Pro ciency Bonus
+
+          COMBINING RITE EFFECTS
+          The e ects of di erent Rites stack while their durations overlap. However, the e ects of the same
+          Rite do not stack with themselves. If the same Rite a ects a target multiple times, only the most
+          potent e ect applies. If multiple instances are equally potent, the most recent e ect applies. For
+          example, if two Deepcallers perform the same Rite on the same target, the target bene ts from
+          only one instance of that Rite unless the Rite speci cally states otherwise.
+
+
+
+
+          HUNTER ZEALOT
+          Most Deepcallers seek power through forbidden study, reading from the Book of the Deepcaller
+          and calling upon many Patrons. A Zealot abandons that path. Through blood, re, and devotion,
+          the Zealot o ers the book to a single eldritch being and becomes its living weapon.
+          A Zealot does not search for many truths. A Zealot serves one Truth.
+
+          LEVEL 3: BURN THE BOOK
+          When you enter the Hunter Zealot Prestige Class, your Book of the Deepcaller is destroyed,
+          burned, consumed, and claimed by your new Patron.
+          You lose all Hunter Deepcaller features gained before entering this Prestige Class unless a Zealot
+          feature speci cally says otherwise. You gain no further features from the Hunter Deepcaller class.
+          Instead, whenever you would gain a Hunter Deepcaller feature, you gain the corresponding
+          feature from the Hunter Zealot Prestige Class.
+          You can no longer perform Rites of Level 2 or higher. You also lose all Rites of Level 2 or higher
+          that you knew or had prepared.
+          You retain your Rite Performing ability, Rite Save DC, and Rite Attack modi er.
+
+          LEVEL 3: CHOSEN OF ONE PATRON
+          Your new Patron becomes the source of your Zealot features.
+          You no longer require a Book of the Deepcaller to perform Whispers. The words of your Patron are
+          carved into your mind, blood, and esh.
+
+          LEVEL 3: ZEALOT WHISPERS
+          You retain the Whispers you knew before entering this Prestige Class.
+          In addition, when you prepare Whispers, you can choose from both normal Whispers and Level 1
+          Hunter Deepcaller Rites. A Level 1 Rite prepared in this way becomes a Zealot Whisper for you.
+
+          A Zealot Whisper:
+          does not require a Book of the Deepcaller,
+          does not expend Strain,
+          does not cause you to su er Madness,
+          cannot be performed using Higher-Level Strain,
+          uses your Rite Save DC and Rite Attack modi er as normal.
+
+
+
+
+                                                                                                fi
+                                                                                           ff
+                                                                                          ff
+                                                                                     fi
+                                                                                fi
+                                                                           fi
+                                                                      fi
+                                                                 fi
+                                                            fi
+                                                       ff
+                                                  fi
+                                             fi
+                                        fl
+                                   ff
+                              fi
+                         fi
+                    ff
+               fi
+          ff
+     ff
+ff
+     You prepare a number of Whispers equal to the number shown for a Hunter Deepcaller of your
+     level, plus one additional Whisper.
+
+     LEVEL 3: ZEALOT TRAINING
+     Your Patron reshapes you for battle.
+     You gain pro ciency with martial weapons.
+
+     LEVEL 3: ELDRITCH ARMAMENT
+     Your devotion allows your Patron to guide your weapon through your body.
+     When you attack with a weapon with which you have pro ciency, you can use your Rite
+     Performing ability for the attack and damage rolls instead of Strength or Dexterity.
+     When you hit with such a weapon, you can choose for the weapon to deal its normal damage
+     type or Eldritch Power damage.
+
+     LEVEL 3: CARVED ELDRITCH STRIKE
+     You always have Eldritch Strike prepared. It does not count against the number of Whispers you
+     can prepare.
+
+     LEVEL 3: CARVED ARMOR OF AGATHYS
+     You always have Armor of Agathys prepared. For you, Armor of Agathys is treated as a Whisper. It
+     does not count against the number of Whispers you can prepare.
+
+     LEVEL 3: STRAIN OF DEVOTION
+     You no longer use Strain to perform Rites. Instead, your Strain becomes a weaponized expression
+     of your devotion.
+     Your Strain progression and maximum Strain level continue to improve as shown in the Hunter
+     Deepcaller table. However, you can spend Strain only on Zealot features.
+     You gain the following ways to spend Strain:
+     Patron's Blow. Once per turn, when you hit a creature with a weapon attack or Eldritch Strike,
+     you can expend one Strain to deal extra Eldritch Power damage to the target.
+     The extra damage equals 1d8 per level of the Strain expended.
+     Patron's Ward. When you take damage, you can take a Reaction and expend one Strain to
+     reduce the damage by 1d8 per level of the Strain expended + your Rite Performing ability
+     modi er.
+     Patron's Step. As a Bonus Action, you can expend one Strain to teleport up to 10 feet per level of
+     the Strain expended to an unoccupied space you can see.
+     This movement does not provoke opportunity attacks.
+
+     LEVEL 4: ABILITY SCORE IMPROVEMENT
+     You gain the Ability Score Improvement feat (see chapter 4) or another feat of your choice for
+     which you qualify. You gain this feature again at Hunter Zealot levels 8, 12, and 16.
+
+     LEVEL 5: RITE AND BLADE
+     You can attack twice, instead of once, whenever you take the Attack Action on your turn.
+     In addition, when you use your Action to perform a Whisper, you can make one weapon attack as
+     a Bonus Action.
+
+     LEVEL 6: FANATICAL FOCUS
+     Your devotion shields your mind from hesitation, fear, and pain.
+     When you fail a saving throw, you can expend one Strain to reroll the saving throw. You must use
+     the new roll.
+     If the new roll succeeds, you can immediately move up to half your Speed without provoking
+     opportunity attacks.
+
+     LEVEL 10: ZEALOUS PRESENCE
+     As a Bonus Action, you unleash a command lled with the authority of your Patron.
+     Choose up to eight creatures of your choice within 60 feet that can see or hear you. Until the start
+     of your next turn, each chosen creature has Advantage on attack rolls and saving throws.
+     Once you use this feature, you cannot use it again until you nish a Long Rest, unless you expend
+     one Strain to use it again.
+
+
+
+
+                                                        fi
+                                                   fi
+                                       fi
+      fi
+fi
+LEVEL 19: EPIC BOON
+You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you qualify.
+
+LEVEL 20: ABSOLUTE UNION
+As a Bonus Action, you allow your Patron to fully manifest through your body. This transformation
+lasts for 5 rounds, until you drop to 0 Hit Points, or until you end it early as a Bonus Action.
+Once you use this feature, you cannot use it again until you nish a Long Rest.
+When you enter this form, you su er 20 Madness.
+While transformed, you gain the following bene ts:
+Patron's Form. Your body becomes a living vessel for your Patron. Your eyes turn black like the
+abyss, blackened veins spread across your esh, impossible shadows cling to your body, bone
+spines tear through your skin, and spectral limbs writhe around you as if guided by a will beyond
+your own. When you transform, each other creature within a 30-foot-radius Sphere centered on
+you must make a Wisdom saving throw against your Rite Save DC.
+On a failed save, a creature takes 8d10 Mind damage and su ers 6 Madness. On a successful
+save, a creature takes half as much damage and su ers 2 Madness.
+Each other creature within 120 feet that can see your transformation unfold, but is outside the 30-
+foot-radius Sphere, su ers 2 Madness.
+Eldritch Resistance. You have Immunity to Mind damage and Resistance to Eldritch Power
+damage.
+Unshaken Vessel. You cannot be Frightened, Charmed, Paralyzed, or Stunned.
+Devoted Assault. The rst time you hit a creature on each of your turns with a weapon attack or
+Eldritch Strike, the target takes an extra 4d8 Eldritch Power damage.
+Lashing Tendrils. As an Action, you command the spectral limbs of your Patron to lash out.
+Choose up to three creatures you can see within 30 feet of you. Each target must make a Strength
+saving throw against your Rite Save DC.
+On a failed save, a target takes 6d10 Eldritch Power damage and gains the Restrained condition.
+On a successful save, a target takes half as much damage and is not Restrained.
+A Restrained creature can repeat the saving throw at the end of each of its turns, ending the
+condition on itself on a success.
+You cannot use Lashing Tendrils again while a creature is Restrained by this feature.
+Tendril Reprisal. When a creature within 15 feet of you hits you with an attack, you can take a
+Reaction to lash out with a spectral tendril. The creature takes 3d10 Eldritch Power damage and
+must succeed on a Strength saving throw against your Rite Save DC or have the Restrained
+condition until the end of its next turn.
+Unbroken Vessel. If you would drop to 0 Hit Points while this transformation is active, you can
+expend one Strain to drop to 1 Hit Point instead.
+If you drop to 0 Hit Points and do not use this bene t, the transformation ends.
+
+
+
+
+                                                         ff
+                                                    fi
+                                               ff
+                                          fi
+                                     fi
+                                fl
+                     ff
+               fi
+          ff
+

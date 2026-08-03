@@ -1,0 +1,218 @@
+               BECOMING A HUNTER STALKER ...
+
+               AS A LEVEL 1 CHARACTER
+               • Gain all the traits in the Core Hunter Stalker Traits table.
+               • Gain the Hunter Stalker's level 1 features, which are listed in the Hunter Stalker Features table.
+
+               LEVEL 1: EXPERTISE
+               You gain Expertise in two of your skill pro ciencies of your choice. At Hunter Stalker level 6, you
+               gain Expertise in two more of your skill pro ciencies of your choice.
+
+               LEVEL 1: SNEAK ATTACK
+               You know how to strike subtly and exploit a foe's distraction. Once per turn, you can deal an extra
+               1d6 damage to one creature you hit with an attack roll if you have Advantage on the roll and the
+               attack uses a Finesse or a Ranged weapon. The extra damage's type is the same as the
+               weapon's type.
+               You don't need Advantage on the attack roll if at least one of your allies is within 5 feet of the
+               target, the ally doesn't have the Incapacitated condition, and you don't have Disadvantage on the
+               attack roll.
+               The extra damage increases as you gain Hunter Stalker levels, as shown in the Sneak Attack
+               column of the Hunter Stalker Features table.
+
+
+               LEVEL 2: WEAPON MASTERY
+               Your training with weapons allows you to use the mastery properties of two kinds of weapons of
+               your choice with which you have pro ciency.
+               Whenever you nish a Long Rest, you can change the kinds of weapons you chose.
+
+               LEVEL 2: CUNNING ACTION
+               Your quick thinking and agility allow you to move and act quickly. On your turn, you can take one
+               of the following actions as a Bonus Action: Dash, Disengage, or Hide.
+
+               LEVEL 3: HUNTER STALKER SUBCLASS
+               You gain a Hunter Stalker subclass of your choice. The Assassin or the Thief subclasses are
+               detailed after this class's description. A subclass is a specialization that grants you features at
+               certain Hunter Stalker levels.
+
+               LEVEL 3: STEADY AIM
+               As a Bonus Action, you give yourself Advantage on your next attack roll on the current turn. You
+               can use this feature only if you haven't moved during this turn, and after you use it, your Speed is
+               O until the end of the current turn.
+
+               LEVEL 4: ABILITY SCORE IMPROVEMENT
+               You gain the Ability Score Improvement feat (see chapter 4) or another feat of your choice for
+               which you qualify. You gain this feature again at Hunter Stalker levels 8, 10, 12, and 16.
+
+               LEVEL 5: CUNNING STRIKE
+               You've developed cunning ways to use your Sneak Attack. When you deal Sneak Attack damage,
+               you can add one of the following Cunning Strike e ects.
+               Each e ect has a die cost, which is the number of Sneak Attack damage dice you must forgo to
+               add the e ect. You remove the die before rolling, and the e ect occurs immediately after the
+               attack's damage is dealt. For example, if you add the Poison e ect, remove 1d6 from the Sneak
+               Attack's damage before rolling.
+               If a Cunning Strike e ect requires a saving throw, the DC equals 8 plus your Dexterity modi er
+               and Pro ciency Bonus.
+               Poison (Cost: 1d6). You add a toxin to your strike, forcing the target to make a Constitution
+               saving throw. On a failed save, the target has the Poisoned condition for 1 minute. At the end of
+               each of its turns, the Poisoned target repeats the save, ending the e ect on itself on a success.
+               To use this e ect, you must have a Poisoner's Kit on your person.
+               Trip (Cost: 1d6). If the target is Large or smaller, it must succeed on a Dexterity saving throw or
+               have the Prone condition.
+
+
+
+
+                                         fi
+                          ff
+                     fi
+                ff
+          ff
+     fi
+ff                                            fi        ff      ff   ff   ff                      fi
+                                                   fi
+      Withdraw (Cost: 1d6). Immediately after the at-tack, you move up to half your Speed without
+      provoking Opportunity Attacks.
+
+      LEVEL 7: EVASION
+      You can nimbly dodge out of the way of certain dangers. When you're subjected to an e ect that
+      allows you to make a Dexterity saving throw to take only half damage, you instead take no
+      damage if you succeed on the saving throw and only half damage if you fail. You can't use this
+      feature if you have the Incapacitated condition.
+
+      LEVEL 7: RELIABLE TALENT
+      Whenever you make an ability check that uses one of your skill or tool pro ciencies, you can treat
+      a d20 roll of 9 or lower as a 10.
+
+      LEVEL 11: IMPROVED CUNNING STRIKE
+      You can use up to two Cunning Strike e ects when you deal Sneak Attack damage, paying the
+      die cost for each e ect.
+
+      LEVEL 14: DEVIOUS STRIKES
+      You've practiced new ways to use your Sneak Attack deviously. The following e ects are now
+      among your Cunning Strike options.
+      Daze (Cost: 2d6). The target must succeed on a Constitution saving throw, or on its next turn, it
+      can do only one of the following: move or take an action or a Bonus Action.
+      Knock Out (Cost: 6d6). The target must succeed on a Constitution saving throw, or it has the
+      Unconscious condition for 1 minute or until it takes any damage. The Unconscious target repeats
+      the save at the end of each of its turns, ending the e ect on itself on a success.
+      Obscure (Cost: 3d6). The target must succeed on a Dexterity saving throw, or it has the Blinded
+      condition until the end of its next turn.
+
+
+      LEVEL 15: SLIPPERY MIND
+      Your cunning mind is exceptionally di cult to con-trol. You gain pro ciency in Wisdom and
+      Charisma saving throws.
+
+      LEVEL 18: ELUSIVE
+      You're so evasive that attackers rarely gain the upper hand against you. No attack roll can have
+      Advantage against you unless you have the Incapacitated condition.
+
+      LEVEL 19: EPIC BOON
+      You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you quality.
+
+      LEVEL 20: STROKE OF LUCK
+      You have a marvelous knack for succeeding when you need to. If you fail a D20 Test, you can turn
+      the roll into a 20.
+      Once you use this feature, you can't use it again until you nish a Short or Long Rest.
+
+
+
+      ASSASSIN
+      Practice the Grim Art of Death
+
+      An Assassin's training focuses on using stealth, poison, and disguise to eliminate foes with deadly
+      e ciency. While some Hunter Stalkers who follow this path are hired killers, spies, or bounty
+      hunters, the capabilities of this subclass are equally useful for adventurers facing a variety of
+      monstrous enemies.
+
+
+      LEVEL 3: ASSASSINATE
+      You're adept at ambushing a target, granting you the following bene ts.
+      Initiative. You have Advantage on Initiative rolls.
+
+
+
+
+                                                                                   ff
+                                                                             ff
+                                                                        fi
+                                                                   fi
+                                                              fi
+                                                     fi
+                                               ff
+                                      ff
+                                ffi
+             ff
+ffi
+     Surprising Strikes. During the rst round of each combat, you have Advantage on attack rolls
+     against any creature that hasn't taken a turn. If your Sneak Attack hits any target during that
+     round, the target takes extra damage of the weapon's type equal to your Hunter Stalker level.
+
+     LEVEL 9: INFILTRATION EXPERTISE
+     You are expert at the following techniques that aid your in ltrations.
+     Masterful Mimicry. You can unerringly mimic another person’s speech, handwriting, or both. To
+     mimic a person’s speech, you must have heard them speak and spent 1 action studying their
+     voice. To mimic a person’s handwriting, you must have seen their writing and spent 1 action
+     studying it.
+     Roving Aim. Your Speed isn't reduced to 0 by using Steady Aim.
+
+     LEVEL 13: ENVENOM WEAPONS
+     When you use the Poison option of your Cunning Strike, the target also takes 2d6 Poison damage
+     whenever it fails the saving throw. This damage ignores Resistance to Poison damage.
+
+     LEVEL 17: DEATH STRIKE
+     When you hit with your Sneak Attack on the rst round of a combat, the target must succeed on a
+     Constitution saving throw (DC 8 plus your Dexterity modi er and Pro ciency Bonus), or the attack
+     s damage is doubled against the target.
+
+
+
+     SHADOW
+     Hunt for Treasure as a Classic Adventurer
+
+     A mix of burglar, treasure hunter, and explorer, you are the epitome of an adventurer. In addition to
+     improving your agility and stealth, you gain abilities useful for delving into ruins and getting
+     maximum bene t from the magic items you nd there.
+
+     LEVEL 3: FAST HANDS
+     As a Bonus Action, you can do one of the following.
+     Sleight of Hand. Make a Dexterity (Sleight of Hand) check to pick a lock or disarm a trap with
+     Thieves' Tools or to pick a pocket.
+
+     Use an Object. Take the Utilize action.
+
+     LEVEL 3: SECOND-STORY WORK
+     You've trained to get into especially hard-to-reach places, granting you these bene ts.
+     Climber. You gain a Climb Speed equal to your Speed.
+     Jumper. You can determine your jump distance using your Dexterity rather than your Strength.
+
+     LEVEL 9: SUPREME SNEAK
+     You gain the following Cunning Strike option.
+     Stealth Attack (Cost: 1d6). If you have the Hide action's Invisible condition, this attack doesn't
+     end that condition on you if you end the turn behind Three-Quarters Cover or Total Cover.
+
+     LEVEL 13: CLOAK OF SHADOWS
+     As a Bonus Action, you can give yourself the Invisible condition until the end of your next turn.
+     You can use this feature a number of times equal to your Wisdom modi er (minimum of once),
+     and you regain all expended uses when you nish a Long Rest.
+
+     LEVEL 17: SHADOWBRINGER
+     You are adept at laying ambushes and quickly escaping danger. You can take two turns during the
+      rst round of any combat. You take your rst turn at your normal Initiative and your second turn at
+     your Initiative minus 10.
+
+
+
+
+                                                                              fi
+                                                                    fi
+                                                               fi
+                                                        fi
+                                                   fi
+                                             fi
+                                             fi
+                                   fi
+                         fi
+         fi
+fi                                      fi
+

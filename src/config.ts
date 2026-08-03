@@ -39,6 +39,8 @@ export interface Capabilities {
   email: boolean;
   /** See the party roster / DM oversight tools. */
   oversight: boolean;
+  /** Start, run and end live games (the DM seat). */
+  runGame: boolean;
 }
 
 export function capabilities({ accessRole, playerType }: Identity): Capabilities {
@@ -50,6 +52,7 @@ export function capabilities({ accessRole, playerType }: Identity): Capabilities
     manageSessions: isMod || isDM,
     email: isAdmin || isDM, // admin and the DM can send emails
     oversight: isMod || isDM,
+    runGame: isMod || isDM,
   };
 }
 

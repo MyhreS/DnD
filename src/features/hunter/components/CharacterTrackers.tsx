@@ -1,75 +1,169 @@
 import { getClass } from "@/data/classes";
-import { maxHp } from "@/lib/character";
-import { usePlayerStore } from "../store/playerStore";
+import { maxHp, maxSanity } from "@/lib/character";
+import { TransformationStatus, TransformationEditor } from "./TransformationPanel";
+import { patchCharacter } from "@/api/players";
 import type { HunterCard } from "@/types";
 
-/** Live, editable play trackers: HP, Madness, Transform. Saved on change. */
-export function CharacterTrackers({ card }: { card: HunterCard }) {
-  const save = usePlayerStore((s) => s.save);
+/** Live, editable play trackers: HP, Sanity (with derived Madness + the Insane
+ * state), Transformation (read-only for players — rolled physically at the
+ * table and recorded by the DM; dmMode gets the editor), and Blood Tinge
+ * (spend-only for players — the DM grants it). Each edit is written as a
+ * MINIMAL partial patch (never the whole card), so a stale local snapshot can
+ * never clobber a concurrent DM write — insight, level, transformation, items. */
+export function CharacterTrackers({
+  card,
+  onPatch,
+  dmMode = false,
+}: {
+  card: HunterCard;
+  /** When provided (e.g. the DM playing as this hunter), edits route here
+   * instead of the owner's own character doc — so the owner's own selection
+   * isn't clobbered. */
+  onPatch?: (p: Partial<HunterCard>) => void;
+  /** DM controls: may grant Blood Tinge and edit Transformation (players can
+   * only spend / view). */
+  dmMode?: boolean;
+}) {
   const klass = getClass(card.classId);
-  const hpMax = klass ? maxHp(klass, card.abilities) : 0;
-  const hp = card.currentHp ?? hpMax;
+  const hpMax = klass ? maxHp(klass, card.abilities, card.level) : 0;
+  // Clamp the displayed value: a saved HP/Sanity can exceed a max that later
+  // dropped (e.g. a CON/WIS change), which would render an over-100% bar.
+  const hp = Math.min(hpMax, card.currentHp ?? hpMax);
+  const sanMax = klass ? maxSanity(klass, card.abilities, card.level) : 0;
+  const san = Math.min(sanMax, card.sanity ?? sanMax);
+  const madness = Math.max(0, sanMax - san);
+  // Madness has reached Max Sanity — the hunter is Insane. What that MEANS
+  // stays at the table: the app only ever shows the state itself.
+  const insane = sanMax > 0 && madness >= sanMax;
 
   function patch(p: Partial<HunterCard>) {
-    void save({ ...card, ...p });
+    if (onPatch) onPatch(p);
+    // Only the touched field(s) — the store's card refreshes via the Firestore
+    // onSnapshot echo (latency-compensated, effectively instant).
+    else void patchCharacter(card.id, p);
   }
 
   return (
     <div className="card">
-      <div className="row between" style={{ marginBottom: 10 }}>
-        <p className="eyebrow" style={{ margin: 0 }}>Vitals · tracked in play</p>
-        <button
-          className="btn btn-ghost btn-sm"
-          style={{ width: "auto" }}
-          onClick={() => patch({ currentHp: hpMax })}
-        >
-          Long rest
-        </button>
-      </div>
+      <p className="eyebrow" style={{ margin: "0 0 10px" }}>Vitals · tracked in play</p>
 
       <Tracker
         label="Hit Points"
         value={hp}
         max={hpMax}
-        tone="hp"
+        color="var(--blood-bright)"
         onChange={(v) => patch({ currentHp: Math.max(0, Math.min(hpMax, v)) })}
       />
       <Tracker
-        label="Madness"
-        value={card.madness ?? 0}
-        tone="madness"
-        onChange={(v) => patch({ madness: Math.max(0, v) })}
+        label="Sanity"
+        badge={insane ? "INSANE" : undefined}
+        sub={`Madness ${madness}${insane ? " — the DM knows what this means" : ""}`}
+        value={san}
+        max={sanMax}
+        color="#7c5cff"
+        onChange={(v) => patch({ sanity: Math.max(0, Math.min(sanMax, v)) })}
       />
-      <Tracker
-        label="Transform"
-        value={card.transform ?? 0}
-        tone="transform"
-        onChange={(v) => patch({ transform: Math.max(0, v) })}
-      />
+      {dmMode ? (
+        <TransformationEditor card={card} onPatch={patch} />
+      ) : (
+        <TransformationStatus card={card} />
+      )}
+
+      <div className="row between" style={{ padding: "10px 0 2px" }}>
+        <div>
+          <span style={{ fontWeight: 600 }}>Blood Tinge</span>
+          <div className="faint" style={{ fontSize: "0.74rem" }}>
+            {card.bloodTinge ? "Held — spend it to reroll a d20" : "Granted by the DM"}
+          </div>
+        </div>
+        {card.bloodTinge ? (
+          <button
+            type="button"
+            className="btn btn-sm btn-primary"
+            style={{ width: "auto", minWidth: 84 }}
+            onClick={() => patch({ bloodTinge: false })}
+          >
+            ● Spend
+          </button>
+        ) : dmMode ? (
+          <button
+            type="button"
+            className="btn btn-sm btn-ghost"
+            style={{ width: "auto", minWidth: 84 }}
+            onClick={() => patch({ bloodTinge: true })}
+          >
+            ○ Grant
+          </button>
+        ) : (
+          <span className="faint" style={{ fontSize: "0.9rem" }}>○ None</span>
+        )}
+      </div>
+
+      {hp <= 0 && (
+        <div style={{ marginTop: 8, paddingTop: 10, borderTop: "1px solid var(--border)" }}>
+          {card.deathPending ? (
+            <p className="muted" style={{ margin: 0, fontSize: "0.9rem" }}>
+              <strong className="blood">Fallen.</strong> Awaiting the DM to confirm your hunter's death.
+            </p>
+          ) : (
+            <>
+              <p className="muted" style={{ marginTop: 0, marginBottom: 8, fontSize: "0.9rem" }}>
+                <strong className="blood">0 Hit Points.</strong> If your hunter has truly fallen, confirm
+                their death — the DM still has to verify it.
+              </p>
+              <button
+                className="btn btn-ghost btn-sm"
+                style={{ color: "var(--blood-bright)", width: "auto" }}
+                onClick={() => patch({ deathPending: true })}
+              >
+                Confirm my hunter's death
+              </button>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
 function Tracker({
   label,
+  badge,
+  sub,
   value,
   max,
-  tone,
+  color,
   onChange,
 }: {
   label: string;
+  badge?: string;
+  sub?: string;
   value: number;
   max?: number;
-  tone: "hp" | "madness" | "transform";
+  color: string;
   onChange: (v: number) => void;
 }) {
-  const color =
-    tone === "hp" ? "var(--blood-bright)" : tone === "madness" ? "var(--gold)" : "#7c5cff";
   const pct = max && max > 0 ? Math.round((value / max) * 100) : 0;
   return (
     <div style={{ padding: "8px 0", borderBottom: "1px solid var(--border)" }}>
       <div className="row between" style={{ marginBottom: max ? 6 : 0 }}>
-        <span style={{ fontWeight: 600 }}>{label}</span>
+        <div>
+          <span style={{ fontWeight: 600 }}>{label}</span>
+          {badge && (
+            <span
+              className="chip"
+              style={{
+                marginLeft: 8,
+                fontSize: "0.66rem",
+                color: "var(--blood-bright)",
+                borderColor: "var(--blood-bright)",
+              }}
+            >
+              {badge}
+            </span>
+          )}
+          {sub && <div className="faint" style={{ fontSize: "0.72rem" }}>{sub}</div>}
+        </div>
         <div className="row" style={{ gap: 10 }}>
           <button className="btn btn-ghost btn-sm" style={{ width: 38, padding: 6 }} onClick={() => onChange(value - 1)} aria-label={`decrease ${label}`}>−</button>
           <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem", minWidth: 56, textAlign: "center" }}>

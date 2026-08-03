@@ -1,0 +1,109 @@
+ELDRITCH BLAST
+Whisper
+
+Type: Evocation Rite
+Performing: Action
+Range: 120 feet
+Duration: Instantaneous
+
+You hurl a beam of crackling energy. Make a ranged spell attack against one creature or object in
+range.
+On a hit, the target takes 1d10 Eldritch Power damage.
+Whisper Upgrade. The spell creates two beams at level 5, three beams at level 11, and four
+beams at level 17. You can direct the beams at the same target or at di erent ones. Make a
+separate attack roll for each beam.
+
+
+
+ELDRITCH STRIKE
+Whisper
+
+Type: Evocation Rite
+Performing: Action
+Range: Self
+Duration: Instantaneous
+Special Requirements: A weapon with which you have pro ciency
+
+Guided by your Patron's will, you make one attack with the weapon used to perform this Rite.
+The attack uses your Rite Performing ability for the attack and damage rolls instead of using
+Strength or Dexterity. If the attack deals damage, it can be Eldrich Power damage or the
+weapon's normal damage type (your choice).
+Whisper Upgrade. Whether you deal Eldrich Power damage or the weapon's normal damage
+type, the attack deals extra Eldrich Power damage when you reach levels 5 (1d6), 11 (2d6), and 17
+(3d6).
+
+
+
+ELDRITCH LIGHTNING
+Whisper
+
+Type: Evocation Rite
+Performing: Action
+Range: Self
+Duration: Instantaneous
+You call upon a Patron, letting a fragment of its voice burst from your body as crackling lightning.
+Each creature in a 5-foot Emanation originating from you must succeed on a Constitution saving
+throw or take 1d6 Lightning damage. The Rite also makes a thunderous sound can be heard up to
+100 feet away.
+Whisper Upgrade. The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17
+(4d6).
+
+
+
+ELDRITCH REBUKE
+Level 1
+
+Type: Evocation Rite
+Performing: Reaction, which you take in response to taking damage from a creature that you can
+see within 60 feet of yourself
+
+
+
+
+                                                            ff
+                                                 fi
+Range: 60 feet
+Duration: Instantaneous
+
+The creature that damaged you is momentarily surrounded by blue ames and crackling lightning.
+It makes a Dexterity saving throw, taking 2d10 Fire damage on a failed save or half as much
+damage on a successful one.
+Using a Higher-Level Strain. The damage increases by 1d10 for each Strain level above 1.
+
+
+
+ELDRITCH CHAIN OF BOLTS
+Level 1
+
+Type: Evocation Rite
+Performing: Action
+Range: 60 feet
+Duration: Concentration, up to 10 rounds
+
+You invoke a Patron of storm and ruin, causing a beam of crackling lightning to lance toward a
+creature within range.
+Make a ranged Rite attack against the target. On a hit, the target takes 2d12 Lightning damage.
+Until the Rite ends, you can take a Bonus Action on each of your turns to cause the lightning to
+surge through the target, dealing 1d12 Lightning damage automatically.
+The Rite ends if the target is ever outside the Rite's range or has Total Cover from you.
+Using Higher-Level Strain. The initial damage increases by 1d12 for each Strain level above 1.
+
+
+
+DARKNESS
+Level 2
+
+Type: Evocation Rite
+Performing: Action
+Range: 60 feet
+Duration: Concentration, up to 20 rounds
+
+For the duration, otherworldly Darkness spreads from a point within range and lls a 15-foot-
+radius Sphere. Darkvision can't see through it, and light can't illuminate it.
+
+
+
+
+                                                                   fi
+                                                        fl
+

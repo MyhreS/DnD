@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { createSession, updateSession, deleteSession } from "@/api/sessions";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
+import { useAuthStore } from "@/features/auth/store/authStore";
 import { AsyncButton } from "@/components/AsyncButton";
+import { ModalBackdrop } from "@/components/ModalBackdrop";
 import type { SessionEvent } from "@/types";
 
 // Datetime helpers for <input type="datetime-local"> (no seconds/zone).
@@ -21,6 +24,12 @@ export function SessionForm({
   const [location, setLocation] = useState(session?.location ?? "");
   const [notes, setNotes] = useState(session?.notes ?? "");
   const [error, setError] = useState<string | null>(null);
+  const activeId = useCampaignStore((s) => s.activeId);
+  const user = useAuthStore((s) => s.user);
+  const member = useAuthStore((s) => s.member);
+  const actor = user
+    ? { uid: user.uid, name: member?.firstName || user.displayName || "The DM" }
+    : undefined;
 
   const canSave = title.trim().length > 0 && date.length >= 16;
 
@@ -28,14 +37,15 @@ export function SessionForm({
     if (!canSave) return;
     setError(null);
     const payload = {
+      campaignId: session?.campaignId ?? activeId,
       title: title.trim(),
       date: fromInput(date),
       location: location.trim(),
       notes: notes.trim(),
     };
     try {
-      if (session) await updateSession(session.id, payload);
-      else await createSession(payload, authorEmail);
+      if (session) await updateSession(session.id, payload, actor);
+      else await createSession(payload, authorEmail, actor);
       onClose();
     } catch (err) {
       console.error(err);
@@ -57,8 +67,8 @@ export function SessionForm({
   }
 
   return (
-    <div className="modal-backdrop" onClick={onClose}>
-      <div className="modal" onClick={(e) => e.stopPropagation()}>
+    <ModalBackdrop label={session ? "Edit session" : "New session"} onDismiss={onClose}>
+      <div className="modal">
         <h2>{session ? "Edit session" : "New session"}</h2>
         <div className="field">
           <label htmlFor="s-title">Title</label>
@@ -89,6 +99,6 @@ export function SessionForm({
           </AsyncButton>
         )}
       </div>
-    </div>
+    </ModalBackdrop>
   );
 }

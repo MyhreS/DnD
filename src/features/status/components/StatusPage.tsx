@@ -1,0 +1,148 @@
+import { Link } from "react-router-dom";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
+import { useGameStore, currentGame } from "@/features/play/store/gameStore";
+import { useCharactersStore } from "@/features/play/store/charactersStore";
+import { useCombatStore } from "@/features/play/store/combatStore";
+import { usePlaySync } from "@/features/play/hooks/usePlaySync";
+import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
+import { useCombatSync } from "@/features/play/hooks/useCombatSync";
+import { PHASE_LABEL, LOCATION_LABEL } from "@/features/play/lib/phase";
+import { useWakeLock } from "@/hooks/common/useWakeLock";
+import { useFullscreen } from "@/hooks/common/useFullscreen";
+import { getClass } from "@/data/classes";
+import { maxHp, maxSanity, isSheetCard } from "@/lib/character";
+import { sheetVitals, cardClassName } from "@/features/hunter/lib/papersheet";
+import type { HunterCard } from "@/types";
+import { CombatBoard } from "./CombatBoard";
+
+/** Chrome-less big-screen board for a TV/laptop at the table: the current phase
+ * + location, the live initiative board during combat, and every hunter's live
+ * vitals. Read-only — a projection of the live game; it never writes. */
+export function StatusPage() {
+  usePlaySync();
+  useCharactersSync();
+  useWakeLock();
+  const { isFullscreen, toggle, supported } = useFullscreen();
+  const campaign = useCampaignStore((s) => s.active);
+  const members = useCampaignStore((s) => s.members);
+  const games = useGameStore((s) => s.games);
+  const party = useCharactersStore((s) => s.party);
+
+  // Only a started game is "in play"; a queued lobby game shouldn't read as live.
+  const game = currentGame(games, campaign?.id ?? null);
+  const liveGame = game && game.status === "active" ? game : null;
+  useCombatSync(liveGame?.id ?? null);
+  const combatants = useCombatStore((s) => s.combatants);
+  const inCombat = !!liveGame?.combat?.active && combatants.length > 0;
+  // A named hunter belongs on the board — sheet-made hunters have classId "".
+  const hunters = members
+    .map((m) => party.find((c) => c.id === m.characterId))
+    .filter((c): c is HunterCard => !!c && !!c.name);
+
+  return (
+    <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)", padding: "clamp(16px, 3vw, 40px)" }}>
+      <div className="row between" style={{ alignItems: "flex-start", marginBottom: 24, gap: 16 }}>
+        <div style={{ minWidth: 0 }}>
+          <p className="eyebrow">{campaign?.name ?? "Catacombs & Starspawns"}</p>
+          <h1 style={{ fontSize: "clamp(2rem, 6vw, 4rem)", margin: 0, lineHeight: 1.05 }}>
+            {liveGame ? PHASE_LABEL[liveGame.phase] : "Between hunts"}
+          </h1>
+          {liveGame && (
+            <span className="chip" style={{ marginTop: 10, fontSize: "1rem" }}>
+              {LOCATION_LABEL[liveGame.location ?? "wild"]}
+            </span>
+          )}
+        </div>
+        <div className="row" style={{ gap: 10, flex: "none" }}>
+          {supported && (
+            <button className="btn btn-ghost" style={{ width: "auto" }} onClick={toggle}>
+              {isFullscreen ? "Exit fullscreen" : "⛶ Fullscreen"}
+            </button>
+          )}
+          <Link className="btn btn-ghost" style={{ width: "auto" }} to="/">Menu</Link>
+        </div>
+      </div>
+
+      {inCombat && liveGame && <CombatBoard game={liveGame} combatants={combatants} party={party} />}
+
+      {hunters.length === 0 ? (
+        <p className="muted" style={{ fontSize: "1.2rem" }}>No hunters in this campaign yet.</p>
+      ) : (
+        <>
+          {inCombat && <p className="eyebrow" style={{ fontSize: "1.05rem", marginBottom: 12 }}>Party</p>}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))",
+              gap: 16,
+              alignItems: "start",
+            }}
+          >
+            {hunters.map((c) => (
+              <VitalsCard key={c.id} card={c} />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
+function VitalsCard({ card }: { card: HunterCard }) {
+  // Sheet hunters: vitals parse from the paper sheet's free-text boxes (null
+  // when blank/unparseable — then the bar is skipped, never shown as 0/0).
+  const sheet = isSheetCard(card);
+  const v = sheetVitals(card.sheet);
+  const klass = sheet ? undefined : getClass(card.classId);
+  const hpMax = sheet ? v.hpMax : klass ? maxHp(klass, card.abilities, card.level) : 0;
+  const sanMax = sheet ? v.sanityMax : klass ? maxSanity(klass, card.abilities, card.level) : 0;
+  const hp = sheet ? v.hpCur : Math.min(hpMax ?? 0, card.currentHp ?? hpMax ?? 0);
+  const san = sheet ? v.sanityCur : Math.min(sanMax ?? 0, card.sanity ?? sanMax ?? 0);
+  const dead = card.deathPending || (hp != null && hp <= 0);
+  const transform = card.transformationLevel ?? 0;
+  const cls = cardClassName(card);
+
+  return (
+    <div className="card" style={{ marginTop: 0, opacity: dead ? 0.55 : 1, borderColor: dead ? "var(--blood-bright)" : undefined }}>
+      <div className="row between" style={{ marginBottom: 10, gap: 8 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", minWidth: 0, overflowWrap: "anywhere" }}>
+            {card.name}
+          </div>
+          <div className="faint" style={{ fontSize: "0.9rem" }}>
+            {cls ? `${cls} · Lvl ${card.level}` : "Hunter"}
+            {dead ? " · fallen" : ""}
+          </div>
+        </div>
+        {transform > 0 && <span className="chip" style={{ flex: "none" }}>Transform {transform}</span>}
+      </div>
+      {hp != null && hpMax != null ? (
+        <Bar label="HP" value={hp} max={hpMax} color="var(--blood-bright)" />
+      ) : (
+        <p className="faint" style={{ margin: "8px 0 0" }}>Vitals tracked on the paper sheet.</p>
+      )}
+      {san != null && sanMax != null && (
+        <Bar label="Sanity" value={san} max={sanMax} color="#7c5cff" sub={`Madness ${Math.max(0, sanMax - san)}`} />
+      )}
+    </div>
+  );
+}
+
+function Bar({ label, value, max, color, sub }: { label: string; value: number; max: number; color: string; sub?: string }) {
+  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+  return (
+    <div style={{ marginTop: 8 }}>
+      <div className="row between" style={{ marginBottom: 4 }}>
+        <span style={{ fontWeight: 600 }}>
+          {label} {sub && <span className="faint" style={{ fontSize: "0.85rem" }}>{sub}</span>}
+        </span>
+        <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem" }}>
+          {value}<span className="faint" style={{ fontSize: "0.85rem" }}> / {max}</span>
+        </span>
+      </div>
+      <div style={{ height: 10, borderRadius: 6, background: "var(--bg)", overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: color }} />
+      </div>
+    </div>
+  );
+}

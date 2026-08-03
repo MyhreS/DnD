@@ -1,0 +1,170 @@
+     THIRD HAND
+     Whisper
+
+     Type: Summoning Rite
+     Performing: Action
+     Range: 30 feet
+     Duration: Concentration, 10 rounds
+
+     A spectral, oating hand not from this world appears at a point you choose within range. The
+     hand lasts for the duration. The hand vanishes if it is ever more than 30 feet away from you or if
+     you perform this rite again. When you perform the rite, you can use the hand to manipulate an
+     object, open an unlocked door or container, stow or retrieve an item from an open container, or
+     pour the contents out of a vial.
+     As a Rite action on your later turns, you can control the hand thus again. As part of that action,
+     you can move the hand up to 30 feet.
+     The hand can't attack, or carry more than 10 pounds.
+
+
+
+     ARMS OF HADAR
+     Level 1
+
+     Type: Summoning Rite
+     Performing: Action
+     Range: Self
+     Duration: Instantaneous
+
+     You invoke Hadar, the Dark Hunger Between the Stars, causing writhing tendrils to erupt from
+     your body and lash out at nearby creatures.
+     Each creature in a 10-foot Emanation originating from you must make a Strength saving throw.
+     On a failed save, a creature takes 2d6 Acid damage and can't take Reactions until the start of its
+     next turn. On a successful save, it takes half as much damage only.
+     Using Higher-Level Strain. The damage increases by 1d6 for each Strain level above 1.
+
+
+     HADAR'S GRASP
+     Level 2
+
+     Type: Summoning Rite
+     Performing: Action
+     Range: 60 feet
+     Duration: Concentration, up to 10 rounds
+
+     You invoke Hadar, the Dark Hunger Between the Stars, causing a massive black tendril to erupt
+     from the ground beneath a creature you can see within range.
+     The target must make a Strength saving throw.
+     On a failed save, the target takes 2d6 Bludgeoning damage and gains the Restrained condition.
+     On a successful save, the target takes half as much damage and su ers no additional e ects.
+     At the end of each of its turns, a Restrained creature can repeat the saving throw, ending the
+     condition on itself on a success.
+     The tendril remains in its space for the duration. If the tendril is not currently Restraining a
+     creature, a creature that enters a space within 5 feet of it for the rst time on a turn, or starts its
+     turn there, must make the saving throw against this Rite. On a failed save, the creature takes 2d6
+     Bludgeoning damage and becomes Restrained by the tendril.
+     f a creature dies while Restrained by the tendril, Hadar claims its victim. The creature and
+     everything it carries vanish into the void between the stars, and the Rite immediately ends.
+     Using Higher-Level Strain. The damage increases by 1d6 for each Strain level above 2.
+
+
+
+
+                                                                                     ff
+                                                                 ff
+                                                            fi
+fl
+UNKNOWN REALM
+Level 3
+
+Type: Summoning Rite
+Performing: Action
+Range: 120 feet
+Duration: Concentration, up to 10 rounds
+
+By your words an unknown realm will appear in a 30-foot Cube within range. The realm appears
+for a moment and then vanishes. Each creature in the area who can see the realm must succeed
+on a Wisdom saving throw or su er 2 Madness, have the Incapacitated condition and a Speed of
+0. The condition will remain for the duration or end for an a ected creature if it takes any damage
+or if someone else uses an action to shake the creature out of its stupor.
+
+
+
+HADAR’S BLACK TENTACLES
+Level 4
+
+Type: Summoning Rite
+Performing: Action
+Range: 90 feet
+Duration: Concentration, up to 10 rounds
+
+You invoke Hadar, the Dark Hunger Between the Stars, tearing open a brief passage for its
+writhing limbs to enter the world.
+Squirming black tentacles ll a 20-foot square on ground you can see within range. For the
+duration, the area is Di cult Terrain.
+Each creature in the area must make a Strength saving throw. On a failed save, a creature takes
+3d6 Bludgeoning damage and has the Restrained condition until the Rite ends. On a successful
+save, a creature takes half as much damage and isn't Restrained.
+A creature must also make this save when it enters the area for the rst time on a turn or ends its
+turn there. A creature makes this save only once per turn.
+A Restrained creature can take an Action to make a Strength (Athletics) check against your Rite
+save DC, ending the condition on itself on a success.
+
+
+CALL LESSER STARBORN
+Level 6
+
+Type: Summoning Rite
+Performing: Action
+Range: 90 feet
+Duration: Concentration, up to 20 rounds
+
+You invoke a Patron from beyond the stars, tearing open a eeting breach in reality and calling
+forth one of its lesser servants.
+A Lesser Starborn manifests in an unoccupied space you can see within range. The creature uses
+the Lesser Starborn stat block. The Lesser Starborn disappears when it drops to 0 Hit Points or
+when this Rite ends. The Lesser Starborn is friendly to you and your allies. In combat, it shares
+your Initiative count but takes its turn immediately after yours. The Lesser Starborn obeys your
+verbal commands (no Action required by you). If you issue no commands, it takes the Dodge
+Action and uses its movement to avoid danger.
+
+
+
+
+                                                          fi
+                                                     fl
+                                                ff
+                      ff
+                 fi
+           ffi
+     A Lesser Starborn is an unnatural creature of the outer dark. Its form varies according to the
+     Patron that answered your call. Some resemble eyeless masses of esh and tendrils, while others
+     appear as twisted creatures stitched together from impossible anatomy and starlit void.
+     Using Higher-Level Strain. The Lesser Starborn gains 10 Temporary Hit Points for each Strain
+     level above 5.
+
+
+
+
+     CALL STARBORN HORROR
+     Level 9
+
+     Type: Summoning Rite
+     Performing: Action
+     Range: 120 feet
+     Duration: 5 rounds
+
+     You tear open reality and call forth a true Starborn Horror, a servant of the outer dark that was
+     never meant to enter the mortal world.
+     When the Starborn Horror manifests, each creature within a 30-foot-radius Sphere centered on a
+     point within range must make a Wisdom saving throw.
+     On a failed save, a creature takes 10d10 Mind damage, su ers 6 Madness, and gains the
+     Frightened condition for the duration.
+     On a successful save, a creature takes half as much damage and su ers 2 Madness.
+     Each other creature that can see or hear the Starborn Horror su ers 2 Madness.
+     You su er 6 Madness when you perform this Rite.
+
+     The Starborn Horror uses the Starborn Horror stat block. It is not friendly to you or your allies, nor
+     is it inherently hostile to your enemies. The Horror acts according to its own unknowable will.
+     At the start of each of its turns, roll on the Starborn Horror Behavior Table to determine which
+     action it takes. When determining targets, use your Madness die system.
+     The Starborn Horror disappears when the Rite ends.
+
+
+
+
+                                                                     ff
+                                                                fl
+                                                           ff
+                                                     ff
+ff
+

@@ -1,0 +1,240 @@
+     BECOMING A HUNTER BLOODBOUND ...
+     AS A LEVEL 1 CHARACTER
+     • Gain all the traits in the Core Hunter Bloodbound Traits table.
+     • Gain the Hunter Bloodbound's level 1 features, which are listed in the Hunter Bloodbound
+     Features table.
+
+     LEVEL 1: BLOOD FRENZY
+     You can imbue yourself with a primal power called Blood Frenzy, a force that grants you
+     extraordinary might and resilience. You can enter it as a Bonus Action if you aren't wearing Heavy
+     armor.
+     You can enter your Blood Frenzy the number of times shown for your Hunter Bloodbound level in
+     the Blood Frenzys column of the Hunter Bloodbound Features table. You regain one expended
+     use when you nish a Short Rest, and you regain all expended uses when you nish a Long Rest.
+     While active, your Blood Frenzy follows the rules below.
+     Damage Resistance. You have Resistance to Blud-
+     geoning, Piercing, and Slashing damage.
+     Blood Frenzy Damage. When you make an attack using Strength-with either a weapon or an
+     Unarmed Strike and deal damage to the target, you gain a bonus to the damage that increases as
+     you gain levels as a Hunter Bloodbound, as shown in the Blood Frenzy Damage column of the
+     Hunter Bloodbound Features table.
+     Strength Advantage. You have Advantage on Strength checks and Strength saving throws.
+     Duration. The Blood Frenzy lasts until the end of your next turn, and it ends early if you don
+     Heavy armor or have the Incapacitated condition. If your Blood Frenzy is still active on your next
+     turn, you can extend the Blood Frenzy for another round by doing one of the following:
+     • Make an attack roll against an enemy.
+     • Force an enemy to make a saving throw.
+     • Take a Bonus Action to extend your Blood Frenzy.
+     Each time the Blood Frenzy is extended, it lasts until the end of your next turn.
+
+     LEVEL 1: FRENZIED BUT SANE
+     You can spend one Blood Frenzy to not su er Madness from using the power of a Transformation
+     one time.
+
+     LEVEL 2: DANGER SENSE
+     You gain an uncanny sense of when things aren't as they should be, giving you an edge when you
+     dodge perils. You have Advantage on Dexterity saving throws unless you have the Incapacitated
+     condition.
+
+     LEVEL 2: RECKLESS ATTACK
+     You can throw aside all concern for defense to attack with increased ferocity. When you make
+     your rst attack roll on your turn, you can decide to attack recklessly. Doing so gives you
+     Advantage on attack rolls using Strength until the start of your next turn, but attack rolls against
+     you have Advantage during that time.
+
+     LEVEL 3: HUNTER BLOODBOUND SUBCLASS
+     You gain a Hunter Bloodbound subclass of your choice. The Path of the Berserker and the Path of
+     the Blood Drunk subclasses are detailed after this class's description. A subclass is a
+     specialization that grants you features at certain Hunter Bloodbound levels.
+
+     LEVEL 4: ABILITY SCORE IMPROVEMENT
+     You gain the Ability Score Improvement feat (see chapter 4) or another feat of your choice for
+     which you qualify. You gain this feature again at Hunter Bloodbound levels 8, 12, and 16.
+
+     LEVEL 5: EXTRA ATTACK
+     You can attack twice instead of once whenever you take the Attack action on your turn.
+
+     LEVEL 7: INSTINCTIVE POUNCE
+     As part of the Bonus Action you take to enter your Blood Frenzy, you can move up to half your
+     Speed.
+
+
+
+
+                                                                           fi
+                                     ff
+        fi
+fi
+LEVEL 9: BRUTAL STRIKE
+If you use Reckless Attack, you can forgo any Advantage on one Strength-based attack roll of
+your choice on your turn. The chosen attack roll mustn't have Disadvantage. If the chosen attack
+roll hits, the target takes an extra 1d10 damage of the same type dealt by the weapon or Unarmed
+Strike, and you can cause one Brutal Strike e ect of your choice.
+You have the following e ect options.
+Forceful Blow. The target is pushed 15 feet straight away from you. You can then move up to half
+your Speed straight toward the target without provoking Opportunity Attacks.
+Hamstring Blow. The target's Speed is reduced by 15 feet until the start of your next turn. A
+target can be a ected by only one Hamstring Blow at a time-the most recent one.
+
+
+LEVEL 11: RELENTLESS BLOOD FRENZY
+Your Blood Frenzy can keep you ghting despite grievous wounds. If you drop to 0 Hit Points
+while your Blood Frenzy is active and don't die outright, you can make a DC
+10 Constitution saving throw. If you succeed, your Hit Points instead change to a number equal to
+twice your Hunter Bloodbound level.
+Each time you use this feature after the rst, the DC increases by 5. When you nish a Short or
+Long Rest, the DC resets to 10.
+
+LEVEL 12: WEAPON MASTERY
+Your training with weapons allows you to use the mastery properties of two kinds of Simple or
+Martial Melee weapons of your choice. Whenever you nish a Long Rest, you can practice
+weapon drills and change one of those weapon choices.
+
+LEVEL 13: IMPROVED BRUTAL STRIKE
+You have honed new ways to attack furiously. The following e ects are now among your Brutal
+Strike options.
+Staggering Blow. The target has Disadvantage on the next saving throw it makes, and it can't
+make Opportunity Attacks until the start of your next
+turn.
+Sundering Blow. Before the start of your next turn, the next attack roll made by another creature
+against the target gains a +5 bonus to the roll. An attack roll can gain only one Sundering Blow
+bonus.
+
+LEVEL 15: PERSISTENT BLOOD FRENZY
+When you roll Initiative, you can regain all expended uses of Blood Frenzy. After you regain uses
+of Blood Frenzy in this way, you can't do so again until you nish a Long Rest.
+In addition, your Blood Frenzy is so erce that it now lasts without you needing to do anything to
+extend it from round to round. Your Blood Frenzy ends early if you have the Unconscious
+condition (not just the Incapacitated condition) or don Heavy armor.
+
+LEVEL 17: IMPROVED BRUTAL STRIKE
+The extra damage of your Brutal Strike increases to 2d10. In addition, you can use two di erent
+Brutal Strike e ects whenever you use your Brutal Strike feature.
+
+LEVEL 18: INDOMITABLE MIGHT
+If your total for a Strength check or Strength saving throw is less than your Strength score, you
+can use that score in place of the total.
+
+LEVEL 19: EPIC BOON
+You gain an Epic Boon feat (see chapter 4) or another feat of your choice for which you qualify.
+
+LEVEL 20: PRIMAL CHAMPION
+You embody primal power. Your Strength and Constitution scores increase by 4, to a maximum of
+25.
+
+
+
+
+                                                                               ff
+                                                                    fi
+                                                      ff
+                                                 fi
+                                           fi
+                                     ff
+                                fi
+                           fi
+                      fi
+             ff
+       ff
+  ff
+PATH OF THE BERSERKER
+Channel Blood Frenzy into Violent Fury
+
+Hunter Bloodbounds who walk the Path of the Berserker direct their Blood Frenzy primarily
+toward violence. Their path is one of untrammeled fury, and they thrill in the chaos of battle as
+they allow their Blood Frenzy to seize and empower them.
+
+LEVEL 3: FRENZY
+If you use Reckless Attack while your Blood Frenzy is active, you deal extra damage to the rst
+target you hit on your turn with a Strength-based attack. To determine the extra damage, roll a
+number of d6s equal to your Blood Frenzy Damage bonus, and add them together.
+The damage has the same type as the weapon or
+Unarmed Strike used for the attack.
+
+LEVEL 6: MINDLESS BLOOD FRENZY
+You have Immunity to the Charmed and Frightened conditions while your Blood Frenzy is active. If
+you're Charmed or Frightened when you enter your Blood Frenzy, the condition ends on you.
+
+LEVEL 10: RETALIATION
+When you take damage from a creature that is within 5 feet of you, you can take a Reaction to
+make one melee attack against that creature, using a weapon or an Unarmed Strike.
+
+LEVEL 14: INTIMIDATING PRESENCE
+As a Bonus Action, you can strike terror into others with your menacing presence and primal
+power.
+When you do so, each creature of your choice in a
+30-foot Emanation originating from you must make a Wisdom saving throw (DC 8 plus your
+Strength modi er and Pro ciency Bonus). On a failed save, a creature has the Frightened
+condition for 10 rounds. At the end of each of the Frightened creature's turns, the creature
+repeats the save, ending the e ect on itself on a success.
+Once you use this feature, you can't use it again until you nish a Long Rest unless you expend a
+use of your Blood Frenzy (no action required) to restore your use of it.
+
+
+
+PATH OF THE BLOOD DRUNK
+Channel the power of the old blood
+
+Text.
+
+LEVEL 3: FURTHER FRENZIED BUT SANE
+You can spend one Blood Frenzy to not su er Madness from using the power of a Transformation
+two times while its active.
+
+LEVEL 6: EMBRACE THE FORM
+At Transform level 1 you may spend one Blood Frenzy to instead decide for yourself the roll of the
+d20.
+
+LEVEL 10: ABSOLUTE HARMONY
+You can spend one Blood Frenzy to not su er Madness from using the power of a Transformation
+three times while its active.
+
+LEVEL 14: ONE FORM
+You gain one transformation of your choice permanently, except the Lost Transformation.
+While using this transformation, or any other transformation, you no longer su er Madness from
+using transformations.
+If you roll for a transformation and the result is your chosen permanent transformation, you
+instead gain the Rare Transformation. You only gain the Rare Transformation this way if you roll
+the result. If another feature lets you choose a transformation instead of rolling, you cannot
+choose the Rare Transformation.
+
+
+
+
+                                                                                  fi
+                                                                    ff
+                                               fi
+                                ff
+                                ff
+                   ff
+              fi
+  fi
+     Rare Transformation. The Rare Transformation is not always active. You can activate it during
+     combat by spending 1 use of Blood Frenzy. It lasts for 3 rounds before disappearing.
+     When activated, your body mutates into an inhuman form. Your original arms elongate and twist
+     into monstrous limbs, while two additional arms burst from your torso, leaving you with a total of
+     four arms. Your legs stretch and contort with violent, unnatural force. You su er 6 Madness.
+     While transformed in this way, you gain the following bene ts:
+
+     Otherworldly Speed. Your movement speed increases by 15 feet, and creatures cannot make
+     Opportunity Attacks against you.
+     Otherworldly Power. When you take the Attack action, you can only make Unarmed Strikes, and
+     those Unarmed Strikes can only be used to deal damage. You cannot use them to grapple or
+     shove.
+     Your Unarmed Strikes use Strength for the attack roll and damage roll. On a hit, they deal 4d12
+     piercing or bludgeoning damage, your choice for each attack, + your Strength modi er.
+     When you hit a creature with one of these Unarmed Strikes, you may divide the damage equally
+     between the target and one other creature within your reach, rounding down.
+     This damage cannot be increased by feats, weapon properties, class features, or other similar
+     e ects. However, if you have the Extra Attack feature, you may still make additional Unarmed
+     Strikes as part of the same Attack action.
+     Otherworldly Retaliation. While this transformation is active, when a creature within your melee
+     reach deals melee damage to you, you can use your reaction to lash out with your mutated limbs.
+     The creature takes 1d12 piercing damage + your Strength modi er.
+
+
+
+
+                                                    fi
+ff                                                       fi           ff      fi
+

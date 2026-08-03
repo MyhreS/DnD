@@ -2,11 +2,9 @@ rules_version = '2';
 
 // Catacombs & Starspawns — Firestore security rules.
 //
-// Access model:
-//  - You must be signed in with Google.
-//  - You must be on the allowlist (a document in /allowlist keyed by your email).
-//  - The allowlist itself is only writable by trusted backends (Admin SDK /
-//    Firebase console / seed script), never from the client.
+// Open access: anyone signed in with a verified Google account may use the app.
+// Permissions are per-campaign: you see a campaign's data only if you're a
+// member, and you control a campaign only if you're its DM (its creator).
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -14,111 +12,209 @@ service cloud.firestore {
       return request.auth != null;
     }
 
+    // Any verified signed-in user.
+    function isUser() {
+      return isSignedIn() && request.auth.token.email_verified == true;
+    }
+
     function emailKey() {
       return request.auth.token.email;
     }
 
-    // Super-admins are always allowed and can manage the allowlist. This
-    // bootstraps the first user so the allowlist never needs hand-editing.
-    // Keep in sync with src/config.ts (SUPER_ADMIN_EMAILS).
+    // Super-admin (manages the legacy allowlist; not required for normal use).
     function isSuperAdmin() {
-      return isSignedIn()
-        && request.auth.token.email_verified == true
-        && emailKey() in ["simonmyhre1@gmail.com"];
+      return isUser() && emailKey() in ["simonmyhre1@gmail.com"];
     }
 
-    // True when the signed-in user is a super-admin OR has a doc in /allowlist.
-    function isAllowlisted() {
-      return isSignedIn()
-        && request.auth.token.email_verified == true
-        && (
-          isSuperAdmin()
-          || exists(/databases/$(database)/documents/allowlist/$(emailKey()))
-        );
+    // You belong to campaign `cid`.
+    function isMember(cid) {
+      return isUser()
+        && exists(/databases/$(database)/documents/campaigns/$(cid)/members/$(request.auth.uid));
     }
 
-    // The signed-in member's allowlist entry data.
-    function myData() {
-      return get(/databases/$(database)/documents/allowlist/$(emailKey())).data;
+    // You are the DM (creator) of campaign `cid`.
+    function isCampaignDM(cid) {
+      return isUser()
+        && get(/databases/$(database)/documents/campaigns/$(cid)).data.dmUid == request.auth.uid;
     }
 
-    // Access control: admin can manage members; admins/moderators are elevated.
-    function isAdmin() {
-      return isSuperAdmin() || (isAllowlisted() && myData().accessRole == "admin");
+    // Parent campaign of a game / session (for subcollection scoping).
+    function gameCampaignId(gid) {
+      return get(/databases/$(database)/documents/games/$(gid)).data.campaignId;
+    }
+    function sessionCampaignId(sid) {
+      return get(/databases/$(database)/documents/sessions/$(sid)).data.campaignId;
     }
 
-    // "Staff" run sessions & oversight: admins, moderators, or the DM.
-    function isStaff() {
-      return isSuperAdmin()
-        || (isAllowlisted()
-            && (myData().accessRole in ["admin", "moderator"] || myData().playerType == "dm"));
-    }
-
-    // /allowlist/{email}
-    // Members can read their own entry so the app can confirm access.
-    // Staff can read the whole roster; admins manage membership.
+    // /allowlist — legacy/optional. Self + super-admin read; super-admin writes.
     match /allowlist/{email} {
-      allow read: if isStaff() || (isSignedIn() && email == emailKey());
-      allow write: if isAdmin();
+      allow read: if isSuperAdmin() || (isSignedIn() && email == emailKey());
+      allow write: if isSuperAdmin();
     }
 
-    // /players/{uid}
-    // Your hunter card. Any allowlisted member of the party can read everyone's
-    // card (party view / DM oversight), but you may only write your own.
-    match /players/{uid} {
-      allow read: if isAllowlisted();
-      allow create, update: if isAllowlisted() && request.auth.uid == uid;
-      allow delete: if isAllowlisted() && request.auth.uid == uid;
+    // /users/{uid} — a signed-in user's self-set profile (name). Owner only.
+    match /users/{uid} {
+      allow read, write: if isUser() && request.auth.uid == uid;
     }
 
-    // /sessions/{id}
-    // Anyone in the party can read the schedule. Only staff (admin/moderator/DM)
-    // can create, edit or remove dates.
-    match /sessions/{id} {
-      allow read: if isAllowlisted();
-      allow write: if isStaff();
+    // /characters/{id}
+    // Any signed-in user can view character sheets. You write your own; the DM of
+    // the campaign a hunter is currently in can manage it (confirm death/recover).
+    match /characters/{id} {
+      // Transformation is DM-owned: gains are rolled physically at the table and
+      // recorded by the DM. The owner may only ever REDUCE transformationLevel
+      // (rests) and only CLEAR activeTransformations — never raise or add.
+      function ownerTransformationOk() {
+        let changed = request.resource.data.diff(resource.data).affectedKeys();
+        return (!changed.hasAny(['transformationLevel'])
+            || request.resource.data.get('transformationLevel', 0) <= resource.data.get('transformationLevel', 0))
+          && (!changed.hasAny(['activeTransformations'])
+            || request.resource.data.get('activeTransformations', []).size() == 0);
+      }
 
-      // /sessions/{id}/rsvps/{uid}
-      // Each member sets their own attendance; everyone in the party can read
-      // attendance (so the DM sees who hasn't answered).
-      match /rsvps/{uid} {
-        allow read: if isAllowlisted();
-        allow write: if isAllowlisted() && request.auth.uid == uid;
+      allow read: if isUser();
+      // You create your own; a campaign's DM may also author a hunter bound to
+      // their campaign, but only for an existing MEMBER of it (a real player or
+      // a seeded bot) — never an arbitrary uid.
+      allow create: if isUser() && (
+        request.resource.data.ownerUid == request.auth.uid
+        || (request.resource.data.campaignId != null
+            && isCampaignDM(request.resource.data.campaignId)
+            && exists(/databases/$(database)/documents/campaigns/$(request.resource.data.campaignId)/members/$(request.resource.data.ownerUid)))
+      );
+      allow update: if isUser() && (
+        (resource.data.ownerUid == request.auth.uid && ownerTransformationOk())
+        || (resource.data.campaignId != null && isCampaignDM(resource.data.campaignId))
+      );
+      allow delete: if isUser() && (
+        resource.data.ownerUid == request.auth.uid
+        || (resource.data.campaignId != null && isCampaignDM(resource.data.campaignId))
+      );
+    }
+
+    // /archive/{id} — transient dead/deleted hunters (purged when a game ends).
+    match /archive/{id} {
+      allow read, create, delete: if isUser();
+    }
+
+    // /campaigns/{id} — a campaign/server and its membership.
+    match /campaigns/{id} {
+      allow read: if isUser();
+      allow create: if isUser() && request.resource.data.dmUid == request.auth.uid;
+      allow update: if isUser(); // joining adds yourself to memberUids
+      allow delete: if isCampaignDM(id);
+
+      match /members/{uid} {
+        allow read: if isUser();
+        allow write: if isUser() && (request.auth.uid == uid || isCampaignDM(id));
       }
     }
 
-    // /combat/active
-    // The active encounter is visible to the whole party so a battle screen can
-    // run on another signed-in device. Only staff may control or replace it.
-    match /combat/{combatId} {
-      allow read: if combatId == "active" && isAllowlisted();
-      allow create, update: if combatId == "active" && isStaff() && validCombatSession();
-      allow delete: if combatId == "active" && isStaff();
+    // /activity/{id} — the campaign chronicle. Append-only: members write
+    // events about themselves (actorUid must match); nobody edits history.
+    // Reads: members see a campaign's log; a hunter's OWNER sees that hunter's
+    // history across campaigns (queries must filter ownerUid == their uid so
+    // the rule is provable). The DM purges the log with the campaign.
+    match /activity/{id} {
+      allow read: if isMember(resource.data.campaignId)
+        || (isUser() && resource.data.ownerUid == request.auth.uid);
+      allow create: if isMember(request.resource.data.campaignId)
+        && request.resource.data.actorUid == request.auth.uid;
+      allow update: if false;
+      allow delete: if isCampaignDM(resource.data.campaignId);
     }
 
-    function validCombatSession() {
-      let data = request.resource.data;
-      return data.keys().hasAll([
-          "title", "combatants", "round", "activeCombatantId",
-          "designatedWardenId", "turnDurationSeconds", "timerPhase",
-          "timerEndsAt", "pausedRemainingMs", "started", "updatedAt"
-        ])
-        && data.keys().hasOnly([
-          "title", "combatants", "round", "activeCombatantId",
-          "designatedWardenId", "turnDurationSeconds", "timerPhase",
-          "timerEndsAt", "pausedRemainingMs", "started", "updatedAt"
-        ])
-        && data.title is string && data.title.size() <= 120
-        && data.combatants is list && data.combatants.size() <= 60
-        && data.round is int && data.round >= 0
-        && (data.activeCombatantId == null || data.activeCombatantId is string)
-        && (data.designatedWardenId == null || data.designatedWardenId is string)
-        && data.turnDurationSeconds == 90
-        && data.timerPhase in ["idle", "briefing", "running", "paused", "untimed", "expired"]
-        && (data.timerEndsAt == null || data.timerEndsAt is int)
-        && (data.pausedRemainingMs == null || data.pausedRemainingMs is int)
-        && data.started is bool
-        && data.updatedAt is int;
+    // /sessions/{id} — campaign schedule. Members read; the DM manages dates.
+    match /sessions/{id} {
+      allow read: if isMember(resource.data.campaignId);
+      allow create: if isCampaignDM(request.resource.data.campaignId);
+      allow update, delete: if isCampaignDM(resource.data.campaignId);
+
+      match /rsvps/{uid} {
+        allow read: if isMember(sessionCampaignId(id));
+        allow write: if request.auth.uid == uid && isMember(sessionCampaignId(id));
+      }
+    }
+
+    // /games/{gameId} — live play, owned by its DM; members read.
+    match /games/{gameId} {
+      allow read: if isMember(resource.data.campaignId);
+      allow create: if isCampaignDM(request.resource.data.campaignId)
+        && request.resource.data.dmUid == request.auth.uid;
+      allow update, delete: if resource.data.dmUid == request.auth.uid;
+
+      match /participants/{uid} {
+        allow read: if isMember(gameCampaignId(gameId));
+        allow write: if isMember(gameCampaignId(gameId))
+          && (request.auth.uid == uid || isCampaignDM(gameCampaignId(gameId)));
+      }
+
+      match /loot/{lootId} {
+        allow read, create, update: if isMember(gameCampaignId(gameId));
+        allow delete: if isCampaignDM(gameCampaignId(gameId));
+      }
+
+      // Combat tracker: members read the initiative tracker; the DM edits it.
+      // Members may also finish off / clear MONSTERS (their Slain + Remove
+      // buttons) — but only the HP field, and never a PC row: no healing,
+      // initiative shuffling or note rewrites from the player side.
+      match /combatants/{cid} {
+        allow read: if isMember(gameCampaignId(gameId));
+        allow write: if isCampaignDM(gameCampaignId(gameId));
+        allow update: if isMember(gameCampaignId(gameId))
+          && resource.data.kind == "monster"
+          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["currentHp"]);
+        allow delete: if isMember(gameCampaignId(gameId))
+          && resource.data.kind == "monster";
+      }
+    }
+
+    // /trades/{tradeId} — player↔player, settled by the settleTrade Cloud
+    // Function (Admin SDK, bypasses these rules). Members read (DM log); the
+    // offerer creates; either party may accept/decline/cancel.
+    match /trades/{tradeId} {
+      allow read: if isMember(resource.data.campaignId);
+      allow create: if isMember(request.resource.data.campaignId)
+        && request.resource.data.fromUid == request.auth.uid;
+      allow update: if isMember(resource.data.campaignId)
+        && request.auth.uid in [resource.data.fromUid, resource.data.toUid]
+        && request.resource.data.fromUid == resource.data.fromUid
+        && request.resource.data.toUid == resource.data.toUid
+        && request.resource.data.status in ["accepted", "declined", "cancelled"];
+      allow delete: if isCampaignDM(resource.data.campaignId);
+    }
+
+    // /shopListings/{id} — the DM's per-campaign storefront. Members browse; the
+    // DM stocks/prices/pulls items. Buying mutates the buyer's own /characters
+    // doc (covered by the owner-write rule above).
+    match /shopListings/{id} {
+      allow read: if isMember(resource.data.campaignId);
+      allow create: if isCampaignDM(request.resource.data.campaignId)
+        && request.resource.data.priceGp is number
+        && request.resource.data.priceGp >= 0;
+      allow update, delete: if isCampaignDM(resource.data.campaignId);
+    }
+
+    // /sellRequests/{id} — a player asks to sell an item; the DM prices then
+    // approves (crediting the seller's own character) or declines. A request is
+    // raised unpriced ("requested"); only the DM may price/approve/decline, and
+    // the seller may cancel (declined).
+    match /sellRequests/{id} {
+      allow read: if isMember(resource.data.campaignId);
+      allow create: if isMember(request.resource.data.campaignId)
+        && request.resource.data.sellerUid == request.auth.uid
+        && request.resource.data.priceGp == null
+        && request.resource.data.status == "requested"
+        && request.resource.data.qty is int
+        && request.resource.data.qty > 0;
+      allow update: if isCampaignDM(resource.data.campaignId)
+        || (request.auth.uid == resource.data.sellerUid
+            && request.resource.data.status == "declined"
+            && request.resource.data.priceGp == resource.data.priceGp
+            && request.resource.data.itemId == resource.data.itemId
+            && request.resource.data.qty == resource.data.qty
+            && request.resource.data.characterId == resource.data.characterId);
+      allow delete: if isCampaignDM(resource.data.campaignId);
     }
 
     // Lock everything else down by default.

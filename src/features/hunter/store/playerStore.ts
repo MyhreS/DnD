@@ -1,25 +1,51 @@
 import { create } from "zustand";
 import type { HunterCard } from "@/types";
-import { saveHunterCard, deleteHunterCard, subscribeHunterCard } from "@/api/players";
+import { saveCharacter, archiveCharacter, subscribeMyCharacters } from "@/api/players";
 import { isPreviewActive, previewCard } from "@/dev/preview";
 
 type LoadStatus = "idle" | "loading" | "loaded" | "error";
 
+const SEL_KEY = "cs-selected-character";
+
+function pick(chars: HunterCard[], selId: string | null): HunterCard | null {
+  return chars.find((c) => c.id === selId) ?? chars[0] ?? null;
+}
+
+/** Stable chip order: oldest-created first (id tie-break). Applied identically
+ * to the snapshot callback and save()'s upsert so saving NEVER reorders the
+ * character switcher — a new hunter simply lands last, next to "+ New hunter".
+ * Client-side on purpose: a Firestore orderBy would drop docs missing the field. */
+const byCreation = (a: HunterCard, b: HunterCard) =>
+  (a.createdAt ?? 0) - (b.createdAt ?? 0) || a.id.localeCompare(b.id);
+
 interface PlayerState {
+  /** All characters the signed-in user owns. */
+  characters: HunterCard[];
+  /** The character currently in play / shown. */
+  selectedId: string | null;
   card: HunterCard | null;
   status: LoadStatus;
   saving: boolean;
   error: string | null;
   subscribedUid: string | null;
   unsub: (() => void) | null;
-  /** Live-subscribe to the signed-in user's card. Idempotent per uid. */
+
   subscribe: (uid: string) => void;
   stop: () => void;
+  select: (id: string) => void;
+  /** FULL-card write — for the builder/editor ONLY (create + deliberate edit of
+   * the whole sheet). Play-time writes (trackers, rests, equip, level-up) must
+   * go through `patchCharacter` with a minimal partial instead: a full-card
+   * save from a stale snapshot silently clobbers concurrent DM writes
+   * (insight/level grants, transformation records, item awards). */
   save: (card: HunterCard) => Promise<boolean>;
-  remove: (uid: string) => Promise<boolean>;
+  /** Archive (soft-delete) the selected character — DM-recoverable for the session. */
+  archive: (gameId: string | null) => Promise<boolean>;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
+  characters: [],
+  selectedId: null,
   card: null,
   status: "idle",
   saving: false,
@@ -29,16 +55,22 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
 
   subscribe: (uid: string) => {
     if (isPreviewActive()) {
-      set({ card: previewCard(uid), status: "loaded", subscribedUid: uid });
+      const c = previewCard("preview-uid");
+      set({ characters: [c], selectedId: c.id, card: c, status: "loaded", subscribedUid: uid });
       return;
     }
     if (get().subscribedUid === uid && get().unsub) return;
     get().unsub?.();
     set({ status: "loading", error: null, subscribedUid: uid });
-    const unsub = subscribeHunterCard(
+    const unsub = subscribeMyCharacters(
       uid,
-      (card) => set({ card, status: "loaded" }),
-      () => set({ status: "error", error: "Could not load your hunter card." }),
+      (cards) => {
+        const sorted = [...cards].sort(byCreation);
+        const stored = localStorage.getItem(SEL_KEY);
+        const selId = sorted.some((c) => c.id === stored) ? stored : (sorted[0]?.id ?? null);
+        set({ characters: sorted, selectedId: selId, card: pick(sorted, selId), status: "loaded" });
+      },
+      () => set({ status: "error", error: "Could not load your characters." }),
     );
     set({ unsub });
   },
@@ -48,37 +80,54 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     set({ unsub: null, subscribedUid: null });
   },
 
+  select: (id: string) => {
+    localStorage.setItem(SEL_KEY, id);
+    set((s) => ({ selectedId: id, card: pick(s.characters, id) }));
+  },
+
   save: async (card: HunterCard) => {
     const toSave = { ...card, updatedAt: Date.now() };
+    const upsert = (s: PlayerState) => {
+      const characters = [...s.characters.filter((c) => c.id !== toSave.id), toSave].sort(byCreation);
+      localStorage.setItem(SEL_KEY, toSave.id);
+      return { characters, selectedId: toSave.id, card: toSave };
+    };
     if (isPreviewActive()) {
-      set({ card: toSave, status: "loaded" }); // local-only in preview
+      set((s) => ({ ...upsert(s), status: "loaded" as LoadStatus }));
       return true;
     }
     set({ saving: true, error: null });
     try {
-      await saveHunterCard(toSave);
-      // The live subscription will echo the change; set optimistically too.
-      set({ card: toSave, saving: false, status: "loaded" });
+      await saveCharacter(toSave);
+      set((s) => ({ ...upsert(s), saving: false, status: "loaded" }));
       return true;
     } catch (err) {
-      console.error("Failed to save hunter card", err);
-      set({ saving: false, error: "Could not save your hunter card. Try again." });
+      console.error("Failed to save character", err);
+      set({ saving: false, error: "Could not save your character. Try again." });
       return false;
     }
   },
 
-  remove: async (uid: string) => {
+  archive: async (gameId: string | null) => {
+    const card = get().card;
+    if (!card) return true;
+    const dropLocal = (s: PlayerState) => {
+      const characters = s.characters.filter((c) => c.id !== card.id);
+      const selId = characters[0]?.id ?? null;
+      if (selId) localStorage.setItem(SEL_KEY, selId);
+      return { characters, selectedId: selId, card: pick(characters, selId) };
+    };
     if (isPreviewActive()) {
-      set({ card: null, status: "loaded" });
+      set((s) => dropLocal(s));
       return true;
     }
     set({ saving: true, error: null });
     try {
-      await deleteHunterCard(uid);
-      set({ card: null, saving: false, status: "loaded" });
+      await archiveCharacter(card, "deleted", gameId);
+      set((s) => ({ ...dropLocal(s), saving: false }));
       return true;
     } catch (err) {
-      console.error("Failed to delete hunter card", err);
+      console.error("Failed to archive character", err);
       set({ saving: false, error: "Could not delete your character. Try again." });
       return false;
     }

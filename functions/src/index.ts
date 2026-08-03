@@ -8,6 +8,8 @@ import { APP_URL, GMAIL_APP_PASSWORD, SUPER_ADMIN_EMAILS, isTestEmail } from "./
 import { sendMail, sendMany } from "./email";
 import { inviteEmail, characterReminder, rsvpReminder } from "./templates";
 
+export { settleTrade } from "./trades";
+
 initializeApp();
 const db = getFirestore();
 
@@ -143,11 +145,12 @@ export const sendReminders = onCall(
       .filter((m) => !isTestEmail(m.email));
 
     if (kind === "character") {
-      const playersSnap = await db.collection("players").get();
+      const playersSnap = await db.collection("characters").get();
       const hasCard = new Set(
         playersSnap.docs
           .map((d) => d.data())
-          .filter((p) => p.classId && p.name)
+          // A named hunter counts — sheet-made hunters have classId "" forever.
+          .filter((p) => p.name)
           .map((p) => String(p.ownerEmail).toLowerCase()),
       );
       const targets = members.filter(
