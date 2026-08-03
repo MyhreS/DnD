@@ -1,5 +1,4 @@
-/** The shared search control: a search box plus an "All" + category chip row.
- * Rendered identically by the Rules page and the Handbook search. */
+/** Shared search field plus an optional category row. */
 export function SearchControls<C extends string>({
   query,
   onQuery,
@@ -10,12 +9,11 @@ export function SearchControls<C extends string>({
   showCategories = true,
 }: {
   query: string;
-  onQuery: (q: string) => void;
+  onQuery: (query: string) => void;
   placeholder: string;
   categories: readonly C[];
   category: C | "all";
-  onCategory: (c: C | "all") => void;
-  /** Hide the chip row (e.g. until a query is active). */
+  onCategory: (category: C | "all") => void;
   showCategories?: boolean;
 }) {
   return (
@@ -25,7 +23,7 @@ export function SearchControls<C extends string>({
         type="search"
         placeholder={placeholder}
         value={query}
-        onChange={(e) => onQuery(e.target.value)}
+        onChange={(event) => onQuery(event.target.value)}
       />
       {showCategories && (
         <div className="chip-row">
@@ -36,14 +34,14 @@ export function SearchControls<C extends string>({
           >
             All
           </button>
-          {categories.map((c) => (
+          {categories.map((item) => (
             <button
-              key={c}
+              key={item}
               type="button"
-              className={`chip selectable${category === c ? " selected" : ""}`}
-              onClick={() => onCategory(c)}
+              className={`chip selectable${category === item ? " selected" : ""}`}
+              onClick={() => onCategory(item)}
             >
-              {c}
+              {item}
             </button>
           ))}
         </div>

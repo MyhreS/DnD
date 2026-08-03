@@ -295,24 +295,25 @@ git anyway.) First-time on a new machine: `doppler login && doppler setup -p dnd
 
 ## Updating game content
 
-The UI is fully data-driven, so content updates are localized to `src/data/`:
+The UI is data-driven. `resources/master.json` is the canonical searchable
+content store; `bun run codex:generate` rebuilds the lean app indexes:
 - `classes.ts` — the six classes: traits (incl. **Max Sanity** + **Sanity Die**),
   full 1–20 **progression tables**, level-by-level **features**, and **subclasses**.
-- `rites.ts` — the Deepcaller's **Rites & Whispers**.
+- `codex.generated.json` — the unified, provenance-aware search index.
+- `gameCard.generated.json` — the Player's Game Card subset.
 - `armor.ts` — the armory (Main / Add-on / **Armor Upgrade** / Extra).
-- `handbook.ts` — the Rules chapters (creation steps, AC, carrying, Sanity).
-- `abilities.ts` — ability names + the modifier formula.
-- …plus newer data files (`backgrounds.ts`, `feats.ts`, `conditions.ts`,
-  `creatures.ts`, `items.ts`, `rulesReference.ts`, …).
+- `abilities.ts` — the ability-modifier formula.
+- …plus app-specific files (`conditions.ts`, `creatures.ts`, `items.ts`, …).
 
-The paper sheet, handbook and rules-reference screens follow automatically.
+The paper sheet and unified Codex follow automatically.
 Replace the PDF in `public/handbook/` if a new one arrives.
 
 **Source of truth.** The DM's raw material lives in `resources/` (PDFs + CSVs).
 `resources/extracted/` holds the clean `pdftotext` output, the structured
-`content.json`, and `gen.py`, which regenerates `classes.ts` + `rites.ts` from
-`content.json` + the level-table CSVs. After a content refresh, re-run
-`pdftotext`, update `content.json`, and `python3 resources/extracted/gen.py`.
+`content.json`, and `gen.py`, which regenerates `classes.ts` from
+`content.json` + the level-table CSVs. After any source-content refresh, update
+`master.json`, run `bun run codex:generate`, and validate with
+`bun run test:codex`.
 
 > A few source tables conflict with the handbook's Class Overview; resolved in
 > favour of the Overview + 5e basis: Stalker Hit Die = **d8** (per Rogue), Bloodbound

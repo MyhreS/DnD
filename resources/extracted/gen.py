@@ -8,7 +8,6 @@ BASE = os.path.join(REPO, "resources")
 SRC = os.path.join(REPO, "src", "data")
 content = json.load(open(BASE + "/extracted/content.json"))
 classes = {c["id"]: c for c in content["classes"]}
-rites = content["rites"]
 
 CSV_DIR = BASE + "/csv/Classes Boards for send"
 FEATURE_CSV = {
@@ -188,36 +187,3 @@ out.write("  if (!id) return undefined;\n  return CLASS_BY_ID[id];\n}\n")
 # (getSubclass is intentionally not emitted — the app doesn't use it; knip flags it as dead code.)
 open(os.path.join(SRC, "classes.ts"), "w", encoding="utf-8").write(out.getvalue())
 print("wrote classes.ts (%d chars)" % len(out.getvalue()))
-
-# ---- rites.ts ----
-def emit_rite(r):
-    L = ["  {"]
-    L.append("    id: %s," % js(r["id"]))
-    L.append("    name: %s," % js(clean(r["name"])))
-    L.append("    level: %d," % int(r["level"]))
-    L.append("    whisper: %s," % ("true" if r["whisper"] else "false"))
-    L.append("    type: %s," % js(r["type"]))
-    L.append("    performing: %s," % js(clean(r["performing"])))
-    L.append("    range: %s," % js(clean(r["range"])))
-    L.append("    duration: %s," % js(clean(r["duration"])))
-    if clean(r.get("special","")): L.append("    special: %s," % js(clean(r["special"])))
-    L.append("    text: %s," % js(clean(r["text"])))
-    if clean(r.get("upgrade","")): L.append("    upgrade: %s," % js(clean(r["upgrade"])))
-    L.append("  },")
-    return "\n".join(L)
-
-# sort: whispers first, then by level, then name
-rites_sorted = sorted(rites, key=lambda r: (not r["whisper"], r["level"], r["name"]))
-ro = io.StringIO()
-ro.write('import type { Rite, RiteType } from "@/types";\n\n')
-ro.write("// The Deepcaller's Rites & Whispers (Appendix B/C).\n")
-ro.write("// GENERATED from the DM's rite PDFs (resources/). Regenerate: resources/extracted/gen.py\n\n")
-ro.write("export const RITES: Rite[] = [\n")
-ro.write("\n".join(emit_rite(r) for r in rites_sorted))
-ro.write("\n];\n\n")
-ro.write("export const RITE_TYPES: RiteType[] = [\n")
-ro.write('  "Evocation", "Mind Influence", "Illusion", "Summoning",\n')
-ro.write('  "Traversal", "Detection", "Protection",\n];\n')
-# (RITE_BY_ID is intentionally not emitted — the app doesn't use it; knip flags it as dead code.)
-open(os.path.join(SRC, "rites.ts"), "w", encoding="utf-8").write(ro.getvalue())
-print("wrote rites.ts (%d chars, %d rites)" % (len(ro.getvalue()), len(rites_sorted)))
