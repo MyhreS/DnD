@@ -1518,7 +1518,7 @@
 }
 
 /* ---------- rules-driven controls, integrated into the paper ---------- */
-.papersheet [data-automated="true"] {
+.papersheet [data-automated="true"]:not(select) {
   box-shadow: inset 3px 0 0 #b58a35;
   background-color: rgba(181, 138, 53, 0.07);
 }
@@ -1605,6 +1605,12 @@
 .papersheet .sheet-auto-block textarea {
   min-height: 18mm;
   resize: vertical;
+}
+/* Dropdowns are part of the paper, not separate coloured UI boxes. Keep the
+ * inked outline/chevron affordance, but let the paper show through everywhere. */
+.papersheet .sheet-auto-block select,
+.papersheet .armor-discovery .sheet-auto-grid select {
+  background-color: transparent;
 }
 .papersheet .sheet-auto-grid {
   display: grid;
