@@ -41,6 +41,7 @@ try {
   await context.addInitScript(() => {
     localStorage.setItem("cs-experimental", "on");
     localStorage.setItem("cs-fighters", "on");
+    localStorage.setItem("cs-theme", "light");
   });
   const page = await context.newPage();
   page.on("pageerror", (error) => errors.push(String(error)));
@@ -169,6 +170,16 @@ try {
   if (await page.getByTestId("legacy-conversion-wizard").count()) throw new Error("Legacy sheets still show a player-facing migration popup");
 
   await page.setViewportSize({ width: 390, height: 844 });
+  if (await page.locator(".papersheet-toolbar h1").count()) throw new Error("Character name still renders above the sheet toolbar");
+  const toolbarAlignment = await page.locator(".papersheet-toolbar").evaluate((toolbar) => {
+    const toggle = toolbar.querySelector(".character-view-switch");
+    const toolbarBox = toolbar.getBoundingClientRect();
+    const toggleBox = toggle.getBoundingClientRect();
+    return { rightGap: Math.round(toolbarBox.right - toggleBox.right), toolbarWidth: Math.round(toolbarBox.width) };
+  });
+  if (toolbarAlignment.rightGap > 2) {
+    throw new Error(`The mobile character-view toggle is not right-aligned: ${JSON.stringify(toolbarAlignment)}`);
+  }
   await page.getByRole("button", { name: "App view" }).click();
   await page.getByTestId("app-character-sheet").waitFor();
   if (await page.getByLabel("Character section", { exact: true }).count()) {
@@ -200,12 +211,23 @@ try {
       const [r, g, b] = value.match(/[\d.]+/g).slice(0, 3).map(Number);
       return .2126 * r + .7152 * g + .0722 * b;
     };
-    return { text, title, background, textContrast: Math.abs(luminance(text) - luminance(background)), titleContrast: Math.abs(luminance(title) - luminance(background)) };
+    return {
+      theme: document.documentElement.dataset.theme,
+      text,
+      title,
+      background,
+      backgroundLuminance: luminance(background),
+      textContrast: Math.abs(luminance(text) - luminance(background)),
+      titleContrast: Math.abs(luminance(title) - luminance(background)),
+    };
   });
+  if (appColors.theme !== "light" || appColors.backgroundLuminance < 180) {
+    throw new Error(`App sheet did not inherit the light theme: ${JSON.stringify(appColors)}`);
+  }
   if (appColors.textContrast < 80 || appColors.titleContrast < 80) {
     throw new Error(`App sheet contrast failed: ${JSON.stringify(appColors)}`);
   }
-  await page.getByTestId("app-character-sheet").scrollIntoViewIfNeeded();
+  await page.locator(".papersheet-modal").evaluate((element) => element.scrollTo({ top: 0 }));
   await page.screenshot({ path: "screenshots/app-character-sheet-mobile.png", fullPage: true });
 
   const retired = await context.newPage();

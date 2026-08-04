@@ -73,11 +73,12 @@ export function PaperSheetModal({
   return createPortal(
     <div className={`papersheet-modal character-editor-modal view-${view}`} role="dialog" aria-modal="true" aria-label="Character sheet">
       <div className="papersheet-toolbar">
-        <button type="button" className="ghost" ref={backRef} onClick={closeEditor}>← Back</button>
-        <h1>{workingCard.name || "UNNAMED HUNTER"}</h1>
-        <div className="character-view-switch" role="group" aria-label="Character sheet view">
-          <button type="button" className={view === "app" ? "active" : ""} aria-pressed={view === "app"} onClick={() => setView("app")}>App view</button>
-          <button type="button" className={view === "paper" ? "active" : ""} aria-pressed={view === "paper"} onClick={() => setView("paper")}>Paper sheet</button>
+        <div className="papersheet-toolbar-primary">
+          <button type="button" className="ghost" ref={backRef} onClick={closeEditor}>← Back</button>
+          <div className="character-view-switch" role="group" aria-label="Character sheet view">
+            <button type="button" className={view === "app" ? "active" : ""} aria-pressed={view === "app"} onClick={() => setView("app")}>App view</button>
+            <button type="button" className={view === "paper" ? "active" : ""} aria-pressed={view === "paper"} onClick={() => setView("paper")}>Paper sheet</button>
+          </div>
         </div>
         {!readOnly && (
           <>

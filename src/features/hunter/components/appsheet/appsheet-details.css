@@ -103,7 +103,7 @@
 }
 
 .appsheet-inventory-list > div:hover {
-  background: rgba(255, 255, 255, .025);
+  background: var(--app-subtle);
 }
 
 .appsheet-item-mark {
@@ -192,7 +192,7 @@
 }
 
 .appsheet-weapon-table > div:not(.heading):hover {
-  background: rgba(255, 255, 255, .025);
+  background: var(--app-subtle);
 }
 
 .appsheet-weapon-table .heading {
@@ -218,11 +218,12 @@
 }
 
 .appsheet-secondary-action {
-  background: #28292e !important;
+  background: var(--app-secondary) !important;
+  color: var(--app-text) !important;
 }
 
 .appsheet-inline-error {
-  color: #e17d76;
+  color: var(--app-danger);
   font-weight: 700;
 }
 
@@ -262,7 +263,7 @@
 }
 
 .appsheet-feature-timeline details[open] {
-  background: rgba(255, 255, 255, .025);
+  background: var(--app-subtle);
 }
 
 .appsheet-feature-timeline summary {
@@ -304,8 +305,8 @@
 .appsheet-token-list span {
   padding: 4px 7px;
   border-radius: 4px;
-  background: rgba(193, 163, 108, .09);
-  color: #dfc997;
+  background: var(--app-token-bg);
+  color: var(--app-token-text);
   font-size: 12px;
 }
 
@@ -332,8 +333,8 @@
   align-items: center;
   padding: 14px 16px;
   border-radius: 7px;
-  background: #24252a;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, .34);
+  background: var(--app-tray);
+  box-shadow: var(--app-shadow);
 }
 
 .appsheet-edit-title span,
@@ -364,7 +365,7 @@
   gap: 2px 8px;
   padding: 6px 8px;
   border-radius: 4px;
-  background: #191a1e;
+  background: var(--app-tray-item);
 }
 
 .appsheet-change-list > span b {
@@ -374,7 +375,7 @@
 }
 
 .appsheet-change-list s {
-  color: #8e8e94;
+  color: var(--app-faint);
 }
 
 .appsheet-change-list strong {
@@ -382,11 +383,11 @@
 }
 
 .appsheet-change-list .positive strong {
-  color: #8ed19f;
+  color: var(--app-positive);
 }
 
 .appsheet-change-list .negative strong {
-  color: #f07b74;
+  color: var(--app-danger);
 }
 
 .appsheet-edit-actions {
@@ -395,11 +396,13 @@
 }
 
 .appsheet-edit-actions .cancel {
-  background: #35363b !important;
+  background: var(--app-cancel) !important;
+  color: var(--app-text) !important;
 }
 
 .appsheet-edit-actions .apply {
-  background: #41714e !important;
+  background: var(--app-apply) !important;
+  color: #fffdf8 !important;
 }
 
 @media (max-width: 900px) {
@@ -433,21 +436,6 @@
   .view-app .papersheet-toolbar {
     gap: 7px;
     margin-bottom: 12px;
-  }
-
-  .view-app .papersheet-toolbar h1 {
-    display: none;
-  }
-
-  .view-app .papersheet-toolbar .savemsg {
-    order: 4;
-    width: 100%;
-    min-height: 14px;
-    text-align: left;
-  }
-
-  .papersheet-toolbar .character-view-switch {
-    margin-left: auto;
   }
 
   .appsheet-overview-grid,
