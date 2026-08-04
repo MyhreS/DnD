@@ -64,6 +64,11 @@
   color: #d8cfbc;
   border: 1px solid #6b6353;
 }
+.papersheet-toolbar .character-delete-trigger {
+  margin-left: auto;
+  border-color: #8b4945;
+  color: #e2aaa3;
+}
 .papersheet-toolbar button:hover,
 .papersheet-toolbar a:hover {
   filter: brightness(1.15);
@@ -89,6 +94,103 @@
   color: #9a917d;
   min-width: 60px;
   text-align: right;
+}
+
+/* ---------- delete confirmation ---------- */
+.character-delete-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 110;
+  display: grid;
+  place-items: center;
+  padding: max(20px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+  background: rgba(12, 10, 8, 0.78);
+}
+
+.character-delete-dialog {
+  width: min(420px, 100%);
+  margin: 0;
+  padding: 24px;
+  border: 1px solid #8f826d;
+  border-radius: 6px;
+  background: #f6f1e5;
+  color: #211d17;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.32);
+  font-family: "Alegreya Sans SC", sans-serif;
+}
+
+.character-delete-dialog h2 {
+  margin: 0 0 10px;
+  color: inherit;
+  font-size: 1.45rem;
+  line-height: 1.15;
+}
+
+.character-delete-dialog p {
+  margin: 0 0 20px;
+  color: #4a443a;
+  font-size: 0.98rem;
+  line-height: 1.5;
+}
+
+.character-delete-dialog label {
+  display: block;
+  margin-bottom: 7px;
+  color: inherit;
+  font-size: 0.9rem;
+}
+
+.character-delete-dialog input {
+  width: 100%;
+  min-height: 42px;
+  margin: 0;
+  padding: 9px 10px;
+  border: 1px solid #8f826d;
+  border-radius: 4px;
+  background: #fffdf8;
+  color: #211d17;
+  font: inherit;
+}
+
+.character-delete-dialog input:focus-visible {
+  outline: 2px solid #8e1f1f;
+  outline-offset: 2px;
+}
+
+.character-delete-dialog .character-delete-error {
+  margin: 10px 0 0;
+  color: #8e1f1f;
+  font-weight: 700;
+}
+
+.character-delete-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 22px;
+}
+
+.character-delete-actions button {
+  width: auto;
+  min-height: 40px;
+  padding: 8px 14px;
+  border: 1px solid #8f826d;
+  border-radius: 4px;
+  background: transparent;
+  color: #211d17;
+  font: 700 0.9rem/1 "Alegreya Sans SC", sans-serif;
+  cursor: pointer;
+}
+
+.character-delete-actions .character-delete-confirm {
+  border-color: #711919;
+  background: #8e1f1f;
+  color: #fff8ed;
+}
+
+.character-delete-actions button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 /* the step selector — round numbered buttons echoing the sheet's red badges */

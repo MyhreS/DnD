@@ -94,7 +94,12 @@ service cloud.firestore {
 
     // /archive/{id} — transient dead/deleted hunters (purged when a game ends).
     match /archive/{id} {
-      allow read, create, delete: if isUser();
+      allow read, delete: if isUser();
+      allow create: if isUser() && (
+        request.resource.data.card.ownerUid == request.auth.uid
+        || (request.resource.data.card.campaignId != null
+            && isCampaignDM(request.resource.data.card.campaignId))
+      );
     }
 
     // /campaigns/{id} — a campaign/server and its membership.

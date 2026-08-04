@@ -258,6 +258,44 @@ try {
   if (darkBackground === appColors.background) throw new Error("App sheet did not respond when the global theme changed to dark");
   await page.screenshot({ path: "screenshots/app-character-sheet-mobile-dark.png", fullPage: true });
 
+  // Character deletion is reachable from the open editor (not hidden behind
+  // it), deliberately confirmed, cancellable, and returns to the hunter list.
+  const deleteTrigger = page.locator(".papersheet-toolbar").getByRole("button", { name: "Delete character" });
+  await deleteTrigger.waitFor();
+  await deleteTrigger.click();
+  const deleteDialog = page.getByRole("dialog", { name: "Delete character?" });
+  await deleteDialog.waitFor();
+  const deleteInput = deleteDialog.getByTestId("character-delete-confirmation");
+  if (!await deleteInput.evaluate((element) => element === document.activeElement)) {
+    throw new Error("Delete confirmation did not focus its required input");
+  }
+  await deleteInput.fill("Not Eileen");
+  if (!await deleteDialog.getByRole("button", { name: "Delete character" }).isDisabled()) {
+    throw new Error("Delete action enabled without the exact character name");
+  }
+  const deleteLayout = await deleteDialog.evaluate((element) => ({
+    left: element.getBoundingClientRect().left,
+    right: element.getBoundingClientRect().right,
+    viewport: window.innerWidth,
+  }));
+  if (deleteLayout.left < 0 || deleteLayout.right > deleteLayout.viewport) {
+    throw new Error(`Delete confirmation overflows the mobile viewport: ${JSON.stringify(deleteLayout)}`);
+  }
+  await page.screenshot({ path: "screenshots/character-delete-confirmation-mobile.png", fullPage: true });
+  await deleteDialog.getByRole("button", { name: "Cancel" }).click();
+  if (await deleteDialog.count()) throw new Error("Cancel did not close the delete confirmation");
+  if (!await page.getByTestId("app-character-sheet").isVisible()) throw new Error("Cancel closed the character editor");
+
+  await deleteTrigger.click();
+  await deleteDialog.getByTestId("character-delete-confirmation").fill("Eileen the Crow");
+  const confirmedDelete = deleteDialog.getByRole("button", { name: "Delete character" });
+  if (await confirmedDelete.isDisabled()) throw new Error("Exact character name did not enable deletion");
+  await confirmedDelete.click();
+  await page.getByRole("heading", { name: "Hunters" }).waitFor();
+  if (await page.getByRole("button", { name: /Open Eileen the Crow/ }).count()) {
+    throw new Error("Deleted character remained in the hunter list");
+  }
+
   const retired = await context.newPage();
   await retired.goto(`${BASE}/profile?preview=user.player`, { waitUntil: "domcontentloaded" });
   await retired.locator("h1").waitFor();

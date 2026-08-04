@@ -19,7 +19,7 @@ export function CharacterView({
   onOpen: (id: string) => void;
   onBack: () => void;
   onNew: () => void;
-  onDelete: () => Promise<boolean>;
+  onDelete: (card: HunterCard) => Promise<boolean>;
 }) {
   const openCard = openId ? characters.find((c) => c.id === openId) ?? null : null;
 
