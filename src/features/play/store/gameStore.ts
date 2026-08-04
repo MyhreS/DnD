@@ -227,7 +227,8 @@ export const useGameStore = create<GameState>((set, get) => {
 
     begin: async (gameId) => {
       if (get().preview) {
-        set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, status: "active", startedAt: Date.now() } : g)) }));
+        const now = Date.now();
+        set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, status: "active", startedAt: now, clockRunning: true, clockStartedAt: now } : g)) }));
         return true;
       }
       const ok = (await run(() => startGame(gameId), "Couldn't begin the game.")) !== null;
@@ -283,7 +284,7 @@ export const useGameStore = create<GameState>((set, get) => {
       if (get().preview) {
         set((s) => ({
           games: s.games.map((g) =>
-            g.id === gameId ? { ...g, status: "ended", endedPhase, endedLocation: endedLocation ?? null } : g,
+            g.id === gameId ? { ...g, status: "ended", endedPhase, endedLocation: endedLocation ?? null, clockRunning: false, clockStartedAt: null } : g,
           ),
         }));
         return true;

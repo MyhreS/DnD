@@ -15,6 +15,7 @@ export function MainLayout() {
         <>
           <NavLink to="/" end>Menu</NavLink>
           <NavLink to="/character">Hunters</NavLink>
+          <NavLink to="/game">Game</NavLink>
           <NavLink to="/codex">Codex</NavLink>
           {dmMode && <NavLink to="/dm">DM</NavLink>}
         </>

@@ -1,0 +1,129 @@
+import { spawn, spawnSync } from "node:child_process";
+import { setTimeout as sleep } from "node:timers/promises";
+import { chromium, devices } from "playwright";
+
+const PORT = 5199;
+const BASE = `http://127.0.0.1:${PORT}`;
+const appsResult = spawnSync("firebase", ["apps:list", "--json"], { encoding: "utf8" });
+if (appsResult.status !== 0) throw new Error(`Could not read Firebase app config: ${appsResult.stderr}`);
+const webApp = JSON.parse(appsResult.stdout).result.find((app) => app.platform === "WEB");
+if (!webApp) throw new Error("No Firebase web app found");
+const configResult = spawnSync("firebase", ["apps:sdkconfig", "WEB", webApp.appId, "--json"], { encoding: "utf8" });
+if (configResult.status !== 0) throw new Error(`Could not read Firebase SDK config: ${configResult.stderr}`);
+const firebase = JSON.parse(configResult.stdout).result.sdkConfig;
+const server = spawn("bunx", ["vite", "--host", "127.0.0.1", "--port", String(PORT)], {
+  stdio: ["ignore", "pipe", "pipe"],
+  env: {
+    ...process.env,
+    VITE_FIREBASE_API_KEY: firebase.apiKey,
+    VITE_FIREBASE_AUTH_DOMAIN: firebase.authDomain,
+    VITE_FIREBASE_PROJECT_ID: firebase.projectId,
+    VITE_FIREBASE_STORAGE_BUCKET: firebase.storageBucket,
+    VITE_FIREBASE_MESSAGING_SENDER_ID: firebase.messagingSenderId,
+    VITE_FIREBASE_APP_ID: firebase.appId,
+    VITE_FIREBASE_MEASUREMENT_ID: firebase.measurementId,
+  },
+});
+
+async function ready() {
+  for (let attempt = 0; attempt < 80; attempt += 1) {
+    try { if ((await fetch(BASE)).ok) return; } catch { /* Vite is starting. */ }
+    await sleep(250);
+  }
+  throw new Error("Vite did not start");
+}
+
+function watch(page, errors) {
+  page.on("pageerror", (error) => errors.push(String(error)));
+  page.on("console", (message) => {
+    if (message.type() === "error" && !message.text().includes("Failed to load resource")) errors.push(message.text());
+  });
+}
+
+async function assertNoHorizontalOverflow(page, label) {
+  const report = await page.evaluate(() => ({
+    viewport: document.documentElement.clientWidth,
+    document: document.documentElement.scrollWidth,
+    body: document.body.scrollWidth,
+  }));
+  if (report.document > report.viewport || report.body > report.viewport) {
+    throw new Error(`${label} overflows horizontally: ${JSON.stringify(report)}`);
+  }
+}
+
+const browser = await chromium.launch({ headless: true });
+const errors = [];
+try {
+  await ready();
+
+  const dmContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+  await dmContext.addInitScript(() => {
+    localStorage.setItem("cs-dm", "on");
+    localStorage.setItem("cs-theme", "dark");
+  });
+  const dm = await dmContext.newPage();
+  watch(dm, errors);
+  await dm.goto(`${BASE}/game?preview=dm`, { waitUntil: "domcontentloaded" });
+  await dm.getByRole("heading", { name: "Game", exact: true }).waitFor();
+  const primaryLinks = await dm.getByRole("navigation", { name: "Primary" }).getByRole("link").allTextContents();
+  const huntersIndex = primaryLinks.indexOf("Hunters");
+  if (huntersIndex < 0 || primaryLinks[huntersIndex + 1] !== "Game") {
+    throw new Error(`Game is not directly after Hunters in navigation: ${JSON.stringify(primaryLinks)}`);
+  }
+  await dm.getByRole("button", { name: "Create session", exact: true }).click();
+  await dm.getByLabel("Session name").fill("Night of the Pale Moon");
+  await dm.getByLabel("Search for a player or Hunter").fill("Eileen");
+  const eileen = dm.getByRole("button", { name: /Eileen the Crow/ });
+  await eileen.waitFor();
+  await eileen.click();
+  await dm.getByRole("button", { name: "Create session", exact: true }).click();
+  await dm.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
+  await dm.getByText("Eileen the Crow", { exact: true }).waitFor();
+
+  await dm.getByRole("button", { name: "Start session" }).click();
+  await dm.getByRole("button", { name: "Pause" }).waitFor();
+  await dm.waitForFunction(() => document.querySelector('[data-testid="session-clock"]')?.textContent !== "00:00:00");
+  await dm.getByRole("button", { name: "Pause" }).click();
+  await dm.getByRole("button", { name: "Resume" }).waitFor();
+  await dm.getByRole("button", { name: "+ Add enemy" }).click();
+  await dm.getByLabel("Name").fill("Moon Beast");
+  await dm.getByLabel("Max HP").fill("30");
+  await dm.getByLabel("Initiative").fill("16");
+  await dm.getByRole("spinbutton", { name: "AC", exact: true }).fill("14");
+  await dm.getByLabel("Notes").fill("Howls when bloodied.");
+  await dm.getByRole("button", { name: "Add enemy", exact: true }).click();
+  const beast = dm.getByRole("article").filter({ hasText: "Moon Beast" });
+  await beast.waitFor();
+  await beast.getByRole("button", { name: "Damage Moon Beast by 5" }).click();
+  await beast.getByText("5 damage taken", { exact: false }).waitFor();
+  await dm.screenshot({ path: "screenshots/game-page-dm-desktop.png", fullPage: true });
+
+  const playerContext = await browser.newContext({ ...devices["iPhone 13"] });
+  await playerContext.addInitScript(() => {
+    localStorage.setItem("cs-dm", "off");
+    localStorage.setItem("cs-theme", "light");
+  });
+  const player = await playerContext.newPage();
+  watch(player, errors);
+  await player.goto(`${BASE}/game?preview=user.player`, { waitUntil: "domcontentloaded" });
+  await player.getByRole("heading", { name: "Game", exact: true }).waitFor();
+  if (await player.getByRole("button", { name: "Create session", exact: true }).count()) {
+    throw new Error("Player can see the DM-only create-session control");
+  }
+  await player.getByText("Christoffer added your Hunter to this session.", { exact: true }).waitFor();
+  const clericBeast = player.getByRole("article").filter({ hasText: "Cleric Beast" });
+  await clericBeast.getByText("28 damage taken", { exact: false }).waitFor();
+  if (await clericBeast.getByRole("button", { name: /Damage Cleric Beast/ }).count()) {
+    throw new Error("Player can see DM enemy controls");
+  }
+  await assertNoHorizontalOverflow(player, "Mobile Game page");
+  await player.screenshot({ path: "screenshots/game-page-player-mobile.png", fullPage: true });
+  await playerContext.close();
+  await dmContext.close();
+
+  if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
+  console.log("Game page E2E passed: DM session creation, roster, clock, enemies, damage, player visibility, responsive layout.");
+} finally {
+  await browser.close();
+  server.kill("SIGTERM");
+}

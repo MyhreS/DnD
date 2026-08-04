@@ -243,6 +243,9 @@ export interface Game {
   title: string;
   dmUid: string;
   dmName: string;
+  /** User ids invited to this session. Kept on the parent so Firestore can
+   * authorize and query a player's sessions without reading subcollections. */
+  participantUids: string[];
   status: GameStatus;
   /** Current phase (meaningful while active). */
   phase: GamePhase;
@@ -252,6 +255,11 @@ export interface Game {
   location?: GameLocation;
   /** Test-run game — hidden from real views and auto-cleaned. */
   sandbox?: boolean;
+  /** Shared table clock. elapsedMs stores completed running intervals while
+   * startedAt anchors the current one, so every subscribed device agrees. */
+  clockRunning: boolean;
+  clockStartedAt: number | null;
+  clockElapsedMs: number;
   createdAt: number;
   startedAt?: number | null;
   endedAt?: number | null;
@@ -264,6 +272,10 @@ export interface Game {
 /** A member present in a game's lobby / session (a denormalised snapshot). */
 export interface GameParticipant {
   uid: string;
+  /** The selected Hunter document. A session has at most one Hunter per user. */
+  characterId?: string | null;
+  /** Account owner display name, separate from the Hunter's name. */
+  playerName?: string | null;
   name: string;
   classId: string;
   subclassId?: string | null;
