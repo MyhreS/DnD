@@ -1,10 +1,12 @@
 import { F, Ta, MergeTa, St, SheetTable } from "./sheetPrimitives";
 import { Info } from "./InfoDot";
+import { ClassChoiceAutomation, EquipmentAutomation, WhisperAutomation } from "./SheetAutomationControls";
 
 // `pblock` = one heading + its content, kept unbroken in print (papersheet.css).
 export function SheetPage3() {
   return (
     <div className="page">
+      <EquipmentAutomation />
       <div className="pblock" data-step="2">
         <h2 className="sec">EQUIPMENT (ALL) <St n={2} /> <Info k="equipment" /></h2>
         <SheetTable
@@ -32,6 +34,7 @@ export function SheetPage3() {
 export function SheetPage4() {
   return (
     <div className="page">
+      <ClassChoiceAutomation />
       <div className="pblock" data-step="5">
         <h2 className="sec">CLASS FEATURES <St n={5} /> <Info k="classFeatures" /></h2>
         {/* one big notes box (was two columns — legacy features2 text merges
@@ -55,6 +58,7 @@ export function SheetPage5() {
   return (
     <div className="page">
       <div className="blue-rule" style={{ marginTop: 0, width: "60mm" }} />
+      <WhisperAutomation />
       <div className="rites-grid">
         <div className="pblock" data-step="5">
           <h2 className="sec" style={{ fontSize: 16 }}>WHISPERS AND RITES <St n={5} /> <Info k="rites" side="right" /></h2>

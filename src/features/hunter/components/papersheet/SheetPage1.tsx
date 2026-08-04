@@ -1,10 +1,8 @@
 import type { ReactNode } from "react";
-import { F, Chk, St, Sel } from "./sheetPrimitives";
+import { F, Chk, St } from "./sheetPrimitives";
 import { Info } from "./InfoDot";
 import { ClassFigure } from "./ClassFigure";
-import { CLASSES } from "@/data/classes";
-
-const CLASS_NAMES = CLASSES.map((c) => c.name);
+import { AutomatedIdentityField, PageOneAutomation } from "./SheetAutomationControls";
 
 interface SkillLine {
   label: string;
@@ -75,9 +73,9 @@ export function SheetPage1() {
             <F f="name" />
             <span className="lbl">Your Name <Info k="name" /></span>
           </div>
-          <div className="fld" data-step="2"><F f="background" /><span className="lbl">Background <St n={2} /> <Info k="background" /></span></div>
-          <div className="fld" data-step="1"><Sel f="class" options={CLASS_NAMES} /><span className="lbl">Class <St n={1} /> <Info k="class" side="right" /></span></div>
-          <div className="fld" data-step="1"><F f="subclass" /><span className="lbl">Subclass <St n={1} /> <Info k="subclass" /></span></div>
+          <div className="fld" data-step="2"><AutomatedIdentityField field="background" /><span className="lbl">Background <St n={2} /> <Info k="background" /></span></div>
+          <div className="fld" data-step="1"><AutomatedIdentityField field="class" /><span className="lbl">Class <St n={1} /> <Info k="class" side="right" /></span></div>
+          <div className="fld" data-step="1"><AutomatedIdentityField field="subclass" /><span className="lbl">Subclass <St n={1} /> <Info k="subclass" /></span></div>
         </div>
 
         <div className="eye-wrap">
@@ -88,7 +86,7 @@ export function SheetPage1() {
               <circle cx="120" cy="67" r="53" stroke="#211d17" strokeWidth="3.5" fill="rgba(246,241,229,.95)" />
             </svg>
             <div className="iris-stack" data-step="1 5">
-              <F f="level" />
+              <AutomatedIdentityField field="level" />
               <span className="lbl">Level <St n={1} /> <Info k="level" /></span>
               <div className="iris-rule" />
               <span className="lbl">Insight <St n={5} /> <Info k="insight" /></span>
@@ -225,6 +223,7 @@ export function SheetPage1() {
         </div>
         <div className="bigstat" data-step="5"><div className="head">PASSIVE PERCEPTION <St n={5} /> <Info k="passivePerception" side="left" /></div><F f="passivePerception" /></div>
       </div>
+      <PageOneAutomation />
       <div className="pageno">PAGE 1 · IDENTITY &amp; ABILITIES</div>
     </div>
   );
