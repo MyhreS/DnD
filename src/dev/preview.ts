@@ -109,6 +109,7 @@ export function previewGame(): import("@/types").Game {
     title: "The Sunless Vault",
     dmUid: "preview-dm",
     dmName: "Christoffer",
+    participantUids: ["preview-uid", "preview-p2"],
     status: "lobby",
     phase: "exploration",
     combat: {
@@ -121,6 +122,9 @@ export function previewGame(): import("@/types").Game {
       pausedRemainingMs: null,
     },
     sandbox: false,
+    clockRunning: false,
+    clockStartedAt: null,
+    clockElapsedMs: 0,
     createdAt: now,
     startedAt: null,
     endedAt: null,
@@ -143,9 +147,8 @@ export function previewCombatants(): import("@/types").Combatant[] {
 export function previewParticipants(): import("@/types").GameParticipant[] {
   const now = Date.now();
   return [
-    { uid: "preview-dm", name: "Christoffer", classId: "", subclassId: null, level: 1, role: "dm", joinedAt: now, lastSeen: now },
-    { uid: "preview-uid", name: "Eileen the Crow", classId: "scout", subclassId: "marksman", className: "Stalker", level: 3, role: "player", joinedAt: now, lastSeen: now },
-    { uid: "preview-p2", name: "Gascoigne", classId: "", subclassId: null, className: "Bloodbound", level: 3, role: "player", joinedAt: now, lastSeen: now },
+    { uid: "preview-uid", characterId: "preview-uid-char", playerName: "Preview Hunter", name: "Eileen the Crow", classId: "scout", subclassId: "marksman", className: "Stalker", level: 3, role: "player", joinedAt: now, lastSeen: now },
+    { uid: "preview-p2", characterId: "preview-p2-char", playerName: "Father Gascoigne", name: "Gascoigne", classId: "", subclassId: null, className: "Bloodbound", level: 3, role: "player", joinedAt: now, lastSeen: now },
   ];
 }
 

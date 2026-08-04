@@ -26,6 +26,9 @@ const CodexDocumentsPage = lazy(() =>
 const DMOverviewPage = lazy(() =>
   import("@/features/dm/components/DMOverviewPage").then((m) => ({ default: m.DMOverviewPage })),
 );
+const GamePage = lazy(() =>
+  import("@/features/game/components/GamePage").then((m) => ({ default: m.GamePage })),
+);
 const StatusPage = lazy(() =>
   import("@/features/status/components/StatusPage").then((m) => ({ default: m.StatusPage })),
 );
@@ -78,6 +81,7 @@ function AuthedApp() {
         <Route element={<MainLayout />}>
           <Route path="/" element={<MainMenu />} />
           <Route path="character" element={<CharacterPage />} />
+          <Route path="game" element={<GamePage />} />
           <Route path="codex" element={<CodexPage />} />
           <Route path="codex/documents" element={<CodexDocumentsPage />} />
           <Route path="handbook" element={<LegacyCodexRedirect />} />

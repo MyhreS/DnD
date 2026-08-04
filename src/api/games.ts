@@ -10,6 +10,9 @@ import {
   query,
   where,
   limit,
+  writeBatch,
+  arrayUnion,
+  arrayRemove,
   serverTimestamp,
   type Timestamp,
 } from "firebase/firestore";
@@ -42,17 +45,53 @@ function toGame(id: string, data: Record<string, unknown>): Game {
     title: (data.title as string) ?? "Game",
     dmUid: (data.dmUid as string) ?? "",
     dmName: (data.dmName as string) ?? "DM",
+    participantUids: Array.isArray(data.participantUids) ? (data.participantUids as string[]) : [],
     status: (data.status as Game["status"]) ?? "lobby",
     phase: (data.phase as GamePhase) ?? "exploration",
     location: (data.location as GameLocation) ?? "wild",
     combat: normalizeEncounterState(data.combat),
     sandbox: (data.sandbox as boolean) ?? false,
+    clockRunning: (data.clockRunning as boolean) ?? false,
+    clockStartedAt: data.clockStartedAt ? ms(data.clockStartedAt) : null,
+    clockElapsedMs: Math.max(0, (data.clockElapsedMs as number) ?? 0),
     createdAt: ms(data.createdAt),
     startedAt: data.startedAt ? ms(data.startedAt) : null,
     endedAt: data.endedAt ? ms(data.endedAt) : null,
     endedPhase: (data.endedPhase as GamePhase | null) ?? null,
     endedLocation: (data.endedLocation as GameLocation | null) ?? null,
   };
+}
+
+/** Sessions visible to a user: ones they run plus ones a DM invited them to.
+ * Two simple queries avoid a composite index; their snapshots are merged and
+ * de-duplicated on the client. */
+export function subscribeUserGames(
+  uid: string,
+  cb: (games: Game[]) => void,
+  onError?: (err: unknown) => void,
+): () => void {
+  let owned: Game[] = [];
+  let invited: Game[] = [];
+  const emit = () => {
+    const merged = new Map<string, Game>();
+    [...owned, ...invited].forEach((game) => merged.set(game.id, game));
+    cb([...merged.values()].sort((a, b) => b.createdAt - a.createdAt));
+  };
+  const fail = (err: unknown) => {
+    console.error("User games subscription failed", err);
+    onError?.(err);
+  };
+  const unsubs = [
+    onSnapshot(query(gamesCol, where("dmUid", "==", uid), limit(50)), (snap) => {
+      owned = snap.docs.map((item) => toGame(item.id, item.data()));
+      emit();
+    }, fail),
+    onSnapshot(query(gamesCol, where("participantUids", "array-contains", uid), limit(50)), (snap) => {
+      invited = snap.docs.map((item) => toGame(item.id, item.data()));
+      emit();
+    }, fail),
+  ];
+  return () => unsubs.forEach((unsubscribe) => unsubscribe());
 }
 
 /** Live-subscribe to a campaign's games (newest first, sorted client-side to
@@ -89,11 +128,15 @@ export async function createGame(input: CreateGameInput): Promise<string> {
     title: input.title,
     dmUid: input.dmUid,
     dmName: input.dmName,
+    participantUids: [],
     status: "lobby",
     phase: "exploration",
     location: "wild",
     combat: emptyEncounter(),
     sandbox: input.sandbox ?? false,
+    clockRunning: false,
+    clockStartedAt: null,
+    clockElapsedMs: 0,
     createdAt: serverTimestamp(),
     startedAt: null,
     endedAt: null,
@@ -103,8 +146,98 @@ export async function createGame(input: CreateGameInput): Promise<string> {
   return ref.id;
 }
 
+function participantData(card: HunterCard) {
+  return {
+    uid: card.ownerUid,
+    characterId: card.id,
+    playerName: card.ownerName || card.ownerEmail || "Player",
+    name: card.name || "Hunter",
+    classId: card.classId || "",
+    subclassId: card.subclassId ?? null,
+    className: typeof card.sheet?.class === "string" ? card.sheet.class : null,
+    level: Math.max(1, card.level || 1),
+    role: "player" as const,
+    joinedAt: serverTimestamp(),
+    lastSeen: serverTimestamp(),
+  };
+}
+
+/** Atomically creates a standalone session and its selected Hunter roster. */
+export async function createGameSession(input: CreateGameInput, hunters: HunterCard[]): Promise<string> {
+  const gameRef = doc(gamesCol);
+  const unique = [...new Map(hunters.map((hunter) => [hunter.ownerUid, hunter])).values()];
+  const batch = writeBatch(db);
+  batch.set(gameRef, {
+    campaignId: input.campaignId ?? null,
+    sessionId: input.sessionId ?? null,
+    title: input.title.trim().slice(0, 80),
+    dmUid: input.dmUid,
+    dmName: input.dmName,
+    participantUids: unique.map((hunter) => hunter.ownerUid),
+    status: "lobby",
+    phase: "exploration",
+    location: "wild",
+    combat: emptyEncounter(),
+    sandbox: input.sandbox ?? false,
+    clockRunning: false,
+    clockStartedAt: null,
+    clockElapsedMs: 0,
+    createdAt: serverTimestamp(),
+    startedAt: null,
+    endedAt: null,
+    endedPhase: null,
+    endedLocation: null,
+  });
+  unique.forEach((hunter) => batch.set(doc(participantsCol(gameRef.id), hunter.ownerUid), participantData(hunter)));
+  await batch.commit();
+  return gameRef.id;
+}
+
+export async function addGameParticipant(gameId: string, card: HunterCard): Promise<void> {
+  const batch = writeBatch(db);
+  batch.update(doc(gamesCol, gameId), { participantUids: arrayUnion(card.ownerUid) });
+  batch.set(doc(participantsCol(gameId), card.ownerUid), participantData(card));
+  await batch.commit();
+}
+
+export async function removeGameParticipant(gameId: string, uid: string): Promise<void> {
+  const batch = writeBatch(db);
+  batch.update(doc(gamesCol, gameId), { participantUids: arrayRemove(uid) });
+  batch.delete(doc(participantsCol(gameId), uid));
+  await batch.commit();
+}
+
 export async function startGame(gameId: string): Promise<void> {
-  await updateDoc(doc(gamesCol, gameId), { status: "active", startedAt: serverTimestamp() });
+  const now = Date.now();
+  await updateDoc(doc(gamesCol, gameId), {
+    status: "active",
+    startedAt: serverTimestamp(),
+    clockRunning: true,
+    clockStartedAt: now,
+  });
+}
+
+export async function pauseGameClock(game: Game): Promise<void> {
+  const accumulated = game.clockElapsedMs + (game.clockRunning && game.clockStartedAt
+    ? Math.max(0, Date.now() - game.clockStartedAt)
+    : 0);
+  await updateDoc(doc(gamesCol, game.id), {
+    clockRunning: false,
+    clockStartedAt: null,
+    clockElapsedMs: accumulated,
+  });
+}
+
+export async function resumeGameClock(gameId: string): Promise<void> {
+  await updateDoc(doc(gamesCol, gameId), { clockRunning: true, clockStartedAt: Date.now() });
+}
+
+export async function resetGameClock(gameId: string, keepRunning: boolean): Promise<void> {
+  await updateDoc(doc(gamesCol, gameId), {
+    clockRunning: keepRunning,
+    clockStartedAt: keepRunning ? Date.now() : null,
+    clockElapsedMs: 0,
+  });
 }
 
 export async function setGamePhase(gameId: string, phase: GamePhase): Promise<void> {
@@ -125,19 +258,27 @@ export async function endGame(
   gameId: string,
   endedPhase: GamePhase,
   endedLocation?: GameLocation,
+  gameClock?: Game,
 ): Promise<void> {
+  const elapsed = gameClock
+    ? gameClock.clockElapsedMs + (gameClock.clockRunning && gameClock.clockStartedAt ? Math.max(0, Date.now() - gameClock.clockStartedAt) : 0)
+    : undefined;
   await updateDoc(doc(gamesCol, gameId), {
     status: "ended",
     endedAt: serverTimestamp(),
     endedPhase,
     endedLocation: endedLocation ?? null,
+    clockRunning: false,
+    clockStartedAt: null,
+    ...(elapsed === undefined ? {} : { clockElapsedMs: elapsed }),
   });
 }
 
 /** Delete a game and all its participants (used to clean up sandbox runs). */
 export async function deleteGame(gameId: string): Promise<void> {
-  const partsSnap = await getDocs(collection(db, "games", gameId, "participants"));
-  await Promise.all(partsSnap.docs.map((d) => deleteDoc(d.ref)));
+  const childCollections = ["participants", "combatants", "loot"];
+  const snapshots = await Promise.all(childCollections.map((name) => getDocs(collection(db, "games", gameId, name))));
+  await Promise.all(snapshots.flatMap((snap) => snap.docs.map((item) => deleteDoc(item.ref))));
   await deleteDoc(doc(gamesCol, gameId));
 }
 
@@ -149,6 +290,8 @@ function participantsCol(gameId: string) {
 
 export interface JoinInput {
   uid: string;
+  characterId?: string | null;
+  playerName?: string | null;
   name: string;
   classId: string;
   subclassId?: string | null;
@@ -163,6 +306,8 @@ export async function joinGame(gameId: string, p: JoinInput): Promise<void> {
     doc(participantsCol(gameId), p.uid),
     {
       uid: p.uid,
+      characterId: p.characterId ?? null,
+      playerName: p.playerName ?? null,
       name: p.name,
       classId: p.classId,
       subclassId: p.subclassId ?? null,
@@ -246,6 +391,8 @@ export function subscribeParticipants(
           const data = d.data();
           return {
             uid: (data.uid as string) ?? d.id,
+            characterId: (data.characterId as string | null) ?? null,
+            playerName: (data.playerName as string | null) ?? null,
             name: (data.name as string) ?? "Hunter",
             classId: (data.classId as string) ?? "",
             subclassId: (data.subclassId as string | null) ?? null,

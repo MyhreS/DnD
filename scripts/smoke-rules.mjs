@@ -12,7 +12,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
 import {
   getFirestore, doc, setDoc, addDoc, updateDoc, getDoc, getDocs,
-  collection, query, where, arrayUnion, serverTimestamp,
+  collection, query, where, arrayUnion, serverTimestamp, writeBatch,
 } from "firebase/firestore";
 
 const sa = process.env.AGENT_TEST_SA;
@@ -48,7 +48,7 @@ async function step(label, fn) {
 }
 
 let campaignId, code = `SMOKE${Math.floor(Math.random() * 9000 + 1000)}`;
-let gameId;
+let gameId, standaloneGameId, standaloneMonsterId;
 
 await step("DM creates campaign", async () => {
   const ref = await addDoc(collection(dm.db, "campaigns"), {
@@ -81,7 +81,7 @@ await step("Player joins (memberUids + member doc)", async () => {
 await step("DM starts a game", async () => {
   const ref = await addDoc(collection(dm.db, "games"), {
     campaignId, sessionId: null, title: "Smoke Game", dmUid, dmName: "Agent DM",
-    status: "lobby", phase: "exploration", sandbox: false, createdAt: serverTimestamp(),
+    participantUids: [], status: "lobby", phase: "exploration", sandbox: false, createdAt: serverTimestamp(),
   });
   gameId = ref.id;
 });
@@ -109,6 +109,44 @@ await step("Outsider is blocked (negative)", async () => {
     await updateDoc(doc(pl.db, "games", gameId), { status: "active" }); // only DM may
   } catch { denied = true; }
   if (!denied) throw new Error("player could update the game (should be DM-only)");
+});
+
+// --- Standalone session invitations (the /game page) ---
+await step("DM creates standalone session and invitation atomically", async () => {
+  const gameRef = doc(collection(dm.db, "games"));
+  standaloneGameId = gameRef.id;
+  const batch = writeBatch(dm.db);
+  batch.set(gameRef, {
+    campaignId: null, sessionId: null, title: "Standalone Smoke", dmUid, dmName: "Agent DM",
+    participantUids: [plUid], status: "lobby", phase: "exploration", location: "wild",
+    clockRunning: false, clockStartedAt: null, clockElapsedMs: 0, createdAt: serverTimestamp(),
+  });
+  batch.set(doc(dm.db, "games", standaloneGameId, "participants", plUid), {
+    uid: plUid, characterId: `smoke-${plUid}`, playerName: "Agent Player", name: "Player Hunter",
+    classId: "stalker", level: 1, role: "player", joinedAt: serverTimestamp(), lastSeen: serverTimestamp(),
+  });
+  await batch.commit();
+});
+await step("Invited player discovers standalone session", async () => {
+  const snap = await getDocs(query(collection(pl.db, "games"), where("participantUids", "array-contains", plUid)));
+  if (!snap.docs.some((item) => item.id === standaloneGameId)) throw new Error("standalone-session-not-visible");
+  const roster = await getDocs(collection(pl.db, "games", standaloneGameId, "participants"));
+  if (roster.empty) throw new Error("standalone-roster-not-visible");
+});
+await step("DM adds enemy and invited player sees damage", async () => {
+  const monster = await addDoc(collection(dm.db, "games", standaloneGameId, "combatants"), {
+    kind: "monster", name: "Standalone Beast", characterId: null, initiative: 14,
+    ac: 12, maxHp: 20, currentHp: 15, conditions: [], note: null, createdAt: serverTimestamp(),
+  });
+  standaloneMonsterId = monster.id;
+  const snap = await getDoc(doc(pl.db, "games", standaloneGameId, "combatants", monster.id));
+  if (!snap.exists() || snap.data().maxHp - snap.data().currentHp !== 5) throw new Error("standalone-enemy-not-visible");
+});
+await step("Invited player cannot control standalone session (negative)", async () => {
+  let denied = false;
+  try { await updateDoc(doc(pl.db, "games", standaloneGameId), { clockRunning: true }); }
+  catch { denied = true; }
+  if (!denied) throw new Error("invited player could control the session");
 });
 
 // --- Combat tracker: DM owns rows; members may kill/remove MONSTERS only ---
@@ -218,6 +256,11 @@ await step("cleanup", async () => {
     if (monsterId) await del(`games/${gameId}/combatants/${monsterId}`);
     if (pcRowId) await del(`games/${gameId}/combatants/${pcRowId}`);
     await del(`games/${gameId}`);
+  }
+  if (standaloneGameId) {
+    await del(`games/${standaloneGameId}/participants/${plUid}`);
+    if (standaloneMonsterId) await del(`games/${standaloneGameId}/combatants/${standaloneMonsterId}`);
+    await del(`games/${standaloneGameId}`);
   }
   if (campaignId) {
     await del(`campaigns/${campaignId}/members/${dmUid}`);

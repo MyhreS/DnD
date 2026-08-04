@@ -42,6 +42,25 @@ service cloud.firestore {
     function gameCampaignId(gid) {
       return get(/databases/$(database)/documents/games/$(gid)).data.campaignId;
     }
+    function gameData(gid) {
+      return get(/databases/$(database)/documents/games/$(gid)).data;
+    }
+    function gameDataAfter(gid) {
+      return getAfter(/databases/$(database)/documents/games/$(gid)).data;
+    }
+    function canReadGameData(data) {
+      return isUser() && (
+        data.dmUid == request.auth.uid
+        || request.auth.uid in data.get('participantUids', [])
+        || (data.campaignId != null && isMember(data.campaignId))
+      );
+    }
+    function canReadGame(gid) {
+      return canReadGameData(gameData(gid));
+    }
+    function isGameDM(gid) {
+      return isUser() && gameDataAfter(gid).dmUid == request.auth.uid;
+    }
     function sessionCampaignId(sid) {
       return get(/databases/$(database)/documents/sessions/$(sid)).data.campaignId;
     }
@@ -141,22 +160,34 @@ service cloud.firestore {
       }
     }
 
-    // /games/{gameId} — live play, owned by its DM; members read.
+    // /games/{gameId} — live play, owned by its DM. Standalone sessions use
+    // participantUids for invitations; legacy campaign games remain valid.
     match /games/{gameId} {
-      allow read: if isMember(resource.data.campaignId);
-      allow create: if isCampaignDM(request.resource.data.campaignId)
-        && request.resource.data.dmUid == request.auth.uid;
-      allow update, delete: if resource.data.dmUid == request.auth.uid;
+      allow read: if canReadGameData(resource.data);
+      allow create: if isUser()
+        && request.resource.data.dmUid == request.auth.uid
+        && request.resource.data.participantUids is list
+        && (request.resource.data.campaignId == null
+          || isCampaignDM(request.resource.data.campaignId));
+      allow update: if isUser()
+        && resource.data.dmUid == request.auth.uid
+        && request.resource.data.dmUid == resource.data.dmUid;
+      allow delete: if isUser() && resource.data.dmUid == request.auth.uid;
 
       match /participants/{uid} {
-        allow read: if isMember(gameCampaignId(gameId));
-        allow write: if isMember(gameCampaignId(gameId))
-          && (request.auth.uid == uid || isCampaignDM(gameCampaignId(gameId)));
+        allow read: if canReadGame(gameId);
+        allow write: if isGameDM(gameId)
+          || (gameCampaignId(gameId) != null
+            && isMember(gameCampaignId(gameId))
+            && request.auth.uid == uid);
       }
 
       match /loot/{lootId} {
-        allow read, create, update: if isMember(gameCampaignId(gameId));
-        allow delete: if isCampaignDM(gameCampaignId(gameId));
+        allow read: if canReadGame(gameId);
+        allow create, update: if isGameDM(gameId)
+          || (gameCampaignId(gameId) != null && isMember(gameCampaignId(gameId)));
+        allow delete: if isGameDM(gameId)
+          || (gameCampaignId(gameId) != null && isCampaignDM(gameCampaignId(gameId)));
       }
 
       // Combat tracker: members read the initiative tracker; the DM edits it.
@@ -164,12 +195,15 @@ service cloud.firestore {
       // buttons) — but only the HP field, and never a PC row: no healing,
       // initiative shuffling or note rewrites from the player side.
       match /combatants/{cid} {
-        allow read: if isMember(gameCampaignId(gameId));
-        allow write: if isCampaignDM(gameCampaignId(gameId));
-        allow update: if isMember(gameCampaignId(gameId))
+        allow read: if canReadGame(gameId);
+        allow write: if isGameDM(gameId)
+          || (gameCampaignId(gameId) != null && isCampaignDM(gameCampaignId(gameId)));
+        allow update: if gameCampaignId(gameId) != null
+          && isMember(gameCampaignId(gameId))
           && resource.data.kind == "monster"
           && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["currentHp"]);
-        allow delete: if isMember(gameCampaignId(gameId))
+        allow delete: if gameCampaignId(gameId) != null
+          && isMember(gameCampaignId(gameId))
           && resource.data.kind == "monster";
       }
     }

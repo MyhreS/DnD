@@ -1,4 +1,4 @@
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes, TextareaHTMLAttributes } from "react";
+import type { ReactNode, SelectHTMLAttributes } from "react";
 import type { HunterCard, SheetData } from "@/types";
 
 export interface AppSheetModel {
@@ -83,42 +83,6 @@ export function DecisionField({ label, help, children }: {
       {children}
       {help && <small>{help}</small>}
     </label>
-  );
-}
-
-export function SheetInput({ model, field, label, ...props }: {
-  model: AppSheetModel;
-  field: string;
-  label: string;
-} & Omit<InputHTMLAttributes<HTMLInputElement>, "value" | "onChange">) {
-  return (
-    <DecisionField label={label}>
-      <input
-        {...props}
-        data-f={field}
-        value={sheetText(model.data, field)}
-        disabled={model.readOnly}
-        onChange={(event) => model.setField(field, event.target.value)}
-      />
-    </DecisionField>
-  );
-}
-
-export function SheetTextarea({ model, field, label, ...props }: {
-  model: AppSheetModel;
-  field: string;
-  label: string;
-} & Omit<TextareaHTMLAttributes<HTMLTextAreaElement>, "value" | "onChange">) {
-  return (
-    <DecisionField label={label}>
-      <textarea
-        {...props}
-        data-f={field}
-        value={sheetText(model.data, field)}
-        disabled={model.readOnly}
-        onChange={(event) => model.setField(field, event.target.value)}
-      />
-    </DecisionField>
   );
 }
 
