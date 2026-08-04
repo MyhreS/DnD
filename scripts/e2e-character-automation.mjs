@@ -100,6 +100,7 @@ try {
 
   await page.getByRole("button", { name: /Notes/ }).click();
   await page.getByTestId("appsheet-notes").fill("Shared app-view note.");
+  await page.getByRole("button", { name: "Overview", exact: true }).click();
   await page.screenshot({ path: "screenshots/app-character-sheet-desktop.png", fullPage: true });
 
   await page.getByRole("button", { name: "Paper sheet" }).click();
@@ -175,6 +176,12 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "App view" }).click();
   await page.getByTestId("app-character-sheet").waitFor();
+  const mobileSection = page.getByLabel("Character section", { exact: true });
+  await mobileSection.waitFor();
+  await mobileSection.selectOption("gear");
+  await page.getByRole("heading", { name: "Gear & carrying" }).waitFor();
+  await mobileSection.selectOption("overview");
+  await page.getByRole("heading", { name: "Eileen the Crow" }).waitFor();
   const overflow = await page.locator(".papersheet-modal").evaluate(
     (element) => element.scrollWidth > element.clientWidth,
   );

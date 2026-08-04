@@ -107,7 +107,7 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
           )}
         </AppPanel>
 
-        <AppPanel title="At a glance" aside={<span className="appsheet-status-word">Live values</span>}>
+        <AppPanel title="At a glance">
           <div className="appsheet-vital-editors">
             <DecisionField label="Current HP">
               <NumericStepper label="HP" value={editStage.previewCard.currentHp ?? numeric(hpCurrent)} disabled={model.readOnly} onChange={editStage.stageHp} />
