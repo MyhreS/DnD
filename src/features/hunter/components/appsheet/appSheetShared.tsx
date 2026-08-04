@@ -20,20 +20,14 @@ export function sheetBool(data: SheetData, field: string): boolean {
 
 export function AppSection({
   title,
-  intro,
   children,
 }: {
-  eyebrow: string;
-  title: string;
-  intro: string;
+  title?: string;
   children: ReactNode;
 }) {
   return (
-    <section className="appsheet-section">
-      <header className="appsheet-section-head">
-        <h2>{title}</h2>
-        <p>{intro}</p>
-      </header>
+    <section className="appsheet-section" aria-label={title ?? "Character overview"}>
+      {title && <header className="appsheet-section-head"><h2>{title}</h2></header>}
       {children}
     </section>
   );
@@ -57,7 +51,7 @@ export function AutoReason({ reason }: { reason?: string }) {
   if (!reason) return null;
   return (
     <details className="appsheet-auto-reason">
-      <summary>Why?</summary>
+      <summary aria-label="Why this value is automatic" title="Why this value is automatic">ⓘ</summary>
       <span>{reason}</span>
     </details>
   );

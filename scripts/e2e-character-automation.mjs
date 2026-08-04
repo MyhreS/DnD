@@ -97,6 +97,7 @@ try {
   await page.getByTestId("appsheet-inventory").getByText("Torch", { exact: true }).waitFor();
 
   await page.getByTestId("appsheet-notes").fill("Shared app-view note.");
+  await page.locator(".papersheet-modal").evaluate((element) => element.scrollTo({ top: 0 }));
   await page.screenshot({ path: "screenshots/app-character-sheet-desktop.png", fullPage: true });
 
   await page.getByRole("button", { name: "Paper sheet" }).click();
@@ -188,9 +189,20 @@ try {
   if (await page.locator(".appsheet-nav").count()) {
     throw new Error("The removed character section navigation is still visible");
   }
-  const sectionHeadings = await page.getByTestId("app-character-sheet").locator("h2").allTextContents();
-  if (sectionHeadings.length !== 6) {
-    throw new Error(`The continuous character sheet did not render all six sections: ${sectionHeadings.join(", ")}`);
+  const sections = await page.getByTestId("app-character-sheet").locator(".appsheet-section").count();
+  if (sections !== 6) {
+    throw new Error(`The continuous character sheet did not render all six sections: ${sections}`);
+  }
+  const overviewOrder = await page.getByTestId("app-character-sheet").evaluate((sheet) => ({
+    battle: sheet.querySelector(".appsheet-battle-resources").getBoundingClientRect().top,
+    build: sheet.querySelector(".appsheet-identity-panel").getBoundingClientRect().top,
+  }));
+  if (overviewOrder.battle >= overviewOrder.build) {
+    throw new Error(`Established characters do not see battle resources before build controls on mobile: ${JSON.stringify(overviewOrder)}`);
+  }
+  const mobileWeaponLabels = page.locator(".appsheet-weapon-label");
+  if (await mobileWeaponLabels.count() === 0 || !await mobileWeaponLabels.first().isVisible()) {
+    throw new Error("Mobile weapon facts do not expose their stacked labels");
   }
   await page.getByRole("heading", { name: "Gear & carrying" }).scrollIntoViewIfNeeded();
   await page.getByTestId("appsheet-notes").scrollIntoViewIfNeeded();
@@ -229,6 +241,22 @@ try {
   }
   await page.locator(".papersheet-modal").evaluate((element) => element.scrollTo({ top: 0 }));
   await page.screenshot({ path: "screenshots/app-character-sheet-mobile.png", fullPage: true });
+  for (const [section, screenshot] of [
+    ["Combat & armor", "combat"],
+    ["Features & choices", "features"],
+    ["Abilities & skills", "abilities"],
+    ["Gear & carrying", "gear"],
+    ["Carried weapons", "weapons"],
+    ["Notes", "notes"],
+  ]) {
+    await page.getByRole("heading", { name: section, exact: true }).scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `screenshots/app-character-sheet-mobile-${screenshot}.png`, fullPage: true });
+  }
+  await page.locator(".papersheet-modal").evaluate((element) => element.scrollTo({ top: 0 }));
+  await page.evaluate(() => { document.documentElement.dataset.theme = "dark"; });
+  const darkBackground = await page.locator(".papersheet-modal").evaluate((element) => getComputedStyle(element).backgroundColor);
+  if (darkBackground === appColors.background) throw new Error("App sheet did not respond when the global theme changed to dark");
+  await page.screenshot({ path: "screenshots/app-character-sheet-mobile-dark.png", fullPage: true });
 
   const retired = await context.newPage();
   await retired.goto(`${BASE}/profile?preview=user.player`, { waitUntil: "domcontentloaded" });

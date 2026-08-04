@@ -204,6 +204,10 @@
   color: var(--app-text);
 }
 
+.appsheet-weapon-label {
+  display: none;
+}
+
 .appsheet-form-intro,
 .appsheet-empty-copy {
   color: var(--app-muted);
@@ -407,7 +411,7 @@
 
 @media (max-width: 900px) {
   .appsheet-section {
-    padding: 0 0 52px;
+    padding: 0 0 44px;
   }
 
   .appsheet-combat-strip {
@@ -438,15 +442,41 @@
     margin-bottom: 12px;
   }
 
-  .appsheet-overview-grid,
-  .appsheet-overview-grid.secondary,
+  .appsheet-overview-layout,
   .appsheet-two-column,
   .appsheet-notes-layout,
   .appsheet-feature-hero,
   .appsheet-form-grid,
-  .appsheet-vital-editors,
   .appsheet-inline-fields {
     grid-template-columns: 1fr;
+  }
+
+  .appsheet-overview-layout {
+    grid-template-areas:
+      "state"
+      "battle"
+      "death"
+      "build";
+    gap: 24px;
+  }
+
+  .appsheet-overview-layout.setup-incomplete {
+    grid-template-areas:
+      "state"
+      "build"
+      "battle"
+      "death";
+  }
+
+  .appsheet-character-profile {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .appsheet-character-meta {
+    justify-content: flex-start;
+    padding-bottom: 0;
   }
 
   .appsheet-metric-grid,
@@ -500,11 +530,50 @@
   }
 
   .appsheet-weapon-table {
-    overflow-x: auto;
+    overflow: visible;
   }
 
   .appsheet-weapon-table > div {
-    min-width: 650px;
+    min-width: 0;
+  }
+
+  .appsheet-weapon-table .heading {
+    display: none;
+  }
+
+  .appsheet-weapon-table > div:not(.heading) {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 10px 16px;
+    margin-bottom: 8px;
+    padding: 12px;
+    border-radius: 5px;
+    background: var(--app-subtle);
+  }
+
+  .appsheet-weapon-label {
+    display: block;
+    margin-bottom: 2px;
+    color: var(--app-faint);
+    font: 700 10px/1.2 "Alegreya Sans SC", sans-serif;
+  }
+
+  .appsheet-weapon-table > div:not(.heading) span:nth-child(1) {
+    grid-column: 1 / -1;
+  }
+
+  .appsheet-weapon-table > div:not(.heading) span:nth-child(2) {
+    grid-column: 1;
+    grid-row: 2;
+  }
+
+  .appsheet-weapon-table > div:not(.heading) span:nth-child(3) {
+    grid-column: 1 / -1;
+    grid-row: 3;
+  }
+
+  .appsheet-weapon-table > div:not(.heading) span:nth-child(4) {
+    grid-column: 2;
+    grid-row: 2;
   }
 
   .appsheet-feature-timeline details p {
@@ -517,12 +586,11 @@
 }
 
 @media (max-width: 390px) {
-  .appsheet-panel {
+  .appsheet-current-state,
+  .appsheet-identity-panel {
     padding: 16px;
   }
 
-  .appsheet-metric-grid,
-  .appsheet-combat-strip,
   .appsheet-choice-list,
   .appsheet-choice-list.compact {
     grid-template-columns: 1fr;
