@@ -110,6 +110,7 @@ export function previewGame(): import("@/types").Game {
     dmUid: "preview-dm",
     dmName: "Christoffer",
     participantUids: ["preview-uid", "preview-p2"],
+    participantRoster: previewParticipants(),
     status: "lobby",
     phase: "exploration",
     combat: {

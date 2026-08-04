@@ -246,6 +246,9 @@ export interface Game {
   /** User ids invited to this session. Kept on the parent so Firestore can
    * authorize and query a player's sessions without reading subcollections. */
   participantUids: string[];
+  /** Selected Hunter snapshots for invitation-based standalone sessions.
+   * Campaign games continue to use the legacy participants subcollection. */
+  participantRoster: GameParticipant[];
   status: GameStatus;
   /** Current phase (meaningful while active). */
   phase: GamePhase;

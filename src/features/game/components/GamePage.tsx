@@ -107,6 +107,9 @@ export function GamePage() {
 
   const selected = games.find((game) => game.id === selectedId) ?? null;
   const isSessionDm = Boolean(user && selected?.dmUid === user.uid);
+  const displayedParticipants = !preview && selected && selected.campaignId === null
+    ? selected.participantRoster
+    : participants;
 
   useEffect(() => {
     if (!selectedId) {
@@ -117,12 +120,13 @@ export function GamePage() {
       const timer = window.setTimeout(() => setParticipants(previewRosters[selectedId] ?? []), 0);
       return () => window.clearTimeout(timer);
     }
+    if (selected?.campaignId == null) return;
     return subscribeParticipants(
       selectedId,
       setParticipants,
       () => setError("Could not load the players in this session."),
     );
-  }, [preview, previewRosters, selectedId]);
+  }, [preview, previewRosters, selected?.campaignId, selectedId]);
 
   useCombatSync(selectedId);
   const combatBusy = useCombatStore((state) => state.busy);
@@ -157,20 +161,6 @@ export function GamePage() {
     };
     if (preview) {
       const id = `preview-session-${Date.now()}`;
-      const game: Game = {
-        ...previewGame(),
-        id,
-        campaignId: null,
-        title,
-        dmUid: user.uid,
-        dmName: input.dmName,
-        participantUids: hunters.map((hunter) => hunter.ownerUid),
-        status: "lobby",
-        createdAt: Date.now(),
-        clockRunning: false,
-        clockStartedAt: null,
-        clockElapsedMs: 0,
-      };
       const roster = hunters.map<GameParticipant>((hunter) => ({
         uid: hunter.ownerUid,
         characterId: hunter.id,
@@ -184,6 +174,21 @@ export function GamePage() {
         joinedAt: Date.now(),
         lastSeen: Date.now(),
       }));
+      const game: Game = {
+        ...previewGame(),
+        id,
+        campaignId: null,
+        title,
+        dmUid: user.uid,
+        dmName: input.dmName,
+        participantUids: hunters.map((hunter) => hunter.ownerUid),
+        participantRoster: roster,
+        status: "lobby",
+        createdAt: Date.now(),
+        clockRunning: false,
+        clockStartedAt: null,
+        clockElapsedMs: 0,
+      };
       setPreviewRosters((current) => ({ ...current, [id]: roster }));
       setGames((current) => [game, ...current]);
       setSelectedId(id);
@@ -220,7 +225,7 @@ export function GamePage() {
       updatePreviewGame(selected.id, { participantUids: [...new Set([...selected.participantUids, card.ownerUid])] });
       return;
     }
-    await perform(() => addGameParticipant(selected.id, card), "Could not add that player.");
+    await perform(() => addGameParticipant(selected, card), "Could not add that player.");
   }
 
   async function removeHunter(uid: string) {
@@ -233,7 +238,7 @@ export function GamePage() {
       updatePreviewGame(selected.id, { participantUids: selected.participantUids.filter((item) => item !== uid) });
       return;
     }
-    await perform(() => removeGameParticipant(selected.id, uid), "Could not remove that player.");
+    await perform(() => removeGameParticipant(selected, uid), "Could not remove that player.");
   }
 
   async function beginSession() {
@@ -379,17 +384,17 @@ export function GamePage() {
                 <div className="game-section-heading">
                   <div>
                     <p className="eyebrow">Party</p>
-                    <h3 id="players-heading">Players <span>{participants.length}</span></h3>
+                    <h3 id="players-heading">Players <span>{displayedParticipants.length}</span></h3>
                   </div>
                   {isSessionDm && selected.status !== "ended" && characters && (
-                    <AddHunter characters={characters} participants={participants} onAdd={addHunter} />
+                    <AddHunter characters={characters} participants={displayedParticipants} onAdd={addHunter} />
                   )}
                 </div>
-                {participants.length === 0 ? (
+                {displayedParticipants.length === 0 ? (
                   <p className="muted">No Hunters have been added yet.</p>
                 ) : (
                   <div className="game-roster">
-                    {participants.map((participant) => (
+                    {displayedParticipants.map((participant) => (
                       <div className="game-player" key={participant.uid}>
                         <div>
                           <strong>{participant.name}</strong>

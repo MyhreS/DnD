@@ -10,9 +10,6 @@ import {
   query,
   where,
   limit,
-  writeBatch,
-  arrayUnion,
-  arrayRemove,
   serverTimestamp,
   type Timestamp,
 } from "firebase/firestore";
@@ -37,6 +34,22 @@ function ms(v: unknown): number {
   return 0;
 }
 
+function toParticipant(data: Record<string, unknown>, fallbackUid = ""): GameParticipant {
+  return {
+    uid: (data.uid as string) ?? fallbackUid,
+    characterId: (data.characterId as string | null) ?? null,
+    playerName: (data.playerName as string | null) ?? null,
+    name: (data.name as string) ?? "Hunter",
+    classId: (data.classId as string) ?? "",
+    subclassId: (data.subclassId as string | null) ?? null,
+    className: (data.className as string | null) ?? null,
+    level: (data.level as number) ?? 1,
+    role: (data.role as GameParticipant["role"]) ?? "player",
+    joinedAt: ms(data.joinedAt),
+    lastSeen: ms(data.lastSeen),
+  };
+}
+
 function toGame(id: string, data: Record<string, unknown>): Game {
   return {
     id,
@@ -46,6 +59,9 @@ function toGame(id: string, data: Record<string, unknown>): Game {
     dmUid: (data.dmUid as string) ?? "",
     dmName: (data.dmName as string) ?? "DM",
     participantUids: Array.isArray(data.participantUids) ? (data.participantUids as string[]) : [],
+    participantRoster: Array.isArray(data.participantRoster)
+      ? (data.participantRoster as Record<string, unknown>[]).map((participant) => toParticipant(participant))
+      : [],
     status: (data.status as Game["status"]) ?? "lobby",
     phase: (data.phase as GamePhase) ?? "exploration",
     location: (data.location as GameLocation) ?? "wild",
@@ -129,6 +145,7 @@ export async function createGame(input: CreateGameInput): Promise<string> {
     dmUid: input.dmUid,
     dmName: input.dmName,
     participantUids: [],
+    participantRoster: [],
     status: "lobby",
     phase: "exploration",
     location: "wild",
@@ -146,7 +163,8 @@ export async function createGame(input: CreateGameInput): Promise<string> {
   return ref.id;
 }
 
-function participantData(card: HunterCard) {
+function participantSnapshot(card: HunterCard): GameParticipant {
+  const now = Date.now();
   return {
     uid: card.ownerUid,
     characterId: card.id,
@@ -156,9 +174,9 @@ function participantData(card: HunterCard) {
     subclassId: card.subclassId ?? null,
     className: typeof card.sheet?.class === "string" ? card.sheet.class : null,
     level: Math.max(1, card.level || 1),
-    role: "player" as const,
-    joinedAt: serverTimestamp(),
-    lastSeen: serverTimestamp(),
+    role: "player",
+    joinedAt: now,
+    lastSeen: now,
   };
 }
 
@@ -173,6 +191,7 @@ export async function createGameSession(input: CreateGameInput, hunters: HunterC
     dmUid: input.dmUid,
     dmName: input.dmName,
     participantUids: unique.map((hunter) => hunter.ownerUid),
+    participantRoster: unique.map(participantSnapshot),
     status: "lobby",
     phase: "exploration",
     location: "wild",
@@ -187,33 +206,23 @@ export async function createGameSession(input: CreateGameInput, hunters: HunterC
     endedPhase: null,
     endedLocation: null,
   });
-  if (unique.length > 0) {
-    const batch = writeBatch(db);
-    unique.forEach((hunter) => batch.set(doc(participantsCol(gameRef.id), hunter.ownerUid), participantData(hunter)));
-    try {
-      await batch.commit();
-    } catch (error) {
-      // Do not leave a half-created session if its denormalized roster could
-      // not be written after the secured parent document was established.
-      await deleteDoc(gameRef).catch(() => undefined);
-      throw error;
-    }
-  }
   return gameRef.id;
 }
 
-export async function addGameParticipant(gameId: string, card: HunterCard): Promise<void> {
-  const batch = writeBatch(db);
-  batch.update(doc(gamesCol, gameId), { participantUids: arrayUnion(card.ownerUid) });
-  batch.set(doc(participantsCol(gameId), card.ownerUid), participantData(card));
-  await batch.commit();
+export async function addGameParticipant(game: Game, card: HunterCard): Promise<void> {
+  const next = [...game.participantRoster.filter((participant) => participant.uid !== card.ownerUid), participantSnapshot(card)];
+  await updateDoc(doc(gamesCol, game.id), {
+    participantUids: next.map((participant) => participant.uid),
+    participantRoster: next,
+  });
 }
 
-export async function removeGameParticipant(gameId: string, uid: string): Promise<void> {
-  const batch = writeBatch(db);
-  batch.update(doc(gamesCol, gameId), { participantUids: arrayRemove(uid) });
-  batch.delete(doc(participantsCol(gameId), uid));
-  await batch.commit();
+export async function removeGameParticipant(game: Game, uid: string): Promise<void> {
+  const next = game.participantRoster.filter((participant) => participant.uid !== uid);
+  await updateDoc(doc(gamesCol, game.id), {
+    participantUids: next.map((participant) => participant.uid),
+    participantRoster: next,
+  });
 }
 
 export async function startGame(gameId: string): Promise<void> {
@@ -396,22 +405,7 @@ export function subscribeParticipants(
     participantsCol(gameId),
     (snap) =>
       cb(
-        snap.docs.map((d) => {
-          const data = d.data();
-          return {
-            uid: (data.uid as string) ?? d.id,
-            characterId: (data.characterId as string | null) ?? null,
-            playerName: (data.playerName as string | null) ?? null,
-            name: (data.name as string) ?? "Hunter",
-            classId: (data.classId as string) ?? "",
-            subclassId: (data.subclassId as string | null) ?? null,
-            className: (data.className as string | null) ?? null,
-            level: (data.level as number) ?? 1,
-            role: (data.role as GameParticipant["role"]) ?? "player",
-            joinedAt: ms(data.joinedAt),
-            lastSeen: ms(data.lastSeen),
-          } satisfies GameParticipant;
-        }),
+        snap.docs.map((d) => toParticipant(d.data(), d.id)),
       ),
     (err) => {
       console.error("Participants subscription failed", err);
