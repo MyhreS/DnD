@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import { createPortal } from "react-dom";
 import { PaperSheet } from "./PaperSheet";
 import { StepGuidance } from "./StepGuidance";
@@ -8,7 +8,6 @@ import { usePaperSheetOpen } from "../../hooks/usePaperSheetOpen";
 import { usePaperSheetFocus } from "../../hooks/usePaperSheetFocus";
 import type { HunterCard } from "@/types";
 import { automationFor } from "../../lib/characterAutomation";
-import { CharacterAutomationPanel } from "./CharacterAutomationPanel";
 
 const STEPS = [1, 2, 3, 4, 5] as const;
 
@@ -37,21 +36,8 @@ export function PaperSheetModal({
   const [showInfo, setShowInfo] = useState(create);
   // Which creation step (1–5) is spotlighted on the sheet; null = none.
   const [activeStep, setActiveStep] = useState<number | null>(null);
-  const [showBuilder, setShowBuilder] = useState(create);
-  const startedAsCreate = useRef(create);
   const automated = automationFor(workingCard);
   const automationState = workingCard.sheetAutomation;
-  const closeModal = () => {
-    if (startedAsCreate.current && workingCard.classId && workingCard.backgroundId && !automationState?.setupComplete) {
-      setFields({}, {
-        sheetAutomation: {
-          ...(automationState ?? { version: 1, classSkills: [], backgroundBonuses: {} }),
-          setupComplete: true,
-        },
-      });
-    }
-    onClose();
-  };
   const sheetSetField = (field: string, value: string | boolean) => {
     if (automated.reasons[field] && !automationState?.manualOverrides?.includes(field)) {
       setFields({ [field]: value }, {
@@ -65,24 +51,16 @@ export function PaperSheetModal({
     setField(field, value);
   };
   usePaperSheetOpen();
-  const backRef = usePaperSheetFocus(closeModal);
+  const backRef = usePaperSheetFocus(onClose);
 
   return createPortal(
     <div className="papersheet-modal" role="dialog" aria-modal="true" aria-label="Character sheet">
       <div className="papersheet-toolbar">
-        <button type="button" className="ghost" ref={backRef} onClick={closeModal}>← Back</button>
+        <button type="button" className="ghost" ref={backRef} onClick={onClose}>← Back</button>
         <h1>CATACOMBS &amp; STARSPAWNS · CHARACTER SHEET</h1>
         {!readOnly && (
           <>
             <span className="savemsg">{saveMsg}</span>
-            <button
-              type="button"
-              className={showBuilder ? "ghost automation-trigger active" : "ghost automation-trigger"}
-              aria-pressed={showBuilder}
-              onClick={() => setShowBuilder((open) => !open)}
-            >
-              ✦ Build &amp; calculate
-            </button>
             {showSteps && (
               <div className="stepsel" role="group" aria-label="Highlight a character-creation step">
                 <span className="steplbl">Step</span>
@@ -120,10 +98,9 @@ export function PaperSheetModal({
         activeStep={showSteps ? activeStep : null}
         automationReasons={automated.reasons}
         manualOverrides={automationState?.manualOverrides}
+        card={workingCard}
+        setFields={setFields}
       />
-      {!readOnly && showBuilder && (
-        <CharacterAutomationPanel card={workingCard} onApply={setFields} onClose={() => setShowBuilder(false)} />
-      )}
     </div>,
     document.body,
   );

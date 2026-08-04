@@ -1,6 +1,7 @@
 import { F, Ta, Chk, St } from "./sheetPrimitives";
 import { HunterFigure } from "./HunterFigure";
 import { Info } from "./InfoDot";
+import { ArmorAutomation } from "./SheetAutomationControls";
 
 // Six rows: five is the normal maximum, and a Balanced Fit Main Armor lets
 // one Add-on not count toward it (handbook Armor Types).
@@ -19,6 +20,7 @@ export function SheetPage2() {
     <div className="page">
       <div className="blue-rule" style={{ marginTop: 0 }} />
       <div className="sec-title">ARMOR &amp; EQUIPMENT</div>
+      <ArmorAutomation />
       <div className="p2-grid">
         {/* left column: armor */}
         <div>

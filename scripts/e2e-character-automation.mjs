@@ -49,17 +49,24 @@ try {
   await page.goto(`${BASE}/character?preview=user.player`, { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Hunters" }).waitFor({ timeout: 20000 });
   await page.getByRole("button", { name: /Create (hunter|character)/ }).click();
-  await page.getByTestId("character-automation-panel").waitFor();
+  await page.getByTestId("sheet-character-automation").waitFor();
+  if (await page.getByText("Build & calculate", { exact: true }).count()) {
+    throw new Error("The retired calculator trigger is still visible");
+  }
+  const controlsAreOnSheet = await page.getByTestId("sheet-character-automation").evaluate(
+    (element) => Boolean(element.closest(".papersheet .page")),
+  );
+  if (!controlsAreOnSheet) throw new Error("Character automation is not integrated into the white sheet");
 
-  await page.getByTestId("automation-class").selectOption("warden");
-  await page.getByTestId("automation-background").selectOption("criminal");
+  await page.getByTestId("sheet-class").selectOption("warden");
+  await page.getByTestId("sheet-background").selectOption("criminal");
   await page.getByLabel("Perception", { exact: true }).check();
   await page.getByLabel("Survival", { exact: true }).check();
-  await page.getByTestId("automation-main-armor").selectOption("reinforced-hunter-leather-vest");
+  await page.getByTestId("sheet-main-armor").selectOption("reinforced-hunter-leather-vest");
 
   const sheetClass = page.locator('[data-f="class"]');
   await sheetClass.waitFor();
-  if (await sheetClass.inputValue() !== "Warden") throw new Error("Class did not fill the paper sheet");
+  if (!/Warden/.test(await sheetClass.locator("option:checked").textContent())) throw new Error("Class did not fill the paper sheet");
   if (await page.locator('[data-f="level"]').inputValue() !== "1") throw new Error("New class did not default to level 1");
   if (await page.locator('[data-f="ac"]').inputValue() !== "12") throw new Error("Armor Class did not recalculate");
   if (await page.locator('[data-f="wisSaveP"]').isChecked() !== true) throw new Error("Warden Wisdom save did not fill");
@@ -69,7 +76,7 @@ try {
   if (await page.locator('[data-f="initiative"]').inputValue() !== "+2") throw new Error("Alert did not update initiative");
   if (!(await page.locator('[data-f="hpMax"]').getAttribute("data-auto-reason"))?.includes("Hit Die")) throw new Error("Auto-filled HP has no visible reason");
   await page.getByText("0 left", { exact: true }).first().waitFor();
-  await page.getByText(/Weight includes inventory, worn armor, and storage/).waitFor();
+  await page.getByText(/The table below fills automatically/).waitFor();
   await page.screenshot({ path: "screenshots/character-automation-desktop.png", fullPage: true });
 
   await page.getByRole("button", { name: "Back" }).first().click();
@@ -78,10 +85,12 @@ try {
   if (await page.getByTestId("legacy-conversion-wizard").count()) throw new Error("Legacy sheets still show a player-facing migration popup");
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByRole("button", { name: "Build & calculate" }).click();
-  await page.getByTestId("character-automation-panel").waitFor();
-  const overflow = await page.evaluate(() => document.documentElement.scrollWidth > document.documentElement.clientWidth);
-  if (overflow) throw new Error("Character automation causes horizontal page scrolling on mobile");
+  await page.getByTestId("sheet-character-automation").waitFor();
+  const overflow = await page.locator(".papersheet-modal").evaluate(
+    (element) => element.scrollWidth > element.clientWidth,
+  );
+  if (overflow) throw new Error("Integrated character automation causes horizontal page scrolling on mobile");
+  await page.getByTestId("sheet-character-automation").scrollIntoViewIfNeeded();
   await page.screenshot({ path: "screenshots/character-automation-mobile.png", fullPage: true });
 
   const retired = await context.newPage();
