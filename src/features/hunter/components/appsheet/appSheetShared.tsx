@@ -19,7 +19,6 @@ export function sheetBool(data: SheetData, field: string): boolean {
 }
 
 export function AppSection({
-  eyebrow,
   title,
   intro,
   children,
@@ -32,7 +31,6 @@ export function AppSection({
   return (
     <section className="appsheet-section">
       <header className="appsheet-section-head">
-        <span>{eyebrow}</span>
         <h2>{title}</h2>
         <p>{intro}</p>
       </header>
@@ -58,10 +56,10 @@ export function AppPanel({ title, aside, children, className = "" }: {
 export function AutoReason({ reason }: { reason?: string }) {
   if (!reason) return null;
   return (
-    <span className="appsheet-auto-reason">
-      <b>Auto</b>
+    <details className="appsheet-auto-reason">
+      <summary>Why?</summary>
       <span>{reason}</span>
-    </span>
+    </details>
   );
 }
 

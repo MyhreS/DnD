@@ -10,6 +10,7 @@ import { AppNotesSection } from "./AppNotesSection";
 import type { AppSheetModel } from "./appSheetShared";
 import { AppEditStage, AppEditTray } from "./AppEditStage";
 import "./appsheet.css";
+import "./appsheet-details.css";
 
 const SECTIONS = [
   ["overview", "Overview"],
@@ -43,10 +44,19 @@ export function AppCharacterSheet({
     <CharacterAutomationProvider card={card} onApply={setFields} readOnly={readOnly}>
       <AppEditStage model={model} onPendingChange={onPendingEditChange}>
       <div className="character-app-sheet" data-testid="app-character-sheet">
+        <label className="appsheet-mobile-nav">
+          <span>Section</span>
+          <select
+            aria-label="Character section"
+            value={active}
+            onChange={(event) => setActive(event.target.value as SectionId)}
+          >
+            {SECTIONS.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+          </select>
+        </label>
         <aside className="appsheet-nav" aria-label="Character sections">
-          <div className="appsheet-nav-label">Character</div>
           <nav>
-            {SECTIONS.map(([id, label], index) => (
+            {SECTIONS.map(([id, label]) => (
               <button
                 key={id}
                 type="button"
@@ -54,11 +64,10 @@ export function AppCharacterSheet({
                 aria-current={active === id ? "page" : undefined}
                 onClick={() => setActive(id)}
               >
-                <span>{String(index + 1).padStart(2, "0")}</span>{label}
+                {label}
               </button>
             ))}
           </nav>
-          <p>One character. Every value stays synchronized with the paper sheet.</p>
         </aside>
         <main className="appsheet-workspace">
           {active === "overview" && <AppOverviewSection model={model} />}
