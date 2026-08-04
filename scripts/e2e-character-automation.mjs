@@ -53,6 +53,9 @@ try {
   if (await page.getByText("Build & calculate", { exact: true }).count()) {
     throw new Error("The retired calculator trigger is still visible");
   }
+  if (await page.getByText("Choose armor", { exact: true }).count()) {
+    throw new Error("Armor still renders in a duplicate chooser section");
+  }
   const controlsAreOnSheet = await page.getByTestId("sheet-character-automation").evaluate(
     (element) => Boolean(element.closest(".papersheet .page")),
   );
@@ -63,12 +66,14 @@ try {
   await page.getByLabel("Perception", { exact: true }).check();
   await page.getByLabel("Survival", { exact: true }).check();
   await page.getByTestId("sheet-main-armor").selectOption("reinforced-hunter-leather-vest");
+  await page.getByLabel("Head Gear", { exact: true }).selectOption("tricorn");
 
   const sheetClass = page.locator('[data-f="class"]');
   await sheetClass.waitFor();
   if (!/Warden/.test(await sheetClass.locator("option:checked").textContent())) throw new Error("Class did not fill the paper sheet");
   if (await page.locator('[data-f="level"]').inputValue() !== "1") throw new Error("New class did not default to level 1");
   if (await page.locator('[data-f="ac"]').inputValue() !== "12") throw new Error("Armor Class did not recalculate");
+  if (!/Tricorn/.test(await page.locator('[data-f="headGear"]').locator("option:checked").textContent())) throw new Error("Extra armor did not fill its legacy paper field");
   if (await page.locator('[data-f="wisSaveP"]').isChecked() !== true) throw new Error("Warden Wisdom save did not fill");
   if (await page.locator('[data-f="chaSaveP"]').isChecked() !== true) throw new Error("Warden Charisma save did not fill");
   const equipmentNames = await page.locator('[data-f^="eq_"][data-f$="_0"]').evaluateAll((fields) => fields.map((field) => field.value));
@@ -90,7 +95,19 @@ try {
   if (!foundEquipmentNames.includes("Moon Saw")) throw new Error("Unique found weapon did not fill the equipment sheet");
   if (await page.locator('[data-f="wd_0_0"]').inputValue() !== "Moon Saw") throw new Error("Unique found weapon did not fill the weapon table");
 
+  const addonIds = ["full-leather-cuirass", "leather-pauldron-right", "leather-pauldron-left", "leather-vambrace-right", "leather-vambrace-left"];
+  for (const [index, id] of addonIds.entries()) await page.getByTestId(`sheet-addon-armor-${index + 1}`).selectOption(id);
+  await page.getByLabel("Studs for add-on armor 1").check();
+  const armoredAc = await page.locator('[data-f="ac"]').inputValue();
+  if (armoredAc !== "18") throw new Error(`Integrated add-on armor, Shield Arm, and studs did not recalculate AC (received ${armoredAc})`);
   await page.getByRole("button", { name: "Add unique armor found in play" }).click();
+  await page.getByLabel("Unique armor type").selectOption("Add-on Armor");
+  if (!await page.getByRole("button", { name: "Add and equip unique armor" }).isDisabled()) throw new Error("Unique add-on armor can exceed the worn-piece limit");
+  await page.getByText(/All add-on slots are full/).waitFor();
+  await page.getByRole("button", { name: "Cancel unique armor" }).click();
+  for (let index = addonIds.length; index > 0; index -= 1) await page.getByTestId(`sheet-addon-armor-${index}`).selectOption("");
+  await page.getByRole("button", { name: "Add unique armor found in play" }).click();
+  await page.getByLabel("Unique armor type").selectOption("Main Armor");
   await page.getByLabel("Unique armor name").fill("Moon Plate");
   await page.getByLabel("Unique armor AC").fill("14");
   await page.getByLabel("Unique armor weight").fill("8");

@@ -37,6 +37,7 @@ export interface CharacterAutomationController {
   switchMode: (mode: BuyMode) => void;
   changeQty: (id: string, delta: number) => void;
   chooseMainArmor: (id: string) => void;
+  setAddonArmorAt: (index: number, id: string) => void;
   toggleAddonArmor: (id: string) => void;
   toggleStuds: (id: string) => void;
   setExtra: (subcategory: string, id: string) => void;

@@ -432,7 +432,28 @@ export function CharacterAutomationProvider({
     chooseMainArmor: (id) => commit({
       mainArmorId: id || null,
       addonArmorIds: (card.addonArmorIds ?? []).slice(0, maxAddonPieces(id || null, card.customItems)),
+      studdedAddonIds: (card.studdedAddonIds ?? []).filter((entry) => (
+        (card.addonArmorIds ?? [])
+          .slice(0, maxAddonPieces(id || null, card.customItems))
+          .includes(entry)
+      )),
     }),
+    setAddonArmorAt: (index, id) => {
+      const limit = maxAddonPieces(card.mainArmorId, card.customItems);
+      if (index < 0 || index >= limit) return;
+      const selected = [...(card.addonArmorIds ?? [])].slice(0, limit);
+      const previous = selected[index];
+      const withoutNext = id ? selected.filter((entry) => entry !== id) : selected;
+      if (id) withoutNext[index] = id;
+      else withoutNext.splice(index, 1);
+      const addonArmorIds = withoutNext.filter(Boolean).slice(0, limit);
+      commit({
+        addonArmorIds,
+        studdedAddonIds: (card.studdedAddonIds ?? []).filter((entry) => (
+          entry !== previous && addonArmorIds.includes(entry)
+        )),
+      });
+    },
     toggleAddonArmor: (id) => {
       const selected = card.addonArmorIds ?? [];
       commit({

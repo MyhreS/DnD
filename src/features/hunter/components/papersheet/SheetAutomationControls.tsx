@@ -9,12 +9,12 @@ import { SKILLS } from "@/data/skills";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { maxAddonPieces } from "@/lib/character";
 import { armorFor, itemFor } from "@/lib/customItems";
-import type { AbilityKey, CarrySignificance } from "@/types";
+import type { AbilityKey, CarrySignificance, HunterCard } from "@/types";
 import type { BuyMode } from "../../lib/abilityBuy";
-import { F, Sel } from "./sheetPrimitives";
+import { Chk, F, Sel, Ta } from "./sheetPrimitives";
 import { useCharacterAutomation } from "./characterAutomationContext";
 
-const EXTRA_SUBCATEGORIES = ["Head Gear", "Scarf", "Gloves", "Boots"] as const;
+type ExtraSubcategory = "Head Gear" | "Scarf" | "Gloves" | "Boots";
 
 function AutoBlock({
   title,
@@ -305,7 +305,141 @@ export function PageOneAutomation() {
   );
 }
 
-export function ArmorAutomation() {
+function armorCatalog(card: HunterCard) {
+  const customArmor = (card.customItems ?? []).filter((item) => item.category === "Armor");
+  return {
+    main: [
+      ...ARMOR.filter((entry) => entry.category === "Main Armor"),
+      ...customArmor.filter((entry) => entry.armorCategory === "Main Armor").map((entry) => armorFor(card, entry.id)!),
+    ],
+    addons: [
+      ...ARMOR.filter((entry) => entry.category === "Add-on Armor"),
+      ...customArmor.filter((entry) => entry.armorCategory === "Add-on Armor").map((entry) => armorFor(card, entry.id)!),
+    ],
+  };
+}
+
+/** Rules-aware armor controls that live in the original paper fields. */
+export function AutomatedMainArmorField() {
+  const automation = useCharacterAutomation();
+  if (automation.readOnly) return <Ta rows={3} f="mainArmor" />;
+  const options = armorCatalog(automation.card).main;
+  return (
+    <select
+      data-f="mainArmor"
+      data-testid="sheet-main-armor"
+      aria-label="Main armor"
+      value={automation.card.mainArmorId ?? ""}
+      data-empty={!automation.card.mainArmorId || undefined}
+      data-automated={automation.card.mainArmorId ? "true" : undefined}
+      data-auto-reason={automation.card.mainArmorId ? "Armor selection calculates AC, category, weight, and worn armor fields" : undefined}
+      onChange={(event) => automation.chooseMainArmor(event.target.value)}
+      title="This choice calculates Armor Class, category, weight, and the written armor fields."
+    >
+      <option value="">Unarmored</option>
+      {options.map((entry) => (
+        <option key={entry.id} value={entry.id}>
+          {entry.name}{entry.unique ? " · Unique" : ""} · {entry.ac} · {entry.weightLb} lb
+        </option>
+      ))}
+    </select>
+  );
+}
+
+export function AutomatedExtraArmorField({
+  subcategory,
+  field,
+}: {
+  subcategory: ExtraSubcategory;
+  field: "headGear" | "scarf" | "gloves" | "boots";
+}) {
+  const automation = useCharacterAutomation();
+  if (automation.readOnly) return <F f={field} />;
+  const selected = (automation.card.extraArmorIds ?? []).find(
+    (id) => ARMOR_BY_ID[id]?.subcategory === subcategory,
+  ) ?? "";
+  return (
+    <select
+      data-f={field}
+      aria-label={subcategory}
+      value={selected}
+      data-empty={!selected || undefined}
+      data-automated={selected ? "true" : undefined}
+      data-auto-reason={selected ? "Worn armor extra updates this field and carried weight" : undefined}
+      onChange={(event) => automation.setExtra(subcategory, event.target.value)}
+      title="This worn item updates the paper field and carried weight."
+    >
+      <option value="">None</option>
+      {ARMOR.filter(
+        (entry) => entry.category === "Extra" && entry.subcategory === subcategory && !entry.unique,
+      ).map((entry) => (
+        <option key={entry.id} value={entry.id}>{entry.name} · {entry.weightLb} lb</option>
+      ))}
+    </select>
+  );
+}
+
+export function AutomatedAddonArmorRow({ index }: { index: number }) {
+  const automation = useCharacterAutomation();
+  if (automation.readOnly) {
+    return (
+      <>
+        <div className="frame"><F f={`addon${index + 1}`} /></div>
+        <span className="studs"><Chk f={`studs${index + 1}`} /> STUDS</span>
+      </>
+    );
+  }
+  const { card } = automation;
+  const selectedId = card.addonArmorIds?.[index] ?? "";
+  const limit = maxAddonPieces(card.mainArmorId, card.customItems);
+  const beyondArmorLimit = index >= limit;
+  const waitingForPrevious = index > (card.addonArmorIds ?? []).length;
+  const disabled = beyondArmorLimit || waitingForPrevious;
+  const options = armorCatalog(card).addons;
+  const wornElsewhere = new Set(
+    (card.addonArmorIds ?? []).filter((_, selectedIndex) => selectedIndex !== index),
+  );
+  return (
+    <>
+      <div className="frame">
+        <select
+          data-f={`addon${index + 1}`}
+          data-testid={`sheet-addon-armor-${index + 1}`}
+          aria-label={`Add-on armor ${index + 1}`}
+          value={selectedId}
+          disabled={disabled}
+          data-empty={!selectedId || undefined}
+          data-automated={selectedId ? "true" : undefined}
+          data-auto-reason={selectedId ? "Add-on selection calculates AC, weight, special rules, and this armor row" : undefined}
+          onChange={(event) => automation.setAddonArmorAt(index, event.target.value)}
+        >
+          <option value="">
+            {beyondArmorLimit ? "Balanced Fit slot" : waitingForPrevious ? "—" : "Choose add-on…"}
+          </option>
+          {options.map((entry) => (
+            <option key={entry.id} value={entry.id} disabled={wornElsewhere.has(entry.id)}>
+              {entry.name}{entry.unique ? " · Unique" : ""} · {entry.ac} · {entry.weightLb} lb
+            </option>
+          ))}
+        </select>
+      </div>
+      <label className="studs">
+        <input
+          type="checkbox"
+          aria-label={`Studs for add-on armor ${index + 1}`}
+          checked={!!selectedId && (card.studdedAddonIds ?? []).includes(selectedId)}
+          disabled={!selectedId || disabled}
+          onChange={() => selectedId && automation.toggleStuds(selectedId)}
+        />
+        STUDS
+      </label>
+    </>
+  );
+}
+
+/** The one screen-only extension to the legacy armor area: recording armor
+ * found outside the handbook. Once saved, it appears in the paper fields. */
+export function UniqueArmorControl() {
   const automation = useCharacterAutomation();
   const [showCustom, setShowCustom] = useState(false);
   const [custom, setCustom] = useState({
@@ -316,83 +450,12 @@ export function ArmorAutomation() {
     note: "",
   });
   if (automation.readOnly) return null;
-  const { card, result } = automation;
+  const { card } = automation;
   const addonLimit = maxAddonPieces(card.mainArmorId, card.customItems);
-  const customArmor = (card.customItems ?? []).filter((item) => item.category === "Armor");
-  const mainArmor = [
-    ...ARMOR.filter((entry) => entry.category === "Main Armor"),
-    ...customArmor.filter((entry) => entry.armorCategory === "Main Armor").map((entry) => armorFor(card, entry.id)!),
-  ];
-  const addonArmor = [
-    ...ARMOR.filter((entry) => entry.category === "Add-on Armor"),
-    ...customArmor.filter((entry) => entry.armorCategory === "Add-on Armor").map((entry) => armorFor(card, entry.id)!),
-  ];
+  const customAddonFull = custom.armorCategory === "Add-on Armor"
+    && (card.addonArmorIds ?? []).length >= addonLimit;
   return (
-    <AutoBlock
-      title="Choose armor"
-      testId="sheet-armor-automation"
-      meta={<span className="sheet-auto-total">AC {result.fields.ac}</span>}
-    >
-      <fieldset className="sheet-auto-fieldset">
-        <label className="sheet-auto-field">
-          Main armor
-          <select
-            data-testid="sheet-main-armor"
-            value={card.mainArmorId ?? ""}
-            onChange={(event) => automation.chooseMainArmor(event.target.value)}
-          >
-            <option value="">Unarmored</option>
-            {mainArmor.map((entry) => (
-              <option key={entry.id} value={entry.id}>{entry.name}{entry.unique ? " · Unique" : ""} · {entry.ac} · {entry.weightLb} lb</option>
-            ))}
-          </select>
-        </label>
-        <div className="sheet-auto-subtitle">
-          <h3>Add-on armor</h3>
-          <span>{(card.addonArmorIds ?? []).length}/{addonLimit}</span>
-        </div>
-        <CheckGrid
-          values={addonArmor.map((entry) => entry.unique ? `${entry.name} · Unique` : entry.name)}
-          selected={(card.addonArmorIds ?? []).map((id) => {
-            const entry = armorFor(card, id);
-            return entry?.unique ? `${entry.name} · Unique` : entry?.name ?? id;
-          })}
-          onToggle={(label) => {
-            const id = addonArmor.find((entry) => label === (entry.unique ? `${entry.name} · Unique` : entry.name))?.id;
-            if (id) automation.toggleAddonArmor(id);
-          }}
-        />
-        {(card.addonArmorIds ?? []).length > 0 && (
-          <div className="sheet-auto-studs">
-            <h3>Studs</h3>
-            <CheckGrid
-              values={(card.addonArmorIds ?? []).map((id) => armorFor(card, id)?.name ?? id)}
-              selected={(card.studdedAddonIds ?? []).map((id) => armorFor(card, id)?.name ?? id)}
-              onToggle={(name) => {
-                const id = card.addonArmorIds?.find((entry) => (armorFor(card, entry)?.name ?? entry) === name);
-                if (id) automation.toggleStuds(id);
-              }}
-            />
-          </div>
-        )}
-        <div className="sheet-auto-grid">
-          {EXTRA_SUBCATEGORIES.map((subcategory) => (
-            <label className="sheet-auto-field" key={subcategory}>
-              {subcategory}
-              <select
-                value={(card.extraArmorIds ?? []).find((id) => ARMOR_BY_ID[id]?.subcategory === subcategory) ?? ""}
-                onChange={(event) => automation.setExtra(subcategory, event.target.value)}
-              >
-                <option value="">None</option>
-                {ARMOR.filter(
-                  (entry) => entry.category === "Extra" && entry.subcategory === subcategory && !entry.unique,
-                ).map((entry) => <option key={entry.id} value={entry.id}>{entry.name} · {entry.weightLb} lb</option>)}
-              </select>
-            </label>
-          ))}
-        </div>
-      </fieldset>
-      <p className="sheet-auto-note">AC, armor category, worn pieces, and carried weight update below.</p>
+    <div className="armor-discovery" data-testid="sheet-armor-automation">
       <button type="button" className="sheet-auto-custom-toggle" onClick={() => setShowCustom((open) => !open)}>
         {showCustom ? "Cancel unique armor" : "Add unique armor found in play"}
       </button>
@@ -407,7 +470,7 @@ export function ArmorAutomation() {
             setShowCustom(false);
           }}
         >
-          <p className="sheet-auto-note">Record the values the DM gave the item. It is equipped immediately.</p>
+          <p className="sheet-auto-note">Record the values the DM gave the item. It will be equipped in the armor fields above.</p>
           <div className="sheet-auto-grid">
             <label className="sheet-auto-field">Unique armor name<input aria-label="Unique armor name" required value={custom.name} onChange={(event) => setCustom({ ...custom, name: event.target.value })} /></label>
             <label className="sheet-auto-field">Armor type<select aria-label="Unique armor type" value={custom.armorCategory} onChange={(event) => setCustom({ ...custom, armorCategory: event.target.value as typeof custom.armorCategory, acValue: event.target.value === "Main Armor" ? 10 : 0 })}><option>Main Armor</option><option>Add-on Armor</option></select></label>
@@ -415,10 +478,11 @@ export function ArmorAutomation() {
             <label className="sheet-auto-field">Weight (lb)<input aria-label="Unique armor weight" type="number" min="0" step="0.1" required value={custom.weightLb} onChange={(event) => setCustom({ ...custom, weightLb: Number(event.target.value) })} /></label>
           </div>
           <label className="sheet-auto-field">Special rule or note<textarea aria-label="Unique armor note" value={custom.note} onChange={(event) => setCustom({ ...custom, note: event.target.value })} /></label>
-          <button type="submit">Add and equip unique armor</button>
+          {customAddonFull && <p className="sheet-auto-alert">All add-on slots are full. Remove one worn piece above first.</p>}
+          <button type="submit" disabled={customAddonFull}>Add and equip unique armor</button>
         </form>
       )}
-    </AutoBlock>
+    </div>
   );
 }
 
