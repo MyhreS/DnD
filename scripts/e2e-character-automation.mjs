@@ -67,6 +67,15 @@ try {
   await page.getByLabel("Survival", { exact: true }).check();
   await page.getByTestId("sheet-main-armor").selectOption("reinforced-hunter-leather-vest");
   await page.getByLabel("Head Gear", { exact: true }).selectOption("tricorn");
+  for (const dropdown of [page.getByTestId("sheet-main-armor"), page.getByLabel("Head Gear", { exact: true })]) {
+    const appearance = await dropdown.evaluate((element) => {
+      const style = getComputedStyle(element);
+      return { backgroundColor: style.backgroundColor, boxShadow: style.boxShadow };
+    });
+    if (appearance.backgroundColor !== "rgba(0, 0, 0, 0)" || appearance.boxShadow !== "none") {
+      throw new Error(`Paper dropdown has a coloured automation box: ${JSON.stringify(appearance)}`);
+    }
+  }
 
   const sheetClass = page.locator('[data-f="class"]');
   await sheetClass.waitFor();
