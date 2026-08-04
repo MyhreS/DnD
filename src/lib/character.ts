@@ -1,7 +1,8 @@
-import type { AbilityScores, HunterCard, HunterClass } from "@/types";
+import type { AbilityScores, CustomItem, HunterCard, HunterClass } from "@/types";
 import { abilityModifier } from "@/data/abilities";
 import { acCategory, ARMOR_BY_ID } from "@/data/armor";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
+import { armorFor } from "@/lib/customItems";
 
 export const DEFAULT_ABILITIES: AbilityScores = {
   str: 10,
@@ -74,7 +75,7 @@ export interface ArmorClassResult {
  * legacy `studdedAddons` count so normalization and the save mirror type-check. */
 export type WornArmor = Pick<
   HunterCard,
-  "mainArmorId" | "addonArmorIds" | "studdedAddons" | "studdedAddonIds" | "extraArmorIds"
+  "mainArmorId" | "addonArmorIds" | "studdedAddons" | "studdedAddonIds" | "extraArmorIds" | "customItems"
 >;
 
 /** Worn Add-on ids carrying the Studs upgrade. Reads the per-piece array,
@@ -120,8 +121,18 @@ function dedupeExtras(ids: string[]): string[] {
  * rewritten — the next save persists the new shape (plus the legacy count
  * mirror for stale clients). */
 export function normalizeCard(raw: HunterCard): HunterCard {
+  const customItems = (Array.isArray(raw.customItems) ? raw.customItems : []).filter(
+    (item): item is CustomItem => !!item
+      && typeof item.id === "string"
+      && typeof item.name === "string"
+      && item.name.trim().length > 0
+      && typeof item.weightLb === "number"
+      && Number.isFinite(item.weightLb)
+      && item.weightLb >= 0,
+  );
   return {
     ...raw,
+    customItems,
     studdedAddonIds: studdedAddonIdsOf(raw),
     extraArmorIds: dedupeExtras(raw.extraArmorIds ?? []),
     equippedStorageIds: Array.from(
@@ -145,8 +156,11 @@ export function normalizeCard(raw: HunterCard): HunterCard {
 
 /** Max Add-on pieces: five, or six when the Main Armor has Balanced Fit
  * (one Add-on doesn't count toward the maximum). */
-export function maxAddonPieces(mainArmorId: string | null | undefined): number {
-  const main = mainArmorId ? ARMOR_BY_ID[mainArmorId] : undefined;
+export function maxAddonPieces(
+  mainArmorId: string | null | undefined,
+  customItems: CustomItem[] = [],
+): number {
+  const main = mainArmorId ? armorFor({ customItems }, mainArmorId) : undefined;
   return main?.special.startsWith("Balanced Fit") ? 6 : 5;
 }
 
@@ -163,10 +177,10 @@ export function hasShieldArm(addonIds: string[]): boolean {
 /** Add-on AC total with the handbook's rules: the Under Layer Jerkin only
  * counts beneath Main Armor, and a completed Shield Arm upgrades its
  * pauldron+vambrace sum (+1) to +2. */
-function addonAcBonus(addonIds: string[], hasMain: boolean): number {
+function addonAcBonus(addonIds: string[], hasMain: boolean, customItems: CustomItem[]): number {
   let sum = 0;
   for (const id of addonIds) {
-    const piece = ARMOR_BY_ID[id];
+    const piece = armorFor({ customItems }, id);
     if (!piece || piece.category !== "Add-on Armor") continue;
     if (id === "under-layer-leather-jerkin" && !hasMain) continue;
     sum += piece.acValue;
@@ -182,14 +196,15 @@ export function armorClass(
   mainArmorId: string | null,
   addonArmorIds: string[] = [],
   studdedAddonIds: string[] = [],
+  customItems: CustomItem[] = [],
 ): ArmorClassResult {
   const dexMod = abilityModifier(abilities.dex);
-  const main = mainArmorId ? ARMOR_BY_ID[mainArmorId] : undefined;
+  const main = mainArmorId ? armorFor({ customItems }, mainArmorId) : undefined;
   const baseAc = main ? main.acValue : 10;
   // Over-max stacks (e.g. a stored 6-piece set whose Balanced Fit main was
   // swapped away) never contribute beyond the legal allowance.
-  const worn = addonArmorIds.slice(0, maxAddonPieces(mainArmorId));
-  const addonBonus = addonAcBonus(worn, !!main);
+  const worn = addonArmorIds.slice(0, maxAddonPieces(mainArmorId, customItems));
+  const addonBonus = addonAcBonus(worn, !!main, customItems);
   const studded = studdedAddonIds.filter((id) => worn.includes(id)).length;
   const studBonus = studded >= 5 ? 2 : studded >= 1 ? 1 : 0;
   const baseArmorAc = baseAc + addonBonus + studBonus;
@@ -217,6 +232,7 @@ export function armorClassFor(
     card.mainArmorId,
     card.addonArmorIds ?? [],
     studdedAddonIdsOf(card),
+    card.customItems ?? [],
   );
 }
 
@@ -228,7 +244,7 @@ export function wornArmorWeight(card: WornArmor): number {
     ...(card.addonArmorIds ?? []),
     ...(card.extraArmorIds ?? []),
   ];
-  const pieces = ids.reduce((sum, id) => sum + (ARMOR_BY_ID[id]?.weightLb ?? 0), 0);
+  const pieces = ids.reduce((sum, id) => sum + (armorFor(card, id)?.weightLb ?? 0), 0);
   const studs = studdedAddonIdsOf(card).length * 3;
   return Math.round((pieces + studs) * 10) / 10;
 }
@@ -272,6 +288,7 @@ export function emptyCard(params: {
     bloodTinge: false,
     preparedWhispers: [],
     coins: 0,
+    customItems: [],
     equippedStorageIds: [],
     notes: "",
     createdAt: now,

@@ -5,6 +5,7 @@ import { CLASSES, getClass } from "@/data/classes";
 import { SHEET_SKILL_FIELD, SKILLS, skillAbility } from "@/data/skills";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { armorClassFor, maxHp, maxSanity, proficiencyBonus, studdedAddonIdsOf } from "@/lib/character";
+import { armorFor } from "@/lib/customItems";
 import { carryCondition, resolveInventory, resolveStorage, totalCarriedWeight } from "@/lib/inventory";
 import { computeSlots } from "@/lib/slots";
 import { catalogIdForName } from "@/lib/startingEquipment";
@@ -211,18 +212,18 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
   put(fields, reasons, "ac", String(armor.total), `${SOURCE.armor}: base ${armor.baseArmorAc} + Dexterity ${formatModifier(armor.dexApplied)}`);
   put(fields, reasons, "armorCategory", armor.category, `${SOURCE.armor}; category comes from base armor AC ${armor.baseArmorAc}`);
   put(fields, reasons, "shieldArm", armor.shieldArm, "Pauldron + vambrace on the same arm");
-  put(fields, reasons, "mainArmor", card.mainArmorId ? ARMOR_BY_ID[card.mainArmorId]?.name ?? "" : "", SOURCE.armor);
+  put(fields, reasons, "mainArmor", card.mainArmorId ? armorFor(card, card.mainArmorId)?.name ?? "" : "", SOURCE.armor);
   const addons = card.addonArmorIds ?? [];
   const studded = new Set(studdedAddonIdsOf(card));
   for (let index = 0; index < 6; index += 1) {
-    put(fields, reasons, `addon${index + 1}`, addons[index] ? ARMOR_BY_ID[addons[index]]?.name ?? "" : "", SOURCE.armor);
+    put(fields, reasons, `addon${index + 1}`, addons[index] ? armorFor(card, addons[index])?.name ?? "" : "", SOURCE.armor);
     put(fields, reasons, `studs${index + 1}`, !!addons[index] && studded.has(addons[index]), SOURCE.armor);
   }
   const extras = (card.extraArmorIds ?? []).map((id) => ARMOR_BY_ID[id]).filter(Boolean);
   for (const [field, subcategory] of [["headGear", "Head Gear"], ["scarf", "Scarf"], ["gloves", "Gloves"], ["boots", "Boots"]] as const) {
     put(fields, reasons, field, extras.find((piece) => piece.subcategory === subcategory)?.name ?? "", SOURCE.armor);
   }
-  const special = [card.mainArmorId ? ARMOR_BY_ID[card.mainArmorId]?.special : null, ...addons.map((id) => ARMOR_BY_ID[id]?.special), ...extras.map((piece) => piece.special)].filter(Boolean);
+  const special = [card.mainArmorId ? armorFor(card, card.mainArmorId)?.special : null, ...addons.map((id) => armorFor(card, id)?.special), ...extras.map((piece) => piece.special)].filter(Boolean);
   put(fields, reasons, "special", [...new Set(special)].join("\n"), SOURCE.armor);
   put(fields, reasons, "impressions", extras.map((piece) => piece.impression).filter(Boolean).join("\n"), SOURCE.armor);
   const weight = totalCarriedWeight(card);

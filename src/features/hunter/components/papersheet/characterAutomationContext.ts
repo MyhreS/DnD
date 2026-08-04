@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 import type { BACKGROUNDS } from "@/data/backgrounds";
 import type { getClass } from "@/data/classes";
 import type { ITEMS } from "@/data/items";
-import type { AbilityKey, HunterCard, LevelFeature, SheetAutomationState } from "@/types";
+import type { AbilityKey, CarrySignificance, HunterCard, LevelFeature, SheetAutomationState } from "@/types";
 import type { BuyMode } from "../../lib/abilityBuy";
 import type { automationFor } from "../../lib/characterAutomation";
 
@@ -18,7 +18,6 @@ export interface CharacterAutomationController {
   mode: BuyMode;
   pointsLeft: number | null;
   bonusUsed: number;
-  canChooseCreationGear: boolean;
   expertiseLimit: number;
   masteryFeature: LevelFeature | undefined;
   masteryCount: number;
@@ -41,6 +40,23 @@ export interface CharacterAutomationController {
   toggleAddonArmor: (id: string) => void;
   toggleStuds: (id: string) => void;
   setExtra: (subcategory: string, id: string) => void;
+  addCustomArmor: (draft: {
+    name: string;
+    armorCategory: "Main Armor" | "Add-on Armor";
+    acValue: number;
+    weightLb: number;
+    note: string;
+  }) => void;
+  addCustomItem: (draft: {
+    name: string;
+    category: "Weapon" | "Gear";
+    carry: CarrySignificance;
+    weightLb: number;
+    note: string;
+    attackBonus: string;
+    damage: string;
+    weaponNotes: string;
+  }) => void;
   restoreCalculated: (key: string) => void;
   finishSetup: () => void;
 }

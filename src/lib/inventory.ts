@@ -4,6 +4,7 @@
 import type { HunterCard, Item } from "@/types";
 import { ITEM_BY_ID } from "@/data/items";
 import { wornArmorWeight } from "@/lib/character";
+import { itemFor } from "@/lib/customItems";
 
 export interface ResolvedEntry {
   item: Item;
@@ -13,12 +14,12 @@ export interface ResolvedEntry {
 /** Resolve a card's inventory entries to catalog items, dropping unknown ids,
  *  sorted by category then name. */
 export function resolveInventory(
-  card: Pick<HunterCard, "inventory">,
+  card: Pick<HunterCard, "inventory" | "customItems">,
 ): ResolvedEntry[] {
   const resolved: ResolvedEntry[] = [];
   for (const entry of card.inventory ?? []) {
     if (entry.qty <= 0) continue;
-    const item = ITEM_BY_ID[entry.itemId];
+    const item = itemFor(card, entry.itemId);
     if (!item) continue;
     resolved.push({ item, qty: entry.qty });
   }
@@ -57,6 +58,7 @@ export function totalCarriedWeight(
     | "studdedAddons"
     | "studdedAddonIds"
     | "extraArmorIds"
+    | "customItems"
   >,
 ): number {
   const storage = resolveStorage(card).reduce((sum, i) => sum + i.weightLb, 0);

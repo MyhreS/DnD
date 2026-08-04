@@ -122,6 +122,21 @@ export interface Item {
   slotLocation?: SlotLocation;
 }
 
+/** A named item found during play that is not part of the handbook catalog.
+ * Its mechanical facts are recorded with the character so calculations stay
+ * deterministic on every device. */
+export interface CustomItem extends Item {
+  source: "found";
+  /** Present only when category is Armor. */
+  armorCategory?: "Main Armor" | "Add-on Armor";
+  /** Main Armor uses this as base AC; Add-on Armor uses it as a bonus. */
+  acValue?: number;
+  /** Optional weapon-sheet facts supplied by the table when the item is found. */
+  attackBonus?: string;
+  damage?: string;
+  weaponNotes?: string;
+}
+
 /** A line in a hunter's inventory: a catalog item id + how many. */
 export interface InventoryEntry {
   itemId: string;
@@ -444,6 +459,8 @@ export interface HunterCard {
   coins?: number;
   /** Carried items (catalog item id + quantity). */
   inventory?: InventoryEntry[];
+  /** Unique weapons, armor, and gear found during play outside the handbook. */
+  customItems?: CustomItem[];
   /** Recently dropped lines, recoverable for 15 minutes (see DroppedItem). */
   droppedItems?: DroppedItem[];
   /** WORN storage items (sack/backpack/bandolier/tool belt/…), by catalog item

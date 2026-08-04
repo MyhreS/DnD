@@ -16,6 +16,7 @@ import { maxAddonPieces } from "@/lib/character";
 import { startingKit } from "@/lib/startingEquipment";
 import type {
   AbilityKey,
+  CustomItem,
   HunterCard,
   InventoryEntry,
   SheetAutomationState,
@@ -137,7 +138,6 @@ export function CharacterAutomationProvider({
   const spent = spentFor(mode, base);
   const pointsLeft = spent === null ? null : budgetFor(mode) - spent;
   const bonusUsed = ABILITY_KEYS.reduce((sum, key) => sum + (bonuses[key] ?? 0), 0);
-  const canChooseCreationGear = state.setupComplete !== true;
   const expertiseLimit = klass
     ? klass.progression.filter(
       (row) => row.level <= card.level && /(^|,\s*)Expertise(,|$)/i.test(row.features),
@@ -312,12 +312,10 @@ export function CharacterAutomationProvider({
   }
 
   function changeQty(id: string, delta: number) {
-    if (!canChooseCreationGear) return;
     commit({ inventory: mergeInventory(card.inventory ?? [], [{ itemId: id, qty: delta }]) });
   }
 
   function setExtra(subcategory: string, id: string) {
-    if (!canChooseCreationGear) return;
     const kept = (card.extraArmorIds ?? []).filter(
       (entry) => ARMOR_BY_ID[entry]?.subcategory !== subcategory,
     );
@@ -329,6 +327,76 @@ export function CharacterAutomationProvider({
     const next = { ...card, sheetAutomation: { ...state, manualOverrides } };
     const value = automationFor(next).fields[key];
     if (value !== undefined) onApply({ [key]: value }, { sheetAutomation: next.sheetAutomation });
+  }
+
+  function addCustomArmor(draft: Parameters<CharacterAutomationController["addCustomArmor"]>[0]) {
+    const item: CustomItem = {
+      id: `found-${crypto.randomUUID()}`,
+      name: draft.name.trim(),
+      category: "Armor",
+      carry: "Significant",
+      weightLb: Math.max(0, draft.weightLb),
+      note: draft.note.trim() || undefined,
+      source: "found",
+      armorCategory: draft.armorCategory,
+      acValue: Math.max(0, Math.floor(draft.acValue)),
+      unique: true,
+    };
+    if (!item.name) return;
+    const customItems = [...(card.customItems ?? []), item];
+    commit({
+      customItems,
+      ...(item.armorCategory === "Main Armor"
+        ? {
+          mainArmorId: item.id,
+          addonArmorIds: (card.addonArmorIds ?? []).slice(0, maxAddonPieces(item.id, customItems)),
+        }
+        : {
+          addonArmorIds: (card.addonArmorIds ?? []).length < maxAddonPieces(card.mainArmorId, customItems)
+            ? [...(card.addonArmorIds ?? []), item.id]
+            : card.addonArmorIds,
+        }),
+    });
+  }
+
+  function addCustomItem(draft: Parameters<CharacterAutomationController["addCustomItem"]>[0]) {
+    const item: CustomItem = {
+      id: `found-${crypto.randomUUID()}`,
+      name: draft.name.trim(),
+      category: draft.category,
+      carry: draft.carry,
+      weightLb: Math.max(0, draft.weightLb),
+      note: draft.note.trim() || undefined,
+      source: "found",
+      unique: true,
+      attackBonus: draft.attackBonus.trim() || undefined,
+      damage: draft.damage.trim() || undefined,
+      weaponNotes: draft.weaponNotes.trim() || undefined,
+    };
+    if (!item.name) return;
+    const next: HunterCard = {
+      ...card,
+      customItems: [...(card.customItems ?? []), item],
+      inventory: mergeInventory(card.inventory ?? [], [{ itemId: item.id, qty: 1 }]),
+      sheetAutomation: state,
+    };
+    const weaponFields: SheetData = {};
+    if (item.category === "Weapon") {
+      const row = Array.from({ length: 8 }, (_, index) => index).find((index) => {
+        const value = card.sheet?.[`wd_${index}_0`];
+        return typeof value !== "string" || value.trim() === "";
+      });
+      if (row != null) {
+        weaponFields[`wd_${row}_0`] = item.name;
+        weaponFields[`wd_${row}_1`] = item.attackBonus ?? "";
+        weaponFields[`wd_${row}_2`] = item.damage ?? "";
+        weaponFields[`wd_${row}_3`] = item.weaponNotes ?? item.note ?? "";
+      }
+    }
+    onApply(
+      { ...automatedFields(next), ...weaponFields },
+      { customItems: next.customItems, inventory: next.inventory, sheetAutomation: state },
+    );
   }
 
   const value: CharacterAutomationController = {
@@ -343,7 +411,6 @@ export function CharacterAutomationProvider({
     mode,
     pointsLeft,
     bonusUsed,
-    canChooseCreationGear,
     expertiseLimit,
     masteryFeature,
     masteryCount,
@@ -364,14 +431,14 @@ export function CharacterAutomationProvider({
     changeQty,
     chooseMainArmor: (id) => commit({
       mainArmorId: id || null,
-      addonArmorIds: (card.addonArmorIds ?? []).slice(0, maxAddonPieces(id || null)),
+      addonArmorIds: (card.addonArmorIds ?? []).slice(0, maxAddonPieces(id || null, card.customItems)),
     }),
     toggleAddonArmor: (id) => {
       const selected = card.addonArmorIds ?? [];
       commit({
         addonArmorIds: selected.includes(id)
           ? selected.filter((entry) => entry !== id)
-          : selected.length < maxAddonPieces(card.mainArmorId) ? [...selected, id] : selected,
+          : selected.length < maxAddonPieces(card.mainArmorId, card.customItems) ? [...selected, id] : selected,
       });
     },
     toggleStuds: (id) => {
@@ -383,6 +450,8 @@ export function CharacterAutomationProvider({
       });
     },
     setExtra,
+    addCustomArmor,
+    addCustomItem,
     restoreCalculated,
     finishSetup: () => commit({ sheetAutomation: { ...state, setupComplete: true } }),
   };
