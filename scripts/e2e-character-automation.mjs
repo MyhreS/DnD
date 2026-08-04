@@ -90,7 +90,19 @@ try {
   if (!foundEquipmentNames.includes("Moon Saw")) throw new Error("Unique found weapon did not fill the equipment sheet");
   if (await page.locator('[data-f="wd_0_0"]').inputValue() !== "Moon Saw") throw new Error("Unique found weapon did not fill the weapon table");
 
+  for (const piece of ["Full Leather Cuirass", "Leather Pauldron, Right", "Leather Pauldron, Left", "Leather Vambrace, Right", "Leather Vambrace, Left"]) {
+    await page.getByTestId("sheet-armor-automation").locator(".sheet-auto-fieldset > .sheet-auto-checks").getByLabel(piece, { exact: true }).check();
+  }
   await page.getByRole("button", { name: "Add unique armor found in play" }).click();
+  await page.getByLabel("Unique armor type").selectOption("Add-on Armor");
+  if (!await page.getByRole("button", { name: "Add and equip unique armor" }).isDisabled()) throw new Error("Unique add-on armor can exceed the worn-piece limit");
+  await page.getByText(/All add-on slots are full/).waitFor();
+  await page.getByRole("button", { name: "Cancel unique armor" }).click();
+  for (const piece of ["Full Leather Cuirass", "Leather Pauldron, Right", "Leather Pauldron, Left", "Leather Vambrace, Right", "Leather Vambrace, Left"]) {
+    await page.getByTestId("sheet-armor-automation").locator(".sheet-auto-fieldset > .sheet-auto-checks").getByLabel(piece, { exact: true }).uncheck();
+  }
+  await page.getByRole("button", { name: "Add unique armor found in play" }).click();
+  await page.getByLabel("Unique armor type").selectOption("Main Armor");
   await page.getByLabel("Unique armor name").fill("Moon Plate");
   await page.getByLabel("Unique armor AC").fill("14");
   await page.getByLabel("Unique armor weight").fill("8");

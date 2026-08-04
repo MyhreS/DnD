@@ -318,6 +318,8 @@ export function ArmorAutomation() {
   if (automation.readOnly) return null;
   const { card, result } = automation;
   const addonLimit = maxAddonPieces(card.mainArmorId, card.customItems);
+  const customAddonFull = custom.armorCategory === "Add-on Armor"
+    && (card.addonArmorIds ?? []).length >= addonLimit;
   const customArmor = (card.customItems ?? []).filter((item) => item.category === "Armor");
   const mainArmor = [
     ...ARMOR.filter((entry) => entry.category === "Main Armor"),
@@ -415,7 +417,8 @@ export function ArmorAutomation() {
             <label className="sheet-auto-field">Weight (lb)<input aria-label="Unique armor weight" type="number" min="0" step="0.1" required value={custom.weightLb} onChange={(event) => setCustom({ ...custom, weightLb: Number(event.target.value) })} /></label>
           </div>
           <label className="sheet-auto-field">Special rule or note<textarea aria-label="Unique armor note" value={custom.note} onChange={(event) => setCustom({ ...custom, note: event.target.value })} /></label>
-          <button type="submit">Add and equip unique armor</button>
+          {customAddonFull && <p className="sheet-auto-alert">All add-on slots are full. Remove one worn piece above first.</p>}
+          <button type="submit" disabled={customAddonFull}>Add and equip unique armor</button>
         </form>
       )}
     </AutoBlock>
