@@ -49,23 +49,66 @@ try {
   await page.goto(`${BASE}/character?preview=user.player`, { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Hunters" }).waitFor({ timeout: 20000 });
   await page.getByRole("button", { name: /Create (hunter|character)/ }).click();
-  await page.getByTestId("sheet-character-automation").waitFor();
+  await page.getByTestId("app-character-sheet").waitFor();
   if (await page.getByText("Build & calculate", { exact: true }).count()) {
     throw new Error("The retired calculator trigger is still visible");
   }
   if (await page.getByText("Choose armor", { exact: true }).count()) {
     throw new Error("Armor still renders in a duplicate chooser section");
   }
+  await page.getByTestId("appsheet-name").fill("App Warden");
+  await page.getByTestId("appsheet-class").selectOption("warden");
+  await page.getByTestId("appsheet-background").selectOption("criminal");
+
+  await page.getByRole("button", { name: "Increase level" }).click();
+  await page.getByTestId("appsheet-edit-stage").waitFor();
+  if (!await page.getByTestId("appsheet-edit-stage").getByText("Level").count()) throw new Error("Level change preview did not list the affected level");
+  if (!await page.getByTestId("appsheet-edit-stage").locator(".positive").count()) throw new Error("Level increase did not show positive changes in green");
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  if (await page.getByTestId("appsheet-level").locator("output").textContent() !== "1") throw new Error("Cancel did not discard the staged level change");
+
+  await page.getByRole("button", { name: "Decrease HP" }).click();
+  await page.getByTestId("appsheet-edit-stage").waitFor();
+  if (!await page.getByTestId("appsheet-edit-stage").locator(".negative").count()) throw new Error("HP loss did not show as a negative preview");
+  await page.getByRole("button", { name: "Apply changes" }).click();
+
+  await page.getByRole("button", { name: /Abilities & skills/ }).click();
+  // Lower scores first so the point-buy guard has budget available while the
+  // three 15s are raised.
+  for (const [ability, score] of [["Intelligence", "8"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "15"], ["Dexterity", "15"], ["Constitution", "15"]]) {
+    await page.getByLabel(`${ability} app base`).selectOption(score);
+  }
+  await page.getByLabel("Perception", { exact: true }).check();
+  await page.getByLabel("Survival", { exact: true }).check();
+  await page.getByLabel("Dexterity app background bonus").selectOption("2");
+  await page.getByLabel("Constitution app background bonus").selectOption("1");
+  const finishSetup = page.getByRole("button", { name: "Finish setup" });
+  if (await finishSetup.isDisabled()) {
+    const unresolved = await page.locator(".appsheet-incomplete").allTextContents();
+    throw new Error(`Fresh app setup remained disabled after all choices: ${unresolved.join(", ")}`);
+  }
+  await finishSetup.click();
+
+  await page.getByRole("button", { name: /Combat & armor/ }).click();
+  await page.getByTestId("appsheet-main-armor").selectOption("reinforced-hunter-leather-vest");
+  if (await page.getByTestId("appsheet-combat-ac").locator(":scope > strong").textContent() !== "15") throw new Error("App armor choice did not recalculate AC");
+
+  await page.getByRole("button", { name: /Gear/ }).click();
+  await page.getByTestId("appsheet-catalog-item").selectOption("torch");
+  await page.getByTestId("appsheet-add-catalog-item").click();
+  await page.getByTestId("appsheet-inventory").getByText("Torch", { exact: true }).waitFor();
+
+  await page.getByRole("button", { name: /Notes/ }).click();
+  await page.getByTestId("appsheet-notes").fill("Shared app-view note.");
+  await page.screenshot({ path: "screenshots/app-character-sheet-desktop.png", fullPage: true });
+
+  await page.getByRole("button", { name: "Paper sheet" }).click();
+  await page.getByTestId("sheet-character-automation").waitFor();
+  if (await page.locator('[data-f="pageNotes"]').inputValue() !== "Shared app-view note.") throw new Error("App notes did not synchronize into the paper sheet");
   const controlsAreOnSheet = await page.getByTestId("sheet-character-automation").evaluate(
     (element) => Boolean(element.closest(".papersheet .page")),
   );
-  if (!controlsAreOnSheet) throw new Error("Character automation is not integrated into the white sheet");
-
-  await page.getByTestId("sheet-class").selectOption("warden");
-  await page.getByTestId("sheet-background").selectOption("criminal");
-  await page.getByLabel("Perception", { exact: true }).check();
-  await page.getByLabel("Survival", { exact: true }).check();
-  await page.getByTestId("sheet-main-armor").selectOption("reinforced-hunter-leather-vest");
+  if (!controlsAreOnSheet) throw new Error("Paper automation is not integrated into the white sheet");
   await page.getByLabel("Head Gear", { exact: true }).selectOption("tricorn");
   for (const dropdown of [page.getByTestId("sheet-main-armor"), page.getByLabel("Head Gear", { exact: true })]) {
     const appearance = await dropdown.evaluate((element) => {
@@ -81,17 +124,15 @@ try {
   await sheetClass.waitFor();
   if (!/Warden/.test(await sheetClass.locator("option:checked").textContent())) throw new Error("Class did not fill the paper sheet");
   if (await page.locator('[data-f="level"]').inputValue() !== "1") throw new Error("New class did not default to level 1");
-  if (await page.locator('[data-f="ac"]').inputValue() !== "12") throw new Error("Armor Class did not recalculate");
+  if (await page.locator('[data-f="ac"]').inputValue() !== "15") throw new Error("Armor Class did not recalculate");
   if (!/Tricorn/.test(await page.locator('[data-f="headGear"]').locator("option:checked").textContent())) throw new Error("Extra armor did not fill its legacy paper field");
   if (await page.locator('[data-f="wisSaveP"]').isChecked() !== true) throw new Error("Warden Wisdom save did not fill");
   if (await page.locator('[data-f="chaSaveP"]').isChecked() !== true) throw new Error("Warden Charisma save did not fill");
   const equipmentNames = await page.locator('[data-f^="eq_"][data-f$="_0"]').evaluateAll((fields) => fields.map((field) => field.value));
   if (!equipmentNames.some((name) => /Hunter Rifle/.test(name))) throw new Error("Warden starting equipment did not fill");
-  if (await page.locator('[data-f="initiative"]').inputValue() !== "+2") throw new Error("Alert did not update initiative");
+  if (await page.locator('[data-f="initiative"]').inputValue() !== "+5") throw new Error("Alert did not update initiative");
   if (!(await page.locator('[data-f="hpMax"]').getAttribute("data-auto-reason"))?.includes("Hit Die")) throw new Error("Auto-filled HP has no visible reason");
-  await page.getByText("0 left", { exact: true }).first().waitFor();
   await page.getByText(/The table below fills automatically/).waitFor();
-  await page.getByRole("button", { name: "Finish character setup" }).click();
 
   await page.getByRole("button", { name: "Add unique weapon or item found in play" }).click();
   await page.getByLabel("Unique item name").fill("Moon Saw");
@@ -122,7 +163,7 @@ try {
   await page.getByLabel("Unique armor weight").fill("8");
   await page.getByLabel("Unique armor note").fill("Glows near Dreadbloods.");
   await page.getByRole("button", { name: "Add and equip unique armor" }).click();
-  if (await page.locator('[data-f="ac"]').inputValue() !== "14") throw new Error("Unique found armor did not recalculate AC");
+  if (await page.locator('[data-f="ac"]').inputValue() !== "16") throw new Error("Unique found armor did not recalculate AC");
   if (!/Moon Plate/.test(await page.getByTestId("sheet-main-armor").locator("option:checked").textContent())) throw new Error("Unique found armor was not equipped");
   await page.screenshot({ path: "screenshots/character-automation-desktop.png", fullPage: true });
 
@@ -132,13 +173,27 @@ try {
   if (await page.getByTestId("legacy-conversion-wizard").count()) throw new Error("Legacy sheets still show a player-facing migration popup");
 
   await page.setViewportSize({ width: 390, height: 844 });
-  await page.getByTestId("sheet-character-automation").waitFor();
+  await page.getByRole("button", { name: "App view" }).click();
+  await page.getByTestId("app-character-sheet").waitFor();
   const overflow = await page.locator(".papersheet-modal").evaluate(
     (element) => element.scrollWidth > element.clientWidth,
   );
-  if (overflow) throw new Error("Integrated character automation causes horizontal page scrolling on mobile");
-  await page.getByTestId("sheet-character-automation").scrollIntoViewIfNeeded();
-  await page.screenshot({ path: "screenshots/character-automation-mobile.png", fullPage: true });
+  if (overflow) throw new Error("App character sheet causes horizontal page scrolling on mobile");
+  const appColors = await page.getByTestId("app-character-sheet").evaluate((element) => {
+    const text = getComputedStyle(element).color;
+    const title = getComputedStyle(element.querySelector("h2")).color;
+    const background = getComputedStyle(element.closest(".papersheet-modal")).backgroundColor;
+    const luminance = (value) => {
+      const [r, g, b] = value.match(/[\d.]+/g).slice(0, 3).map(Number);
+      return .2126 * r + .7152 * g + .0722 * b;
+    };
+    return { text, title, background, textContrast: Math.abs(luminance(text) - luminance(background)), titleContrast: Math.abs(luminance(title) - luminance(background)) };
+  });
+  if (appColors.textContrast < 80 || appColors.titleContrast < 80) {
+    throw new Error(`App sheet contrast failed: ${JSON.stringify(appColors)}`);
+  }
+  await page.getByTestId("app-character-sheet").scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "screenshots/app-character-sheet-mobile.png", fullPage: true });
 
   const retired = await context.newPage();
   await retired.goto(`${BASE}/profile?preview=user.player`, { waitUntil: "domcontentloaded" });

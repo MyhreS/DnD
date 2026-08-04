@@ -303,5 +303,14 @@ export function emptySheetCard(params: {
   email: string;
   displayName: string;
 }): HunterCard {
-  return { ...emptyCard(params), sheet: {} };
+  return {
+    ...emptyCard(params),
+    sheet: {},
+    sheetAutomation: {
+      version: 1,
+      classSkills: [],
+      backgroundBonuses: {},
+      setupComplete: false,
+    },
+  };
 }

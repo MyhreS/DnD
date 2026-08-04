@@ -14,6 +14,7 @@ import {
 import { migrateLegacyCharacter } from "../src/features/hunter/lib/legacyMigration";
 
 const base = emptySheetCard({ ownerUid: "test", email: "test@example.com", displayName: "Tester" });
+assert.equal(base.sheetAutomation?.setupComplete, false, "fresh sheets start in guided setup even if the name is entered first");
 const warden = {
   ...base,
   classId: "warden",

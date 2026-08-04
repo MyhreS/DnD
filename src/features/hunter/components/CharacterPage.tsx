@@ -11,8 +11,7 @@ import { Sigil } from "@/components/icons";
 import type { HunterCard } from "@/types";
 
 /** The main-menu Hunters page. It ALWAYS lands on the LIST of your hunters —
- * you click a hunter to open its paper sheet (the only view/creation flow; the
- * old step-by-step builder is gone). */
+ * you click a hunter to open the shared app or paper character editor. */
 export function CharacterPage() {
   const user = useAuthStore((s) => s.user);
   const characters = usePlayerStore((s) => s.characters);
@@ -87,8 +86,8 @@ export function CharacterPage() {
         <div className="center" style={{ maxWidth: 320 }}>
           <h1 style={{ marginBottom: 6 }}>No hunter yet</h1>
           <p className="muted">
-            Create your character on the classic paper sheet — every field is
-            saved as you write, and the little ⓘ dots explain each step.
+            Build your character in the guided app view or switch to the paper
+            sheet at any time. Both views share the same automatically saved data.
           </p>
         </div>
         <button className="btn btn-primary" style={{ maxWidth: 280 }} onClick={startNew}>

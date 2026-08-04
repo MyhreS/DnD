@@ -11,6 +11,7 @@ import { BACKGROUNDS } from "@/data/backgrounds";
 import { getClass } from "@/data/classes";
 import { ITEMS } from "@/data/items";
 import { SKILLS } from "@/data/skills";
+import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { maxAddonPieces } from "@/lib/character";
 import { startingKit } from "@/lib/startingEquipment";
@@ -138,11 +139,16 @@ export function CharacterAutomationProvider({
   const spent = spentFor(mode, base);
   const pointsLeft = spent === null ? null : budgetFor(mode) - spent;
   const bonusUsed = ABILITY_KEYS.reduce((sum, key) => sum + (bonuses[key] ?? 0), 0);
-  const expertiseLimit = klass
-    ? klass.progression.filter(
-      (row) => row.level <= card.level && /(^|,\s*)Expertise(,|$)/i.test(row.features),
-    ).length * 2 + (klass.id === "warden" && card.level >= 9 ? 2 : 0)
-    : 0;
+  // The three classes that grant Expertise do not grant the same number at
+  // each occurrence. Keep the class-board amounts explicit instead of
+  // assuming every row means two choices.
+  const expertiseLimit = klass?.id === "scout"
+    ? (card.level >= 2 ? 1 : 0) + (card.level >= 9 ? 2 : 0)
+    : klass?.id === "stalker"
+      ? (card.level >= 1 ? 2 : 0) + (card.level >= 6 ? 2 : 0)
+      : klass?.id === "warden"
+        ? (card.level >= 2 ? 2 : 0) + (card.level >= 9 ? 2 : 0)
+        : 0;
   const masteryFeature = klass?.features?.find(
     (feature) => feature.name === "Weapon Mastery" && feature.level <= card.level,
   );
@@ -315,6 +321,25 @@ export function CharacterAutomationProvider({
     commit({ inventory: mergeInventory(card.inventory ?? [], [{ itemId: id, qty: delta }]) });
   }
 
+  function toggleStorage(id: string) {
+    const equipped = card.equippedStorageIds ?? [];
+    const isEquipped = equipped.includes(id);
+    const definition = STORAGE_BY_ITEM_ID[id];
+    const conflicts = isEquipped || !definition?.requires ? [] : equipped.filter((entry) => {
+      const other = STORAGE_BY_ITEM_ID[entry]?.requires;
+      return !!other && other.kind === definition.requires?.kind && other.location === definition.requires?.location;
+    });
+    commit({
+      equippedStorageIds: isEquipped
+        ? equipped.filter((entry) => entry !== id)
+        : [...equipped.filter((entry) => !conflicts.includes(entry)), id],
+      inventory: mergeInventory(card.inventory ?? [], [
+        { itemId: id, qty: isEquipped ? 1 : -1 },
+        ...conflicts.map((itemId) => ({ itemId, qty: 1 })),
+      ]),
+    });
+  }
+
   function setExtra(subcategory: string, id: string) {
     const kept = (card.extraArmorIds ?? []).filter(
       (entry) => ARMOR_BY_ID[entry]?.subcategory !== subcategory,
@@ -429,6 +454,7 @@ export function CharacterAutomationProvider({
     setBonus,
     switchMode,
     changeQty,
+    toggleStorage,
     chooseMainArmor: (id) => commit({
       mainArmorId: id || null,
       addonArmorIds: (card.addonArmorIds ?? []).slice(0, maxAddonPieces(id || null, card.customItems)),
