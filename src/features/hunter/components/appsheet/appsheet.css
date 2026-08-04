@@ -46,52 +46,8 @@
 .character-app-sheet {
   width: min(1120px, 100%);
   margin: 0 auto;
-  display: grid;
-  grid-template-columns: 168px minmax(0, 1fr);
-  gap: 42px;
   color: var(--app-text);
   font-family: "Alegreya Sans SC", sans-serif;
-}
-
-.appsheet-mobile-nav {
-  display: none;
-}
-
-.appsheet-nav {
-  position: sticky;
-  top: 18px;
-  align-self: start;
-  padding-top: 6px;
-}
-
-.appsheet-nav nav {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-
-.appsheet-nav button {
-  width: 100%;
-  padding: 9px 11px;
-  border: 0;
-  border-left: 2px solid transparent;
-  border-radius: 0 4px 4px 0;
-  background: transparent;
-  color: var(--app-muted);
-  text-align: left;
-  font: 700 14px/1.25 "Alegreya Sans SC", sans-serif;
-  cursor: pointer;
-}
-
-.appsheet-nav button:hover {
-  background: rgba(255, 255, 255, .03);
-  color: var(--app-text);
-}
-
-.appsheet-nav button.active {
-  border-left-color: var(--app-accent);
-  background: rgba(255, 255, 255, .045);
-  color: var(--app-text);
 }
 
 .appsheet-workspace {
@@ -99,7 +55,11 @@
 }
 
 .appsheet-section {
-  padding: 10px 0 110px;
+  padding: 10px 0 64px;
+}
+
+.appsheet-section:last-child {
+  padding-bottom: 110px;
 }
 
 .appsheet-section-head {
@@ -562,7 +522,7 @@
   font: 12px "Alegreya", serif;
 }
 
-.character-app-sheet button:not(.appsheet-nav button):not(.appsheet-stepper button) {
+.character-app-sheet button:not(.appsheet-stepper button) {
   width: auto;
   padding: 9px 13px;
   border: 0;
@@ -573,7 +533,7 @@
   cursor: pointer;
 }
 
-.character-app-sheet button:not(.appsheet-nav button):not(.appsheet-stepper button):hover:not(:disabled) {
+.character-app-sheet button:not(.appsheet-stepper button):hover:not(:disabled) {
   background: #843a35;
 }
 

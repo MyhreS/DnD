@@ -72,7 +72,6 @@ try {
   if (!await page.getByTestId("appsheet-edit-stage").locator(".negative").count()) throw new Error("HP loss did not show as a negative preview");
   await page.getByRole("button", { name: "Apply changes" }).click();
 
-  await page.getByRole("button", { name: /Abilities & skills/ }).click();
   // Lower scores first so the point-buy guard has budget available while the
   // three 15s are raised.
   for (const [ability, score] of [["Intelligence", "8"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "15"], ["Dexterity", "15"], ["Constitution", "15"]]) {
@@ -89,18 +88,14 @@ try {
   }
   await finishSetup.click();
 
-  await page.getByRole("button", { name: /Combat & armor/ }).click();
   await page.getByTestId("appsheet-main-armor").selectOption("reinforced-hunter-leather-vest");
   if (await page.getByTestId("appsheet-combat-ac").locator(":scope > strong").textContent() !== "15") throw new Error("App armor choice did not recalculate AC");
 
-  await page.getByRole("button", { name: /Gear/ }).click();
   await page.getByTestId("appsheet-catalog-item").selectOption("torch");
   await page.getByTestId("appsheet-add-catalog-item").click();
   await page.getByTestId("appsheet-inventory").getByText("Torch", { exact: true }).waitFor();
 
-  await page.getByRole("button", { name: /Notes/ }).click();
   await page.getByTestId("appsheet-notes").fill("Shared app-view note.");
-  await page.getByRole("button", { name: "Overview", exact: true }).click();
   await page.screenshot({ path: "screenshots/app-character-sheet-desktop.png", fullPage: true });
 
   await page.getByRole("button", { name: "Paper sheet" }).click();
@@ -176,16 +171,27 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole("button", { name: "App view" }).click();
   await page.getByTestId("app-character-sheet").waitFor();
-  const mobileSection = page.getByLabel("Character section", { exact: true });
-  await mobileSection.waitFor();
-  await mobileSection.selectOption("gear");
-  await page.getByRole("heading", { name: "Gear & carrying" }).waitFor();
-  await mobileSection.selectOption("overview");
-  await page.getByRole("heading", { name: "Eileen the Crow" }).waitFor();
-  const overflow = await page.locator(".papersheet-modal").evaluate(
-    (element) => element.scrollWidth > element.clientWidth,
-  );
-  if (overflow) throw new Error("App character sheet causes horizontal page scrolling on mobile");
+  if (await page.getByLabel("Character section", { exact: true }).count()) {
+    throw new Error("The removed character section selector is still visible");
+  }
+  if (await page.locator(".appsheet-nav").count()) {
+    throw new Error("The removed character section navigation is still visible");
+  }
+  const sectionHeadings = await page.getByTestId("app-character-sheet").locator("h2").allTextContents();
+  if (sectionHeadings.length !== 6) {
+    throw new Error(`The continuous character sheet did not render all six sections: ${sectionHeadings.join(", ")}`);
+  }
+  await page.getByRole("heading", { name: "Gear & carrying" }).scrollIntoViewIfNeeded();
+  await page.getByTestId("appsheet-notes").scrollIntoViewIfNeeded();
+  const mobileScroll = await page.locator(".papersheet-modal").evaluate((element) => ({
+    horizontal: element.scrollWidth > element.clientWidth,
+    vertical: element.scrollHeight > element.clientHeight,
+    position: element.scrollTop,
+  }));
+  if (mobileScroll.horizontal) throw new Error("App character sheet causes horizontal page scrolling on mobile");
+  if (!mobileScroll.vertical || mobileScroll.position === 0) {
+    throw new Error(`The continuous mobile sheet does not scroll naturally: ${JSON.stringify(mobileScroll)}`);
+  }
   const appColors = await page.getByTestId("app-character-sheet").evaluate((element) => {
     const text = getComputedStyle(element).color;
     const title = getComputedStyle(element.querySelector("h2")).color;

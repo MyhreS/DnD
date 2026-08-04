@@ -403,38 +403,8 @@
 }
 
 @media (max-width: 900px) {
-  .character-app-sheet {
-    grid-template-columns: 1fr;
-    gap: 18px;
-  }
-
-  .appsheet-nav {
-    display: none;
-  }
-
-  .appsheet-mobile-nav {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 10px 12px;
-    border-radius: 6px;
-    background: var(--app-surface);
-  }
-
-  .appsheet-mobile-nav > span {
-    flex: none;
-    color: var(--app-muted);
-    font-size: 13px;
-    font-weight: 700;
-  }
-
-  .character-app-sheet .appsheet-mobile-nav select {
-    flex: 1;
-    min-height: 40px;
-  }
-
   .appsheet-section {
-    padding-top: 0;
+    padding: 0 0 52px;
   }
 
   .appsheet-combat-strip {
