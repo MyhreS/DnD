@@ -1534,7 +1534,9 @@
   font-weight: 800;
   letter-spacing: 0.06em;
 }
-.papersheet .sheet-auto-block select {
+.papersheet .sheet-auto-block select,
+.papersheet .sheet-auto-block input:not([type="checkbox"]),
+.papersheet .sheet-auto-block textarea {
   width: 100%;
   min-width: 0;
   height: auto;
@@ -1544,6 +1546,10 @@
   border: 1px solid #9b8f7a;
   border-radius: 2px;
   font: 700 12px "Alegreya Sans SC", sans-serif;
+}
+.papersheet .sheet-auto-block textarea {
+  min-height: 18mm;
+  resize: vertical;
 }
 .papersheet .sheet-auto-grid {
   display: grid;
@@ -1635,6 +1641,15 @@
 }
 .papersheet .sheet-auto-explanation summary { color: var(--marker-blue); font-weight: 900; cursor: pointer; }
 .papersheet .sheet-auto-explanation button { display: block; margin-top: 2mm; }
+.papersheet .sheet-auto-custom-toggle { margin-top: 3mm; }
+.papersheet .sheet-auto-custom {
+  display: grid;
+  gap: 3mm;
+  margin-top: 3mm;
+  padding: 3mm 0 1mm 3mm;
+  border-left: 2px solid var(--marker-blue);
+}
+.papersheet .sheet-auto-custom > button { justify-self: start; }
 .papersheet .sheet-auto-finish {
   width: 100%;
   margin-top: 4mm;

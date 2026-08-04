@@ -120,6 +120,41 @@ assert.equal(equipped.fields.ac, "12");
 assert.match(String(equipped.fields.eq_0_0), /Longsword/);
 assert.equal(equipped.fields.weight, "9 lb");
 
+const foundGear = automationFor({
+  ...warden,
+  mainArmorId: "found-moon-plate",
+  customItems: [
+    {
+      id: "found-moon-plate",
+      name: "Moon Plate",
+      category: "Armor",
+      carry: "Significant",
+      weightLb: 8,
+      note: "Glows near Dreadbloods.",
+      unique: true,
+      source: "found",
+      armorCategory: "Main Armor",
+      acValue: 14,
+    },
+    {
+      id: "found-bone-saw",
+      name: "Bone Saw",
+      category: "Weapon",
+      carry: "Significant",
+      weightLb: 4,
+      unique: true,
+      source: "found",
+      damage: "1d8 slashing",
+    },
+  ],
+  inventory: [{ itemId: "found-bone-saw", qty: 1 }],
+});
+assert.equal(foundGear.fields.mainArmor, "Moon Plate");
+assert.equal(foundGear.fields.ac, "15", "found armor participates in normal Dexterity AC math");
+assert.match(String(foundGear.fields.eq_0_0), /Bone Saw/);
+assert.equal(foundGear.fields.weight, "12 lb", "found armor and weapons both count toward weight");
+assert.match(String(foundGear.fields.special), /Glows near Dreadbloods/);
+
 assert.equal(matchCatalogItem("Hunter Rifle"), "hunter-rifle");
 assert.equal(matchCatalogItem("2 Hunting Traps"), "hunting-trap");
 assert.equal(matchCatalogItem("something handwritten"), null);

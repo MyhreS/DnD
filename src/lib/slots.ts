@@ -67,7 +67,7 @@ function stow(pool: Pool, itemId: string, name: string): void {
  * are their only home), then Significant — restricted pools (ankle holster)
  * before general capacity in back → chest → hip → hand order. */
 export function computeSlots(
-  card: Pick<HunterCard, "inventory" | "equippedStorageIds">,
+  card: Pick<HunterCard, "inventory" | "equippedStorageIds" | "customItems">,
 ): SlotComputation {
   const equipped = (card.equippedStorageIds ?? []).filter((id) => STORAGE_BY_ITEM_ID[id]);
   const defs = equipped.map((id) => STORAGE_BY_ITEM_ID[id]);

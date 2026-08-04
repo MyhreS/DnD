@@ -4,11 +4,12 @@ import { ARMOR, ARMOR_BY_ID } from "@/data/armor";
 import { BACKGROUNDS } from "@/data/backgrounds";
 import { CLASSES } from "@/data/classes";
 import { TOOL_PROFICIENCIES, WHISPERS } from "@/data/characterOptions";
-import { ITEMS, ITEM_BY_ID } from "@/data/items";
+import { ITEMS } from "@/data/items";
 import { SKILLS } from "@/data/skills";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { maxAddonPieces } from "@/lib/character";
-import type { AbilityKey } from "@/types";
+import { armorFor, itemFor } from "@/lib/customItems";
+import type { AbilityKey, CarrySignificance } from "@/types";
 import type { BuyMode } from "../../lib/abilityBuy";
 import { F, Sel } from "./sheetPrimitives";
 import { useCharacterAutomation } from "./characterAutomationContext";
@@ -306,19 +307,33 @@ export function PageOneAutomation() {
 
 export function ArmorAutomation() {
   const automation = useCharacterAutomation();
+  const [showCustom, setShowCustom] = useState(false);
+  const [custom, setCustom] = useState({
+    name: "",
+    armorCategory: "Main Armor" as "Main Armor" | "Add-on Armor",
+    acValue: 10,
+    weightLb: 0,
+    note: "",
+  });
   if (automation.readOnly) return null;
-  const { card, result, canChooseCreationGear } = automation;
-  const addonLimit = maxAddonPieces(card.mainArmorId);
+  const { card, result } = automation;
+  const addonLimit = maxAddonPieces(card.mainArmorId, card.customItems);
+  const customArmor = (card.customItems ?? []).filter((item) => item.category === "Armor");
+  const mainArmor = [
+    ...ARMOR.filter((entry) => entry.category === "Main Armor"),
+    ...customArmor.filter((entry) => entry.armorCategory === "Main Armor").map((entry) => armorFor(card, entry.id)!),
+  ];
+  const addonArmor = [
+    ...ARMOR.filter((entry) => entry.category === "Add-on Armor"),
+    ...customArmor.filter((entry) => entry.armorCategory === "Add-on Armor").map((entry) => armorFor(card, entry.id)!),
+  ];
   return (
     <AutoBlock
       title="Choose armor"
       testId="sheet-armor-automation"
       meta={<span className="sheet-auto-total">AC {result.fields.ac}</span>}
     >
-      {!canChooseCreationGear && (
-        <p className="sheet-auto-alert">Setup is finished. Owned armor is now managed from inventory.</p>
-      )}
-      <fieldset className="sheet-auto-fieldset" disabled={!canChooseCreationGear}>
+      <fieldset className="sheet-auto-fieldset">
         <label className="sheet-auto-field">
           Main armor
           <select
@@ -327,8 +342,8 @@ export function ArmorAutomation() {
             onChange={(event) => automation.chooseMainArmor(event.target.value)}
           >
             <option value="">Unarmored</option>
-            {ARMOR.filter((entry) => entry.category === "Main Armor").map((entry) => (
-              <option key={entry.id} value={entry.id}>{entry.name} · {entry.ac} · {entry.weightLb} lb</option>
+            {mainArmor.map((entry) => (
+              <option key={entry.id} value={entry.id}>{entry.name}{entry.unique ? " · Unique" : ""} · {entry.ac} · {entry.weightLb} lb</option>
             ))}
           </select>
         </label>
@@ -337,10 +352,13 @@ export function ArmorAutomation() {
           <span>{(card.addonArmorIds ?? []).length}/{addonLimit}</span>
         </div>
         <CheckGrid
-          values={ARMOR.filter((entry) => entry.category === "Add-on Armor").map((entry) => entry.name)}
-          selected={(card.addonArmorIds ?? []).map((id) => ARMOR_BY_ID[id]?.name ?? id)}
-          onToggle={(name) => {
-            const id = ARMOR.find((entry) => entry.name === name)?.id;
+          values={addonArmor.map((entry) => entry.unique ? `${entry.name} · Unique` : entry.name)}
+          selected={(card.addonArmorIds ?? []).map((id) => {
+            const entry = armorFor(card, id);
+            return entry?.unique ? `${entry.name} · Unique` : entry?.name ?? id;
+          })}
+          onToggle={(label) => {
+            const id = addonArmor.find((entry) => label === (entry.unique ? `${entry.name} · Unique` : entry.name))?.id;
             if (id) automation.toggleAddonArmor(id);
           }}
         />
@@ -348,10 +366,10 @@ export function ArmorAutomation() {
           <div className="sheet-auto-studs">
             <h3>Studs</h3>
             <CheckGrid
-              values={(card.addonArmorIds ?? []).map((id) => ARMOR_BY_ID[id]?.name ?? id)}
-              selected={(card.studdedAddonIds ?? []).map((id) => ARMOR_BY_ID[id]?.name ?? id)}
+              values={(card.addonArmorIds ?? []).map((id) => armorFor(card, id)?.name ?? id)}
+              selected={(card.studdedAddonIds ?? []).map((id) => armorFor(card, id)?.name ?? id)}
               onToggle={(name) => {
-                const id = card.addonArmorIds?.find((entry) => (ARMOR_BY_ID[entry]?.name ?? entry) === name);
+                const id = card.addonArmorIds?.find((entry) => (armorFor(card, entry)?.name ?? entry) === name);
                 if (id) automation.toggleStuds(id);
               }}
             />
@@ -375,6 +393,31 @@ export function ArmorAutomation() {
         </div>
       </fieldset>
       <p className="sheet-auto-note">AC, armor category, worn pieces, and carried weight update below.</p>
+      <button type="button" className="sheet-auto-custom-toggle" onClick={() => setShowCustom((open) => !open)}>
+        {showCustom ? "Cancel unique armor" : "Add unique armor found in play"}
+      </button>
+      {showCustom && (
+        <form
+          className="sheet-auto-custom"
+          data-testid="unique-armor-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            automation.addCustomArmor(custom);
+            setCustom({ name: "", armorCategory: "Main Armor", acValue: 10, weightLb: 0, note: "" });
+            setShowCustom(false);
+          }}
+        >
+          <p className="sheet-auto-note">Record the values the DM gave the item. It is equipped immediately.</p>
+          <div className="sheet-auto-grid">
+            <label className="sheet-auto-field">Unique armor name<input aria-label="Unique armor name" required value={custom.name} onChange={(event) => setCustom({ ...custom, name: event.target.value })} /></label>
+            <label className="sheet-auto-field">Armor type<select aria-label="Unique armor type" value={custom.armorCategory} onChange={(event) => setCustom({ ...custom, armorCategory: event.target.value as typeof custom.armorCategory, acValue: event.target.value === "Main Armor" ? 10 : 0 })}><option>Main Armor</option><option>Add-on Armor</option></select></label>
+            <label className="sheet-auto-field">{custom.armorCategory === "Main Armor" ? "Base AC" : "AC bonus"}<input aria-label="Unique armor AC" type="number" min="0" max="30" required value={custom.acValue} onChange={(event) => setCustom({ ...custom, acValue: Number(event.target.value) })} /></label>
+            <label className="sheet-auto-field">Weight (lb)<input aria-label="Unique armor weight" type="number" min="0" step="0.1" required value={custom.weightLb} onChange={(event) => setCustom({ ...custom, weightLb: Number(event.target.value) })} /></label>
+          </div>
+          <label className="sheet-auto-field">Special rule or note<textarea aria-label="Unique armor note" value={custom.note} onChange={(event) => setCustom({ ...custom, note: event.target.value })} /></label>
+          <button type="submit">Add and equip unique armor</button>
+        </form>
+      )}
     </AutoBlock>
   );
 }
@@ -382,8 +425,19 @@ export function ArmorAutomation() {
 export function EquipmentAutomation() {
   const automation = useCharacterAutomation();
   const [itemId, setItemId] = useState("");
+  const [showCustom, setShowCustom] = useState(false);
+  const [custom, setCustom] = useState({
+    name: "",
+    category: "Weapon" as "Weapon" | "Gear",
+    carry: "Significant" as CarrySignificance,
+    weightLb: 0,
+    note: "",
+    attackBonus: "",
+    damage: "",
+    weaponNotes: "",
+  });
   if (automation.readOnly) return null;
-  const { card, result, canChooseCreationGear } = automation;
+  const { card, result } = automation;
   const equipment = ITEMS.filter((entry) => entry.category !== "Armor");
   return (
     <AutoBlock
@@ -391,10 +445,7 @@ export function EquipmentAutomation() {
       testId="sheet-equipment-automation"
       meta={<span className="sheet-auto-total">{String(result.fields.weight ?? "0 lb")}</span>}
     >
-      {!canChooseCreationGear && (
-        <p className="sheet-auto-alert">Setup is finished. Equipment is now managed from inventory.</p>
-      )}
-      <fieldset className="sheet-auto-fieldset" disabled={!canChooseCreationGear}>
+      <fieldset className="sheet-auto-fieldset">
         <div className="sheet-auto-add">
           <select aria-label="Equipment catalog" value={itemId} onChange={(event) => setItemId(event.target.value)}>
             <option value="">Choose equipment…</option>
@@ -416,12 +467,12 @@ export function EquipmentAutomation() {
         <div className="sheet-auto-inventory">
           {(card.inventory ?? []).map((entry) => (
             <div key={entry.itemId}>
-              <span>{ITEM_BY_ID[entry.itemId]?.name ?? entry.itemId}</span>
-              <small>{ITEM_BY_ID[entry.itemId]?.weightLb ?? 0} lb each</small>
+              <span>{itemFor(card, entry.itemId)?.name ?? entry.itemId}{itemFor(card, entry.itemId)?.unique ? " · Unique" : ""}</span>
+              <small>{itemFor(card, entry.itemId)?.weightLb ?? 0} lb each</small>
               <div>
-                <button type="button" aria-label={`Remove ${ITEM_BY_ID[entry.itemId]?.name ?? entry.itemId}`} onClick={() => automation.changeQty(entry.itemId, -1)}>−</button>
+                <button type="button" aria-label={`Remove ${itemFor(card, entry.itemId)?.name ?? entry.itemId}`} onClick={() => automation.changeQty(entry.itemId, -1)}>−</button>
                 <b>{entry.qty}</b>
-                <button type="button" aria-label={`Add ${ITEM_BY_ID[entry.itemId]?.name ?? entry.itemId}`} onClick={() => automation.changeQty(entry.itemId, 1)}>+</button>
+                <button type="button" aria-label={`Add ${itemFor(card, entry.itemId)?.name ?? entry.itemId}`} onClick={() => automation.changeQty(entry.itemId, 1)}>+</button>
               </div>
             </div>
           ))}
@@ -430,6 +481,37 @@ export function EquipmentAutomation() {
       <p className="sheet-auto-note">
         Carrying: {String(result.fields.weightCondition ?? "Normal")}. The table below fills automatically.
       </p>
+      <button type="button" className="sheet-auto-custom-toggle" onClick={() => setShowCustom((open) => !open)}>
+        {showCustom ? "Cancel unique item" : "Add unique weapon or item found in play"}
+      </button>
+      {showCustom && (
+        <form
+          className="sheet-auto-custom"
+          data-testid="unique-item-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            automation.addCustomItem(custom);
+            setCustom({ name: "", category: "Weapon", carry: "Significant", weightLb: 0, note: "", attackBonus: "", damage: "", weaponNotes: "" });
+            setShowCustom(false);
+          }}
+        >
+          <p className="sheet-auto-note">Use the values supplied when the item was found; handbook catalog data is not required.</p>
+          <div className="sheet-auto-grid">
+            <label className="sheet-auto-field">Unique item name<input aria-label="Unique item name" required value={custom.name} onChange={(event) => setCustom({ ...custom, name: event.target.value })} /></label>
+            <label className="sheet-auto-field">Item type<select aria-label="Unique item type" value={custom.category} onChange={(event) => setCustom({ ...custom, category: event.target.value as typeof custom.category })}><option>Weapon</option><option>Gear</option></select></label>
+            <label className="sheet-auto-field">Carrying category<select aria-label="Unique item carrying category" value={custom.carry} onChange={(event) => setCustom({ ...custom, carry: event.target.value as CarrySignificance })}><option>Insignificant</option><option>Significant</option><option>Oversized</option></select></label>
+            <label className="sheet-auto-field">Weight (lb)<input aria-label="Unique item weight" type="number" min="0" step="0.1" required value={custom.weightLb} onChange={(event) => setCustom({ ...custom, weightLb: Number(event.target.value) })} /></label>
+          </div>
+          {custom.category === "Weapon" && (
+            <div className="sheet-auto-grid">
+              <label className="sheet-auto-field">Attack bonus<input aria-label="Unique weapon attack bonus" value={custom.attackBonus} onChange={(event) => setCustom({ ...custom, attackBonus: event.target.value })} /></label>
+              <label className="sheet-auto-field">Damage / type<input aria-label="Unique weapon damage" value={custom.damage} onChange={(event) => setCustom({ ...custom, damage: event.target.value })} /></label>
+            </div>
+          )}
+          <label className="sheet-auto-field">Special rule or note<textarea aria-label="Unique item note" value={custom.note} onChange={(event) => setCustom({ ...custom, note: event.target.value, weaponNotes: event.target.value })} /></label>
+          <button type="submit">Add unique item</button>
+        </form>
+      )}
     </AutoBlock>
   );
 }

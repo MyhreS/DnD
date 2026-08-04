@@ -77,6 +77,27 @@ try {
   if (!(await page.locator('[data-f="hpMax"]').getAttribute("data-auto-reason"))?.includes("Hit Die")) throw new Error("Auto-filled HP has no visible reason");
   await page.getByText("0 left", { exact: true }).first().waitFor();
   await page.getByText(/The table below fills automatically/).waitFor();
+  await page.getByRole("button", { name: "Finish character setup" }).click();
+
+  await page.getByRole("button", { name: "Add unique weapon or item found in play" }).click();
+  await page.getByLabel("Unique item name").fill("Moon Saw");
+  await page.getByLabel("Unique item weight").fill("4");
+  await page.getByLabel("Unique weapon attack bonus").fill("+4");
+  await page.getByLabel("Unique weapon damage").fill("1d8 slashing");
+  await page.getByLabel("Unique item note").fill("Found beneath the old chapel.");
+  await page.getByRole("button", { name: "Add unique item", exact: true }).click();
+  const foundEquipmentNames = await page.locator('[data-f^="eq_"][data-f$="_0"]').evaluateAll((fields) => fields.map((field) => field.value));
+  if (!foundEquipmentNames.includes("Moon Saw")) throw new Error("Unique found weapon did not fill the equipment sheet");
+  if (await page.locator('[data-f="wd_0_0"]').inputValue() !== "Moon Saw") throw new Error("Unique found weapon did not fill the weapon table");
+
+  await page.getByRole("button", { name: "Add unique armor found in play" }).click();
+  await page.getByLabel("Unique armor name").fill("Moon Plate");
+  await page.getByLabel("Unique armor AC").fill("14");
+  await page.getByLabel("Unique armor weight").fill("8");
+  await page.getByLabel("Unique armor note").fill("Glows near Dreadbloods.");
+  await page.getByRole("button", { name: "Add and equip unique armor" }).click();
+  if (await page.locator('[data-f="ac"]').inputValue() !== "14") throw new Error("Unique found armor did not recalculate AC");
+  if (!/Moon Plate/.test(await page.getByTestId("sheet-main-armor").locator("option:checked").textContent())) throw new Error("Unique found armor was not equipped");
   await page.screenshot({ path: "screenshots/character-automation-desktop.png", fullPage: true });
 
   await page.getByRole("button", { name: "Back" }).first().click();
