@@ -39,13 +39,9 @@
   /* anchor for the step-guidance popover */
   position: relative;
 }
-.papersheet-toolbar h1 {
-  font-family: "Cinzel", serif;
-  font-weight: 900;
-  font-size: 17px;
-  letter-spacing: 0.14em;
-  margin: 0 auto 0 0;
-  color: #e6ddc8;
+
+.papersheet-toolbar-primary {
+  display: contents;
 }
 .papersheet-toolbar button,
 .papersheet-toolbar a {
@@ -1742,12 +1738,22 @@
     margin-bottom: 18px;
   }
 
-  /* toolbar: title on its own line, controls wrap beneath */
-  .papersheet-toolbar h1 {
-    flex-basis: 100%;
-    order: -1;
-    text-align: center;
-    font-size: 13px;
+  .papersheet-toolbar .savemsg {
+    order: 4;
+    width: 100%;
+    min-height: 14px;
+    text-align: left;
+  }
+
+  .papersheet-toolbar-primary {
+    display: flex;
+    flex: 0 0 100%;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .papersheet-toolbar-primary .character-view-switch {
+    margin-left: auto;
   }
 
   /* every side-by-side grid collapses to one column */
