@@ -119,7 +119,7 @@ function VitalsCard({ card }: { card: HunterCard }) {
       {hp != null && hpMax != null ? (
         <Bar label="HP" value={hp} max={hpMax} color="var(--blood-bright)" />
       ) : (
-        <p className="faint" style={{ margin: "8px 0 0" }}>Vitals tracked on the paper sheet.</p>
+        <p className="faint" style={{ margin: "8px 0 0" }}>Vitals tracked on the shared character sheet.</p>
       )}
       {san != null && sanMax != null && (
         <Bar label="Sanity" value={san} max={sanMax} color="#7c5cff" sub={`Madness ${Math.max(0, sanMax - san)}`} />
