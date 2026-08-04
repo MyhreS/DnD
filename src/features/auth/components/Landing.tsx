@@ -40,7 +40,7 @@ export function Landing() {
       </p>
 
       <div className="derived-grid">
-        <Feature title="Forge a hunter" body="Six classes & subclasses on a paper character sheet — six pages, guided steps, saved as you write." />
+        <Feature title="Forge a hunter" body="A guided app view with automatic rules, plus the original six-page paper sheet — one character, saved as you play." />
         <Feature title="Play live" body="A lobby, DM phases, and live HP / Sanity / Blood Tinge." />
         <Feature title="Trade & survive" body="Swap gear, claim loot from the fallen, risk permadeath." />
         <Feature title="Run a table" body="DM tools: party status, items overview, trades, full control." />

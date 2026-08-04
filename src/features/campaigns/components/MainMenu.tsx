@@ -29,7 +29,7 @@ export function MainMenu() {
 
       <p className="eyebrow" style={{ marginTop: 22, marginBottom: 8 }}>Find your way</p>
       <div className="stack" style={{ gap: 10 }}>
-        <GuideCard to="/character" title="Hunters" body="Forge new hunters and manage the ones you have — a six-page paper sheet, saved as you write." />
+        <GuideCard to="/character" title="Hunters" body="Forge and manage hunters in the guided app view or the original paper sheet — both stay synchronized." />
         <GuideCard to="/codex" title="Codex" body="Search the handbook, D&D rules, class boards, rites, character guidance, and the Player's Game Card in one place—with the source shown for every answer." />
         <GuideCard to="/profile" title="Profile" body="Your account and settings — tap your initial in the corner." />
       </div>
