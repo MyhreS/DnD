@@ -5,13 +5,13 @@ import {
   updateDoc,
   deleteDoc,
   deleteField,
-  addDoc,
   getDocs,
   onSnapshot,
   query,
   where,
   serverTimestamp,
   increment,
+  writeBatch,
   type Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -132,14 +132,17 @@ export async function archiveCharacter(
   reason: ArchivedCharacter["reason"],
   gameId: string | null,
 ): Promise<void> {
-  await addDoc(archiveCol, {
+  const archiveRef = doc(archiveCol);
+  const batch = writeBatch(db);
+  batch.set(archiveRef, {
     originalUid: card.ownerUid,
     gameId: gameId ?? null,
     reason,
     archivedAt: serverTimestamp(),
     card,
   });
-  await deleteDoc(doc(charsCol, card.id));
+  batch.delete(doc(charsCol, card.id));
+  await batch.commit();
 }
 
 export async function recoverCharacter(a: ArchivedCharacter): Promise<void> {

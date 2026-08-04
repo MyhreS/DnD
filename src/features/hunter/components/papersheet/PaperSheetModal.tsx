@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { PaperSheet } from "./PaperSheet";
 import { StepGuidance } from "./StepGuidance";
@@ -9,6 +9,8 @@ import { usePaperSheetFocus } from "../../hooks/usePaperSheetFocus";
 import type { HunterCard } from "@/types";
 import { automationFor } from "../../lib/characterAutomation";
 import { AppCharacterSheet } from "../appsheet/AppCharacterSheet";
+import { sheetMirror } from "../../lib/papersheet";
+import { CharacterDeleteDialog } from "./CharacterDeleteDialog";
 
 const STEPS = [1, 2, 3, 4, 5] as const;
 type CharacterViewMode = "app" | "paper";
@@ -23,15 +25,17 @@ const VIEW_KEY = "cs-character-sheet-view";
 export function PaperSheetModal({
   card,
   onClose,
+  onDelete,
   readOnly = false,
   create = false,
 }: {
   card: HunterCard;
   onClose: () => void;
+  onDelete?: (card: HunterCard) => Promise<boolean>;
   readOnly?: boolean;
   create?: boolean;
 }) {
-  const { data, setField, setFields, workingCard, saveMsg } = usePaperSheetAutosave(card, { readOnly, create });
+  const { data, setField, setFields, workingCard, saveMsg, flushChanges } = usePaperSheetAutosave(card, { readOnly, create });
   // Guides default OFF; the create flow opens with them ON (initial value only —
   // `create` intentionally flips to false once autosave lands the draft).
   const [showSteps, setShowSteps] = useState(create);
@@ -41,6 +45,13 @@ export function PaperSheetModal({
     return saved === "paper" || saved === "app" ? saved : "app";
   });
   const [appEditPending, setAppEditPending] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteConfirmation, setDeleteConfirmation] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const mirrored = sheetMirror(data);
+  const characterName = mirrored.name || workingCard.name?.trim() || "";
+  const deletePhrase = characterName || "DELETE";
   const setView = (next: CharacterViewMode) => {
     if (view === "app" && next !== view && appEditPending && !window.confirm("Discard the previewed changes and switch views?")) return;
     setAppEditPending(false);
@@ -48,8 +59,44 @@ export function PaperSheetModal({
     window.localStorage.setItem(VIEW_KEY, next);
   };
   const closeEditor = () => {
+    if (deleteOpen) {
+      if (!deleting) setDeleteOpen(false);
+      return;
+    }
     if (view === "app" && appEditPending && !window.confirm("Discard the previewed changes and close the character?")) return;
     onClose();
+  };
+  const openDelete = () => {
+    setDeleteConfirmation("");
+    setDeleteError("");
+    setDeleteOpen(true);
+  };
+  const cancelDelete = () => {
+    if (deleting) return;
+    setDeleteOpen(false);
+    setDeleteConfirmation("");
+    setDeleteError("");
+  };
+  const confirmDelete = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!onDelete || deleting || deleteConfirmation.trim() !== deletePhrase) return;
+    setDeleting(true);
+    setDeleteError("");
+
+    // Make sure the archive contains the latest typing and no debounced save
+    // tries to write to the document after it has been removed.
+    const saved = await flushChanges();
+    if (!saved) {
+      setDeleting(false);
+      setDeleteError("Your latest changes could not be saved. Nothing was deleted; try again.");
+      return;
+    }
+
+    const ok = await onDelete({ ...workingCard, ...sheetMirror(data), sheet: data });
+    if (!ok) {
+      setDeleting(false);
+      setDeleteError("The character could not be deleted. Nothing was removed; try again.");
+    }
   };
   // Which creation step (1–5) is spotlighted on the sheet; null = none.
   const [activeStep, setActiveStep] = useState<number | null>(null);
@@ -112,6 +159,11 @@ export function PaperSheetModal({
                 <button type="button" className="ghost" onClick={() => window.print()}>Print</button>
               </>
             )}
+            {onDelete && !create && (
+              <button type="button" className="ghost character-delete-trigger" onClick={openDelete}>
+                Delete character
+              </button>
+            )}
           </>
         )}
       </div>
@@ -129,6 +181,18 @@ export function PaperSheetModal({
           manualOverrides={automationState?.manualOverrides}
           card={workingCard}
           setFields={setFields}
+        />
+      )}
+      {deleteOpen && (
+        <CharacterDeleteDialog
+          characterName={characterName}
+          deletePhrase={deletePhrase}
+          confirmation={deleteConfirmation}
+          deleting={deleting}
+          error={deleteError}
+          onConfirmationChange={setDeleteConfirmation}
+          onCancel={cancelDelete}
+          onConfirm={(event) => void confirmDelete(event)}
         />
       )}
     </div>,

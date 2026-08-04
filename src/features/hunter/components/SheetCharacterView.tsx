@@ -17,8 +17,8 @@ export function SheetCharacterView({
   autoOpen?: boolean;
   /** Called when the popup closes, so the caller can stop re-auto-opening. */
   onDismiss?: () => void;
-  /** When given, offers deletion (main-menu Hunters only). */
-  onDelete?: () => Promise<boolean> | void;
+  /** When given, offers deletion inside the editor (main-menu Hunters only). */
+  onDelete?: (card: HunterCard) => Promise<boolean>;
 }) {
   const [open, setOpen] = useState(autoOpen);
   const cls = cardClassName(card);
@@ -27,11 +27,6 @@ export function SheetCharacterView({
     setOpen(false);
     onDismiss?.();
   }
-  async function del() {
-    if (!window.confirm(`Delete ${card.name || "this hunter"}? The DM can recover it during a live game.`)) return;
-    await onDelete?.();
-  }
-
   return (
     <>
       <div className="card">
@@ -45,13 +40,8 @@ export function SheetCharacterView({
         <button type="button" className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => setOpen(true)}>
           Open character
         </button>
-        {onDelete && (
-          <button type="button" className="btn btn-ghost btn-sm" style={{ marginTop: 8 }} onClick={() => void del()}>
-            Delete hunter
-          </button>
-        )}
       </div>
-      {open && <PaperSheetModal card={card} onClose={close} />}
+      {open && <PaperSheetModal card={card} onClose={close} onDelete={onDelete} />}
     </>
   );
 }

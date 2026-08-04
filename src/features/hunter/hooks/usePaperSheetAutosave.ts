@@ -68,8 +68,8 @@ export function usePaperSheetAutosave(
     latestCard.current = workingCard;
   }, [card, workingCard]);
 
-  const persist = useCallback(async () => {
-    if (dirty.current.size === 0 && Object.keys(pendingCard.current).length === 0) return;
+  const persist = useCallback(async (): Promise<boolean> => {
+    if (dirty.current.size === 0 && Object.keys(pendingCard.current).length === 0) return true;
     const dirtyKeys = Array.from(dirty.current);
     const seedingNow = seeding.current;
     const snapshot = latest.current;
@@ -103,13 +103,14 @@ export function usePaperSheetAutosave(
       for (const [key, value] of Object.entries(structured)) {
         if (inFlightCard.current[key as keyof HunterCard] === value) delete inFlightCard.current[key as keyof HunterCard];
       }
-      if (!mounted.current) return;
+      if (!mounted.current) return true;
       setSaveMsg("Saved");
       if (savedTimer.current) window.clearTimeout(savedTimer.current);
       savedTimer.current = window.setTimeout(() => {
         savedTimer.current = null;
         if (mounted.current) setSaveMsg((m) => (m === "Saved" ? "" : m));
       }, 1600);
+      return true;
     } catch (err) {
       for (const k of dirtyKeys) dirty.current.add(k);
       pendingCard.current = { ...structured, ...pendingCard.current };
@@ -118,15 +119,16 @@ export function usePaperSheetAutosave(
       }
       console.error("Failed to save the character sheet", err);
       if (mounted.current) setSaveMsg("Save failed");
+      return false;
     }
   }, []);
 
-  const flush = useCallback(() => {
+  const flush = useCallback(async (): Promise<boolean> => {
     if (timer.current !== null) {
       window.clearTimeout(timer.current);
       timer.current = null;
     }
-    void persist();
+    return persist();
   }, [persist]);
 
   const setField = useCallback(
@@ -223,12 +225,13 @@ export function usePaperSheetAutosave(
     const onVisibility = () => {
       if (document.visibilityState === "hidden") flush();
     };
-    window.addEventListener("pagehide", flush);
+    const onPageHide = () => void flush();
+    window.addEventListener("pagehide", onPageHide);
     document.addEventListener("visibilitychange", onVisibility);
     return () => {
-      window.removeEventListener("pagehide", flush);
+      window.removeEventListener("pagehide", onPageHide);
       document.removeEventListener("visibilitychange", onVisibility);
-      flush();
+      void flush();
     };
   }, [readOnly, flush]);
 
@@ -253,5 +256,5 @@ export function usePaperSheetAutosave(
   // Read-only viewers follow the live doc; editors keep their working copy.
   // Sheet-less cards read through the derived fallback here too.
   const data = readOnly ? (card.sheet ?? deriveSheetFromCard(card)) : local;
-  return { data, setField, setFields, workingCard, saveMsg };
+  return { data, setField, setFields, workingCard, saveMsg, flushChanges: flush };
 }

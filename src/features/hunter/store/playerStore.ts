@@ -39,8 +39,8 @@ interface PlayerState {
    * save from a stale snapshot silently clobbers concurrent DM writes
    * (insight/level grants, transformation records, item awards). */
   save: (card: HunterCard) => Promise<boolean>;
-  /** Archive (soft-delete) the selected character — DM-recoverable for the session. */
-  archive: (gameId: string | null) => Promise<boolean>;
+  /** Archive (soft-delete) a character — DM-recoverable for the session. */
+  archive: (gameId: string | null, currentCard?: HunterCard) => Promise<boolean>;
 }
 
 export const usePlayerStore = create<PlayerState>((set, get) => ({
@@ -108,13 +108,16 @@ export const usePlayerStore = create<PlayerState>((set, get) => ({
     }
   },
 
-  archive: async (gameId: string | null) => {
-    const card = get().card;
+  archive: async (gameId: string | null, currentCard?: HunterCard) => {
+    // The open editor may contain a just-saved sheet snapshot that is newer
+    // than the store subscription. Archive that exact snapshot when supplied.
+    const card = currentCard ?? get().card;
     if (!card) return true;
     const dropLocal = (s: PlayerState) => {
       const characters = s.characters.filter((c) => c.id !== card.id);
       const selId = characters[0]?.id ?? null;
       if (selId) localStorage.setItem(SEL_KEY, selId);
+      else localStorage.removeItem(SEL_KEY);
       return { characters, selectedId: selId, card: pick(characters, selId) };
     };
     if (isPreviewActive()) {

@@ -45,8 +45,8 @@ export function CharacterPage() {
     select(id);
     setOpenId(id);
   }
-  async function deleteOpen() {
-    const ok = await archive(null); // archives the selected (== opened) hunter
+  async function deleteOpen(currentCard: HunterCard) {
+    const ok = await archive(null, currentCard);
     if (ok) setOpenId(null);
     return ok;
   }
