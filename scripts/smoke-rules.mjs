@@ -118,18 +118,18 @@ await step("DM creates standalone session and invitation", async () => {
   await setDoc(gameRef, {
     campaignId: null, sessionId: null, title: "Standalone Smoke", dmUid, dmName: "Agent DM",
     participantUids: [plUid], status: "lobby", phase: "exploration", location: "wild",
+    participantRoster: [{
+      uid: plUid, characterId: `smoke-${plUid}`, playerName: "Agent Player", name: "Player Hunter",
+      classId: "stalker", level: 1, role: "player", joinedAt: Date.now(), lastSeen: Date.now(),
+    }],
     clockRunning: false, clockStartedAt: null, clockElapsedMs: 0, createdAt: serverTimestamp(),
-  });
-  await setDoc(doc(dm.db, "games", standaloneGameId, "participants", plUid), {
-    uid: plUid, characterId: `smoke-${plUid}`, playerName: "Agent Player", name: "Player Hunter",
-    classId: "stalker", level: 1, role: "player", joinedAt: serverTimestamp(), lastSeen: serverTimestamp(),
   });
 });
 await step("Invited player discovers standalone session", async () => {
   const snap = await getDocs(query(collection(pl.db, "games"), where("participantUids", "array-contains", plUid)));
-  if (!snap.docs.some((item) => item.id === standaloneGameId)) throw new Error("standalone-session-not-visible");
-  const roster = await getDocs(collection(pl.db, "games", standaloneGameId, "participants"));
-  if (roster.empty) throw new Error("standalone-roster-not-visible");
+  const session = snap.docs.find((item) => item.id === standaloneGameId);
+  if (!session) throw new Error("standalone-session-not-visible");
+  if (session.data().participantRoster?.[0]?.name !== "Player Hunter") throw new Error("standalone-roster-not-visible");
 });
 await step("DM adds enemy and invited player sees damage", async () => {
   const monster = await addDoc(collection(dm.db, "games", standaloneGameId, "combatants"), {
