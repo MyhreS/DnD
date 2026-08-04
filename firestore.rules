@@ -45,9 +45,6 @@ service cloud.firestore {
     function gameData(gid) {
       return get(/databases/$(database)/documents/games/$(gid)).data;
     }
-    function gameDataAfter(gid) {
-      return getAfter(/databases/$(database)/documents/games/$(gid)).data;
-    }
     function canReadGameData(data) {
       return isUser() && (
         data.dmUid == request.auth.uid
@@ -59,7 +56,7 @@ service cloud.firestore {
       return canReadGameData(gameData(gid));
     }
     function isGameDM(gid) {
-      return isUser() && gameDataAfter(gid).dmUid == request.auth.uid;
+      return isUser() && gameData(gid).dmUid == request.auth.uid;
     }
     function sessionCampaignId(sid) {
       return get(/databases/$(database)/documents/sessions/$(sid)).data.campaignId;

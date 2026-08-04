@@ -166,8 +166,7 @@ function participantData(card: HunterCard) {
 export async function createGameSession(input: CreateGameInput, hunters: HunterCard[]): Promise<string> {
   const gameRef = doc(gamesCol);
   const unique = [...new Map(hunters.map((hunter) => [hunter.ownerUid, hunter])).values()];
-  const batch = writeBatch(db);
-  batch.set(gameRef, {
+  await setDoc(gameRef, {
     campaignId: input.campaignId ?? null,
     sessionId: input.sessionId ?? null,
     title: input.title.trim().slice(0, 80),
@@ -188,8 +187,18 @@ export async function createGameSession(input: CreateGameInput, hunters: HunterC
     endedPhase: null,
     endedLocation: null,
   });
-  unique.forEach((hunter) => batch.set(doc(participantsCol(gameRef.id), hunter.ownerUid), participantData(hunter)));
-  await batch.commit();
+  if (unique.length > 0) {
+    const batch = writeBatch(db);
+    unique.forEach((hunter) => batch.set(doc(participantsCol(gameRef.id), hunter.ownerUid), participantData(hunter)));
+    try {
+      await batch.commit();
+    } catch (error) {
+      // Do not leave a half-created session if its denormalized roster could
+      // not be written after the secured parent document was established.
+      await deleteDoc(gameRef).catch(() => undefined);
+      throw error;
+    }
+  }
   return gameRef.id;
 }
 

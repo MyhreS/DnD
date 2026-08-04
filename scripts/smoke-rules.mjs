@@ -12,7 +12,7 @@ import { initializeApp } from "firebase/app";
 import { getAuth, signInWithCustomToken } from "firebase/auth";
 import {
   getFirestore, doc, setDoc, addDoc, updateDoc, getDoc, getDocs,
-  collection, query, where, arrayUnion, serverTimestamp, writeBatch,
+  collection, query, where, arrayUnion, serverTimestamp,
 } from "firebase/firestore";
 
 const sa = process.env.AGENT_TEST_SA;
@@ -112,20 +112,18 @@ await step("Outsider is blocked (negative)", async () => {
 });
 
 // --- Standalone session invitations (the /game page) ---
-await step("DM creates standalone session and invitation atomically", async () => {
+await step("DM creates standalone session and invitation", async () => {
   const gameRef = doc(collection(dm.db, "games"));
   standaloneGameId = gameRef.id;
-  const batch = writeBatch(dm.db);
-  batch.set(gameRef, {
+  await setDoc(gameRef, {
     campaignId: null, sessionId: null, title: "Standalone Smoke", dmUid, dmName: "Agent DM",
     participantUids: [plUid], status: "lobby", phase: "exploration", location: "wild",
     clockRunning: false, clockStartedAt: null, clockElapsedMs: 0, createdAt: serverTimestamp(),
   });
-  batch.set(doc(dm.db, "games", standaloneGameId, "participants", plUid), {
+  await setDoc(doc(dm.db, "games", standaloneGameId, "participants", plUid), {
     uid: plUid, characterId: `smoke-${plUid}`, playerName: "Agent Player", name: "Player Hunter",
     classId: "stalker", level: 1, role: "player", joinedAt: serverTimestamp(), lastSeen: serverTimestamp(),
   });
-  await batch.commit();
 });
 await step("Invited player discovers standalone session", async () => {
   const snap = await getDocs(query(collection(pl.db, "games"), where("participantUids", "array-contains", plUid)));
