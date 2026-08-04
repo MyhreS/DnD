@@ -1,5 +1,6 @@
-import { F, Ta, St } from "./sheetPrimitives";
+import { St } from "./sheetPrimitives";
 import { Info } from "./InfoDot";
+import { AutomatedExtraArmorField, AutomatedMainArmorField } from "./SheetAutomationControls";
 
 /** Page 2's paper-doll: the hunter line-art with dashed leader lines to the
  * five gear plaques (head gear, scarf, main armor, gloves, boots). */
@@ -61,11 +62,11 @@ export function HunterFigure() {
           <circle cx="546" cy="1006" r="9" />
         </g>
       </svg>
-      <div className="plaque pl-head" data-step="4"><span className="plbl">HEAD GEAR <St n={4} /> <Info k="extras" /></span><F f="headGear" /></div>
-      <div className="plaque pl-scarf" data-step="4"><span className="plbl">SCARF <St n={4} /> <Info k="extras" side="left" /></span><F f="scarf" /></div>
-      <div className="plaque pl-gloves" data-step="4"><span className="plbl">GLOVES <St n={4} /> <Info k="extras" /></span><F f="gloves" /></div>
-      <div className="plaque pl-main" data-step="4"><span className="plbl">MAIN ARMOR <St n={4} /> <Info k="mainArmor" side="left" /></span><Ta rows={3} f="mainArmor" /></div>
-      <div className="plaque pl-boots" data-step="4"><span className="plbl">BOOTS <St n={4} /> <Info k="extras" side="left" /></span><F f="boots" /></div>
+      <div className="plaque pl-head" data-step="4"><span className="plbl">HEAD GEAR <St n={4} /> <Info k="extras" /></span><AutomatedExtraArmorField subcategory="Head Gear" field="headGear" /></div>
+      <div className="plaque pl-scarf" data-step="4"><span className="plbl">SCARF <St n={4} /> <Info k="extras" side="left" /></span><AutomatedExtraArmorField subcategory="Scarf" field="scarf" /></div>
+      <div className="plaque pl-gloves" data-step="4"><span className="plbl">GLOVES <St n={4} /> <Info k="extras" /></span><AutomatedExtraArmorField subcategory="Gloves" field="gloves" /></div>
+      <div className="plaque pl-main" data-step="4"><span className="plbl">MAIN ARMOR <St n={4} /> <Info k="mainArmor" side="left" /></span><AutomatedMainArmorField /></div>
+      <div className="plaque pl-boots" data-step="4"><span className="plbl">BOOTS <St n={4} /> <Info k="extras" side="left" /></span><AutomatedExtraArmorField subcategory="Boots" field="boots" /></div>
     </div>
   );
 }

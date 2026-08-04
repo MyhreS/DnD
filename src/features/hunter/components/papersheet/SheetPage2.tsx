@@ -1,7 +1,7 @@
 import { F, Ta, Chk, St } from "./sheetPrimitives";
 import { HunterFigure } from "./HunterFigure";
 import { Info } from "./InfoDot";
-import { ArmorAutomation } from "./SheetAutomationControls";
+import { AutomatedAddonArmorRow, UniqueArmorControl } from "./SheetAutomationControls";
 
 // Six rows: five is the normal maximum, and a Balanced Fit Main Armor lets
 // one Add-on not count toward it (handbook Armor Types).
@@ -20,7 +20,6 @@ export function SheetPage2() {
     <div className="page">
       <div className="blue-rule" style={{ marginTop: 0 }} />
       <div className="sec-title">ARMOR &amp; EQUIPMENT</div>
-      <ArmorAutomation />
       <div className="p2-grid">
         {/* left column: armor */}
         <div>
@@ -48,15 +47,18 @@ export function SheetPage2() {
 
           <HunterFigure />
 
-          <h2 className="sec" style={{ marginTop: "4mm" }} data-step="4">ADD-ON ARMOR <St n={4} /> <Info k="addons" /></h2>
+          <h2 className="sec armor-heading" style={{ marginTop: "4mm" }} data-step="4">
+            <span>ADD-ON ARMOR <St n={4} /> <Info k="addons" /></span>
+            <small>{ADDONS.length - 1} worn pieces · 1 Balanced Fit slot</small>
+          </h2>
           <div className="addons">
-            {ADDONS.map((i) => (
+            {ADDONS.map((i, index) => (
               <div className="addon-row" key={i} data-step="4">
-                <div className="frame"><F f={`addon${i}`} /></div>
-                <span className="studs"><Chk f={`studs${i}`} /> STUDS <St n={4} /></span>
+                <AutomatedAddonArmorRow index={index} />
               </div>
             ))}
           </div>
+          <UniqueArmorControl />
 
           <div className="coins" data-step="2">
             <span className="lbl">COINS <St n={2} /> <Info k="coins" side="up" /></span>
