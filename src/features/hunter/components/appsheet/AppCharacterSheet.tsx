@@ -33,10 +33,10 @@ export function AppCharacterSheet({
       <div className="character-app-sheet" data-testid="app-character-sheet">
         <main className="appsheet-workspace">
           <AppOverviewSection model={model} />
-          <AppAbilitiesSection model={model} />
           <AppCombatSection model={model} />
-          <AppGearSection model={model} />
           <AppFeaturesSection model={model} />
+          <AppAbilitiesSection model={model} />
+          <AppGearSection model={model} />
           <AppNotesSection model={model} />
         </main>
         {!readOnly && <AppEditTray />}

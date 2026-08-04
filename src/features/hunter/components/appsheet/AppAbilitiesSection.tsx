@@ -30,11 +30,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
     && featRemaining === 0;
 
   return (
-    <AppSection
-      eyebrow="Rules engine"
-      title="Abilities & skills"
-      intro="Choose the inputs. Modifiers, saves, proficiencies, and skill bonuses are produced from those choices."
-    >
+    <AppSection title="Abilities & skills">
       {!setupComplete && (
         <AppPanel title="Build ability scores" aside={<span className={pointsLeft === 0 ? "appsheet-complete" : "appsheet-incomplete"}>{pointsLeft ?? "Invalid"} points left</span>}>
           <AppSelect label="Ability method" value={automation.mode} disabled={model.readOnly} onChange={(event) => automation.switchMode(event.target.value as BuyMode)}>

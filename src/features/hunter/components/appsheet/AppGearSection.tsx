@@ -59,11 +59,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
   }
 
   return (
-    <AppSection
-      eyebrow="Handbook inventory"
-      title="Gear & carrying"
-      intro="Choose known items from the catalog. Quantity, weight, body slots, and weapon facts update without rewriting equipment rows."
-    >
+    <AppSection title="Gear & carrying">
       <div className="appsheet-combat-strip">
         <DerivedValue label="Gold" value={card.coins ?? 0} reason="Saved gold pieces; coins do not consume carrying slots." />
         <DerivedValue label="Carried weight" value={result.fields.weight} reason={result.reasons.weight} />
@@ -155,9 +151,9 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
               return (
                 <div key={item.id}>
                   <span><b>{item.name}</b>{qty > 1 ? ` ×${qty}` : ""}</span>
-                  <span>{custom?.damage || facts?.damage || "—"}</span>
-                  <span>{custom?.weaponNotes || facts?.properties || item.note || "—"}</span>
-                  <span>{facts?.mastery || "—"}</span>
+                  <span><small className="appsheet-weapon-label">Damage</small>{custom?.damage || facts?.damage || "—"}</span>
+                  <span><small className="appsheet-weapon-label">Properties</small>{custom?.weaponNotes || facts?.properties || item.note || "—"}</span>
+                  <span><small className="appsheet-weapon-label">Mastery</small>{facts?.mastery || "—"}</span>
                 </div>
               );
             })}

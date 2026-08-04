@@ -14,11 +14,7 @@ export function AppNotesSection({ model }: { model: AppSheetModel }) {
   const notes = sheetText(model.data, "pageNotes") || card.notes || "";
 
   return (
-    <AppSection
-      eyebrow="Player record"
-      title="Notes"
-      intro="Free writing lives here because memories, plans, and table rulings cannot be safely inferred from a rules table."
-    >
+    <AppSection title="Notes">
       <div className="appsheet-notes-layout single">
         <AppPanel title="Campaign notes" className="appsheet-notes-panel">
           <DecisionField label="Notes shared by both character views">

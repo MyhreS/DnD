@@ -24,7 +24,7 @@ function numeric(value: string, fallback = 0): number {
 export function AppOverviewSection({ model }: { model: AppSheetModel }) {
   const automation = useCharacterAutomation();
   const editStage = useAppEditStage();
-  const { card, result, klass, background } = automation;
+  const { card, result, klass, background, state } = automation;
   const subclassOptions = klass?.subclasses ?? [];
   const pending = Object.values(result.pending).filter(Boolean);
   const name = sheetText(model.data, "name") || card.name;
@@ -32,31 +32,61 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
   const sanityCurrent = sheetText(model.data, "sanityCur") || String(card.sanity ?? result.fields.sanityMax ?? 0);
 
   return (
-    <AppSection
-      eyebrow="Hunter dossier"
-      title={name || "Unnamed hunter"}
-      intro="The decisions here drive the rest of the character. Calculated values explain exactly what set them."
-    >
+    <AppSection>
+      <div className="appsheet-character-profile">
+        <input
+          className="appsheet-character-name"
+          data-f="name"
+          data-testid="appsheet-name"
+          aria-label="Hunter name"
+          value={name}
+          disabled={model.readOnly}
+          placeholder="Unnamed hunter"
+          onChange={(event) => model.setFields({ name: event.target.value }, { name: event.target.value })}
+        />
+        <div className="appsheet-character-meta" aria-label="Character summary">
+          <span>{klass?.title ?? "No class"}</span>
+          <span>Level {editStage.previewCard.level}</span>
+          <span>{background?.name ?? "No background"}</span>
+        </div>
+      </div>
+
       {pending.length > 0 && (
         <PendingNotice>
           <b>{pending.length} character {pending.length === 1 ? "decision" : "decisions"} remaining</b>
-          <p>Open Abilities &amp; skills or Features to complete the highlighted choices.</p>
+          <p>Complete the highlighted choices under Features or Abilities &amp; skills below.</p>
         </PendingNotice>
       )}
 
-      <div className="appsheet-overview-grid">
-        <AppPanel title="Identity" className="appsheet-identity-panel">
-          <div className="appsheet-form-grid">
-            <DecisionField label="Hunter name">
-              <input
-                data-f="name"
-                data-testid="appsheet-name"
-                value={name}
-                disabled={model.readOnly}
-                placeholder="Name your hunter"
-                onChange={(event) => model.setFields({ name: event.target.value }, { name: event.target.value })}
-              />
+      <div className={`appsheet-overview-layout ${state.setupComplete === true ? "" : "setup-incomplete"}`.trim()}>
+        <AppPanel title="Current state" className="appsheet-current-state">
+          <div className="appsheet-vital-editors">
+            <DecisionField label="Current HP">
+              <NumericStepper label="HP" value={editStage.previewCard.currentHp ?? numeric(hpCurrent)} disabled={model.readOnly} onChange={editStage.stageHp} />
+              <small>Maximum {result.fields.hpMax}</small>
             </DecisionField>
+            <DecisionField label="Current sanity">
+              <NumericStepper label="sanity" value={editStage.previewCard.sanity ?? numeric(sanityCurrent)} disabled={model.readOnly} onChange={editStage.stageSanity} />
+              <small>Maximum {result.fields.sanityMax}</small>
+            </DecisionField>
+            <DecisionField label="Insight">
+              <NumericStepper label="Insight" value={card.insight ?? numeric(sheetText(model.data, "insight"))} disabled={model.readOnly} onChange={(insight) => model.setFields({ insight: String(insight) }, { insight })} />
+            </DecisionField>
+            <DecisionField label="Transformation">
+              <NumericStepper label="Transformation" value={editStage.previewCard.transformationLevel ?? 0} max={10} disabled={model.readOnly} onChange={editStage.stageTransformation} />
+              <small>Reducing it clears active transformations.</small>
+            </DecisionField>
+          </div>
+          <div className="appsheet-metric-grid">
+            <DerivedValue label="Armor class" value={result.fields.ac} reason={result.reasons.ac} testId="appsheet-ac" />
+            <DerivedValue label="Speed" value={result.fields.speed} reason={result.reasons.speed} />
+            <DerivedValue label="Initiative" value={result.fields.initiative} reason={result.reasons.initiative} />
+            <DerivedValue label="Passive perception" value={result.fields.passivePerception} reason={result.reasons.passivePerception} />
+          </div>
+        </AppPanel>
+
+        <AppPanel title="Character build" className="appsheet-identity-panel">
+          <div className="appsheet-form-grid">
             <AppSelect
               label="Class"
               value={card.classId}
@@ -107,37 +137,7 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
           )}
         </AppPanel>
 
-        <AppPanel title="At a glance">
-          <div className="appsheet-vital-editors">
-            <DecisionField label="Current HP">
-              <NumericStepper label="HP" value={editStage.previewCard.currentHp ?? numeric(hpCurrent)} disabled={model.readOnly} onChange={editStage.stageHp} />
-              <small>Changes are previewed before saving.</small>
-            </DecisionField>
-            <DecisionField label="Current sanity">
-              <NumericStepper label="sanity" value={editStage.previewCard.sanity ?? numeric(sanityCurrent)} disabled={model.readOnly} onChange={editStage.stageSanity} />
-              <small>Changes are previewed before saving.</small>
-            </DecisionField>
-            <DecisionField label="Insight">
-              <NumericStepper label="Insight" value={card.insight ?? numeric(sheetText(model.data, "insight"))} disabled={model.readOnly} onChange={(insight) => model.setFields({ insight: String(insight) }, { insight })} />
-            </DecisionField>
-            <DecisionField label="Transformation">
-              <NumericStepper label="Transformation" value={editStage.previewCard.transformationLevel ?? 0} max={10} disabled={model.readOnly} onChange={editStage.stageTransformation} />
-              <small>Reductions preview and clear active transformations.</small>
-            </DecisionField>
-          </div>
-          <div className="appsheet-metric-grid">
-            <DerivedValue label="Maximum HP" value={result.fields.hpMax} reason={result.reasons.hpMax} />
-            <DerivedValue label="Maximum sanity" value={result.fields.sanityMax} reason={result.reasons.sanityMax} />
-            <DerivedValue label="Armor class" value={result.fields.ac} reason={result.reasons.ac} testId="appsheet-ac" />
-            <DerivedValue label="Speed" value={result.fields.speed} reason={result.reasons.speed} />
-            <DerivedValue label="Initiative" value={result.fields.initiative} reason={result.reasons.initiative} />
-            <DerivedValue label="Passive perception" value={result.fields.passivePerception} reason={result.reasons.passivePerception} />
-          </div>
-        </AppPanel>
-      </div>
-
-      <div className="appsheet-overview-grid secondary">
-        <AppPanel title="Battle resources">
+        <AppPanel title="Battle resources" className="appsheet-battle-resources">
           <div className="appsheet-inline-fields">
             {([
               ["hpTemp", "Temporary HP", 0],
@@ -155,7 +155,7 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
             <label><input type="checkbox" checked={sheetBool(model.data, "insane")} disabled={model.readOnly} onChange={(event) => model.setField("insane", event.target.checked)} /> Insane</label>
           </div>
         </AppPanel>
-        <AppPanel title="Death saves">
+        <AppPanel title="Death saves" className="appsheet-death-panel">
           <div className="appsheet-death-saves">
             {(["S", "F"] as const).map((kind) => (
               <div key={kind}>

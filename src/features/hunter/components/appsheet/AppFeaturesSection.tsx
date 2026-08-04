@@ -25,11 +25,7 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
   const pending = Object.values(result.pending).filter(Boolean);
 
   return (
-    <AppSection
-      eyebrow="Class progression"
-      title="Features & choices"
-      intro="Your class and level decide what appears. The remaining controls only ask for choices the rules cannot make for you."
-    >
+    <AppSection title="Features & choices">
       {!klass && <PendingNotice><b>Choose a class on Overview</b><p>Class features and level choices will appear here automatically.</p></PendingNotice>}
 
       {klass && (
@@ -73,7 +69,7 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
           <div className="appsheet-pending-list">
             {pending.map((choice) => choice && <div key={choice.label}><span><b>{choice.label}</b><small>{choice.reason}</small></span><strong>{choice.remaining} left</strong></div>)}
           </div>
-          <AutoReason reason="Only decisions with finite, verified options are shown as selectors. Open Abilities & skills for creation choices; subclass selection is on Overview." />
+          <AutoReason reason="Only decisions with finite, verified options are shown as selectors. Creation choices continue under Abilities & skills; subclass selection is under Overview." />
         </AppPanel>
       )}
 

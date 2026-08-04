@@ -40,11 +40,7 @@ export function AppCombatSection({ model }: { model: AppSheetModel }) {
   const foundAddonFull = found.armorCategory === "Add-on Armor" && (card.addonArmorIds?.length ?? 0) >= addonLimit;
 
   return (
-    <AppSection
-      eyebrow="Encounter readiness"
-      title="Combat & armor"
-      intro="Armor choices recalculate defense, weight, special rules, and training. The outputs below explain each result."
-    >
+    <AppSection title="Combat & armor">
       <div className="appsheet-combat-strip">
         <DerivedValue label="Armor class" value={result.fields.ac} reason={result.reasons.ac} testId="appsheet-combat-ac" />
         <DerivedValue label="Armor category" value={result.fields.armorCategory} reason={result.reasons.armorCategory} />
