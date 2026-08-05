@@ -26,6 +26,7 @@
   gap: clamp(24px, 4vw, 56px);
   align-items: start;
 }
+.game-layout.is-player-focus { display: block; width: min(760px, 100%); margin: 0 auto; }
 
 .game-sessions {
   position: sticky;
@@ -76,6 +77,72 @@
 .game-clock > span,
 .game-clock small { display: block; color: var(--ink-faint); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; }
 .game-clock strong { display: block; color: var(--gold); font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.15rem); font-variant-numeric: tabular-nums; line-height: 1.1; }
+
+.game-session-heading-compact { align-items: center; }
+.game-session-top-actions { display: flex; align-items: center; gap: 20px; }
+.game-clock-small { min-width: 0; }
+.game-clock-small strong { color: var(--ink-dim); font-family: var(--font-body); font-size: 0.82rem; letter-spacing: 0.06em; }
+.game-primary-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 0 4px; }
+.game-primary-actions .btn { width: auto; min-height: 38px; padding: 8px 13px; }
+.game-primary-actions .btn-danger { margin-left: auto; }
+
+.game-focus-panel { padding: clamp(28px, 6vw, 52px) 0; border-bottom: 1px solid var(--border); }
+.game-focus-panel > .eyebrow,
+.game-focus-panel header .eyebrow { margin: 0 0 5px; }
+.game-focus-panel h3 { margin: 0; font-family: var(--font-display); font-size: clamp(1.4rem, 4vw, 2rem); }
+.game-focus-panel > .game-text-button { margin-top: 12px; }
+.game-history-enemies { margin: 18px 0 0; color: var(--ink-dim); }
+.game-focus-panel header { display: flex; justify-content: space-between; gap: 16px; align-items: end; margin-bottom: 16px; }
+.game-focus-panel header > span { color: var(--ink-faint); font-size: 0.8rem; }
+.game-own-hunter { display: flex; justify-content: space-between; align-items: center; gap: 24px; }
+.game-own-hunter > div > span { display: block; margin-top: 5px; color: var(--ink-dim); }
+.game-own-hunter .btn { width: auto; flex: none; }
+.game-success { color: #6baa82; }
+.game-loot-list { display: grid; }
+.game-loot-list article { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 0; border-top: 1px solid var(--border); }
+.game-loot-list article:first-child { border-top: 0; }
+.game-loot-list article > div { min-width: 0; }
+.game-loot-list strong,
+.game-loot-list span,
+.game-loot-list small { display: block; }
+.game-loot-list article > div span,
+.game-loot-list article > div small,
+.game-loot-list article > span { color: var(--ink-faint); font-size: 0.8rem; }
+.game-loot-list .btn { width: auto; min-width: 76px; }
+.game-threat strong,
+.game-threat span { display: block; }
+.game-threat span { margin-top: 4px; color: var(--ink-faint); font-size: 0.82rem; }
+
+.game-dialog-backdrop { position: fixed; z-index: 1000; inset: 0; display: grid; place-items: center; padding: 18px; overflow-y: auto; background: rgba(5, 5, 8, 0.72); backdrop-filter: blur(5px); }
+.game-dialog { width: min(620px, 100%); max-height: min(760px, calc(100dvh - 36px)); overflow-y: auto; padding: clamp(20px, 4vw, 30px); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg-elev); box-shadow: var(--shadow); }
+.game-dialog > header { display: flex; align-items: start; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+.game-dialog h2 { margin: 2px 0 0; font-family: var(--font-display); font-size: 1.8rem; }
+.game-dialog-close { width: 36px; height: 36px; border: 0; background: transparent; color: var(--ink-dim); font: inherit; font-size: 1.7rem; cursor: pointer; }
+.game-dialog > footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 22px; }
+.game-dialog > footer .btn { width: auto; }
+.game-dialog-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 12px; }
+.game-dialog-wide { grid-column: 1 / -1; }
+.game-dialog textarea { min-height: 84px; resize: vertical; }
+.game-check,
+.game-inline-check { display: flex; align-items: center; gap: 8px; color: var(--ink-dim); font-size: 0.85rem; }
+.game-check { margin-top: 10px; }
+.game-inline-check { margin-left: 6px; }
+.game-dialog-note { padding: 10px 12px; border-left: 2px solid var(--gold); background: rgba(201, 164, 90, 0.07); color: var(--ink-dim); }
+.game-dialog-results { margin: -6px 0 18px; border-bottom: 1px solid var(--border); }
+.game-dialog-results > button { display: flex; justify-content: space-between; gap: 16px; width: 100%; padding: 10px 0; border: 0; border-top: 1px solid var(--border); background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
+.game-dialog-results > button:disabled { opacity: 0.45; cursor: default; }
+.game-dialog-results span,
+.game-dialog-results small { display: block; }
+.game-dialog-results small { color: var(--ink-faint); }
+.game-dialog-roster { border-top: 1px solid var(--border); }
+.game-dialog-player { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+.game-dialog-player > button:first-child { flex: 1; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
+.game-dialog-player > button:first-child:disabled { cursor: default; }
+.game-dialog-player strong,
+.game-dialog-player span { display: block; }
+.game-dialog-player span { color: var(--ink-faint); font-size: 0.8rem; }
+.game-battle-dm-actions { display: flex; justify-content: flex-end; gap: 8px; margin: 14px 0; }
+.game-battle-dm-actions .btn { width: auto; }
 
 .game-clock-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 0; border-bottom: 1px solid var(--border); }
 .game-clock-actions .btn { width: auto; min-height: 38px; padding: 8px 13px; }
@@ -292,6 +359,14 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-page { padding-top: 2px; }
   .game-heading { margin-bottom: 18px; }
   .game-layout { display: block; }
+  .game-session-heading-compact { align-items: start; }
+  .game-session-top-actions { display: grid; justify-items: end; gap: 10px; }
+  .game-primary-actions .btn-danger { margin-left: 0; }
+  .game-own-hunter { align-items: end; }
+  .game-dialog-grid { grid-template-columns: 1fr; }
+  .game-dialog-wide { grid-column: auto; }
+  .game-dialog { max-height: calc(100dvh - 20px); padding: 20px 18px; }
+  .game-inline-check { margin: 8px 8px 0 0; }
   .game-sessions {
     position: static;
     display: flex;
@@ -308,6 +383,7 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-session-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
   .game-clock { min-width: 128px; }
   .game-clock strong { font-size: 1.8rem; }
+  .game-clock-small strong { font-size: 0.82rem; }
   .game-player { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; }
   .game-player-open { grid-template-columns: 1fr; gap: 3px; }
   .game-enemy-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -327,6 +403,7 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-create-button { padding-inline: 12px; }
   .game-session-heading { grid-template-columns: 1fr; }
   .game-clock { text-align: left; }
+  .game-clock-small { text-align: right; }
   .game-clock-actions .btn { flex: 1 1 calc(50% - 8px); }
   .game-section { padding: 24px 0; }
   .game-enemy-title { align-items: end; }

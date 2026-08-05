@@ -74,6 +74,7 @@ await db.doc(`games/${gameId}`).set({
   dmName: "Battle DM",
   participantUids: [playerUid],
   participantRoster: [participant],
+  attendeeRoster: [participant],
   seatUids: [dmUid, playerUid],
   status: "active",
   phase: "combat",
@@ -100,6 +101,24 @@ await db.doc(`games/${gameId}/combatants/${enemyId}`).set({
   conditions: [],
   conditionSince: {},
   note: "Howls when bloodied.",
+  revealHp: false,
+  revealStats: false,
+  isWarden: false,
+  createdAt: Date.now(),
+});
+await db.doc(`games/${gameId}/battleView/${enemyId}`).set({
+  kind: "monster",
+  name: "Moon Beast",
+  characterId: null,
+  initiative: -99,
+  ac: null,
+  maxHp: null,
+  currentHp: null,
+  conditions: [],
+  conditionSince: {},
+  note: null,
+  revealHp: false,
+  revealStats: false,
   isWarden: false,
   createdAt: Date.now(),
 });
@@ -182,18 +201,33 @@ try {
   const enemyDisplay = playerPage.getByTestId(`battle-combatant-${enemyId}`);
   await enemyDisplay.getByText(/Poisoned/).waitFor();
 
+  const playerEnemyText = await enemyDisplay.innerText();
+  if (playerEnemyText.includes("30") || playerEnemyText.includes("14") || playerEnemyText.includes("Howls")) {
+    throw new Error(`Hidden monster data leaked to the player: ${playerEnemyText}`);
+  }
+
   const enemyCard = dmPage.locator(".game-enemy").filter({ hasText: "Moon Beast" });
-  await enemyCard.getByRole("button", { name: "Damage Moon Beast by 5" }).click();
+  await enemyCard.getByRole("button", { name: "+5", exact: true }).click();
+  if ((await enemyDisplay.innerText()).includes("5")) throw new Error("Player saw exact damage before the DM revealed HP.");
+  await enemyCard.getByLabel("HP visible").check();
   await enemyDisplay.getByText("5", { exact: true }).waitFor();
   await enemyDisplay.getByText("taken", { exact: true }).waitFor();
+  await enemyCard.getByLabel("Stats visible").check();
+  await enemyDisplay.locator(".battle-ac").getByText("14", { exact: true }).waitFor();
 
-  await dmPage.getByRole("button", { name: "+ Add enemy" }).click();
-  const enemyForm = dmPage.locator(".game-enemy-form");
+  await dmPage.getByRole("button", { name: "Add enemy", exact: true }).click();
+  const enemyForm = dmPage.getByRole("dialog", { name: "Add enemy" });
   await enemyForm.getByLabel("Name").fill("Grave Hound");
   await enemyForm.getByLabel("Max HP").fill("18");
   await enemyForm.getByLabel("Initiative").fill("-99");
   await enemyForm.getByRole("button", { name: "Add enemy" }).click();
   await playerPage.locator(".battle-name").getByText("Grave Hound", { exact: true }).waitFor();
+
+  await dmPage.getByRole("button", { name: "Create item", exact: true }).click();
+  const itemDialog = dmPage.getByRole("dialog", { name: "Create an item" });
+  await itemDialog.getByLabel("Name").fill("Ashen Spear");
+  await itemDialog.getByLabel("Damage").fill("1d8 piercing");
+  await itemDialog.getByRole("button", { name: "Create item" }).click();
 
   await noHorizontalOverflow(dmPage, "Game combat controls");
   await dmPage.screenshot({ path: "screenshots/game-battle-mode-dm.png", fullPage: true });
@@ -215,7 +249,15 @@ try {
     dmPage.getByTestId("session-battle-screen").waitFor({ state: "detached" }),
     playerPage.getByTestId("session-battle-screen").waitFor({ state: "detached" }),
   ]);
-  await playerPage.getByRole("heading", { name: "Players" }).waitFor();
+  await playerPage.getByText("Your Hunter", { exact: true }).waitFor();
+  await playerPage.getByRole("heading", { name: "Something was found" }).waitFor();
+  await playerPage.getByText("Ashen Spear", { exact: true }).waitFor();
+  await playerPage.getByRole("button", { name: "Take", exact: true }).click();
+  await playerPage.getByText("Ashen Spear was added to your Hunter.", { exact: true }).waitFor();
+  await sleep(250);
+  const claimedHunter = await db.doc(`characters/${characterId}`).get();
+  if (!claimedHunter.data()?.customItems?.some((item) => item.name === "Ashen Spear")) throw new Error("Claimed session weapon did not reach the Hunter sheet.");
+  if (!claimedHunter.data()?.inventory?.some((item) => String(item.itemId).startsWith("session-"))) throw new Error("Claimed session weapon did not reach inventory.");
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
   console.log("Battle mode E2E passed: automatic entry/exit on both Game pages, player read-only view, DM controls, Firestore timer, conditions, damage, enemy creation, and responsive layout.");

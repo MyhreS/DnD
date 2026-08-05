@@ -96,6 +96,9 @@ function toGame(id: string, data: Record<string, unknown>): Game {
     participantRoster: Array.isArray(data.participantRoster)
       ? (data.participantRoster as Record<string, unknown>[]).map((participant) => toParticipant(participant))
       : [],
+    attendeeRoster: Array.isArray(data.attendeeRoster)
+      ? (data.attendeeRoster as Record<string, unknown>[]).map((participant) => toParticipant(participant))
+      : undefined,
     status: (data.status as Game["status"]) ?? "lobby",
     phase: (data.phase as GamePhase) ?? "exploration",
     location: (data.location as GameLocation) ?? "wild",
@@ -301,14 +304,6 @@ export async function resumeGameClock(gameId: string): Promise<void> {
   await updateDoc(doc(gamesCol, gameId), { clockRunning: true, clockStartedAt: Date.now() });
 }
 
-export async function resetGameClock(gameId: string, keepRunning: boolean): Promise<void> {
-  await updateDoc(doc(gamesCol, gameId), {
-    clockRunning: keepRunning,
-    clockStartedAt: keepRunning ? Date.now() : null,
-    clockElapsedMs: 0,
-  });
-}
-
 export async function setGamePhase(gameId: string, phase: GamePhase): Promise<void> {
   await updateDoc(doc(gamesCol, gameId), { phase });
 }
@@ -345,7 +340,7 @@ export async function endGame(
 
 /** Delete a game and all its participants (used to clean up sandbox runs). */
 export async function deleteGame(gameId: string): Promise<void> {
-  const childCollections = ["participants", "combatants", "loot"];
+  const childCollections = ["participants", "combatants", "battleView", "loot"];
   const snapshots = await Promise.all(childCollections.map((name) => getDocs(collection(db, "games", gameId, name))));
   await Promise.all(snapshots.flatMap((snap) => snap.docs.map((item) => deleteDoc(item.ref))));
   await deleteDoc(doc(gamesCol, gameId));

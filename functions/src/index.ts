@@ -11,6 +11,8 @@ import { inviteEmail, characterReminder, rsvpReminder } from "./templates";
 export { settleTrade } from "./trades";
 export {
   addStandaloneGameParticipant,
+  claimStandaloneGameLoot,
+  createStandaloneGameLoot,
   createStandaloneGameSession,
   discardStandaloneGameSession,
   finishStandaloneGameSession,

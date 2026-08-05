@@ -6,7 +6,6 @@ import {
   finishGameSession,
   pauseGameClock,
   removeGameParticipant,
-  resetGameClock,
   resumeGameClock,
   startGame,
   subscribeActiveGameSeats,
@@ -22,7 +21,8 @@ import { useCombatSync } from "@/features/play/hooks/useCombatSync";
 import { emptyEncounter } from "@/features/play/lib/turnTimer";
 import { useCombatStore } from "@/features/play/store/combatStore";
 import type { Game, GameParticipant, HunterCard } from "@/types";
-import { EnemySection } from "./EnemySection";
+import { AddMonsterDialog, EnemySection } from "./EnemySection";
+import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
 import { SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
 import "./game.css";
@@ -94,6 +94,10 @@ export function GamePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [managingPlayers, setManagingPlayers] = useState(false);
+  const [creatingItem, setCreatingItem] = useState(false);
+  const [addingMonster, setAddingMonster] = useState(false);
+  const [ownSheetOpen, setOwnSheetOpen] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -154,6 +158,9 @@ export function GamePage() {
   const displayedParticipants = selected && selected.campaignId === null
     ? selected.participantRoster
     : participants;
+  const ownParticipant = displayedParticipants.find((participant) => participant.uid === user?.uid);
+  const ownCard = ownParticipant?.characterId ? charactersById.get(ownParticipant.characterId) : undefined;
+  const focusedPlayerSession = Boolean(selected && !isSessionDm && selected.status !== "ended" && history.length === 0);
 
   useEffect(() => {
     if (!selectedId) {
@@ -172,9 +179,10 @@ export function GamePage() {
     );
   }, [preview, previewRosters, selected?.campaignId, selectedId]);
 
-  useCombatSync(selectedId);
+  useCombatSync(selectedId, !isSessionDm);
   const combatBusy = useCombatStore((state) => state.busy);
   const combatError = useCombatStore((state) => state.error);
+  const combatants = useCombatStore((state) => state.combatants);
   const clock = useClock(selected);
 
   async function perform(work: () => Promise<void>, message: string): Promise<boolean> {
@@ -243,6 +251,7 @@ export function GamePage() {
         dmName: input.dmName,
         participantUids: hunters.map((hunter) => hunter.ownerUid),
         participantRoster: roster,
+        attendeeRoster: roster,
         status: "lobby",
         combat: emptyEncounter(),
         createdAt: Date.now(),
@@ -291,6 +300,7 @@ export function GamePage() {
       updatePreviewGame(selected.id, {
         participantUids: [...new Set([...selected.participantUids, card.ownerUid])],
         participantRoster: [...selected.participantRoster.filter((item) => item.uid !== card.ownerUid), participant],
+        attendeeRoster: [...(selected.attendeeRoster ?? selected.participantRoster).filter((item) => item.uid !== card.ownerUid), participant],
       });
       return;
     }
@@ -345,18 +355,6 @@ export function GamePage() {
     await perform(() => resumeGameClock(selected.id), "Could not resume the clock.");
   }
 
-  async function resetClock() {
-    if (!selected) return;
-    if (preview) {
-      updatePreviewGame(selected.id, {
-        clockElapsedMs: 0,
-        clockStartedAt: selected.clockRunning ? Date.now() : null,
-      });
-      return;
-    }
-    await perform(() => resetGameClock(selected.id, selected.clockRunning), "Could not reset the clock.");
-  }
-
   async function finishSession() {
     if (!selected || selected.status !== "active") return;
     if (!window.confirm("End this session? The party, enemies, damage, and duration will be saved in session history.")) return;
@@ -405,21 +403,25 @@ export function GamePage() {
           characters={characters ?? []}
           isDm={isSessionDm}
           dmControls={isSessionDm ? (
-            <SessionCombatControls
-              game={selected}
-              characters={characters ?? []}
-              disabled={combatBusy || busy}
-            />
+            <>
+              <div className="game-battle-dm-actions">
+                <button className="btn btn-ghost" type="button" onClick={() => setAddingMonster(true)}>Add enemy</button>
+                {selected.campaignId === null && <button className="btn btn-ghost" type="button" onClick={() => setCreatingItem(true)}>Create item</button>}
+              </div>
+              <SessionCombatControls game={selected} characters={characters ?? []} disabled={combatBusy || busy} />
+            </>
           ) : null}
-          enemySection={<EnemySection game={selected} isDm={isSessionDm} disabled={combatBusy || busy} />}
+          enemySection={isSessionDm ? <EnemySection game={selected} isDm disabled={combatBusy || busy} /> : null}
         />
+        {addingMonster && <AddMonsterDialog game={selected} disabled={combatBusy || busy} onClose={() => setAddingMonster(false)} />}
+        {creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
       </div>
     );
   }
 
   return (
     <div className="game-page">
-      <header className="game-heading">
+      {!focusedPlayerSession && <header className="game-heading">
         <div>
           <p className="eyebrow">Shared table</p>
           <h1 className="page-title">Game</h1>
@@ -429,7 +431,7 @@ export function GamePage() {
             Create session
           </button>
         )}
-      </header>
+      </header>}
 
       {(error || charactersError || combatError) && <div className="banner-error" role="alert">{error || charactersError || combatError}</div>}
 
@@ -454,8 +456,8 @@ export function GamePage() {
       )}
 
       {!creating && games.length > 0 && (
-        <div className="game-layout">
-          <nav className="game-sessions" aria-label="Game sessions">
+        <div className={focusedPlayerSession ? "game-layout is-player-focus" : "game-layout"}>
+          {!focusedPlayerSession && <nav className="game-sessions" aria-label="Game sessions">
             {activeGame && (
               <div className="game-session-group">
                 <span className="game-session-label">Current session</span>
@@ -470,25 +472,25 @@ export function GamePage() {
                 ))}
               </div>
             )}
-          </nav>
+          </nav>}
 
           {selected && (
             <main className="game-table" aria-label={`${selected.title} session`}>
-              <div className="game-session-heading">
+              <div className="game-session-heading game-session-heading-compact">
                 <div>
                   <p className="eyebrow">{selected.status === "active" ? "Live session" : selected.status === "ended" ? "Session history" : "Waiting room"}</p>
                   <h2>{selected.title}</h2>
-                  {!isSessionDm && <p className="muted">{selected.status === "ended" ? `Run by ${selected.dmName}.` : `${selected.dmName} added your Hunter to this session.`}</p>}
                 </div>
-                <div className="game-clock" aria-label={`Session clock ${clock}`}>
-                  <span>{selected.status === "ended" ? "Duration" : "Session clock"}</span>
+                <div className="game-session-top-actions">
+                  {isSessionDm && selected.campaignId === null && selected.status !== "ended" && <button className="game-text-button" type="button" onClick={() => setManagingPlayers(true)}>Manage players</button>}
+                  <div className="game-clock game-clock-small" aria-label={`Session clock ${clock}`}>
                   <strong data-testid="session-clock">{clock}</strong>
-                  <small>{selected.status === "ended" ? "Saved" : selected.clockRunning ? "Running" : "Paused"}</small>
+                  </div>
                 </div>
               </div>
 
               {isSessionDm && selected.status !== "ended" && (
-                <div className="game-clock-actions" aria-label="Clock controls">
+                <div className="game-primary-actions" aria-label="Session controls">
                   {selected.status === "lobby" ? (
                     <button className="btn btn-primary" type="button" disabled={busy} onClick={beginSession}>Start session</button>
                   ) : selected.clockRunning ? (
@@ -496,7 +498,8 @@ export function GamePage() {
                   ) : (
                     <button className="btn btn-primary" type="button" disabled={busy} onClick={resumeClock}>Resume</button>
                   )}
-                  {selected.status === "active" && <button className="btn btn-ghost" type="button" disabled={busy} onClick={resetClock}>Reset clock</button>}
+                  {selected.campaignId === null && selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => setCreatingItem(true)}>Create item</button>}
+                  {selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => setAddingMonster(true)}>Add enemy</button>}
                   {selected.status === "active" ? (
                     <button className="btn btn-danger" type="button" disabled={busy} onClick={finishSession}>End session</button>
                   ) : (
@@ -505,55 +508,38 @@ export function GamePage() {
                 </div>
               )}
 
-              <section className="game-section" aria-labelledby="players-heading">
-                <div className="game-section-heading">
-                  <div>
-                    <p className="eyebrow">Party</p>
-                    <h3 id="players-heading">Players <span>{displayedParticipants.length}</span></h3>
-                  </div>
-                  {isSessionDm && selected.status === "lobby" && characters && (
-                    <AddHunter
-                      characters={otherCharacters}
-                      participants={displayedParticipants}
-                      unavailableOwnerUids={unavailableForSelected}
-                      onAdd={addHunter}
-                    />
-                  )}
-                </div>
-                {displayedParticipants.length === 0 ? (
-                  <p className="muted">No Hunters have been added yet.</p>
-                ) : (
-                  <div className="game-roster">
-                    {displayedParticipants.map((participant) => (
-                      <SessionHunterRow
-                        key={participant.uid}
-                        participant={participant}
-                        card={participant.characterId ? charactersById.get(participant.characterId) : undefined}
-                        canInspect={isSessionDm}
-                        canRemove={isSessionDm && selected.status === "lobby"}
-                        busy={busy}
-                        onRemove={() => removeHunter(participant.uid)}
-                      />
-                    ))}
-                  </div>
-                )}
-              </section>
+              {selected.status === "ended" ? (
+                <section className="game-focus-panel"><p className="eyebrow">Saved</p><h3>{(selected.attendeeRoster ?? displayedParticipants).length} {(selected.attendeeRoster ?? displayedParticipants).length === 1 ? "player" : "players"} attended</h3><p className="muted">Run by {selected.dmName} · {historyDate(selected)} · {clock}</p>{combatants.some((combatant) => combatant.kind === "monster") && <p className="game-history-enemies"><strong>Enemies:</strong> {combatants.filter((combatant) => combatant.kind === "monster").map((combatant) => combatant.name).join(", ")}</p>}</section>
+              ) : isSessionDm ? (
+                <>
+                  <section className="game-focus-panel game-dm-overview"><p className="eyebrow">At the table</p><h3>{displayedParticipants.length === 0 ? "Add the first player" : `${displayedParticipants.length} player${displayedParticipants.length === 1 ? "" : "s"} ready`}</h3>{selected.campaignId === null && <button className="game-text-button" type="button" onClick={() => setManagingPlayers(true)}>{displayedParticipants.length === 0 ? "Add players" : "View party"}</button>}</section>
+                  {selected.campaignId === null && selected.status === "active" && !preview && <SessionLootFeed game={selected} isDm />}
+                </>
+              ) : (
+                <>
+                  {ownCard && <section className="game-focus-panel game-own-hunter"><div><p className="eyebrow">Your Hunter</p><h3>{ownCard.name}</h3><span>{displayClass(ownParticipant!)} · Level {ownCard.level}</span></div><button className="btn btn-ghost" type="button" onClick={() => setOwnSheetOpen(true)}>Open sheet</button></section>}
+                  {selected.campaignId === null && selected.status === "active" && !preview && <SessionLootFeed game={selected} characterId={ownParticipant?.characterId} isDm={false} threats={combatants} />}
+                  {selected.status === "lobby" && <section className="game-focus-panel"><p className="eyebrow">Waiting</p><h3>{selected.dmName} is preparing the session</h3></section>}
+                </>
+              )}
 
-              {selected.status === "active" && (
+              {isSessionDm && selected.status === "active" && (
                 <SessionCombatSection
                   game={selected}
                   participants={displayedParticipants}
                   characters={characters ?? []}
-                  isDm={isSessionDm}
+                  isDm
                   disabled={combatBusy || busy}
                 />
               )}
-
-              <EnemySection game={selected} isDm={isSessionDm} disabled={combatBusy || busy} />
             </main>
           )}
         </div>
       )}
+      {selected && managingPlayers && <ManagePlayersDialog game={selected} characters={otherCharacters.concat((characters ?? []).filter((card) => displayedParticipants.some((participant) => participant.characterId === card.id)))} participants={displayedParticipants} unavailableOwnerUids={unavailableForSelected} busy={busy} onAdd={addHunter} onRemove={removeHunter} onClose={() => setManagingPlayers(false)} />}
+      {selected && creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
+      {selected && addingMonster && <AddMonsterDialog game={selected} disabled={combatBusy || busy} onClose={() => setAddingMonster(false)} />}
+      {ownSheetOpen && ownCard && <PaperSheetModal card={ownCard} onClose={() => setOwnSheetOpen(false)} />}
     </div>
   );
 }
@@ -564,56 +550,6 @@ function SessionLink({ game, selected, onSelect }: { game: Game; selected: boole
       <strong>{game.title}</strong>
       <span>{game.status === "lobby" ? "Waiting" : game.status === "active" ? "Live" : historyDate(game)}</span>
     </button>
-  );
-}
-
-function SessionHunterRow({
-  participant,
-  card,
-  canInspect,
-  canRemove,
-  busy,
-  onRemove,
-}: {
-  participant: GameParticipant;
-  card?: HunterCard;
-  canInspect: boolean;
-  canRemove: boolean;
-  busy: boolean;
-  onRemove: () => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const details = (
-    <>
-      <div>
-        <strong>{participant.name}</strong>
-        <span>{participant.playerName || "Player"}</span>
-      </div>
-      <span>{displayClass(participant)} · Level {participant.level}</span>
-    </>
-  );
-
-  return (
-    <div className="game-player">
-      {canInspect && card ? (
-        <button
-          type="button"
-          className="game-player-open"
-          aria-label={`Open ${participant.name} character sheet`}
-          onClick={() => setOpen(true)}
-        >
-          {details}
-        </button>
-      ) : (
-        <div className="game-player-open">{details}</div>
-      )}
-      {canRemove && (
-        <button type="button" className="game-text-button" disabled={busy} onClick={onRemove}>
-          Remove
-        </button>
-      )}
-      {open && card && <PaperSheetModal card={card} readOnly onClose={() => setOpen(false)} />}
-    </div>
   );
 }
 
@@ -692,44 +628,5 @@ function CreateSession({
       )}
       <button className="btn btn-primary" type="submit" disabled={busy || !title.trim()}>{busy ? "Creating…" : "Create session"}</button>
     </form>
-  );
-}
-
-function AddHunter({
-  characters,
-  participants,
-  unavailableOwnerUids,
-  onAdd,
-}: {
-  characters: HunterCard[];
-  participants: GameParticipant[];
-  unavailableOwnerUids: Set<string>;
-  onAdd: (card: HunterCard) => Promise<void>;
-}) {
-  const [open, setOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const currentByOwner = new Map(participants.map((participant) => [participant.uid, participant.characterId]));
-  const results = characters
-    .filter((card) => hunterSearchText(card).includes(query.trim().toLocaleLowerCase()))
-    .slice(0, 8);
-  return (
-    <div className="game-add-hunter">
-      <button type="button" className="game-text-button" onClick={() => setOpen((value) => !value)}>{open ? "Close" : "+ Add Hunter"}</button>
-      {open && (
-        <div className="game-add-popover">
-          <input className="input" type="search" placeholder="Search players…" value={query} onChange={(event) => setQuery(event.target.value)} autoFocus />
-          {results.map((card) => {
-            const same = currentByOwner.get(card.ownerUid) === card.id;
-            const unavailable = unavailableOwnerUids.has(card.ownerUid);
-            return (
-              <button key={card.id} type="button" disabled={same || unavailable} onClick={() => { void onAdd(card); setOpen(false); setQuery(""); }}>
-                <span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail}</small></span>
-                <span>{unavailable ? "In session" : same ? "Added" : currentByOwner.has(card.ownerUid) ? "Switch" : "Add"}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-    </div>
   );
 }

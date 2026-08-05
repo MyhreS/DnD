@@ -31,7 +31,7 @@ export function StatusPage() {
   // Only a started game is "in play"; a queued lobby game shouldn't read as live.
   const game = currentGame(games, campaign?.id ?? null);
   const liveGame = game && game.status === "active" ? game : null;
-  useCombatSync(liveGame?.id ?? null);
+  useCombatSync(liveGame?.id ?? null, true);
   const combatants = useCombatStore((s) => s.combatants);
   const inCombat = !!liveGame?.combat?.active && combatants.length > 0;
   // A named hunter belongs on the board — sheet-made hunters have classId "".

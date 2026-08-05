@@ -46,6 +46,8 @@ export interface MonsterInput {
   maxHp: number;
   ac: number | null;
   note?: string | null;
+  revealHp?: boolean;
+  revealStats?: boolean;
 }
 
 interface CombatState {
@@ -55,8 +57,9 @@ interface CombatState {
   preview: boolean;
   _unsub: (() => void) | null;
   _gameId: string | null;
+  _publicView: boolean;
 
-  sync: (gameId: string | null) => void;
+  sync: (gameId: string | null, publicView?: boolean) => void;
   stop: () => void;
 
   startEncounter: (gameId: string, pcs: PcSeed[]) => Promise<boolean>;
@@ -93,11 +96,11 @@ interface CombatState {
 }
 
 const setCombat = async (gameId: string, combat: EncounterState) => {
-  const result = await useGameStore.getState().setCombat(gameId, combat);
   if (isPreviewActive() && typeof window !== "undefined") {
     window.dispatchEvent(new CustomEvent("cs-preview-combat", { detail: { gameId, combat } }));
+    return true;
   }
-  return result;
+  return useGameStore.getState().setCombat(gameId, combat);
 };
 
 export const useCombatStore = create<CombatState>((set, get) => {
@@ -121,21 +124,23 @@ export const useCombatStore = create<CombatState>((set, get) => {
     preview: false,
     _unsub: null,
     _gameId: null,
+    _publicView: false,
 
-    sync: (gameId) => {
+    sync: (gameId, publicView = false) => {
       if (isPreviewActive()) {
         if (!get().preview) set({ preview: true, combatants: previewCombatants() });
         return;
       }
-      if (gameId === get()._gameId && get()._unsub) return;
+      if (gameId === get()._gameId && publicView === get()._publicView && get()._unsub) return;
       get()._unsub?.();
       if (!gameId) {
-        set({ _unsub: null, _gameId: null, combatants: [] });
+        set({ _unsub: null, _gameId: null, _publicView: false, combatants: [] });
         return;
       }
-      set({ _gameId: gameId, combatants: [] });
+      set({ _gameId: gameId, _publicView: publicView, combatants: [] });
       const unsub = subscribeCombatants(
         gameId,
+        publicView,
         (combatants) => set({ combatants }),
         () => set({ error: "Couldn't load combat." }),
       );
@@ -144,7 +149,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
 
     stop: () => {
       get()._unsub?.();
-      set({ _unsub: null, _gameId: null });
+      set({ _unsub: null, _gameId: null, _publicView: false });
     },
 
     startEncounter: async (gameId, pcs) => {
@@ -253,6 +258,8 @@ export const useCombatStore = create<CombatState>((set, get) => {
         currentHp: m.maxHp,
         conditions: [] as string[],
         note: m.note ?? null,
+        revealHp: m.revealHp === true,
+        revealStats: m.revealStats === true,
         isWarden: false,
       };
       if (get().preview) {
@@ -263,11 +270,14 @@ export const useCombatStore = create<CombatState>((set, get) => {
     },
 
     patch: async (gameId, id, partial) => {
+      const current = get().combatants.find((combatant) => combatant.id === id);
+      if (!current) return false;
+      const next = { ...current, ...partial };
       // Optimistic local echo so rapid taps read fresh state; the
       // latency-compensated snapshot then confirms or corrects.
       set((s) => ({ combatants: s.combatants.map((c) => (c.id === id ? { ...c, ...partial } : c)) }));
       if (get().preview) return true;
-      return (await run(() => patchCombatant(gameId, id, partial), "Couldn't update the combatant.")) !== null;
+      return (await run(() => patchCombatant(gameId, id, partial, next), "Couldn't update the combatant.")) !== null;
     },
 
     remove: async (gameId, id, game, combatants) => {
