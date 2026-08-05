@@ -199,7 +199,7 @@ export const createStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (reque
       location: "wild",
       combat: {
         active: false,
-        round: 1,
+        round: 0,
         turnId: null,
         designatedWardenId: null,
         timerPhase: "idle",
