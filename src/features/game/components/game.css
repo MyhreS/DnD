@@ -88,7 +88,7 @@
 .game-roster { display: grid; }
 .game-player {
   display: grid;
-  grid-template-columns: minmax(150px, 1fr) minmax(130px, 0.8fr) auto;
+  grid-template-columns: minmax(0, 1fr) auto;
   gap: 18px;
   align-items: center;
   min-width: 0;
@@ -96,9 +96,23 @@
   border-top: 1px solid var(--border);
 }
 .game-player:first-child { border-top: 0; }
-.game-player > div { min-width: 0; }
-.game-player strong,
-.game-player span { display: block; }
+.game-player-open {
+  display: grid;
+  grid-template-columns: minmax(150px, 1fr) minmax(130px, 0.8fr);
+  gap: 18px;
+  align-items: center;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  text-align: left;
+}
+button.game-player-open { cursor: pointer; }
+button.game-player-open:hover strong { color: var(--gold); }
+.game-player-open > div { min-width: 0; }
+.game-player-open strong,
+.game-player-open span { display: block; }
 .game-player strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .game-player span { color: var(--ink-dim); font-size: 0.86rem; }
 
@@ -206,8 +220,7 @@
   .game-clock { min-width: 128px; }
   .game-clock strong { font-size: 1.8rem; }
   .game-player { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; }
-  .game-player > span { grid-column: 1; }
-  .game-player > button { grid-column: 2; grid-row: 1 / span 2; }
+  .game-player-open { grid-template-columns: 1fr; gap: 3px; }
   .game-enemy-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .game-enemy-name,
   .game-enemy-note { grid-column: 1 / -1; }

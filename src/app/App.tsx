@@ -1,6 +1,5 @@
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import { useSettings } from "@/app/settings";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCampaignSync } from "@/features/campaigns/hooks/useCampaignSync";
 import { useAuthInit } from "@/hooks/auth/useAuthInit";
@@ -22,9 +21,6 @@ const CodexPage = lazy(() =>
 );
 const CodexDocumentsPage = lazy(() =>
   import("@/features/codex/components/CodexPage").then((m) => ({ default: m.CodexDocumentsPage })),
-);
-const DMOverviewPage = lazy(() =>
-  import("@/features/dm/components/DMOverviewPage").then((m) => ({ default: m.DMOverviewPage })),
 );
 const GamePage = lazy(() =>
   import("@/features/game/components/GamePage").then((m) => ({ default: m.GamePage })),
@@ -72,8 +68,6 @@ function LegacyCodexRedirect() {
 
 function AuthedApp() {
   useCampaignSync();
-  // The DM overview only exists when Dungeon Master mode is on (Profile).
-  const dmMode = useSettings((s) => s.dmMode);
   return (
     <Suspense fallback={<Splash />}>
       <Routes>
@@ -88,7 +82,7 @@ function AuthedApp() {
           <Route path="rules" element={<LegacyCodexRedirect />} />
           <Route path="game-card" element={<LegacyCodexRedirect />} />
           <Route path="reference" element={<LegacyCodexRedirect />} />
-          <Route path="dm" element={dmMode ? <DMOverviewPage /> : <Navigate to="/" replace />} />
+          <Route path="dm" element={<Navigate to="/game" replace />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
         {/* Chrome-less big-screen status board (its own full-bleed layout). */}

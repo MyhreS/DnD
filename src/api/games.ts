@@ -183,7 +183,8 @@ function participantSnapshot(card: HunterCard): GameParticipant {
 /** Atomically creates a standalone session and its selected Hunter roster. */
 export async function createGameSession(input: CreateGameInput, hunters: HunterCard[]): Promise<string> {
   const gameRef = doc(gamesCol);
-  const unique = [...new Map(hunters.map((hunter) => [hunter.ownerUid, hunter])).values()];
+  const invited = hunters.filter((hunter) => hunter.ownerUid !== input.dmUid);
+  const unique = [...new Map(invited.map((hunter) => [hunter.ownerUid, hunter])).values()];
   await setDoc(gameRef, {
     campaignId: input.campaignId ?? null,
     sessionId: input.sessionId ?? null,
@@ -210,6 +211,9 @@ export async function createGameSession(input: CreateGameInput, hunters: HunterC
 }
 
 export async function addGameParticipant(game: Game, card: HunterCard): Promise<void> {
+  if (card.ownerUid === game.dmUid) {
+    throw new Error("The session creator cannot also join as a player.");
+  }
   const next = [...game.participantRoster.filter((participant) => participant.uid !== card.ownerUid), participantSnapshot(card)];
   await updateDoc(doc(gamesCol, game.id), {
     participantUids: next.map((participant) => participant.uid),

@@ -25,14 +25,6 @@ export function SignOutIcon(props: IconProps) {
   );
 }
 
-export function ChevronIcon(props: IconProps) {
-  return (
-    <svg {...base(props)}>
-      <path d="M9 6l6 6-6 6" />
-    </svg>
-  );
-}
-
 export function GoogleIcon(props: IconProps) {
   return (
     <svg width={20} height={20} viewBox="0 0 24 24" {...props}>
