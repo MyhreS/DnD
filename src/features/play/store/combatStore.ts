@@ -3,6 +3,7 @@ import type { Combatant, EncounterState, Game } from "@/types";
 import {
   subscribeCombatants,
   addCombatant,
+  addCombatants,
   patchCombatant,
   removeCombatant,
   clearCombatants,
@@ -59,6 +60,14 @@ interface CombatState {
   stop: () => void;
 
   startEncounter: (gameId: string, pcs: PcSeed[]) => Promise<boolean>;
+  /** Starts the standalone Game-page encounter without clearing enemies that
+   * the DM already prepared. Existing PC rows are reused on resume. */
+  startSessionEncounter: (
+    gameId: string,
+    pcs: PcSeed[],
+    existing: Combatant[],
+    encounter: EncounterState,
+  ) => Promise<boolean>;
   addMonster: (gameId: string, m: MonsterInput) => Promise<boolean>;
   patch: (gameId: string, id: string, partial: Partial<Combatant>) => Promise<boolean>;
   remove: (
@@ -79,10 +88,17 @@ interface CombatState {
   pauseTimer: (gameId: string, game: Game) => Promise<boolean>;
   resumeTimer: (gameId: string, game: Game) => Promise<boolean>;
   endEncounter: (gameId: string) => Promise<boolean>;
+  /** Stops the turn clock but retains combatants as session history. */
+  closeSessionEncounter: (gameId: string, encounter: EncounterState) => Promise<boolean>;
 }
 
-const setCombat = (gameId: string, combat: EncounterState) =>
-  useGameStore.getState().setCombat(gameId, combat);
+const setCombat = async (gameId: string, combat: EncounterState) => {
+  const result = await useGameStore.getState().setCombat(gameId, combat);
+  if (isPreviewActive() && typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("cs-preview-combat", { detail: { gameId, combat } }));
+  }
+  return result;
+};
 
 export const useCombatStore = create<CombatState>((set, get) => {
   async function run<T>(fn: () => Promise<T>, msg: string): Promise<T | null> {
@@ -178,6 +194,51 @@ export const useCombatStore = create<CombatState>((set, get) => {
         turnId: top?.id ?? null,
         designatedWardenId,
         ...timerForCombatant(top, designatedWardenId),
+      });
+    },
+
+    startSessionEncounter: async (gameId, pcs, existing, encounter) => {
+      const existingCharacterIds = new Set(
+        existing.filter((combatant) => combatant.kind === "pc").map((combatant) => combatant.characterId),
+      );
+      const missing = pcs
+        .filter((pc) => !existingCharacterIds.has(pc.characterId))
+        .map((pc) => ({
+          kind: "pc" as const,
+          name: pc.name,
+          characterId: pc.characterId,
+          initiative: rollD20() + pc.dexMod,
+          ac: null,
+          maxHp: null,
+          currentHp: null,
+          conditions: [] as string[],
+          isWarden: pc.isWarden,
+        }));
+      let created: Combatant[] = [];
+      if (get().preview) {
+        created = missing.map((combatant) => ({ ...combatant, id: previewId(), createdAt: Date.now() }));
+        if (created.length > 0) {
+          set((state) => ({ combatants: [...state.combatants, ...created] }));
+        }
+      } else if (missing.length > 0) {
+        const result = await run(
+          () => addCombatants(gameId, missing),
+          "Couldn't add the Hunters to combat.",
+        );
+        if (!result) return false;
+        created = result;
+      }
+      const order = initiativeOrder([...existing, ...created]);
+      if (order.length === 0) return false;
+      const first = order.find((combatant) => combatant.id === encounter.turnId) ?? order[0];
+      const savedWarden = order.find((combatant) => combatant.id === encounter.designatedWardenId && combatant.isWarden);
+      const designatedWardenId = savedWarden?.id ?? order.find((combatant) => combatant.isWarden)?.id ?? null;
+      return setCombat(gameId, {
+        active: true,
+        round: Math.max(1, encounter.round),
+        turnId: first.id,
+        designatedWardenId,
+        ...timerForCombatant(first, designatedWardenId),
       });
     },
 
@@ -338,5 +399,13 @@ export const useCombatStore = create<CombatState>((set, get) => {
       if (ok) await setCombat(gameId, emptyEncounter());
       return ok;
     },
+
+    closeSessionEncounter: async (gameId, encounter) => setCombat(gameId, {
+      ...encounter,
+      active: false,
+      timerPhase: "idle",
+      timerEndsAt: null,
+      pausedRemainingMs: null,
+    }),
   };
 });

@@ -216,6 +216,10 @@ await step("Session creator cannot add themselves as a player (negative)", async
 await step("DM starts the standalone session", async () => {
   await updateDoc(doc(dm.db, "games", standaloneGameId), {
     status: "active", startedAt: serverTimestamp(), clockRunning: true, clockStartedAt: Date.now(),
+    combat: {
+      active: true, round: 1, turnId: standaloneMonsterId, designatedWardenId: null,
+      timerPhase: "untimed", timerEndsAt: null, pausedRemainingMs: null,
+    },
   });
 });
 await step("A fought enemy cannot be removed from future history (negative)", async () => {
@@ -229,6 +233,9 @@ await step("Ending saves history, preserves enemies, and releases every seat", a
   await finishStandalone({ gameId: standaloneGameId, endedPhase: "combat", endedLocation: "wild" });
   const game = await getDoc(doc(pl.db, "games", standaloneGameId));
   if (game.data()?.status !== "ended" || !game.data()?.historySavedAt) throw new Error("history-not-saved");
+  if (game.data()?.combat?.active !== false || game.data()?.combat?.timerPhase !== "idle") {
+    throw new Error("ended history kept a live combat timer");
+  }
   const enemy = await getDoc(doc(pl.db, "games", standaloneGameId, "combatants", standaloneMonsterId));
   if (!enemy.exists()) throw new Error("history-enemy-missing");
   const [dmSeat, playerSeat] = await Promise.all([

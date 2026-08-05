@@ -113,11 +113,11 @@ try {
   await owner.getByRole("button", { name: "+ Add enemy" }).click();
   await owner.getByLabel("Name").fill("Moon Beast");
   await owner.getByLabel("Max HP").fill("30");
-  await owner.getByLabel("Initiative").fill("16");
+  await owner.getByRole("spinbutton", { name: "Initiative", exact: true }).fill("16");
   await owner.getByRole("spinbutton", { name: "AC", exact: true }).fill("14");
   await owner.getByLabel("Notes").fill("Howls when bloodied.");
   await owner.getByRole("button", { name: "Add enemy", exact: true }).click();
-  const beast = owner.getByRole("article").filter({ hasText: "Moon Beast" });
+  const beast = owner.locator(".game-enemy").filter({ hasText: "Moon Beast" });
   await beast.waitFor();
   await beast.getByRole("button", { name: "Damage Moon Beast by 5" }).click();
   await beast.getByText("5 damage taken", { exact: false }).waitFor();
@@ -161,7 +161,7 @@ try {
   const playerLinks = await player.getByRole("navigation", { name: "Primary" }).getByRole("link").allTextContents();
   if (playerLinks.includes("DM")) throw new Error(`Legacy DM page remains in player navigation: ${JSON.stringify(playerLinks)}`);
   await player.getByText("Christoffer added your Hunter to this session.", { exact: true }).waitFor();
-  const clericBeast = player.getByRole("article").filter({ hasText: "Cleric Beast" });
+  const clericBeast = player.locator(".game-enemy").filter({ hasText: "Cleric Beast" });
   await clericBeast.getByText("28 damage taken", { exact: false }).waitFor();
   if (await clericBeast.getByRole("button", { name: /Damage Cleric Beast/ }).count()) {
     throw new Error("Player can see DM enemy controls");

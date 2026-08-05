@@ -5,9 +5,10 @@ import {
   indexedDBLocalPersistence,
   browserLocalPersistence,
   browserPopupRedirectResolver,
+  connectAuthEmulator,
 } from "firebase/auth";
-import { initializeFirestore } from "firebase/firestore";
-import { getFunctions } from "firebase/functions";
+import { connectFirestoreEmulator, initializeFirestore } from "firebase/firestore";
+import { connectFunctionsEmulator, getFunctions } from "firebase/functions";
 import { getAnalytics, isSupported as analyticsSupported } from "firebase/analytics";
 
 const firebaseConfig: FirebaseOptions = {
@@ -48,6 +49,11 @@ export const db = initializeFirestore(app, {
   ignoreUndefinedProperties: true,
 });
 export const functions = getFunctions(app, "europe-west1");
+if (import.meta.env.DEV && import.meta.env.VITE_FIREBASE_EMULATORS === "1") {
+  connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+  connectFirestoreEmulator(db, "127.0.0.1", 8080);
+  connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+}
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 

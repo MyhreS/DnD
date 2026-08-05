@@ -25,6 +25,9 @@ const CodexDocumentsPage = lazy(() =>
 const GamePage = lazy(() =>
   import("@/features/game/components/GamePage").then((m) => ({ default: m.GamePage })),
 );
+const BattleScreenPage = lazy(() =>
+  import("@/features/game/components/BattleScreenPage").then((m) => ({ default: m.BattleScreenPage })),
+);
 const StatusPage = lazy(() =>
   import("@/features/status/components/StatusPage").then((m) => ({ default: m.StatusPage })),
 );
@@ -85,6 +88,8 @@ function AuthedApp() {
           <Route path="dm" element={<Navigate to="/game" replace />} />
           <Route path="profile" element={<ProfilePage />} />
         </Route>
+        {/* Read-only, chrome-less second display for a live Game session. */}
+        <Route path="game/:gameId/battle" element={<BattleScreenPage />} />
         {/* Chrome-less big-screen status board (its own full-bleed layout). */}
         <Route path="status" element={<StatusPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
