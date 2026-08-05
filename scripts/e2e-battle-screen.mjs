@@ -152,29 +152,34 @@ try {
   await signIn(dmPage, dmToken);
   await dmPage.goto(`${BASE}/game`, { waitUntil: "domcontentloaded" });
   await dmPage.getByRole("heading", { name: "The Ashen Hunt" }).waitFor();
-  const battleLink = dmPage.getByRole("link", { name: "Open battle screen ↗" });
-  await battleLink.waitFor();
-  if (!(await battleLink.getAttribute("target"))?.includes("_blank")) throw new Error("Battle Screen does not open as a second display.");
 
   const playerContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
-  const battlePage = await playerContext.newPage();
-  watch(battlePage, errors);
-  await signIn(battlePage, playerToken);
-  await battlePage.goto(`${BASE}/game/${gameId}/battle`, { waitUntil: "domcontentloaded" });
-  await battlePage.getByText("Roll for initiative", { exact: true }).waitFor();
+  const playerPage = await playerContext.newPage();
+  watch(playerPage, errors);
+  await signIn(playerPage, playerToken);
+  await playerPage.goto(`${BASE}/game`, { waitUntil: "domcontentloaded" });
+  await playerPage.getByRole("heading", { name: "The Ashen Hunt" }).waitFor();
 
-  await dmPage.getByRole("button", { name: "Start battle" }).click();
-  await battlePage.getByText("Round 1", { exact: true }).waitFor();
-  await battlePage.locator(".battle-name").getByText("Lady Maria", { exact: true }).waitFor();
-  await battlePage.getByTestId("battle-turn-timer").getByText("Tactical briefing", { exact: true }).waitFor();
-  await battlePage.getByTestId("battle-turn-timer").getByText("Briefing", { exact: true }).waitFor();
+  await dmPage.getByRole("button", { name: "Start battle screen" }).click();
+  await Promise.all([
+    dmPage.getByTestId("session-battle-screen").waitFor(),
+    playerPage.getByTestId("session-battle-screen").waitFor(),
+  ]);
+  await playerPage.getByText("Round 1", { exact: true }).waitFor();
+  await playerPage.locator(".battle-name").getByText("Lady Maria", { exact: true }).waitFor();
+  await playerPage.getByTestId("battle-turn-timer").getByText("Tactical briefing", { exact: true }).waitFor();
+  await playerPage.getByTestId("battle-turn-timer").getByText("Briefing", { exact: true }).waitFor();
+  if (await playerPage.getByRole("button", { name: "Next turn" }).count()) throw new Error("Player received DM battle controls.");
+  if (await playerPage.getByRole("button", { name: "End battle" }).count()) throw new Error("Player can end battle mode.");
+  if (await playerPage.getByRole("button", { name: "+ Add enemy" }).count()) throw new Error("Player can add enemies.");
+  if (await playerPage.locator(".game-battle-controls").count()) throw new Error("Player can see the DM control panel.");
   await dmPage.getByRole("button", { name: "Start 90 seconds" }).click();
-  await battlePage.getByTestId("battle-turn-timer").getByText("Turn timer", { exact: true }).waitFor();
-  await battlePage.getByTestId("battle-turn-timer").getByText(/1:[0-3][0-9]/).waitFor();
+  await playerPage.getByTestId("battle-turn-timer").getByText("Turn timer", { exact: true }).waitFor();
+  await playerPage.getByTestId("battle-turn-timer").getByText(/1:[0-3][0-9]/).waitFor();
 
   const enemyControl = dmPage.locator(".game-initiative-row").filter({ hasText: "Moon Beast" });
   await enemyControl.getByLabel("Add condition to Moon Beast").selectOption("poisoned");
-  const enemyDisplay = battlePage.getByTestId(`battle-combatant-${enemyId}`);
+  const enemyDisplay = playerPage.getByTestId(`battle-combatant-${enemyId}`);
   await enemyDisplay.getByText(/Poisoned/).waitFor();
 
   const enemyCard = dmPage.locator(".game-enemy").filter({ hasText: "Moon Beast" });
@@ -182,22 +187,38 @@ try {
   await enemyDisplay.getByText("5", { exact: true }).waitFor();
   await enemyDisplay.getByText("taken", { exact: true }).waitFor();
 
+  await dmPage.getByRole("button", { name: "+ Add enemy" }).click();
+  const enemyForm = dmPage.locator(".game-enemy-form");
+  await enemyForm.getByLabel("Name").fill("Grave Hound");
+  await enemyForm.getByLabel("Max HP").fill("18");
+  await enemyForm.getByLabel("Initiative").fill("-99");
+  await enemyForm.getByRole("button", { name: "Add enemy" }).click();
+  await playerPage.locator(".battle-name").getByText("Grave Hound", { exact: true }).waitFor();
+
   await noHorizontalOverflow(dmPage, "Game combat controls");
-  await dmPage.screenshot({ path: "screenshots/game-page-combat-controls.png", fullPage: true });
-  await noHorizontalOverflow(battlePage, "Battle Screen desktop");
-  await battlePage.screenshot({ path: "screenshots/battle-screen-desktop.png", fullPage: true });
+  await dmPage.screenshot({ path: "screenshots/game-battle-mode-dm.png", fullPage: true });
+  await noHorizontalOverflow(playerPage, "Player battle mode desktop");
+  await playerPage.screenshot({ path: "screenshots/game-battle-mode-player.png", fullPage: true });
 
   await dmPage.getByRole("button", { name: "Next turn" }).click();
-  await battlePage.getByTestId("battle-turn-timer").getByText("DM turn", { exact: true }).waitFor();
-  await battlePage.getByTestId("battle-turn-timer").getByText("No timer", { exact: true }).waitFor();
-  await battlePage.getByTestId("battle-turn-timer").getByText("Moon Beast", { exact: true }).waitFor();
+  await playerPage.getByTestId("battle-turn-timer").getByText("DM turn", { exact: true }).waitFor();
+  await playerPage.getByTestId("battle-turn-timer").getByText("No timer", { exact: true }).waitFor();
+  await playerPage.getByTestId("battle-turn-timer").getByText("Grave Hound", { exact: true }).waitFor();
 
-  await battlePage.setViewportSize({ width: 390, height: 844 });
-  await noHorizontalOverflow(battlePage, "Battle Screen mobile");
-  await battlePage.screenshot({ path: "screenshots/battle-screen-mobile.png", fullPage: true });
+  await playerPage.setViewportSize({ width: 390, height: 844 });
+  await noHorizontalOverflow(playerPage, "Player battle mode mobile");
+  await playerPage.screenshot({ path: "screenshots/game-battle-mode-mobile.png", fullPage: true });
+
+  dmPage.once("dialog", (dialog) => dialog.accept());
+  await dmPage.getByRole("button", { name: "End battle" }).click();
+  await Promise.all([
+    dmPage.getByTestId("session-battle-screen").waitFor({ state: "detached" }),
+    playerPage.getByTestId("session-battle-screen").waitFor({ state: "detached" }),
+  ]);
+  await playerPage.getByRole("heading", { name: "Players" }).waitFor();
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Battle Screen E2E passed: separate player display, Firestore initiative sync, timer, conditions, damage, and responsive layout.");
+  console.log("Battle mode E2E passed: automatic entry/exit on both Game pages, player read-only view, DM controls, Firestore timer, conditions, damage, enemy creation, and responsive layout.");
   await dmContext.close();
   await playerContext.close();
 } finally {

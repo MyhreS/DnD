@@ -5,6 +5,13 @@
   color: var(--ink);
 }
 
+.game-page-battle { width: min(1400px, 100%); }
+.game-battle-mode {
+  min-height: calc(100dvh - var(--nav-h) - 48px);
+  padding: 4px 0 40px;
+  background: transparent;
+}
+
 .battle-header {
   display: flex;
   align-items: flex-start;
@@ -15,6 +22,11 @@
 }
 .battle-title h1 { margin: 0; font-family: var(--font-display); font-size: clamp(1.7rem, 3.2vw, 3rem); font-weight: 600; }
 .battle-title p { margin: 3px 0 0; color: var(--gold); font-size: clamp(1.05rem, 1.6vw, 1.4rem); }
+.battle-live-status { max-width: min(42vw, 360px); text-align: right; }
+.battle-live-status span,
+.battle-live-status strong { display: block; }
+.battle-live-status span { color: var(--ink-faint); font-size: 0.78rem; }
+.battle-live-status strong { overflow: hidden; font-family: var(--font-display); font-size: clamp(1.15rem, 2vw, 1.7rem); text-overflow: ellipsis; white-space: nowrap; }
 .battle-header-actions { display: flex; gap: 8px; }
 .battle-header-actions button,
 .battle-header-actions a {
@@ -94,6 +106,14 @@
 .battle-message p { color: var(--ink-dim); }
 .battle-message a { color: var(--gold); }
 
+.game-battle-controls { margin-top: clamp(24px, 4vw, 48px); }
+.game-battle-controls .game-section-heading { align-items: center; }
+.game-battle-controls .game-combat-actions { margin: 0; }
+.game-battle-timer-actions { display: flex; gap: 8px; margin-bottom: 14px; }
+.game-battle-timer-actions:empty { display: none; }
+.game-battle-timer-actions .btn { width: auto; }
+.battle-enemies { border-bottom: 0; }
+
 @media (max-width: 980px) {
   .battle-layout { grid-template-columns: 1fr; }
   .battle-timer { position: static; grid-row: 1; padding-block: 12px 18px; }
@@ -103,15 +123,30 @@
   .battle-conditions { grid-column: 2 / -1; }
 }
 
+/* MainLayout's desktop sidebar reduces the available Game-page width well
+ * before the viewport itself reaches the tablet breakpoint. */
+@media (min-width: 981px) and (max-width: 1390px) {
+  .game-battle-mode .battle-layout { grid-template-columns: 1fr; }
+  .game-battle-mode .battle-timer { position: static; grid-row: 1; padding-block: 12px 18px; }
+  .game-battle-mode .battle-timer > strong { font-size: clamp(3.4rem, 9vw, 6.5rem); }
+  .game-battle-mode .battle-column-headings { display: none; }
+  .game-battle-mode .battle-row { grid-template-columns: 42px minmax(0, 1fr) 70px 100px 56px; }
+  .game-battle-mode .battle-conditions { grid-column: 2 / -1; }
+}
+
 @media (max-width: 560px) {
-  .battle-screen { padding: 16px 14px 28px; }
+  .battle-screen:not(.game-battle-mode) { padding: 16px 14px 28px; }
   .battle-header { display: grid; gap: 14px; }
+  .battle-live-status { max-width: 100%; text-align: left; }
   .battle-header-actions { width: 100%; }
   .battle-header-actions > * { flex: 1; text-align: center; }
   .battle-row { grid-template-columns: 30px minmax(0, 1fr) 54px; gap: 8px; padding: 12px 6px; }
   .battle-damage { grid-column: 2; }
   .battle-ac { grid-column: 3; grid-row: 2; }
   .battle-conditions { grid-column: 2 / -1; }
+  .game-battle-controls .game-section-heading { align-items: stretch; }
+  .game-battle-controls .game-combat-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+  .game-battle-controls .game-combat-actions .btn { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
