@@ -512,7 +512,6 @@ export function GamePage() {
                 <section className="game-focus-panel"><p className="eyebrow">Saved</p><h3>{(selected.attendeeRoster ?? displayedParticipants).length} {(selected.attendeeRoster ?? displayedParticipants).length === 1 ? "player" : "players"} attended</h3><p className="muted">Run by {selected.dmName} · {historyDate(selected)} · {clock}</p>{combatants.some((combatant) => combatant.kind === "monster") && <p className="game-history-enemies"><strong>Enemies:</strong> {combatants.filter((combatant) => combatant.kind === "monster").map((combatant) => combatant.name).join(", ")}</p>}</section>
               ) : isSessionDm ? (
                 <>
-                  <section className="game-focus-panel game-dm-overview"><p className="eyebrow">At the table</p><h3>{displayedParticipants.length === 0 ? "Add the first player" : `${displayedParticipants.length} player${displayedParticipants.length === 1 ? "" : "s"} ready`}</h3>{selected.campaignId === null && <button className="game-text-button" type="button" onClick={() => setManagingPlayers(true)}>{displayedParticipants.length === 0 ? "Add players" : "View party"}</button>}</section>
                   {selected.campaignId === null && selected.status === "active" && !preview && <SessionLootFeed game={selected} isDm />}
                 </>
               ) : (
