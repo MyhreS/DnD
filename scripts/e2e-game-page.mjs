@@ -86,12 +86,16 @@ try {
   await gascoigne.click();
   await owner.getByRole("button", { name: "Create session", exact: true }).click();
   await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
-  await owner.getByText("1 player ready", { exact: true }).waitFor();
+  if (await owner.getByText(/player ready|players ready|View party|Add players/).count()) {
+    throw new Error("DM session body duplicates player management");
+  }
   if (await owner.getByRole("button", { name: "Create session", exact: true }).count()) {
     throw new Error("Session owner can create a second active session");
   }
 
-  await owner.getByRole("button", { name: "Manage players", exact: true }).first().click();
+  const managePlayersButton = owner.getByRole("button", { name: "Manage players", exact: true });
+  if (await managePlayersButton.count() !== 1) throw new Error("DM should have exactly one Manage players entry point");
+  await managePlayersButton.click();
   const managePlayers = owner.getByRole("dialog", { name: "Manage players" });
   await managePlayers.getByRole("button", { name: /Gascoigne/ }).click();
   const characterSheet = owner.getByRole("dialog", { name: "Character sheet" });
