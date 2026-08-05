@@ -58,6 +58,9 @@ service cloud.firestore {
     function isGameDM(gid) {
       return isUser() && gameData(gid).dmUid == request.auth.uid;
     }
+    function isGameOpen(gid) {
+      return gameData(gid).status != "ended";
+    }
     function sessionCampaignId(sid) {
       return get(/databases/$(database)/documents/sessions/$(sid)).data.campaignId;
     }
@@ -71,6 +74,13 @@ service cloud.firestore {
     // /users/{uid} — a signed-in user's self-set profile (name). Owner only.
     match /users/{uid} {
       allow read, write: if isUser() && request.auth.uid == uid;
+    }
+
+    // One deterministic reservation per user. Session Cloud Functions are the
+    // only writers; clients read the index to hide unavailable Hunters.
+    match /activeGameSeats/{uid} {
+      allow read: if isUser();
+      allow write: if false;
     }
 
     // /characters/{id}
@@ -161,34 +171,50 @@ service cloud.firestore {
     // participantUids for invitations; legacy campaign games remain valid.
     match /games/{gameId} {
       allow read: if canReadGameData(resource.data);
-      allow create: if isUser()
-        && request.resource.data.dmUid == request.auth.uid
-        && request.resource.data.participantUids is list
-        && (request.resource.data.campaignId != null
-          || !(request.resource.data.dmUid in request.resource.data.participantUids))
-        && (request.resource.data.campaignId == null
-          || isCampaignDM(request.resource.data.campaignId));
+      // Every new game goes through the callable transaction so there is no
+      // alternate path that can bypass the one-active-session reservation.
+      allow create: if false;
       allow update: if isUser()
         && resource.data.dmUid == request.auth.uid
         && request.resource.data.dmUid == resource.data.dmUid
-        && (request.resource.data.campaignId != null
-          || !(request.resource.data.dmUid in request.resource.data.participantUids));
-      allow delete: if isUser() && resource.data.dmUid == request.auth.uid;
+        && (resource.data.campaignId != null
+          || (
+            resource.data.status != "ended"
+            && request.resource.data.campaignId == null
+            && request.resource.data.participantUids == resource.data.participantUids
+            && request.resource.data.participantRoster == resource.data.participantRoster
+            && request.resource.data.seatUids == resource.data.seatUids
+            && request.resource.data.endedAt == resource.data.endedAt
+            && request.resource.data.endedPhase == resource.data.endedPhase
+            && request.resource.data.endedLocation == resource.data.endedLocation
+            && (request.resource.data.status == resource.data.status
+              || (resource.data.status == "lobby" && request.resource.data.status == "active"))
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly([
+              "status", "startedAt", "clockRunning", "clockStartedAt",
+              "clockElapsedMs", "phase", "location", "combat"
+            ])
+          ));
+      allow delete: if isUser()
+        && resource.data.dmUid == request.auth.uid
+        && resource.data.campaignId != null;
 
       match /participants/{uid} {
         allow read: if canReadGame(gameId);
-        allow write: if isGameDM(gameId)
-          || (gameCampaignId(gameId) != null
-            && isMember(gameCampaignId(gameId))
-            && request.auth.uid == uid);
+        allow write: if isGameOpen(gameId)
+          && (isGameDM(gameId)
+            || (gameCampaignId(gameId) != null
+              && isMember(gameCampaignId(gameId))
+              && request.auth.uid == uid));
       }
 
       match /loot/{lootId} {
         allow read: if canReadGame(gameId);
-        allow create, update: if isGameDM(gameId)
-          || (gameCampaignId(gameId) != null && isMember(gameCampaignId(gameId)));
-        allow delete: if isGameDM(gameId)
-          || (gameCampaignId(gameId) != null && isCampaignDM(gameCampaignId(gameId)));
+        allow create, update: if isGameOpen(gameId)
+          && (isGameDM(gameId)
+            || (gameCampaignId(gameId) != null && isMember(gameCampaignId(gameId))));
+        allow delete: if isGameOpen(gameId)
+          && (isGameDM(gameId)
+            || (gameCampaignId(gameId) != null && isCampaignDM(gameCampaignId(gameId))));
       }
 
       // Combat tracker: members read the initiative tracker; the DM edits it.
@@ -197,15 +223,23 @@ service cloud.firestore {
       // initiative shuffling or note rewrites from the player side.
       match /combatants/{cid} {
         allow read: if canReadGame(gameId);
-        allow write: if isGameDM(gameId)
-          || (gameCampaignId(gameId) != null && isCampaignDM(gameCampaignId(gameId)));
-        allow update: if gameCampaignId(gameId) != null
-          && isMember(gameCampaignId(gameId))
-          && resource.data.kind == "monster"
-          && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["currentHp"]);
-        allow delete: if gameCampaignId(gameId) != null
-          && isMember(gameCampaignId(gameId))
-          && resource.data.kind == "monster";
+        allow create: if isGameOpen(gameId)
+          && (isGameDM(gameId)
+            || (gameCampaignId(gameId) != null && isCampaignDM(gameCampaignId(gameId))));
+        allow update: if isGameOpen(gameId) && (
+          isGameDM(gameId)
+          || (gameCampaignId(gameId) != null
+            && isMember(gameCampaignId(gameId))
+            && resource.data.kind == "monster"
+            && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["currentHp"]))
+        );
+        allow delete: if isGameOpen(gameId) && (
+          (isGameDM(gameId)
+            && (gameCampaignId(gameId) != null || gameData(gameId).status == "lobby"))
+          || (gameCampaignId(gameId) != null
+            && isMember(gameCampaignId(gameId))
+            && resource.data.kind == "monster")
+        );
       }
     }
 

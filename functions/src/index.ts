@@ -9,6 +9,13 @@ import { sendMail, sendMany } from "./email";
 import { inviteEmail, characterReminder, rsvpReminder } from "./templates";
 
 export { settleTrade } from "./trades";
+export {
+  addStandaloneGameParticipant,
+  createStandaloneGameSession,
+  discardStandaloneGameSession,
+  finishStandaloneGameSession,
+  removeStandaloneGameParticipant,
+} from "./gameSessions";
 
 initializeApp();
 const db = getFirestore();

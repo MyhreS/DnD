@@ -9,14 +9,16 @@ import { initializeApp as adminInit, cert } from "firebase-admin/app";
 import { getAuth as adminAuth } from "firebase-admin/auth";
 import { getFirestore as adminGetFirestore } from "firebase-admin/firestore";
 import { initializeApp } from "firebase/app";
-import { getAuth, signInWithCustomToken } from "firebase/auth";
+import { connectAuthEmulator, getAuth, signInWithCustomToken } from "firebase/auth";
+import { connectFunctionsEmulator, getFunctions, httpsCallable } from "firebase/functions";
 import {
-  getFirestore, doc, setDoc, addDoc, updateDoc, getDoc, getDocs,
+  connectFirestoreEmulator, getFirestore, doc, setDoc, addDoc, updateDoc, getDoc, getDocs,
   collection, query, where, arrayUnion, serverTimestamp,
 } from "firebase/firestore";
 
 const sa = process.env.AGENT_TEST_SA;
 if (!sa) throw new Error("Missing AGENT_TEST_SA (run via doppler).");
+const useEmulators = process.env.USE_FIREBASE_EMULATORS === "1";
 const cfg = {
   apiKey: process.env.VITE_FIREBASE_API_KEY,
   authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
@@ -27,19 +29,48 @@ if (!cfg.apiKey) throw new Error("Missing VITE_FIREBASE_* web config.");
 
 const admin = adminInit({ credential: cert(JSON.parse(sa)) });
 const aauth = adminAuth(admin);
+if (useEmulators) {
+  await Promise.all([
+    aauth.createUser({ uid: "agent-dm", email: "agent-dm@dandd-ea955.web.app", emailVerified: true }),
+    aauth.createUser({ uid: "agent-dm-2", email: "agent-dm-2@dandd-ea955.web.app", emailVerified: true }),
+    aauth.createUser({ uid: "agent-player", email: "agent-player@dandd-ea955.web.app", emailVerified: true }),
+  ]);
+}
 const dmTok = await aauth.createCustomToken("agent-dm");
+const dm2Tok = await aauth.createCustomToken("agent-dm-2");
 const plTok = await aauth.createCustomToken("agent-player");
 
 function client(name) {
   const app = initializeApp(cfg, name);
-  return { auth: getAuth(app), db: getFirestore(app) };
+  const auth = getAuth(app);
+  const db = getFirestore(app);
+  const functions = getFunctions(app, "europe-west1");
+  if (useEmulators) {
+    connectAuthEmulator(auth, "http://127.0.0.1:9099", { disableWarnings: true });
+    connectFirestoreEmulator(db, "127.0.0.1", 8080);
+    connectFunctionsEmulator(functions, "127.0.0.1", 5001);
+  }
+  return { auth, db, functions };
 }
 const dm = client("dm");
+const dm2 = client("dm2");
 const pl = client("pl");
 await signInWithCustomToken(dm.auth, dmTok);
+await signInWithCustomToken(dm2.auth, dm2Tok);
 await signInWithCustomToken(pl.auth, plTok);
 const dmUid = dm.auth.currentUser.uid;
+const dm2Uid = dm2.auth.currentUser.uid;
 const plUid = pl.auth.currentUser.uid;
+const plCharId = `smoke-${plUid}`;
+const createStandalone = httpsCallable(dm.functions, "createStandaloneGameSession");
+const createStandaloneAsPlayer = httpsCallable(pl.functions, "createStandaloneGameSession");
+const createStandaloneAsSecondDm = httpsCallable(dm2.functions, "createStandaloneGameSession");
+const addStandaloneParticipant = httpsCallable(dm.functions, "addStandaloneGameParticipant");
+const addStandaloneParticipantAsSecondDm = httpsCallable(dm2.functions, "addStandaloneGameParticipant");
+const finishStandalone = httpsCallable(dm.functions, "finishStandaloneGameSession");
+const discardStandalone = httpsCallable(dm.functions, "discardStandaloneGameSession");
+const discardStandaloneAsSecondDm = httpsCallable(dm2.functions, "discardStandaloneGameSession");
+const adb = adminGetFirestore(admin);
 
 const results = [];
 async function step(label, fn) {
@@ -78,10 +109,21 @@ await step("Player joins (memberUids + member doc)", async () => {
     uid: plUid, name: "Agent Player", email: "p@x", role: "player", characterId: null, joinedAt: serverTimestamp(),
   });
 });
-await step("DM starts a game", async () => {
-  const ref = await addDoc(collection(dm.db, "games"), {
+await step("Player creates own character (with Transformation)", async () => {
+  await setDoc(doc(pl.db, "characters", plCharId), {
+    id: plCharId, ownerUid: plUid, ownerEmail: "p@x", ownerName: "Agent Player",
+    name: "Player Hunter", classId: "stalker", background: "", level: 1,
+    abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
+    skillProficiencies: [], mainArmorId: null, campaignId, notes: "",
+    transformationLevel: 2, activeTransformations: ["mutatedArm"],
+    createdAt: Date.now(), updatedAt: Date.now(),
+  });
+});
+await step("Legacy campaign game fixture is seeded", async () => {
+  const ref = adb.collection("games").doc();
+  await ref.set({
     campaignId, sessionId: null, title: "Smoke Game", dmUid, dmName: "Agent DM",
-    participantUids: [], status: "lobby", phase: "exploration", sandbox: false, createdAt: serverTimestamp(),
+    participantUids: [], status: "lobby", phase: "exploration", sandbox: false, createdAt: Date.now(),
   });
   gameId = ref.id;
 });
@@ -112,18 +154,20 @@ await step("Outsider is blocked (negative)", async () => {
 });
 
 // --- Standalone session invitations (the /game page) ---
+await step("Client cannot bypass the session transaction (negative)", async () => {
+  let denied = false;
+  try {
+    await setDoc(doc(collection(dm.db, "games")), {
+      campaignId: null, title: "Bypass", dmUid, participantUids: [], participantRoster: [], status: "lobby",
+    });
+  } catch { denied = true; }
+  if (!denied) throw new Error("client created a game without reserving active seats");
+});
 await step("DM creates standalone session and invitation", async () => {
-  const gameRef = doc(collection(dm.db, "games"));
-  standaloneGameId = gameRef.id;
-  await setDoc(gameRef, {
-    campaignId: null, sessionId: null, title: "Standalone Smoke", dmUid, dmName: "Agent DM",
-    participantUids: [plUid], status: "lobby", phase: "exploration", location: "wild",
-    participantRoster: [{
-      uid: plUid, characterId: `smoke-${plUid}`, playerName: "Agent Player", name: "Player Hunter",
-      classId: "stalker", level: 1, role: "player", joinedAt: Date.now(), lastSeen: Date.now(),
-    }],
-    clockRunning: false, clockStartedAt: null, clockElapsedMs: 0, createdAt: serverTimestamp(),
+  const result = await createStandalone({
+    title: "Standalone Smoke", dmName: "Agent DM", hunterIds: [plCharId],
   });
+  standaloneGameId = result.data.gameId;
 });
 await step("Invited player discovers standalone session", async () => {
   const snap = await getDocs(query(collection(pl.db, "games"), where("participantUids", "array-contains", plUid)));
@@ -146,24 +190,70 @@ await step("Invited player cannot control standalone session (negative)", async 
   catch { denied = true; }
   if (!denied) throw new Error("invited player could control the session");
 });
+await step("DM and invited player cannot open second sessions (negative)", async () => {
+  for (const create of [createStandalone, createStandaloneAsPlayer]) {
+    let denied = false;
+    try { await create({ title: "Second Session", dmName: "Busy", hunterIds: [] }); }
+    catch { denied = true; }
+    if (!denied) throw new Error("busy user created a second active session");
+  }
+});
+await step("Another DM cannot invite a player who is already in session (negative)", async () => {
+  const created = await createStandaloneAsSecondDm({ title: "Other Table", dmName: "Agent DM 2", hunterIds: [] });
+  const otherGameId = created.data.gameId;
+  let denied = false;
+  try { await addStandaloneParticipantAsSecondDm({ gameId: otherGameId, characterId: plCharId }); }
+  catch { denied = true; }
+  await discardStandaloneAsSecondDm({ gameId: otherGameId });
+  if (!denied) throw new Error("busy player was invited to another DM's active session");
+});
 await step("Session creator cannot add themselves as a player (negative)", async () => {
   let denied = false;
-  try {
-    await updateDoc(doc(dm.db, "games", standaloneGameId), {
-      participantUids: [plUid, dmUid],
-      participantRoster: [
-        {
-          uid: plUid, characterId: `smoke-${plUid}`, playerName: "Agent Player", name: "Player Hunter",
-          classId: "stalker", level: 1, role: "player", joinedAt: Date.now(), lastSeen: Date.now(),
-        },
-        {
-          uid: dmUid, characterId: `smoke-${dmUid}`, playerName: "Agent DM", name: "DM Hunter",
-          classId: "brute", level: 1, role: "player", joinedAt: Date.now(), lastSeen: Date.now(),
-        },
-      ],
-    });
-  } catch { denied = true; }
+  try { await addStandaloneParticipant({ gameId: standaloneGameId, characterId: `smoke-${dmUid}` }); }
+  catch { denied = true; }
   if (!denied) throw new Error("session creator could add themselves as a player");
+});
+await step("DM starts the standalone session", async () => {
+  await updateDoc(doc(dm.db, "games", standaloneGameId), {
+    status: "active", startedAt: serverTimestamp(), clockRunning: true, clockStartedAt: Date.now(),
+  });
+});
+await step("A fought enemy cannot be removed from future history (negative)", async () => {
+  const { deleteDoc } = await import("firebase/firestore");
+  let denied = false;
+  try { await deleteDoc(doc(dm.db, "games", standaloneGameId, "combatants", standaloneMonsterId)); }
+  catch { denied = true; }
+  if (!denied) throw new Error("active-session enemy could be removed from history");
+});
+await step("Ending saves history, preserves enemies, and releases every seat", async () => {
+  await finishStandalone({ gameId: standaloneGameId, endedPhase: "combat", endedLocation: "wild" });
+  const game = await getDoc(doc(pl.db, "games", standaloneGameId));
+  if (game.data()?.status !== "ended" || !game.data()?.historySavedAt) throw new Error("history-not-saved");
+  const enemy = await getDoc(doc(pl.db, "games", standaloneGameId, "combatants", standaloneMonsterId));
+  if (!enemy.exists()) throw new Error("history-enemy-missing");
+  const [dmSeat, playerSeat] = await Promise.all([
+    getDoc(doc(dm.db, "activeGameSeats", dmUid)),
+    getDoc(doc(dm.db, "activeGameSeats", plUid)),
+  ]);
+  if (dmSeat.exists() || playerSeat.exists()) throw new Error("active seats were not released");
+});
+await step("Ended history is read-only (negative)", async () => {
+  let enemyDenied = false;
+  try { await updateDoc(doc(dm.db, "games", standaloneGameId, "combatants", standaloneMonsterId), { currentHp: 1 }); }
+  catch { enemyDenied = true; }
+  if (!enemyDenied) throw new Error("ended session enemy remained editable");
+
+  let gameDenied = false;
+  try { await updateDoc(doc(dm.db, "games", standaloneGameId), { title: "Rewritten history" }); }
+  catch { gameDenied = true; }
+  if (!gameDenied) throw new Error("ended session metadata remained editable");
+});
+await step("A new lobby can be created after finish and discarded without history", async () => {
+  const created = await createStandalone({ title: "Discard Smoke", dmName: "Agent DM", hunterIds: [plCharId] });
+  const discardedId = created.data.gameId;
+  await discardStandalone({ gameId: discardedId });
+  const discarded = await adb.doc(`games/${discardedId}`).get();
+  if (discarded.exists) throw new Error("discarded lobby still exists");
 });
 
 // --- Combat tracker: DM owns rows; members may kill/remove MONSTERS only ---
@@ -217,17 +307,6 @@ await step("Player removes the monster from battle (delete)", async () => {
 // list (rests). The NEGATIVE cases assert the owner-write constraints in the
 // DEPLOYED rules — live since the Transformation feature merged — so they
 // always run.
-const plCharId = `smoke-${plUid}`;
-await step("Player creates own character (with Transformation)", async () => {
-  await setDoc(doc(pl.db, "characters", plCharId), {
-    id: plCharId, ownerUid: plUid, ownerEmail: "p@x", ownerName: "Agent Player",
-    name: "Player Hunter", classId: "stalker", background: "", level: 1,
-    abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
-    skillProficiencies: [], mainArmorId: null, campaignId, notes: "",
-    transformationLevel: 2, activeTransformations: ["mutatedArm"],
-    createdAt: Date.now(), updatedAt: Date.now(),
-  });
-});
 await step("Player cannot raise own Transformation Level (negative)", async () => {
   let denied = false;
   try {
@@ -265,7 +344,6 @@ await step("Client can still read /characters (regression)", async () => {
 });
 
 // Cleanup (admin bypass, best-effort).
-const adb = adminGetFirestore(admin);
 async function del(path) { try { await adb.doc(path).delete(); } catch { /* best-effort */ } }
 await step("cleanup", async () => {
   if (gameId) {
@@ -286,6 +364,9 @@ await step("cleanup", async () => {
   }
   await del(`characters/smoke-${dmUid}`);
   await del(`characters/smoke-${plUid}`);
+  await del(`activeGameSeats/${dmUid}`);
+  await del(`activeGameSeats/${dm2Uid}`);
+  await del(`activeGameSeats/${plUid}`);
 });
 
 console.log(results.join("\n"));
