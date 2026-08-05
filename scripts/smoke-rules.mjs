@@ -67,6 +67,9 @@ const createStandaloneAsPlayer = httpsCallable(pl.functions, "createStandaloneGa
 const createStandaloneAsSecondDm = httpsCallable(dm2.functions, "createStandaloneGameSession");
 const addStandaloneParticipant = httpsCallable(dm.functions, "addStandaloneGameParticipant");
 const addStandaloneParticipantAsSecondDm = httpsCallable(dm2.functions, "addStandaloneGameParticipant");
+const removeStandaloneParticipant = httpsCallable(dm.functions, "removeStandaloneGameParticipant");
+const createStandaloneLoot = httpsCallable(dm.functions, "createStandaloneGameLoot");
+const claimStandaloneLoot = httpsCallable(pl.functions, "claimStandaloneGameLoot");
 const finishStandalone = httpsCallable(dm.functions, "finishStandaloneGameSession");
 const discardStandalone = httpsCallable(dm.functions, "discardStandaloneGameSession");
 const discardStandaloneAsSecondDm = httpsCallable(dm2.functions, "discardStandaloneGameSession");
@@ -175,14 +178,23 @@ await step("Invited player discovers standalone session", async () => {
   if (!session) throw new Error("standalone-session-not-visible");
   if (session.data().participantRoster?.[0]?.name !== "Player Hunter") throw new Error("standalone-roster-not-visible");
 });
-await step("DM adds enemy and invited player sees damage", async () => {
-  const monster = await addDoc(collection(dm.db, "games", standaloneGameId, "combatants"), {
+await step("DM publishes a sanitized enemy and private stats stay private", async () => {
+  const monster = doc(collection(dm.db, "games", standaloneGameId, "combatants"));
+  await setDoc(monster, {
     kind: "monster", name: "Standalone Beast", characterId: null, initiative: 14,
-    ac: 12, maxHp: 20, currentHp: 15, conditions: [], note: null, createdAt: serverTimestamp(),
+    ac: 12, maxHp: 20, currentHp: 15, conditions: [], note: "Secret attack", revealHp: false, revealStats: false, createdAt: serverTimestamp(),
+  });
+  await setDoc(doc(dm.db, "games", standaloneGameId, "battleView", monster.id), {
+    kind: "monster", name: "Standalone Beast", characterId: null, initiative: 14,
+    ac: null, maxHp: null, currentHp: null, conditions: [], note: null, revealHp: false, revealStats: false, createdAt: serverTimestamp(),
   });
   standaloneMonsterId = monster.id;
-  const snap = await getDoc(doc(pl.db, "games", standaloneGameId, "combatants", monster.id));
-  if (!snap.exists() || snap.data().maxHp - snap.data().currentHp !== 5) throw new Error("standalone-enemy-not-visible");
+  let privateDenied = false;
+  try { await getDoc(doc(pl.db, "games", standaloneGameId, "combatants", monster.id)); }
+  catch { privateDenied = true; }
+  if (!privateDenied) throw new Error("player-read-private-monster-stats");
+  const snap = await getDoc(doc(pl.db, "games", standaloneGameId, "battleView", monster.id));
+  if (!snap.exists() || snap.data().maxHp !== null || snap.data().ac !== null || snap.data().note !== null) throw new Error("battle-projection-leaked-stats");
 });
 await step("Invited player cannot control standalone session (negative)", async () => {
   let denied = false;
@@ -217,13 +229,41 @@ await step("DM starts the standalone session", async () => {
   await updateDoc(doc(dm.db, "games", standaloneGameId), {
     status: "active", startedAt: serverTimestamp(), clockRunning: true, clockStartedAt: Date.now(),
     combat: {
-      active: true, round: 1, turnId: standaloneMonsterId, designatedWardenId: null,
-      timerPhase: "untimed", timerEndsAt: null, pausedRemainingMs: null,
+      active: false, round: 1, turnId: null, designatedWardenId: null,
+      timerPhase: "idle", timerEndsAt: null, pausedRemainingMs: null,
     },
   });
 });
+await step("DM manages players during active exploration and attendance is retained", async () => {
+  await removeStandaloneParticipant({ gameId: standaloneGameId, uid: plUid });
+  await addStandaloneParticipant({ gameId: standaloneGameId, characterId: plCharId });
+  const game = await getDoc(doc(dm.db, "games", standaloneGameId));
+  if (!game.data()?.attendeeRoster?.some((entry) => entry.uid === plUid)) throw new Error("attendance-was-lost");
+});
+await step("DM creates a unique item and the invited Hunter claims it once", async () => {
+  const created = await createStandaloneLoot({ gameId: standaloneGameId, item: {
+    name: "Smoke Blade", category: "Weapon", carry: "Significant", weightLb: 3,
+    attackBonus: "+1", damage: "1d8", note: "Emulator treasure",
+  } });
+  await claimStandaloneLoot({ gameId: standaloneGameId, lootId: created.data.lootId, characterId: plCharId });
+  const [loot, hunter] = await Promise.all([
+    getDoc(doc(pl.db, "games", standaloneGameId, "loot", created.data.lootId)),
+    getDoc(doc(pl.db, "characters", plCharId)),
+  ]);
+  if (loot.data()?.status !== "claimed") throw new Error("loot-was-not-claimed");
+  if (!hunter.data()?.customItems?.some((item) => item.name === "Smoke Blade")) throw new Error("custom-item-not-added");
+  if (!hunter.data()?.inventory?.some((item) => item.itemId === loot.data()?.item?.id)) throw new Error("claimed-item-not-in-inventory");
+  let duplicateDenied = false;
+  try { await claimStandaloneLoot({ gameId: standaloneGameId, lootId: created.data.lootId, characterId: plCharId }); }
+  catch { duplicateDenied = true; }
+  if (!duplicateDenied) throw new Error("loot-was-claimed-twice");
+});
 await step("A fought enemy cannot be removed from future history (negative)", async () => {
   const { deleteDoc } = await import("firebase/firestore");
+  await updateDoc(doc(dm.db, "games", standaloneGameId), { combat: {
+    active: true, round: 1, turnId: standaloneMonsterId, designatedWardenId: null,
+    timerPhase: "untimed", timerEndsAt: null, pausedRemainingMs: null,
+  } });
   let denied = false;
   try { await deleteDoc(doc(dm.db, "games", standaloneGameId, "combatants", standaloneMonsterId)); }
   catch { denied = true; }
@@ -236,7 +276,7 @@ await step("Ending saves history, preserves enemies, and releases every seat", a
   if (game.data()?.combat?.active !== false || game.data()?.combat?.timerPhase !== "idle") {
     throw new Error("ended history kept a live combat timer");
   }
-  const enemy = await getDoc(doc(pl.db, "games", standaloneGameId, "combatants", standaloneMonsterId));
+  const enemy = await getDoc(doc(pl.db, "games", standaloneGameId, "battleView", standaloneMonsterId));
   if (!enemy.exists()) throw new Error("history-enemy-missing");
   const [dmSeat, playerSeat] = await Promise.all([
     getDoc(doc(dm.db, "activeGameSeats", dmUid)),
@@ -263,7 +303,7 @@ await step("A new lobby can be created after finish and discarded without histor
   if (discarded.exists) throw new Error("discarded lobby still exists");
 });
 
-// --- Combat tracker: DM owns rows; members may kill/remove MONSTERS only ---
+// --- Combat tracker: private rows are DM-only; members consume battleView. ---
 let monsterId, pcRowId;
 await step("DM adds combatants (monster + pc)", async () => {
   const m = await addDoc(collection(dm.db, "games", gameId, "combatants"), {
@@ -272,15 +312,30 @@ await step("DM adds combatants (monster + pc)", async () => {
     note: null, createdAt: serverTimestamp(),
   });
   monsterId = m.id;
+  await setDoc(doc(dm.db, "games", gameId, "battleView", m.id), {
+    kind: "monster", name: "Smoke Beast", characterId: null, initiative: 12,
+    ac: null, maxHp: null, currentHp: null, conditions: [], conditionSince: {},
+    note: null, revealHp: false, revealStats: false, createdAt: serverTimestamp(),
+  });
   const p = await addDoc(collection(dm.db, "games", gameId, "combatants"), {
     kind: "pc", name: "Smoke Hunter", characterId: `smoke-${dmUid}`, initiative: 15,
     ac: null, maxHp: null, currentHp: null, conditions: [], conditionSince: {},
     note: null, createdAt: serverTimestamp(),
   });
   pcRowId = p.id;
+  await setDoc(doc(dm.db, "games", gameId, "battleView", p.id), {
+    kind: "pc", name: "Smoke Hunter", characterId: `smoke-${dmUid}`, initiative: 15,
+    ac: null, maxHp: null, currentHp: null, conditions: [], conditionSince: {},
+    note: null, createdAt: serverTimestamp(),
+  });
 });
-await step("Player marks the monster slain (update)", async () => {
-  await updateDoc(doc(pl.db, "games", gameId, "combatants", monsterId), { currentHp: 0 });
+await step("Player reads sanitized battle row but cannot read private combatant", async () => {
+  const visible = await getDoc(doc(pl.db, "games", gameId, "battleView", monsterId));
+  if (!visible.exists() || visible.data().maxHp !== null) throw new Error("sanitized-row-missing");
+  let denied = false;
+  try { await getDoc(doc(pl.db, "games", gameId, "combatants", monsterId)); }
+  catch { denied = true; }
+  if (!denied) throw new Error("private-row-readable");
 });
 await step("Player cannot edit a PC combatant (negative)", async () => {
   let denied = false;
@@ -305,9 +360,12 @@ await step("Player cannot heal/buff/rewrite a monster (negative)", async () => {
     if (!denied) throw new Error(`player could write ${JSON.stringify(bad)} on a monster (currentHp-only allowed)`);
   }
 });
-await step("Player removes the monster from battle (delete)", async () => {
+await step("Player cannot remove the monster from battle (negative)", async () => {
   const { deleteDoc } = await import("firebase/firestore");
-  await deleteDoc(doc(pl.db, "games", gameId, "combatants", monsterId));
+  let denied = false;
+  try { await deleteDoc(doc(pl.db, "games", gameId, "combatants", monsterId)); }
+  catch { denied = true; }
+  if (!denied) throw new Error("player deleted private monster");
 });
 
 // --- Transformation: DM-recorded; owners may only REDUCE the level / CLEAR the
@@ -356,12 +414,15 @@ await step("cleanup", async () => {
   if (gameId) {
     await del(`games/${gameId}/participants/${plUid}`);
     if (monsterId) await del(`games/${gameId}/combatants/${monsterId}`);
+    if (monsterId) await del(`games/${gameId}/battleView/${monsterId}`);
     if (pcRowId) await del(`games/${gameId}/combatants/${pcRowId}`);
+    if (pcRowId) await del(`games/${gameId}/battleView/${pcRowId}`);
     await del(`games/${gameId}`);
   }
   if (standaloneGameId) {
     await del(`games/${standaloneGameId}/participants/${plUid}`);
     if (standaloneMonsterId) await del(`games/${standaloneGameId}/combatants/${standaloneMonsterId}`);
+    if (standaloneMonsterId) await del(`games/${standaloneGameId}/battleView/${standaloneMonsterId}`);
     await del(`games/${standaloneGameId}`);
   }
   if (campaignId) {

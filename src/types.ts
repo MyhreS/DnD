@@ -229,6 +229,10 @@ export interface Combatant {
   conditionSince?: Record<string, number>;
   /** Optional DM note for a monster — its attack / special / damage. */
   note?: string | null;
+  /** Monster visibility switches. False/missing keeps the corresponding
+   * private fields out of the player-readable battle projection. */
+  revealHp?: boolean;
+  revealStats?: boolean;
   /** True when this PC's class is Hunter Warden. */
   isWarden?: boolean;
   createdAt: number;
@@ -249,6 +253,9 @@ export interface Game {
   /** Selected Hunter snapshots for invitation-based standalone sessions.
    * Campaign games continue to use the legacy participants subcollection. */
   participantRoster: GameParticipant[];
+  /** Append-only attendance snapshots. Unlike the active roster, this retains
+   * Hunters removed mid-session so history still records who took part. */
+  attendeeRoster?: GameParticipant[];
   status: GameStatus;
   /** Current phase (meaningful while active). */
   phase: GamePhase;
@@ -290,6 +297,20 @@ export interface GameParticipant {
   joinedAt: number;
   /** Presence heartbeat (ms epoch). */
   lastSeen: number;
+}
+
+/** A unique item created by the DM during a standalone session. It remains in
+ * session history after being claimed; claiming copies the definition into the
+ * Hunter's custom item catalog. */
+export interface SessionLoot {
+  id: string;
+  item: CustomItem;
+  status: "available" | "claimed";
+  createdAt: number;
+  claimedAt?: number | null;
+  claimedByUid?: string | null;
+  claimedByCharacterId?: string | null;
+  claimedByName?: string | null;
 }
 
 /** A character removed from play (dead or deleted), kept so the DM can recover

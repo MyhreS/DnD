@@ -348,7 +348,7 @@ export async function deleteCampaign(campaignId: string): Promise<void> {
       await deleteDoc(d.ref);
     }
   };
-  await purgeScoped("games", ["participants", "loot", "combatants"]);
+  await purgeScoped("games", ["participants", "loot", "combatants", "battleView"]);
   await purgeScoped("sessions");
   await purgeScoped("trades");
   await purgeScoped("shopListings");

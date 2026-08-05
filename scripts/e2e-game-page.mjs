@@ -86,52 +86,51 @@ try {
   await gascoigne.click();
   await owner.getByRole("button", { name: "Create session", exact: true }).click();
   await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
-  await owner.getByText("Gascoigne", { exact: true }).waitFor();
+  await owner.getByText("1 player ready", { exact: true }).waitFor();
   if (await owner.getByRole("button", { name: "Create session", exact: true }).count()) {
     throw new Error("Session owner can create a second active session");
   }
 
-  await owner.getByRole("button", { name: "Open Gascoigne character sheet" }).click();
+  await owner.getByRole("button", { name: "Manage players", exact: true }).first().click();
+  const managePlayers = owner.getByRole("dialog", { name: "Manage players" });
+  await managePlayers.getByRole("button", { name: /Gascoigne/ }).click();
   const characterSheet = owner.getByRole("dialog", { name: "Character sheet" });
   await characterSheet.waitFor();
   await characterSheet.getByRole("button", { name: /Back/ }).click();
   await characterSheet.waitFor({ state: "hidden" });
 
-  await owner.getByRole("button", { name: "+ Add Hunter" }).click();
-  const addPopover = owner.locator(".game-add-popover");
-  await addPopover.getByPlaceholder("Search players…").fill("Eileen");
-  if (await addPopover.getByRole("button", { name: /Eileen the Crow/ }).count()) {
+  await managePlayers.getByPlaceholder("Search player or Hunter…").fill("Eileen");
+  if (await managePlayers.getByRole("button", { name: /Eileen the Crow/ }).count()) {
     throw new Error("Session creator can add their own Hunter after session creation");
   }
-  await owner.getByRole("button", { name: "Close", exact: true }).click();
+  await managePlayers.getByRole("button", { name: "Done", exact: true }).click();
 
   await owner.getByRole("button", { name: "Start session" }).click();
   await owner.getByRole("button", { name: "Pause" }).waitFor();
   await owner.waitForFunction(() => document.querySelector('[data-testid="session-clock"]')?.textContent !== "00:00:00");
   await owner.getByRole("button", { name: "Pause" }).click();
   await owner.getByRole("button", { name: "Resume" }).waitFor();
-  await owner.getByRole("button", { name: "+ Add enemy" }).click();
-  await owner.getByLabel("Name").fill("Moon Beast");
-  await owner.getByLabel("Max HP").fill("30");
-  await owner.getByRole("spinbutton", { name: "Initiative", exact: true }).fill("16");
-  await owner.getByRole("spinbutton", { name: "AC", exact: true }).fill("14");
-  await owner.getByLabel("Notes").fill("Howls when bloodied.");
   await owner.getByRole("button", { name: "Add enemy", exact: true }).click();
-  const beast = owner.locator(".game-enemy").filter({ hasText: "Moon Beast" });
-  await beast.waitFor();
-  await beast.getByRole("button", { name: "Damage Moon Beast by 5" }).click();
-  await beast.getByText("5 damage taken", { exact: false }).waitFor();
+  const addEnemyDialog = owner.getByRole("dialog", { name: "Add enemy" });
+  await addEnemyDialog.getByLabel("Name").fill("Moon Beast");
+  await addEnemyDialog.getByLabel("Max HP").fill("30");
+  await addEnemyDialog.getByRole("spinbutton", { name: "Initiative", exact: true }).fill("16");
+  await addEnemyDialog.getByRole("spinbutton", { name: "AC", exact: true }).fill("14");
+  await addEnemyDialog.getByLabel("Private notes").fill("Howls when bloodied.");
+  await addEnemyDialog.getByRole("button", { name: "Add enemy", exact: true }).click();
+  await owner.getByRole("button", { name: "Start battle screen" }).click();
+  await owner.getByTestId("session-battle-screen").waitFor();
+  await owner.locator(".battle-name").getByText("Moon Beast", { exact: true }).waitFor();
+  owner.once("dialog", (dialog) => dialog.accept());
+  await owner.getByRole("button", { name: "End battle" }).click();
+  await owner.getByTestId("session-battle-screen").waitFor({ state: "detached" });
 
   owner.once("dialog", (dialog) => dialog.accept());
   await owner.getByRole("button", { name: "End session" }).click();
   await owner.getByText("Session history", { exact: true }).waitFor();
   await owner.getByText("History", { exact: true }).waitFor();
-  await owner.getByText("Saved", { exact: true }).waitFor();
+  await owner.getByText("1 player attended", { exact: true }).waitFor();
   await owner.getByRole("button", { name: "Create session", exact: true }).waitFor();
-  await beast.getByText("5 damage taken", { exact: false }).waitFor();
-  if (await beast.getByRole("button", { name: "Damage Moon Beast by 5" }).count()) {
-    throw new Error("Ended session history still exposes enemy controls");
-  }
 
   await owner.getByRole("button", { name: "Create session", exact: true }).click();
   await owner.getByLabel("Session name").fill("Throwaway lobby");
@@ -141,7 +140,7 @@ try {
   owner.once("dialog", (dialog) => dialog.accept());
   await owner.getByRole("button", { name: "Discard session" }).click();
   await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
-  await owner.getByText("Gascoigne", { exact: true }).waitFor();
+  await owner.getByText("1 player attended", { exact: true }).waitFor();
   if (await owner.getByText("Throwaway lobby", { exact: true }).count()) {
     throw new Error("Discarded lobby was retained in session history");
   }
@@ -154,18 +153,15 @@ try {
   const player = await playerContext.newPage();
   watch(player, errors);
   await player.goto(`${BASE}/game?preview=user.player`, { waitUntil: "domcontentloaded" });
-  await player.getByRole("heading", { name: "Game", exact: true }).waitFor();
+  await player.getByRole("heading", { name: "The Sunless Vault", exact: true }).waitFor();
   if (await player.getByRole("button", { name: "Create session", exact: true }).count()) {
     throw new Error("Invited player can create a second active session");
   }
   const playerLinks = await player.getByRole("navigation", { name: "Primary" }).getByRole("link").allTextContents();
   if (playerLinks.includes("DM")) throw new Error(`Legacy DM page remains in player navigation: ${JSON.stringify(playerLinks)}`);
-  await player.getByText("Christoffer added your Hunter to this session.", { exact: true }).waitFor();
-  const clericBeast = player.locator(".game-enemy").filter({ hasText: "Cleric Beast" });
-  await clericBeast.getByText("28 damage taken", { exact: false }).waitFor();
-  if (await clericBeast.getByRole("button", { name: /Damage Cleric Beast/ }).count()) {
-    throw new Error("Player can see DM enemy controls");
-  }
+  await player.getByText("Your Hunter", { exact: true }).waitFor();
+  if (await player.getByText("Cleric Beast", { exact: true }).count()) throw new Error("Normal player session page exposes the encounter roster");
+  if (await player.getByText("Players", { exact: true }).count()) throw new Error("Normal player session page exposes the party roster");
   await assertNoHorizontalOverflow(player, "Mobile Game page");
   await player.screenshot({ path: "screenshots/game-page-player-mobile.png", fullPage: true });
 
