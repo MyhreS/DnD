@@ -13,7 +13,8 @@ import {
   serverTimestamp,
   type Timestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "@/lib/firebase";
 import type {
   Game,
   GameParticipant,
@@ -26,6 +27,39 @@ import type {
 import { emptyEncounter, normalizeEncounterState } from "@/features/play/lib/turnTimer";
 
 const gamesCol = collection(db, "games");
+const activeSeatsCol = collection(db, "activeGameSeats");
+
+const createStandaloneSessionFn = httpsCallable<
+  { title: string; dmName: string; hunterIds: string[] },
+  { gameId: string }
+>(functions, "createStandaloneGameSession");
+const addStandaloneParticipantFn = httpsCallable<
+  { gameId: string; characterId: string },
+  { ok: boolean }
+>(functions, "addStandaloneGameParticipant");
+const removeStandaloneParticipantFn = httpsCallable<
+  { gameId: string; uid: string },
+  { ok: boolean }
+>(functions, "removeStandaloneGameParticipant");
+const finishStandaloneSessionFn = httpsCallable<
+  { gameId: string; endedPhase: GamePhase; endedLocation: GameLocation },
+  { ok: boolean }
+>(functions, "finishStandaloneGameSession");
+const discardStandaloneSessionFn = httpsCallable<{ gameId: string }, { ok: boolean }>(
+  functions,
+  "discardStandaloneGameSession",
+);
+
+export interface ActiveGameSeat {
+  uid: string;
+  gameId: string;
+  role: "dm" | "player";
+}
+
+function callableError(error: unknown, fallback: string): Error {
+  if (error instanceof Error && error.message.trim()) return new Error(error.message);
+  return new Error(fallback);
+}
 
 /** Coerce a Firestore Timestamp | number | undefined to ms epoch. */
 function ms(v: unknown): number {
@@ -110,6 +144,29 @@ export function subscribeUserGames(
   return () => unsubs.forEach((unsubscribe) => unsubscribe());
 }
 
+/** Availability index maintained atomically by the session Cloud Functions. */
+export function subscribeActiveGameSeats(
+  cb: (seats: Map<string, ActiveGameSeat>) => void,
+  onError?: (err: unknown) => void,
+): () => void {
+  return onSnapshot(
+    activeSeatsCol,
+    (snapshot) => cb(new Map(snapshot.docs.map((item) => {
+      const data = item.data();
+      const seat: ActiveGameSeat = {
+        uid: item.id,
+        gameId: String(data.gameId ?? ""),
+        role: data.role === "dm" ? "dm" : "player",
+      };
+      return [item.id, seat];
+    }))),
+    (error) => {
+      console.error("Active game seats subscription failed", error);
+      onError?.(error);
+    },
+  );
+}
+
 /** Live-subscribe to a campaign's games (newest first, sorted client-side to
  * avoid a composite index). The store derives the current/last game. */
 export function subscribeGames(
@@ -163,70 +220,60 @@ export async function createGame(input: CreateGameInput): Promise<string> {
   return ref.id;
 }
 
-function participantSnapshot(card: HunterCard): GameParticipant {
-  const now = Date.now();
-  return {
-    uid: card.ownerUid,
-    characterId: card.id,
-    playerName: card.ownerName || card.ownerEmail || "Player",
-    name: card.name || "Hunter",
-    classId: card.classId || "",
-    subclassId: card.subclassId ?? null,
-    className: typeof card.sheet?.class === "string" ? card.sheet.class : null,
-    level: Math.max(1, card.level || 1),
-    role: "player",
-    joinedAt: now,
-    lastSeen: now,
-  };
-}
-
 /** Atomically creates a standalone session and its selected Hunter roster. */
 export async function createGameSession(input: CreateGameInput, hunters: HunterCard[]): Promise<string> {
-  const gameRef = doc(gamesCol);
+  if (input.campaignId !== null) throw new Error("Campaign sessions are not created from the Game page.");
   const invited = hunters.filter((hunter) => hunter.ownerUid !== input.dmUid);
   const unique = [...new Map(invited.map((hunter) => [hunter.ownerUid, hunter])).values()];
-  await setDoc(gameRef, {
-    campaignId: input.campaignId ?? null,
-    sessionId: input.sessionId ?? null,
-    title: input.title.trim().slice(0, 80),
-    dmUid: input.dmUid,
-    dmName: input.dmName,
-    participantUids: unique.map((hunter) => hunter.ownerUid),
-    participantRoster: unique.map(participantSnapshot),
-    status: "lobby",
-    phase: "exploration",
-    location: "wild",
-    combat: emptyEncounter(),
-    sandbox: input.sandbox ?? false,
-    clockRunning: false,
-    clockStartedAt: null,
-    clockElapsedMs: 0,
-    createdAt: serverTimestamp(),
-    startedAt: null,
-    endedAt: null,
-    endedPhase: null,
-    endedLocation: null,
-  });
-  return gameRef.id;
+  try {
+    const result = await createStandaloneSessionFn({
+      title: input.title.trim().slice(0, 80),
+      dmName: input.dmName,
+      hunterIds: unique.map((hunter) => hunter.id),
+    });
+    return result.data.gameId;
+  } catch (error) {
+    throw callableError(error, "Could not create the session.");
+  }
 }
 
 export async function addGameParticipant(game: Game, card: HunterCard): Promise<void> {
   if (card.ownerUid === game.dmUid) {
     throw new Error("The session creator cannot also join as a player.");
   }
-  const next = [...game.participantRoster.filter((participant) => participant.uid !== card.ownerUid), participantSnapshot(card)];
-  await updateDoc(doc(gamesCol, game.id), {
-    participantUids: next.map((participant) => participant.uid),
-    participantRoster: next,
-  });
+  try {
+    await addStandaloneParticipantFn({ gameId: game.id, characterId: card.id });
+  } catch (error) {
+    throw callableError(error, "Could not add that player.");
+  }
 }
 
 export async function removeGameParticipant(game: Game, uid: string): Promise<void> {
-  const next = game.participantRoster.filter((participant) => participant.uid !== uid);
-  await updateDoc(doc(gamesCol, game.id), {
-    participantUids: next.map((participant) => participant.uid),
-    participantRoster: next,
-  });
+  try {
+    await removeStandaloneParticipantFn({ gameId: game.id, uid });
+  } catch (error) {
+    throw callableError(error, "Could not remove that player.");
+  }
+}
+
+export async function finishGameSession(game: Game): Promise<void> {
+  try {
+    await finishStandaloneSessionFn({
+      gameId: game.id,
+      endedPhase: game.phase,
+      endedLocation: game.location ?? "wild",
+    });
+  } catch (error) {
+    throw callableError(error, "Could not end the session.");
+  }
+}
+
+export async function discardGameSession(gameId: string): Promise<void> {
+  try {
+    await discardStandaloneSessionFn({ gameId });
+  } catch (error) {
+    throw callableError(error, "Could not discard the session.");
+  }
 }
 
 export async function startGame(gameId: string): Promise<void> {

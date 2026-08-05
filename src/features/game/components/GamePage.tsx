@@ -2,14 +2,17 @@ import { useEffect, useMemo, useState, type FormEvent } from "react";
 import {
   addGameParticipant,
   createGameSession,
-  endGame,
+  discardGameSession,
+  finishGameSession,
   pauseGameClock,
   removeGameParticipant,
   resetGameClock,
   resumeGameClock,
   startGame,
+  subscribeActiveGameSeats,
   subscribeParticipants,
   subscribeUserGames,
+  type ActiveGameSeat,
 } from "@/api/games";
 import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview";
 import { useAllCharacters } from "@/features/game/hooks/useAllCharacters";
@@ -57,10 +60,16 @@ function hunterSearchText(card: HunterCard): string {
     .toLocaleLowerCase();
 }
 
+function historyDate(game: Game): string {
+  const value = game.endedAt || game.createdAt;
+  return value ? new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date(value)) : "Saved session";
+}
+
 export function GamePage() {
   const user = useAuthStore((state) => state.user);
   const member = useAuthStore((state) => state.member);
   const preview = isPreviewActive();
+  const emptyGamePreview = preview && new URLSearchParams(window.location.search).get("game") === "empty";
   const { characters, error: charactersError } = useAllCharacters();
   const otherCharacters = useMemo(
     () => (characters ?? []).filter((card) => card.ownerUid !== user?.uid),
@@ -71,6 +80,7 @@ export function GamePage() {
     [characters],
   );
   const [games, setGames] = useState<Game[]>([]);
+  const [activeSeats, setActiveSeats] = useState<Map<string, ActiveGameSeat>>(new Map());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<GameParticipant[]>([]);
   const [previewRosters, setPreviewRosters] = useState<Record<string, GameParticipant[]>>({
@@ -85,9 +95,9 @@ export function GamePage() {
     if (!user) return;
     if (preview) {
       const timer = window.setTimeout(() => {
-        const game = previewGame();
-        setGames([game]);
-        setSelectedId(game.id);
+        const game = emptyGamePreview ? null : previewGame();
+        setGames(game ? [game] : []);
+        setSelectedId(game?.id ?? null);
         setLoading(false);
       }, 0);
       return () => window.clearTimeout(timer);
@@ -107,11 +117,36 @@ export function GamePage() {
         setError("Could not load your game sessions.");
       },
     );
-  }, [preview, user]);
+  }, [emptyGamePreview, preview, user]);
+
+  useEffect(() => {
+    if (preview) return;
+    return subscribeActiveGameSeats(
+      setActiveSeats,
+      () => setError("Could not load player availability."),
+    );
+  }, [preview]);
 
   const selected = games.find((game) => game.id === selectedId) ?? null;
+  const activeGame = games.find((game) => game.status !== "ended") ?? null;
+  const history = games.filter((game) => game.status === "ended");
+  const effectiveSeats = useMemo(() => {
+    if (!preview) return activeSeats;
+    const seats = new Map<string, ActiveGameSeat>();
+    for (const game of games.filter((item) => item.status !== "ended")) {
+      seats.set(game.dmUid, { uid: game.dmUid, gameId: game.id, role: "dm" });
+      game.participantUids.forEach((uid) => seats.set(uid, { uid, gameId: game.id, role: "player" }));
+    }
+    return seats;
+  }, [activeSeats, games, preview]);
+  const occupiedOwnerUids = useMemo(() => new Set(effectiveSeats.keys()), [effectiveSeats]);
+  const unavailableForSelected = useMemo(() => new Set(
+    [...effectiveSeats.values()]
+      .filter((seat) => seat.gameId !== selected?.id)
+      .map((seat) => seat.uid),
+  ), [effectiveSeats, selected?.id]);
   const isSessionDm = Boolean(user && selected?.dmUid === user.uid);
-  const displayedParticipants = !preview && selected && selected.campaignId === null
+  const displayedParticipants = selected && selected.campaignId === null
     ? selected.participantRoster
     : participants;
 
@@ -137,14 +172,16 @@ export function GamePage() {
   const combatError = useCombatStore((state) => state.error);
   const clock = useClock(selected);
 
-  async function perform(work: () => Promise<void>, message: string) {
+  async function perform(work: () => Promise<void>, message: string): Promise<boolean> {
     setBusy(true);
     setError(null);
     try {
       await work();
+      return true;
     } catch (reason) {
       console.error(message, reason);
-      setError(message);
+      setError(reason instanceof Error && reason.message ? reason.message : message);
+      return false;
     } finally {
       setBusy(false);
     }
@@ -156,6 +193,10 @@ export function GamePage() {
 
   async function createSession(title: string, hunters: HunterCard[]) {
     if (!user) return;
+    if (activeGame) {
+      setError("End or discard your current session before creating another one.");
+      return;
+    }
     const input = {
       campaignId: null,
       sessionId: null,
@@ -208,6 +249,11 @@ export function GamePage() {
 
   async function addHunter(card: HunterCard) {
     if (!selected) return;
+    const occupied = effectiveSeats.get(card.ownerUid);
+    if (occupied && occupied.gameId !== selected.id) {
+      setError(`${card.ownerName || card.name} is already in another active session.`);
+      return;
+    }
     if (preview) {
       const participant: GameParticipant = {
         uid: card.ownerUid,
@@ -226,7 +272,10 @@ export function GamePage() {
         ...current,
         [selected.id]: [...(current[selected.id] ?? []).filter((item) => item.uid !== card.ownerUid), participant],
       }));
-      updatePreviewGame(selected.id, { participantUids: [...new Set([...selected.participantUids, card.ownerUid])] });
+      updatePreviewGame(selected.id, {
+        participantUids: [...new Set([...selected.participantUids, card.ownerUid])],
+        participantRoster: [...selected.participantRoster.filter((item) => item.uid !== card.ownerUid), participant],
+      });
       return;
     }
     await perform(() => addGameParticipant(selected, card), "Could not add that player.");
@@ -239,7 +288,10 @@ export function GamePage() {
         ...current,
         [selected.id]: (current[selected.id] ?? []).filter((item) => item.uid !== uid),
       }));
-      updatePreviewGame(selected.id, { participantUids: selected.participantUids.filter((item) => item !== uid) });
+      updatePreviewGame(selected.id, {
+        participantUids: selected.participantUids.filter((item) => item !== uid),
+        participantRoster: selected.participantRoster.filter((item) => item.uid !== uid),
+      });
       return;
     }
     await perform(() => removeGameParticipant(selected, uid), "Could not remove that player.");
@@ -290,7 +342,8 @@ export function GamePage() {
   }
 
   async function finishSession() {
-    if (!selected) return;
+    if (!selected || selected.status !== "active") return;
+    if (!window.confirm("End this session? The party, enemies, damage, and duration will be saved in session history.")) return;
     if (preview) {
       updatePreviewGame(selected.id, {
         status: "ended",
@@ -301,7 +354,23 @@ export function GamePage() {
       });
       return;
     }
-    await perform(() => endGame(selected.id, selected.phase, selected.location, selected), "Could not end the session.");
+    await perform(() => finishGameSession(selected), "Could not end the session.");
+  }
+
+  async function discardSession() {
+    if (!selected || selected.status !== "lobby") return;
+    if (!window.confirm("Discard this unstarted session? It will not be added to history.")) return;
+    if (preview) {
+      setPreviewRosters((current) => {
+        const next = { ...current };
+        delete next[selected.id];
+        return next;
+      });
+      setGames((current) => current.filter((game) => game.id !== selected.id));
+      setSelectedId(history[0]?.id ?? null);
+      return;
+    }
+    await perform(() => discardGameSession(selected.id), "Could not discard the session.");
   }
 
   return (
@@ -311,7 +380,7 @@ export function GamePage() {
           <p className="eyebrow">Shared table</p>
           <h1 className="page-title">Game</h1>
         </div>
-        {!creating && (
+        {!creating && !activeGame && games.length > 0 && (
           <button className="btn btn-primary game-create-button" type="button" onClick={() => setCreating(true)}>
             Create session
           </button>
@@ -323,6 +392,7 @@ export function GamePage() {
       {creating && (
         <CreateSession
           characters={otherCharacters}
+          unavailableOwnerUids={occupiedOwnerUids}
           busy={busy}
           onCancel={() => setCreating(false)}
           onCreate={createSession}
@@ -342,31 +412,34 @@ export function GamePage() {
       {!creating && games.length > 0 && (
         <div className="game-layout">
           <nav className="game-sessions" aria-label="Game sessions">
-            {games.map((game) => (
-              <button
-                key={game.id}
-                type="button"
-                className={game.id === selectedId ? "game-session is-current" : "game-session"}
-                onClick={() => setSelectedId(game.id)}
-              >
-                <strong>{game.title}</strong>
-                <span>{game.status === "lobby" ? "Waiting" : game.status === "active" ? "Live" : "Ended"}</span>
-              </button>
-            ))}
+            {activeGame && (
+              <div className="game-session-group">
+                <span className="game-session-label">Current session</span>
+                <SessionLink game={activeGame} selected={activeGame.id === selectedId} onSelect={() => setSelectedId(activeGame.id)} />
+              </div>
+            )}
+            {history.length > 0 && (
+              <div className="game-session-group">
+                <span className="game-session-label">History</span>
+                {history.map((game) => (
+                  <SessionLink key={game.id} game={game} selected={game.id === selectedId} onSelect={() => setSelectedId(game.id)} />
+                ))}
+              </div>
+            )}
           </nav>
 
           {selected && (
             <main className="game-table" aria-label={`${selected.title} session`}>
               <div className="game-session-heading">
                 <div>
-                  <p className="eyebrow">{selected.status === "active" ? "Live session" : selected.status === "ended" ? "Session ended" : "Waiting room"}</p>
+                  <p className="eyebrow">{selected.status === "active" ? "Live session" : selected.status === "ended" ? "Session history" : "Waiting room"}</p>
                   <h2>{selected.title}</h2>
-                  {!isSessionDm && <p className="muted">{selected.dmName} added your Hunter to this session.</p>}
+                  {!isSessionDm && <p className="muted">{selected.status === "ended" ? `Run by ${selected.dmName}.` : `${selected.dmName} added your Hunter to this session.`}</p>}
                 </div>
                 <div className="game-clock" aria-label={`Session clock ${clock}`}>
-                  <span>Session clock</span>
+                  <span>{selected.status === "ended" ? "Duration" : "Session clock"}</span>
                   <strong data-testid="session-clock">{clock}</strong>
-                  <small>{selected.clockRunning ? "Running" : "Paused"}</small>
+                  <small>{selected.status === "ended" ? "Saved" : selected.clockRunning ? "Running" : "Paused"}</small>
                 </div>
               </div>
 
@@ -379,8 +452,12 @@ export function GamePage() {
                   ) : (
                     <button className="btn btn-primary" type="button" disabled={busy} onClick={resumeClock}>Resume</button>
                   )}
-                  <button className="btn btn-ghost" type="button" disabled={busy} onClick={resetClock}>Reset clock</button>
-                  <button className="btn btn-danger" type="button" disabled={busy} onClick={finishSession}>End session</button>
+                  {selected.status === "active" && <button className="btn btn-ghost" type="button" disabled={busy} onClick={resetClock}>Reset clock</button>}
+                  {selected.status === "active" ? (
+                    <button className="btn btn-danger" type="button" disabled={busy} onClick={finishSession}>End session</button>
+                  ) : (
+                    <button className="btn btn-danger" type="button" disabled={busy} onClick={discardSession}>Discard session</button>
+                  )}
                 </div>
               )}
 
@@ -390,8 +467,13 @@ export function GamePage() {
                     <p className="eyebrow">Party</p>
                     <h3 id="players-heading">Players <span>{displayedParticipants.length}</span></h3>
                   </div>
-                  {isSessionDm && selected.status !== "ended" && characters && (
-                    <AddHunter characters={otherCharacters} participants={displayedParticipants} onAdd={addHunter} />
+                  {isSessionDm && selected.status === "lobby" && characters && (
+                    <AddHunter
+                      characters={otherCharacters}
+                      participants={displayedParticipants}
+                      unavailableOwnerUids={unavailableForSelected}
+                      onAdd={addHunter}
+                    />
                   )}
                 </div>
                 {displayedParticipants.length === 0 ? (
@@ -404,7 +486,7 @@ export function GamePage() {
                         participant={participant}
                         card={participant.characterId ? charactersById.get(participant.characterId) : undefined}
                         canInspect={isSessionDm}
-                        canRemove={isSessionDm && selected.status !== "ended"}
+                        canRemove={isSessionDm && selected.status === "lobby"}
                         busy={busy}
                         onRemove={() => removeHunter(participant.uid)}
                       />
@@ -419,6 +501,15 @@ export function GamePage() {
         </div>
       )}
     </div>
+  );
+}
+
+function SessionLink({ game, selected, onSelect }: { game: Game; selected: boolean; onSelect: () => void }) {
+  return (
+    <button type="button" className={selected ? "game-session is-current" : "game-session"} onClick={onSelect}>
+      <strong>{game.title}</strong>
+      <span>{game.status === "lobby" ? "Waiting" : game.status === "active" ? "Live" : historyDate(game)}</span>
+    </button>
   );
 }
 
@@ -474,11 +565,13 @@ function SessionHunterRow({
 
 function CreateSession({
   characters,
+  unavailableOwnerUids,
   busy,
   onCancel,
   onCreate,
 }: {
   characters: HunterCard[];
+  unavailableOwnerUids: Set<string>;
   busy: boolean;
   onCancel: () => void;
   onCreate: (title: string, hunters: HunterCard[]) => Promise<void>;
@@ -523,10 +616,11 @@ function CreateSession({
       <div className="game-hunter-results" aria-label="Hunter search results">
         {results.map((card) => {
           const picked = selected.some((hunter) => hunter.id === card.id);
+          const unavailable = unavailableOwnerUids.has(card.ownerUid);
           return (
-            <button key={card.id} type="button" className={picked ? "game-hunter-result is-picked" : "game-hunter-result"} onClick={() => choose(card)}>
+            <button key={card.id} type="button" disabled={unavailable} className={picked ? "game-hunter-result is-picked" : "game-hunter-result"} onClick={() => choose(card)}>
               <span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail}</small></span>
-              <span>{picked ? "Added" : "Add"}</span>
+              <span>{unavailable ? "In session" : picked ? "Added" : "Add"}</span>
             </button>
           );
         })}
@@ -547,7 +641,17 @@ function CreateSession({
   );
 }
 
-function AddHunter({ characters, participants, onAdd }: { characters: HunterCard[]; participants: GameParticipant[]; onAdd: (card: HunterCard) => Promise<void> }) {
+function AddHunter({
+  characters,
+  participants,
+  unavailableOwnerUids,
+  onAdd,
+}: {
+  characters: HunterCard[];
+  participants: GameParticipant[];
+  unavailableOwnerUids: Set<string>;
+  onAdd: (card: HunterCard) => Promise<void>;
+}) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const currentByOwner = new Map(participants.map((participant) => [participant.uid, participant.characterId]));
@@ -562,10 +666,11 @@ function AddHunter({ characters, participants, onAdd }: { characters: HunterCard
           <input className="input" type="search" placeholder="Search players…" value={query} onChange={(event) => setQuery(event.target.value)} autoFocus />
           {results.map((card) => {
             const same = currentByOwner.get(card.ownerUid) === card.id;
+            const unavailable = unavailableOwnerUids.has(card.ownerUid);
             return (
-              <button key={card.id} type="button" disabled={same} onClick={() => { void onAdd(card); setOpen(false); setQuery(""); }}>
+              <button key={card.id} type="button" disabled={same || unavailable} onClick={() => { void onAdd(card); setOpen(false); setQuery(""); }}>
                 <span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail}</small></span>
-                <span>{same ? "Added" : currentByOwner.has(card.ownerUid) ? "Switch" : "Add"}</span>
+                <span>{unavailable ? "In session" : same ? "Added" : currentByOwner.has(card.ownerUid) ? "Switch" : "Add"}</span>
               </button>
             );
           })}
@@ -652,7 +757,9 @@ function EnemySection({ game, isDm, disabled }: { game: Game; isDm: boolean; dis
                     <button type="button" disabled={disabled || current <= 0} aria-label={`Damage ${enemy.name} by 1`} onClick={() => changeDamage(enemy.id, current, max, 1)}>+1</button>
                     <button type="button" disabled={disabled || current <= 0} aria-label={`Damage ${enemy.name} by 5`} onClick={() => changeDamage(enemy.id, current, max, 5)}>+5</button>
                     <span>{current} / {max} HP</span>
-                    <button type="button" className="game-text-button" disabled={disabled} onClick={() => void remove(game.id, enemy.id, game, combatants)}>Remove</button>
+                    {game.status === "lobby" && (
+                      <button type="button" className="game-text-button" disabled={disabled} onClick={() => void remove(game.id, enemy.id, game, combatants)}>Remove</button>
+                    )}
                   </div>
                 )}
               </article>

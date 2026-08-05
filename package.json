@@ -28,6 +28,7 @@
     "test:combat": "bun scripts/combat-rules-test.ts",
     "test:game-card": "bun scripts/game-card-data-test.ts",
     "test:character-automation": "bun scripts/character-automation-test.ts",
+    "test:game-sessions": "npm --prefix functions run build && firebase emulators:exec --only auth,firestore,functions \"USE_FIREBASE_EMULATORS=1 doppler run -- bun scripts/smoke-rules.mjs\"",
     "migrate:character-sheets": "bun scripts/migrate-character-sheets.ts",
     "codex:generate": "node scripts/generate-codex-data.mjs",
     "test:codex": "bun scripts/codex-data-test.ts",

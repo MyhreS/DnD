@@ -62,7 +62,7 @@ try {
   });
   const owner = await ownerContext.newPage();
   watch(owner, errors);
-  await owner.goto(`${BASE}/game?preview=user.player`, { waitUntil: "domcontentloaded" });
+  await owner.goto(`${BASE}/game?preview=user.player&game=empty`, { waitUntil: "domcontentloaded" });
   await owner.getByRole("heading", { name: "Game", exact: true }).waitFor();
   const primaryLinks = await owner.getByRole("navigation", { name: "Primary" }).getByRole("link").allTextContents();
   const huntersIndex = primaryLinks.indexOf("Hunters");
@@ -87,6 +87,9 @@ try {
   await owner.getByRole("button", { name: "Create session", exact: true }).click();
   await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
   await owner.getByText("Gascoigne", { exact: true }).waitFor();
+  if (await owner.getByRole("button", { name: "Create session", exact: true }).count()) {
+    throw new Error("Session owner can create a second active session");
+  }
 
   await owner.getByRole("button", { name: "Open Gascoigne character sheet" }).click();
   const characterSheet = owner.getByRole("dialog", { name: "Character sheet" });
@@ -118,7 +121,31 @@ try {
   await beast.waitFor();
   await beast.getByRole("button", { name: "Damage Moon Beast by 5" }).click();
   await beast.getByText("5 damage taken", { exact: false }).waitFor();
-  await owner.screenshot({ path: "screenshots/game-page-owner-desktop.png", fullPage: true });
+
+  owner.once("dialog", (dialog) => dialog.accept());
+  await owner.getByRole("button", { name: "End session" }).click();
+  await owner.getByText("Session history", { exact: true }).waitFor();
+  await owner.getByText("History", { exact: true }).waitFor();
+  await owner.getByText("Saved", { exact: true }).waitFor();
+  await owner.getByRole("button", { name: "Create session", exact: true }).waitFor();
+  await beast.getByText("5 damage taken", { exact: false }).waitFor();
+  if (await beast.getByRole("button", { name: "Damage Moon Beast by 5" }).count()) {
+    throw new Error("Ended session history still exposes enemy controls");
+  }
+
+  await owner.getByRole("button", { name: "Create session", exact: true }).click();
+  await owner.getByLabel("Session name").fill("Throwaway lobby");
+  await owner.getByRole("button", { name: "Create session", exact: true }).click();
+  await owner.getByRole("heading", { name: "Throwaway lobby" }).waitFor();
+  await owner.getByRole("button", { name: "Discard session" }).waitFor();
+  owner.once("dialog", (dialog) => dialog.accept());
+  await owner.getByRole("button", { name: "Discard session" }).click();
+  await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
+  await owner.getByText("Gascoigne", { exact: true }).waitFor();
+  if (await owner.getByText("Throwaway lobby", { exact: true }).count()) {
+    throw new Error("Discarded lobby was retained in session history");
+  }
+  await owner.screenshot({ path: "screenshots/game-page-owner-history-desktop.png", fullPage: true });
 
   const playerContext = await browser.newContext({ ...devices["iPhone 13"] });
   await playerContext.addInitScript(() => {
@@ -128,7 +155,9 @@ try {
   watch(player, errors);
   await player.goto(`${BASE}/game?preview=user.player`, { waitUntil: "domcontentloaded" });
   await player.getByRole("heading", { name: "Game", exact: true }).waitFor();
-  await player.getByRole("button", { name: "Create session", exact: true }).waitFor();
+  if (await player.getByRole("button", { name: "Create session", exact: true }).count()) {
+    throw new Error("Invited player can create a second active session");
+  }
   const playerLinks = await player.getByRole("navigation", { name: "Primary" }).getByRole("link").allTextContents();
   if (playerLinks.includes("DM")) throw new Error(`Legacy DM page remains in player navigation: ${JSON.stringify(playerLinks)}`);
   await player.getByText("Christoffer added your Hunter to this session.", { exact: true }).waitFor();
@@ -152,7 +181,7 @@ try {
   await ownerContext.close();
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Game page E2E passed: equal navigation, session-owner controls, self-invite prevention, Hunter inspection, player visibility, and responsive layout.");
+  console.log("Game page E2E passed: one active session, owner controls, saved history, lobby discard, player visibility, and responsive layout.");
 } finally {
   await browser.close();
   server.kill("SIGTERM");
