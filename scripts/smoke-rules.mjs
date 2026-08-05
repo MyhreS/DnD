@@ -146,6 +146,25 @@ await step("Invited player cannot control standalone session (negative)", async 
   catch { denied = true; }
   if (!denied) throw new Error("invited player could control the session");
 });
+await step("Session creator cannot add themselves as a player (negative)", async () => {
+  let denied = false;
+  try {
+    await updateDoc(doc(dm.db, "games", standaloneGameId), {
+      participantUids: [plUid, dmUid],
+      participantRoster: [
+        {
+          uid: plUid, characterId: `smoke-${plUid}`, playerName: "Agent Player", name: "Player Hunter",
+          classId: "stalker", level: 1, role: "player", joinedAt: Date.now(), lastSeen: Date.now(),
+        },
+        {
+          uid: dmUid, characterId: `smoke-${dmUid}`, playerName: "Agent DM", name: "DM Hunter",
+          classId: "brute", level: 1, role: "player", joinedAt: Date.now(), lastSeen: Date.now(),
+        },
+      ],
+    });
+  } catch { denied = true; }
+  if (!denied) throw new Error("session creator could add themselves as a player");
+});
 
 // --- Combat tracker: DM owns rows; members may kill/remove MONSTERS only ---
 let monsterId, pcRowId;

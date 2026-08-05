@@ -1,40 +1,26 @@
 import { useNavigate } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
-import { fullName, capabilities, isSuperAdmin } from "@/config";
-import { isPreviewActive } from "@/dev/preview";
+import { fullName } from "@/config";
 import { format } from "date-fns";
 import { SignOutIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { DMModeToggle } from "./DMModeToggle";
-import { RoleSwitcher } from "./RoleSwitcher";
-import { AllowlistManager } from "./AllowlistManager";
 
 export function ProfilePage() {
   const user = useAuthStore((s) => s.user);
   const member = useAuthStore((s) => s.member);
-  const identity = useAuthStore((s) => s.identity);
-  const canManageMembers = useAuthStore((s) => s.caps.manageMembers);
-  const realIdentity = useAuthStore((s) => s.realIdentity);
   const signOut = useAuthStore((s) => s.signOut);
   const navigate = useNavigate();
 
   const name = member ? fullName(member) : (user?.displayName ?? "Hunter");
-  // Gate on the REAL role so previewing as a lower role doesn't hide the
-  // switcher (otherwise you'd be stuck and couldn't switch back).
-  const showSwitcher = capabilities(realIdentity).oversight || isPreviewActive();
-
   return (
     <div className="reading">
       <p className="eyebrow">Profile</p>
       <h1 className="page-title">{name}</h1>
       <p className="page-intro">
         {user?.email}
-        <span className="faint"> · {identity.accessRole}{identity.playerType === "dm" ? " · DM" : ""}</span>
       </p>
 
       <ThemeToggle />
-
-      <DMModeToggle />
 
       <div className="card">
         <p className="eyebrow">App</p>
@@ -48,13 +34,6 @@ export function ProfilePage() {
           top — tap it to switch.
         </p>
       </div>
-
-      {showSwitcher && <RoleSwitcher />}
-      {/* Legacy allowlist tools: Firestore only permits the super-admin, so
-          don't render (and query) them for other admin-role accounts. */}
-      {canManageMembers && isSuperAdmin(user?.email) && (
-        <AllowlistManager adminEmail={user?.email ?? ""} />
-      )}
 
       <button
         className="btn btn-ghost"

@@ -2,9 +2,7 @@ import {
   doc,
   getDoc,
   setDoc,
-  deleteDoc,
   collection,
-  getDocs,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { isSuperAdmin, type Identity } from "@/config";
@@ -80,38 +78,4 @@ export async function ensureSuperAdminEntry(email: string): Promise<void> {
   } catch (err) {
     console.warn("Could not seed super-admin allowlist entry", err);
   }
-}
-
-/** Staff only (enforced by rules). List real members (hides agent test users). */
-export async function listAllowlist(): Promise<AllowlistMember[]> {
-  const snap = await getDocs(allowlistCol);
-  return snap.docs
-    .map((d) => toMember(d.id, d.data()))
-    .filter((m) => m.addedBy !== "agent-test")
-    .sort((a, b) => a.firstName.localeCompare(b.firstName));
-}
-
-export interface NewMember {
-  email: string;
-  firstName: string;
-  lastName: string;
-  accessRole: AccessRole;
-  playerType: PlayerType;
-}
-
-export async function addToAllowlist(member: NewMember, addedBy: string): Promise<void> {
-  const key = normalize(member.email);
-  await setDoc(doc(allowlistCol, key), {
-    email: key,
-    firstName: member.firstName.trim(),
-    lastName: member.lastName.trim(),
-    accessRole: member.accessRole,
-    playerType: member.playerType,
-    addedBy,
-    addedAt: Date.now(),
-  });
-}
-
-export async function removeFromAllowlist(email: string): Promise<void> {
-  await deleteDoc(doc(allowlistCol, normalize(email)));
 }

@@ -7,7 +7,6 @@ import {
   browserPopupRedirectResolver,
 } from "firebase/auth";
 import { initializeFirestore } from "firebase/firestore";
-import { getFunctions } from "firebase/functions";
 import { getAnalytics, isSupported as analyticsSupported } from "firebase/analytics";
 
 const firebaseConfig: FirebaseOptions = {
@@ -47,9 +46,6 @@ export const db = initializeFirestore(app, {
   experimentalAutoDetectLongPolling: true,
   ignoreUndefinedProperties: true,
 });
-// Functions are deployed in europe-west1 (see functions/src/index.ts).
-export const functions = getFunctions(app, "europe-west1");
-
 export const googleProvider = new GoogleAuthProvider();
 googleProvider.setCustomParameters({ prompt: "select_account" });
 

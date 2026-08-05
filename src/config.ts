@@ -1,4 +1,4 @@
-import type { AccessRole, PlayerType, AllowlistMember } from "./types";
+import type { AccessRole, PlayerType } from "./types";
 
 // App-wide constants.
 
@@ -67,20 +67,4 @@ export function isStaff(identity: Identity): boolean {
 export function fullName(m: { firstName?: string; lastName?: string; email?: string }): string {
   const name = [m.firstName, m.lastName].filter(Boolean).join(" ").trim();
   return name || m.email || "Hunter";
-}
-
-/**
- * Show just the first name, unless another member shares it — then disambiguate
- * with the last name.
- */
-export function displayName(
-  member: Pick<AllowlistMember, "firstName" | "lastName" | "email">,
-  all: Pick<AllowlistMember, "firstName" | "lastName">[],
-): string {
-  const first = member.firstName?.trim();
-  if (!first) return member.email ?? "Hunter";
-  const clash = all.filter(
-    (m) => m.firstName && m.firstName.trim().toLowerCase() === first.toLowerCase(),
-  ).length;
-  return clash > 1 && member.lastName ? `${first} ${member.lastName}` : first;
 }

@@ -164,11 +164,15 @@ service cloud.firestore {
       allow create: if isUser()
         && request.resource.data.dmUid == request.auth.uid
         && request.resource.data.participantUids is list
+        && (request.resource.data.campaignId != null
+          || !(request.resource.data.dmUid in request.resource.data.participantUids))
         && (request.resource.data.campaignId == null
           || isCampaignDM(request.resource.data.campaignId));
       allow update: if isUser()
         && resource.data.dmUid == request.auth.uid
-        && request.resource.data.dmUid == resource.data.dmUid;
+        && request.resource.data.dmUid == resource.data.dmUid
+        && (request.resource.data.campaignId != null
+          || !(request.resource.data.dmUid in request.resource.data.participantUids));
       allow delete: if isUser() && resource.data.dmUid == request.auth.uid;
 
       match /participants/{uid} {

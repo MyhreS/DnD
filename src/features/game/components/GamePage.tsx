@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { useSettings } from "@/app/settings";
 import {
   addGameParticipant,
   createGameSession,
@@ -13,8 +12,9 @@ import {
   subscribeUserGames,
 } from "@/api/games";
 import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview";
-import { useAllCharacters } from "@/features/dm/hooks/useAllCharacters";
+import { useAllCharacters } from "@/features/game/hooks/useAllCharacters";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { PaperSheetModal } from "@/features/hunter/components/papersheet/PaperSheetModal";
 import { useCombatSync } from "@/features/play/hooks/useCombatSync";
 import { useCombatStore } from "@/features/play/store/combatStore";
 import type { Game, GameParticipant, HunterCard } from "@/types";
@@ -60,11 +60,16 @@ function hunterSearchText(card: HunterCard): string {
 export function GamePage() {
   const user = useAuthStore((state) => state.user);
   const member = useAuthStore((state) => state.member);
-  const identity = useAuthStore((state) => state.identity);
-  const dmMode = useSettings((state) => state.dmMode);
   const preview = isPreviewActive();
-  const canCreate = dmMode || (preview && identity.playerType === "dm");
   const { characters, error: charactersError } = useAllCharacters();
+  const otherCharacters = useMemo(
+    () => (characters ?? []).filter((card) => card.ownerUid !== user?.uid),
+    [characters, user?.uid],
+  );
+  const charactersById = useMemo(
+    () => new Map((characters ?? []).map((card) => [card.id, card])),
+    [characters],
+  );
   const [games, setGames] = useState<Game[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [participants, setParticipants] = useState<GameParticipant[]>([]);
@@ -80,8 +85,7 @@ export function GamePage() {
     if (!user) return;
     if (preview) {
       const timer = window.setTimeout(() => {
-        const base = previewGame();
-        const game = canCreate ? { ...base, dmUid: user.uid, dmName: "You (DM)" } : base;
+        const game = previewGame();
         setGames([game]);
         setSelectedId(game.id);
         setLoading(false);
@@ -103,7 +107,7 @@ export function GamePage() {
         setError("Could not load your game sessions.");
       },
     );
-  }, [canCreate, preview, user]);
+  }, [preview, user]);
 
   const selected = games.find((game) => game.id === selectedId) ?? null;
   const isSessionDm = Boolean(user && selected?.dmUid === user.uid);
@@ -307,7 +311,7 @@ export function GamePage() {
           <p className="eyebrow">Shared table</p>
           <h1 className="page-title">Game</h1>
         </div>
-        {canCreate && !creating && (
+        {!creating && (
           <button className="btn btn-primary game-create-button" type="button" onClick={() => setCreating(true)}>
             Create session
           </button>
@@ -318,7 +322,7 @@ export function GamePage() {
 
       {creating && (
         <CreateSession
-          characters={characters ?? []}
+          characters={otherCharacters}
           busy={busy}
           onCancel={() => setCreating(false)}
           onCreate={createSession}
@@ -330,8 +334,8 @@ export function GamePage() {
       {!creating && !loading && games.length === 0 && (
         <div className="game-empty">
           <h2>No sessions yet</h2>
-          <p>{canCreate ? "Create a session, then add the Hunters who are playing." : "A session will appear here when a DM adds one of your Hunters."}</p>
-          {canCreate && <button className="btn btn-primary" type="button" onClick={() => setCreating(true)}>Create session</button>}
+          <p>Create a session to run the game, or wait for another player to add one of your Hunters.</p>
+          <button className="btn btn-primary" type="button" onClick={() => setCreating(true)}>Create session</button>
         </div>
       )}
 
@@ -387,7 +391,7 @@ export function GamePage() {
                     <h3 id="players-heading">Players <span>{displayedParticipants.length}</span></h3>
                   </div>
                   {isSessionDm && selected.status !== "ended" && characters && (
-                    <AddHunter characters={characters} participants={displayedParticipants} onAdd={addHunter} />
+                    <AddHunter characters={otherCharacters} participants={displayedParticipants} onAdd={addHunter} />
                   )}
                 </div>
                 {displayedParticipants.length === 0 ? (
@@ -395,18 +399,15 @@ export function GamePage() {
                 ) : (
                   <div className="game-roster">
                     {displayedParticipants.map((participant) => (
-                      <div className="game-player" key={participant.uid}>
-                        <div>
-                          <strong>{participant.name}</strong>
-                          <span>{participant.playerName || "Player"}</span>
-                        </div>
-                        <span>{displayClass(participant)} · Level {participant.level}</span>
-                        {isSessionDm && selected.status !== "ended" && (
-                          <button type="button" className="game-text-button" disabled={busy} onClick={() => removeHunter(participant.uid)}>
-                            Remove
-                          </button>
-                        )}
-                      </div>
+                      <SessionHunterRow
+                        key={participant.uid}
+                        participant={participant}
+                        card={participant.characterId ? charactersById.get(participant.characterId) : undefined}
+                        canInspect={isSessionDm}
+                        canRemove={isSessionDm && selected.status !== "ended"}
+                        busy={busy}
+                        onRemove={() => removeHunter(participant.uid)}
+                      />
                     ))}
                   </div>
                 )}
@@ -417,6 +418,56 @@ export function GamePage() {
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+function SessionHunterRow({
+  participant,
+  card,
+  canInspect,
+  canRemove,
+  busy,
+  onRemove,
+}: {
+  participant: GameParticipant;
+  card?: HunterCard;
+  canInspect: boolean;
+  canRemove: boolean;
+  busy: boolean;
+  onRemove: () => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const details = (
+    <>
+      <div>
+        <strong>{participant.name}</strong>
+        <span>{participant.playerName || "Player"}</span>
+      </div>
+      <span>{displayClass(participant)} · Level {participant.level}</span>
+    </>
+  );
+
+  return (
+    <div className="game-player">
+      {canInspect && card ? (
+        <button
+          type="button"
+          className="game-player-open"
+          aria-label={`Open ${participant.name} character sheet`}
+          onClick={() => setOpen(true)}
+        >
+          {details}
+        </button>
+      ) : (
+        <div className="game-player-open">{details}</div>
+      )}
+      {canRemove && (
+        <button type="button" className="game-text-button" disabled={busy} onClick={onRemove}>
+          Remove
+        </button>
+      )}
+      {open && card && <PaperSheetModal card={card} readOnly onClose={() => setOpen(false)} />}
     </div>
   );
 }
