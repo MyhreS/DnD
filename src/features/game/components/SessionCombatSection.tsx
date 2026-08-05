@@ -40,7 +40,11 @@ export function SessionCombatSection({
   }
 
   const canStart = participants.some((participant) => participant.characterId) || combatants.length > 0;
-  const hasPreviousBattle = encounter.round > 0;
+  // Older standalone sessions were mistakenly created at round 1, so round
+  // alone is not evidence that anyone actually opened the battle screen.
+  const hasPreviousBattle = encounter.round > 1
+    || encounter.turnId !== null
+    || encounter.timerPhase !== "idle";
 
   return (
     <section className="game-section game-combat" aria-labelledby="combat-heading">

@@ -177,6 +177,7 @@ await step("Invited player discovers standalone session", async () => {
   const session = snap.docs.find((item) => item.id === standaloneGameId);
   if (!session) throw new Error("standalone-session-not-visible");
   if (session.data().participantRoster?.[0]?.name !== "Player Hunter") throw new Error("standalone-roster-not-visible");
+  if (session.data().combat?.round !== 0) throw new Error("new-session-looks-like-a-resumable-battle");
 });
 await step("DM publishes a sanitized enemy and private stats stay private", async () => {
   const monster = doc(collection(dm.db, "games", standaloneGameId, "combatants"));
