@@ -1,15 +1,10 @@
 import { useMemo, useState } from "react";
 import { CONDITIONS, CONDITION_NAME } from "@/data/conditions";
-import { CombatTurnTimer } from "@/features/play/components/CombatTurnTimer";
+import { useTurnClock } from "@/features/play/hooks/useTurnClock";
 import { emptyEncounter } from "@/features/play/lib/turnTimer";
 import { initiativeOrder, useCombatStore } from "@/features/play/store/combatStore";
 import type { Combatant, Game, GameParticipant, HunterCard } from "@/types";
 import { combatVitals, isWarden, participantInitiative } from "../lib/combatPresentation";
-
-function battleHref(gameId: string): string {
-  const preview = new URLSearchParams(window.location.search).get("preview");
-  return `/game/${encodeURIComponent(gameId)}/battle${preview ? `?preview=${encodeURIComponent(preview)}` : ""}`;
-}
 
 export function SessionCombatSection({
   game,
@@ -26,18 +21,8 @@ export function SessionCombatSection({
 }) {
   const combatants = useCombatStore((state) => state.combatants);
   const startSessionEncounter = useCombatStore((state) => state.startSessionEncounter);
-  const closeSessionEncounter = useCombatStore((state) => state.closeSessionEncounter);
-  const patch = useCombatStore((state) => state.patch);
-  const toggleCondition = useCombatStore((state) => state.toggleCondition);
-  const nextTurn = useCombatStore((state) => state.nextTurn);
-  const designateWarden = useCombatStore((state) => state.designateWarden);
-  const startTimer = useCombatStore((state) => state.startTimer);
-  const pauseTimer = useCombatStore((state) => state.pauseTimer);
-  const resumeTimer = useCombatStore((state) => state.resumeTimer);
   const order = useMemo(() => initiativeOrder(combatants), [combatants]);
   const encounter = game.combat ?? emptyEncounter();
-  const current = order.find((combatant) => combatant.id === encounter.turnId) ?? order[0];
-  const wardens = order.filter((combatant) => combatant.kind === "pc" && combatant.isWarden);
   const cardsById = useMemo(() => new Map(characters.map((card) => [card.id, card])), [characters]);
 
   async function startBattle() {
@@ -54,11 +39,6 @@ export function SessionCombatSection({
     await startSessionEncounter(game.id, pcs, combatants, encounter);
   }
 
-  async function endBattle() {
-    if (!window.confirm("End this battle? Initiative, conditions, enemies, and damage remain saved in the session.")) return;
-    await closeSessionEncounter(game.id, encounter);
-  }
-
   const canStart = participants.some((participant) => participant.characterId) || combatants.length > 0;
   const hasPreviousBattle = encounter.round > 0;
 
@@ -67,79 +47,100 @@ export function SessionCombatSection({
       <div className="game-section-heading game-combat-heading">
         <div>
           <p className="eyebrow">Battle</p>
-          <h3 id="combat-heading">
-            {encounter.active ? `Round ${Math.max(1, encounter.round)}` : "Initiative"}
-            <span> · {order.length} combatant{order.length === 1 ? "" : "s"}</span>
-          </h3>
+          <h3 id="combat-heading">Initiative <span> · {order.length} combatant{order.length === 1 ? "" : "s"}</span></h3>
         </div>
-        <a className="btn btn-ghost game-battle-screen-link" href={battleHref(game.id)} target="_blank" rel="noreferrer">
-          Open battle screen ↗
-        </a>
+      </div>
+      <div className="game-combat-idle">
+        <p>{hasPreviousBattle ? "The previous battle remains saved. Resume it with the same combatants." : "Start battle to move everyone into the shared battle view. Prepared enemies are kept."}</p>
+        {isDm && (
+          <button className="btn btn-primary" type="button" disabled={disabled || !canStart} onClick={() => void startBattle()}>
+            {hasPreviousBattle ? "Resume battle screen" : "Start battle screen"}
+          </button>
+        )}
+      </div>
+    </section>
+  );
+}
+
+export function SessionCombatControls({
+  game,
+  characters,
+  disabled,
+}: {
+  game: Game;
+  characters: HunterCard[];
+  disabled: boolean;
+}) {
+  const combatants = useCombatStore((state) => state.combatants);
+  const closeSessionEncounter = useCombatStore((state) => state.closeSessionEncounter);
+  const patch = useCombatStore((state) => state.patch);
+  const toggleCondition = useCombatStore((state) => state.toggleCondition);
+  const nextTurn = useCombatStore((state) => state.nextTurn);
+  const designateWarden = useCombatStore((state) => state.designateWarden);
+  const startTimer = useCombatStore((state) => state.startTimer);
+  const pauseTimer = useCombatStore((state) => state.pauseTimer);
+  const resumeTimer = useCombatStore((state) => state.resumeTimer);
+  const order = useMemo(() => initiativeOrder(combatants), [combatants]);
+  const encounter = game.combat ?? emptyEncounter();
+  const { phase: timerPhase } = useTurnClock(encounter);
+  const wardens = order.filter((combatant) => combatant.kind === "pc" && combatant.isWarden);
+
+  async function endBattle() {
+    if (!window.confirm("End this battle? Everyone will return to the session view. Initiative, conditions, enemies, and damage remain saved.")) return;
+    await closeSessionEncounter(game.id, encounter);
+  }
+
+  return (
+    <section className="game-section game-battle-controls" aria-labelledby="battle-controls-heading">
+      <div className="game-section-heading">
+        <div>
+          <p className="eyebrow">DM controls</p>
+          <h3 id="battle-controls-heading">Run battle</h3>
+        </div>
+        <div className="game-combat-actions">
+          <button className="btn btn-primary" type="button" disabled={disabled || order.length === 0} onClick={() => void nextTurn(game.id, game, combatants)}>Next turn</button>
+          <button className="btn btn-ghost" type="button" disabled={disabled} onClick={() => void endBattle()}>End battle</button>
+        </div>
       </div>
 
-      {!encounter.active ? (
-        <div className="game-combat-idle">
-          <p>{hasPreviousBattle ? "The previous battle remains saved. Resume it with the same combatants." : "Start battle to roll the Hunters into initiative. Prepared enemies are kept."}</p>
-          {isDm && (
-            <button className="btn btn-primary" type="button" disabled={disabled || !canStart} onClick={() => void startBattle()}>
-              {hasPreviousBattle ? "Resume battle" : "Start battle"}
-            </button>
-          )}
-        </div>
-      ) : (
-        <>
-          <CombatTurnTimer
-            encounter={encounter}
-            combatantName={current?.name}
-            controls={isDm}
-            onStart={() => void startTimer(game.id, game)}
-            onPause={() => void pauseTimer(game.id, game)}
-            onResume={() => void resumeTimer(game.id, game)}
-          />
+      <div className="game-battle-timer-actions">
+        {timerPhase === "briefing" && <button type="button" className="btn btn-primary" disabled={disabled} onClick={() => void startTimer(game.id, game)}>Start 90 seconds</button>}
+        {timerPhase === "running" && <button type="button" className="btn btn-ghost" disabled={disabled} onClick={() => void pauseTimer(game.id, game)}>Pause timer</button>}
+        {timerPhase === "paused" && <button type="button" className="btn btn-primary" disabled={disabled} onClick={() => void resumeTimer(game.id, game)}>Resume timer</button>}
+      </div>
 
-          {isDm && wardens.length > 1 && (
-            <label className="combat-warden-select">
-              <span>Tactical briefing</span>
-              <select
-                className="input"
-                aria-label="Hunter Warden with Tactical Briefing"
-                value={encounter.designatedWardenId ?? ""}
-                onChange={(event) => void designateWarden(game.id, game, combatants, event.target.value)}
-              >
-                <option value="">No designated Warden</option>
-                {wardens.map((warden) => <option key={warden.id} value={warden.id}>{warden.name}</option>)}
-              </select>
-              <small>Only the selected Warden receives unlimited planning before their 90 seconds begin.</small>
-            </label>
-          )}
-
-          <div className="game-combat-actions">
-            {isDm && (
-              <>
-                <button className="btn btn-primary" type="button" disabled={disabled || order.length === 0} onClick={() => void nextTurn(game.id, game, combatants)}>Next turn</button>
-                <button className="btn btn-ghost" type="button" disabled={disabled} onClick={() => void endBattle()}>End battle</button>
-              </>
-            )}
-          </div>
-
-          <div className="game-initiative" aria-label="Initiative order">
-            {order.map((combatant, index) => (
-              <InitiativeControlRow
-                key={`${combatant.id}:${combatant.initiative}`}
-                combatant={combatant}
-                position={index + 1}
-                round={Math.max(1, encounter.round)}
-                active={combatant.id === encounter.turnId}
-                characters={characters}
-                canEdit={isDm}
-                disabled={disabled}
-                onInitiative={(initiative) => patch(game.id, combatant.id, { initiative })}
-                onToggleCondition={(conditionId) => toggleCondition(game.id, combatant, conditionId, Math.max(1, encounter.round))}
-              />
-            ))}
-          </div>
-        </>
+      {wardens.length > 1 && (
+        <label className="combat-warden-select">
+          <span>Tactical briefing</span>
+          <select
+            className="input"
+            aria-label="Hunter Warden with Tactical Briefing"
+            value={encounter.designatedWardenId ?? ""}
+            onChange={(event) => void designateWarden(game.id, game, combatants, event.target.value)}
+          >
+            <option value="">No designated Warden</option>
+            {wardens.map((warden) => <option key={warden.id} value={warden.id}>{warden.name}</option>)}
+          </select>
+          <small>Only the selected Warden receives unlimited planning before their 90 seconds begin.</small>
+        </label>
       )}
+
+      <div className="game-initiative" aria-label="DM initiative controls">
+        {order.map((combatant, index) => (
+          <InitiativeControlRow
+            key={`${combatant.id}:${combatant.initiative}`}
+            combatant={combatant}
+            position={index + 1}
+            round={Math.max(1, encounter.round)}
+            active={combatant.id === encounter.turnId}
+            characters={characters}
+            canEdit
+            disabled={disabled}
+            onInitiative={(initiative) => patch(game.id, combatant.id, { initiative })}
+            onToggleCondition={(conditionId) => toggleCondition(game.id, combatant, conditionId, Math.max(1, encounter.round))}
+          />
+        ))}
+      </div>
     </section>
   );
 }

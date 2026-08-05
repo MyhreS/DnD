@@ -1,107 +1,49 @@
-import { useEffect, useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { subscribeUserGames } from "@/api/games";
+import { useMemo, type ReactNode } from "react";
 import { CONDITION_NAME } from "@/data/conditions";
-import { isPreviewActive, previewGame } from "@/dev/preview";
-import { useAuthStore } from "@/features/auth/store/authStore";
-import { useAllCharacters } from "@/features/game/hooks/useAllCharacters";
-import { useCombatSync } from "@/features/play/hooks/useCombatSync";
 import { useTurnClock } from "@/features/play/hooks/useTurnClock";
-import { emptyEncounter, formatTurnTime } from "@/features/play/lib/turnTimer";
+import { formatTurnTime } from "@/features/play/lib/turnTimer";
 import { initiativeOrder, useCombatStore } from "@/features/play/store/combatStore";
-import { useFullscreen } from "@/hooks/common/useFullscreen";
 import { useWakeLock } from "@/hooks/common/useWakeLock";
 import type { Combatant, Game, HunterCard, TurnTimerPhase } from "@/types";
 import { combatVitals } from "../lib/combatPresentation";
 import "./battle-screen.css";
 
-function previewBattle(): Game {
-  const sample = previewGame();
-  return {
-    ...sample,
-    status: "active",
-    startedAt: Date.now() - 35 * 60_000,
-    combat: {
-      ...sample.combat!,
-      active: true,
-      round: 2,
-      turnId: "prev-pc-1",
-      timerPhase: "running",
-      timerEndsAt: Date.now() + 74_000,
-      pausedRemainingMs: null,
-    },
-  };
-}
-
-export function BattleScreenPage() {
-  const { gameId = "" } = useParams();
-  const user = useAuthStore((state) => state.user);
-  const preview = isPreviewActive();
-  const [game, setGame] = useState<Game | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const { characters, error: charactersError } = useAllCharacters();
-  const { isFullscreen, toggle, supported } = useFullscreen();
+export function SessionBattleView({
+  game,
+  characters,
+  isDm,
+  dmControls,
+  enemySection,
+}: {
+  game: Game;
+  characters: HunterCard[];
+  isDm: boolean;
+  dmControls: ReactNode;
+  enemySection: ReactNode;
+}) {
   useWakeLock();
-
-  useEffect(() => {
-    if (preview) {
-      const timer = window.setTimeout(() => {
-        setGame(previewBattle());
-        setLoading(false);
-      }, 0);
-      return () => window.clearTimeout(timer);
-    }
-    if (!user) return;
-    return subscribeUserGames(
-      user.uid,
-      (games) => {
-        setGame(games.find((candidate) => candidate.id === gameId) ?? null);
-        setLoading(false);
-        setError(null);
-      },
-      () => {
-        setLoading(false);
-        setError("Could not load this session.");
-      },
-    );
-  }, [gameId, preview, user]);
-
-  useCombatSync(game?.id ?? null);
   const combatants = useCombatStore((state) => state.combatants);
   const order = useMemo(() => initiativeOrder(combatants), [combatants]);
-  const encounter = game?.combat ?? emptyEncounter();
+  const encounter = game.combat!;
   const current = order.find((combatant) => combatant.id === encounter.turnId) ?? order[0];
 
-  if (loading) return <div className="battle-screen battle-message">Loading battle…</div>;
-  if (error || charactersError) return <div className="battle-screen battle-message">{error || charactersError}</div>;
-  if (!game) {
-    return (
-      <div className="battle-screen battle-message">
-        <p>This session is unavailable.</p>
-        <Link to="/game">Back to Game</Link>
-      </div>
-    );
-  }
-  const battleActive = game.status === "active" && encounter.active;
-
   return (
-    <main className="battle-screen" aria-label={`${game.title} battle screen`}>
+    <main className="battle-screen game-battle-mode" aria-label={`${game.title} battle screen`} data-testid="session-battle-screen">
       <header className="battle-header">
         <div className="battle-title">
           <h1>{game.title}</h1>
-          <p>{battleActive ? `Round ${Math.max(1, encounter.round)}` : game.status === "ended" ? "Session ended" : "Waiting for initiative"}</p>
+          <p>Round {Math.max(1, encounter.round)}</p>
         </div>
-        <div className="battle-header-actions">
-          {supported && <button type="button" onClick={toggle}>{isFullscreen ? "Exit fullscreen" : "Fullscreen"}</button>}
-          <Link to="/game">Game controls</Link>
+        <div className="battle-live-status" aria-live="polite">
+          <span>Current turn</span>
+          <strong>{current?.name ?? "Waiting for initiative"}</strong>
         </div>
       </header>
 
-      {!battleActive || order.length === 0 ? (
+      {order.length === 0 ? (
         <section className="battle-waiting" aria-live="polite">
-          <strong>{game.status === "ended" ? "Battle complete" : "Roll for initiative"}</strong>
-          <p>{game.status === "ended" ? "The encounter remains saved in session history." : "This screen will update automatically when the DM starts battle."}</p>
+          <strong>Waiting for initiative</strong>
+          <p>The DM is preparing the encounter.</p>
         </section>
       ) : (
         <div className="battle-layout">
@@ -116,13 +58,16 @@ export function BattleScreenPage() {
                 position={index + 1}
                 round={Math.max(1, encounter.round)}
                 active={combatant.id === encounter.turnId}
-                characters={characters ?? []}
+                characters={characters}
               />
             ))}
           </section>
           <BattleTimer phaseSource={encounter} combatant={current} />
         </div>
       )}
+
+      {isDm && dmControls}
+      {enemySection}
     </main>
   );
 }

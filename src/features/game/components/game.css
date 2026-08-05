@@ -80,13 +80,6 @@
 .game-clock-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 0; border-bottom: 1px solid var(--border); }
 .game-clock-actions .btn { width: auto; min-height: 38px; padding: 8px 13px; }
 
-.game-battle-screen-link {
-  width: auto;
-  min-height: 38px;
-  padding: 8px 12px;
-  white-space: nowrap;
-}
-
 .game-combat-heading { align-items: center; }
 .game-combat-idle {
   display: flex;
@@ -339,7 +332,6 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-enemy-title { align-items: end; }
   .game-damage small { display: block; }
   .game-combat-heading { display: grid; gap: 10px; }
-  .game-battle-screen-link { width: 100%; text-align: center; }
   .game-combat-idle { align-items: stretch; flex-direction: column; }
   .game-combat-idle .btn { width: 100%; }
   .game-combat-actions .btn { flex: 1; }
