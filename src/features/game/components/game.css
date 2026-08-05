@@ -80,6 +80,87 @@
 .game-clock-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 0; border-bottom: 1px solid var(--border); }
 .game-clock-actions .btn { width: auto; min-height: 38px; padding: 8px 13px; }
 
+.game-battle-screen-link {
+  width: auto;
+  min-height: 38px;
+  padding: 8px 12px;
+  white-space: nowrap;
+}
+
+.game-combat-heading { align-items: center; }
+.game-combat-idle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 14px 0;
+  border-top: 1px solid var(--border);
+}
+.game-combat-idle p { margin: 0; color: var(--ink-dim); }
+.game-combat-idle .btn { width: auto; flex: none; }
+.game-combat-actions { display: flex; gap: 8px; margin: 0 0 14px; }
+.game-combat-actions .btn { width: auto; }
+
+.game-initiative { border-top: 1px solid var(--border-strong); }
+.game-initiative-row {
+  display: grid;
+  grid-template-columns: 32px minmax(130px, 1.1fr) 88px 120px minmax(180px, 1.6fr);
+  gap: 12px;
+  align-items: center;
+  min-width: 0;
+  padding: 13px 8px;
+  border-bottom: 1px solid var(--border);
+  border-left: 2px solid transparent;
+}
+.game-initiative-row.is-current { border-left-color: var(--gold); background: rgba(201, 164, 90, 0.07); }
+.game-initiative-position { color: var(--ink-faint); font-family: var(--font-display); font-size: 1.15rem; text-align: center; }
+.game-initiative-name { min-width: 0; }
+.game-initiative-name strong,
+.game-initiative-name span { display: block; }
+.game-initiative-name strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.game-initiative-name span,
+.game-initiative-score > span { color: var(--ink-faint); font-size: 0.72rem; }
+.game-initiative-score { display: grid; gap: 2px; min-width: 0; }
+.game-initiative-score input {
+  width: 58px;
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 1px solid var(--border-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+.game-initiative-score input:focus { outline: 2px solid var(--gold); outline-offset: 2px; }
+.game-initiative-vitals { display: grid; gap: 1px; color: var(--ink-dim); font-size: 0.8rem; font-variant-numeric: tabular-nums; }
+.game-condition-controls { display: flex; align-items: center; justify-content: flex-end; gap: 8px; min-width: 0; }
+.game-condition-list { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; min-width: 0; }
+.game-condition-list button,
+.game-condition-list > span:not(.game-no-conditions) {
+  padding: 3px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 0.72rem;
+}
+.game-condition-list button { cursor: pointer; }
+.game-condition-list button:hover { border-color: var(--gold-dim); color: var(--ink); }
+.game-no-conditions { color: var(--ink-faint); font-size: 0.75rem; }
+.game-condition-controls select {
+  max-width: 130px;
+  padding: 3px 20px 3px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--border-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink-dim);
+  font: inherit;
+  font-size: 0.75rem;
+}
+
 .game-section { padding: 30px 0; border-bottom: 1px solid var(--border-strong); }
 .game-section-heading { align-items: end; margin-bottom: 14px; }
 .game-section-heading .eyebrow { margin-bottom: 2px; }
@@ -240,6 +321,12 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-enemy-name,
   .game-enemy-note { grid-column: 1 / -1; }
   .game-enemy-form .btn { grid-column: 1 / -1; }
+  .game-initiative-row {
+    grid-template-columns: 28px minmax(0, 1fr) 72px 92px;
+    gap: 8px;
+  }
+  .game-condition-controls { grid-column: 2 / -1; justify-content: flex-start; }
+  .game-condition-list { justify-content: flex-start; }
 }
 
 @media (max-width: 480px) {
@@ -251,4 +338,12 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-section { padding: 24px 0; }
   .game-enemy-title { align-items: end; }
   .game-damage small { display: block; }
+  .game-combat-heading { display: grid; gap: 10px; }
+  .game-battle-screen-link { width: 100%; text-align: center; }
+  .game-combat-idle { align-items: stretch; flex-direction: column; }
+  .game-combat-idle .btn { width: 100%; }
+  .game-combat-actions .btn { flex: 1; }
+  .game-initiative-row { grid-template-columns: 24px minmax(0, 1fr) 68px; padding-inline: 2px; }
+  .game-initiative-vitals { grid-column: 2 / -1; display: flex; gap: 14px; }
+  .game-condition-controls { grid-column: 2 / -1; flex-wrap: wrap; justify-content: flex-start; }
 }

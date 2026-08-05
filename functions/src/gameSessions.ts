@@ -273,6 +273,7 @@ export const finishStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (reque
     await releaseSeats(tx, refs, gameId);
     const elapsed = Math.max(0, Number(game.clockElapsedMs) || 0)
       + (game.clockRunning && game.clockStartedAt ? Math.max(0, Date.now() - millis(game.clockStartedAt)) : 0);
+    const combat = game.combat && typeof game.combat === "object" ? game.combat as DocumentData : {};
     tx.update(gameRef, {
       status: "ended",
       endedAt: FieldValue.serverTimestamp(),
@@ -281,6 +282,13 @@ export const finishStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (reque
       clockRunning: false,
       clockStartedAt: null,
       clockElapsedMs: elapsed,
+      combat: {
+        ...combat,
+        active: false,
+        timerPhase: "idle",
+        timerEndsAt: null,
+        pausedRemainingMs: null,
+      },
       historySavedAt: FieldValue.serverTimestamp(),
     });
   });

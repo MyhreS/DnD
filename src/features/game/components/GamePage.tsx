@@ -21,6 +21,7 @@ import { PaperSheetModal } from "@/features/hunter/components/papersheet/PaperSh
 import { useCombatSync } from "@/features/play/hooks/useCombatSync";
 import { useCombatStore } from "@/features/play/store/combatStore";
 import type { Game, GameParticipant, HunterCard } from "@/types";
+import { SessionCombatSection } from "./SessionCombatSection";
 import "./game.css";
 
 const DEFAULT_TITLE = () => `Session ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())}`;
@@ -191,6 +192,16 @@ export function GamePage() {
     setGames((current) => current.map((game) => game.id === id ? { ...game, ...patch } : game));
   }
 
+  useEffect(() => {
+    if (!preview) return;
+    const updateCombat = (event: Event) => {
+      const detail = (event as CustomEvent<{ gameId: string; combat: Game["combat"] }>).detail;
+      if (detail?.gameId) updatePreviewGame(detail.gameId, { combat: detail.combat });
+    };
+    window.addEventListener("cs-preview-combat", updateCombat);
+    return () => window.removeEventListener("cs-preview-combat", updateCombat);
+  }, [preview]);
+
   async function createSession(title: string, hunters: HunterCard[]) {
     if (!user) return;
     if (activeGame) {
@@ -351,6 +362,13 @@ export function GamePage() {
         clockElapsedMs: elapsedMs(selected, Date.now()),
         clockRunning: false,
         clockStartedAt: null,
+        combat: selected.combat ? {
+          ...selected.combat,
+          active: false,
+          timerPhase: "idle",
+          timerEndsAt: null,
+          pausedRemainingMs: null,
+        } : selected.combat,
       });
       return;
     }
@@ -494,6 +512,16 @@ export function GamePage() {
                   </div>
                 )}
               </section>
+
+              {selected.status === "active" && (
+                <SessionCombatSection
+                  game={selected}
+                  participants={displayedParticipants}
+                  characters={characters ?? []}
+                  isDm={isSessionDm}
+                  disabled={combatBusy || busy}
+                />
+              )}
 
               <EnemySection game={selected} isDm={isSessionDm} disabled={combatBusy || busy} />
             </main>

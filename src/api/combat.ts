@@ -7,6 +7,7 @@ import {
   getDocs,
   onSnapshot,
   serverTimestamp,
+  writeBatch,
   type Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -28,6 +29,21 @@ export type NewCombatant = Omit<Combatant, "id" | "createdAt">;
 export async function addCombatant(gameId: string, data: NewCombatant): Promise<string> {
   const ref = await addDoc(combatantsCol(gameId), { ...data, createdAt: serverTimestamp() });
   return ref.id;
+}
+
+/** Add a party to initiative in one commit so a failed start never leaves a
+ * half-created Hunter roster. */
+export async function addCombatants(gameId: string, combatants: NewCombatant[]): Promise<Combatant[]> {
+  if (combatants.length === 0) return [];
+  const batch = writeBatch(db);
+  const now = Date.now();
+  const rows = combatants.map((combatant) => {
+    const ref = doc(combatantsCol(gameId));
+    batch.set(ref, { ...combatant, createdAt: serverTimestamp() });
+    return { ...combatant, id: ref.id, createdAt: now };
+  });
+  await batch.commit();
+  return rows;
 }
 
 export async function patchCombatant(
