@@ -41,6 +41,8 @@ export type AgentState = {
   triggerMode?: "realtime_with_fallback";
   fallbackIntervalMs?: number;
   watchingChanges?: boolean;
+  model?: string;
+  reasoningEffort?: string;
 };
 
 export const STATUS_LABELS: Record<WorkshopStatus, string> = {

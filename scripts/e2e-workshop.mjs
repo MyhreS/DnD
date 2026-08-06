@@ -228,7 +228,9 @@ try {
       const state = (await db.doc("workshopAgent/state").get()).data();
       return state?.watchingChanges === true
         && state?.triggerMode === "realtime_with_fallback"
-        && state?.fallbackIntervalMs === 5 * 60_000;
+        && state?.fallbackIntervalMs === 5 * 60_000
+        && state?.model === "gpt-5.6-sol"
+        && state?.reasoningEffort === "high";
     }, "Real-time request listener");
     await creator.page.getByTestId("agent-presence").getByText("Agent online").waitFor();
     const triggerProbe = db.doc("workshopTickets/realtime-trigger-probe");
@@ -245,7 +247,7 @@ try {
       revision: 1,
       nextSequence: 1,
       attachmentCount: 0,
-      needsSimonApproved: false,
+      needsSimonReplyReceived: false,
       leasedBy: null,
       leaseExpiresAt: null,
     });
@@ -269,6 +271,81 @@ try {
   } finally {
     await triggerManager.stop();
   }
+
+  const answerProbe = db.doc("workshopTickets/direct-answer-probe");
+  await answerProbe.set({
+    title: "A question for the agent",
+    status: "not_done",
+    authorUid: creatorUid,
+    authorEmail: creatorEmail,
+    authorName: "Christopher Creator",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    readAtBy: {},
+    revision: 1,
+    nextSequence: 2,
+    attachmentCount: 0,
+    needsSimonReplyReceived: false,
+    leasedBy: null,
+    leaseExpiresAt: null,
+  });
+  await answerProbe.collection("messages").doc("question").set({
+    kind: "request",
+    body: "Do I need to change anything?",
+    authorUid: creatorUid,
+    authorEmail: creatorEmail,
+    authorName: "Christopher Creator",
+    attachments: [],
+    sequence: 1,
+    createdAt: new Date(),
+  });
+  await runManager("answered");
+  const answerData = (await answerProbe.get()).data();
+  if (answerData?.status !== "finished") throw new Error("Direct answer did not close cleanly.");
+  await creator.page.getByTestId("ticket-direct-answer-probe").click();
+  await creator.page.getByText("You do not need to change anything. This is a direct answer from the Workshop agent.", { exact: true }).waitFor();
+  if (await creator.page.getByRole("link", { name: "Open the updated app" }).count()) throw new Error("Direct answer incorrectly exposed a production link.");
+  await creator.page.getByRole("button", { name: "Close thread" }).click();
+  await db.recursiveDelete(answerProbe);
+
+  const retryProbe = db.doc("workshopTickets/automatic-retry-probe");
+  await retryProbe.set({
+    title: "Automatic service retry",
+    status: "not_done",
+    authorUid: creatorUid,
+    authorEmail: creatorEmail,
+    authorName: "Christopher Creator",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    readAtBy: {},
+    revision: 1,
+    nextSequence: 2,
+    attachmentCount: 0,
+    needsSimonReplyReceived: false,
+    automaticRetryCount: 0,
+    leasedBy: null,
+    leaseExpiresAt: null,
+  });
+  await retryProbe.collection("messages").doc("request").set({
+    kind: "request",
+    body: "Please complete this when the external service is available.",
+    authorUid: creatorUid,
+    authorEmail: creatorEmail,
+    authorName: "Christopher Creator",
+    attachments: [],
+    sequence: 1,
+    createdAt: new Date(),
+  });
+  await runManager("temporary_service");
+  const retryData = (await retryProbe.get()).data();
+  if (retryData?.status !== "not_done" || retryData?.automaticRetryCount !== 1 || !retryData?.retryAfter) {
+    throw new Error("Temporary service failure did not schedule an automatic retry.");
+  }
+  await creator.page.getByTestId("ticket-automatic-retry-probe").click();
+  await creator.page.getByText("I hit a temporary service problem. I’ll retry automatically; you do not need to reply.", { exact: true }).waitFor();
+  if (await creator.page.getByText("Needs Simon", { exact: true }).count()) throw new Error("Temporary service failure incorrectly asked for Simon.");
+  await creator.page.getByRole("button", { name: "Close thread" }).click();
+  await db.recursiveDelete(retryProbe);
   const composerFileInput = creator.page.locator('.composer input[type="file"]');
   await composerFileInput.setInputFiles({ name: "unsafe.svg", mimeType: "image/svg+xml", buffer: Buffer.from("<svg/>") });
   await creator.page.getByText("Use JPG, PNG, WebP, or GIF images.", { exact: true }).waitFor();
@@ -343,7 +420,7 @@ try {
     revision: 1,
     nextSequence: 31,
     attachmentCount: 1,
-    needsSimonApproved: false,
+    needsSimonReplyReceived: false,
     leasedBy: null,
     leaseExpiresAt: null,
   });
@@ -372,7 +449,7 @@ try {
     revision: 1,
     nextSequence: 1,
     attachmentCount: 0,
-    needsSimonApproved: false,
+    needsSimonReplyReceived: false,
     leasedBy: null,
     leaseExpiresAt: null,
   })));
@@ -502,7 +579,7 @@ try {
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await creator.page.getByText("Needs Simon", { exact: true }).waitFor();
   const afterCreatorReply = (await db.doc(`workshopTickets/${ticketId}`).get()).data();
-  if (afterCreatorReply?.status !== "needs_simon" || afterCreatorReply?.needsSimonApproved === true) {
+  if (afterCreatorReply?.status !== "needs_simon" || afterCreatorReply?.needsSimonReplyReceived === true) {
     throw new Error("Christopher incorrectly unblocked a Needs Simon task.");
   }
 
@@ -510,17 +587,17 @@ try {
   await simon.page.getByText("Only Simon’s reply in this thread can restart this task.", { exact: true }).waitFor();
   await simon.page.getByTestId("ticket-reply").fill("Simon approves continuing with the updated request.");
   await simon.page.getByTestId("send-reply").click();
-  await simon.page.getByText("Simon answered. The agent will reread the whole thread.", { exact: true }).waitFor();
+  await simon.page.getByText("Simon replied. The agent will reread the whole thread.", { exact: true }).waitFor();
   await simon.page.getByRole("button", { name: "Close thread" }).click();
   await creator.page.getByText("Not done", { exact: true }).waitFor();
   const afterSimonReply = (await db.doc(`workshopTickets/${ticketId}`).get()).data();
-  if (afterSimonReply?.status !== "not_done" || afterSimonReply?.needsSimonApproved !== true) {
+  if (afterSimonReply?.status !== "not_done" || afterSimonReply?.needsSimonReplyReceived !== true) {
     throw new Error("Simon did not unblock the Needs Simon task.");
   }
 
   await runManager("declined");
-  if ((await db.doc(`workshopTickets/${ticketId}`).get()).data()?.needsSimonApproved !== false) {
-    throw new Error("Simon approval was not consumed after the next agent run.");
+  if ((await db.doc(`workshopTickets/${ticketId}`).get()).data()?.needsSimonReplyReceived !== false) {
+    throw new Error("Simon reply marker was not consumed after the next agent run.");
   }
   await creator.page.getByText("Declined", { exact: true }).waitFor();
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
@@ -537,7 +614,7 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: screenshot paste in requests and replies, clipboard limits, rotating tip, immediate Firestore wake-up, fixed three-account gate with Thomas access, secure images, offline drafts, idempotency, read receipts, long-thread behavior, Needs Simon/declined flows, and responsive mobile/desktop layout.");
+  console.log("Workshop E2E passed: direct answers, automatic retries, Simon-only replies, screenshot paste, immediate Firestore wake-up, fixed access for Thomas, secure images, offline drafts, idempotency, read receipts, long-thread behavior, and responsive mobile/desktop layout.");
   await Promise.all([simon.context.close(), creator.context.close(), thomas.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();
