@@ -1,8 +1,10 @@
 import { useRef, useState, type FormEvent } from "react";
 import { createWorkshopTicket, uploadWorkshopImages } from "@/api/workshop";
 import { AttachmentPicker } from "@/workshop/components/AttachmentPicker";
+import { WorkshopTip } from "@/workshop/components/WorkshopTip";
 import { useOnlineStatus } from "@/workshop/hooks/useOnlineStatus";
 import { useSentFeedback } from "@/workshop/hooks/useSentFeedback";
+import { useWorkshopImagePaste } from "@/workshop/hooks/useWorkshopImagePaste";
 import { useWorkshopDraft, useWorkshopFileDraft } from "@/workshop/hooks/useWorkshopDraft";
 import { workshopErrorMessage } from "@/workshop/lib/errors";
 import { submitOnEnter } from "@/workshop/lib/submitOnEnter";
@@ -21,6 +23,7 @@ export function TicketComposer({ uid, onCreated }: { uid: string; onCreated: (id
     submissionId.current = null;
     setFiles(selected);
   }
+  const pasteImages = useWorkshopImagePaste({ files, disabled: busy, onChange: changeFiles, onError: setError });
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -50,6 +53,7 @@ export function TicketComposer({ uid, onCreated }: { uid: string; onCreated: (id
       <p className="eyebrow">New request</p>
       <h1 id="new-request-title">What should we improve?</h1>
       <p className="composer-help">Describe the change in your own words. Add screenshots when something is easier to show.</p>
+      <WorkshopTip />
       <form onSubmit={(event) => void submit(event)}>
         <label className="sr-only" htmlFor="ticket-body">Workshop request</label>
         <textarea
@@ -62,6 +66,7 @@ export function TicketComposer({ uid, onCreated }: { uid: string; onCreated: (id
             submissionId.current = null;
           }}
           onKeyDown={submitOnEnter}
+          onPaste={pasteImages}
           maxLength={8_000}
           placeholder="Write feedback or a new idea…"
         />

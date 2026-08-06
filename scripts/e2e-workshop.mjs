@@ -98,6 +98,22 @@ async function assertScrollable(locator, label) {
   await locator.evaluate((element) => { element.scrollTop = 0; });
 }
 
+async function pasteImages(locator, files) {
+  const payload = files.map((file) => ({
+    name: file.name,
+    type: file.mimeType,
+    base64: file.buffer.toString("base64"),
+  }));
+  await locator.evaluate((element, pasted) => {
+    const clipboard = new DataTransfer();
+    pasted.forEach((file) => {
+      const bytes = Uint8Array.from(atob(file.base64), (character) => character.charCodeAt(0));
+      clipboard.items.add(new File([bytes], file.name, { type: file.type }));
+    });
+    element.dispatchEvent(new ClipboardEvent("paste", { bubbles: true, cancelable: true, clipboardData: clipboard }));
+  }, payload);
+}
+
 async function runManager(fixture) {
   const child = spawn("bun", ["scripts/workshop-manager.ts", "--once", `--fixture=${fixture}`], {
     stdio: ["ignore", "pipe", "pipe"],
@@ -190,6 +206,7 @@ try {
   const creator = await openAs(browser, creatorToken, { width: 390, height: 844 });
   watch(creator.page, errors, false, true);
   await waitForWorkspace(creator.page, "Creator");
+  await creator.page.getByTestId("workshop-tip").getByText("Paste screenshots directly with ⌘V or Ctrl+V.", { exact: false }).waitFor();
   await creator.page.getByTestId("agent-presence").getByText("Agent offline").waitFor();
   await creator.page.getByText("Ask Simon to start the Workshop agent.").waitFor();
   if (await creator.page.getByTestId("agent-countdown").count()) throw new Error("Workshop still shows a polling countdown.");
@@ -249,10 +266,13 @@ try {
   await creator.page.getByTestId("ticket-body").press("Shift+Enter");
   await creator.page.getByTestId("ticket-body").pressSequentially("Only show the most important action first.");
   const tinyPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64");
-  await composerFileInput.setInputFiles([
-    { name: "game-page.png", mimeType: "image/png", buffer: tinyPng },
-    { name: "remove-me.png", mimeType: "image/png", buffer: tinyPng },
-  ]);
+  const ticketBody = creator.page.getByTestId("ticket-body");
+  await pasteImages(ticketBody, [{ name: "pasted-game-page.png", mimeType: "image/png", buffer: tinyPng }]);
+  await creator.page.getByRole("button", { name: "Remove pasted-game-page.png" }).waitFor();
+  await pasteImages(ticketBody, Array.from({ length: 5 }, (_, index) => ({ name: `too-many-${index}.png`, mimeType: "image/png", buffer: tinyPng })));
+  await creator.page.getByText("Add up to 5 images.", { exact: true }).waitFor();
+  if (await creator.page.getByTestId("attachment-previews").locator(".attachment-preview").count() !== 1) throw new Error("Invalid clipboard batch changed the selected images.");
+  await composerFileInput.setInputFiles({ name: "remove-me.png", mimeType: "image/png", buffer: tinyPng });
   await creator.page.getByTestId("attachment-previews").locator(".attachment-preview").nth(1).waitFor();
   await creator.page.getByRole("button", { name: "Remove remove-me.png" }).click();
   if (await creator.page.getByTestId("attachment-previews").locator(".attachment-preview").count() !== 1) throw new Error("Selected image was not removed.");
@@ -288,8 +308,8 @@ try {
   await eventually(async () => !(await simon.page.getByTestId(`ticket-${ticketId}`).getAttribute("aria-label"))?.includes("unread"), "Read marker clearing");
   if (await detail.getByRole("button", { name: /delete|edit/i }).count()) throw new Error("Thread exposes destructive edit/delete controls.");
   await detail.getByRole("button", { name: "Close thread" }).click();
-  await composerFileInput.setInputFiles({ name: "image-only.png", mimeType: "image/png", buffer: tinyPng });
-  await creator.page.getByTestId("ticket-body").press("Enter");
+  await pasteImages(ticketBody, [{ name: "pasted-image-only.png", mimeType: "image/png", buffer: tinyPng }]);
+  await ticketBody.press("Enter");
   await creator.page.getByRole("heading", { name: "Image request" }).waitFor();
   const imageOnlyTicket = (await db.collection("workshopTickets").where("title", "==", "Image request").limit(1).get()).docs[0];
   if (!imageOnlyTicket || imageOnlyTicket.data().attachmentCount !== 1) throw new Error("Image-only request was not created correctly.");
@@ -383,9 +403,9 @@ try {
   await creator.page.screenshot({ path: "screenshots/workshop-long-thread-mobile.png", fullPage: true });
   await creator.page.getByRole("button", { name: "New message ↓" }).click();
   await eventually(async () => messageList.evaluate((element) => element.scrollHeight - element.scrollTop - element.clientHeight < 90), "Jump to latest message");
-  const replyFileInput = creator.page.locator('.reply-form input[type="file"]');
-  await replyFileInput.setInputFiles({ name: "reply-image.png", mimeType: "image/png", buffer: tinyPng });
-  await creator.page.getByTestId("ticket-reply").press("Enter");
+  const ticketReply = creator.page.getByTestId("ticket-reply");
+  await pasteImages(ticketReply, [{ name: "pasted-reply-image.png", mimeType: "image/png", buffer: tinyPng }]);
+  await ticketReply.press("Enter");
   await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
   const longMessages = await longThreadRef.collection("messages").get();
   const imageOnlyReply = longMessages.docs.map((item) => item.data()).find((message) => message.kind === "follow_up" && message.sequence === 32);
@@ -505,7 +525,7 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: immediate Firestore wake-up with hidden fallback polling, no visible countdown, fixed account gate, secure images, offline drafts, idempotency, read receipts, long-thread behavior, Needs Simon/declined flows, and responsive mobile/desktop layout.");
+  console.log("Workshop E2E passed: screenshot paste in requests and replies, clipboard limits, rotating tip, immediate Firestore wake-up, secure images, offline drafts, idempotency, long-thread behavior, and responsive mobile/desktop layout.");
   await Promise.all([simon.context.close(), creator.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();

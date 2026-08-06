@@ -3,6 +3,7 @@ import { replyWorkshopTicket, uploadWorkshopImages } from "@/api/workshop";
 import { AttachmentPicker } from "@/workshop/components/AttachmentPicker";
 import { useOnlineStatus } from "@/workshop/hooks/useOnlineStatus";
 import { useSentFeedback } from "@/workshop/hooks/useSentFeedback";
+import { useWorkshopImagePaste } from "@/workshop/hooks/useWorkshopImagePaste";
 import { useWorkshopDraft, useWorkshopFileDraft } from "@/workshop/hooks/useWorkshopDraft";
 import { workshopErrorMessage } from "@/workshop/lib/errors";
 import { submitOnEnter } from "@/workshop/lib/submitOnEnter";
@@ -22,6 +23,7 @@ export function TicketReply({ ticketId, uid }: { ticketId: string; uid: string }
     setSent(false);
     submissionId.current = null;
   }
+  const pasteImages = useWorkshopImagePaste({ files, disabled: busy, onChange: changeFiles, onError: setError });
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -52,7 +54,7 @@ export function TicketReply({ ticketId, uid }: { ticketId: string; uid: string }
         setBody(event.target.value);
         setSent(false);
         submissionId.current = null;
-      }} onKeyDown={submitOnEnter} maxLength={8_000} placeholder="Reply to this thread…" data-testid="ticket-reply" />
+      }} onKeyDown={submitOnEnter} onPaste={pasteImages} maxLength={8_000} placeholder="Reply to this thread…" data-testid="ticket-reply" />
       <div className="reply-actions">
         <AttachmentPicker files={files} disabled={busy} compact onChange={changeFiles} onError={setError} />
         <button
