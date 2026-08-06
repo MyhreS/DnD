@@ -1,4 +1,4 @@
-export type ManagerOutcome = "finished" | "needs_simon";
+export type ManagerOutcome = "finished" | "needs_simon" | "declined";
 
 export type AgentResult = {
   outcome: ManagerOutcome;
@@ -6,6 +6,7 @@ export type AgentResult = {
   technicalSummary?: string;
   productionUrl?: string;
   needsSimonReason?: string;
+  declineReason?: string;
 };
 
 const RISK_PATTERNS = [
@@ -34,7 +35,7 @@ export function parseAgentResult(raw: string): AgentResult {
     throw new Error("The coding agent did not return a valid result.");
   }
   const result = value as Partial<AgentResult>;
-  if (result.outcome !== "finished" && result.outcome !== "needs_simon") {
+  if (result.outcome !== "finished" && result.outcome !== "needs_simon" && result.outcome !== "declined") {
     throw new Error("The coding agent returned an unknown outcome.");
   }
   if (!result.summaryForCreator?.trim()) {
@@ -43,12 +44,16 @@ export function parseAgentResult(raw: string): AgentResult {
   if (result.outcome === "needs_simon" && !result.needsSimonReason?.trim()) {
     throw new Error("The coding agent did not state what Simon needs to decide.");
   }
+  if (result.outcome === "declined" && !result.declineReason?.trim()) {
+    throw new Error("The coding agent did not explain why the request was declined.");
+  }
   return {
     outcome: result.outcome,
     summaryForCreator: result.summaryForCreator.trim().slice(0, 4_000),
     technicalSummary: result.technicalSummary?.trim().slice(0, 8_000),
     productionUrl: safeProductionUrl(result.productionUrl),
     needsSimonReason: result.needsSimonReason?.trim().slice(0, 2_000),
+    declineReason: result.declineReason?.trim().slice(0, 2_000),
   };
 }
 
@@ -65,6 +70,9 @@ function safeProductionUrl(value: string | undefined): string | undefined {
 export function outcomeMessage(result: AgentResult): string {
   if (result.outcome === "needs_simon") {
     return `I need Simon to decide one thing before I continue: ${result.needsSimonReason}`;
+  }
+  if (result.outcome === "declined") {
+    return `Declined — ${result.declineReason}`;
   }
   return result.summaryForCreator.startsWith("Done")
     ? result.summaryForCreator
