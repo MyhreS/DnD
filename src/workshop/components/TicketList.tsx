@@ -24,7 +24,7 @@ export function TicketList({ tickets, onSelect }: { tickets: WorkshopTicket[]; o
       {tickets.length === 0 ? (
         <p className="empty-history">No requests yet. The first one will appear here.</p>
       ) : (
-        <ol className="ticket-list" data-testid="ticket-list">
+        <ol className="ticket-list" data-testid="ticket-list" tabIndex={0} aria-label="Request history">
           {tickets.map((ticket) => (
             <li key={ticket.id}>
               <button type="button" onClick={() => onSelect(ticket.id)} data-testid={`ticket-${ticket.id}`}>

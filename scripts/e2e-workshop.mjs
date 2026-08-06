@@ -79,6 +79,20 @@ async function noOverflow(page, label) {
   if (size.scroll > size.client) throw new Error(`${label} horizontally overflows: ${JSON.stringify(size)}`);
 }
 
+async function assertScrollable(locator, label) {
+  const metrics = await locator.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+    overflowY: getComputedStyle(element).overflowY,
+  }));
+  if (metrics.scrollHeight <= metrics.clientHeight || !["auto", "scroll"].includes(metrics.overflowY)) {
+    throw new Error(`${label} is not vertically scrollable: ${JSON.stringify(metrics)}`);
+  }
+  await locator.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  if (await locator.evaluate((element) => element.scrollTop) <= 0) throw new Error(`${label} did not scroll.`);
+  await locator.evaluate((element) => { element.scrollTop = 0; });
+}
+
 async function runManager(fixture) {
   const child = spawn("bun", ["scripts/workshop-manager.ts", "--once", `--fixture=${fixture}`], {
     stdio: ["ignore", "pipe", "pipe"],
@@ -149,7 +163,26 @@ try {
   if (!ticketId) throw new Error("Ticket was not created.");
   if (await detail.getByRole("button", { name: /delete|edit/i }).count()) throw new Error("Thread exposes destructive edit/delete controls.");
   await detail.getByRole("button", { name: "Close thread" }).click();
+  await Promise.all(Array.from({ length: 16 }, (_, index) => db.collection("workshopTickets").doc(`scroll-fixture-${index}`).set({
+    title: `History request ${index + 1}`,
+    status: "doing_now",
+    authorUid: "scroll-fixture",
+    authorEmail: "scroll-fixture@example.test",
+    authorName: "History fixture",
+    createdAt: new Date(Date.now() - (index + 1) * 60_000),
+    updatedAt: new Date(Date.now() - (index + 1) * 60_000),
+    revision: 1,
+    nextSequence: 1,
+    attachmentCount: 0,
+    needsSimonApproved: false,
+    leasedBy: null,
+    leaseExpiresAt: null,
+  })));
+  const requestList = creator.page.getByTestId("ticket-list");
+  await requestList.locator("li").nth(16).waitFor();
+  await assertScrollable(requestList, "Workshop mobile request list");
   await noOverflow(creator.page, "Workshop mobile");
+  await creator.page.screenshot({ path: "screenshots/workshop-long-list-mobile.png", fullPage: true });
   await creator.page.screenshot({ path: "screenshots/workshop-mobile.png", fullPage: true });
 
   const creatorDb = await ruleClient("creator", creatorToken);
@@ -239,10 +272,11 @@ try {
     nextPollAt: new Date(Date.now() + 5 * 60_000),
   }, { merge: true });
   await countdown.getByText(/Next agent check in 5:00|Next agent check in 4:59/).waitFor();
+  await assertScrollable(requestList, "Workshop desktop request list");
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, heartbeat countdown, Chris-blocked/Simon-reopened Needs Simon flow, declined flow, and responsive layout.");
+  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, scrollable long history, heartbeat countdown, Chris-blocked/Simon-reopened Needs Simon flow, declined flow, and responsive layout.");
   await Promise.all([simon.context.close(), creator.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();
