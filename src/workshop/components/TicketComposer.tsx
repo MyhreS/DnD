@@ -1,47 +1,47 @@
 import { useRef, useState, type FormEvent } from "react";
 import { createWorkshopTicket, uploadWorkshopImages } from "@/api/workshop";
 import { AgentCountdown } from "@/workshop/components/AgentCountdown";
+import { AttachmentPicker } from "@/workshop/components/AttachmentPicker";
+import { useOnlineStatus } from "@/workshop/hooks/useOnlineStatus";
+import { useSentFeedback } from "@/workshop/hooks/useSentFeedback";
+import { useWorkshopDraft, useWorkshopFileDraft } from "@/workshop/hooks/useWorkshopDraft";
+import { workshopErrorMessage } from "@/workshop/lib/errors";
 import { submitOnEnter } from "@/workshop/lib/submitOnEnter";
 import type { AgentState } from "@/workshop/types";
 
-const MAX_IMAGES = 5;
-const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
-
 export function TicketComposer({ uid, agentState, onCreated }: { uid: string; agentState: AgentState | null; onCreated: (id: string) => void }) {
-  const [body, setBody] = useState("");
-  const [files, setFiles] = useState<File[]>([]);
+  const { body, setBody, hasDraft } = useWorkshopDraft("new-request");
+  const { files, setFiles } = useWorkshopFileDraft("new-request");
   const [busy, setBusy] = useState(false);
-  const [sent, setSent] = useState(false);
+  const { sent, setSent } = useSentFeedback();
   const [error, setError] = useState<string | null>(null);
-  const picker = useRef<HTMLInputElement>(null);
+  const submissionId = useRef<string | null>(null);
+  const online = useOnlineStatus();
 
-  function chooseImages(next: FileList | null) {
-    const selected = Array.from(next ?? []);
-    if (selected.length > MAX_IMAGES || selected.some((file) => !file.type.startsWith("image/") || file.size > MAX_IMAGE_BYTES)) {
-      setError("Choose up to five images, no larger than 10 MB each.");
-      return;
-    }
+  function changeFiles(selected: File[]) {
     setSent(false);
+    submissionId.current = null;
     setFiles(selected);
-    setError(null);
   }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
-    if (!body.trim() || busy) return;
+    if ((!body.trim() && files.length === 0) || busy || !online) return;
     setBusy(true);
     setSent(false);
     setError(null);
+    const currentSubmissionId = submissionId.current ?? crypto.randomUUID();
+    submissionId.current = currentSubmissionId;
     try {
       const attachments = await uploadWorkshopImages(uid, files);
-      const ticketId = await createWorkshopTicket(body, attachments);
+      const ticketId = await createWorkshopTicket(body, attachments, currentSubmissionId);
       setBody("");
       setFiles([]);
       setSent(true);
-      if (picker.current) picker.current.value = "";
+      submissionId.current = null;
       onCreated(ticketId);
     } catch (failure) {
-      setError(failure instanceof Error ? failure.message : "Could not send this request.");
+      setError(workshopErrorMessage(failure, "Could not send this request. Please try again."));
     } finally {
       setBusy(false);
     }
@@ -62,20 +62,18 @@ export function TicketComposer({ uid, agentState, onCreated }: { uid: string; ag
           onChange={(event) => {
             setBody(event.target.value);
             setSent(false);
+            submissionId.current = null;
           }}
           onKeyDown={submitOnEnter}
           maxLength={8_000}
           placeholder="Write feedback or a new idea…"
         />
         <div className="composer-actions">
-          <label className="attach-button">
-            <input ref={picker} type="file" accept="image/*" multiple onChange={(event) => chooseImages(event.target.files)} />
-            <span aria-hidden>＋</span> Add images
-          </label>
+          <AttachmentPicker files={files} disabled={busy} onChange={changeFiles} onError={setError} />
           <button
             className={`primary-button${busy ? " is-sending" : sent ? " is-sent" : ""}`}
             type="submit"
-            disabled={!body.trim() || busy || sent}
+            disabled={(!body.trim() && files.length === 0) || busy || sent || !online}
             aria-busy={busy}
             aria-live="polite"
             data-testid="send-ticket"
@@ -83,7 +81,12 @@ export function TicketComposer({ uid, agentState, onCreated }: { uid: string; ag
             {busy ? "Sending…" : sent ? "Sent ✓" : "Send request"}
           </button>
         </div>
-        {files.length > 0 && <p className="file-summary">{files.length} image{files.length === 1 ? "" : "s"} ready</p>}
+        {(!online || hasDraft || files.length > 0 || body.length > 6_500) && (
+          <div className="composer-meta" aria-live="polite">
+            {!online ? <span className="offline-note">Offline · your draft is saved</span> : (hasDraft || files.length > 0) ? <span>Draft saved</span> : <span />}
+            {body.length > 6_500 && <span className={body.length > 7_000 ? "is-near-limit" : ""}>{body.length.toLocaleString("en-GB")}/8,000</span>}
+          </div>
+        )}
         {error && <p className="form-error" role="alert">{error}</p>}
       </form>
     </section>

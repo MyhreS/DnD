@@ -10,6 +10,8 @@ const MAX_BODY = 8_000;
 const MAX_ATTACHMENTS = 5;
 const ACTION_WINDOW_MS = 60_000;
 const MAX_ACTIONS_PER_WINDOW = 12;
+const SAFE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 if (!getApps().length) initializeApp();
 const db = getFirestore();
@@ -41,13 +43,30 @@ function identity(request: CallableRequest): WorkshopUser {
   };
 }
 
-function validBody(value: unknown): string {
-  const body = String(value ?? "").trim();
-  if (!body) throw new HttpsError("invalid-argument", "Write a request first.");
+function validBody(value: unknown, hasAttachments: boolean): string {
+  if (typeof value !== "string") throw new HttpsError("invalid-argument", "Write a valid message.");
+  const body = value.trim();
+  if (!body && !hasAttachments) throw new HttpsError("invalid-argument", "Write a message or add an image first.");
   if (body.length > MAX_BODY) {
     throw new HttpsError("invalid-argument", `Requests may be at most ${MAX_BODY} characters.`);
   }
   return body;
+}
+
+function validId(value: unknown, label: string): string {
+  const id = typeof value === "string" ? value : "";
+  if (!UUID_PATTERN.test(id)) throw new HttpsError("invalid-argument", `Invalid ${label}.`);
+  return id;
+}
+
+function safeAttachmentName(value: unknown): string {
+  const cleaned = String(value ?? "image")
+    .split("")
+    .filter((character) => character.charCodeAt(0) >= 32 && character.charCodeAt(0) !== 127)
+    .join("")
+    .trim()
+    .slice(0, 160);
+  return cleaned || "image";
 }
 
 function validAttachments(value: unknown, uid: string): AttachmentInput[] {
@@ -56,12 +75,20 @@ function validAttachments(value: unknown, uid: string): AttachmentInput[] {
     throw new HttpsError("invalid-argument", `Attach at most ${MAX_ATTACHMENTS} images.`);
   }
   return value.map((raw) => {
+    if (!raw || typeof raw !== "object") throw new HttpsError("invalid-argument", "One of the image attachments is invalid.");
     const item = raw as Partial<AttachmentInput>;
     const path = String(item.path ?? "");
     const contentType = String(item.contentType ?? "");
-    const name = String(item.name ?? "image").slice(0, 160);
+    const name = safeAttachmentName(item.name);
     const size = Number(item.size ?? 0);
-    if (!path.startsWith(`workshop/${uid}/`) || !contentType.startsWith("image/") || size <= 0 || size > 10 * 1024 * 1024) {
+    const parts = path.split("/");
+    const pathIsValid = parts.length === 4
+      && parts[0] === "workshop"
+      && parts[1] === uid
+      && UUID_PATTERN.test(parts[2])
+      && UUID_PATTERN.test(parts[3].slice(0, 36))
+      && parts[3][36] === "-";
+    if (!pathIsValid || !SAFE_IMAGE_TYPES.has(contentType) || !Number.isSafeInteger(size) || size <= 0 || size > 10 * 1024 * 1024) {
       throw new HttpsError("invalid-argument", "One of the image attachments is invalid.");
     }
     return { name, path, contentType, size };
@@ -135,48 +162,70 @@ export const claimWorkshopAccess = onCall({ region: REGION }, async (request) =>
 export const createWorkshopTicket = onCall({ region: REGION }, async (request) => {
   const user = identity(request);
   await assertMember(user);
-  await checkRateLimit(user.uid);
-  const body = validBody(request.data?.body);
   const attachments = validAttachments(request.data?.attachments, user.uid);
-  const ticketRef = db.collection("workshopTickets").doc();
-  const messageRef = ticketRef.collection("messages").doc();
-  const ackRef = ticketRef.collection("messages").doc();
-  const batch = db.batch();
-  batch.set(ticketRef, {
-    title: body.split(/\n/)[0].slice(0, 96),
-    status: "not_done",
-    authorUid: user.uid,
-    authorEmail: user.email,
-    authorName: user.name,
-    createdAt: FieldValue.serverTimestamp(),
-    updatedAt: FieldValue.serverTimestamp(),
-    revision: 1,
-    nextSequence: 3,
-    attachmentCount: attachments.length,
-    needsSimonApproved: false,
-    leasedBy: null,
-    leaseExpiresAt: null,
+  const body = validBody(request.data?.body, attachments.length > 0);
+  const submissionId = validId(request.data?.submissionId, "submission");
+  const ticketRef = db.collection("workshopTickets").doc(submissionId);
+  const existing = await ticketRef.get();
+  if (existing.exists) {
+    if (existing.data()?.authorUid !== user.uid) throw new HttpsError("already-exists", "This submission is already in use.");
+    return { ok: true, ticketId: ticketRef.id };
+  }
+  await checkRateLimit(user.uid);
+  await db.runTransaction(async (tx) => {
+    const ticket = await tx.get(ticketRef);
+    if (ticket.exists) {
+      if (ticket.data()?.authorUid !== user.uid) throw new HttpsError("already-exists", "This submission is already in use.");
+      return;
+    }
+    tx.set(ticketRef, {
+      title: body.split(/\n/)[0].slice(0, 96) || "Image request",
+      status: "not_done",
+      authorUid: user.uid,
+      authorEmail: user.email,
+      authorName: user.name,
+      createdAt: FieldValue.serverTimestamp(),
+      updatedAt: FieldValue.serverTimestamp(),
+      readAtBy: { [user.uid]: FieldValue.serverTimestamp() },
+      revision: 1,
+      nextSequence: 3,
+      attachmentCount: attachments.length,
+      needsSimonApproved: false,
+      leasedBy: null,
+      leaseExpiresAt: null,
+    });
+    tx.set(ticketRef.collection("messages").doc(`${submissionId}-request`), messageData("request", body, user, 1, attachments));
+    tx.set(ticketRef.collection("messages").doc(`${submissionId}-ack`), messageData("system", "Received. I’ll pick this up when the Workshop agent is online.", null, 2));
   });
-  batch.set(messageRef, messageData("request", body, user, 1, attachments));
-  batch.set(ackRef, messageData("system", "Received. I’ll pick this up when the Workshop agent is online.", null, 2));
-  await batch.commit();
   return { ok: true, ticketId: ticketRef.id };
 });
 
 export const replyWorkshopTicket = onCall({ region: REGION }, async (request) => {
   const user = identity(request);
   await assertMember(user);
-  await checkRateLimit(user.uid);
   const ticketId = String(request.data?.ticketId ?? "");
   if (!/^[A-Za-z0-9_-]{6,128}$/.test(ticketId)) {
     throw new HttpsError("invalid-argument", "Invalid ticket.");
   }
-  const body = validBody(request.data?.body);
   const attachments = validAttachments(request.data?.attachments, user.uid);
+  const body = validBody(request.data?.body, attachments.length > 0);
+  const submissionId = validId(request.data?.submissionId, "submission");
   const ticketRef = db.doc(`workshopTickets/${ticketId}`);
+  const messageRef = ticketRef.collection("messages").doc(submissionId);
+  const existing = await messageRef.get();
+  if (existing.exists) {
+    if (existing.data()?.authorUid !== user.uid) throw new HttpsError("already-exists", "This submission is already in use.");
+    return { ok: true };
+  }
+  await checkRateLimit(user.uid);
   await db.runTransaction(async (tx) => {
     const ticket = await tx.get(ticketRef);
     if (!ticket.exists) throw new HttpsError("not-found", "Ticket not found.");
+    const duplicate = await tx.get(messageRef);
+    if (duplicate.exists) {
+      if (duplicate.data()?.authorUid !== user.uid) throw new HttpsError("already-exists", "This submission is already in use.");
+      return;
+    }
     const data = ticket.data()!;
     const sequence = Number(data.nextSequence ?? 1);
     const waitingForSimon = data.status === "needs_simon";
@@ -191,15 +240,33 @@ export const replyWorkshopTicket = onCall({ region: REGION }, async (request) =>
         ? "Simon answered. The agent will reread the whole thread."
         : "Update received. This task is still waiting for Simon to reply in this thread."
       : "Update received. The agent will reread the whole thread.";
-    tx.set(ticketRef.collection("messages").doc(), messageData("follow_up", body, user, sequence, attachments));
-    tx.set(ticketRef.collection("messages").doc(), messageData("system", acknowledgement, null, sequence + 1));
+    tx.set(messageRef, messageData("follow_up", body, user, sequence, attachments));
+    tx.set(ticketRef.collection("messages").doc(`${submissionId}-ack`), messageData("system", acknowledgement, null, sequence + 1));
     tx.update(ticketRef, {
       status: nextStatus,
       updatedAt: FieldValue.serverTimestamp(),
+      readAtBy: { ...(data.readAtBy ?? {}), [user.uid]: FieldValue.serverTimestamp() },
       revision: FieldValue.increment(1),
       nextSequence: sequence + 2,
       attachmentCount: FieldValue.increment(attachments.length),
       ...(waitingForSimon ? { needsSimonApproved: answeredBySimon } : {}),
+    });
+  });
+  return { ok: true };
+});
+
+export const markWorkshopTicketRead = onCall({ region: REGION }, async (request) => {
+  const user = identity(request);
+  await assertMember(user);
+  const ticketId = String(request.data?.ticketId ?? "");
+  if (!/^[A-Za-z0-9_-]{6,128}$/.test(ticketId)) throw new HttpsError("invalid-argument", "Invalid ticket.");
+  const ticketRef = db.doc(`workshopTickets/${ticketId}`);
+  await db.runTransaction(async (tx) => {
+    const ticket = await tx.get(ticketRef);
+    if (!ticket.exists) throw new HttpsError("not-found", "Ticket not found.");
+    const data = ticket.data()!;
+    tx.update(ticketRef, {
+      readAtBy: { ...(data.readAtBy ?? {}), [user.uid]: FieldValue.serverTimestamp() },
     });
   });
   return { ok: true };

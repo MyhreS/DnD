@@ -17,6 +17,7 @@ export type WorkshopTicket = {
   authorEmail: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
+  readAtBy?: Record<string, Timestamp>;
   revision: number;
   attachmentCount: number;
 };

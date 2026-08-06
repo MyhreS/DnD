@@ -6,6 +6,8 @@ import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
 import { initializeApp as initializeClient } from "firebase/app";
 import { connectAuthEmulator, getAuth, signInWithCustomToken } from "firebase/auth";
 import { connectFirestoreEmulator, deleteDoc, doc, getDoc, getFirestore, updateDoc } from "firebase/firestore";
+import { connectFunctionsEmulator, getFunctions, httpsCallable } from "firebase/functions";
+import { connectStorageEmulator, getStorage, ref, uploadBytes } from "firebase/storage";
 import { chromium } from "playwright";
 
 const PORT = 5202;
@@ -51,10 +53,13 @@ async function ready() {
   throw new Error("Workshop Vite server did not start.");
 }
 
-function watch(page, errors, allowForbidden = false) {
+function watch(page, errors, allowForbidden = false, allowMissingImage = false) {
   page.on("pageerror", (error) => errors.push(String(error)));
   page.on("console", (message) => {
-    if (message.type() === "error" && !message.text().includes("400") && !(allowForbidden && message.text().includes("403"))) errors.push(message.text());
+    const expected = message.text().includes("400")
+      || (allowForbidden && message.text().includes("403"))
+      || (allowMissingImage && message.text().includes("404 (Not Found)"));
+    if (message.type() === "error" && !expected) errors.push(message.text());
   });
 }
 
@@ -111,19 +116,42 @@ async function ruleClient(name, token) {
     authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
     projectId,
     appId: process.env.VITE_FIREBASE_APP_ID,
+    storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
   }, `workshop-${name}`);
   const clientAuth = getAuth(app);
   const clientDb = getFirestore(app);
+  const clientFunctions = getFunctions(app, "europe-west1");
+  const clientStorage = getStorage(app);
   connectAuthEmulator(clientAuth, "http://127.0.0.1:9099", { disableWarnings: true });
   connectFirestoreEmulator(clientDb, "127.0.0.1", 8080);
+  connectFunctionsEmulator(clientFunctions, "127.0.0.1", 5001);
+  connectStorageEmulator(clientStorage, "127.0.0.1", 9199);
   await signInWithCustomToken(clientAuth, token);
-  return clientDb;
+  return { db: clientDb, functions: clientFunctions, storage: clientStorage };
 }
 
 async function expectDenied(action, label) {
   let denied = false;
   try { await action(); } catch (error) { denied = String(error?.code ?? error).includes("permission-denied"); }
   if (!denied) throw new Error(`${label} was not denied by security rules.`);
+}
+
+async function expectCode(action, code, label) {
+  let matched = false;
+  let actual = "resolved successfully";
+  try { await action(); } catch (error) {
+    actual = String(error?.code ?? error);
+    matched = actual.includes(code);
+  }
+  if (!matched) throw new Error(`${label} did not fail with ${code}; it ${actual}.`);
+}
+
+async function eventually(check, label) {
+  for (let attempt = 0; attempt < 100; attempt += 1) {
+    if (await check()) return;
+    await sleep(50);
+  }
+  throw new Error(`${label} did not become true.`);
 }
 
 const browser = await chromium.launch({ headless: true });
@@ -142,28 +170,100 @@ try {
   await outsider.page.getByText("only available to Simon and Christoffer").waitFor();
 
   const creator = await openAs(browser, creatorToken, { width: 390, height: 844 });
-  watch(creator.page, errors);
+  watch(creator.page, errors, false, true);
   await waitForWorkspace(creator.page, "Creator");
   await creator.page.getByTestId("agent-presence").getByText("Agent offline").waitFor();
   await creator.page.getByText("Ask Simon to start the Workshop agent.").waitFor();
   await creator.page.getByTestId("agent-countdown").getByText("Next check starts when the agent is online.").waitFor();
+  const composerFileInput = creator.page.locator('.composer input[type="file"]');
+  await composerFileInput.setInputFiles({ name: "unsafe.svg", mimeType: "image/svg+xml", buffer: Buffer.from("<svg/>") });
+  await creator.page.getByText("Use JPG, PNG, WebP, or GIF images.", { exact: true }).waitFor();
+  if (await creator.page.getByTestId("attachment-previews").count()) throw new Error("Unsafe image appeared in the preview list.");
   await creator.page.getByTestId("ticket-body").fill("Make the game page calmer");
   await creator.page.getByTestId("ticket-body").press("Shift+Enter");
   await creator.page.getByTestId("ticket-body").pressSequentially("Only show the most important action first.");
-  await creator.page.locator('.composer input[type="file"]').setInputFiles({
-    name: "game-page.png",
-    mimeType: "image/png",
-    buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"),
+  const tinyPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64");
+  await composerFileInput.setInputFiles([
+    { name: "game-page.png", mimeType: "image/png", buffer: tinyPng },
+    { name: "remove-me.png", mimeType: "image/png", buffer: tinyPng },
+  ]);
+  await creator.page.getByTestId("attachment-previews").locator(".attachment-preview").nth(1).waitFor();
+  await creator.page.getByRole("button", { name: "Remove remove-me.png" }).click();
+  if (await creator.page.getByTestId("attachment-previews").locator(".attachment-preview").count() !== 1) throw new Error("Selected image was not removed.");
+  await creator.page.evaluate(() => {
+    Object.defineProperty(Navigator.prototype, "onLine", { configurable: true, get: () => false });
+    window.dispatchEvent(new Event("offline"));
   });
+  await creator.page.getByText("Offline · your draft is saved", { exact: true }).waitFor();
+  if (await creator.page.getByTestId("send-ticket").isEnabled()) throw new Error("Offline composer remained enabled.");
+  await creator.page.screenshot({ path: "screenshots/workshop-offline-draft-mobile.png", fullPage: true });
+  await creator.page.evaluate(() => {
+    Object.defineProperty(Navigator.prototype, "onLine", { configurable: true, get: () => true });
+    window.dispatchEvent(new Event("online"));
+  });
+  await creator.page.getByText("Draft saved", { exact: true }).waitFor();
   await creator.page.getByTestId("ticket-body").press("Enter");
   await creator.page.getByTestId("send-ticket").getByText("Sent ✓", { exact: true }).waitFor();
   const detail = creator.page.getByTestId("ticket-detail");
   await detail.waitFor();
   await detail.getByText("Received. I’ll pick this up").waitFor();
+  await creator.page.keyboard.press("Shift+Tab");
+  if (await creator.page.evaluate(() => document.activeElement?.getAttribute("data-testid")) !== "ticket-reply") throw new Error("Dialog focus did not wrap to its last control.");
+  await creator.page.keyboard.press("Tab");
+  if (await creator.page.evaluate(() => document.activeElement?.getAttribute("aria-label")) !== "Close thread") throw new Error("Dialog focus escaped into the page behind it.");
   ticketId = (await db.collection("workshopTickets").where("authorUid", "==", creatorUid).limit(1).get()).docs[0]?.id;
   if (!ticketId) throw new Error("Ticket was not created.");
+  await eventually(async () => Boolean((await db.doc(`workshopTickets/${ticketId}`).get()).data()?.readAtBy?.[creatorUid]), "Creator read receipt");
+  await simon.page.getByTestId(`ticket-${ticketId}`).waitFor();
+  if (!(await simon.page.getByTestId(`ticket-${ticketId}`).getAttribute("aria-label"))?.includes("unread")) throw new Error("Simon did not see the new request as unread.");
+  await simon.page.getByTestId(`ticket-${ticketId}`).click();
+  await simon.page.getByRole("button", { name: "Close thread" }).click();
+  await eventually(async () => Boolean((await db.doc(`workshopTickets/${ticketId}`).get()).data()?.readAtBy?.[simonUid]), "Simon read receipt");
+  await eventually(async () => !(await simon.page.getByTestId(`ticket-${ticketId}`).getAttribute("aria-label"))?.includes("unread"), "Read marker clearing");
   if (await detail.getByRole("button", { name: /delete|edit/i }).count()) throw new Error("Thread exposes destructive edit/delete controls.");
   await detail.getByRole("button", { name: "Close thread" }).click();
+  await composerFileInput.setInputFiles({ name: "image-only.png", mimeType: "image/png", buffer: tinyPng });
+  await creator.page.getByTestId("ticket-body").press("Enter");
+  await creator.page.getByRole("heading", { name: "Image request" }).waitFor();
+  const imageOnlyTicket = (await db.collection("workshopTickets").where("title", "==", "Image request").limit(1).get()).docs[0];
+  if (!imageOnlyTicket || imageOnlyTicket.data().attachmentCount !== 1) throw new Error("Image-only request was not created correctly.");
+  const imageOnlyMessages = await imageOnlyTicket.ref.collection("messages").orderBy("sequence", "asc").get();
+  if (imageOnlyMessages.docs[0]?.data().body !== "") throw new Error("Image-only request stored unexpected text.");
+  await creator.page.getByRole("button", { name: "Close thread" }).click();
+  await imageOnlyTicket.ref.update({ status: "finished" });
+
+  const longThreadId = "long-conversation";
+  const longThreadRef = db.doc(`workshopTickets/${longThreadId}`);
+  await longThreadRef.set({
+    title: "Long conversation with an image problem",
+    status: "finished",
+    authorUid: creatorUid,
+    authorEmail: creatorEmail,
+    authorName: "Christopher Creator",
+    createdAt: new Date(Date.now() - 3_600_000),
+    updatedAt: new Date(),
+    readAtBy: {},
+    revision: 1,
+    nextSequence: 31,
+    attachmentCount: 1,
+    needsSimonApproved: false,
+    leasedBy: null,
+    leaseExpiresAt: null,
+  });
+  await Promise.all(Array.from({ length: 30 }, (_, index) => longThreadRef.collection("messages").doc(`message-${String(index + 1).padStart(2, "0")}`).set({
+    kind: index === 0 ? "request" : "follow_up",
+    body: `Conversation note ${index + 1}`,
+    authorUid: creatorUid,
+    authorName: "Christopher Creator",
+    attachments: index === 4 ? [{
+      name: "missing-image.png",
+      path: `workshop/${creatorUid}/${crypto.randomUUID()}/${crypto.randomUUID()}-missing-image.png`,
+      contentType: "image/png",
+      size: 42,
+    }] : [],
+    sequence: index + 1,
+    createdAt: new Date(Date.now() - (30 - index) * 30_000),
+  })));
   await Promise.all(Array.from({ length: 16 }, (_, index) => db.collection("workshopTickets").doc(`scroll-fixture-${index}`).set({
     title: `History request ${index + 1}`,
     status: "doing_now",
@@ -180,18 +280,91 @@ try {
     leaseExpiresAt: null,
   })));
   const requestList = creator.page.getByTestId("ticket-list");
-  await requestList.locator("li").nth(16).waitFor();
+  await requestList.locator("li").nth(18).waitFor();
   await assertScrollable(requestList, "Workshop mobile request list");
+  const requestSearch = creator.page.getByTestId("ticket-search");
+  await requestSearch.fill("History request 9");
+  await creator.page.getByRole("button", { name: /History request 9/ }).waitFor();
+  if (await creator.page.getByTestId("ticket-list").locator("li").count() !== 1) throw new Error("Request search returned unrelated results.");
+  await requestSearch.fill("nothing matches this phrase");
+  await creator.page.getByTestId("empty-search").waitFor();
+  await requestSearch.fill("");
+  await requestList.locator("li").nth(18).waitFor();
   await noOverflow(creator.page, "Workshop mobile");
   await creator.page.screenshot({ path: "screenshots/workshop-long-list-mobile.png", fullPage: true });
   await creator.page.screenshot({ path: "screenshots/workshop-mobile.png", fullPage: true });
 
-  const creatorDb = await ruleClient("creator", creatorToken);
-  const outsiderDb = await ruleClient("outsider", outsiderToken);
-  if (!(await getDoc(doc(creatorDb, "workshopTickets", ticketId))).exists()) throw new Error("Invited creator cannot read the ticket.");
-  await expectDenied(() => updateDoc(doc(creatorDb, "workshopTickets", ticketId), { title: "edited" }), "Ticket edit");
-  await expectDenied(() => deleteDoc(doc(creatorDb, "workshopTickets", ticketId)), "Ticket deletion");
-  await expectDenied(() => getDoc(doc(outsiderDb, "workshopTickets", ticketId)), "Outsider ticket read");
+  await requestSearch.fill("Long conversation");
+  await creator.page.getByTestId(`ticket-${longThreadId}`).click();
+  await creator.page.getByText("Conversation note 30", { exact: true }).waitFor();
+  const messageList = creator.page.getByTestId("message-list");
+  await eventually(async () => messageList.evaluate((element) => element.scrollTop > 0 && element.scrollHeight > element.clientHeight), "Conversation opening at latest message");
+  await creator.page.getByText("Image unavailable", { exact: true }).waitFor();
+  await creator.page.getByRole("button", { name: "Try again" }).click();
+  await creator.page.getByText("Image unavailable", { exact: true }).waitFor();
+  await messageList.evaluate((element) => { element.scrollTop = 0; element.dispatchEvent(new Event("scroll")); });
+  await longThreadRef.collection("messages").doc("message-31").set({
+    kind: "agent",
+    body: "A new reply arrived while reading older messages.",
+    authorUid: "workshop-agent",
+    authorName: "Workshop agent",
+    attachments: [],
+    sequence: 31,
+    createdAt: new Date(),
+  });
+  await longThreadRef.update({ updatedAt: new Date(), nextSequence: 32 });
+  await creator.page.getByRole("button", { name: "New message ↓" }).waitFor();
+  await creator.page.screenshot({ path: "screenshots/workshop-long-thread-mobile.png", fullPage: true });
+  await creator.page.getByRole("button", { name: "New message ↓" }).click();
+  await eventually(async () => messageList.evaluate((element) => element.scrollHeight - element.scrollTop - element.clientHeight < 90), "Jump to latest message");
+  const replyFileInput = creator.page.locator('.reply-form input[type="file"]');
+  await replyFileInput.setInputFiles({ name: "reply-image.png", mimeType: "image/png", buffer: tinyPng });
+  await creator.page.getByTestId("ticket-reply").press("Enter");
+  await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
+  const longMessages = await longThreadRef.collection("messages").get();
+  const imageOnlyReply = longMessages.docs.map((item) => item.data()).find((message) => message.kind === "follow_up" && message.sequence === 32);
+  if (!imageOnlyReply || imageOnlyReply.body !== "" || imageOnlyReply.attachments?.length !== 1) throw new Error("Image-only reply was not stored correctly.");
+  await longThreadRef.update({ status: "finished" });
+  await creator.page.keyboard.press("Escape");
+  await requestSearch.fill("");
+
+  const creatorClient = await ruleClient("creator", creatorToken);
+  const outsiderClient = await ruleClient("outsider", outsiderToken);
+  if (!(await getDoc(doc(creatorClient.db, "workshopTickets", ticketId))).exists()) throw new Error("Invited creator cannot read the ticket.");
+  await expectDenied(() => updateDoc(doc(creatorClient.db, "workshopTickets", ticketId), { title: "edited" }), "Ticket edit");
+  await expectDenied(() => deleteDoc(doc(creatorClient.db, "workshopTickets", ticketId)), "Ticket deletion");
+  await expectDenied(() => getDoc(doc(outsiderClient.db, "workshopTickets", ticketId)), "Outsider ticket read");
+
+  const createDirect = httpsCallable(creatorClient.functions, "createWorkshopTicket");
+  const duplicateSubmissionId = crypto.randomUUID();
+  const duplicatePayload = { body: "Retry-safe request", attachments: [], submissionId: duplicateSubmissionId };
+  await createDirect(duplicatePayload);
+  await createDirect(duplicatePayload);
+  const duplicateTicket = await db.doc(`workshopTickets/${duplicateSubmissionId}`).get();
+  const duplicateMessages = await duplicateTicket.ref.collection("messages").get();
+  if (!duplicateTicket.exists || duplicateMessages.size !== 2) throw new Error("Retry created duplicate Workshop content.");
+  const replyDirect = httpsCallable(creatorClient.functions, "replyWorkshopTicket");
+  const duplicateReplyId = crypto.randomUUID();
+  const duplicateReply = { ticketId: duplicateSubmissionId, body: "Retry-safe reply", attachments: [], submissionId: duplicateReplyId };
+  await replyDirect(duplicateReply);
+  await replyDirect(duplicateReply);
+  const afterDuplicateReply = await duplicateTicket.ref.get();
+  const afterDuplicateMessages = await duplicateTicket.ref.collection("messages").get();
+  if (afterDuplicateReply.data()?.revision !== 2 || afterDuplicateMessages.size !== 4) throw new Error("Reply retry created duplicate Workshop content.");
+  await duplicateTicket.ref.update({ status: "finished" });
+
+  const unsafeDraftId = crypto.randomUUID();
+  const unsafeFileId = `${crypto.randomUUID()}-unsafe.svg`;
+  await expectCode(() => createDirect({
+    body: "Unsafe attachment",
+    submissionId: crypto.randomUUID(),
+    attachments: [{ name: "unsafe.svg", path: `workshop/${creatorUid}/${unsafeDraftId}/${unsafeFileId}`, contentType: "image/svg+xml", size: 6 }],
+  }), "invalid-argument", "Unsafe callable attachment");
+  await expectCode(() => uploadBytes(
+    ref(creatorClient.storage, `workshop/${creatorUid}/${unsafeDraftId}/${unsafeFileId}`),
+    new Blob(["<svg/>"]),
+    { contentType: "image/svg+xml" },
+  ), "unauthorized", "Unsafe Storage upload");
 
   await runManager("finished");
   await creator.page.getByTestId("agent-presence").getByText("Agent online").waitFor();
@@ -208,12 +381,17 @@ try {
   if (await countdown.textContent() === firstCountdown) throw new Error("Agent countdown did not advance.");
   await db.doc("workshopAgent/state").set({ checkingNow: true, nextPollAt: null }, { merge: true });
   await countdown.getByText("The agent is checking requests now.").waitFor();
-  await creator.page.getByText("Finished", { exact: true }).waitFor();
+  await creator.page.getByTestId(`ticket-${ticketId}`).getByText("Finished", { exact: true }).waitFor();
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
   await creator.page.getByText("requested test update is available now", { exact: false }).waitFor();
   if (await creator.page.getByText("Received. I’ll pick this up when the Workshop agent is online.", { exact: true }).count()) {
     throw new Error("The initial queue acknowledgement remained visible after the agent picked up the request.");
   }
+  await creator.page.getByTestId("ticket-reply").fill("Keep this unsent draft when I close the thread.");
+  await creator.page.getByText("Draft saved", { exact: true }).waitFor();
+  await creator.page.keyboard.press("Escape");
+  await creator.page.getByTestId(`ticket-${ticketId}`).click();
+  if (await creator.page.getByTestId("ticket-reply").inputValue() !== "Keep this unsent draft when I close the thread.") throw new Error("Reply draft was lost when the thread closed.");
   await creator.page.getByTestId("ticket-reply").fill("Please also reduce the number of buttons.");
   await creator.page.getByTestId("ticket-reply").press("Enter");
   await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
@@ -280,7 +458,7 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, visible Enter/click send feedback, scrollable long history, heartbeat countdown, Chris-blocked/Simon-reopened Needs Simon flow, declined flow, and responsive layout.");
+  console.log("Workshop E2E passed: fixed account gate, secure and removable images, offline drafts, image-only messages, retry idempotency, read receipts, request search, long-thread latest/new-message behavior, recoverable missing images, Enter/click feedback, heartbeat countdown, Needs Simon/declined flows, and responsive mobile/desktop layout.");
   await Promise.all([simon.context.close(), creator.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();

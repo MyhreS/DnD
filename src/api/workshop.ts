@@ -21,27 +21,33 @@ const claimAccessCall = httpsCallable<undefined, { ok: boolean; role: "admin" | 
   "claimWorkshopAccess",
 );
 const createTicketCall = httpsCallable<
-  { body: string; attachments: WorkshopAttachment[] },
+  { body: string; attachments: WorkshopAttachment[]; submissionId: string },
   { ok: boolean; ticketId: string }
 >(workshopFunctions, "createWorkshopTicket");
 const replyTicketCall = httpsCallable<
-  { ticketId: string; body: string; attachments: WorkshopAttachment[] },
+  { ticketId: string; body: string; attachments: WorkshopAttachment[]; submissionId: string },
   { ok: boolean }
 >(workshopFunctions, "replyWorkshopTicket");
+const markTicketReadCall = httpsCallable<{ ticketId: string }, { ok: boolean }>(workshopFunctions, "markWorkshopTicketRead");
 export async function claimWorkshopAccess(): Promise<"admin" | "creator"> {
   return (await claimAccessCall()).data.role;
 }
 
-export async function createWorkshopTicket(body: string, attachments: WorkshopAttachment[]) {
-  return (await createTicketCall({ body, attachments })).data.ticketId;
+export async function createWorkshopTicket(body: string, attachments: WorkshopAttachment[], submissionId: string) {
+  return (await createTicketCall({ body, attachments, submissionId })).data.ticketId;
 }
 
 export async function replyWorkshopTicket(
   ticketId: string,
   body: string,
   attachments: WorkshopAttachment[],
+  submissionId: string,
 ) {
-  await replyTicketCall({ ticketId, body, attachments });
+  await replyTicketCall({ ticketId, body, attachments, submissionId });
+}
+
+export async function markWorkshopTicketRead(ticketId: string) {
+  await markTicketReadCall({ ticketId });
 }
 
 export async function uploadWorkshopImages(uid: string, files: File[]): Promise<WorkshopAttachment[]> {
@@ -81,8 +87,8 @@ export function subscribeWorkshopMessages(
   );
 }
 
-export function subscribeAgentState(next: (state: AgentState | null) => void): Unsubscribe {
+export function subscribeAgentState(next: (state: AgentState | null) => void, fail: (error: Error) => void): Unsubscribe {
   return onSnapshot(doc(workshopDb, "workshopAgent", "state"), (snapshot) => {
     next(snapshot.exists() ? snapshot.data() as AgentState : null);
-  });
+  }, fail);
 }
