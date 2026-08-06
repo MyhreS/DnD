@@ -310,6 +310,26 @@ try {
   await dmPage.getByRole("button", { name: "Manage battle" }).click();
   const mobileManageBattle = dmPage.getByRole("dialog", { name: "Manage battle" });
   await noHorizontalOverflow(dmPage, "Manage battle modal mobile");
+  const mobileBackdropBox = await dmPage.locator(".game-dialog-backdrop").boundingBox();
+  if (!mobileBackdropBox || Math.abs(mobileBackdropBox.y) > 1 || Math.abs(mobileBackdropBox.height - 844) > 1) {
+    throw new Error(`Manage battle backdrop is not fixed to the mobile viewport: ${JSON.stringify(mobileBackdropBox)}`);
+  }
+  const mobileBattleScroll = mobileManageBattle.locator(".game-battle-dialog-scroll");
+  const scrollMetrics = await mobileBattleScroll.evaluate((element) => ({
+    clientHeight: element.clientHeight,
+    scrollHeight: element.scrollHeight,
+  }));
+  if (scrollMetrics.scrollHeight <= scrollMetrics.clientHeight) {
+    throw new Error(`Manage battle content should scroll on mobile: ${JSON.stringify(scrollMetrics)}`);
+  }
+  await mobileBattleScroll.evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await dmPage.waitForTimeout(250);
+  const stableScrollTop = await mobileBattleScroll.evaluate((element) => element.scrollTop);
+  if (stableScrollTop <= 0) throw new Error("Manage battle mobile scroll jumped back to the top.");
+  const endBattleBox = await mobileManageBattle.getByRole("button", { name: "End battle" }).boundingBox();
+  if (!endBattleBox || endBattleBox.y < 0 || endBattleBox.y + endBattleBox.height > 844) {
+    throw new Error(`End battle is outside the mobile viewport: ${JSON.stringify(endBattleBox)}`);
+  }
   await dmPage.screenshot({ path: "screenshots/game-battle-manage-mobile.png", fullPage: true });
   await mobileManageBattle.getByRole("button", { name: "Done", exact: true }).click();
 

@@ -905,7 +905,11 @@ button {
 }
 
 .fade-in {
-  animation: fade-in 0.4s ease both;
+  /* Do not retain the transform animation after it finishes. A retained
+     transform makes fixed dialogs use this page wrapper as their containing
+     block on Safari, so tall dialogs move with the document instead of the
+     viewport. */
+  animation: fade-in 0.4s ease backwards;
 }
 @keyframes fade-in {
   from {
