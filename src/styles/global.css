@@ -618,6 +618,7 @@ button {
   color: #1f1f1f;
   border-color: #fff;
   font-family: var(--font-body);
+  white-space: nowrap;
 }
 
 .btn-row {
@@ -1354,6 +1355,11 @@ button {
   .codex-version-count { display: none; }
   .codex-topic-body { padding-left: 24px; }
   .codex-topic-copy > span { white-space: normal; }
+}
+
+@media (max-width: 360px) {
+  .top-tabs { gap: 0; padding-inline: 4px; }
+  .top-tabs a { padding-inline: 8px; font-size: 0.7rem; }
 }
 
 /* ---------- Print / PDF export ---------- */

@@ -68,6 +68,8 @@ try {
   await page.getByTestId("appsheet-name").fill("App Warden");
   await page.getByTestId("appsheet-class").selectOption("warden");
   await page.getByTestId("appsheet-background").selectOption("criminal");
+  const skillChoiceDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Skill proficiency choices", { exact: true }) }).first();
+  if (!await skillChoiceDisclosure.evaluate((element) => element.open)) throw new Error("Fresh required skill choices are not expanded");
 
   await page.getByRole("button", { name: "Increase level" }).click();
   await page.getByTestId("appsheet-edit-stage").waitFor();
@@ -88,6 +90,7 @@ try {
   }
   await page.getByLabel("Perception", { exact: true }).check();
   await page.getByLabel("Survival", { exact: true }).check();
+  if (await skillChoiceDisclosure.evaluate((element) => element.open)) throw new Error("Completed skill choices did not collapse to reduce clutter");
   await page.getByLabel("Dexterity app background bonus").selectOption("2");
   await page.getByLabel("Constitution app background bonus").selectOption("1");
   const finishSetup = page.getByRole("button", { name: "Finish setup" });
@@ -96,10 +99,14 @@ try {
     throw new Error(`Fresh app setup remained disabled after all choices: ${unresolved.join(", ")}`);
   }
   await finishSetup.click();
+  const characterBuildDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Character build", { exact: true }) }).first();
+  if (await characterBuildDisclosure.evaluate((element) => element.open)) throw new Error("Completed character build did not collapse to reduce clutter");
 
   await openAppDisclosure("Change worn armor");
+  const wornArmorDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Change worn armor", { exact: true }) }).first();
   await page.getByTestId("appsheet-main-armor").selectOption("reinforced-hunter-leather-vest");
   if (await page.getByTestId("appsheet-combat-ac").locator(":scope > strong").textContent() !== "15") throw new Error("App armor choice did not recalculate AC");
+  if (!await wornArmorDisclosure.evaluate((element) => element.open)) throw new Error("Editing a value collapsed its disclosure mid-task");
 
   await openAppDisclosure("Add a catalog item");
   await page.getByTestId("appsheet-catalog-item").selectOption("torch");
@@ -279,6 +286,21 @@ try {
   const darkBackground = await page.locator(".papersheet-modal").evaluate((element) => getComputedStyle(element).backgroundColor);
   if (darkBackground === appColors.background) throw new Error("App sheet did not respond when the global theme changed to dark");
   await page.screenshot({ path: "screenshots/app-character-sheet-mobile-dark.png", fullPage: true });
+
+  // Escape closes the complete character editor, and reopening restores focus
+  // to the toolbar rather than leaving keyboard users behind the modal.
+  await page.keyboard.press("Escape");
+  await page.getByRole("heading", { name: "Hunters" }).waitFor();
+  await page.getByRole("button", { name: /Open Eileen the Crow/ }).click();
+  const reopenedBack = page.locator(".papersheet-toolbar").getByRole("button", { name: "Back" }).first();
+  await reopenedBack.waitFor();
+  if (!await reopenedBack.evaluate((element) => element === document.activeElement)) {
+    throw new Error("Reopened character editor did not focus its Back control");
+  }
+  if (!await page.getByTestId("app-character-sheet").count()) {
+    await page.getByRole("button", { name: "App view" }).click();
+  }
+  await page.getByTestId("app-character-sheet").waitFor();
 
   // Character deletion is reachable from the open editor (not hidden behind
   // it), deliberately confirmed, cancellable, and returns to the hunter list.

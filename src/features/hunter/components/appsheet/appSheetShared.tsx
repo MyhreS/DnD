@@ -9,15 +9,6 @@ export interface AppSheetModel {
   setFields: (fields: SheetData, patch: Partial<HunterCard>) => void;
 }
 
-export function sheetText(data: SheetData, field: string): string {
-  const value = data[field];
-  return typeof value === "string" ? value : "";
-}
-
-export function sheetBool(data: SheetData, field: string): boolean {
-  return data[field] === true;
-}
-
 export function AppSection({
   title,
   children,

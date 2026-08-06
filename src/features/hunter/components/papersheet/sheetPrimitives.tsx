@@ -2,7 +2,7 @@ import {
   createContext,
   useCallback,
   useContext,
-  useEffect,
+  useLayoutEffect,
   useState,
   useSyncExternalStore,
   type InputHTMLAttributes,
@@ -22,10 +22,10 @@ type Listener = () => void;
 class SheetStore {
   private values: SheetData;
   private listeners = new Map<string, Set<Listener>>();
-  /** Keys whose value changed during render, flushed to listeners on commit. */
+  /** Keys whose value changed while adopting a new committed snapshot. */
   private pending = new Set<string>();
-  /** Kept current every render — assigning is cheap and keeps identity stable. */
-  setFieldImpl: (f: string, v: string | boolean) => void = () => {};
+  /** Kept current without changing the store identity supplied to context. */
+  private setFieldImpl: (f: string, v: string | boolean) => void = () => {};
 
   constructor(initial: SheetData) {
     this.values = initial;
@@ -48,9 +48,12 @@ class SheetStore {
 
   setField = (f: string, v: string | boolean): void => this.setFieldImpl(f, v);
 
+  setWriter(next: (f: string, v: string | boolean) => void): void {
+    this.setFieldImpl = next;
+  }
+
   /** Adopt the latest `data` snapshot, queuing changed keys for notification.
-   * Called during render so field snapshots are always fresh (no controlled-
-   * input caret jump); idempotent so a re-run (StrictMode) queues nothing. */
+   * Idempotent so a repeated synchronization queues nothing. */
   sync(next: SheetData): void {
     if (next === this.values) return;
     const prev = this.values;
@@ -60,8 +63,7 @@ class SheetStore {
     this.values = next;
   }
 
-  /** Notify subscribers of keys changed since the last flush (called in an
-   * effect, after commit). */
+  /** Notify subscribers of keys changed since the last flush. */
   flush(): void {
     if (this.pending.size === 0) return;
     const keys = Array.from(this.pending);
@@ -93,12 +95,14 @@ export function SheetProvider({
   children: ReactNode;
 }) {
   const [store] = useState(() => new SheetStore(data));
-  // Keep the store's write path current + adopt the latest snapshot (render-
-  // time so descendant field snapshots are fresh in this same pass).
-  store.setFieldImpl = setField;
-  store.sync(data);
-  // Deliver the queued per-key notifications after the render commits.
-  useEffect(() => store.flush());
+  // Synchronize the external field bus before paint. Descendants may read the
+  // previous snapshot during the parent pass, then receive a targeted update
+  // for only the keys that changed; no React-owned value is mutated in render.
+  useLayoutEffect(() => {
+    store.setWriter(setField);
+    store.sync(data);
+    store.flush();
+  }, [data, setField, store]);
   return (
     <StoreContext.Provider value={store}>
       <ReadOnlyContext.Provider value={readOnly}>

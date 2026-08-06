@@ -11,11 +11,10 @@ import {
   DerivedValue,
   NumericStepper,
   PendingNotice,
-  sheetBool,
-  sheetText,
   type AppSheetModel,
 } from "./appSheetShared";
-import { useAppEditStage } from "./AppEditStage";
+import { sheetBool, sheetText } from "./appSheetValues";
+import { useAppEditStage } from "./appEditStageContext";
 
 function numeric(value: string, fallback = 0): number {
   const parsed = Number.parseInt(value, 10);
@@ -90,6 +89,7 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
         </AppPanel>
 
         <AppDisclosure
+          key={state.setupComplete === true ? "build-complete" : "build-pending"}
           title="Character build"
           summary={`${klass?.title ?? "No class"} · ${background?.name ?? "No background"} · level ${editStage.previewCard.level}`}
           defaultOpen={state.setupComplete !== true}

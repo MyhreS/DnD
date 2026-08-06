@@ -42,6 +42,7 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
 
       {(expertiseLimit > 0 || masteryCount > 0 || whisperLimit > 0) && (
       <AppDisclosure
+        key={classChoiceRemaining > 0 ? "class-choices-pending" : "class-choices-complete"}
         title="Class choices"
         summary={classChoiceRemaining ? `${classChoiceRemaining} remaining` : "All current choices complete"}
         aside={classChoiceRemaining ? <span className="appsheet-incomplete">Action needed</span> : <span className="appsheet-complete">Complete</span>}
