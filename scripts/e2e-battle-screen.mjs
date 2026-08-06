@@ -186,16 +186,12 @@ try {
   ]);
   await playerPage.getByText("Round 1", { exact: true }).waitFor();
   await playerPage.locator(".battle-name").getByText("Lady Maria", { exact: true }).waitFor();
-  await playerPage.getByTestId("battle-turn-timer").getByText("Tactical briefing", { exact: true }).waitFor();
-  await playerPage.getByTestId("battle-turn-timer").getByText("Briefing", { exact: true }).waitFor();
+  if (await playerPage.getByTestId("battle-turn-timer").count()) throw new Error("Player can still see the turn timer.");
+  if (await dmPage.getByRole("button", { name: /timer|90 seconds/i }).count()) throw new Error("DM can still see turn-timer controls.");
   if (await playerPage.getByRole("button", { name: "Next turn" }).count()) throw new Error("Player received DM battle controls.");
   if (await playerPage.getByRole("button", { name: "End battle" }).count()) throw new Error("Player can end battle mode.");
   if (await playerPage.getByRole("button", { name: "+ Add enemy" }).count()) throw new Error("Player can add enemies.");
   if (await playerPage.locator(".game-battle-controls").count()) throw new Error("Player can see the DM control panel.");
-  await dmPage.getByRole("button", { name: "Start 90 seconds" }).click();
-  await playerPage.getByTestId("battle-turn-timer").getByText("Turn timer", { exact: true }).waitFor();
-  await playerPage.getByTestId("battle-turn-timer").getByText(/1:[0-3][0-9]/).waitFor();
-
   const enemyControl = dmPage.locator(".game-initiative-row").filter({ hasText: "Moon Beast" });
   await enemyControl.getByLabel("Add condition to Moon Beast").selectOption("poisoned");
   const enemyDisplay = playerPage.getByTestId(`battle-combatant-${enemyId}`);
@@ -235,9 +231,7 @@ try {
   await playerPage.screenshot({ path: "screenshots/game-battle-mode-player.png", fullPage: true });
 
   await dmPage.getByRole("button", { name: "Next turn" }).click();
-  await playerPage.getByTestId("battle-turn-timer").getByText("DM turn", { exact: true }).waitFor();
-  await playerPage.getByTestId("battle-turn-timer").getByText("No timer", { exact: true }).waitFor();
-  await playerPage.getByTestId("battle-turn-timer").getByText("Grave Hound", { exact: true }).waitFor();
+  await playerPage.locator(".battle-live-status").getByText("Grave Hound", { exact: true }).waitFor();
 
   await playerPage.setViewportSize({ width: 390, height: 844 });
   await noHorizontalOverflow(playerPage, "Player battle mode mobile");
@@ -260,7 +254,7 @@ try {
   if (!claimedHunter.data()?.inventory?.some((item) => String(item.itemId).startsWith("session-"))) throw new Error("Claimed session weapon did not reach inventory.");
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Battle mode E2E passed: automatic entry/exit on both Game pages, player read-only view, DM controls, Firestore timer, conditions, damage, enemy creation, and responsive layout.");
+  console.log("Battle mode E2E passed: automatic entry/exit on both Game pages, timer-free player view, DM controls, conditions, damage, enemy creation, and responsive layout.");
   await dmContext.close();
   await playerContext.close();
 } finally {

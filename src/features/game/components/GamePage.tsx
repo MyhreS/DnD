@@ -4,9 +4,7 @@ import {
   createGameSession,
   discardGameSession,
   finishGameSession,
-  pauseGameClock,
   removeGameParticipant,
-  resumeGameClock,
   startGame,
   subscribeActiveGameSeats,
   subscribeParticipants,
@@ -28,30 +26,6 @@ import { SessionCombatControls, SessionCombatSection } from "./SessionCombatSect
 import "./game.css";
 
 const DEFAULT_TITLE = () => `Session ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())}`;
-
-function elapsedMs(game: Game, now: number): number {
-  return game.clockElapsedMs + (game.clockRunning && game.clockStartedAt
-    ? Math.max(0, now - game.clockStartedAt)
-    : 0);
-}
-
-function clockText(ms: number): string {
-  const totalSeconds = Math.floor(ms / 1000);
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
-  const seconds = totalSeconds % 60;
-  return [hours, minutes, seconds].map((part) => String(part).padStart(2, "0")).join(":");
-}
-
-function useClock(game: Game | null): string {
-  const [now, setNow] = useState(0);
-  useEffect(() => {
-    if (!game?.clockRunning) return;
-    const timer = window.setInterval(() => setNow(Date.now()), 250);
-    return () => window.clearInterval(timer);
-  }, [game?.clockRunning]);
-  return clockText(game ? elapsedMs(game, now) : 0);
-}
 
 function displayClass(participant: GameParticipant): string {
   return participant.className || participant.classId || "Hunter";
@@ -183,7 +157,6 @@ export function GamePage() {
   const combatBusy = useCombatStore((state) => state.busy);
   const combatError = useCombatStore((state) => state.error);
   const combatants = useCombatStore((state) => state.combatants);
-  const clock = useClock(selected);
 
   async function perform(work: () => Promise<void>, message: string): Promise<boolean> {
     setBusy(true);
@@ -333,36 +306,14 @@ export function GamePage() {
     await perform(() => startGame(selected.id), "Could not start the session.");
   }
 
-  async function pauseClock() {
-    if (!selected) return;
-    if (preview) {
-      updatePreviewGame(selected.id, {
-        clockElapsedMs: elapsedMs(selected, Date.now()),
-        clockRunning: false,
-        clockStartedAt: null,
-      });
-      return;
-    }
-    await perform(() => pauseGameClock(selected), "Could not pause the clock.");
-  }
-
-  async function resumeClock() {
-    if (!selected) return;
-    if (preview) {
-      updatePreviewGame(selected.id, { clockRunning: true, clockStartedAt: Date.now() });
-      return;
-    }
-    await perform(() => resumeGameClock(selected.id), "Could not resume the clock.");
-  }
-
   async function finishSession() {
     if (!selected || selected.status !== "active") return;
-    if (!window.confirm("End this session? The party, enemies, damage, and duration will be saved in session history.")) return;
+    if (!window.confirm("End this session? The party, enemies, and damage will be saved in session history.")) return;
     if (preview) {
       updatePreviewGame(selected.id, {
         status: "ended",
         endedAt: Date.now(),
-        clockElapsedMs: elapsedMs(selected, Date.now()),
+        clockElapsedMs: selected.clockElapsedMs,
         clockRunning: false,
         clockStartedAt: null,
         combat: selected.combat ? {
@@ -483,9 +434,6 @@ export function GamePage() {
                 </div>
                 <div className="game-session-top-actions">
                   {isSessionDm && selected.campaignId === null && selected.status !== "ended" && <button className="game-text-button" type="button" onClick={() => setManagingPlayers(true)}>Manage players</button>}
-                  <div className="game-clock game-clock-small" aria-label={`Session clock ${clock}`}>
-                  <strong data-testid="session-clock">{clock}</strong>
-                  </div>
                 </div>
               </div>
 
@@ -493,11 +441,7 @@ export function GamePage() {
                 <div className="game-primary-actions" aria-label="Session controls">
                   {selected.status === "lobby" ? (
                     <button className="btn btn-primary" type="button" disabled={busy} onClick={beginSession}>Start session</button>
-                  ) : selected.clockRunning ? (
-                    <button className="btn btn-ghost" type="button" disabled={busy} onClick={pauseClock}>Pause</button>
-                  ) : (
-                    <button className="btn btn-primary" type="button" disabled={busy} onClick={resumeClock}>Resume</button>
-                  )}
+                  ) : null}
                   {selected.campaignId === null && selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => setCreatingItem(true)}>Create item</button>}
                   {selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => setAddingMonster(true)}>Add enemy</button>}
                   {selected.status === "active" ? (
@@ -509,7 +453,7 @@ export function GamePage() {
               )}
 
               {selected.status === "ended" ? (
-                <section className="game-focus-panel"><p className="eyebrow">Saved</p><h3>{(selected.attendeeRoster ?? displayedParticipants).length} {(selected.attendeeRoster ?? displayedParticipants).length === 1 ? "player" : "players"} attended</h3><p className="muted">Run by {selected.dmName} · {historyDate(selected)} · {clock}</p>{combatants.some((combatant) => combatant.kind === "monster") && <p className="game-history-enemies"><strong>Enemies:</strong> {combatants.filter((combatant) => combatant.kind === "monster").map((combatant) => combatant.name).join(", ")}</p>}</section>
+                <section className="game-focus-panel"><p className="eyebrow">Saved</p><h3>{(selected.attendeeRoster ?? displayedParticipants).length} {(selected.attendeeRoster ?? displayedParticipants).length === 1 ? "player" : "players"} attended</h3><p className="muted">Run by {selected.dmName} · {historyDate(selected)}</p>{combatants.some((combatant) => combatant.kind === "monster") && <p className="game-history-enemies"><strong>Enemies:</strong> {combatants.filter((combatant) => combatant.kind === "monster").map((combatant) => combatant.name).join(", ")}</p>}</section>
               ) : isSessionDm ? (
                 <>
                   {selected.campaignId === null && selected.status === "active" && !preview && <SessionLootFeed game={selected} isDm />}

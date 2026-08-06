@@ -110,10 +110,8 @@ try {
   await managePlayers.getByRole("button", { name: "Done", exact: true }).click();
 
   await owner.getByRole("button", { name: "Start session" }).click();
-  await owner.getByRole("button", { name: "Pause" }).waitFor();
-  await owner.waitForFunction(() => document.querySelector('[data-testid="session-clock"]')?.textContent !== "00:00:00");
-  await owner.getByRole("button", { name: "Pause" }).click();
-  await owner.getByRole("button", { name: "Resume" }).waitFor();
+  if (await owner.getByTestId("session-clock").count()) throw new Error("Session timer is still visible.");
+  if (await owner.getByRole("button", { name: /^(Pause|Resume)$/ }).count()) throw new Error("Session timer controls are still visible.");
   await owner.getByRole("button", { name: "Add enemy", exact: true }).click();
   const addEnemyDialog = owner.getByRole("dialog", { name: "Add enemy" });
   await addEnemyDialog.getByLabel("Name").fill("Moon Beast");
