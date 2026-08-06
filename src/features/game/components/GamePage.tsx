@@ -11,10 +11,12 @@ import {
   subscribeUserGames,
   type ActiveGameSeat,
 } from "@/api/games";
+import { getClass } from "@/data/classes";
 import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview";
 import { useAllCharacters } from "@/features/game/hooks/useAllCharacters";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { PaperSheetModal } from "@/features/hunter/components/papersheet/PaperSheetModal";
+import { cardClassName } from "@/features/hunter/lib/papersheet";
 import { useCombatSync } from "@/features/play/hooks/useCombatSync";
 import { emptyEncounter } from "@/features/play/lib/turnTimer";
 import { useCombatStore } from "@/features/play/store/combatStore";
@@ -28,12 +30,11 @@ import "./game.css";
 const DEFAULT_TITLE = () => `Session ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())}`;
 
 function displayClass(participant: GameParticipant): string {
-  return participant.className || participant.classId || "Hunter";
+  return participant.className || getClass(participant.classId)?.name || participant.classId || "Hunter";
 }
 
 function hunterSearchText(card: HunterCard): string {
-  const sheetClass = typeof card.sheet?.class === "string" ? card.sheet.class : "";
-  return [card.name, card.ownerName, card.ownerEmail, card.classId, sheetClass, card.background, card.level]
+  return [card.name, card.ownerName, card.ownerEmail, card.classId, cardClassName(card), card.background, card.level]
     .join(" ")
     .toLocaleLowerCase();
 }
@@ -562,7 +563,7 @@ function CreateSession({
           const unavailable = unavailableOwnerUids.has(card.ownerUid);
           return (
             <button key={card.id} type="button" disabled={unavailable} className={picked ? "game-hunter-result is-picked" : "game-hunter-result"} onClick={() => choose(card)}>
-              <span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail}</small></span>
+              <span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail} · {cardClassName(card) || "Hunter"} · Level {card.level}</small></span>
               <span>{unavailable ? "In session" : picked ? "Added" : "Add"}</span>
             </button>
           );
