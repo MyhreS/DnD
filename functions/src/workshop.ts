@@ -191,7 +191,8 @@ export const createWorkshopTicket = onCall({ region: REGION }, async (request) =
       revision: 1,
       nextSequence: 3,
       attachmentCount: attachments.length,
-      needsSimonApproved: false,
+      needsSimonReplyReceived: false,
+      automaticRetryCount: 0,
       leasedBy: null,
       leaseExpiresAt: null,
     });
@@ -238,7 +239,7 @@ export const replyWorkshopTicket = onCall({ region: REGION }, async (request) =>
         : "not_done";
     const acknowledgement = waitingForSimon
       ? answeredBySimon
-        ? "Simon answered. The agent will reread the whole thread."
+        ? "Simon replied. The agent will reread the whole thread."
         : "Update received. This task is still waiting for Simon to reply in this thread."
       : "Update received. The agent will reread the whole thread.";
     tx.set(messageRef, messageData("follow_up", body, user, sequence, attachments));
@@ -250,7 +251,12 @@ export const replyWorkshopTicket = onCall({ region: REGION }, async (request) =>
       revision: FieldValue.increment(1),
       nextSequence: sequence + 2,
       attachmentCount: FieldValue.increment(attachments.length),
-      ...(waitingForSimon ? { needsSimonApproved: answeredBySimon } : {}),
+      automaticRetryCount: 0,
+      retryAfter: FieldValue.delete(),
+      ...(waitingForSimon ? {
+        needsSimonReplyReceived: answeredBySimon,
+        needsSimonApproved: FieldValue.delete(),
+      } : {}),
     });
   });
   return { ok: true };

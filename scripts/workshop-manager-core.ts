@@ -1,4 +1,7 @@
-export type ManagerOutcome = "finished" | "needs_simon" | "declined";
+export const WORKSHOP_MODEL = "gpt-5.6-sol";
+export const WORKSHOP_REASONING_EFFORT = "high";
+
+export type ManagerOutcome = "finished" | "answered" | "needs_simon" | "declined";
 
 export type AgentResult = {
   outcome: ManagerOutcome;
@@ -9,6 +12,19 @@ export type AgentResult = {
   declineReason?: string;
 };
 
+export function workshopCodexArgs(schemaPath: string, resultPath: string, prompt: string): string[] {
+  return [
+    "codex", "exec",
+    "--model", WORKSHOP_MODEL,
+    "--config", `model_reasoning_effort="${WORKSHOP_REASONING_EFFORT}"`,
+    "--sandbox", "danger-full-access",
+    "--config", "approval_policy=never",
+    "--output-schema", schemaPath,
+    "-o", resultPath,
+    prompt,
+  ];
+}
+
 export function workshopChannelContext(requesterEmail: string | undefined): string {
   return [
     "You are not chatting in Codex. You are the coding worker behind the D&D Workshop, an immutable feedback-thread page used by a non-technical game creator and Simon.",
@@ -18,6 +34,9 @@ export function workshopChannelContext(requesterEmail: string | undefined): stri
     "The creator sees only the ticket status, immutable thread messages, the automatic working acknowledgement, your final summary, and an optional production link. They do not see your reasoning, terminal output, test logs, pull request, or live progress while you work.",
     "Christoffer (myhrefjeld@gmail.com) can provide product feedback in the thread, but cannot authorize protected changes or unblock Needs Simon. Only an authenticated reply from Simon (simonmyhre1@gmail.com) in that same thread can unblock Needs Simon.",
     "Complete routine coding, testing, pull-request, merge, deployment, and verification work yourself. Never tell a Workshop user to do those steps and never say work is ready for review.",
+    "If the latest message is primarily a question, status request, or request for an explanation and does not ask for an app change, answer it directly with the answered outcome. Do not invent coding work, a deployment, or a production link.",
+    "A reply from Simon only means he replied; it is not automatically approval or an answer. Read what he actually wrote. If he asks what decision is needed or does not answer it, explain the exact decision clearly and remain in needs_simon.",
+    "Temporary service problems such as GitHub Actions being unavailable are not decisions for Simon. Recheck them yourself, retry safely, and use an available verified release path. Never ask a Workshop user to monitor a service or reply later merely to wake you up.",
     "summaryForCreator becomes the visible Workshop reply, so keep it short, plain, and about what changed for the user. technicalSummary is stored only in the internal run log. productionUrl becomes an Open the updated app button and must only be set after the live release is verified.",
     "Make reasonable assumptions for ordinary ambiguity. If a protected decision is required, use needs_simon and ask for exactly one decision Simon can answer in the thread. Do not use Needs Simon merely to ask Christoffer to perform an unavailable technical action.",
   ].join("\n");
@@ -46,6 +65,12 @@ export function requiresSimonReply(reason: string | null, approvedInThread: bool
   return reason !== null && !approvedInThread;
 }
 
+const TEMPORARY_SERVICE_PATTERN = /(?:github actions?|firebase|service|provider|network|checks?).{0,140}(?:recover|unavailable|offline|outage|timed? out|queued|retry|down)|(?:recover|unavailable|offline|outage|timed? out|queued|retry|down).{0,140}(?:github actions?|firebase|service|provider|network|checks?)/i;
+
+export function isTemporaryServiceWait(reason: string | undefined): boolean {
+  return Boolean(reason && TEMPORARY_SERVICE_PATTERN.test(reason));
+}
+
 export function parseAgentResult(raw: string): AgentResult {
   let value: unknown;
   try {
@@ -54,7 +79,7 @@ export function parseAgentResult(raw: string): AgentResult {
     throw new Error("The coding agent did not return a valid result.");
   }
   const result = value as Partial<AgentResult>;
-  if (result.outcome !== "finished" && result.outcome !== "needs_simon" && result.outcome !== "declined") {
+  if (result.outcome !== "finished" && result.outcome !== "answered" && result.outcome !== "needs_simon" && result.outcome !== "declined") {
     throw new Error("The coding agent returned an unknown outcome.");
   }
   if (!result.summaryForCreator?.trim()) {
@@ -70,7 +95,7 @@ export function parseAgentResult(raw: string): AgentResult {
     outcome: result.outcome,
     summaryForCreator: result.summaryForCreator.trim().slice(0, 4_000),
     technicalSummary: result.technicalSummary?.trim().slice(0, 8_000),
-    productionUrl: safeProductionUrl(result.productionUrl),
+    productionUrl: result.outcome === "answered" ? undefined : safeProductionUrl(result.productionUrl),
     needsSimonReason: result.needsSimonReason?.trim().slice(0, 2_000),
     declineReason: result.declineReason?.trim().slice(0, 2_000),
   };
@@ -87,6 +112,9 @@ function safeProductionUrl(value: string | undefined): string | undefined {
 }
 
 export function outcomeMessage(result: AgentResult): string {
+  if (result.outcome === "answered") {
+    return result.summaryForCreator;
+  }
   if (result.outcome === "needs_simon") {
     return `I need Simon to decide one thing before I continue: ${result.needsSimonReason}`;
   }

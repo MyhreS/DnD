@@ -1,4 +1,14 @@
-import { outcomeMessage, parseAgentResult, requiresSimonReply, ticketNeedsSimon, workshopChannelContext } from "./workshop-manager-core";
+import {
+  WORKSHOP_MODEL,
+  WORKSHOP_REASONING_EFFORT,
+  outcomeMessage,
+  parseAgentResult,
+  isTemporaryServiceWait,
+  requiresSimonReply,
+  ticketNeedsSimon,
+  workshopChannelContext,
+  workshopCodexArgs,
+} from "./workshop-manager-core";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -9,6 +19,8 @@ assert(ticketNeedsSimon("Delete every user in production") !== null, "destructiv
 assert(ticketNeedsSimon("Please change the authentication permissions") !== null, "access changes must stop");
 assert(requiresSimonReply("Protected change", false), "protected work must wait without Simon's thread reply");
 assert(!requiresSimonReply("Protected change", true), "Simon's thread reply must unblock one protected run");
+assert(isTemporaryServiceWait("Please reply after GitHub Actions has recovered."), "GitHub recovery waits must retry automatically");
+assert(!isTemporaryServiceWait("Choose which old data may be removed."), "real product decisions must still wait for Simon");
 
 const channelContext = workshopChannelContext("myhrefjeld@gmail.com");
 assert(channelContext.includes("not chatting in Codex"), "worker must know it replies through Workshop");
@@ -18,6 +30,23 @@ assert(channelContext.includes("review or merge a pull request"), "worker must n
 assert(channelContext.includes("technicalSummary is stored only in the internal run log"), "worker must separate visible and private output");
 assert(channelContext.includes("They do not see your reasoning"), "worker must understand what is hidden from the creator");
 assert(channelContext.includes("Only an authenticated reply from Simon"), "worker must understand Needs Simon authorization");
+assert(channelContext.includes("answer it directly with the answered outcome"), "worker must answer ordinary questions directly");
+assert(channelContext.includes("not automatically approval or an answer"), "worker must evaluate what Simon actually replied");
+assert(channelContext.includes("GitHub Actions being unavailable are not decisions for Simon"), "worker must own temporary service recovery");
+assert(WORKSHOP_MODEL === "gpt-5.6-sol", "Workshop must use Sol explicitly");
+assert(WORKSHOP_REASONING_EFFORT === "high", "Workshop must use high reasoning explicitly");
+const codexArgs = workshopCodexArgs("schema.json", "result.json", "prompt");
+assert(codexArgs.includes("gpt-5.6-sol"), "coding command must pin Sol");
+assert(codexArgs.includes('model_reasoning_effort="high"'), "coding command must pin high reasoning");
+
+const answered = parseAgentResult(JSON.stringify({
+  outcome: "answered",
+  summaryForCreator: "You do not need to reply. I will recheck the service and continue myself.",
+  productionUrl: "https://dandd-ea955.web.app",
+}));
+assert(answered.outcome === "answered", "answered outcome must parse");
+assert(outcomeMessage(answered) === answered.summaryForCreator, "direct answers must not claim an app update");
+assert(answered.productionUrl === undefined, "direct answers must not expose a production link");
 
 const finished = parseAgentResult(JSON.stringify({
   outcome: "finished",
