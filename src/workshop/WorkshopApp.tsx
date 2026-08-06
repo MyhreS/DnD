@@ -20,7 +20,7 @@ export function WorkshopApp() {
     return <AccessScreen mode={session.status} onSignIn={session.signIn} onSignOut={session.signOut} />;
   }
   const selected = ticketBatch.tickets.find((ticket) => ticket.id === selectedId) ?? null;
-  const activeTicketId = agentOnline ? (session.agentState?.currentTicketId ?? null) : null;
+  const activeTicketId = session.agentState?.currentTicketId ?? null;
   return (
     <div className="workshop-app">
       <header className="workshop-header">
@@ -39,6 +39,8 @@ export function WorkshopApp() {
           hasMore={ticketBatch.hasMore}
           loadingMore={ticketBatch.loadingMore}
           activeTicketId={activeTicketId}
+          agentState={session.agentState}
+          agentOnline={agentOnline}
           onLoadMore={ticketBatch.loadMore}
           onSelect={setSelectedId}
         />
@@ -53,6 +55,8 @@ export function WorkshopApp() {
           initialTicket={selected}
           uid={session.user!.uid}
           isWorking={activeTicketId === selectedId}
+          agentState={session.agentState}
+          agentOnline={agentOnline}
           onClose={closeSelected}
         />
       )}

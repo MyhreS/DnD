@@ -43,6 +43,11 @@ export type AgentState = {
   watchingChanges?: boolean;
   model?: string;
   reasoningEffort?: string;
+  progressStage?: number;
+  progressActivity?: string;
+  lastCompletedActivity?: string;
+  progressUpdatedAt?: Timestamp;
+  workStartedAt?: Timestamp;
 };
 
 export const STATUS_LABELS: Record<WorkshopStatus, string> = {

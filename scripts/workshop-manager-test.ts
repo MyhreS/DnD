@@ -3,6 +3,7 @@ import {
   WORKSHOP_REASONING_EFFORT,
   outcomeMessage,
   parseAgentResult,
+  progressFromCodexEvent,
   isTemporaryServiceWait,
   requiresSimonReply,
   ticketNeedsSimon,
@@ -28,7 +29,7 @@ assert(channelContext.includes("myhrefjeld@gmail.com"), "worker must know the au
 assert(channelContext.includes("cannot do: edit or delete messages"), "worker must know creator UI limitations");
 assert(channelContext.includes("review or merge a pull request"), "worker must not delegate repository work to the creator");
 assert(channelContext.includes("technicalSummary is stored only in the internal run log"), "worker must separate visible and private output");
-assert(channelContext.includes("They do not see your reasoning"), "worker must understand what is hidden from the creator");
+assert(channelContext.includes("They do not see private reasoning"), "worker must understand what is hidden from the creator");
 assert(channelContext.includes("Only an authenticated reply from Simon"), "worker must understand Needs Simon authorization");
 assert(channelContext.includes("answer it directly with the answered outcome"), "worker must answer ordinary questions directly");
 assert(channelContext.includes("not automatically approval or an answer"), "worker must evaluate what Simon actually replied");
@@ -38,6 +39,24 @@ assert(WORKSHOP_REASONING_EFFORT === "high", "Workshop must use high reasoning e
 const codexArgs = workshopCodexArgs("schema.json", "result.json", "prompt");
 assert(codexArgs.includes("gpt-5.6-sol"), "coding command must pin Sol");
 assert(codexArgs.includes('model_reasoning_effort="high"'), "coding command must pin high reasoning");
+assert(codexArgs.includes("--json"), "coding command must stream structured progress events");
+
+const editingProgress = progressFromCodexEvent({
+  type: "item.started",
+  item: { type: "command_execution", command: "apply_patch src/workshop/WorkshopApp.tsx" },
+});
+assert(editingProgress?.stage === 3 && editingProgress.activity === "Updating the app", "editing must produce safe creator-facing progress");
+const testProgress = progressFromCodexEvent({
+  type: "item.started",
+  item: { type: "command_execution", command: "bun run e2e:workshop" },
+});
+assert(testProgress?.stage === 4 && testProgress.activity === "Testing the update", "tests must advance the visible stage");
+const deployProgress = progressFromCodexEvent({
+  type: "item.completed",
+  item: { type: "command_execution", command: "firebase deploy --only hosting:workshop" },
+});
+assert(deployProgress?.stage === 5 && deployProgress.lastCompleted === "Published or checked the live update", "deployment must expose a safe completed step");
+assert(progressFromCodexEvent({ type: "item.completed", item: { type: "agent_message", text: "private reasoning" } }) === null, "agent prose must never leak into live progress");
 
 const answered = parseAgentResult(JSON.stringify({
   outcome: "answered",

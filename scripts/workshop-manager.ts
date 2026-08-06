@@ -13,12 +13,14 @@ import {
   WORKSHOP_REASONING_EFFORT,
   outcomeMessage,
   parseAgentResult,
+  progressFromCodexEvent,
   isTemporaryServiceWait,
   requiresSimonReply,
   ticketNeedsSimon,
   workshopChannelContext,
   workshopCodexArgs,
   type AgentResult,
+  type WorkshopProgress,
 } from "./workshop-manager-core";
 
 type TicketData = {
@@ -47,7 +49,7 @@ const WORKER_ID = `local-${process.pid}-${crypto.randomUUID().slice(0, 8)}`;
 const FALLBACK_POLL_MS = 5 * 60_000;
 const WATCH_RETRY_MS = 10_000;
 const HEARTBEAT_MS = 30_000;
-const LEASE_MS = 45 * 60_000;
+const LEASE_MS = 5 * 60_000;
 const AUTOMATIC_RETRY_MS = 5 * 60_000;
 const MAX_AUTOMATIC_RETRIES = 3;
 const REPO_ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -100,9 +102,29 @@ let polling = false;
 let pollAgain = false;
 let pollRequestActive = false;
 let watchingChanges = false;
+let currentProgress: WorkshopProgress | null = null;
+let progressWrites = Promise.resolve();
+
+function progressFields() {
+  if (!currentTicketId || !currentProgress) {
+    return {
+      progressStage: FieldValue.delete(),
+      progressActivity: FieldValue.delete(),
+      lastCompletedActivity: FieldValue.delete(),
+      progressUpdatedAt: FieldValue.delete(),
+      workStartedAt: FieldValue.delete(),
+    };
+  }
+  return {
+    progressStage: currentProgress.stage,
+    progressActivity: currentProgress.activity,
+    lastCompletedActivity: currentProgress.lastCompleted ?? FieldValue.delete(),
+  };
+}
 
 async function heartbeat(): Promise<void> {
-  await db.doc("workshopAgent/state").set({
+  const activeTicketId = currentTicketId;
+  const stateWrite = db.doc("workshopAgent/state").set({
     workerId: WORKER_ID,
     currentTicketId,
     checkingNow: polling,
@@ -114,8 +136,73 @@ async function heartbeat(): Promise<void> {
     watchingChanges,
     model: WORKSHOP_MODEL,
     reasoningEffort: WORKSHOP_REASONING_EFFORT,
-    version: 4,
+    version: 5,
+    ...progressFields(),
   }, { merge: true });
+  const leaseRenewal = activeTicketId ? db.runTransaction(async (tx) => {
+    const ticketRef = db.doc(`workshopTickets/${activeTicketId}`);
+    const ticket = await tx.get(ticketRef);
+    if (ticket.data()?.status === "doing_now" && ticket.data()?.leasedBy === WORKER_ID) {
+      tx.update(ticketRef, { leaseExpiresAt: Timestamp.fromMillis(Date.now() + LEASE_MS) });
+    }
+  }) : Promise.resolve();
+  await Promise.all([stateWrite, leaseRenewal]);
+}
+
+async function updateProgress(next: WorkshopProgress, start = false): Promise<void> {
+  if (!currentTicketId) return;
+  const stage = Math.max(currentProgress?.stage ?? 1, Math.min(5, Math.max(1, next.stage)));
+  let activity = next.activity;
+  if (stage === 5 && next.stage < 5) activity = "Finishing and verifying the update";
+  else if (stage === 4 && next.stage < 4) activity = "Refining the update after checks";
+  currentProgress = {
+    stage,
+    activity,
+    lastCompleted: next.lastCompleted ?? currentProgress?.lastCompleted,
+  };
+  await db.doc("workshopAgent/state").set({
+    currentTicketId,
+    ...progressFields(),
+    progressUpdatedAt: FieldValue.serverTimestamp(),
+    ...(start ? { workStartedAt: FieldValue.serverTimestamp() } : {}),
+  }, { merge: true });
+}
+
+function queueProgress(next: WorkshopProgress): void {
+  progressWrites = progressWrites
+    .then(() => updateProgress(next))
+    .catch((error) => console.error("Workshop progress update failed:", error));
+}
+
+async function readCodexProgress(stream: ReadableStream<Uint8Array>): Promise<void> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      try {
+        const progress = progressFromCodexEvent(JSON.parse(line));
+        if (progress) queueProgress(progress);
+      } catch {
+        // Ignore non-JSON diagnostic output; raw agent output is never shown in Workshop.
+      }
+    }
+  }
+  const tail = `${buffer}${decoder.decode()}`.trim();
+  if (tail) {
+    try {
+      const progress = progressFromCodexEvent(JSON.parse(tail));
+      if (progress) queueProgress(progress);
+    } catch {
+      // A partial final diagnostic line does not affect the coding result file.
+    }
+  }
+  await progressWrites;
 }
 
 async function claimNext(): Promise<ClaimedTicket | null> {
@@ -348,22 +435,31 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
     `Attached local images: ${JSON.stringify(imagePaths)}`,
     `WORKSHOP_TICKET=${JSON.stringify({ id: ticket.id, claimedRevision: ticket.data.revision, simonReplyReceived, messages })}`,
   ].join("\n\n");
+  await updateProgress({ stage: 2, activity: "Preparing a safe workspace", lastCompleted: "Read the request and its screenshots" });
   const worktree = createAgentWorktree(ticket.id);
   try {
+    await updateProgress({ stage: 2, activity: "Understanding the request", lastCompleted: "Prepared a safe workspace" });
     const proc = spawn({
       cmd: workshopCodexArgs(schemaPath, resultPath, prompt),
       cwd: worktree.path,
-      stdout: "inherit",
+      stdout: "pipe",
       stderr: "inherit",
       env: { ...process.env, DND_WORKSHOP_TICKET_ID: ticket.id },
     });
+    const progressStream = readCodexProgress(proc.stdout).catch(async (error) => {
+      console.error("Workshop progress stream stopped:", error);
+      await progressWrites;
+    });
     const exitCode = await proc.exited;
+    await progressStream;
     if (exitCode !== 0) throw new Error(`Coding agent exited with status ${exitCode}.`);
+    await updateProgress({ stage: 5, activity: "Confirming the result", lastCompleted: "Completed the coding work" });
     const result = parseAgentResult(await readFile(resultPath, "utf8"));
     if (result.outcome === "needs_simon" && isTemporaryServiceWait(result.needsSimonReason)) {
       throw new Error(`Temporary service wait must be retried automatically: ${result.needsSimonReason}`);
     }
     await ensureFinishedWorkIsMerged(ticket, worktree, result);
+    await updateProgress({ stage: 5, activity: "Finishing the request", lastCompleted: result.outcome === "finished" ? "Confirmed the published update" : "Prepared the final answer" });
     return result;
   } finally {
     cleanupAgentWorktree(worktree);
@@ -464,11 +560,15 @@ async function processOnce(): Promise<boolean> {
   const ticket = await claimNext();
   if (!ticket) return false;
   currentTicketId = ticket.id;
-  await heartbeat();
+  currentProgress = null;
+  await updateProgress({ stage: 1, activity: "Opening the request" }, true);
   const folder = await mkdtemp(join(tmpdir(), "dnd-workshop-"));
   try {
+    await updateProgress({ stage: 1, activity: "Reading the full thread", lastCompleted: "Opened the request" });
     const messages = await readThread(ticket);
+    await updateProgress({ stage: 1, activity: "Checking attached images", lastCompleted: "Read the full thread" });
     const images = fixture ? [] : await downloadImages(messages, folder);
+    await updateProgress({ stage: 2, activity: "Deciding the safest next step", lastCompleted: images.length ? "Read the thread and screenshots" : "Read the thread" });
     await finalize(ticket, await runCodingAgent(ticket, messages, images, folder));
   } catch (error) {
     if (Number(ticket.data.automaticRetryCount ?? 0) < MAX_AUTOMATIC_RETRIES) {
@@ -484,6 +584,7 @@ async function processOnce(): Promise<boolean> {
   } finally {
     await rm(folder, { recursive: true, force: true });
     currentTicketId = null;
+    currentProgress = null;
     await heartbeat();
   }
   return true;

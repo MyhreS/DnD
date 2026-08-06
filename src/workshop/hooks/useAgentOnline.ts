@@ -24,8 +24,12 @@ function subscribe(listener: () => void) {
 
 function snapshot() { return currentTime; }
 
+export function useCurrentTime(): number {
+  return useSyncExternalStore(subscribe, snapshot, snapshot);
+}
+
 export function useAgentOnline(state: AgentState | null): boolean {
-  const now = useSyncExternalStore(subscribe, snapshot, snapshot);
+  const now = useCurrentTime();
   const heartbeat = state?.lastHeartbeatAt?.toMillis() ?? 0;
   return now > 0 && heartbeat > 0 && now - heartbeat < 90_000;
 }

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { TicketStatus } from "@/workshop/components/TicketStatus";
 import { WorkActivity } from "@/workshop/components/WorkActivity";
-import { STATUS_LABELS, type WorkshopTicket } from "@/workshop/types";
+import { STATUS_LABELS, type AgentState, type WorkshopTicket } from "@/workshop/types";
 
 function relativeTime(timestamp: WorkshopTicket["updatedAt"]): string {
   if (!timestamp) return "Just now";
@@ -25,11 +25,13 @@ type TicketListProps = {
   hasMore: boolean;
   loadingMore: boolean;
   activeTicketId: string | null;
+  agentState: AgentState | null;
+  agentOnline: boolean;
   onLoadMore: () => void;
   onSelect: (id: string) => void;
 };
 
-export function TicketList({ tickets, uid, hasMore, loadingMore, activeTicketId, onLoadMore, onSelect }: TicketListProps) {
+export function TicketList({ tickets, uid, hasMore, loadingMore, activeTicketId, agentState, agentOnline, onLoadMore, onSelect }: TicketListProps) {
   const [search, setSearch] = useState("");
   const query = search.trim().toLocaleLowerCase();
   const filtered = query
@@ -69,7 +71,7 @@ export function TicketList({ tickets, uid, hasMore, loadingMore, activeTicketId,
                         </span>
                         <strong>{ticket.title}</strong>
                         <span className="ticket-meta">{ticket.authorName}{ticket.attachmentCount ? ` · ${ticket.attachmentCount} image${ticket.attachmentCount === 1 ? "" : "s"}` : ""}</span>
-                        {ticket.id === activeTicketId && ticket.status === "doing_now" && <WorkActivity placement="list" />}
+                        {ticket.id === activeTicketId && ticket.status === "doing_now" && <WorkActivity placement="list" state={agentState} online={agentOnline} />}
                       </button>
                     </li>
                   );
