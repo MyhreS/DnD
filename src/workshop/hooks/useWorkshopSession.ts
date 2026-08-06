@@ -10,6 +10,7 @@ import {
 } from "firebase/auth";
 import { claimWorkshopAccess, subscribeAgentState, subscribeWorkshopTickets } from "@/api/workshop";
 import { workshopAuth, workshopGoogleProvider } from "@/workshop/firebase";
+import { workshopErrorMessage } from "@/workshop/lib/errors";
 import type { AgentState, WorkshopTicket } from "@/workshop/types";
 
 export type WorkshopSession = {
@@ -41,8 +42,12 @@ export function useWorkshopSession(): WorkshopSession & {
   });
 
   useEffect(() => {
-    void getRedirectResult(workshopAuth);
-    void maybeTestSignIn();
+    void getRedirectResult(workshopAuth).catch((failure) => {
+      setSession((current) => ({ ...current, error: workshopErrorMessage(failure, "Could not finish signing in. Please try again.") }));
+    });
+    void maybeTestSignIn().catch((failure) => {
+      setSession((current) => ({ ...current, error: workshopErrorMessage(failure, "Could not open the test session.") }));
+    });
     let stopTickets: (() => void) | undefined;
     let stopAgent: (() => void) | undefined;
     const stopAuth = onAuthStateChanged(workshopAuth, async (user) => {
@@ -57,10 +62,12 @@ export function useWorkshopSession(): WorkshopSession & {
         const role = await claimWorkshopAccess();
         stopTickets = subscribeWorkshopTickets(
           (tickets) => setSession((current) => ({ ...current, tickets })),
-          (error) => setSession((current) => ({ ...current, error: error.message })),
+          (failure) => setSession((current) => ({ ...current, error: workshopErrorMessage(failure, "Could not update the request list.") })),
         );
         stopAgent = subscribeAgentState((agentState) => {
           setSession((current) => ({ ...current, agentState }));
+        }, (failure) => {
+          setSession((current) => ({ ...current, error: workshopErrorMessage(failure, "Could not update the agent status.") }));
         });
         setSession((current) => ({ ...current, user, role, status: "allowed" }));
       } catch {
@@ -81,10 +88,22 @@ export function useWorkshopSession(): WorkshopSession & {
   }, []);
 
   async function startSignIn() {
-    const standalone = window.matchMedia("(display-mode: standalone)").matches;
-    if (standalone) await signInWithRedirect(workshopAuth, workshopGoogleProvider);
-    else await signInWithPopup(workshopAuth, workshopGoogleProvider);
+    try {
+      const standalone = window.matchMedia("(display-mode: standalone)").matches;
+      if (standalone) await signInWithRedirect(workshopAuth, workshopGoogleProvider);
+      else await signInWithPopup(workshopAuth, workshopGoogleProvider);
+    } catch (failure) {
+      setSession((current) => ({ ...current, error: workshopErrorMessage(failure, "Could not sign in. Please try again.") }));
+    }
   }
 
-  return { ...session, signIn: startSignIn, signOut: () => signOut(workshopAuth) };
+  async function endSession() {
+    try {
+      await signOut(workshopAuth);
+    } catch (failure) {
+      setSession((current) => ({ ...current, error: workshopErrorMessage(failure, "Could not sign out. Please try again.") }));
+    }
+  }
+
+  return { ...session, signIn: startSignIn, signOut: endSession };
 }
