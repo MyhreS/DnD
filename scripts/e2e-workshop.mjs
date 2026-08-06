@@ -156,6 +156,7 @@ try {
     buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"),
   });
   await creator.page.getByTestId("ticket-body").press("Enter");
+  await creator.page.getByTestId("send-ticket").getByText("Sent ✓", { exact: true }).waitFor();
   const detail = creator.page.getByTestId("ticket-detail");
   await detail.waitFor();
   await detail.getByText("Received. I’ll pick this up").waitFor();
@@ -215,7 +216,9 @@ try {
   }
   await creator.page.getByTestId("ticket-reply").fill("Please also reduce the number of buttons.");
   await creator.page.getByTestId("ticket-reply").press("Enter");
+  await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
   await creator.page.getByText("Update received. The agent will reread").waitFor();
+  await creator.page.screenshot({ path: "screenshots/workshop-sent-feedback-mobile.png", fullPage: true });
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await creator.page.getByText("Not done", { exact: true }).waitFor();
 
@@ -231,6 +234,7 @@ try {
 
   await creator.page.getByTestId("ticket-reply").fill("Please reconsider this with the new information.");
   await creator.page.getByTestId("send-reply").click();
+  await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
   await creator.page.getByText("still waiting for Simon to reply in this thread", { exact: false }).waitFor();
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await creator.page.getByText("Needs Simon", { exact: true }).waitFor();
@@ -276,7 +280,7 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, scrollable long history, heartbeat countdown, Chris-blocked/Simon-reopened Needs Simon flow, declined flow, and responsive layout.");
+  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, visible Enter/click send feedback, scrollable long history, heartbeat countdown, Chris-blocked/Simon-reopened Needs Simon flow, declined flow, and responsive layout.");
   await Promise.all([simon.context.close(), creator.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();

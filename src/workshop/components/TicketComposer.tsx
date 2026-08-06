@@ -11,6 +11,7 @@ export function TicketComposer({ uid, agentState, onCreated }: { uid: string; ag
   const [body, setBody] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const picker = useRef<HTMLInputElement>(null);
 
@@ -20,6 +21,7 @@ export function TicketComposer({ uid, agentState, onCreated }: { uid: string; ag
       setError("Choose up to five images, no larger than 10 MB each.");
       return;
     }
+    setSent(false);
     setFiles(selected);
     setError(null);
   }
@@ -28,12 +30,14 @@ export function TicketComposer({ uid, agentState, onCreated }: { uid: string; ag
     event.preventDefault();
     if (!body.trim() || busy) return;
     setBusy(true);
+    setSent(false);
     setError(null);
     try {
       const attachments = await uploadWorkshopImages(uid, files);
       const ticketId = await createWorkshopTicket(body, attachments);
       setBody("");
       setFiles([]);
+      setSent(true);
       if (picker.current) picker.current.value = "";
       onCreated(ticketId);
     } catch (failure) {
@@ -55,7 +59,10 @@ export function TicketComposer({ uid, agentState, onCreated }: { uid: string; ag
           id="ticket-body"
           data-testid="ticket-body"
           value={body}
-          onChange={(event) => setBody(event.target.value)}
+          onChange={(event) => {
+            setBody(event.target.value);
+            setSent(false);
+          }}
           onKeyDown={submitOnEnter}
           maxLength={8_000}
           placeholder="Write feedback or a new idea…"
@@ -65,8 +72,15 @@ export function TicketComposer({ uid, agentState, onCreated }: { uid: string; ag
             <input ref={picker} type="file" accept="image/*" multiple onChange={(event) => chooseImages(event.target.files)} />
             <span aria-hidden>＋</span> Add images
           </label>
-          <button className="primary-button" type="submit" disabled={!body.trim() || busy} data-testid="send-ticket">
-            {busy ? "Sending…" : "Send request"}
+          <button
+            className={`primary-button${busy ? " is-sending" : sent ? " is-sent" : ""}`}
+            type="submit"
+            disabled={!body.trim() || busy || sent}
+            aria-busy={busy}
+            aria-live="polite"
+            data-testid="send-ticket"
+          >
+            {busy ? "Sending…" : sent ? "Sent ✓" : "Send request"}
           </button>
         </div>
         {files.length > 0 && <p className="file-summary">{files.length} image{files.length === 1 ? "" : "s"} ready</p>}
