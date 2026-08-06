@@ -27,5 +27,5 @@ function snapshot() { return currentTime; }
 export function useAgentOnline(state: AgentState | null): boolean {
   const now = useSyncExternalStore(subscribe, snapshot, snapshot);
   const heartbeat = state?.lastHeartbeatAt?.toMillis() ?? 0;
-  return now - heartbeat < 90_000;
+  return now > 0 && heartbeat > 0 && now - heartbeat < 90_000;
 }

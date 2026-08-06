@@ -1,9 +1,12 @@
 import {
   collection,
   doc,
+  getDocs,
+  limit,
   onSnapshot,
   orderBy,
   query,
+  startAfter,
   type Unsubscribe,
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
@@ -15,6 +18,19 @@ import type {
   WorkshopMessage,
   WorkshopTicket,
 } from "@/workshop/types";
+
+export const WORKSHOP_TICKET_PAGE_SIZE = 15;
+export const WORKSHOP_MESSAGE_PAGE_SIZE = 20;
+
+export type WorkshopTicketBatch = {
+  tickets: WorkshopTicket[];
+  hasMore: boolean;
+};
+
+export type WorkshopMessagePage = {
+  messages: WorkshopMessage[];
+  hasOlder: boolean;
+};
 
 const claimAccessCall = httpsCallable<undefined, { ok: boolean; role: "admin" | "creator" }>(
   workshopFunctions,
@@ -65,26 +81,67 @@ export async function workshopImageBlob(path: string): Promise<Blob> {
 }
 
 export function subscribeWorkshopTickets(
-  next: (tickets: WorkshopTicket[]) => void,
+  visibleLimit: number,
+  next: (batch: WorkshopTicketBatch) => void,
   fail: (error: Error) => void,
 ): Unsubscribe {
   return onSnapshot(
-    query(collection(workshopDb, "workshopTickets"), orderBy("updatedAt", "desc")),
-    (snapshot) => next(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as WorkshopTicket)),
+    query(collection(workshopDb, "workshopTickets"), orderBy("updatedAt", "desc"), limit(visibleLimit + 1)),
+    (snapshot) => {
+      const visible = snapshot.docs.slice(0, visibleLimit);
+      next({
+        tickets: visible.map((item) => ({ id: item.id, ...item.data() }) as WorkshopTicket),
+        hasMore: snapshot.docs.length > visibleLimit,
+      });
+    },
     fail,
   );
 }
 
+export function subscribeWorkshopTicket(
+  ticketId: string,
+  next: (ticket: WorkshopTicket | null) => void,
+  fail: (error: Error) => void,
+): Unsubscribe {
+  return onSnapshot(doc(workshopDb, "workshopTickets", ticketId), (snapshot) => {
+    next(snapshot.exists() ? ({ id: snapshot.id, ...snapshot.data() } as WorkshopTicket) : null);
+  }, fail);
+}
+
 export function subscribeWorkshopMessages(
   ticketId: string,
-  next: (messages: WorkshopMessage[]) => void,
+  next: (page: WorkshopMessagePage) => void,
   fail: (error: Error) => void,
 ): Unsubscribe {
   return onSnapshot(
-    query(collection(workshopDb, "workshopTickets", ticketId, "messages"), orderBy("sequence", "asc")),
-    (snapshot) => next(snapshot.docs.map((item) => ({ id: item.id, ...item.data() }) as WorkshopMessage)),
+    query(
+      collection(workshopDb, "workshopTickets", ticketId, "messages"),
+      orderBy("sequence", "desc"),
+      limit(WORKSHOP_MESSAGE_PAGE_SIZE + 1),
+    ),
+    (snapshot) => {
+      const visible = snapshot.docs.slice(0, WORKSHOP_MESSAGE_PAGE_SIZE);
+      next({
+        messages: visible.map((item) => ({ id: item.id, ...item.data() }) as WorkshopMessage).reverse(),
+        hasOlder: snapshot.docs.length > WORKSHOP_MESSAGE_PAGE_SIZE,
+      });
+    },
     fail,
   );
+}
+
+export async function loadOlderWorkshopMessages(ticketId: string, beforeSequence: number): Promise<WorkshopMessagePage> {
+  const snapshot = await getDocs(query(
+    collection(workshopDb, "workshopTickets", ticketId, "messages"),
+    orderBy("sequence", "desc"),
+    startAfter(beforeSequence),
+    limit(WORKSHOP_MESSAGE_PAGE_SIZE + 1),
+  ));
+  const visible = snapshot.docs.slice(0, WORKSHOP_MESSAGE_PAGE_SIZE);
+  return {
+    messages: visible.map((item) => ({ id: item.id, ...item.data() }) as WorkshopMessage).reverse(),
+    hasOlder: snapshot.docs.length > WORKSHOP_MESSAGE_PAGE_SIZE,
+  };
 }
 
 export function subscribeAgentState(next: (state: AgentState | null) => void, fail: (error: Error) => void): Unsubscribe {

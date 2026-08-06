@@ -8,17 +8,16 @@ import {
   signOut,
   type User,
 } from "firebase/auth";
-import { claimWorkshopAccess, subscribeAgentState, subscribeWorkshopTickets } from "@/api/workshop";
+import { claimWorkshopAccess, subscribeAgentState } from "@/api/workshop";
 import { workshopAuth, workshopGoogleProvider } from "@/workshop/firebase";
 import { workshopErrorMessage } from "@/workshop/lib/errors";
-import type { AgentState, WorkshopTicket } from "@/workshop/types";
+import type { AgentState } from "@/workshop/types";
 
 export type WorkshopSession = {
   user: User | null;
   status: "loading" | "signed_out" | "allowed" | "denied";
   role: "admin" | "creator" | null;
   error: string | null;
-  tickets: WorkshopTicket[];
   agentState: AgentState | null;
 };
 
@@ -37,7 +36,6 @@ export function useWorkshopSession(): WorkshopSession & {
     status: "loading",
     role: null,
     error: null,
-    tickets: [],
     agentState: null,
   });
 
@@ -48,22 +46,16 @@ export function useWorkshopSession(): WorkshopSession & {
     void maybeTestSignIn().catch((failure) => {
       setSession((current) => ({ ...current, error: workshopErrorMessage(failure, "Could not open the test session.") }));
     });
-    let stopTickets: (() => void) | undefined;
     let stopAgent: (() => void) | undefined;
     const stopAuth = onAuthStateChanged(workshopAuth, async (user) => {
-      stopTickets?.();
       stopAgent?.();
       if (!user) {
-        setSession({ user: null, status: "signed_out", role: null, error: null, tickets: [], agentState: null });
+        setSession({ user: null, status: "signed_out", role: null, error: null, agentState: null });
         return;
       }
       setSession((current) => ({ ...current, user, status: "loading", error: null }));
       try {
         const role = await claimWorkshopAccess();
-        stopTickets = subscribeWorkshopTickets(
-          (tickets) => setSession((current) => ({ ...current, tickets })),
-          (failure) => setSession((current) => ({ ...current, error: workshopErrorMessage(failure, "Could not update the request list.") })),
-        );
         stopAgent = subscribeAgentState((agentState) => {
           setSession((current) => ({ ...current, agentState }));
         }, (failure) => {
@@ -82,7 +74,6 @@ export function useWorkshopSession(): WorkshopSession & {
     });
     return () => {
       stopAuth();
-      stopTickets?.();
       stopAgent?.();
     };
   }, []);

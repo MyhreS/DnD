@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type UIEvent } from "react";
 
 const BOTTOM_THRESHOLD = 80;
 
-export function useConversationScroll(messageCount: number) {
+export function useConversationScroll(latestSequence: number) {
   const listRef = useRef<HTMLDivElement>(null);
   const initialLoad = useRef(true);
   const nearBottom = useRef(true);
@@ -23,7 +23,7 @@ export function useConversationScroll(messageCount: number) {
   }, []);
 
   useEffect(() => {
-    if (messageCount === 0) return;
+    if (latestSequence === 0) return;
     const frame = window.requestAnimationFrame(() => {
       const list = listRef.current;
       if (!list) return;
@@ -36,7 +36,7 @@ export function useConversationScroll(messageCount: number) {
       }
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [messageCount]);
+  }, [latestSequence]);
 
   return { listRef, onScroll, hasNewMessage, jumpToLatest };
 }

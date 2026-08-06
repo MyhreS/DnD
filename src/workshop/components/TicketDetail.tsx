@@ -1,10 +1,13 @@
 import { MessageAttachment } from "@/workshop/components/MessageAttachment";
+import { MessageBody } from "@/workshop/components/MessageBody";
 import { TicketReply } from "@/workshop/components/TicketReply";
 import { TicketStatus } from "@/workshop/components/TicketStatus";
+import { WorkActivity } from "@/workshop/components/WorkActivity";
 import { useConversationScroll } from "@/workshop/hooks/useConversationScroll";
 import { useDialogBehavior } from "@/workshop/hooks/useDialogBehavior";
 import { useMarkTicketRead } from "@/workshop/hooks/useMarkTicketRead";
 import { useTicketMessages } from "@/workshop/hooks/useTicketMessages";
+import { useWorkshopTicket } from "@/workshop/hooks/useWorkshopTicket";
 import type { WorkshopMessage, WorkshopTicket } from "@/workshop/types";
 
 function messageLabel(message: WorkshopMessage): string {
@@ -35,15 +38,30 @@ function safeProductionUrl(value: string | undefined): string | null {
   }
 }
 
-export function TicketDetail({ ticket, uid, onClose }: { ticket: WorkshopTicket; uid: string; onClose: () => void }) {
-  const { messages, error, loading } = useTicketMessages(ticket.id);
+type TicketDetailProps = {
+  ticketId: string;
+  initialTicket: WorkshopTicket | null;
+  uid: string;
+  isWorking: boolean;
+  onClose: () => void;
+};
+
+function isRoutineActivityMessage(message: WorkshopMessage): boolean {
+  return message.kind === "agent" && message.body.trim() === "I’m working on this now.";
+}
+
+export function TicketDetail({ ticketId, initialTicket, uid, isWorking, onClose }: TicketDetailProps) {
+  const { ticket, error: ticketError } = useWorkshopTicket(ticketId, initialTicket);
+  const { messages, error, loading, hasOlder, loadingOlder, loadOlder } = useTicketMessages(ticketId);
   const dialogRef = useDialogBehavior(onClose);
-  const { listRef, onScroll, hasNewMessage, jumpToLatest } = useConversationScroll(messages.length);
+  const latestSequence = messages.at(-1)?.sequence ?? 0;
+  const { listRef, onScroll, hasNewMessage, jumpToLatest } = useConversationScroll(latestSequence);
   useMarkTicketRead(ticket, uid);
   const pickedUp = messages.some((message) => message.kind === "agent");
-  const visibleMessages = pickedUp
-    ? messages.filter((message) => !(message.kind === "system" && message.sequence === 2))
-    : messages;
+  const visibleMessages = messages.filter((message) => {
+    if (isRoutineActivityMessage(message)) return false;
+    return !(pickedUp && message.kind === "system" && message.sequence === 2);
+  });
   return (
     <div className="detail-backdrop" role="presentation" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose();
@@ -51,30 +69,36 @@ export function TicketDetail({ ticket, uid, onClose }: { ticket: WorkshopTicket;
       <article ref={dialogRef} className="ticket-detail" role="dialog" aria-modal="true" aria-labelledby="ticket-detail-title" data-testid="ticket-detail" tabIndex={-1}>
         <header>
           <button className="close-button" type="button" onClick={onClose} aria-label="Close thread">×</button>
-          <TicketStatus status={ticket.status} />
-          <h2 id="ticket-detail-title">{ticket.title}</h2>
+          {ticket && <TicketStatus status={ticket.status} />}
+          <h2 id="ticket-detail-title">{ticket?.title ?? "Opening request…"}</h2>
           <p>Every reply stays in this thread.</p>
-          {ticket.status === "needs_simon" && <p className="ticket-gate-note">Only Simon’s reply in this thread can restart this task.</p>}
+          {ticket?.status === "needs_simon" && <p className="ticket-gate-note">Only Simon’s reply in this thread can restart this task.</p>}
         </header>
         <div className="conversation-frame">
           <div className="message-list" ref={listRef} onScroll={onScroll} data-testid="message-list">
             {loading && <p className="conversation-loading">Opening conversation…</p>}
+            {hasOlder && (
+              <button className="page-more-button message-page-button" type="button" onClick={() => void loadOlder()} disabled={loadingOlder} data-testid="load-older-messages">
+                {loadingOlder ? "Loading…" : "Show earlier messages"}
+              </button>
+            )}
             {visibleMessages.map((message) => {
               const productionUrl = safeProductionUrl(message.productionUrl);
               return (
                 <section className={`thread-message kind-${message.kind}`} key={message.id}>
                   <div className="message-heading"><strong>{messageLabel(message)}</strong><time>{messageTime(message)}</time></div>
-                  {message.body && <p>{message.body}</p>}
+                  {message.body && <MessageBody body={message.body} />}
                   {message.attachments?.length > 0 && <div className="message-images">{message.attachments.map((attachment) => <MessageAttachment key={attachment.path} attachment={attachment} />)}</div>}
                   {productionUrl && <a className="production-link" href={productionUrl} target="_blank" rel="noreferrer">Open the updated app →</a>}
                 </section>
               );
             })}
-            {error && <p className="form-error" role="alert">Could not load this conversation. Close it and try again.</p>}
+            {(error || ticketError) && <p className="form-error" role="alert">Could not load this conversation. Close it and try again.</p>}
           </div>
           {hasNewMessage && <button className="new-message-button" type="button" onClick={jumpToLatest}>New message ↓</button>}
         </div>
-        <TicketReply ticketId={ticket.id} uid={uid} />
+        {isWorking && ticket?.status === "doing_now" && <WorkActivity placement="detail" />}
+        <TicketReply ticketId={ticketId} uid={uid} />
       </article>
     </div>
   );
