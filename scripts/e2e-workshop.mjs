@@ -19,7 +19,7 @@ const db = getAdminFirestore(admin);
 const simonUid = "workshop-e2e-simon";
 const creatorUid = "workshop-e2e-creator";
 const outsiderUid = "workshop-e2e-outsider";
-const creatorEmail = "christopher-workshop@example.test";
+const creatorEmail = "myhrefjeld@gmail.com";
 
 async function user(uid, email, displayName) {
   try { await auth.deleteUser(uid); } catch { /* absent */ }
@@ -32,6 +32,11 @@ const [simonToken, creatorToken, outsiderToken] = await Promise.all([
   user(creatorUid, creatorEmail, "Christopher Creator"),
   user(outsiderUid, "outsider-workshop@example.test", "Outside User"),
 ]);
+await db.doc(`workshopMembers/${outsiderUid}`).set({
+  email: "outsider-workshop@example.test",
+  name: "Stale invited user",
+  role: "creator",
+});
 
 const server = spawn("bunx", ["vite", "--config", "vite.workshop.config.ts", "--host", "127.0.0.1", "--port", String(PORT)], {
   stdio: ["ignore", "pipe", "pipe"],
@@ -115,15 +120,12 @@ try {
   const simon = await openAs(browser, simonToken, { width: 1440, height: 900 });
   watch(simon.page, errors);
   await waitForWorkspace(simon.page, "Simon");
-  await simon.page.getByRole("button", { name: "Invite someone" }).click();
-  await simon.page.getByTestId("invite-email").fill(creatorEmail);
-  await simon.page.getByTestId("invite-submit").click();
-  await simon.page.getByText(`${creatorEmail} can now sign in.`).waitFor();
+  if (await simon.page.getByRole("button", { name: /invite/i }).count()) throw new Error("Workshop still exposes invitations.");
 
   const outsider = await openAs(browser, outsiderToken, { width: 390, height: 844 });
   watch(outsider.page, errors, true);
   await outsider.page.getByRole("heading", { name: "D&D Workshop" }).waitFor();
-  await outsider.page.getByText("has not been invited").waitFor();
+  await outsider.page.getByText("only available to Simon and Christoffer").waitFor();
 
   const creator = await openAs(browser, creatorToken, { width: 390, height: 844 });
   watch(creator.page, errors);
@@ -175,7 +177,7 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: invite gate, image ticket, immutable thread UI, heartbeat, finished/reopened/Needs Simon flow, and responsive layout.");
+  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, heartbeat, finished/reopened/Needs Simon flow, and responsive layout.");
   await Promise.all([simon.context.close(), creator.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();
@@ -185,7 +187,7 @@ try {
     ...tickets.docs.map((item) => db.recursiveDelete(item.ref)),
     db.doc(`workshopMembers/${simonUid}`).delete(),
     db.doc(`workshopMembers/${creatorUid}`).delete(),
-    db.doc(`workshopInvites/${creatorEmail}`).delete(),
+    db.doc(`workshopMembers/${outsiderUid}`).delete(),
     db.doc("workshopAgent/state").delete(),
     auth.deleteUser(simonUid),
     auth.deleteUser(creatorUid),

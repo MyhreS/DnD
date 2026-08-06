@@ -26,9 +26,15 @@ service cloud.firestore {
       return isUser() && emailKey() in ["simonmyhre1@gmail.com"];
     }
 
-    function isWorkshopMember() {
+    function isWorkshopAccount() {
       return isUser()
-        && exists(/databases/$(database)/documents/workshopMembers/$(request.auth.uid));
+        && emailKey() in ["simonmyhre1@gmail.com", "myhrefjeld@gmail.com"];
+    }
+
+    function isWorkshopMember() {
+      return isWorkshopAccount()
+        && exists(/databases/$(database)/documents/workshopMembers/$(request.auth.uid))
+        && get(/databases/$(database)/documents/workshopMembers/$(request.auth.uid)).data.email == emailKey();
     }
 
     // You belong to campaign `cid`.
@@ -76,7 +82,8 @@ service cloud.firestore {
       allow write: if isSuperAdmin();
     }
 
-    // D&D Workshop is an independently deployed, invited feedback space.
+    // D&D Workshop is an independently deployed feedback space restricted to
+    // Simon and Christoffer's two verified Google accounts.
     // All changes go through callable functions so requests and agent replies
     // form an immutable audit trail. Members may only read that trail.
     match /workshopMembers/{uid} {

@@ -3,6 +3,8 @@ import { FieldValue, Timestamp, getFirestore } from "firebase-admin/firestore";
 import { HttpsError, onCall, type CallableRequest } from "firebase-functions/v2/https";
 
 const ADMIN_EMAIL = "simonmyhre1@gmail.com";
+const CREATOR_EMAIL = "myhrefjeld@gmail.com";
+const WORKSHOP_EMAILS = new Set([ADMIN_EMAIL, CREATOR_EMAIL]);
 const REGION = "europe-west1";
 const MAX_BODY = 8_000;
 const MAX_ATTACHMENTS = 5;
@@ -19,13 +21,24 @@ type AttachmentInput = {
   size: number;
 };
 
-function identity(request: CallableRequest): { uid: string; email: string; name: string } {
+type WorkshopRole = "admin" | "creator";
+type WorkshopUser = { uid: string; email: string; name: string; role: WorkshopRole };
+
+function identity(request: CallableRequest): WorkshopUser {
   const uid = request.auth?.uid;
   const email = String(request.auth?.token.email ?? "").trim().toLowerCase();
   if (!uid || !email || request.auth?.token.email_verified !== true) {
     throw new HttpsError("unauthenticated", "Sign in with a verified Google account.");
   }
-  return { uid, email, name: String(request.auth?.token.name ?? email.split("@")[0]) };
+  if (!WORKSHOP_EMAILS.has(email)) {
+    throw new HttpsError("permission-denied", "This Workshop is only available to Simon and Christoffer.");
+  }
+  return {
+    uid,
+    email,
+    name: String(request.auth?.token.name ?? email.split("@")[0]),
+    role: email === ADMIN_EMAIL ? "admin" : "creator",
+  };
 }
 
 function validBody(value: unknown): string {
@@ -55,9 +68,10 @@ function validAttachments(value: unknown, uid: string): AttachmentInput[] {
   });
 }
 
-async function assertMember(uid: string): Promise<void> {
-  if (!(await db.doc(`workshopMembers/${uid}`).get()).exists) {
-    throw new HttpsError("permission-denied", "This Workshop is invitation-only.");
+async function assertMember(user: WorkshopUser): Promise<void> {
+  const member = await db.doc(`workshopMembers/${user.uid}`).get();
+  if (!member.exists || member.data()?.email !== user.email) {
+    throw new HttpsError("permission-denied", "Open the Workshop before making changes.");
   }
 }
 
@@ -103,42 +117,24 @@ function messageData(
 export const claimWorkshopAccess = onCall({ region: REGION }, async (request) => {
   const user = identity(request);
   const memberRef = db.doc(`workshopMembers/${user.uid}`);
-  const inviteRef = db.doc(`workshopInvites/${user.email}`);
-  const [member, invite] = await Promise.all([memberRef.get(), inviteRef.get()]);
-  if (!member.exists && user.email !== ADMIN_EMAIL && !invite.exists) {
-    throw new HttpsError("permission-denied", "You have not been invited to this Workshop.");
-  }
+  const member = await memberRef.get();
   if (!member.exists) {
     await memberRef.set({
       email: user.email,
       name: user.name,
-      role: user.email === ADMIN_EMAIL ? "admin" : "creator",
+      role: user.role,
       joinedAt: FieldValue.serverTimestamp(),
-      invitedBy: invite.data()?.invitedBy ?? "bootstrap",
+      access: "fixed-account-list",
     });
+  } else if (member.data()?.email !== user.email || member.data()?.role !== user.role) {
+    await memberRef.set({ email: user.email, name: user.name, role: user.role }, { merge: true });
   }
-  return { ok: true, role: user.email === ADMIN_EMAIL ? "admin" : member.data()?.role ?? "creator" };
-});
-
-export const inviteWorkshopMember = onCall({ region: REGION }, async (request) => {
-  const user = identity(request);
-  if (user.email !== ADMIN_EMAIL) throw new HttpsError("permission-denied", "Simon only.");
-  const email = String(request.data?.email ?? "").trim().toLowerCase();
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) || email.includes("/") || email.length > 254) {
-    throw new HttpsError("invalid-argument", "Enter a valid email address.");
-  }
-  await checkRateLimit(user.uid);
-  await db.doc(`workshopInvites/${email}`).set({
-    email,
-    invitedBy: user.email,
-    createdAt: FieldValue.serverTimestamp(),
-  }, { merge: true });
-  return { ok: true, email };
+  return { ok: true, role: user.role };
 });
 
 export const createWorkshopTicket = onCall({ region: REGION }, async (request) => {
   const user = identity(request);
-  await assertMember(user.uid);
+  await assertMember(user);
   await checkRateLimit(user.uid);
   const body = validBody(request.data?.body);
   const attachments = validAttachments(request.data?.attachments, user.uid);
@@ -168,7 +164,7 @@ export const createWorkshopTicket = onCall({ region: REGION }, async (request) =
 
 export const replyWorkshopTicket = onCall({ region: REGION }, async (request) => {
   const user = identity(request);
-  await assertMember(user.uid);
+  await assertMember(user);
   await checkRateLimit(user.uid);
   const ticketId = String(request.data?.ticketId ?? "");
   if (!/^[A-Za-z0-9_-]{6,128}$/.test(ticketId)) {

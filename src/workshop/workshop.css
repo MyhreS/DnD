@@ -39,9 +39,9 @@ button { color: inherit; }
 .composer h1 { max-width: 520px; margin: 0; font: 400 clamp(38px, 5vw, 62px)/1.03 "Libre Caslon Display", serif; letter-spacing: -.025em; }
 .composer-help { max-width: 520px; margin: 18px 0 27px; color: #6f685e; line-height: 1.55; }
 .composer textarea { width: 100%; min-height: 220px; padding: 20px; resize: vertical; border: 1px solid #bfb5a6; border-radius: 6px; outline: none; color: #27241f; background: #fbf9f4; line-height: 1.55; }
-.composer textarea:focus, .reply-form textarea:focus, .invite-form input:focus { border-color: #8b5c2d; box-shadow: 0 0 0 3px #8b5c2d1a; }
+.composer textarea:focus, .reply-form textarea:focus { border-color: #8b5c2d; box-shadow: 0 0 0 3px #8b5c2d1a; }
 .composer-actions, .reply-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; }
-.attach-button, .primary-button, .text-button { cursor: pointer; }
+.attach-button, .primary-button { cursor: pointer; }
 .attach-button { color: #665f55; font-size: 13px; font-weight: 600; }
 .attach-button input { position: absolute; opacity: 0; width: 1px; height: 1px; }
 .attach-button span { font-size: 19px; vertical-align: -1px; }
@@ -74,13 +74,6 @@ button { color: inherit; }
 .empty-history { padding: 28px 0; border-top: 1px solid #cfc6b7; border-bottom: 1px solid #d8d1c3; color: #81786c; font-size: 13px; }
 
 .workshop-footer { min-height: 58px; padding: 15px clamp(20px, 4vw, 58px); display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #d8d1c3; color: #7e766b; font-size: 11px; background: #eee9df; }
-.text-button { padding: 0; border: 0; border-bottom: 1px solid currentColor; background: transparent; font-size: 11px; }
-.invite-control { position: relative; }
-.invite-form { position: absolute; right: 0; bottom: 30px; width: 330px; padding: 16px; border: 1px solid #c9bfaf; border-radius: 6px; background: #fffdf8; box-shadow: 0 14px 40px #493d2c22; color: #302b25; }
-.invite-form label { display: block; margin-bottom: 8px; font-weight: 700; }
-.invite-form div { display: flex; gap: 7px; }
-.invite-form input { min-width: 0; flex: 1; padding: 8px 10px; border: 1px solid #c9bfaf; border-radius: 4px; outline: 0; }
-.invite-form p { margin: 9px 0 0; }
 
 .detail-backdrop { position: fixed; inset: 0; z-index: 10; display: flex; justify-content: flex-end; background: #211d17a6; }
 .ticket-detail { width: min(650px, 100%); height: 100%; overflow: auto; background: #f8f5ee; box-shadow: -16px 0 46px #1e18113d; }
@@ -124,7 +117,6 @@ button { color: inherit; }
   .ticket-history { margin-top: 62px; }
   .workshop-footer { align-items: flex-start; }
   .workshop-footer > span { max-width: 250px; }
-  .invite-form { position: fixed; left: 18px; right: 18px; bottom: 70px; width: auto; }
   .ticket-detail > header, .message-list, .reply-form { padding-left: 20px; padding-right: 20px; }
   .message-images { grid-template-columns: 1fr; }
 }

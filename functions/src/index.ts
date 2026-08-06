@@ -21,7 +21,6 @@ export {
 export {
   claimWorkshopAccess,
   createWorkshopTicket,
-  inviteWorkshopMember,
   replyWorkshopTicket,
 } from "./workshop";
 
