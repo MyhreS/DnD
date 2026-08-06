@@ -24,18 +24,8 @@ function subscribe(listener: () => void) {
 
 function snapshot() { return currentTime; }
 
-export function useAgentTiming(state: AgentState | null): { online: boolean; secondsUntilCheck: number | null } {
+export function useAgentOnline(state: AgentState | null): boolean {
   const now = useSyncExternalStore(subscribe, snapshot, snapshot);
   const heartbeat = state?.lastHeartbeatAt?.toMillis() ?? 0;
-  const nextPoll = state?.nextPollAt?.toMillis();
-  return {
-    online: now - heartbeat < 90_000,
-    secondsUntilCheck: nextPoll === undefined || nextPoll === null
-      ? null
-      : Math.max(0, Math.ceil((nextPoll - now) / 1_000)),
-  };
-}
-
-export function useAgentOnline(state: AgentState | null): boolean {
-  return useAgentTiming(state).online;
+  return now - heartbeat < 90_000;
 }

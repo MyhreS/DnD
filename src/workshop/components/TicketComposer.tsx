@@ -1,15 +1,13 @@
 import { useRef, useState, type FormEvent } from "react";
 import { createWorkshopTicket, uploadWorkshopImages } from "@/api/workshop";
-import { AgentCountdown } from "@/workshop/components/AgentCountdown";
 import { AttachmentPicker } from "@/workshop/components/AttachmentPicker";
 import { useOnlineStatus } from "@/workshop/hooks/useOnlineStatus";
 import { useSentFeedback } from "@/workshop/hooks/useSentFeedback";
 import { useWorkshopDraft, useWorkshopFileDraft } from "@/workshop/hooks/useWorkshopDraft";
 import { workshopErrorMessage } from "@/workshop/lib/errors";
 import { submitOnEnter } from "@/workshop/lib/submitOnEnter";
-import type { AgentState } from "@/workshop/types";
 
-export function TicketComposer({ uid, agentState, onCreated }: { uid: string; agentState: AgentState | null; onCreated: (id: string) => void }) {
+export function TicketComposer({ uid, onCreated }: { uid: string; onCreated: (id: string) => void }) {
   const { body, setBody, hasDraft } = useWorkshopDraft("new-request");
   const { files, setFiles } = useWorkshopFileDraft("new-request");
   const [busy, setBusy] = useState(false);
@@ -52,7 +50,6 @@ export function TicketComposer({ uid, agentState, onCreated }: { uid: string; ag
       <p className="eyebrow">New request</p>
       <h1 id="new-request-title">What should we improve?</h1>
       <p className="composer-help">Describe the change in your own words. Add screenshots when something is easier to show.</p>
-      <AgentCountdown state={agentState} />
       <form onSubmit={(event) => void submit(event)}>
         <label className="sr-only" htmlFor="ticket-body">Workshop request</label>
         <textarea
