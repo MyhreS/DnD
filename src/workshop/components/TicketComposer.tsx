@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from "react";
 import { createWorkshopTicket, uploadWorkshopImages } from "@/api/workshop";
+import { submitOnEnter } from "@/workshop/lib/submitOnEnter";
 
 const MAX_IMAGES = 5;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
@@ -52,6 +53,7 @@ export function TicketComposer({ uid, onCreated }: { uid: string; onCreated: (id
           data-testid="ticket-body"
           value={body}
           onChange={(event) => setBody(event.target.value)}
+          onKeyDown={submitOnEnter}
           maxLength={8_000}
           placeholder="Write feedback or a new idea…"
         />
