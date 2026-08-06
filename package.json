@@ -48,6 +48,7 @@
     "qa": "doppler run -- node scripts/qa-crawl.mjs",
     "workshop:bot": "bun scripts/workshop-manager.ts",
     "workshop:bot:once": "bun scripts/workshop-manager.ts --once",
+    "workshop:storage-cors": "gcloud storage buckets update gs://dandd-ea955.firebasestorage.app --cors-file=storage.cors.json --project=dandd-ea955 --account=simonmyhre1@gmail.com",
     "deploy:workshop": "bun run build:workshop && firebase deploy --only hosting:workshop"
   },
   "dependencies": {

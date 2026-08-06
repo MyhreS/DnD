@@ -3,5 +3,5 @@
   "entry": ["scripts/*.{mjs,ts}"],
   "project": ["src/**/*.{ts,tsx}"],
   "ignoreExportsUsedInFile": true,
-  "ignoreBinaries": ["doppler", "firebase"]
+  "ignoreBinaries": ["doppler", "firebase", "gcloud"]
 }
