@@ -26,7 +26,7 @@ export function WorkshopApp() {
       </header>
       {session.error && <div className="global-error" role="alert">{session.error}</div>}
       <main className="workshop-grid">
-        <TicketComposer uid={session.user!.uid} onCreated={setSelectedId} />
+        <TicketComposer uid={session.user!.uid} agentState={session.agentState} onCreated={setSelectedId} />
         <TicketList tickets={session.tickets} onSelect={setSelectedId} />
       </main>
       <footer className="workshop-footer">

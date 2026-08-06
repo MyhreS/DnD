@@ -78,13 +78,17 @@ const db = getFirestore();
 
 let currentTicketId: string | null = null;
 let polling = false;
+let nextPollAt: Timestamp | null = null;
 
 async function heartbeat(): Promise<void> {
   await db.doc("workshopAgent/state").set({
     workerId: WORKER_ID,
     currentTicketId,
+    checkingNow: polling,
     lastHeartbeatAt: FieldValue.serverTimestamp(),
-    version: 1,
+    nextPollAt,
+    pollIntervalMs: POLL_MS,
+    version: 2,
   }, { merge: true });
 }
 
@@ -396,12 +400,31 @@ async function processOnce(): Promise<boolean> {
 async function poll(): Promise<void> {
   if (polling) return;
   polling = true;
+  nextPollAt = null;
   try {
     await heartbeat();
     while (await processOnce()) { /* Drain the current queue. */ }
   } finally {
     polling = false;
+    await heartbeat();
   }
+}
+
+let pollTimer: ReturnType<typeof setTimeout> | undefined;
+
+async function scheduleNextPoll(): Promise<void> {
+  nextPollAt = Timestamp.fromMillis(Date.now() + POLL_MS);
+  pollTimer = setTimeout(() => void runScheduledPoll(), POLL_MS);
+  await heartbeat();
+}
+
+async function runScheduledPoll(): Promise<void> {
+  try {
+    await poll();
+  } catch (error) {
+    console.error("Workshop poll failed:", error);
+  }
+  await scheduleNextPoll();
 }
 
 if (once) {
@@ -409,7 +432,7 @@ if (once) {
 } else {
   const heartbeatTimer = setInterval(() => void heartbeat(), HEARTBEAT_MS);
   await poll();
-  const pollTimer = setInterval(() => void poll(), POLL_MS);
-  process.on("SIGINT", () => { clearInterval(heartbeatTimer); clearInterval(pollTimer); process.exit(0); });
-  process.on("SIGTERM", () => { clearInterval(heartbeatTimer); clearInterval(pollTimer); process.exit(0); });
+  await scheduleNextPoll();
+  process.on("SIGINT", () => { clearInterval(heartbeatTimer); clearTimeout(pollTimer); process.exit(0); });
+  process.on("SIGTERM", () => { clearInterval(heartbeatTimer); clearTimeout(pollTimer); process.exit(0); });
 }

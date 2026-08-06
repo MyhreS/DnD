@@ -1,11 +1,13 @@
 import { useRef, useState, type FormEvent } from "react";
 import { createWorkshopTicket, uploadWorkshopImages } from "@/api/workshop";
+import { AgentCountdown } from "@/workshop/components/AgentCountdown";
 import { submitOnEnter } from "@/workshop/lib/submitOnEnter";
+import type { AgentState } from "@/workshop/types";
 
 const MAX_IMAGES = 5;
 const MAX_IMAGE_BYTES = 10 * 1024 * 1024;
 
-export function TicketComposer({ uid, onCreated }: { uid: string; onCreated: (id: string) => void }) {
+export function TicketComposer({ uid, agentState, onCreated }: { uid: string; agentState: AgentState | null; onCreated: (id: string) => void }) {
   const [body, setBody] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
@@ -46,6 +48,7 @@ export function TicketComposer({ uid, onCreated }: { uid: string; onCreated: (id
       <p className="eyebrow">New request</p>
       <h1 id="new-request-title">What should we improve?</h1>
       <p className="composer-help">Describe the change in your own words. Add screenshots when something is easier to show.</p>
+      <AgentCountdown state={agentState} />
       <form onSubmit={(event) => void submit(event)}>
         <label className="sr-only" htmlFor="ticket-body">Workshop request</label>
         <textarea
