@@ -110,6 +110,24 @@ async function runManager(fixture) {
   if (code !== 0) throw new Error(`Fixture manager failed (${code}): ${output}`);
 }
 
+function startManager(fixture) {
+  const child = spawn("bun", ["scripts/workshop-manager.ts", `--fixture=${fixture}`], {
+    stdio: ["ignore", "pipe", "pipe"],
+    env: { ...process.env },
+  });
+  let output = "";
+  child.stdout.on("data", (data) => { output += data; });
+  child.stderr.on("data", (data) => { output += data; });
+  return {
+    output: () => output,
+    stop: async () => {
+      child.kill("SIGTERM");
+      const code = await new Promise((resolve) => child.on("exit", resolve));
+      if (code !== 0) throw new Error(`Continuous fixture manager failed (${code}): ${output}`);
+    },
+  };
+}
+
 async function ruleClient(name, token) {
   const app = initializeClient({
     apiKey: process.env.VITE_FIREBASE_API_KEY,
@@ -174,7 +192,55 @@ try {
   await waitForWorkspace(creator.page, "Creator");
   await creator.page.getByTestId("agent-presence").getByText("Agent offline").waitFor();
   await creator.page.getByText("Ask Simon to start the Workshop agent.").waitFor();
-  await creator.page.getByTestId("agent-countdown").getByText("Next check starts when the agent is online.").waitFor();
+  if (await creator.page.getByTestId("agent-countdown").count()) throw new Error("Workshop still shows a polling countdown.");
+
+  const triggerManager = startManager("finished");
+  try {
+    await eventually(async () => {
+      const state = (await db.doc("workshopAgent/state").get()).data();
+      return state?.watchingChanges === true
+        && state?.triggerMode === "realtime_with_fallback"
+        && state?.fallbackIntervalMs === 5 * 60_000;
+    }, "Real-time request listener");
+    await creator.page.getByTestId("agent-presence").getByText("Agent online").waitFor();
+    const triggerProbe = db.doc("workshopTickets/realtime-trigger-probe");
+    const triggerStartedAt = Date.now();
+    await triggerProbe.set({
+      title: "Real-time trigger probe",
+      status: "not_done",
+      authorUid: creatorUid,
+      authorEmail: creatorEmail,
+      authorName: "Christopher Creator",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      readAtBy: {},
+      revision: 1,
+      nextSequence: 1,
+      attachmentCount: 0,
+      needsSimonApproved: false,
+      leasedBy: null,
+      leaseExpiresAt: null,
+    });
+    await eventually(async () => (await triggerProbe.get()).data()?.status === "finished", "Immediate request trigger");
+    if (Date.now() - triggerStartedAt > 5_000) throw new Error("Workshop request waited instead of triggering immediately.");
+
+    await creator.page.getByTestId("ticket-realtime-trigger-probe").click();
+    await creator.page.getByTestId("ticket-reply").fill("Start this follow-up without waiting for the recovery check.");
+    const replyStartedAt = Date.now();
+    await creator.page.getByTestId("ticket-reply").press("Enter");
+    await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
+    await eventually(async () => {
+      const ticket = (await triggerProbe.get()).data();
+      return ticket?.status === "finished" && ticket?.lastCompletedRevision === 2;
+    }, "Immediate reply trigger");
+    if (Date.now() - replyStartedAt > 5_000) throw new Error("Workshop reply waited instead of triggering immediately.");
+    await creator.page.getByRole("button", { name: "Close thread" }).click();
+    await db.recursiveDelete(triggerProbe);
+  } catch (error) {
+    throw new Error(`${error}\nManager output:\n${triggerManager.output()}`);
+  } finally {
+    await triggerManager.stop();
+  }
   const composerFileInput = creator.page.locator('.composer input[type="file"]');
   await composerFileInput.setInputFiles({ name: "unsafe.svg", mimeType: "image/svg+xml", buffer: Buffer.from("<svg/>") });
   await creator.page.getByText("Use JPG, PNG, WebP, or GIF images.", { exact: true }).waitFor();
@@ -206,7 +272,7 @@ try {
   await creator.page.getByTestId("send-ticket").getByText("Sent ✓", { exact: true }).waitFor();
   const detail = creator.page.getByTestId("ticket-detail");
   await detail.waitFor();
-  await detail.getByText("Received. I’ll pick this up").waitFor();
+  await detail.getByText("Received. The Workshop agent").waitFor();
   await creator.page.keyboard.press("Shift+Tab");
   if (await creator.page.evaluate(() => document.activeElement?.getAttribute("data-testid")) !== "ticket-reply") throw new Error("Dialog focus did not wrap to its last control.");
   await creator.page.keyboard.press("Tab");
@@ -368,23 +434,10 @@ try {
 
   await runManager("finished");
   await creator.page.getByTestId("agent-presence").getByText("Agent online").waitFor();
-  await db.doc("workshopAgent/state").set({
-    checkingNow: false,
-    currentTicketId: null,
-    nextPollAt: new Date(Date.now() + 4_000),
-  }, { merge: true });
-  const countdown = creator.page.getByTestId("agent-countdown");
-  await countdown.getByText(/Next agent check in 0:0[34]/).waitFor();
-  await creator.page.screenshot({ path: "screenshots/workshop-countdown-mobile.png", fullPage: true });
-  const firstCountdown = await countdown.textContent();
-  await creator.page.waitForTimeout(1_100);
-  if (await countdown.textContent() === firstCountdown) throw new Error("Agent countdown did not advance.");
-  await db.doc("workshopAgent/state").set({ checkingNow: true, nextPollAt: null }, { merge: true });
-  await countdown.getByText("The agent is checking requests now.").waitFor();
   await creator.page.getByTestId(`ticket-${ticketId}`).getByText("Finished", { exact: true }).waitFor();
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
   await creator.page.getByText("requested test update is available now", { exact: false }).waitFor();
-  if (await creator.page.getByText("Received. I’ll pick this up when the Workshop agent is online.", { exact: true }).count()) {
+  if (await creator.page.getByText("Received. The Workshop agent will start automatically when it is online.", { exact: true }).count()) {
     throw new Error("The initial queue acknowledgement remained visible after the agent picked up the request.");
   }
   await creator.page.getByTestId("ticket-reply").fill("Keep this unsent draft when I close the thread.");
@@ -448,17 +501,11 @@ try {
 
   await creator.page.setViewportSize({ width: 1440, height: 900 });
   await creator.page.getByRole("button", { name: "Close thread" }).click();
-  await db.doc("workshopAgent/state").set({
-    checkingNow: false,
-    currentTicketId: null,
-    nextPollAt: new Date(Date.now() + 5 * 60_000),
-  }, { merge: true });
-  await countdown.getByText(/Next agent check in 5:00|Next agent check in 4:59/).waitFor();
   await assertScrollable(requestList, "Workshop desktop request list");
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: fixed account gate, secure and removable images, offline drafts, image-only messages, retry idempotency, read receipts, request search, long-thread latest/new-message behavior, recoverable missing images, Enter/click feedback, heartbeat countdown, Needs Simon/declined flows, and responsive mobile/desktop layout.");
+  console.log("Workshop E2E passed: immediate Firestore wake-up with hidden fallback polling, no visible countdown, fixed account gate, secure images, offline drafts, idempotency, read receipts, long-thread behavior, Needs Simon/declined flows, and responsive mobile/desktop layout.");
   await Promise.all([simon.context.close(), creator.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();

@@ -38,8 +38,9 @@ export type AgentState = {
   workerId?: string;
   currentTicketId?: string | null;
   checkingNow?: boolean;
-  nextPollAt?: Timestamp | null;
-  pollIntervalMs?: number;
+  triggerMode?: "realtime_with_fallback";
+  fallbackIntervalMs?: number;
+  watchingChanges?: boolean;
 };
 
 export const STATUS_LABELS: Record<WorkshopStatus, string> = {

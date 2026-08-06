@@ -28,7 +28,8 @@ type ClaimedTicket = { id: string; ref: DocumentReference; data: TicketData; wor
 
 const PROJECT_ID = process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID || "dandd-ea955";
 const WORKER_ID = `local-${process.pid}-${crypto.randomUUID().slice(0, 8)}`;
-const POLL_MS = 5 * 60_000;
+const FALLBACK_POLL_MS = 5 * 60_000;
+const WATCH_RETRY_MS = 10_000;
 const HEARTBEAT_MS = 30_000;
 const LEASE_MS = 45 * 60_000;
 const REPO_ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
@@ -78,7 +79,9 @@ const db = getFirestore();
 
 let currentTicketId: string | null = null;
 let polling = false;
-let nextPollAt: Timestamp | null = null;
+let pollAgain = false;
+let pollRequestActive = false;
+let watchingChanges = false;
 
 async function heartbeat(): Promise<void> {
   await db.doc("workshopAgent/state").set({
@@ -86,9 +89,12 @@ async function heartbeat(): Promise<void> {
     currentTicketId,
     checkingNow: polling,
     lastHeartbeatAt: FieldValue.serverTimestamp(),
-    nextPollAt,
-    pollIntervalMs: POLL_MS,
-    version: 2,
+    nextPollAt: FieldValue.delete(),
+    pollIntervalMs: FieldValue.delete(),
+    triggerMode: "realtime_with_fallback",
+    fallbackIntervalMs: FALLBACK_POLL_MS,
+    watchingChanges,
+    version: 3,
   }, { merge: true });
 }
 
@@ -398,9 +404,7 @@ async function processOnce(): Promise<boolean> {
 }
 
 async function poll(): Promise<void> {
-  if (polling) return;
   polling = true;
-  nextPollAt = null;
   try {
     await heartbeat();
     while (await processOnce()) { /* Drain the current queue. */ }
@@ -410,29 +414,72 @@ async function poll(): Promise<void> {
   }
 }
 
-let pollTimer: ReturnType<typeof setTimeout> | undefined;
+let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
+let watchRetryTimer: ReturnType<typeof setTimeout> | undefined;
+let stopTicketWatch: (() => void) | undefined;
 
-async function scheduleNextPoll(): Promise<void> {
-  nextPollAt = Timestamp.fromMillis(Date.now() + POLL_MS);
-  pollTimer = setTimeout(() => void runScheduledPoll(), POLL_MS);
-  await heartbeat();
+function scheduleFallbackPoll(): void {
+  clearTimeout(fallbackTimer);
+  fallbackTimer = setTimeout(() => void requestPoll("fallback"), FALLBACK_POLL_MS);
 }
 
-async function runScheduledPoll(): Promise<void> {
-  try {
-    await poll();
-  } catch (error) {
-    console.error("Workshop poll failed:", error);
+async function requestPoll(source: "change" | "fallback"): Promise<void> {
+  if (pollRequestActive) {
+    pollAgain = true;
+    return;
   }
-  await scheduleNextPoll();
+  pollRequestActive = true;
+  clearTimeout(fallbackTimer);
+  try {
+    do {
+      pollAgain = false;
+      try {
+        await poll();
+      } catch (error) {
+        console.error(`Workshop ${source} check failed:`, error);
+      }
+    } while (pollAgain);
+  } finally {
+    pollRequestActive = false;
+    scheduleFallbackPoll();
+  }
+}
+
+function startTicketWatch(): void {
+  clearTimeout(watchRetryTimer);
+  stopTicketWatch?.();
+  stopTicketWatch = db.collection("workshopTickets").where("status", "==", "not_done").onSnapshot((snapshot) => {
+    watchingChanges = true;
+    void heartbeat().catch((error) => console.error("Workshop heartbeat failed:", error));
+    if (snapshot.docChanges().some((change) => change.type !== "removed")) {
+      void requestPoll("change");
+    }
+  }, (error) => {
+    watchingChanges = false;
+    stopTicketWatch = undefined;
+    console.error("Workshop request listener stopped; retrying:", error);
+    void heartbeat().catch((heartbeatError) => console.error("Workshop heartbeat failed:", heartbeatError));
+    watchRetryTimer = setTimeout(startTicketWatch, WATCH_RETRY_MS);
+  });
+}
+
+function stopManager(heartbeatTimer: ReturnType<typeof setInterval>): void {
+  clearInterval(heartbeatTimer);
+  clearTimeout(fallbackTimer);
+  clearTimeout(watchRetryTimer);
+  stopTicketWatch?.();
+  process.exit(0);
 }
 
 if (once) {
   await poll();
 } else {
-  const heartbeatTimer = setInterval(() => void heartbeat(), HEARTBEAT_MS);
+  const heartbeatTimer = setInterval(() => {
+    void heartbeat().catch((error) => console.error("Workshop heartbeat failed:", error));
+  }, HEARTBEAT_MS);
   await poll();
-  await scheduleNextPoll();
-  process.on("SIGINT", () => { clearInterval(heartbeatTimer); clearTimeout(pollTimer); process.exit(0); });
-  process.on("SIGTERM", () => { clearInterval(heartbeatTimer); clearTimeout(pollTimer); process.exit(0); });
+  startTicketWatch();
+  scheduleFallbackPoll();
+  process.on("SIGINT", () => stopManager(heartbeatTimer));
+  process.on("SIGTERM", () => stopManager(heartbeatTimer));
 }

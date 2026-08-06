@@ -7,7 +7,7 @@ description: Process D&D Workshop feedback tickets from Firestore through a safe
 
 ## Run the manager
 
-From the repository root, run `bun run workshop:bot` for the continuous manager or `bun run workshop:bot:once` for one polling pass. Keep credentials in Doppler or Application Default Credentials; never write them to the repository.
+From the repository root, run `bun run workshop:bot` for the continuous manager or `bun run workshop:bot:once` for one recovery pass. The continuous manager listens to Firestore and starts queued work immediately when a request or eligible reply arrives. It also performs a hidden five-minute recovery check in case a live notification was missed. Keep credentials in Doppler or Application Default Credentials; never write them to the repository.
 
 ## Process a ticket
 

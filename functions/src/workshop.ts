@@ -195,7 +195,7 @@ export const createWorkshopTicket = onCall({ region: REGION }, async (request) =
       leaseExpiresAt: null,
     });
     tx.set(ticketRef.collection("messages").doc(`${submissionId}-request`), messageData("request", body, user, 1, attachments));
-    tx.set(ticketRef.collection("messages").doc(`${submissionId}-ack`), messageData("system", "Received. I’ll pick this up when the Workshop agent is online.", null, 2));
+    tx.set(ticketRef.collection("messages").doc(`${submissionId}-ack`), messageData("system", "Received. The Workshop agent will start automatically when it is online.", null, 2));
   });
   return { ok: true, ticketId: ticketRef.id };
 });
