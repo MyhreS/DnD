@@ -1,5 +1,6 @@
 import { useRef, useState, type FormEvent } from "react";
 import { replyWorkshopTicket, uploadWorkshopImages } from "@/api/workshop";
+import { submitOnEnter } from "@/workshop/lib/submitOnEnter";
 
 export function TicketReply({ ticketId, uid }: { ticketId: string; uid: string }) {
   const [body, setBody] = useState("");
@@ -29,7 +30,7 @@ export function TicketReply({ ticketId, uid }: { ticketId: string; uid: string }
   return (
     <form className="reply-form" onSubmit={(event) => void submit(event)}>
       <label htmlFor="ticket-reply">Add information</label>
-      <textarea id="ticket-reply" value={body} onChange={(event) => setBody(event.target.value)} maxLength={8_000} placeholder="Reply to this thread…" data-testid="ticket-reply" />
+      <textarea id="ticket-reply" value={body} onChange={(event) => setBody(event.target.value)} onKeyDown={submitOnEnter} maxLength={8_000} placeholder="Reply to this thread…" data-testid="ticket-reply" />
       <div className="reply-actions">
         <label className="attach-button compact"><input ref={picker} type="file" accept="image/*" multiple onChange={(event) => setFiles(Array.from(event.target.files ?? []).slice(0, 5))} />＋ Image{files.length ? ` (${files.length})` : ""}</label>
         <button className="primary-button compact" disabled={!body.trim() || busy} data-testid="send-reply">{busy ? "Sending…" : "Reply"}</button>

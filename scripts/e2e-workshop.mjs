@@ -132,13 +132,15 @@ try {
   await waitForWorkspace(creator.page, "Creator");
   await creator.page.getByTestId("agent-presence").getByText("Agent offline").waitFor();
   await creator.page.getByText("Ask Simon to start the Workshop agent.").waitFor();
-  await creator.page.getByTestId("ticket-body").fill("Make the game page calmer\nOnly show the most important action first.");
+  await creator.page.getByTestId("ticket-body").fill("Make the game page calmer");
+  await creator.page.getByTestId("ticket-body").press("Shift+Enter");
+  await creator.page.getByTestId("ticket-body").pressSequentially("Only show the most important action first.");
   await creator.page.locator('.composer input[type="file"]').setInputFiles({
     name: "game-page.png",
     mimeType: "image/png",
     buffer: Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64"),
   });
-  await creator.page.getByTestId("send-ticket").click();
+  await creator.page.getByTestId("ticket-body").press("Enter");
   const detail = creator.page.getByTestId("ticket-detail");
   await detail.waitFor();
   await detail.getByText("Received. I’ll pick this up").waitFor();
@@ -162,7 +164,7 @@ try {
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
   await creator.page.getByText("requested test update is available now", { exact: false }).waitFor();
   await creator.page.getByTestId("ticket-reply").fill("Please also reduce the number of buttons.");
-  await creator.page.getByTestId("send-reply").click();
+  await creator.page.getByTestId("ticket-reply").press("Enter");
   await creator.page.getByText("Update received. The agent will reread").waitFor();
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await creator.page.getByText("Not done", { exact: true }).waitFor();
