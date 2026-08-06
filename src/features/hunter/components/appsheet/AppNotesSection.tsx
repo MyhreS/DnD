@@ -4,9 +4,9 @@ import {
   AppSection,
   AutoReason,
   DecisionField,
-  sheetText,
   type AppSheetModel,
 } from "./appSheetShared";
+import { sheetText } from "./appSheetValues";
 
 export function AppNotesSection({ model }: { model: AppSheetModel }) {
   const { card } = useCharacterAutomation();

@@ -3,7 +3,7 @@ import { CONDITIONS, CONDITION_NAME } from "@/data/conditions";
 import { emptyEncounter } from "@/features/play/lib/turnTimer";
 import { initiativeOrder, useCombatStore } from "@/features/play/store/combatStore";
 import type { Combatant, Game, GameParticipant, HunterCard } from "@/types";
-import { combatVitals, isWarden, participantInitiative } from "../lib/combatPresentation";
+import { combatVitals, hasSavedBattle, isWarden, participantInitiative } from "../lib/combatPresentation";
 
 export function SessionCombatSection({
   game,
@@ -39,11 +39,7 @@ export function SessionCombatSection({
   }
 
   const canStart = participants.some((participant) => participant.characterId) || combatants.length > 0;
-  // Older standalone sessions were mistakenly created at round 1, so round
-  // alone is not evidence that anyone actually opened the battle screen.
-  const hasPreviousBattle = encounter.round > 1
-    || encounter.turnId !== null
-    || encounter.timerPhase !== "idle";
+  const hasPreviousBattle = hasSavedBattle(encounter);
 
   return (
     <section className="game-section game-combat" aria-labelledby="combat-heading">

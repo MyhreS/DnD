@@ -1,25 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { automationFor } from "../../lib/characterAutomation";
 import type { AppSheetModel } from "./appSheetShared";
-import type { HunterCard } from "@/types";
-
-type StagedPatch = Pick<Partial<HunterCard>, "level" | "currentHp" | "sanity" | "subclassId" | "transformationLevel" | "activeTransformations">;
-
-interface AppEditStageValue {
-  patch: StagedPatch;
-  previewCard: HunterCard;
-  currentResult: ReturnType<typeof automationFor>;
-  previewResult: ReturnType<typeof automationFor>;
-  hasChanges: boolean;
-  stageLevel: (level: number) => void;
-  stageHp: (hp: number) => void;
-  stageSanity: (sanity: number) => void;
-  stageTransformation: (level: number) => void;
-  apply: () => void;
-  cancel: () => void;
-}
-
-const Context = createContext<AppEditStageValue | null>(null);
+import { AppEditStageContext, useAppEditStage, type AppEditStageValue, type StagedPatch } from "./appEditStageContext";
 
 function optionalNumber(value: unknown): number | undefined {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -105,13 +87,7 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
     apply,
     cancel: () => setPatch({}),
   };
-  return <Context.Provider value={value}>{children}</Context.Provider>;
-}
-
-export function useAppEditStage(): AppEditStageValue {
-  const value = useContext(Context);
-  if (!value) throw new Error("App edit controls must be inside AppEditStage");
-  return value;
+  return <AppEditStageContext.Provider value={value}>{children}</AppEditStageContext.Provider>;
 }
 
 function numeric(value: unknown): number | null {

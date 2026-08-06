@@ -61,10 +61,11 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
       )}
 
       <AppDisclosure
+        key={classRemaining + featRemaining > 0 ? "skills-pending" : "skills-complete"}
         title="Skill proficiency choices"
         summary={klass ? `${card.skillProficiencies.length} proficient · ${classRemaining + featRemaining} choices remaining` : "Choose a class first"}
         aside={classRemaining + featRemaining > 0 ? <span className="appsheet-incomplete">Action needed</span> : undefined}
-        defaultOpen={!setupComplete || classRemaining + featRemaining > 0}
+        defaultOpen={classRemaining + featRemaining > 0}
       >
       {klass ? (
         <AppPanel title={`${klass.title} skill choices`} aside={<span className={classRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{classRemaining} left</span>}>

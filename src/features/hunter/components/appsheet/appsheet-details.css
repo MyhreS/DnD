@@ -437,6 +437,12 @@
     padding-inline: 8px;
   }
 
+  .character-app-sheet input:not([type="checkbox"]),
+  .character-app-sheet select,
+  .character-app-sheet textarea {
+    font-size: 16px;
+  }
+
   .view-app .papersheet-toolbar {
     gap: 7px;
     margin-bottom: 12px;

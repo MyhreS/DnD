@@ -5,17 +5,18 @@ import { useEffect, useRef } from "react";
  * Escape closes it. Returns the ref to put on the Back button. */
 export function usePaperSheetFocus(onClose: () => void) {
   const backRef = useRef<HTMLButtonElement>(null);
-  const closeRef = useRef(onClose);
-  closeRef.current = onClose;
 
   useEffect(() => {
     backRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeRef.current();
+      if (e.key === "Escape") onClose();
     };
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, []);
+  }, [onClose]);
 
   return backRef;
 }

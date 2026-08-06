@@ -1,7 +1,7 @@
 import { getClass } from "@/data/classes";
 import { armorClass, isSheetCard, maxHp } from "@/lib/character";
 import { sheetVitals } from "@/features/hunter/lib/papersheet";
-import type { Combatant, HunterCard } from "@/types";
+import type { Combatant, EncounterState, HunterCard } from "@/types";
 
 export interface CombatVitals {
   currentHp: number | null;
@@ -68,6 +68,13 @@ export function participantInitiative(card: HunterCard | undefined): number {
     if (Number.isFinite(parsed)) return parsed;
   }
   return Math.floor((card.abilities.dex - 10) / 2);
+}
+
+/** A real prior battle always advanced beyond its untouched legacy placeholder
+ * or assigned a turn. Removed timer state is deliberately not evidence: older
+ * lobbies can contain `untimed` without anyone having opened Battle View. */
+export function hasSavedBattle(encounter: EncounterState): boolean {
+  return encounter.round > 1 || encounter.turnId !== null;
 }
 
 export function isWarden(card: HunterCard | undefined, classId: string, className?: string | null): boolean {
