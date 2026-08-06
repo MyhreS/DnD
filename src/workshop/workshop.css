@@ -1,0 +1,138 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Libre+Caslon+Display&display=swap");
+
+:root {
+  color-scheme: light;
+  font-family: "DM Sans", system-ui, sans-serif;
+  color: #27241f;
+  background: #f3efe6;
+  font-synthesis: none;
+}
+
+* { box-sizing: border-box; }
+html, body, #workshop-root { min-height: 100%; margin: 0; }
+body { min-width: 320px; background: #f3efe6; }
+button, textarea, input { font: inherit; }
+button { color: inherit; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+.eyebrow { margin: 0 0 10px; color: #8b5c2d; font-size: 11px; font-weight: 700; letter-spacing: .17em; text-transform: uppercase; }
+
+.workshop-app { min-height: 100vh; display: flex; flex-direction: column; }
+.workshop-header { min-height: 76px; padding: 14px clamp(20px, 4vw, 58px); display: flex; align-items: center; justify-content: space-between; gap: 20px; border-bottom: 1px solid #d8d1c3; background: #f8f5ee; }
+.workshop-wordmark, .header-actions, .agent-presence { display: flex; align-items: center; }
+.workshop-wordmark { gap: 12px; }
+.workshop-wordmark > span, .access-mark { display: grid; place-items: center; background: #7f1d27; color: #fffaf0; font-family: "Libre Caslon Display", serif; }
+.workshop-wordmark > span { width: 38px; height: 38px; border-radius: 50%; font-size: 19px; }
+.workshop-wordmark strong, .workshop-wordmark small { display: block; }
+.workshop-wordmark strong { font-family: "Libre Caslon Display", serif; font-size: 18px; font-weight: 400; }
+.workshop-wordmark small { margin-top: 2px; color: #7c756a; font-size: 11px; }
+.header-actions { gap: 18px; }
+.agent-presence { gap: 9px; }
+.agent-presence > span { width: 8px; height: 8px; border-radius: 50%; background: #9e9485; }
+.agent-presence.is-online > span { background: #497a51; box-shadow: 0 0 0 4px #dce8dc; }
+.agent-presence strong, .agent-presence small { display: block; }
+.agent-presence strong { font-size: 12px; }
+.agent-presence small { max-width: 180px; margin-top: 1px; color: #8a8276; font-size: 10px; }
+.account-button { width: 36px; height: 36px; border: 1px solid #cfc6b7; border-radius: 50%; background: transparent; cursor: pointer; }
+
+.workshop-grid { width: min(1180px, 100%); margin: 0 auto; padding: clamp(36px, 6vw, 78px) clamp(20px, 5vw, 64px); display: grid; grid-template-columns: minmax(0, .95fr) minmax(360px, 1.05fr); gap: clamp(46px, 8vw, 110px); flex: 1; }
+.composer h1 { max-width: 520px; margin: 0; font: 400 clamp(38px, 5vw, 62px)/1.03 "Libre Caslon Display", serif; letter-spacing: -.025em; }
+.composer-help { max-width: 520px; margin: 18px 0 27px; color: #6f685e; line-height: 1.55; }
+.composer textarea { width: 100%; min-height: 220px; padding: 20px; resize: vertical; border: 1px solid #bfb5a6; border-radius: 6px; outline: none; color: #27241f; background: #fbf9f4; line-height: 1.55; }
+.composer textarea:focus, .reply-form textarea:focus, .invite-form input:focus { border-color: #8b5c2d; box-shadow: 0 0 0 3px #8b5c2d1a; }
+.composer-actions, .reply-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; }
+.attach-button, .primary-button, .text-button { cursor: pointer; }
+.attach-button { color: #665f55; font-size: 13px; font-weight: 600; }
+.attach-button input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.attach-button span { font-size: 19px; vertical-align: -1px; }
+.primary-button { min-height: 43px; padding: 0 20px; border: 1px solid #7f1d27; border-radius: 5px; background: #7f1d27; color: white; font-weight: 700; }
+.primary-button:disabled { opacity: .45; cursor: not-allowed; }
+.primary-button.compact { min-height: 36px; padding: 0 14px; font-size: 12px; }
+.attach-button.compact { font-size: 12px; }
+.file-summary, .form-error { margin: 10px 0 0; font-size: 12px; }
+.file-summary { color: #5c745d; }
+.form-error, .global-error { color: #a1262f; }
+.global-error { padding: 9px 20px; text-align: center; background: #f6e3e3; font-size: 13px; }
+
+.ticket-history { min-width: 0; }
+.section-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 12px; }
+.section-heading h2 { margin: 0; font: 400 30px "Libre Caslon Display", serif; }
+.ticket-count { display: grid; place-items: center; min-width: 28px; height: 28px; padding: 0 8px; border: 1px solid #cfc6b7; border-radius: 50%; color: #70685d; font-size: 12px; }
+.ticket-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid #cfc6b7; }
+.ticket-list li { border-bottom: 1px solid #d8d1c3; }
+.ticket-list button { width: 100%; padding: 19px 2px; border: 0; text-align: left; background: transparent; cursor: pointer; }
+.ticket-list button:hover { padding-left: 8px; background: #eee8db; }
+.ticket-row-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.ticket-row-top time { color: #8b8377; font-size: 11px; }
+.ticket-list strong { display: block; margin-top: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font: 400 18px/1.3 "Libre Caslon Display", serif; }
+.ticket-meta { display: block; margin-top: 6px; color: #81786c; font-size: 11px; }
+.ticket-status { display: inline-flex; align-items: center; min-height: 21px; padding: 0 8px; border-radius: 999px; font-size: 10px; font-weight: 700; letter-spacing: .04em; }
+.status-not_done { background: #e3dfd7; color: #5b554c; }
+.status-doing_now { background: #f3df9c; color: #725310; }
+.status-needs_simon { background: #efc4c5; color: #86232b; }
+.status-finished { background: #d4e5d4; color: #35613c; }
+.empty-history { padding: 28px 0; border-top: 1px solid #cfc6b7; border-bottom: 1px solid #d8d1c3; color: #81786c; font-size: 13px; }
+
+.workshop-footer { min-height: 58px; padding: 15px clamp(20px, 4vw, 58px); display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #d8d1c3; color: #7e766b; font-size: 11px; background: #eee9df; }
+.text-button { padding: 0; border: 0; border-bottom: 1px solid currentColor; background: transparent; font-size: 11px; }
+.invite-control { position: relative; }
+.invite-form { position: absolute; right: 0; bottom: 30px; width: 330px; padding: 16px; border: 1px solid #c9bfaf; border-radius: 6px; background: #fffdf8; box-shadow: 0 14px 40px #493d2c22; color: #302b25; }
+.invite-form label { display: block; margin-bottom: 8px; font-weight: 700; }
+.invite-form div { display: flex; gap: 7px; }
+.invite-form input { min-width: 0; flex: 1; padding: 8px 10px; border: 1px solid #c9bfaf; border-radius: 4px; outline: 0; }
+.invite-form p { margin: 9px 0 0; }
+
+.detail-backdrop { position: fixed; inset: 0; z-index: 10; display: flex; justify-content: flex-end; background: #211d17a6; }
+.ticket-detail { width: min(650px, 100%); height: 100%; overflow: auto; background: #f8f5ee; box-shadow: -16px 0 46px #1e18113d; }
+.ticket-detail > header { position: sticky; top: 0; z-index: 2; padding: 28px 34px 22px; border-bottom: 1px solid #d8d1c3; background: #f8f5eef5; backdrop-filter: blur(8px); }
+.ticket-detail h2 { margin: 13px 42px 6px 0; font: 400 30px/1.15 "Libre Caslon Display", serif; }
+.ticket-detail header p { margin: 0; color: #81786c; font-size: 11px; }
+.close-button { position: absolute; top: 20px; right: 24px; width: 37px; height: 37px; border: 1px solid #cec5b6; border-radius: 50%; background: transparent; font-size: 25px; cursor: pointer; }
+.message-list { padding: 10px 34px; }
+.thread-message { padding: 22px 0; border-bottom: 1px solid #ddd5c8; }
+.thread-message.kind-system { padding: 13px 0; color: #787065; }
+.thread-message.kind-agent { margin: 10px -12px; padding: 22px 12px; border: 1px solid #d8c9ac; border-radius: 6px; background: #f2eadb; }
+.message-heading { display: flex; justify-content: space-between; gap: 16px; font-size: 11px; }
+.message-heading time { color: #92897c; }
+.thread-message > p { margin: 9px 0 0; white-space: pre-wrap; line-height: 1.55; }
+.kind-system > p { margin-top: 4px; font-size: 12px; }
+.message-images { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
+.message-attachment { display: block; overflow: hidden; border-radius: 5px; background: #e3ded4; }
+.message-attachment img { display: block; width: 100%; height: 170px; object-fit: cover; }
+.attachment-loading { min-height: 100px; display: grid; place-items: center; background: #e3ded4; color: #756d62; font-size: 11px; }
+.production-link { display: inline-block; margin-top: 14px; color: #7f1d27; font-size: 13px; font-weight: 700; }
+.reply-form { position: sticky; bottom: 0; padding: 17px 34px 22px; border-top: 1px solid #d8d1c3; background: #f8f5eef5; backdrop-filter: blur(8px); }
+.reply-form > label { display: block; margin-bottom: 7px; font-size: 11px; font-weight: 700; }
+.reply-form textarea { width: 100%; min-height: 80px; padding: 11px; resize: vertical; border: 1px solid #c9bfaf; border-radius: 5px; outline: none; background: #fffdf8; }
+.reply-actions { margin-top: 7px; }
+
+.access-screen, .loading-screen { min-height: 100vh; display: grid; place-content: center; justify-items: center; padding: 30px; text-align: center; }
+.access-mark { width: 58px; height: 58px; margin-bottom: 28px; border-radius: 50%; font-size: 27px; }
+.access-screen h1 { margin: 2px 0 12px; font: 400 clamp(42px, 8vw, 72px) "Libre Caslon Display", serif; }
+.access-screen > p:not(.eyebrow) { max-width: 480px; margin: 0 0 28px; color: #6f685e; line-height: 1.55; }
+.loading-screen { color: #70685d; }
+
+@media (max-width: 760px) {
+  .workshop-header { min-height: 66px; padding: 11px 16px; }
+  .workshop-wordmark small { display: none; }
+  .agent-presence small { max-width: 98px; font-size: 9px; line-height: 1.15; }
+  .workshop-wordmark > span { width: 34px; height: 34px; }
+  .header-actions { gap: 11px; }
+  .workshop-grid { display: block; padding: 38px 18px 54px; }
+  .composer h1 { font-size: 42px; }
+  .composer textarea { min-height: 170px; }
+  .ticket-history { margin-top: 62px; }
+  .workshop-footer { align-items: flex-start; }
+  .workshop-footer > span { max-width: 250px; }
+  .invite-form { position: fixed; left: 18px; right: 18px; bottom: 70px; width: auto; }
+  .ticket-detail > header, .message-list, .reply-form { padding-left: 20px; padding-right: 20px; }
+  .message-images { grid-template-columns: 1fr; }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ticket-list button { transition: padding .16s ease, background .16s ease; }
+  .detail-backdrop { animation: fade-in .16s ease-out; }
+  .ticket-detail { animation: slide-in .22s ease-out; }
+}
+@keyframes fade-in { from { opacity: 0; } }
+@keyframes slide-in { from { transform: translateX(30px); } }

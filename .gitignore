@@ -5,6 +5,7 @@ node_modules
 
 # build
 dist
+dist-workshop
 dist-ssr
 dev-dist
 *.local

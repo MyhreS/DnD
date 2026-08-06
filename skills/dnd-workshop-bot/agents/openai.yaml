@@ -1,0 +1,4 @@
+interface:
+  display_name: "D&D Workshop Bot"
+  short_description: "Process Workshop feedback safely"
+  default_prompt: "Use $dnd-workshop-bot to process the next feedback ticket."
