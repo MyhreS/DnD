@@ -6,6 +6,8 @@ import {
   onSnapshot,
   orderBy,
   query,
+  serverTimestamp,
+  setDoc,
   startAfter,
   type Unsubscribe,
 } from "firebase/firestore";
@@ -16,6 +18,7 @@ import type {
   AgentState,
   WorkshopAttachment,
   WorkshopMessage,
+  WorkshopPresence,
   WorkshopTicket,
 } from "@/workshop/types";
 
@@ -148,4 +151,32 @@ export function subscribeAgentState(next: (state: AgentState | null) => void, fa
   return onSnapshot(doc(workshopDb, "workshopAgent", "state"), (snapshot) => {
     next(snapshot.exists() ? snapshot.data() as AgentState : null);
   }, fail);
+}
+
+export async function updateWorkshopPresence(
+  uid: string,
+  name: string,
+  state: WorkshopPresence["state"],
+  viewingTicketId: string | null,
+): Promise<void> {
+  await setDoc(doc(workshopDb, "workshopPresence", uid), {
+    uid,
+    name: name.trim().slice(0, 80) || "Workshop member",
+    state,
+    viewingTicketId,
+    lastSeenAt: serverTimestamp(),
+  });
+}
+
+export function subscribeWorkshopPresence(
+  next: (presence: WorkshopPresence[]) => void,
+  fail: (error: Error) => void,
+): Unsubscribe {
+  return onSnapshot(
+    query(collection(workshopDb, "workshopPresence"), orderBy("lastSeenAt", "desc"), limit(20)),
+    (snapshot) => {
+      next(snapshot.docs.map((item) => item.data() as WorkshopPresence));
+    },
+    fail,
+  );
 }

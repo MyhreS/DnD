@@ -4,7 +4,7 @@ import type { AgentState } from "@/workshop/types";
 export function AgentPresence({ state }: { state: AgentState | null }) {
   const online = useAgentOnline(state);
   return (
-    <div className={`agent-presence ${online ? "is-online" : "is-offline"}`} data-testid="agent-presence">
+    <div className={`agent-presence ${online ? "is-online" : "is-offline"}`} data-testid="agent-presence" role="status" aria-live="polite" aria-label={online ? "Workshop agent online" : "Workshop agent offline"}>
       <span aria-hidden />
       <div>
         <strong>{online ? "Agent online" : "Agent offline"}</strong>

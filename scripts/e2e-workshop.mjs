@@ -5,7 +5,7 @@ import { getAuth as getAdminAuth } from "firebase-admin/auth";
 import { getFirestore as getAdminFirestore } from "firebase-admin/firestore";
 import { initializeApp as initializeClient } from "firebase/app";
 import { connectAuthEmulator, getAuth, signInWithCustomToken } from "firebase/auth";
-import { connectFirestoreEmulator, deleteDoc, doc, getDoc, getFirestore, updateDoc } from "firebase/firestore";
+import { collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getDocs, getFirestore, serverTimestamp, setDoc, updateDoc } from "firebase/firestore";
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from "firebase/functions";
 import { connectStorageEmulator, getStorage, ref, uploadBytes } from "firebase/storage";
 import { chromium } from "playwright";
@@ -200,6 +200,7 @@ try {
   watch(simon.page, errors);
   await waitForWorkspace(simon.page, "Simon");
   if (await simon.page.getByRole("button", { name: /invite/i }).count()) throw new Error("Workshop still exposes invitations.");
+  await simon.page.getByTestId("collaborator-presence").getByText("Just you", { exact: true }).waitFor();
 
   const outsider = await openAs(browser, outsiderToken, { width: 390, height: 844 });
   watch(outsider.page, errors, true);
@@ -211,12 +212,26 @@ try {
   const thomas = await openAs(browser, thomasToken, { width: 1440, height: 900 });
   watch(thomas.page, errors);
   await waitForWorkspace(thomas.page, "Thomas");
+  await Promise.all([
+    simon.page.getByTestId("collaborator-presence").getByText("Thomas here", { exact: true }).waitFor(),
+    thomas.page.getByTestId("collaborator-presence").getByText("Simon here", { exact: true }).waitFor(),
+  ]);
   await noOverflow(thomas.page, "Thomas Workshop desktop");
   await thomas.page.screenshot({ path: "screenshots/workshop-thomas-desktop.png", fullPage: true });
 
   const creator = await openAs(browser, creatorToken, { width: 390, height: 844 });
   watch(creator.page, errors, false, true);
   await waitForWorkspace(creator.page, "Creator");
+  await Promise.all([
+    simon.page.getByTestId("collaborator-presence").getByText("2 others here", { exact: true }).waitFor(),
+    creator.page.getByTestId("collaborator-presence").getByText("2 others here", { exact: true }).waitFor(),
+  ]);
+  const peopleMenu = creator.page.getByTestId("collaborator-presence");
+  await peopleMenu.locator("summary").click();
+  await peopleMenu.getByText("Simon Myhre", { exact: false }).waitFor();
+  await peopleMenu.getByText("Thomas Myhre", { exact: false }).waitFor();
+  await creator.page.screenshot({ path: "screenshots/workshop-presence-mobile.png", fullPage: true });
+  await peopleMenu.locator("summary").click();
   await creator.page.getByTestId("workshop-tip").getByText("Paste screenshots directly with ⌘V or Ctrl+V.", { exact: false }).waitFor();
   await creator.page.getByTestId("agent-presence").getByText("Agent offline").waitFor();
   await creator.page.getByText("Ask Simon to start the Workshop agent.").waitFor();
@@ -232,7 +247,9 @@ try {
         && state?.model === "gpt-5.6-sol"
         && state?.reasoningEffort === "high";
     }, "Real-time request listener");
-    await creator.page.getByTestId("agent-presence").getByText("Agent online").waitFor();
+    await Promise.all([creator, simon, thomas].map(({ page }) => (
+      page.getByTestId("agent-presence").getByText("Agent online").waitFor()
+    )));
     const triggerProbe = db.doc("workshopTickets/realtime-trigger-probe");
     const triggerStartedAt = Date.now();
     await triggerProbe.set({
@@ -392,10 +409,34 @@ try {
   ticketId = (await db.collection("workshopTickets").where("authorUid", "==", creatorUid).limit(1).get()).docs[0]?.id;
   if (!ticketId) throw new Error("Ticket was not created.");
   await eventually(async () => Boolean((await db.doc(`workshopTickets/${ticketId}`).get()).data()?.readAtBy?.[creatorUid]), "Creator read receipt");
-  await simon.page.getByTestId(`ticket-${ticketId}`).waitFor();
+  await simon.page.getByTestId(`ticket-${ticketId}`).waitFor({ timeout: 4_000 });
   if (!(await simon.page.getByTestId(`ticket-${ticketId}`).getAttribute("aria-label"))?.includes("unread")) throw new Error("Simon did not see the new request as unread.");
   await simon.page.getByTestId(`ticket-${ticketId}`).click();
-  await simon.page.getByRole("button", { name: "Close thread" }).click();
+  await thomas.page.getByTestId(`ticket-${ticketId}`).click();
+  await creator.page.getByTestId("thread-presence").getByText("2 others are also viewing", { exact: true }).waitFor();
+
+  await simon.page.getByTestId("ticket-reply").fill("Simon is answering this shared thread.");
+  await thomas.page.getByTestId("ticket-reply").fill("Thomas is answering this shared thread.");
+  await Promise.all([
+    simon.page.getByTestId("ticket-reply").press("Enter"),
+    thomas.page.getByTestId("ticket-reply").press("Enter"),
+  ]);
+  await Promise.all([
+    creator.page.getByText("Simon is answering this shared thread.", { exact: true }).waitFor({ timeout: 4_000 }),
+    creator.page.getByText("Thomas is answering this shared thread.", { exact: true }).waitFor({ timeout: 4_000 }),
+    simon.page.getByText("Thomas is answering this shared thread.", { exact: true }).waitFor({ timeout: 4_000 }),
+    thomas.page.getByText("Simon is answering this shared thread.", { exact: true }).waitFor({ timeout: 4_000 }),
+  ]);
+  const sharedReplies = (await db.doc(`workshopTickets/${ticketId}`).collection("messages").where("kind", "==", "follow_up").get())
+    .docs.map((message) => message.data())
+    .filter((message) => [simonUid, thomasUid].includes(message.authorUid));
+  if (sharedReplies.length !== 2 || new Set(sharedReplies.map((message) => message.sequence)).size !== 2) {
+    throw new Error("Simultaneous replies did not remain separate and ordered.");
+  }
+  await Promise.all([
+    simon.page.getByRole("button", { name: "Close thread" }).click(),
+    thomas.page.getByRole("button", { name: "Close thread" }).click(),
+  ]);
   await eventually(async () => Boolean((await db.doc(`workshopTickets/${ticketId}`).get()).data()?.readAtBy?.[simonUid]), "Simon read receipt");
   await eventually(async () => !(await simon.page.getByTestId(`ticket-${ticketId}`).getAttribute("aria-label"))?.includes("unread"), "Read marker clearing");
   if (await detail.getByRole("button", { name: /delete|edit/i }).count()) throw new Error("Thread exposes destructive edit/delete controls.");
@@ -605,6 +646,22 @@ try {
   const outsiderClient = await ruleClient("outsider", outsiderToken);
   if (!(await getDoc(doc(creatorClient.db, "workshopTickets", ticketId))).exists()) throw new Error("Invited creator cannot read the ticket.");
   if (!(await getDoc(doc(thomasClient.db, "workshopTickets", ticketId))).exists()) throw new Error("Thomas cannot read Workshop tickets.");
+  if ((await getDocs(collection(creatorClient.db, "workshopPresence"))).empty) throw new Error("Workshop members cannot read live presence.");
+  await expectDenied(() => getDocs(collection(outsiderClient.db, "workshopPresence")), "Outsider presence read");
+  await expectDenied(() => setDoc(doc(creatorClient.db, "workshopPresence", thomasUid), {
+    uid: creatorUid,
+    name: "Wrong member",
+    state: "active",
+    viewingTicketId: null,
+    lastSeenAt: serverTimestamp(),
+  }), "Another member's presence write");
+  await expectDenied(() => setDoc(doc(creatorClient.db, "workshopPresence", creatorUid), {
+    uid: creatorUid,
+    name: "Simon Myhre",
+    state: "active",
+    viewingTicketId: null,
+    lastSeenAt: serverTimestamp(),
+  }), "Spoofed presence name");
   await expectDenied(() => updateDoc(doc(creatorClient.db, "workshopTickets", ticketId), { title: "edited" }), "Ticket edit");
   await expectDenied(() => deleteDoc(doc(creatorClient.db, "workshopTickets", ticketId)), "Ticket deletion");
   await expectDenied(() => getDoc(doc(outsiderClient.db, "workshopTickets", ticketId)), "Outsider ticket read");
@@ -655,7 +712,7 @@ try {
   await creator.page.getByTestId("ticket-reply").fill("Please also reduce the number of buttons.");
   await creator.page.getByTestId("ticket-reply").press("Enter");
   await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
-  await creator.page.getByText("Update received. The agent will reread").waitFor();
+  await creator.page.getByText("Update received. The agent will reread").last().waitFor();
   await creator.page.screenshot({ path: "screenshots/workshop-sent-feedback-mobile.png", fullPage: true });
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await creator.page.getByText("Not done", { exact: true }).waitFor();
@@ -712,14 +769,16 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: paged requests and conversations, compact long comments, detailed live progress, slow/stale-agent states, hidden routine acknowledgements, direct answers, automatic retries, Simon-only replies, secure images, drafts, idempotency, read receipts, and responsive mobile/desktop layout.");
+  console.log("Workshop E2E passed: live member presence, simultaneous multi-user replies, fast ticket/message/worker sync, paged requests and conversations, compact long comments, detailed progress, secure images, drafts, idempotency, read receipts, and responsive mobile/desktop layout.");
   await Promise.all([simon.context.close(), creator.context.close(), thomas.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();
   server.kill("SIGTERM");
   const tickets = await db.collection("workshopTickets").get();
+  const presence = await db.collection("workshopPresence").get();
   await Promise.allSettled([
     ...tickets.docs.map((item) => db.recursiveDelete(item.ref)),
+    ...presence.docs.map((item) => item.ref.delete()),
     db.doc(`workshopMembers/${simonUid}`).delete(),
     db.doc(`workshopMembers/${creatorUid}`).delete(),
     db.doc(`workshopMembers/${thomasUid}`).delete(),

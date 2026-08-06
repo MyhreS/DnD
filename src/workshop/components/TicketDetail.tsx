@@ -1,5 +1,6 @@
 import { MessageAttachment } from "@/workshop/components/MessageAttachment";
 import { MessageBody } from "@/workshop/components/MessageBody";
+import { ThreadPresence } from "@/workshop/components/CollaboratorPresence";
 import { TicketReply } from "@/workshop/components/TicketReply";
 import { TicketStatus } from "@/workshop/components/TicketStatus";
 import { WorkActivity } from "@/workshop/components/WorkActivity";
@@ -8,7 +9,7 @@ import { useDialogBehavior } from "@/workshop/hooks/useDialogBehavior";
 import { useMarkTicketRead } from "@/workshop/hooks/useMarkTicketRead";
 import { useTicketMessages } from "@/workshop/hooks/useTicketMessages";
 import { useWorkshopTicket } from "@/workshop/hooks/useWorkshopTicket";
-import type { AgentState, WorkshopMessage, WorkshopTicket } from "@/workshop/types";
+import type { AgentState, WorkshopMessage, WorkshopPresence, WorkshopTicket } from "@/workshop/types";
 
 function messageLabel(message: WorkshopMessage): string {
   if (message.kind === "agent") return "Workshop agent";
@@ -45,6 +46,7 @@ type TicketDetailProps = {
   isWorking: boolean;
   agentState: AgentState | null;
   agentOnline: boolean;
+  people: WorkshopPresence[];
   onClose: () => void;
 };
 
@@ -54,7 +56,7 @@ function isRoutineActivityMessage(message: WorkshopMessage): boolean {
   return body === "i'm working on this now." || body === "i'm working on this now";
 }
 
-export function TicketDetail({ ticketId, initialTicket, uid, isWorking, agentState, agentOnline, onClose }: TicketDetailProps) {
+export function TicketDetail({ ticketId, initialTicket, uid, isWorking, agentState, agentOnline, people, onClose }: TicketDetailProps) {
   const { ticket, error: ticketError } = useWorkshopTicket(ticketId, initialTicket);
   const { messages, error, loading, hasOlder, loadingOlder, loadOlder } = useTicketMessages(ticketId);
   const dialogRef = useDialogBehavior(onClose);
@@ -76,6 +78,7 @@ export function TicketDetail({ ticketId, initialTicket, uid, isWorking, agentSta
           {ticket && <TicketStatus status={ticket.status} />}
           <h2 id="ticket-detail-title">{ticket?.title ?? "Opening request…"}</h2>
           <p>Every reply stays in this thread.</p>
+          <ThreadPresence people={people} currentUid={uid} ticketId={ticketId} />
           {ticket?.status === "needs_simon" && <p className="ticket-gate-note">Only Simon’s reply in this thread can restart this task.</p>}
         </header>
         <div className="conversation-frame">

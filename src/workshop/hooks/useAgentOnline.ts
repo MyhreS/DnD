@@ -31,5 +31,5 @@ export function useCurrentTime(): number {
 export function useAgentOnline(state: AgentState | null): boolean {
   const now = useCurrentTime();
   const heartbeat = state?.lastHeartbeatAt?.toMillis() ?? 0;
-  return now > 0 && heartbeat > 0 && now - heartbeat < 90_000;
+  return now > 0 && heartbeat > 0 && now - heartbeat < 45_000;
 }

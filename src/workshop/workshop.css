@@ -27,6 +27,19 @@ button { color: inherit; }
 .workshop-wordmark strong { font-family: "Libre Caslon Display", serif; font-size: 18px; font-weight: 400; }
 .workshop-wordmark small { margin-top: 2px; color: #7c756a; font-size: 11px; }
 .header-actions { gap: 18px; }
+.collaborator-presence { position: relative; }
+.collaborator-presence summary { display: flex; align-items: center; gap: 7px; min-height: 36px; padding: 0 8px; border-radius: 5px; list-style: none; cursor: pointer; }
+.collaborator-presence summary::-webkit-details-marker { display: none; }
+.collaborator-presence summary:hover, .collaborator-presence[open] summary { background: #eee8db; }
+.collaborator-presence summary strong { max-width: 92px; overflow: hidden; font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.presence-avatars { display: flex; align-items: center; }
+.presence-avatars i { width: 24px; height: 24px; display: grid; place-items: center; border: 2px solid #f8f5ee; border-radius: 50%; background: #d9cfbf; color: #5b5044; font-size: 8px; font-style: normal; font-weight: 700; }
+.presence-avatars i + i { margin-left: -7px; }
+.presence-menu { position: absolute; top: calc(100% + 8px); right: 0; z-index: 20; width: 230px; padding: 14px; border: 1px solid #cfc6b7; border-radius: 6px; background: #fffdf8; box-shadow: 0 12px 34px #32271d24; }
+.presence-menu p { margin: 0 0 9px; color: #81786c; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; }
+.presence-menu ul { margin: 0; padding: 0; list-style: none; }
+.presence-menu li { display: flex; align-items: center; gap: 8px; padding: 6px 0; font-size: 12px; }
+.presence-menu li > span, .thread-presence > span { width: 7px; height: 7px; flex: none; border-radius: 50%; background: #497a51; box-shadow: 0 0 0 3px #dce8dc; }
 .agent-presence { gap: 9px; }
 .agent-presence > span { width: 8px; height: 8px; border-radius: 50%; background: #9e9485; }
 .agent-presence.is-online > span { background: #497a51; box-shadow: 0 0 0 4px #dce8dc; }
@@ -123,6 +136,7 @@ button { color: inherit; }
 .ticket-detail h2 { margin: 13px 42px 6px 0; font: 400 30px/1.15 "Libre Caslon Display", serif; }
 .ticket-detail header p { margin: 0; color: #81786c; font-size: 11px; }
 .ticket-detail header .ticket-gate-note { margin-top: 10px; color: #86232b; font-weight: 700; }
+.ticket-detail header .thread-presence { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: #497a51; font-weight: 700; }
 .close-button { position: absolute; top: 20px; right: 24px; width: 37px; height: 37px; border: 1px solid #cec5b6; border-radius: 50%; background: transparent; font-size: 25px; cursor: pointer; }
 .conversation-frame { position: relative; min-height: 0; flex: 1; }
 .message-list { height: 100%; padding: 10px 34px; overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
@@ -159,6 +173,9 @@ button { color: inherit; }
   .workshop-header { min-height: 66px; padding: 11px 16px; }
   .workshop-wordmark small { display: none; }
   .agent-presence small { max-width: 98px; font-size: 9px; line-height: 1.15; }
+  .collaborator-presence summary { padding: 0 4px; }
+  .collaborator-presence summary strong { max-width: 72px; }
+  .presence-menu { position: fixed; top: 62px; right: 12px; width: min(230px, calc(100vw - 24px)); }
   .workshop-wordmark > span { width: 34px; height: 34px; }
   .header-actions { gap: 11px; }
   .workshop-grid { display: block; padding: 38px 18px 54px; }
@@ -173,6 +190,13 @@ button { color: inherit; }
   .reply-form { padding-top: 12px; padding-bottom: max(14px, env(safe-area-inset-bottom)); }
   .reply-form textarea { min-height: 68px; }
   .message-images { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 430px) {
+  .workshop-wordmark > div { display: none; }
+  .header-actions { gap: 9px; }
+  .agent-presence { gap: 6px; }
+  .agent-presence strong { font-size: 10px; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
