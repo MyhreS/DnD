@@ -8,7 +8,7 @@ export function workshopErrorMessage(failure: unknown, fallback: string): string
     return "The connection was interrupted. Your draft is saved—try again when you are online.";
   }
   if (code.includes("unauthenticated")) return "Your sign-in expired. Refresh the page and sign in again.";
-  if (code.includes("permission-denied") || code.includes("unauthorized")) return "This account cannot make that change.";
+  if (code.includes("permission-denied") || code.includes("unauthorized")) return "Your Workshop access needs refreshing. Reload the page and try again.";
   if (code.includes("invalid-argument")) return typeof error?.message === "string" ? error.message : fallback;
   if (code.includes("not-found")) return "This request no longer exists.";
   return fallback;

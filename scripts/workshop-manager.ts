@@ -15,8 +15,8 @@ import {
   parseAgentResult,
   progressFromCodexEvent,
   isTemporaryServiceWait,
-  requiresSimonReply,
-  ticketNeedsSimon,
+  requiresDecisionReply,
+  ticketNeedsDecision,
   workshopChannelContext,
   workshopCodexArgs,
   type AgentResult,
@@ -397,12 +397,12 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
   if (fixture === "finished") return { outcome: "finished", summaryForCreator: "Done — the requested test update is available now.", productionUrl: "https://dandd-ea955.web.app" };
   if (fixture === "answered") return { outcome: "answered", summaryForCreator: "You do not need to change anything. This is a direct answer from the Workshop agent." };
   if (fixture === "temporary_service") throw new Error("Temporary service wait must be retried automatically: Please reply after GitHub Actions has recovered.");
-  if (fixture === "needs_simon") return { outcome: "needs_simon", summaryForCreator: "Waiting for Simon.", needsSimonReason: "Confirm the test decision." };
+  if (fixture === "needs_simon") return { outcome: "needs_simon", summaryForCreator: "Waiting for a Workshop decision.", needsSimonReason: "Confirm the test decision." };
   if (fixture === "declined") return { outcome: "declined", summaryForCreator: "This request was declined.", declineReason: "This test request cannot be completed safely." };
-  const protectedReason = ticketNeedsSimon(ticketText(ticket, messages));
-  const simonReplyReceived = ticket.data.needsSimonReplyReceived === true || ticket.data.needsSimonApproved === true;
-  if (protectedReason && requiresSimonReply(protectedReason, simonReplyReceived)) {
-    return { outcome: "needs_simon", summaryForCreator: "Waiting for Simon.", needsSimonReason: protectedReason };
+  const protectedReason = ticketNeedsDecision(ticketText(ticket, messages));
+  const decisionReplyReceived = ticket.data.needsSimonReplyReceived === true || ticket.data.needsSimonApproved === true;
+  if (protectedReason && requiresDecisionReply(protectedReason, decisionReplyReceived)) {
+    return { outcome: "needs_simon", summaryForCreator: "Waiting for a Workshop decision.", needsSimonReason: protectedReason };
   }
 
   const schemaPath = join(folder, "result-schema.json");
@@ -428,12 +428,12 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
     "Implement the complete request when safe. Make reasonable assumptions. Preserve existing data. Test proportionately, including Playwright phone and desktop checks for UI work.",
     "First decide whether the latest human message needs an app change or only a direct answer. For a question, status request, or explanation that needs no change, return answered, put the complete plain-language answer in summaryForCreator, leave productionUrl null, and do not modify the repository.",
     "When you implement a change, commit, push, open a PR, wait for checks, squash-merge it yourself, deploy via the normal repository workflow, and verify production. Never ask anyone to review or merge routine work, and never return finished with an open PR. Do not create a PR for answered, needs_simon, or declined outcomes.",
-    "If it requires a protected decision described by the skill, do not make that change; return needs_simon. The simonReplyReceived flag below records only that authenticated Simon replied; it does not mean his words approved or answered anything. Judge the actual reply. If it is a question such as 'what do I need to reply on?', restate the exact decision in plain language and keep needs_simon.",
-    "Do not return needs_simon merely because GitHub Actions, Firebase, or another service is temporarily unavailable. Recheck it yourself and complete safe retries or an established verified fallback. Needs Simon is for a decision, authority, credential, or genuinely unrecoverable action only.",
-    "Return declined only when the request should not be implemented and no decision from Simon would unblock it. Give the creator a short, concrete declineReason.",
+    "If it requires a protected decision described by the skill, do not make that change; return needs_simon. The decisionReplyReceived flag below records only that an authenticated Workshop owner replied; it does not mean their words approved or answered anything. Judge the actual reply. If it is a question such as 'what do I need to reply on?', restate the exact decision in plain language and keep needs_simon.",
+    "Do not return needs_simon merely because GitHub Actions, Firebase, or another service is temporarily unavailable. Recheck it yourself and complete safe retries or an established verified fallback. This status is for a decision, authority, credential, or genuinely unrecoverable action only.",
+    "Return declined only when the request should not be implemented and no Workshop-owner decision would unblock it. Give the creator a short, concrete declineReason.",
     "Your final response must match the provided JSON schema. Remember that summaryForCreator is posted directly into the Workshop thread, while technicalSummary is not shown to the creator.",
     `Attached local images: ${JSON.stringify(imagePaths)}`,
-    `WORKSHOP_TICKET=${JSON.stringify({ id: ticket.id, claimedRevision: ticket.data.revision, simonReplyReceived, messages })}`,
+    `WORKSHOP_TICKET=${JSON.stringify({ id: ticket.id, claimedRevision: ticket.data.revision, decisionReplyReceived, messages })}`,
   ].join("\n\n");
   await updateProgress({ stage: 2, activity: "Preparing a safe workspace", lastCompleted: "Read the request and its screenshots" });
   const worktree = createAgentWorktree(ticket.id);
@@ -577,7 +577,7 @@ async function processOnce(): Promise<boolean> {
       await finalize(ticket, {
         outcome: "needs_simon",
         summaryForCreator: "I could not safely finish this update after retrying it automatically.",
-        needsSimonReason: "The Workshop worker still cannot complete this ticket after three automatic retries. Simon needs to inspect the worker.",
+        needsSimonReason: "The Workshop worker still cannot complete this ticket after three automatic retries. A Workshop owner needs to ask Simon to inspect the worker.",
         technicalSummary: String(error),
       });
     }

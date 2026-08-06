@@ -32,9 +32,7 @@ service cloud.firestore {
     }
 
     function isWorkshopMember() {
-      return isWorkshopAccount()
-        && exists(/databases/$(database)/documents/workshopMembers/$(request.auth.uid))
-        && get(/databases/$(database)/documents/workshopMembers/$(request.auth.uid)).data.email == emailKey();
+      return isWorkshopAccount();
     }
 
     // You belong to campaign `cid`.
@@ -87,7 +85,7 @@ service cloud.firestore {
     // All changes go through callable functions so requests and agent replies
     // form an immutable audit trail. Members may only read that trail.
     match /workshopMembers/{uid} {
-      allow read: if isWorkshopMember() && (uid == request.auth.uid || isSuperAdmin());
+      allow read: if isWorkshopMember();
       allow write: if false;
     }
 
@@ -108,8 +106,8 @@ service cloud.firestore {
         && request.resource.data.name is string
         && request.resource.data.name.size() > 0
         && request.resource.data.name.size() <= 80
-        && request.resource.data.name
-          == get(/databases/$(database)/documents/workshopMembers/$(request.auth.uid)).data.name
+        && request.auth.token.name is string
+        && request.resource.data.name == request.auth.token.name
         && request.resource.data.state in ["active", "away"]
         && (request.resource.data.viewingTicketId == null
           || (request.resource.data.viewingTicketId is string

@@ -35,7 +35,7 @@ export type WorkshopMessagePage = {
   hasOlder: boolean;
 };
 
-const claimAccessCall = httpsCallable<undefined, { ok: boolean; role: "admin" | "creator" }>(
+const claimAccessCall = httpsCallable<undefined, { ok: boolean; role: "admin" }>(
   workshopFunctions,
   "claimWorkshopAccess",
 );
@@ -48,7 +48,7 @@ const replyTicketCall = httpsCallable<
   { ok: boolean }
 >(workshopFunctions, "replyWorkshopTicket");
 const markTicketReadCall = httpsCallable<{ ticketId: string }, { ok: boolean }>(workshopFunctions, "markWorkshopTicketRead");
-export async function claimWorkshopAccess(): Promise<"admin" | "creator"> {
+export async function claimWorkshopAccess(): Promise<"admin"> {
   return (await claimAccessCall()).data.role;
 }
 
