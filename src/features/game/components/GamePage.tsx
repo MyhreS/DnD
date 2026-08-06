@@ -22,7 +22,7 @@ import type { Game, GameParticipant, HunterCard } from "@/types";
 import { AddMonsterDialog, EnemySection } from "./EnemySection";
 import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
-import { SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
+import { ManageBattleDialog, SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
 import "./game.css";
 
 const DEFAULT_TITLE = () => `Session ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())}`;
@@ -69,6 +69,7 @@ export function GamePage() {
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [managingPlayers, setManagingPlayers] = useState(false);
+  const [managingBattle, setManagingBattle] = useState(false);
   const [creatingItem, setCreatingItem] = useState(false);
   const [addingMonster, setAddingMonster] = useState(false);
   const [ownSheetOpen, setOwnSheetOpen] = useState(false);
@@ -354,18 +355,27 @@ export function GamePage() {
           characters={characters ?? []}
           isDm={isSessionDm}
           dmControls={isSessionDm ? (
-            <>
-              <div className="game-battle-dm-actions">
-                <button className="btn btn-ghost" type="button" onClick={() => setAddingMonster(true)}>Add enemy</button>
-                {selected.campaignId === null && <button className="btn btn-ghost" type="button" onClick={() => setCreatingItem(true)}>Create item</button>}
-              </div>
-              <SessionCombatControls game={selected} characters={characters ?? []} disabled={combatBusy || busy} />
-            </>
+            <SessionCombatControls
+              game={selected}
+              disabled={combatBusy || busy}
+              onManage={() => setManagingBattle(true)}
+            />
           ) : null}
-          enemySection={isSessionDm ? <EnemySection game={selected} isDm disabled={combatBusy || busy} /> : null}
         />
-        {addingMonster && <AddMonsterDialog game={selected} disabled={combatBusy || busy} onClose={() => setAddingMonster(false)} />}
-        {creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
+        {isSessionDm && managingBattle && (
+          <ManageBattleDialog
+            game={selected}
+            characters={characters ?? []}
+            disabled={combatBusy || busy}
+            canCreateItem={selected.campaignId === null}
+            enemySection={<EnemySection game={selected} isDm disabled={combatBusy || busy} />}
+            onAddEnemy={() => { setManagingBattle(false); setAddingMonster(true); }}
+            onCreateItem={() => { setManagingBattle(false); setCreatingItem(true); }}
+            onClose={() => setManagingBattle(false)}
+          />
+        )}
+        {addingMonster && <AddMonsterDialog game={selected} disabled={combatBusy || busy} onClose={() => { setAddingMonster(false); setManagingBattle(true); }} />}
+        {creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => { setCreatingItem(false); setManagingBattle(true); }} />}
       </div>
     );
   }
