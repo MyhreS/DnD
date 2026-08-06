@@ -5,8 +5,8 @@ import {
   parseAgentResult,
   progressFromCodexEvent,
   isTemporaryServiceWait,
-  requiresSimonReply,
-  ticketNeedsSimon,
+  requiresDecisionReply,
+  ticketNeedsDecision,
   workshopChannelContext,
   workshopCodexArgs,
 } from "./workshop-manager-core";
@@ -15,13 +15,13 @@ function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
 
-assert(ticketNeedsSimon("Make the mobile buttons cleaner") === null, "ordinary UI work must proceed");
-assert(ticketNeedsSimon("Delete every user in production") !== null, "destructive production work must stop");
-assert(ticketNeedsSimon("Please change the authentication permissions") !== null, "access changes must stop");
-assert(requiresSimonReply("Protected change", false), "protected work must wait without Simon's thread reply");
-assert(!requiresSimonReply("Protected change", true), "Simon's thread reply must unblock one protected run");
+assert(ticketNeedsDecision("Make the mobile buttons cleaner") === null, "ordinary UI work must proceed");
+assert(ticketNeedsDecision("Delete every user in production") !== null, "destructive production work must stop");
+assert(ticketNeedsDecision("Please change the authentication permissions") !== null, "access changes must stop");
+assert(requiresDecisionReply("Protected change", false), "protected work must wait without an owner reply");
+assert(!requiresDecisionReply("Protected change", true), "an owner reply must unblock one protected run");
 assert(isTemporaryServiceWait("Please reply after GitHub Actions has recovered."), "GitHub recovery waits must retry automatically");
-assert(!isTemporaryServiceWait("Choose which old data may be removed."), "real product decisions must still wait for Simon");
+assert(!isTemporaryServiceWait("Choose which old data may be removed."), "real product decisions must still wait for an owner");
 
 const channelContext = workshopChannelContext("myhrefjeld@gmail.com");
 assert(channelContext.includes("not chatting in Codex"), "worker must know it replies through Workshop");
@@ -30,10 +30,10 @@ assert(channelContext.includes("cannot do: edit or delete messages"), "worker mu
 assert(channelContext.includes("review or merge a pull request"), "worker must not delegate repository work to the creator");
 assert(channelContext.includes("technicalSummary is stored only in the internal run log"), "worker must separate visible and private output");
 assert(channelContext.includes("They do not see private reasoning"), "worker must understand what is hidden from the creator");
-assert(channelContext.includes("Only an authenticated reply from Simon"), "worker must understand Needs Simon authorization");
+assert(channelContext.includes("equally authorized Workshop owners"), "worker must understand equal Workshop authorization");
 assert(channelContext.includes("answer it directly with the answered outcome"), "worker must answer ordinary questions directly");
-assert(channelContext.includes("not automatically approval or an answer"), "worker must evaluate what Simon actually replied");
-assert(channelContext.includes("GitHub Actions being unavailable are not decisions for Simon"), "worker must own temporary service recovery");
+assert(channelContext.includes("not automatically approval or an answer"), "worker must evaluate what an owner actually replied");
+assert(channelContext.includes("GitHub Actions being unavailable are not Workshop decisions"), "worker must own temporary service recovery");
 assert(WORKSHOP_MODEL === "gpt-5.6-sol", "Workshop must use Sol explicitly");
 assert(WORKSHOP_REASONING_EFFORT === "high", "Workshop must use high reasoning explicitly");
 const codexArgs = workshopCodexArgs("schema.json", "result.json", "prompt");

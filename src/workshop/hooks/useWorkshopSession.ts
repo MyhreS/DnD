@@ -16,7 +16,7 @@ import type { AgentState } from "@/workshop/types";
 export type WorkshopSession = {
   user: User | null;
   status: "loading" | "signed_out" | "allowed" | "denied";
-  role: "admin" | "creator" | null;
+  role: "admin" | null;
   error: string | null;
   agentState: AgentState | null;
 };

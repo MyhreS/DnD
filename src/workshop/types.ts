@@ -61,7 +61,7 @@ export type AgentState = {
 export const STATUS_LABELS: Record<WorkshopStatus, string> = {
   not_done: "Not done",
   doing_now: "Doing now",
-  needs_simon: "Needs Simon",
+  needs_simon: "Needs decision",
   finished: "Finished",
   declined: "Declined",
 };

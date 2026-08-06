@@ -24,7 +24,7 @@ type AttachmentInput = {
   size: number;
 };
 
-type WorkshopRole = "admin" | "creator";
+type WorkshopRole = "admin";
 type WorkshopUser = { uid: string; email: string; name: string; role: WorkshopRole };
 
 function identity(request: CallableRequest): WorkshopUser {
@@ -41,7 +41,7 @@ function identity(request: CallableRequest): WorkshopUser {
     uid,
     email,
     name: requestedName || email.split("@")[0],
-    role: email === ADMIN_EMAIL ? "admin" : "creator",
+    role: "admin",
   };
 }
 
@@ -95,13 +95,6 @@ function validAttachments(value: unknown, uid: string): AttachmentInput[] {
     }
     return { name, path, contentType, size };
   });
-}
-
-async function assertMember(user: WorkshopUser): Promise<void> {
-  const member = await db.doc(`workshopMembers/${user.uid}`).get();
-  if (!member.exists || member.data()?.email !== user.email) {
-    throw new HttpsError("permission-denied", "Open the Workshop before making changes.");
-  }
 }
 
 async function checkRateLimit(uid: string): Promise<void> {
@@ -163,7 +156,6 @@ export const claimWorkshopAccess = onCall({ region: REGION }, async (request) =>
 
 export const createWorkshopTicket = onCall({ region: REGION }, async (request) => {
   const user = identity(request);
-  await assertMember(user);
   const attachments = validAttachments(request.data?.attachments, user.uid);
   const body = validBody(request.data?.body, attachments.length > 0);
   const submissionId = validId(request.data?.submissionId, "submission");
@@ -205,7 +197,6 @@ export const createWorkshopTicket = onCall({ region: REGION }, async (request) =
 
 export const replyWorkshopTicket = onCall({ region: REGION }, async (request) => {
   const user = identity(request);
-  await assertMember(user);
   const ticketId = String(request.data?.ticketId ?? "");
   if (!/^[A-Za-z0-9_-]{6,128}$/.test(ticketId)) {
     throw new HttpsError("invalid-argument", "Invalid ticket.");
@@ -231,17 +222,12 @@ export const replyWorkshopTicket = onCall({ region: REGION }, async (request) =>
     }
     const data = ticket.data()!;
     const sequence = Number(data.nextSequence ?? 1);
-    const waitingForSimon = data.status === "needs_simon";
-    const answeredBySimon = user.email === ADMIN_EMAIL;
+    const waitingForDecision = data.status === "needs_simon";
     const nextStatus = data.status === "doing_now"
       ? "doing_now"
-      : waitingForSimon && !answeredBySimon
-        ? "needs_simon"
-        : "not_done";
-    const acknowledgement = waitingForSimon
-      ? answeredBySimon
-        ? "Simon replied. The agent will reread the whole thread."
-        : "Update received. This task is still waiting for Simon to reply in this thread."
+      : "not_done";
+    const acknowledgement = waitingForDecision
+      ? `${user.name} replied. The agent will reread the whole thread.`
       : "Update received. The agent will reread the whole thread.";
     tx.set(messageRef, messageData("follow_up", body, user, sequence, attachments));
     tx.set(ticketRef.collection("messages").doc(`${submissionId}-ack`), messageData("system", acknowledgement, null, sequence + 1));
@@ -254,8 +240,8 @@ export const replyWorkshopTicket = onCall({ region: REGION }, async (request) =>
       attachmentCount: FieldValue.increment(attachments.length),
       automaticRetryCount: 0,
       retryAfter: FieldValue.delete(),
-      ...(waitingForSimon ? {
-        needsSimonReplyReceived: answeredBySimon,
+      ...(waitingForDecision ? {
+        needsSimonReplyReceived: true,
         needsSimonApproved: FieldValue.delete(),
       } : {}),
     });
@@ -265,7 +251,6 @@ export const replyWorkshopTicket = onCall({ region: REGION }, async (request) =>
 
 export const markWorkshopTicketRead = onCall({ region: REGION }, async (request) => {
   const user = identity(request);
-  await assertMember(user);
   const ticketId = String(request.data?.ticketId ?? "");
   if (!/^[A-Za-z0-9_-]{6,128}$/.test(ticketId)) throw new HttpsError("invalid-argument", "Invalid ticket.");
   const ticketRef = db.doc(`workshopTickets/${ticketId}`);

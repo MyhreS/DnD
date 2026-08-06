@@ -40,7 +40,7 @@ const [simonToken, creatorToken, thomasToken, outsiderToken] = await Promise.all
 await db.doc(`workshopMembers/${outsiderUid}`).set({
   email: "outsider-workshop@example.test",
   name: "Stale invited user",
-  role: "creator",
+  role: "admin",
 });
 
 const server = spawn("bunx", ["vite", "--config", "vite.workshop.config.ts", "--host", "127.0.0.1", "--port", String(PORT)], {
@@ -226,6 +226,10 @@ try {
     simon.page.getByTestId("collaborator-presence").getByText("2 others here", { exact: true }).waitFor(),
     creator.page.getByTestId("collaborator-presence").getByText("2 others here", { exact: true }).waitFor(),
   ]);
+  const approvedMembers = await Promise.all([simonUid, creatorUid, thomasUid].map((uid) => db.doc(`workshopMembers/${uid}`).get()));
+  if (approvedMembers.some((member) => member.data()?.role !== "admin")) {
+    throw new Error("Approved Workshop accounts did not receive equal admin access.");
+  }
   const peopleMenu = creator.page.getByTestId("collaborator-presence");
   await peopleMenu.locator("summary").click();
   await peopleMenu.getByText("Simon Myhre", { exact: false }).waitFor();
@@ -364,7 +368,7 @@ try {
   }
   await creator.page.getByTestId("ticket-automatic-retry-probe").click();
   await creator.page.getByText("I hit a temporary service problem. I’ll retry automatically; you do not need to reply.", { exact: true }).waitFor();
-  if (await creator.page.getByText("Needs Simon", { exact: true }).count()) throw new Error("Temporary service failure incorrectly asked for Simon.");
+  if (await creator.page.getByText("Needs decision", { exact: true }).count()) throw new Error("Temporary service failure incorrectly asked for a Workshop decision.");
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await db.recursiveDelete(retryProbe);
   const composerFileInput = creator.page.locator('.composer input[type="file"]');
@@ -644,9 +648,15 @@ try {
   const creatorClient = await ruleClient("creator", creatorToken);
   const thomasClient = await ruleClient("thomas", thomasToken);
   const outsiderClient = await ruleClient("outsider", outsiderToken);
-  if (!(await getDoc(doc(creatorClient.db, "workshopTickets", ticketId))).exists()) throw new Error("Invited creator cannot read the ticket.");
+  await Promise.all([
+    db.doc(`workshopMembers/${creatorUid}`).delete(),
+    db.doc(`workshopMembers/${thomasUid}`).delete(),
+  ]);
+  if (!(await getDoc(doc(creatorClient.db, "workshopTickets", ticketId))).exists()) throw new Error("Christoffer cannot read the ticket without a duplicate membership record.");
   if (!(await getDoc(doc(thomasClient.db, "workshopTickets", ticketId))).exists()) throw new Error("Thomas cannot read Workshop tickets.");
   if ((await getDocs(collection(creatorClient.db, "workshopPresence"))).empty) throw new Error("Workshop members cannot read live presence.");
+  const noMemberUploadPath = `workshop/${thomasUid}/${crypto.randomUUID()}/${crypto.randomUUID()}-no-member.png`;
+  await uploadBytes(ref(thomasClient.storage, noMemberUploadPath), new Blob(["image"]), { contentType: "image/png" });
   await expectDenied(() => getDocs(collection(outsiderClient.db, "workshopPresence")), "Outsider presence read");
   await expectDenied(() => setDoc(doc(creatorClient.db, "workshopPresence", thomasUid), {
     uid: creatorUid,
@@ -718,41 +728,43 @@ try {
   await creator.page.getByText("Not done", { exact: true }).waitFor();
 
   await runManager("needs_simon");
-  await creator.page.getByText("Needs Simon", { exact: true }).waitFor();
+  await creator.page.getByText("Needs decision", { exact: true }).waitFor();
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
-  await creator.page.getByText("I need Simon to decide one thing", { exact: false }).waitFor();
-  await creator.page.getByText("Only Simon’s reply in this thread can restart this task.", { exact: true }).waitFor();
+  await creator.page.getByText("I need one Workshop member to decide one thing", { exact: false }).waitFor();
+  await creator.page.getByText("A reply from any Workshop member can restart this task.", { exact: true }).waitFor();
   await creator.page.locator(".detail-backdrop").evaluate(async (element) => {
     await Promise.all(element.getAnimations({ subtree: true }).map((animation) => animation.finished));
   });
-  await creator.page.screenshot({ path: "screenshots/workshop-needs-simon-mobile.png", fullPage: true });
+  await creator.page.screenshot({ path: "screenshots/workshop-needs-decision-mobile.png", fullPage: true });
 
   await creator.page.getByTestId("ticket-reply").fill("Please reconsider this with the new information.");
   await creator.page.getByTestId("send-reply").click();
   await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
-  await creator.page.getByText("still waiting for Simon to reply in this thread", { exact: false }).waitFor();
+  await creator.page.getByText("Christopher Creator replied. The agent will reread the whole thread.", { exact: true }).waitFor();
   await creator.page.getByRole("button", { name: "Close thread" }).click();
-  await creator.page.getByText("Needs Simon", { exact: true }).waitFor();
+  await creator.page.getByText("Not done", { exact: true }).waitFor();
   const afterCreatorReply = (await db.doc(`workshopTickets/${ticketId}`).get()).data();
-  if (afterCreatorReply?.status !== "needs_simon" || afterCreatorReply?.needsSimonReplyReceived === true) {
-    throw new Error("Christopher incorrectly unblocked a Needs Simon task.");
+  if (afterCreatorReply?.status !== "not_done" || afterCreatorReply?.needsSimonReplyReceived !== true) {
+    throw new Error("Christoffer did not unblock the protected Workshop decision.");
   }
 
-  await simon.page.getByTestId(`ticket-${ticketId}`).click();
-  await simon.page.getByText("Only Simon’s reply in this thread can restart this task.", { exact: true }).waitFor();
-  await simon.page.getByTestId("ticket-reply").fill("Simon approves continuing with the updated request.");
-  await simon.page.getByTestId("send-reply").click();
-  await simon.page.getByText("Simon replied. The agent will reread the whole thread.", { exact: true }).waitFor();
-  await simon.page.getByRole("button", { name: "Close thread" }).click();
+  await runManager("needs_simon");
+  await thomas.page.getByText("Needs decision", { exact: true }).waitFor();
+  await thomas.page.getByTestId(`ticket-${ticketId}`).click();
+  await thomas.page.getByText("A reply from any Workshop member can restart this task.", { exact: true }).waitFor();
+  await thomas.page.getByTestId("ticket-reply").fill("Thomas approves continuing with the updated request.");
+  await thomas.page.getByTestId("send-reply").click();
+  await thomas.page.getByText("Thomas Myhre replied. The agent will reread the whole thread.", { exact: true }).waitFor();
+  await thomas.page.getByRole("button", { name: "Close thread" }).click();
   await creator.page.getByText("Not done", { exact: true }).waitFor();
-  const afterSimonReply = (await db.doc(`workshopTickets/${ticketId}`).get()).data();
-  if (afterSimonReply?.status !== "not_done" || afterSimonReply?.needsSimonReplyReceived !== true) {
-    throw new Error("Simon did not unblock the Needs Simon task.");
+  const afterThomasReply = (await db.doc(`workshopTickets/${ticketId}`).get()).data();
+  if (afterThomasReply?.status !== "not_done" || afterThomasReply?.needsSimonReplyReceived !== true) {
+    throw new Error("Thomas did not unblock the protected Workshop decision.");
   }
 
   await runManager("declined");
   if ((await db.doc(`workshopTickets/${ticketId}`).get()).data()?.needsSimonReplyReceived !== false) {
-    throw new Error("Simon reply marker was not consumed after the next agent run.");
+    throw new Error("Workshop decision marker was not consumed after the next agent run.");
   }
   await creator.page.getByText("Declined", { exact: true }).waitFor();
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
@@ -769,7 +781,7 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: live member presence, simultaneous multi-user replies, fast ticket/message/worker sync, paged requests and conversations, compact long comments, detailed progress, secure images, drafts, idempotency, read receipts, and responsive mobile/desktop layout.");
+  console.log("Workshop E2E passed: equal owner access without duplicate membership metadata, shared protected decisions, outsider denial, live presence, simultaneous replies, fast sync, secure images, paging, drafts, idempotency, read receipts, and responsive mobile/desktop layout.");
   await Promise.all([simon.context.close(), creator.context.close(), thomas.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();

@@ -79,7 +79,7 @@ export function TicketDetail({ ticketId, initialTicket, uid, isWorking, agentSta
           <h2 id="ticket-detail-title">{ticket?.title ?? "Opening request…"}</h2>
           <p>Every reply stays in this thread.</p>
           <ThreadPresence people={people} currentUid={uid} ticketId={ticketId} />
-          {ticket?.status === "needs_simon" && <p className="ticket-gate-note">Only Simon’s reply in this thread can restart this task.</p>}
+          {ticket?.status === "needs_simon" && <p className="ticket-gate-note">A reply from any Workshop member can restart this task.</p>}
         </header>
         <div className="conversation-frame">
           <div className="message-list" ref={listRef} onScroll={onScroll} data-testid="message-list">
