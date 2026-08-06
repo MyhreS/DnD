@@ -172,12 +172,28 @@ try {
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
   await creator.page.getByText("I need Simon to decide one thing", { exact: false }).waitFor();
 
+  await creator.page.getByTestId("ticket-reply").fill("Please reconsider this with the new information.");
+  await creator.page.getByTestId("send-reply").click();
+  await creator.page.getByText("Update received. The agent will reread").waitFor();
+  await creator.page.getByRole("button", { name: "Close thread" }).click();
+  await creator.page.getByText("Not done", { exact: true }).waitFor();
+
+  await runManager("declined");
+  await creator.page.getByText("Declined", { exact: true }).waitFor();
+  await creator.page.getByTestId(`ticket-${ticketId}`).click();
+  await creator.page.getByText("Declined — This test request cannot be completed safely.", { exact: true }).waitFor();
+  await creator.page.locator(".detail-backdrop").evaluate(async (element) => {
+    await Promise.all(element.getAnimations({ subtree: true }).map((animation) => animation.finished));
+  });
+  await noOverflow(creator.page, "Declined Workshop mobile");
+  await creator.page.screenshot({ path: "screenshots/workshop-mobile.png", fullPage: true });
+
   await creator.page.setViewportSize({ width: 1440, height: 900 });
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, heartbeat, finished/reopened/Needs Simon flow, and responsive layout.");
+  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, heartbeat, finished/reopened/Needs Simon/declined flow, and responsive layout.");
   await Promise.all([simon.context.close(), creator.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();

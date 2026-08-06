@@ -23,6 +23,22 @@ const needsSimon = parseAgentResult(JSON.stringify({
 }));
 assert(outcomeMessage(needsSimon).includes("Choose which old data"), "decision must be preserved");
 
+const declined = parseAgentResult(JSON.stringify({
+  outcome: "declined",
+  summaryForCreator: "This request was declined.",
+  declineReason: "It would remove the permanent ticket history.",
+}));
+assert(declined.outcome === "declined", "declined outcome must parse");
+assert(outcomeMessage(declined) === "Declined — It would remove the permanent ticket history.", "decline reason must be clear");
+
+let missingDeclineReasonFailed = false;
+try {
+  parseAgentResult(JSON.stringify({ outcome: "declined", summaryForCreator: "No." }));
+} catch {
+  missingDeclineReasonFailed = true;
+}
+assert(missingDeclineReasonFailed, "declined outcome without a reason must fail closed");
+
 let invalidFailed = false;
 try { parseAgentResult("not json"); } catch { invalidFailed = true; }
 assert(invalidFailed, "invalid agent output must fail closed");

@@ -1,6 +1,6 @@
 import type { Timestamp } from "firebase/firestore";
 
-export type WorkshopStatus = "not_done" | "doing_now" | "needs_simon" | "finished";
+export type WorkshopStatus = "not_done" | "doing_now" | "needs_simon" | "finished" | "declined";
 
 export type WorkshopAttachment = {
   name: string;
@@ -43,4 +43,5 @@ export const STATUS_LABELS: Record<WorkshopStatus, string> = {
   doing_now: "Doing now",
   needs_simon: "Needs Simon",
   finished: "Finished",
+  declined: "Declined",
 };

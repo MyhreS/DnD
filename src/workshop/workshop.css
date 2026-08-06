@@ -71,6 +71,7 @@ button { color: inherit; }
 .status-doing_now { background: #f3df9c; color: #725310; }
 .status-needs_simon { background: #efc4c5; color: #86232b; }
 .status-finished { background: #d4e5d4; color: #35613c; }
+.status-declined { background: #dedbd5; color: #514d47; }
 .empty-history { padding: 28px 0; border-top: 1px solid #cfc6b7; border-bottom: 1px solid #d8d1c3; color: #81786c; font-size: 13px; }
 
 .workshop-footer { min-height: 58px; padding: 15px clamp(20px, 4vw, 58px); display: flex; align-items: center; justify-content: space-between; gap: 16px; border-top: 1px solid #d8d1c3; color: #7e766b; font-size: 11px; background: #eee9df; }

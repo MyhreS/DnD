@@ -17,7 +17,7 @@ From the repository root, run `bun run workshop:bot` for the continuous manager 
 4. Work in an isolated git worktree and follow the repository quality gates.
 5. Make reasonable product assumptions when the request is clear. Preserve existing user data.
 6. Run focused tests, the repository checks, and Playwright at phone and desktop sizes for UI work.
-7. Commit, push, open a pull request, merge only after checks pass, deploy through the repository's normal path, and verify the live result.
+7. For implemented changes, commit, push, open a pull request, merge only after checks pass, deploy through the repository's normal path, and verify the live result. Skip repository changes for `needs_simon` and `declined` outcomes.
 8. Reply in plain language. Say what changed and that the updated version is available; avoid implementation terms unless needed.
 
 ## Stop for Simon
@@ -26,9 +26,13 @@ Use `needs_simon` without making the risky change when the ticket requests or re
 
 If implementation or deployment fails after safe retries, use `needs_simon` and describe the visible problem without a technical log dump.
 
+## Decline a ticket
+
+Use `declined` only when the request should not be implemented and no decision from Simon would unblock it. Give one short, concrete reason. Do not decline ordinary bugs, clear product requests, or work that is merely difficult. A new creator reply reopens the ticket for reconsideration.
+
 ## Thread revisions
 
-Never overwrite or delete ticket messages. Before marking work finished, compare the ticket revision with the claimed revision. If it changed, put the ticket back in `not_done`, explain that the new reply will be included in the next pass, and reread the complete thread on that pass.
+Never overwrite or delete ticket messages. Before marking work finished or declined, compare the ticket revision with the claimed revision. If it changed, put the ticket back in `not_done`, explain that the new reply will be included in the next pass, and reread the complete thread on that pass.
 
 ## Creator-facing language
 
@@ -37,3 +41,4 @@ Keep updates brief and concrete:
 - Start: `I’m working on this now.`
 - Finished: `Done — the updated version is available now. [What visibly changed.]`
 - Needs Simon: `I need Simon to decide one thing before I continue: [decision].`
+- Declined: `Declined — [short, concrete reason].`
