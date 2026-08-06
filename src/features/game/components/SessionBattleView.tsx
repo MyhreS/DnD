@@ -11,13 +11,11 @@ export function SessionBattleView({
   characters,
   isDm,
   dmControls,
-  enemySection,
 }: {
   game: Game;
   characters: HunterCard[];
   isDm: boolean;
   dmControls: ReactNode;
-  enemySection: ReactNode;
 }) {
   useWakeLock();
   const combatants = useCombatStore((state) => state.combatants);
@@ -37,6 +35,8 @@ export function SessionBattleView({
           <strong>{current?.name ?? "Waiting for initiative"}</strong>
         </div>
       </header>
+
+      {isDm && dmControls}
 
       {order.length === 0 ? (
         <section className="battle-waiting" aria-live="polite">
@@ -63,8 +63,6 @@ export function SessionBattleView({
         </div>
       )}
 
-      {isDm && dmControls}
-      {enemySection}
     </main>
   );
 }

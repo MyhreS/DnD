@@ -123,8 +123,10 @@ try {
   await owner.getByRole("button", { name: "Start battle screen" }).click();
   await owner.getByTestId("session-battle-screen").waitFor();
   await owner.locator(".battle-name").getByText("Moon Beast", { exact: true }).waitFor();
+  await owner.getByRole("button", { name: "Manage battle" }).click();
+  const manageBattle = owner.getByRole("dialog", { name: "Manage battle" });
   owner.once("dialog", (dialog) => dialog.accept());
-  await owner.getByRole("button", { name: "End battle" }).click();
+  await manageBattle.getByRole("button", { name: "End battle" }).click();
   await owner.getByTestId("session-battle-screen").waitFor({ state: "detached" });
 
   owner.once("dialog", (dialog) => dialog.accept());

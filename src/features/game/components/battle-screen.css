@@ -89,9 +89,15 @@
 .battle-message p { color: var(--ink-dim); }
 .battle-message a { color: var(--gold); }
 
-.game-battle-controls { margin-top: clamp(24px, 4vw, 48px); }
-.game-battle-controls .game-section-heading { align-items: center; }
-.game-battle-controls .game-combat-actions { margin: 0; }
+.game-battle-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  min-height: 54px;
+  border-bottom: 1px solid var(--border);
+}
+.game-battle-toolbar .btn { width: auto; min-height: 36px; padding: 7px 14px; }
 .battle-enemies { border-bottom: 0; }
 
 @media (max-width: 980px) {
@@ -118,9 +124,7 @@
   .battle-damage { grid-column: 2; }
   .battle-ac { grid-column: 3; grid-row: 2; }
   .battle-conditions { grid-column: 2 / -1; }
-  .game-battle-controls .game-section-heading { align-items: stretch; }
-  .game-battle-controls .game-combat-actions { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
-  .game-battle-controls .game-combat-actions .btn { width: 100%; }
+  .game-battle-toolbar { justify-content: space-between; gap: 12px; }
 }
 
 @media (prefers-reduced-motion: reduce) {

@@ -191,8 +191,15 @@ try {
   if (await playerPage.getByRole("button", { name: "Next turn" }).count()) throw new Error("Player received DM battle controls.");
   if (await playerPage.getByRole("button", { name: "End battle" }).count()) throw new Error("Player can end battle mode.");
   if (await playerPage.getByRole("button", { name: "+ Add enemy" }).count()) throw new Error("Player can add enemies.");
-  if (await playerPage.locator(".game-battle-controls").count()) throw new Error("Player can see the DM control panel.");
-  const enemyControl = dmPage.locator(".game-initiative-row").filter({ hasText: "Moon Beast" });
+  if (await playerPage.locator(".game-battle-toolbar").count()) throw new Error("Player can see the DM control bar.");
+  if (await dmPage.locator(".game-initiative-row").count()) throw new Error("DM combatant controls are visible before opening Manage battle.");
+  if (await dmPage.locator(".battle-name").filter({ hasText: "Lady Maria" }).count() !== 1) throw new Error("The Hunter is duplicated in the default battle view.");
+  if (await dmPage.locator(".game-battle-toolbar button").count() !== 2) throw new Error("The default DM control bar is not compact.");
+
+  await dmPage.getByRole("button", { name: "Manage battle" }).click();
+  const manageBattle = dmPage.getByRole("dialog", { name: "Manage battle" });
+  await manageBattle.waitFor();
+  const enemyControl = manageBattle.locator(".game-initiative-row").filter({ hasText: "Moon Beast" });
   await enemyControl.getByLabel("Add condition to Moon Beast").selectOption("poisoned");
   const enemyDisplay = playerPage.getByTestId(`battle-combatant-${enemyId}`);
   await enemyDisplay.getByText(/Poisoned/).waitFor();
@@ -202,7 +209,7 @@ try {
     throw new Error(`Hidden monster data leaked to the player: ${playerEnemyText}`);
   }
 
-  const enemyCard = dmPage.locator(".game-enemy").filter({ hasText: "Moon Beast" });
+  const enemyCard = manageBattle.locator(".game-enemy").filter({ hasText: "Moon Beast" });
   await enemyCard.getByRole("button", { name: "+5", exact: true }).click();
   if ((await enemyDisplay.innerText()).includes("5")) throw new Error("Player saw exact damage before the DM revealed HP.");
   await enemyCard.getByLabel("HP visible").check();
@@ -211,7 +218,7 @@ try {
   await enemyCard.getByLabel("Stats visible").check();
   await enemyDisplay.locator(".battle-ac").getByText("14", { exact: true }).waitFor();
 
-  await dmPage.getByRole("button", { name: "Add enemy", exact: true }).click();
+  await manageBattle.getByRole("button", { name: "Add enemy", exact: true }).click();
   const enemyForm = dmPage.getByRole("dialog", { name: "Add enemy" });
   await enemyForm.getByLabel("Name").fill("Grave Hound");
   await enemyForm.getByLabel("Max HP").fill("18");
@@ -219,16 +226,29 @@ try {
   await enemyForm.getByRole("button", { name: "Add enemy" }).click();
   await playerPage.locator(".battle-name").getByText("Grave Hound", { exact: true }).waitFor();
 
-  await dmPage.getByRole("button", { name: "Create item", exact: true }).click();
+  await manageBattle.getByRole("button", { name: "Create item", exact: true }).click();
   const itemDialog = dmPage.getByRole("dialog", { name: "Create an item" });
   await itemDialog.getByLabel("Name").fill("Ashen Spear");
   await itemDialog.getByLabel("Damage").fill("1d8 piercing");
   await itemDialog.getByRole("button", { name: "Create item" }).click();
 
-  await noHorizontalOverflow(dmPage, "Game combat controls");
+  await manageBattle.getByRole("button", { name: "Done", exact: true }).click();
+  await manageBattle.waitFor({ state: "detached" });
+  if (await dmPage.locator(".game-initiative-row").count()) throw new Error("Closing Manage battle left duplicate combatant controls visible.");
+
+  await noHorizontalOverflow(dmPage, "Clean DM battle view");
   await dmPage.screenshot({ path: "screenshots/game-battle-mode-dm.png", fullPage: true });
   await noHorizontalOverflow(playerPage, "Player battle mode desktop");
   await playerPage.screenshot({ path: "screenshots/game-battle-mode-player.png", fullPage: true });
+
+  await dmPage.setViewportSize({ width: 390, height: 844 });
+  await noHorizontalOverflow(dmPage, "Clean DM battle view mobile");
+  await dmPage.screenshot({ path: "screenshots/game-battle-mode-dm-mobile.png", fullPage: true });
+  await dmPage.getByRole("button", { name: "Manage battle" }).click();
+  const mobileManageBattle = dmPage.getByRole("dialog", { name: "Manage battle" });
+  await noHorizontalOverflow(dmPage, "Manage battle modal mobile");
+  await dmPage.screenshot({ path: "screenshots/game-battle-manage-mobile.png", fullPage: true });
+  await mobileManageBattle.getByRole("button", { name: "Done", exact: true }).click();
 
   await dmPage.getByRole("button", { name: "Next turn" }).click();
   await playerPage.locator(".battle-live-status").getByText("Grave Hound", { exact: true }).waitFor();
@@ -237,8 +257,10 @@ try {
   await noHorizontalOverflow(playerPage, "Player battle mode mobile");
   await playerPage.screenshot({ path: "screenshots/game-battle-mode-mobile.png", fullPage: true });
 
+  await dmPage.getByRole("button", { name: "Manage battle" }).click();
+  const endBattleDialog = dmPage.getByRole("dialog", { name: "Manage battle" });
   dmPage.once("dialog", (dialog) => dialog.accept());
-  await dmPage.getByRole("button", { name: "End battle" }).click();
+  await endBattleDialog.getByRole("button", { name: "End battle" }).click();
   await Promise.all([
     dmPage.getByTestId("session-battle-screen").waitFor({ state: "detached" }),
     playerPage.getByTestId("session-battle-screen").waitFor({ state: "detached" }),
@@ -254,7 +276,7 @@ try {
   if (!claimedHunter.data()?.inventory?.some((item) => String(item.itemId).startsWith("session-"))) throw new Error("Claimed session weapon did not reach inventory.");
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Battle mode E2E passed: automatic entry/exit on both Game pages, timer-free player view, DM controls, conditions, damage, enemy creation, and responsive layout.");
+  console.log("Battle mode E2E passed: automatic entry/exit, one clean combatant list, modal-only management, conditions, damage, enemy creation, and responsive layout.");
   await dmContext.close();
   await playerContext.close();
 } finally {
