@@ -1,11 +1,13 @@
 import { useCallback, useState } from "react";
 import { AccessScreen } from "@/workshop/components/AccessScreen";
 import { AgentPresence } from "@/workshop/components/AgentPresence";
+import { CollaboratorPresence } from "@/workshop/components/CollaboratorPresence";
 import { TicketComposer } from "@/workshop/components/TicketComposer";
 import { TicketDetail } from "@/workshop/components/TicketDetail";
 import { TicketList } from "@/workshop/components/TicketList";
 import { useAgentOnline } from "@/workshop/hooks/useAgentOnline";
 import { useWorkshopSession } from "@/workshop/hooks/useWorkshopSession";
+import { useWorkshopPresence } from "@/workshop/hooks/useWorkshopPresence";
 import { useWorkshopTickets } from "@/workshop/hooks/useWorkshopTickets";
 
 export function WorkshopApp() {
@@ -13,6 +15,7 @@ export function WorkshopApp() {
   const agentOnline = useAgentOnline(session.agentState);
   const ticketBatch = useWorkshopTickets(session.status === "allowed");
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const presence = useWorkshopPresence(session.user, session.status === "allowed", selectedId);
   const closeSelected = useCallback(() => setSelectedId(null), []);
 
   if (session.status === "loading") return <main className="loading-screen"><span>Opening Workshop…</span></main>;
@@ -26,11 +29,16 @@ export function WorkshopApp() {
       <header className="workshop-header">
         <div className="workshop-wordmark"><span>W</span><div><strong>D&amp;D Workshop</strong><small>Feedback for the game</small></div></div>
         <div className="header-actions">
+          <CollaboratorPresence
+            people={presence.people}
+            currentUid={session.user!.uid}
+            currentName={session.user!.displayName || session.user!.email?.split("@")[0] || "You"}
+          />
           <AgentPresence state={session.agentState} />
           <button className="account-button" type="button" onClick={() => void session.signOut()} title="Sign out">{session.user?.displayName?.slice(0, 1) || "S"}</button>
         </div>
       </header>
-      {(session.error || ticketBatch.error) && <div className="global-error" role="alert">{session.error || "Could not update the request list."}</div>}
+      {(session.error || ticketBatch.error || presence.error) && <div className="global-error" role="alert">{session.error || ticketBatch.error || presence.error}</div>}
       <main className="workshop-grid">
         <TicketComposer uid={session.user!.uid} onCreated={setSelectedId} />
         <TicketList
@@ -57,6 +65,7 @@ export function WorkshopApp() {
           isWorking={activeTicketId === selectedId}
           agentState={session.agentState}
           agentOnline={agentOnline}
+          people={presence.people}
           onClose={closeSelected}
         />
       )}

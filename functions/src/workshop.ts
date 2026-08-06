@@ -36,10 +36,11 @@ function identity(request: CallableRequest): WorkshopUser {
   if (!WORKSHOP_EMAILS.has(email)) {
     throw new HttpsError("permission-denied", "This Google account does not have access to the Workshop.");
   }
+  const requestedName = String(request.auth?.token.name ?? "").trim().slice(0, 80);
   return {
     uid,
     email,
-    name: String(request.auth?.token.name ?? email.split("@")[0]),
+    name: requestedName || email.split("@")[0],
     role: email === ADMIN_EMAIL ? "admin" : "creator",
   };
 }
@@ -154,7 +155,7 @@ export const claimWorkshopAccess = onCall({ region: REGION }, async (request) =>
       joinedAt: FieldValue.serverTimestamp(),
       access: "fixed-account-list",
     });
-  } else if (member.data()?.email !== user.email || member.data()?.role !== user.role) {
+  } else {
     await memberRef.set({ email: user.email, name: user.name, role: user.role }, { merge: true });
   }
   return { ok: true, role: user.role };

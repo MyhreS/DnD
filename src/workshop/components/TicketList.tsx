@@ -45,7 +45,7 @@ export function TicketList({ tickets, uid, hasMore, loadingMore, activeTicketId,
           <p className="eyebrow">History</p>
           <h2 id="history-title">Requests</h2>
         </div>
-        <span className="ticket-count" aria-label={`${filtered.length} requests shown`}>{query ? `${filtered.length}/${tickets.length}` : `${tickets.length}${hasMore ? "+" : ""}`}</span>
+        <span className="ticket-count" aria-label={`${filtered.length} requests shown`} aria-live="polite">{query ? `${filtered.length}/${tickets.length}` : `${tickets.length}${hasMore ? "+" : ""}`}</span>
       </div>
       {tickets.length === 0 ? (
         <p className="empty-history">No requests yet. The first one will appear here.</p>

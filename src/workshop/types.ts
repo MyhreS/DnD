@@ -33,6 +33,14 @@ export type WorkshopMessage = {
   productionUrl?: string;
 };
 
+export type WorkshopPresence = {
+  uid: string;
+  name: string;
+  state: "active" | "away";
+  viewingTicketId: string | null;
+  lastSeenAt?: Timestamp;
+};
+
 export type AgentState = {
   lastHeartbeatAt?: Timestamp;
   workerId?: string;
