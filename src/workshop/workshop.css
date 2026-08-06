@@ -60,7 +60,8 @@ button { color: inherit; }
 .section-heading { display: flex; justify-content: space-between; align-items: end; margin-bottom: 12px; }
 .section-heading h2 { margin: 0; font: 400 30px "Libre Caslon Display", serif; }
 .ticket-count { display: grid; place-items: center; min-width: 28px; height: 28px; padding: 0 8px; border: 1px solid #cfc6b7; border-radius: 50%; color: #70685d; font-size: 12px; }
-.ticket-list { margin: 0; padding: 0; list-style: none; border-top: 1px solid #cfc6b7; }
+.ticket-list { max-height: 58vh; max-height: min(58vh, 620px); margin: 0; padding: 0; overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; list-style: none; border-top: 1px solid #cfc6b7; -webkit-overflow-scrolling: touch; }
+.ticket-list:focus-visible { outline: 2px solid #8b5c2d; outline-offset: 3px; }
 .ticket-list li { border-bottom: 1px solid #d8d1c3; }
 .ticket-list button { width: 100%; padding: 19px 2px; border: 0; text-align: left; background: transparent; cursor: pointer; }
 .ticket-list button:hover { padding-left: 8px; background: #eee8db; }
