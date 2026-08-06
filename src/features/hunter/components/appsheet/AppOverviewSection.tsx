@@ -2,6 +2,7 @@ import { BACKGROUNDS } from "@/data/backgrounds";
 import { CLASSES } from "@/data/classes";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import {
+  AppDisclosure,
   AppPanel,
   AppSection,
   AppSelect,
@@ -30,6 +31,9 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
   const name = sheetText(model.data, "name") || card.name;
   const hpCurrent = sheetText(model.data, "hpCur") || String(card.currentHp ?? result.fields.hpMax ?? 0);
   const sanityCurrent = sheetText(model.data, "sanityCur") || String(card.sanity ?? result.fields.sanityMax ?? 0);
+  const hitDiceCurrent = numeric(sheetText(model.data, "hdCur"), numeric(String(result.fields.hdMax ?? 0)));
+  const deathSuccesses = [1, 2, 3].filter((number) => sheetBool(model.data, `dsS${number}`)).length;
+  const deathFailures = [1, 2, 3].filter((number) => sheetBool(model.data, `dsF${number}`)).length;
 
   return (
     <AppSection>
@@ -58,8 +62,8 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
         </PendingNotice>
       )}
 
-      <div className={`appsheet-overview-layout ${state.setupComplete === true ? "" : "setup-incomplete"}`.trim()}>
-        <AppPanel title="Current state" className="appsheet-current-state">
+      <div className="appsheet-overview-layout">
+        <AppPanel title="At a glance" className="appsheet-current-state">
           <div className="appsheet-vital-editors">
             <DecisionField label="Current HP">
               <NumericStepper label="HP" value={editStage.previewCard.currentHp ?? numeric(hpCurrent)} disabled={model.readOnly} onChange={editStage.stageHp} />
@@ -85,7 +89,12 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
           </div>
         </AppPanel>
 
-        <AppPanel title="Character build" className="appsheet-identity-panel">
+        <AppDisclosure
+          title="Character build"
+          summary={`${klass?.title ?? "No class"} · ${background?.name ?? "No background"} · level ${editStage.previewCard.level}`}
+          defaultOpen={state.setupComplete !== true}
+          className="appsheet-identity-panel"
+        >
           <div className="appsheet-form-grid">
             <AppSelect
               label="Class"
@@ -129,15 +138,13 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
               {subclassOptions.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
             </AppSelect>
           </div>
-          {(klass || background) && (
-            <div className="appsheet-choice-impact">
-              {klass && <p><b>{klass.title}</b> · {klass.primaryAbility} · d{klass.hitDie} Hit Die · {klass.sanityDie} Sanity Dice</p>}
-              {background && <p><b>{background.name}</b> · {background.feat ?? "No readable source feat"} · {background.skills.join(" & ")}</p>}
-            </div>
-          )}
-        </AppPanel>
+        </AppDisclosure>
 
-        <AppPanel title="Battle resources" className="appsheet-battle-resources">
+        <AppDisclosure
+          title="Battle resources"
+          summary={`Temp HP ${numeric(sheetText(model.data, "hpTemp"))} · Hit dice ${hitDiceCurrent}/${result.fields.hdMax}`}
+          className="appsheet-battle-resources"
+        >
           <div className="appsheet-inline-fields">
             {([
               ["hpTemp", "Temporary HP", 0],
@@ -154,8 +161,12 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
             <label><input type="checkbox" checked={card.bloodTinge === true} disabled={model.readOnly} onChange={(event) => model.setFields({ bloodTinge: event.target.checked }, { bloodTinge: event.target.checked })} /> Blood Tinge held</label>
             <label><input type="checkbox" checked={sheetBool(model.data, "insane")} disabled={model.readOnly} onChange={(event) => model.setField("insane", event.target.checked)} /> Insane</label>
           </div>
-        </AppPanel>
-        <AppPanel title="Death saves" className="appsheet-death-panel">
+        </AppDisclosure>
+        <AppDisclosure
+          title="Death saves"
+          summary={deathSuccesses || deathFailures ? `${deathSuccesses} successes · ${deathFailures} failures` : "None marked"}
+          className="appsheet-death-panel"
+        >
           <div className="appsheet-death-saves">
             {(["S", "F"] as const).map((kind) => (
               <div key={kind}>
@@ -170,7 +181,7 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
             ))}
           </div>
           <AutoReason reason="Death saves are table state, so the player records them rather than the rules engine calculating them." />
-        </AppPanel>
+        </AppDisclosure>
       </div>
     </AppSection>
   );

@@ -4,12 +4,12 @@ import { SHEET_SKILL_FIELD, SKILLS } from "@/data/skills";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import type { BuyMode } from "../../lib/abilityBuy";
 import {
+  AppDisclosure,
   AppPanel,
   AppSection,
   AppSelect,
   AutoReason,
   ChoiceToggle,
-  DerivedValue,
   PendingNotice,
   type AppSheetModel,
 } from "./appSheetShared";
@@ -60,6 +60,12 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
         </AppPanel>
       )}
 
+      <AppDisclosure
+        title="Skill proficiency choices"
+        summary={klass ? `${card.skillProficiencies.length} proficient · ${classRemaining + featRemaining} choices remaining` : "Choose a class first"}
+        aside={classRemaining + featRemaining > 0 ? <span className="appsheet-incomplete">Action needed</span> : undefined}
+        defaultOpen={!setupComplete || classRemaining + featRemaining > 0}
+      >
       {klass ? (
         <AppPanel title={`${klass.title} skill choices`} aside={<span className={classRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{classRemaining} left</span>}>
           <div className="appsheet-choice-list">
@@ -83,21 +89,27 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
           <AutoReason reason="The Skilled background feat grants any combination of three skills or tool proficiencies." />
         </AppPanel>
       )}
+      </AppDisclosure>
 
       <AppPanel title="Final abilities and saves">
         <div className="appsheet-final-abilities">
           {ABILITIES.map((ability) => (
-            <div key={ability.key}>
-              <div className="appsheet-final-score">
-                <span>{ability.name}</span><strong>{result.fields[`${ability.key}Score`]}</strong><b>{result.fields[`${ability.key}Mod`]}</b>
-              </div>
-              <DerivedValue label="Saving throw" value={result.fields[`${ability.key}Save`]} reason={result.reasons[`${ability.key}Save`]} />
+            <div className="appsheet-final-score" key={ability.key}>
+              <span>{ability.name}</span>
+              <strong>{result.fields[`${ability.key}Score`]}</strong>
+              <b>{result.fields[`${ability.key}Mod`]}</b>
+              <small>Save {result.fields[`${ability.key}Save`]}</small>
+              <AutoReason reason={result.reasons[`${ability.key}Save`]} />
             </div>
           ))}
         </div>
       </AppPanel>
 
-      <AppPanel title="Skill bonuses" aside={<span className="appsheet-status-word">Calculated</span>}>
+      <AppDisclosure
+        title="All skill bonuses"
+        summary={`${SKILLS.filter((skill) => result.fields[`${SHEET_SKILL_FIELD[skill.name]}P`] === true).length} proficient · passive Perception ${result.fields.passivePerception}`}
+      >
+      <AppPanel title="Calculated skills" aside={<span className="appsheet-status-word">Rules-linked</span>}>
         <div className="appsheet-skill-table">
           {SKILLS.map((skill) => {
             const field = SHEET_SKILL_FIELD[skill.name];
@@ -113,6 +125,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
           })}
         </div>
       </AppPanel>
+      </AppDisclosure>
 
       {!setupComplete && !model.readOnly && (
         <div className="appsheet-finish-bar">

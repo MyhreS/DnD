@@ -460,6 +460,11 @@
     gap: 24px;
   }
 
+  .appsheet-current-state .appsheet-vital-editors,
+  .appsheet-current-state .appsheet-metric-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .appsheet-overview-layout.setup-incomplete {
     grid-template-areas:
       "state"
@@ -481,8 +486,24 @@
 
   .appsheet-metric-grid,
   .appsheet-combat-strip,
+  .appsheet-focus-strip,
   .appsheet-final-abilities {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .appsheet-armor-summary .appsheet-derived:nth-child(2) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .appsheet-disclosure > summary {
+    grid-template-columns: minmax(0, 1fr) auto 16px;
+    min-height: 62px;
+  }
+
+  .appsheet-disclosure-aside {
+    max-width: 90px;
+    text-align: right;
   }
 
   .appsheet-choice-list,

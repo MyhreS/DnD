@@ -4,6 +4,7 @@ import { maxAddonPieces, studdedAddonIdsOf } from "@/lib/character";
 import { armorFor } from "@/lib/customItems";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import {
+  AppDisclosure,
   AppPanel,
   AppSection,
   AppSelect,
@@ -38,18 +39,21 @@ export function AppCombatSection({ model }: { model: AppSheetModel }) {
   const addonLimit = maxAddonPieces(card.mainArmorId, card.customItems);
   const studded = new Set(studdedAddonIdsOf(card));
   const foundAddonFull = found.armorCategory === "Add-on Armor" && (card.addonArmorIds?.length ?? 0) >= addonLimit;
+  const wornMainArmor = mainOptions.find((entry) => entry.id === card.mainArmorId);
 
   return (
     <AppSection title="Combat & armor">
-      <div className="appsheet-combat-strip">
+      <div className="appsheet-focus-strip appsheet-armor-summary">
         <DerivedValue label="Armor class" value={result.fields.ac} reason={result.reasons.ac} testId="appsheet-combat-ac" />
-        <DerivedValue label="Armor category" value={result.fields.armorCategory} reason={result.reasons.armorCategory} />
+        <DerivedValue label="Worn armor" value={wornMainArmor?.name ?? "Unarmored"} reason={result.reasons.armorCategory} />
         <DerivedValue label="Shield Arm" value={result.fields.shieldArm === true ? "Active" : "—"} reason={result.reasons.shieldArm} />
-        <DerivedValue label="Carried weight" value={result.fields.weight} reason={result.reasons.weight} />
-        <DerivedValue label="Load" value={result.fields.weightCondition} reason={result.reasons.weightCondition} />
       </div>
 
-      <AppPanel title="Worn armor" aside={<span className="appsheet-status-word">{(card.addonArmorIds ?? []).length}/{addonLimit} add-ons</span>}>
+      <AppDisclosure
+        title="Change worn armor"
+        summary={`${(card.addonArmorIds ?? []).length}/${addonLimit} add-ons · ${card.extraArmorIds?.length ?? 0} extras`}
+      >
+      <AppPanel title="Main armor and add-ons" aside={<span className="appsheet-status-word">{(card.addonArmorIds ?? []).length}/{addonLimit} add-ons</span>}>
         <AppSelect
           label="Main armor"
           value={card.mainArmorId ?? ""}
@@ -100,8 +104,13 @@ export function AppCombatSection({ model }: { model: AppSheetModel }) {
         </div>
         <AutoReason reason="Only one item can occupy each extra-armor category. Extras update weight, special rules, and impressions." />
       </AppPanel>
+      </AppDisclosure>
 
-      <div className="appsheet-two-column">
+      <AppDisclosure
+        title="Armor rules"
+        summary={`${String(result.fields.armorCategory || "Unarmored")} · training, effects, and appearance`}
+      >
+      <div className="appsheet-two-column appsheet-disclosure-grid">
         <AppPanel title="Training">
           <div className="appsheet-read-list">
             <span><b>Armor</b><strong>{klass?.armorTraining.join(" · ") || "Choose a class"}</strong></span>
@@ -114,9 +123,11 @@ export function AppCombatSection({ model }: { model: AppSheetModel }) {
           <div className="appsheet-read-copy"><b>Impressions</b><p>{String(result.fields.impressions || "No visible armor impression.")}</p></div>
         </AppPanel>
       </div>
+      </AppDisclosure>
 
       {!model.readOnly && (
-        <AppPanel title="Armor found outside the handbook" className="appsheet-found-panel">
+        <AppDisclosure title="Record unique armor" summary="For armor found outside the handbook">
+        <AppPanel title="Unique armor" className="appsheet-found-panel">
           {!showFound ? (
             <button type="button" className="appsheet-secondary-action" onClick={() => setShowFound(true)}>Record unique armor</button>
           ) : (
@@ -134,6 +145,7 @@ export function AppCombatSection({ model }: { model: AppSheetModel }) {
             </form>
           )}
         </AppPanel>
+        </AppDisclosure>
       )}
     </AppSection>
   );
