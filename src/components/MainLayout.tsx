@@ -10,7 +10,6 @@ export function MainLayout() {
       titleTo="/"
       nav={
         <>
-          <NavLink to="/" end>Menu</NavLink>
           <NavLink to="/character">Hunters</NavLink>
           <NavLink to="/game">Game</NavLink>
           <NavLink to="/codex">Codex</NavLink>
