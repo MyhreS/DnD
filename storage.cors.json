@@ -1,0 +1,14 @@
+[
+  {
+    "origin": [
+      "https://dandd-ea955-workshop.web.app"
+    ],
+    "method": [
+      "GET"
+    ],
+    "responseHeader": [
+      "Content-Type"
+    ],
+    "maxAgeSeconds": 3600
+  }
+]
