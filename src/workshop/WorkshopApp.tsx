@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { AccessScreen } from "@/workshop/components/AccessScreen";
-import { AdminInvite } from "@/workshop/components/AdminInvite";
 import { AgentPresence } from "@/workshop/components/AgentPresence";
 import { TicketComposer } from "@/workshop/components/TicketComposer";
 import { TicketDetail } from "@/workshop/components/TicketDetail";
@@ -32,7 +31,6 @@ export function WorkshopApp() {
       </main>
       <footer className="workshop-footer">
         <span>Requests stay as a permanent thread. Reply when you want to add or correct something.</span>
-        {session.role === "admin" && <AdminInvite />}
       </footer>
       {selected && <TicketDetail key={selected.id} ticket={selected} uid={session.user!.uid} onClose={() => setSelectedId(null)} />}
     </div>

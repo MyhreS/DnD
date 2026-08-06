@@ -28,11 +28,6 @@ const replyTicketCall = httpsCallable<
   { ticketId: string; body: string; attachments: WorkshopAttachment[] },
   { ok: boolean }
 >(workshopFunctions, "replyWorkshopTicket");
-const inviteMemberCall = httpsCallable<{ email: string }, { ok: boolean; email: string }>(
-  workshopFunctions,
-  "inviteWorkshopMember",
-);
-
 export async function claimWorkshopAccess(): Promise<"admin" | "creator"> {
   return (await claimAccessCall()).data.role;
 }
@@ -47,10 +42,6 @@ export async function replyWorkshopTicket(
   attachments: WorkshopAttachment[],
 ) {
   await replyTicketCall({ ticketId, body, attachments });
-}
-
-export async function inviteWorkshopMember(email: string): Promise<string> {
-  return (await inviteMemberCall({ email })).data.email;
 }
 
 export async function uploadWorkshopImages(uid: string, files: File[]): Promise<WorkshopAttachment[]> {
