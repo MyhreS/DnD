@@ -153,6 +153,7 @@ export const createWorkshopTicket = onCall({ region: REGION }, async (request) =
     revision: 1,
     nextSequence: 3,
     attachmentCount: attachments.length,
+    needsSimonApproved: false,
     leasedBy: null,
     leaseExpiresAt: null,
   });
@@ -178,15 +179,27 @@ export const replyWorkshopTicket = onCall({ region: REGION }, async (request) =>
     if (!ticket.exists) throw new HttpsError("not-found", "Ticket not found.");
     const data = ticket.data()!;
     const sequence = Number(data.nextSequence ?? 1);
-    const nextStatus = data.status === "doing_now" ? "doing_now" : "not_done";
+    const waitingForSimon = data.status === "needs_simon";
+    const answeredBySimon = user.email === ADMIN_EMAIL;
+    const nextStatus = data.status === "doing_now"
+      ? "doing_now"
+      : waitingForSimon && !answeredBySimon
+        ? "needs_simon"
+        : "not_done";
+    const acknowledgement = waitingForSimon
+      ? answeredBySimon
+        ? "Simon answered. The agent will reread the whole thread."
+        : "Update received. This task is still waiting for Simon to reply in this thread."
+      : "Update received. The agent will reread the whole thread.";
     tx.set(ticketRef.collection("messages").doc(), messageData("follow_up", body, user, sequence, attachments));
-    tx.set(ticketRef.collection("messages").doc(), messageData("system", "Update received. The agent will reread the whole thread.", null, sequence + 1));
+    tx.set(ticketRef.collection("messages").doc(), messageData("system", acknowledgement, null, sequence + 1));
     tx.update(ticketRef, {
       status: nextStatus,
       updatedAt: FieldValue.serverTimestamp(),
       revision: FieldValue.increment(1),
       nextSequence: sequence + 2,
       attachmentCount: FieldValue.increment(attachments.length),
+      ...(waitingForSimon ? { needsSimonApproved: answeredBySimon } : {}),
     });
   });
   return { ok: true };

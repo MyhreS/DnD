@@ -18,6 +18,7 @@ const RISK_PATTERNS = [
   /\b(workshop (agent|manager|bot)|heartbeat worker)\b/i,
   /\b(migrate|overwrite|replace)\b.*\b(production|database|user data)\b/i,
 ];
+const REVIEW_REQUEST = /\b(?:ready for|needs?|please|can you|could you)\b.{0,80}\b(?:review|approve|merge)\b/i;
 
 export function ticketNeedsSimon(text: string): string | null {
   if (text.length > 40_000) return "The request is unusually large and needs to be split into a clear first change.";
@@ -25,6 +26,10 @@ export function ticketNeedsSimon(text: string): string | null {
     return "This request touches a protected or high-impact area. Simon needs to approve the exact change.";
   }
   return null;
+}
+
+export function requiresSimonReply(reason: string | null, approvedInThread: boolean): boolean {
+  return reason !== null && !approvedInThread;
 }
 
 export function parseAgentResult(raw: string): AgentResult {
@@ -73,6 +78,9 @@ export function outcomeMessage(result: AgentResult): string {
   }
   if (result.outcome === "declined") {
     return `Declined — ${result.declineReason}`;
+  }
+  if (REVIEW_REQUEST.test(result.summaryForCreator)) {
+    return "Done — the updated version is available now.";
   }
   return result.summaryForCreator.startsWith("Done")
     ? result.summaryForCreator

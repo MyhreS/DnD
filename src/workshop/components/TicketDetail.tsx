@@ -32,6 +32,7 @@ export function TicketDetail({ ticket, uid, onClose }: { ticket: WorkshopTicket;
           <TicketStatus status={ticket.status} />
           <h2 id="ticket-detail-title">{ticket.title}</h2>
           <p>Updated after every reply · revision {ticket.revision}</p>
+          {ticket.status === "needs_simon" && <p className="ticket-gate-note">Only Simon’s reply in this thread can restart this task.</p>}
         </header>
         <div className="message-list">
           {messages.map((message) => (

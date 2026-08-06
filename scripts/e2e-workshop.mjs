@@ -171,14 +171,38 @@ try {
   await creator.page.getByText("Needs Simon", { exact: true }).waitFor();
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
   await creator.page.getByText("I need Simon to decide one thing", { exact: false }).waitFor();
+  await creator.page.getByText("Only Simon’s reply in this thread can restart this task.", { exact: true }).waitFor();
+  await creator.page.locator(".detail-backdrop").evaluate(async (element) => {
+    await Promise.all(element.getAnimations({ subtree: true }).map((animation) => animation.finished));
+  });
+  await creator.page.screenshot({ path: "screenshots/workshop-needs-simon-mobile.png", fullPage: true });
 
   await creator.page.getByTestId("ticket-reply").fill("Please reconsider this with the new information.");
   await creator.page.getByTestId("send-reply").click();
-  await creator.page.getByText("Update received. The agent will reread").waitFor();
+  await creator.page.getByText("still waiting for Simon to reply in this thread", { exact: false }).waitFor();
   await creator.page.getByRole("button", { name: "Close thread" }).click();
+  await creator.page.getByText("Needs Simon", { exact: true }).waitFor();
+  const afterCreatorReply = (await db.doc(`workshopTickets/${ticketId}`).get()).data();
+  if (afterCreatorReply?.status !== "needs_simon" || afterCreatorReply?.needsSimonApproved === true) {
+    throw new Error("Christopher incorrectly unblocked a Needs Simon task.");
+  }
+
+  await simon.page.getByTestId(`ticket-${ticketId}`).click();
+  await simon.page.getByText("Only Simon’s reply in this thread can restart this task.", { exact: true }).waitFor();
+  await simon.page.getByTestId("ticket-reply").fill("Simon approves continuing with the updated request.");
+  await simon.page.getByTestId("send-reply").click();
+  await simon.page.getByText("Simon answered. The agent will reread the whole thread.", { exact: true }).waitFor();
+  await simon.page.getByRole("button", { name: "Close thread" }).click();
   await creator.page.getByText("Not done", { exact: true }).waitFor();
+  const afterSimonReply = (await db.doc(`workshopTickets/${ticketId}`).get()).data();
+  if (afterSimonReply?.status !== "not_done" || afterSimonReply?.needsSimonApproved !== true) {
+    throw new Error("Simon did not unblock the Needs Simon task.");
+  }
 
   await runManager("declined");
+  if ((await db.doc(`workshopTickets/${ticketId}`).get()).data()?.needsSimonApproved !== false) {
+    throw new Error("Simon approval was not consumed after the next agent run.");
+  }
   await creator.page.getByText("Declined", { exact: true }).waitFor();
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
   await creator.page.getByText("Declined — This test request cannot be completed safely.", { exact: true }).waitFor();
@@ -193,7 +217,7 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, heartbeat, finished/reopened/Needs Simon/declined flow, and responsive layout.");
+  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, heartbeat, Chris-blocked/Simon-reopened Needs Simon flow, declined flow, and responsive layout.");
   await Promise.all([simon.context.close(), creator.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();
