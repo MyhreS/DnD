@@ -134,7 +134,6 @@ async function claimNext(): Promise<ClaimedTicket | null> {
       if (!fresh.exists || fresh.data()?.status !== "not_done") return null;
       const data = fresh.data() as TicketData;
       if (data.retryAfter && data.retryAfter.toMillis() > Date.now()) return null;
-      const sequence = Number(data.nextSequence ?? 1);
       tx.update(candidate.ref, {
         status: "doing_now",
         leasedBy: WORKER_ID,
@@ -142,16 +141,6 @@ async function claimNext(): Promise<ClaimedTicket | null> {
         retryAfter: FieldValue.delete(),
         claimedRevision: data.revision,
         updatedAt: FieldValue.serverTimestamp(),
-        nextSequence: sequence + 1,
-      });
-      tx.set(candidate.ref.collection("messages").doc(), {
-        kind: "agent",
-        body: "I’m working on this now.",
-        authorUid: "workshop-agent",
-        authorName: "Workshop agent",
-        attachments: [],
-        sequence,
-        createdAt: FieldValue.serverTimestamp(),
       });
       return { id: candidate.id, ref: candidate.ref, data, workerId: WORKER_ID };
     });

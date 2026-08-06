@@ -302,6 +302,10 @@ try {
   await runManager("answered");
   const answerData = (await answerProbe.get()).data();
   if (answerData?.status !== "finished") throw new Error("Direct answer did not close cleanly.");
+  const answerMessages = await answerProbe.collection("messages").get();
+  if (answerMessages.docs.some((message) => message.data().body === "I’m working on this now.")) {
+    throw new Error("Routine working state was stored as a permanent thread reply.");
+  }
   await creator.page.getByTestId("ticket-direct-answer-probe").click();
   await creator.page.getByText("You do not need to change anything. This is a direct answer from the Workshop agent.", { exact: true }).waitFor();
   if (await creator.page.getByRole("link", { name: "Open the updated app" }).count()) throw new Error("Direct answer incorrectly exposed a production link.");
@@ -418,25 +422,26 @@ try {
     updatedAt: new Date(),
     readAtBy: {},
     revision: 1,
-    nextSequence: 31,
+    nextSequence: 46,
     attachmentCount: 1,
     needsSimonReplyReceived: false,
     leasedBy: null,
     leaseExpiresAt: null,
   });
-  await Promise.all(Array.from({ length: 30 }, (_, index) => longThreadRef.collection("messages").doc(`message-${String(index + 1).padStart(2, "0")}`).set({
+  const longMessageTail = "Long note ending marker.";
+  await Promise.all(Array.from({ length: 45 }, (_, index) => longThreadRef.collection("messages").doc(`message-${String(index + 1).padStart(2, "0")}`).set({
     kind: index === 0 ? "request" : "follow_up",
-    body: `Conversation note ${index + 1}`,
+    body: index === 34 ? `Long note start ${"detail ".repeat(300)}${longMessageTail}` : `Conversation note ${index + 1}`,
     authorUid: creatorUid,
     authorName: "Christopher Creator",
-    attachments: index === 4 ? [{
+    attachments: index === 29 ? [{
       name: "missing-image.png",
       path: `workshop/${creatorUid}/${crypto.randomUUID()}/${crypto.randomUUID()}-missing-image.png`,
       contentType: "image/png",
       size: 42,
     }] : [],
     sequence: index + 1,
-    createdAt: new Date(Date.now() - (30 - index) * 30_000),
+    createdAt: new Date(Date.now() - (45 - index) * 30_000),
   })));
   await Promise.all(Array.from({ length: 16 }, (_, index) => db.collection("workshopTickets").doc(`scroll-fixture-${index}`).set({
     title: `History request ${index + 1}`,
@@ -454,6 +459,54 @@ try {
     leaseExpiresAt: null,
   })));
   const requestList = creator.page.getByTestId("ticket-list");
+  await eventually(async () => await requestList.locator("li").count() === 15, "Initial request page limit");
+  await creator.page.getByTestId("load-more-tickets").waitFor();
+
+  const evictedButton = requestList.locator("li").nth(14).locator("button");
+  const evictedTestId = await evictedButton.getAttribute("data-testid");
+  const evictedTitle = await evictedButton.locator("strong").innerText();
+  if (!evictedTestId) throw new Error("Could not identify the last request on the first page.");
+  await evictedButton.click();
+  await creator.page.getByRole("heading", { name: evictedTitle }).waitFor();
+  const evictionProbe = db.doc("workshopTickets/paging-eviction-probe");
+  await evictionProbe.set({
+    title: "New request pushing the page",
+    status: "finished",
+    authorUid: creatorUid,
+    authorEmail: creatorEmail,
+    authorName: "Christopher Creator",
+    createdAt: new Date(),
+    updatedAt: new Date(Date.now() + 1_000),
+    readAtBy: {},
+    revision: 1,
+    nextSequence: 1,
+    attachmentCount: 0,
+    needsSimonReplyReceived: false,
+    leasedBy: null,
+    leaseExpiresAt: null,
+  });
+  await eventually(async () => await creator.page.getByTestId(evictedTestId).count() === 0, "Open request leaving the bounded list");
+  await creator.page.getByRole("heading", { name: evictedTitle }).waitFor();
+  await creator.page.getByRole("button", { name: "Close thread" }).click();
+  await db.recursiveDelete(evictionProbe);
+
+  await db.doc("workshopAgent/state").set({
+    currentTicketId: "scroll-fixture-0",
+    checkingNow: true,
+    lastHeartbeatAt: new Date(),
+  }, { merge: true });
+  await creator.page.getByTestId("ticket-scroll-fixture-0").getByTestId("work-activity-list").waitFor();
+  await creator.page.getByTestId("ticket-scroll-fixture-0").click();
+  await creator.page.getByTestId("work-activity-detail").waitFor();
+  await creator.page.waitForTimeout(350);
+  await creator.page.screenshot({ path: "screenshots/workshop-working-mobile.png", fullPage: true });
+  if (await creator.page.getByText("I’m working on this now.", { exact: true }).count()) {
+    throw new Error("Routine working copy appeared as a conversation reply.");
+  }
+  await creator.page.getByRole("button", { name: "Close thread" }).click();
+  await db.doc("workshopAgent/state").set({ currentTicketId: null, checkingNow: false, lastHeartbeatAt: new Date() }, { merge: true });
+
+  await creator.page.getByTestId("load-more-tickets").click();
   await requestList.locator("li").nth(18).waitFor();
   await assertScrollable(requestList, "Workshop mobile request list");
   const requestSearch = creator.page.getByTestId("ticket-search");
@@ -470,23 +523,34 @@ try {
 
   await requestSearch.fill("Long conversation");
   await creator.page.getByTestId(`ticket-${longThreadId}`).click();
-  await creator.page.getByText("Conversation note 30", { exact: true }).waitFor();
+  await creator.page.getByText("Conversation note 45", { exact: true }).waitFor();
+  if (await creator.page.getByText("Conversation note 1", { exact: true }).count()) throw new Error("Long thread loaded its full history immediately.");
+  await creator.page.getByTestId("load-older-messages").waitFor();
+  if (await creator.page.getByText(longMessageTail, { exact: false }).count()) throw new Error("Long comment was not compacted.");
+  await creator.page.getByRole("button", { name: "Show full message" }).click();
+  await creator.page.getByText(longMessageTail, { exact: false }).waitFor();
+  await creator.page.getByRole("button", { name: "Show less" }).click();
   const messageList = creator.page.getByTestId("message-list");
   await eventually(async () => messageList.evaluate((element) => element.scrollTop > 0 && element.scrollHeight > element.clientHeight), "Conversation opening at latest message");
   await creator.page.getByText("Image unavailable", { exact: true }).waitFor();
   await creator.page.getByRole("button", { name: "Try again" }).click();
   await creator.page.getByText("Image unavailable", { exact: true }).waitFor();
+  await creator.page.getByTestId("load-older-messages").click();
+  await creator.page.getByText("Conversation note 6", { exact: true }).waitFor();
+  await creator.page.getByTestId("load-older-messages").click();
+  await creator.page.getByText("Conversation note 1", { exact: true }).waitFor();
+  if (await creator.page.getByTestId("load-older-messages").count()) throw new Error("Earlier-message paging did not reach the beginning.");
   await messageList.evaluate((element) => { element.scrollTop = 0; element.dispatchEvent(new Event("scroll")); });
-  await longThreadRef.collection("messages").doc("message-31").set({
+  await longThreadRef.collection("messages").doc("message-46").set({
     kind: "agent",
     body: "A new reply arrived while reading older messages.",
     authorUid: "workshop-agent",
     authorName: "Workshop agent",
     attachments: [],
-    sequence: 31,
+    sequence: 46,
     createdAt: new Date(),
   });
-  await longThreadRef.update({ updatedAt: new Date(), nextSequence: 32 });
+  await longThreadRef.update({ updatedAt: new Date(), nextSequence: 47 });
   await creator.page.getByRole("button", { name: "New message ↓" }).waitFor();
   await creator.page.screenshot({ path: "screenshots/workshop-long-thread-mobile.png", fullPage: true });
   await creator.page.getByRole("button", { name: "New message ↓" }).click();
@@ -496,7 +560,7 @@ try {
   await ticketReply.press("Enter");
   await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
   const longMessages = await longThreadRef.collection("messages").get();
-  const imageOnlyReply = longMessages.docs.map((item) => item.data()).find((message) => message.kind === "follow_up" && message.sequence === 32);
+  const imageOnlyReply = longMessages.docs.map((item) => item.data()).find((message) => message.kind === "follow_up" && message.sequence === 47);
   if (!imageOnlyReply || imageOnlyReply.body !== "" || imageOnlyReply.attachments?.length !== 1) throw new Error("Image-only reply was not stored correctly.");
   await longThreadRef.update({ status: "finished" });
   await creator.page.keyboard.press("Escape");
@@ -614,7 +678,7 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: direct answers, automatic retries, Simon-only replies, screenshot paste, immediate Firestore wake-up, fixed access for Thomas, secure images, offline drafts, idempotency, read receipts, long-thread behavior, and responsive mobile/desktop layout.");
+  console.log("Workshop E2E passed: paged requests, durable open threads, paged conversations, compact long comments, live working indicators, direct answers, automatic retries, Simon-only replies, secure images, drafts, idempotency, read receipts, and responsive mobile/desktop layout.");
   await Promise.all([simon.context.close(), creator.context.close(), thomas.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();
