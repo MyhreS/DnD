@@ -1,4 +1,4 @@
-import { outcomeMessage, parseAgentResult, ticketNeedsSimon } from "./workshop-manager-core";
+import { outcomeMessage, parseAgentResult, requiresSimonReply, ticketNeedsSimon } from "./workshop-manager-core";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -7,6 +7,8 @@ function assert(condition: unknown, message: string): asserts condition {
 assert(ticketNeedsSimon("Make the mobile buttons cleaner") === null, "ordinary UI work must proceed");
 assert(ticketNeedsSimon("Delete every user in production") !== null, "destructive production work must stop");
 assert(ticketNeedsSimon("Please change the authentication permissions") !== null, "access changes must stop");
+assert(requiresSimonReply("Protected change", false), "protected work must wait without Simon's thread reply");
+assert(!requiresSimonReply("Protected change", true), "Simon's thread reply must unblock one protected run");
 
 const finished = parseAgentResult(JSON.stringify({
   outcome: "finished",
@@ -15,6 +17,12 @@ const finished = parseAgentResult(JSON.stringify({
 }));
 assert(finished.outcome === "finished", "finished outcome must parse");
 assert(outcomeMessage(finished).startsWith("Done"), "creator result must be plain and explicit");
+
+const reviewRequest = parseAgentResult(JSON.stringify({
+  outcome: "finished",
+  summaryForCreator: "The pull request is ready for review. Please approve and merge it.",
+}));
+assert(outcomeMessage(reviewRequest) === "Done — the updated version is available now.", "finished work must never ask the creator for review");
 
 const needsSimon = parseAgentResult(JSON.stringify({
   outcome: "needs_simon",

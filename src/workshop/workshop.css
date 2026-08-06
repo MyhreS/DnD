@@ -81,6 +81,7 @@ button { color: inherit; }
 .ticket-detail > header { position: sticky; top: 0; z-index: 2; padding: 28px 34px 22px; border-bottom: 1px solid #d8d1c3; background: #f8f5eef5; backdrop-filter: blur(8px); }
 .ticket-detail h2 { margin: 13px 42px 6px 0; font: 400 30px/1.15 "Libre Caslon Display", serif; }
 .ticket-detail header p { margin: 0; color: #81786c; font-size: 11px; }
+.ticket-detail header .ticket-gate-note { margin-top: 10px; color: #86232b; font-weight: 700; }
 .close-button { position: absolute; top: 20px; right: 24px; width: 37px; height: 37px; border: 1px solid #cec5b6; border-radius: 50%; background: transparent; font-size: 25px; cursor: pointer; }
 .message-list { padding: 10px 34px; }
 .thread-message { padding: 22px 0; border-bottom: 1px solid #ddd5c8; }
