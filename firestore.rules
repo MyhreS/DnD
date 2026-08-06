@@ -138,6 +138,12 @@ service cloud.firestore {
     // /users/{uid} — a signed-in user's self-set profile (name). Owner only.
     match /users/{uid} {
       allow read, write: if isUser() && request.auth.uid == uid;
+
+      // A DM's reusable enemy library. Archived entries stay recoverable.
+      match /enemies/{enemyId} {
+        allow read, create, update: if isUser() && request.auth.uid == uid;
+        allow delete: if false;
+      }
     }
 
     // One deterministic reservation per user. Session Cloud Functions are the

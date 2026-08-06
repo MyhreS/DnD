@@ -8,11 +8,11 @@ import { chromium } from "playwright";
 const PORT = 5201;
 const BASE = `http://127.0.0.1:${PORT}`;
 const serviceAccount = process.env.AGENT_TEST_SA;
-if (!serviceAccount) throw new Error("Missing AGENT_TEST_SA (run through Doppler).");
-const projectId = process.env.VITE_FIREBASE_PROJECT_ID;
-if (!projectId) throw new Error("Missing VITE_FIREBASE_PROJECT_ID.");
+const projectId = process.env.VITE_FIREBASE_PROJECT_ID ?? process.env.GCLOUD_PROJECT ?? "dandd-ea955";
 
-const admin = initializeAdmin({ credential: cert(JSON.parse(serviceAccount)), projectId }, "battle-e2e");
+const admin = initializeAdmin(serviceAccount
+  ? { credential: cert(JSON.parse(serviceAccount)), projectId }
+  : { projectId }, "battle-e2e");
 const auth = getAdminAuth(admin);
 const db = getAdminFirestore(admin);
 const dmUid = "battle-e2e-dm";
@@ -25,6 +25,19 @@ async function ensureUser(uid, email, displayName) {
   try { await auth.deleteUser(uid); } catch { /* absent */ }
   await auth.createUser({ uid, email, emailVerified: true, displayName });
   await db.doc(`users/${uid}`).set({ uid, email, firstName: displayName.split(" ")[0], lastName: displayName.split(" ").slice(1).join(" ") });
+}
+
+function unsignedCustomToken(uid) {
+  const now = Math.floor(Date.now() / 1000);
+  const encode = (value) => Buffer.from(JSON.stringify(value)).toString("base64url");
+  return `${encode({ alg: "RS256", typ: "JWT" })}.${encode({
+    iss: "emulator-test@dandd-ea955.iam.gserviceaccount.com",
+    sub: "emulator-test@dandd-ea955.iam.gserviceaccount.com",
+    aud: "https://identitytoolkit.googleapis.com/google.identity.identitytoolkit.v1.IdentityToolkit",
+    iat: now,
+    exp: now + 3600,
+    uid,
+  })}.emulator-signature`;
 }
 
 await ensureUser(dmUid, "battle-dm@example.test", "Battle DM");
@@ -103,9 +116,15 @@ await db.doc(`games/${gameId}/combatants/${enemyId}`).set({
   note: "Howls when bloodied.",
   revealHp: false,
   revealStats: false,
+  enemyTemplateId: "moon-beast-template",
+  baseStats: { name: "Moon Beast", initiative: -99, ac: 14, maxHp: 30, note: "Howls when bloodied.", revealHp: false, revealStats: false },
   isWarden: false,
   createdAt: Date.now(),
 });
+await Promise.all([
+  db.doc(`users/${dmUid}/enemies/moon-beast-template`).set({ name: "Moon Beast", initiative: -99, ac: 14, maxHp: 30, note: "Howls when bloodied.", revealHp: false, revealStats: false, archived: false, createdAt: Date.now(), updatedAt: Date.now() }),
+  db.doc(`users/${dmUid}/enemies/grave-hound-template`).set({ name: "Grave Hound", initiative: -99, ac: 12, maxHp: 18, note: "Fast and territorial.", revealHp: false, revealStats: false, archived: false, createdAt: Date.now(), updatedAt: Date.now() }),
+]);
 await db.doc(`games/${gameId}/battleView/${enemyId}`).set({
   kind: "monster",
   name: "Moon Beast",
@@ -126,14 +145,44 @@ await Promise.all([
   db.doc(`activeGameSeats/${dmUid}`).set({ uid: dmUid, gameId, role: "dm", reservedAt: Date.now() }),
   db.doc(`activeGameSeats/${playerUid}`).set({ uid: playerUid, gameId, role: "player", reservedAt: Date.now() }),
 ]);
-const [dmToken, playerToken] = await Promise.all([
+const [dmToken, playerToken] = serviceAccount ? await Promise.all([
   auth.createCustomToken(dmUid),
   auth.createCustomToken(playerUid),
-]);
+]) : [unsignedCustomToken(dmUid), unsignedCustomToken(playerUid)];
+
+async function idTokenFor(customToken) {
+  const response = await fetch("http://127.0.0.1:9099/identitytoolkit.googleapis.com/v1/accounts:signInWithCustomToken?key=emulator-api-key", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ token: customToken, returnSecureToken: true }),
+  });
+  if (!response.ok) throw new Error(`Auth emulator sign-in failed: ${response.status}`);
+  return (await response.json()).idToken;
+}
+
+async function verifyEnemyLibraryRules() {
+  const [dmIdToken, playerIdToken] = await Promise.all([idTokenFor(dmToken), idTokenFor(playerToken)]);
+  const url = `http://127.0.0.1:8080/v1/projects/${projectId}/databases/(default)/documents/users/${dmUid}/enemies/moon-beast-template`;
+  const [ownerRead, playerRead] = await Promise.all([
+    fetch(url, { headers: { authorization: `Bearer ${dmIdToken}` } }),
+    fetch(url, { headers: { authorization: `Bearer ${playerIdToken}` } }),
+  ]);
+  if (!ownerRead.ok) throw new Error(`The DM cannot read their enemy library: ${ownerRead.status}`);
+  if (playerRead.status !== 403) throw new Error(`Another player can read the DM enemy library: ${playerRead.status}`);
+}
+
+await verifyEnemyLibraryRules();
 
 const server = spawn("bunx", ["vite", "--host", "127.0.0.1", "--port", String(PORT)], {
   stdio: ["ignore", "pipe", "pipe"],
-  env: { ...process.env, VITE_FIREBASE_EMULATORS: "1" },
+  env: {
+    ...process.env,
+    VITE_FIREBASE_EMULATORS: "1",
+    VITE_FIREBASE_API_KEY: process.env.VITE_FIREBASE_API_KEY ?? "emulator-api-key",
+    VITE_FIREBASE_PROJECT_ID: projectId,
+    VITE_FIREBASE_AUTH_DOMAIN: process.env.VITE_FIREBASE_AUTH_DOMAIN ?? `${projectId}.firebaseapp.com`,
+    VITE_FIREBASE_APP_ID: process.env.VITE_FIREBASE_APP_ID ?? "1:123:web:emulator",
+  },
 });
 
 async function ready() {
@@ -180,12 +229,16 @@ try {
   await playerPage.getByRole("heading", { name: "The Ashen Hunt" }).waitFor();
 
   await dmPage.getByRole("button", { name: "Start battle screen" }).click();
+  const battlePicker = dmPage.getByRole("dialog", { name: "Choose enemies" });
+  await battlePicker.getByLabel(/Grave Hound/).check();
+  await battlePicker.getByRole("button", { name: "Start battle", exact: true }).click();
   await Promise.all([
     dmPage.getByTestId("session-battle-screen").waitFor(),
     playerPage.getByTestId("session-battle-screen").waitFor(),
   ]);
   await playerPage.getByText("Round 1", { exact: true }).waitFor();
   await playerPage.locator(".battle-name").getByText("Lady Maria", { exact: true }).waitFor();
+  await playerPage.locator(".battle-name").getByText("Grave Hound", { exact: true }).waitFor();
   if (await playerPage.getByTestId("battle-turn-timer").count()) throw new Error("Player can still see the turn timer.");
   if (await dmPage.getByRole("button", { name: /timer|90 seconds/i }).count()) throw new Error("DM can still see turn-timer controls.");
   if (await playerPage.getByRole("button", { name: "Next turn" }).count()) throw new Error("Player received DM battle controls.");
@@ -217,14 +270,24 @@ try {
   await enemyDisplay.getByText("taken", { exact: true }).waitFor();
   await enemyCard.getByLabel("Stats visible").check();
   await enemyDisplay.locator(".battle-ac").getByText("14", { exact: true }).waitFor();
+  await enemyCard.getByRole("button", { name: "Reset stats", exact: true }).click();
+  await enemyCard.getByText("0 damage", { exact: false }).waitFor();
+  if (await enemyControl.locator(".game-condition-list").getByText(/Poisoned/).count()) throw new Error("Reset stats did not clear enemy conditions.");
+  await enemyDisplay.getByText(/Poisoned/).waitFor({ state: "detached" });
+  await enemyDisplay.locator(".battle-ac").getByText("14", { exact: true }).waitFor({ state: "detached" });
+  const resetPlayerText = await enemyDisplay.innerText();
+  if (resetPlayerText.includes("30") || resetPlayerText.includes("14")) {
+    throw new Error(`Reset stats did not restore the enemy visibility defaults: ${resetPlayerText}`);
+  }
 
   await manageBattle.getByRole("button", { name: "Add enemy", exact: true }).click();
-  const enemyForm = dmPage.getByRole("dialog", { name: "Add enemy" });
-  await enemyForm.getByLabel("Name").fill("Grave Hound");
-  await enemyForm.getByLabel("Max HP").fill("18");
-  await enemyForm.getByLabel("Initiative").fill("-99");
-  await enemyForm.getByRole("button", { name: "Add enemy" }).click();
-  await playerPage.locator(".battle-name").getByText("Grave Hound", { exact: true }).waitFor();
+  const enemyLibrary = dmPage.getByRole("dialog", { name: "Manage enemies" });
+  await enemyLibrary.getByText("Moon Beast", { exact: true }).waitFor();
+  await enemyLibrary.getByText("Grave Hound", { exact: true }).waitFor();
+  await noHorizontalOverflow(dmPage, "Enemy library desktop");
+  await dmPage.screenshot({ path: "screenshots/game-enemy-library-desktop.png", fullPage: true });
+  await enemyLibrary.getByRole("button", { name: "Done", exact: true }).click();
+  await manageBattle.waitFor();
 
   await manageBattle.getByRole("button", { name: "Create item", exact: true }).click();
   const itemDialog = dmPage.getByRole("dialog", { name: "Create an item" });
@@ -276,7 +339,7 @@ try {
   if (!claimedHunter.data()?.inventory?.some((item) => String(item.itemId).startsWith("session-"))) throw new Error("Claimed session weapon did not reach inventory.");
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Battle mode E2E passed: automatic entry/exit, one clean combatant list, modal-only management, conditions, damage, enemy creation, and responsive layout.");
+  console.log("Battle mode E2E passed: private enemy library, battle selection, stat reset, synced visibility, and responsive layout.");
   await dmContext.close();
   await playerContext.close();
 } finally {
@@ -287,8 +350,8 @@ try {
     db.doc(`characters/${characterId}`).delete(),
     db.doc(`activeGameSeats/${dmUid}`).delete(),
     db.doc(`activeGameSeats/${playerUid}`).delete(),
-    db.doc(`users/${dmUid}`).delete(),
-    db.doc(`users/${playerUid}`).delete(),
+    db.recursiveDelete(db.doc(`users/${dmUid}`)),
+    db.recursiveDelete(db.doc(`users/${playerUid}`)),
     auth.deleteUser(dmUid),
     auth.deleteUser(playerUid),
   ]);

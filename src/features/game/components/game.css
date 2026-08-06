@@ -127,6 +127,27 @@
 .game-dialog-results span,
 .game-dialog-results small { display: block; }
 .game-dialog-results small { color: var(--ink-faint); }
+.game-library-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.game-library-toolbar .btn { width: auto; }
+.game-library-toolbar .game-check { margin: 0; }
+.game-library-list { border-top: 1px solid var(--border-strong); }
+.game-library-list article { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 15px 0; border-bottom: 1px solid var(--border); }
+.game-library-list article.is-archived { opacity: 0.58; }
+.game-library-list article > div:first-child { min-width: 0; }
+.game-library-list strong,
+.game-library-list span,
+.game-library-list small { display: block; }
+.game-library-list span,
+.game-library-list small { overflow: hidden; color: var(--ink-faint); font-size: 0.8rem; text-overflow: ellipsis; white-space: nowrap; }
+.game-library-actions { display: flex; align-items: center; gap: 12px; }
+.game-library-actions .btn { width: auto; min-height: 34px; padding: 6px 10px; }
+.game-battle-picker { max-height: 360px; overflow-y: auto; border-top: 1px solid var(--border-strong); }
+.game-battle-picker label { display: flex; align-items: center; gap: 12px; padding: 13px 4px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.game-battle-picker label > span,
+.game-battle-picker strong,
+.game-battle-picker small { display: block; min-width: 0; }
+.game-battle-picker label > span { flex: 1; }
+.game-battle-picker small { color: var(--ink-faint); }
 .game-dialog-roster { border-top: 1px solid var(--border); }
 .game-dialog-player { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
 .game-dialog-player > button:first-child { flex: 1; padding: 0; border: 0; background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
@@ -366,6 +387,8 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-dialog-wide { grid-column: auto; }
   .game-dialog { max-height: calc(100dvh - 20px); padding: 20px 18px; }
   .game-inline-check { margin: 8px 8px 0 0; }
+  .game-library-list article { grid-template-columns: 1fr; gap: 10px; }
+  .game-library-actions { flex-wrap: wrap; }
   .game-sessions {
     position: static;
     display: flex;

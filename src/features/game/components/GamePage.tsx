@@ -14,14 +14,18 @@ import {
 import { getClass } from "@/data/classes";
 import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview";
 import { useAllCharacters } from "@/features/game/hooks/useAllCharacters";
+import { useEnemyLibrary } from "@/features/game/hooks/useEnemyLibrary";
+import { templateStats } from "@/features/game/lib/enemies";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { PaperSheetModal } from "@/features/hunter/components/papersheet/PaperSheetModal";
 import { cardClassName } from "@/features/hunter/lib/papersheet";
 import { useCombatSync } from "@/features/play/hooks/useCombatSync";
 import { emptyEncounter } from "@/features/play/lib/turnTimer";
 import { useCombatStore } from "@/features/play/store/combatStore";
-import type { Game, GameParticipant, HunterCard } from "@/types";
-import { AddMonsterDialog, EnemySection } from "./EnemySection";
+import type { EnemyStats, EnemyTemplate, Game, GameParticipant, HunterCard } from "@/types";
+import { EnemyEditorDialog } from "./EnemyEditorDialog";
+import { EnemyLibraryDialog } from "./EnemyLibraryDialog";
+import { EnemySection } from "./EnemySection";
 import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
 import { ManageBattleDialog, SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
@@ -50,6 +54,7 @@ export function GamePage() {
   const preview = isPreviewActive();
   const emptyGamePreview = preview && new URLSearchParams(window.location.search).get("game") === "empty";
   const { characters, error: charactersError } = useAllCharacters();
+  const enemyLibrary = useEnemyLibrary(user?.uid, preview);
   const otherCharacters = useMemo(
     () => (characters ?? []).filter((card) => card.ownerUid !== user?.uid),
     [characters, user?.uid],
@@ -72,7 +77,9 @@ export function GamePage() {
   const [managingPlayers, setManagingPlayers] = useState(false);
   const [managingBattle, setManagingBattle] = useState(false);
   const [creatingItem, setCreatingItem] = useState(false);
-  const [addingMonster, setAddingMonster] = useState(false);
+  const [managingEnemies, setManagingEnemies] = useState(false);
+  const [editingEnemy, setEditingEnemy] = useState<EnemyTemplate | "new" | null>(null);
+  const [returnToBattleManager, setReturnToBattleManager] = useState(false);
   const [ownSheetOpen, setOwnSheetOpen] = useState(false);
 
   useEffect(() => {
@@ -159,6 +166,7 @@ export function GamePage() {
   const combatBusy = useCombatStore((state) => state.busy);
   const combatError = useCombatStore((state) => state.error);
   const combatants = useCombatStore((state) => state.combatants);
+  const addMonster = useCombatStore((state) => state.addMonster);
 
   async function perform(work: () => Promise<void>, message: string): Promise<boolean> {
     setBusy(true);
@@ -347,10 +355,76 @@ export function GamePage() {
     await perform(() => discardGameSession(selected.id), "Could not discard the session.");
   }
 
+  async function addEnemyToBattle(template: EnemyTemplate): Promise<boolean> {
+    if (!selected) return false;
+    return addMonster(selected.id, { ...templateStats(template), enemyTemplateId: template.id });
+  }
+
+  function openEnemyLibrary(fromBattleManager = false) {
+    setReturnToBattleManager(fromBattleManager);
+    setManagingBattle(false);
+    setManagingEnemies(true);
+  }
+
+  function closeEnemyLibrary() {
+    setManagingEnemies(false);
+    if (returnToBattleManager) setManagingBattle(true);
+    setReturnToBattleManager(false);
+  }
+
+  function openEnemyEditor(template: EnemyTemplate | "new") {
+    setManagingEnemies(false);
+    setEditingEnemy(template);
+  }
+
+  function closeEnemyEditor() {
+    setEditingEnemy(null);
+    setManagingEnemies(true);
+  }
+
+  async function saveEnemy(stats: EnemyStats, addToCurrentBattle: boolean) {
+    let saved: EnemyTemplate | null = null;
+    if (editingEnemy === "new") {
+      saved = await enemyLibrary.create(stats);
+    } else if (editingEnemy) {
+      const updated = await enemyLibrary.update(editingEnemy, stats);
+      if (updated) saved = { ...editingEnemy, ...stats, updatedAt: Date.now() };
+    }
+    if (!saved) return;
+    if (addToCurrentBattle && !await addEnemyToBattle(saved)) return;
+    closeEnemyEditor();
+  }
+
+  const enemyDialogs = selected ? (
+    <>
+      {managingEnemies && (
+        <EnemyLibraryDialog
+          templates={enemyLibrary.templates}
+          busy={enemyLibrary.busy || combatBusy || busy}
+          canAddToBattle={selected.status === "active"}
+          onAdd={async (template) => { await addEnemyToBattle(template); }}
+          onEdit={openEnemyEditor}
+          onArchive={async (template, archived) => { await enemyLibrary.update(template, { archived }); }}
+          onNew={() => openEnemyEditor("new")}
+          onClose={closeEnemyLibrary}
+        />
+      )}
+      {editingEnemy && (
+        <EnemyEditorDialog
+          template={editingEnemy === "new" ? null : editingEnemy}
+          busy={enemyLibrary.busy || combatBusy || busy}
+          canAddToBattle={selected.status === "active"}
+          onSave={saveEnemy}
+          onClose={closeEnemyEditor}
+        />
+      )}
+    </>
+  ) : null;
+
   if (!creating && selected && battleMode) {
     return (
       <div className="game-page game-page-battle">
-        {(error || charactersError || combatError) && <div className="banner-error" role="alert">{error || charactersError || combatError}</div>}
+        {(error || charactersError || combatError || enemyLibrary.error) && <div className="banner-error" role="alert">{error || charactersError || combatError || enemyLibrary.error}</div>}
         <SessionBattleView
           game={selected}
           characters={characters ?? []}
@@ -370,12 +444,12 @@ export function GamePage() {
             disabled={combatBusy || busy}
             canCreateItem={selected.campaignId === null}
             enemySection={<EnemySection game={selected} isDm disabled={combatBusy || busy} />}
-            onAddEnemy={() => { setManagingBattle(false); setAddingMonster(true); }}
+            onAddEnemy={() => openEnemyLibrary(true)}
             onCreateItem={() => { setManagingBattle(false); setCreatingItem(true); }}
             onClose={() => setManagingBattle(false)}
           />
         )}
-        {addingMonster && <AddMonsterDialog game={selected} disabled={combatBusy || busy} onClose={() => { setAddingMonster(false); setManagingBattle(true); }} />}
+        {enemyDialogs}
         {creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => { setCreatingItem(false); setManagingBattle(true); }} />}
       </div>
     );
@@ -395,7 +469,7 @@ export function GamePage() {
         )}
       </header>}
 
-      {(error || charactersError || combatError) && <div className="banner-error" role="alert">{error || charactersError || combatError}</div>}
+      {(error || charactersError || combatError || enemyLibrary.error) && <div className="banner-error" role="alert">{error || charactersError || combatError || enemyLibrary.error}</div>}
 
       {creating && (
         <CreateSession
@@ -454,7 +528,7 @@ export function GamePage() {
                     <button className="btn btn-primary" type="button" disabled={busy} onClick={beginSession}>Start session</button>
                   ) : null}
                   {selected.campaignId === null && selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => setCreatingItem(true)}>Create item</button>}
-                  {selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => setAddingMonster(true)}>Add enemy</button>}
+                  {selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => openEnemyLibrary()}>Manage enemies</button>}
                   {selected.status === "active" ? (
                     <button className="btn btn-danger" type="button" disabled={busy} onClick={finishSession}>End session</button>
                   ) : (
@@ -484,6 +558,8 @@ export function GamePage() {
                   characters={characters ?? []}
                   isDm
                   disabled={combatBusy || busy}
+                  enemyTemplates={enemyLibrary.templates}
+                  onAddEnemy={addEnemyToBattle}
                 />
               )}
             </main>
@@ -492,7 +568,7 @@ export function GamePage() {
       )}
       {selected && managingPlayers && <ManagePlayersDialog game={selected} characters={otherCharacters.concat((characters ?? []).filter((card) => displayedParticipants.some((participant) => participant.characterId === card.id)))} participants={displayedParticipants} unavailableOwnerUids={unavailableForSelected} busy={busy} onAdd={addHunter} onRemove={removeHunter} onClose={() => setManagingPlayers(false)} />}
       {selected && creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
-      {selected && addingMonster && <AddMonsterDialog game={selected} disabled={combatBusy || busy} onClose={() => setAddingMonster(false)} />}
+      {enemyDialogs}
       {ownSheetOpen && ownCard && <PaperSheetModal card={ownCard} onClose={() => setOwnSheetOpen(false)} />}
     </div>
   );

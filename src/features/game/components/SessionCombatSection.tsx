@@ -2,8 +2,9 @@ import { useMemo, useState, type ReactNode } from "react";
 import { CONDITIONS, CONDITION_NAME } from "@/data/conditions";
 import { emptyEncounter } from "@/features/play/lib/turnTimer";
 import { initiativeOrder, useCombatStore } from "@/features/play/store/combatStore";
-import type { Combatant, Game, GameParticipant, HunterCard } from "@/types";
+import type { Combatant, EnemyTemplate, Game, GameParticipant, HunterCard } from "@/types";
 import { combatVitals, hasSavedBattle, isWarden, participantInitiative } from "../lib/combatPresentation";
+import { StartBattleDialog } from "./StartBattleDialog";
 
 export function SessionCombatSection({
   game,
@@ -11,20 +12,25 @@ export function SessionCombatSection({
   characters,
   isDm,
   disabled,
+  enemyTemplates,
+  onAddEnemy,
 }: {
   game: Game;
   participants: GameParticipant[];
   characters: HunterCard[];
   isDm: boolean;
   disabled: boolean;
+  enemyTemplates: EnemyTemplate[];
+  onAddEnemy: (template: EnemyTemplate) => Promise<boolean>;
 }) {
   const combatants = useCombatStore((state) => state.combatants);
   const startSessionEncounter = useCombatStore((state) => state.startSessionEncounter);
   const order = useMemo(() => initiativeOrder(combatants), [combatants]);
   const encounter = game.combat ?? emptyEncounter();
   const cardsById = useMemo(() => new Map(characters.map((card) => [card.id, card])), [characters]);
+  const [choosingEnemies, setChoosingEnemies] = useState(false);
 
-  async function startBattle() {
+  async function startBattle(selectedEnemies: EnemyTemplate[]) {
     const pcs = participants.flatMap((participant) => {
       if (!participant.characterId) return [];
       const card = cardsById.get(participant.characterId);
@@ -35,10 +41,18 @@ export function SessionCombatSection({
         isWarden: isWarden(card, participant.classId, participant.className),
       }];
     });
-    await startSessionEncounter(game.id, pcs, combatants, encounter);
+    for (const template of selectedEnemies) {
+      const added = await onAddEnemy(template);
+      if (!added) return;
+    }
+    const latestCombatants = useCombatStore.getState().combatants;
+    const started = await startSessionEncounter(game.id, pcs, latestCombatants, encounter);
+    if (started) setChoosingEnemies(false);
   }
 
-  const canStart = participants.some((participant) => participant.characterId) || combatants.length > 0;
+  const canStart = participants.some((participant) => participant.characterId)
+    || combatants.length > 0
+    || enemyTemplates.some((template) => !template.archived);
   const hasPreviousBattle = hasSavedBattle(encounter);
 
   return (
@@ -52,11 +66,21 @@ export function SessionCombatSection({
       <div className="game-combat-idle">
         <p>{hasPreviousBattle ? "The previous battle remains saved. Resume it with the same combatants." : "Start battle to move everyone into the shared battle view. Prepared enemies are kept."}</p>
         {isDm && (
-          <button className="btn btn-primary" type="button" disabled={disabled || !canStart} onClick={() => void startBattle()}>
+          <button className="btn btn-primary" type="button" disabled={disabled || !canStart} onClick={() => setChoosingEnemies(true)}>
             {hasPreviousBattle ? "Resume battle screen" : "Start battle screen"}
           </button>
         )}
       </div>
+      {choosingEnemies && (
+        <StartBattleDialog
+          templates={enemyTemplates}
+          preparedCount={combatants.length}
+          resuming={hasPreviousBattle}
+          busy={disabled}
+          onStart={startBattle}
+          onClose={() => setChoosingEnemies(false)}
+        />
+      )}
     </section>
   );
 }

@@ -11,6 +11,7 @@ import {
 import { useGameStore } from "./gameStore";
 import { isPreviewActive, previewCombatants } from "@/dev/preview";
 import { emptyEncounter } from "../lib/turnTimer";
+import { resetEnemyPatch } from "@/features/game/lib/enemies";
 
 function rollD20(): number {
   return Math.floor(Math.random() * 20) + 1;
@@ -41,6 +42,7 @@ export interface MonsterInput {
   note?: string | null;
   revealHp?: boolean;
   revealStats?: boolean;
+  enemyTemplateId?: string | null;
 }
 
 interface CombatState {
@@ -65,6 +67,7 @@ interface CombatState {
     encounter: EncounterState,
   ) => Promise<boolean>;
   addMonster: (gameId: string, m: MonsterInput) => Promise<boolean>;
+  resetMonster: (gameId: string, id: string) => Promise<boolean>;
   patch: (gameId: string, id: string, partial: Partial<Combatant>) => Promise<boolean>;
   remove: (
     gameId: string,
@@ -243,6 +246,15 @@ export const useCombatStore = create<CombatState>((set, get) => {
     },
 
     addMonster: async (gameId, m) => {
+      const baseStats = {
+        name: m.name,
+        initiative: m.initiative,
+        ac: m.ac,
+        maxHp: m.maxHp,
+        note: m.note ?? null,
+        revealHp: m.revealHp === true,
+        revealStats: m.revealStats === true,
+      };
       const data = {
         kind: "monster" as const,
         name: m.name,
@@ -255,13 +267,26 @@ export const useCombatStore = create<CombatState>((set, get) => {
         note: m.note ?? null,
         revealHp: m.revealHp === true,
         revealStats: m.revealStats === true,
+        enemyTemplateId: m.enemyTemplateId ?? null,
+        baseStats,
         isWarden: false,
       };
       if (get().preview) {
         set((s) => ({ combatants: [...s.combatants, { ...data, id: previewId(), createdAt: Date.now() }] }));
         return true;
       }
-      return (await run(() => addCombatant(gameId, data), "Couldn't add the monster.")) !== null;
+      const id = await run(() => addCombatant(gameId, data), "Couldn't add the monster.");
+      if (!id) return false;
+      set((state) => state.combatants.some((combatant) => combatant.id === id) ? state : {
+        combatants: [...state.combatants, { ...data, id, createdAt: Date.now() }],
+      });
+      return true;
+    },
+
+    resetMonster: async (gameId, id) => {
+      const current = get().combatants.find((combatant) => combatant.id === id && combatant.kind === "monster");
+      if (!current) return false;
+      return get().patch(gameId, id, resetEnemyPatch(current));
     },
 
     patch: async (gameId, id, partial) => {

@@ -209,6 +209,27 @@ export interface EncounterState {
   pausedRemainingMs: number | null;
 }
 
+/** Reusable DM-owned enemy stats. A copy is stored on each spawned combatant so
+ * reset always restores the values used when that enemy entered the battle. */
+export interface EnemyStats {
+  name: string;
+  initiative: number;
+  ac: number | null;
+  maxHp: number;
+  note: string | null;
+  revealHp: boolean;
+  revealStats: boolean;
+}
+
+/** One reusable entry in /users/{uid}/enemies/{id}. Archived entries remain
+ * recoverable and are hidden from the normal battle picker. */
+export interface EnemyTemplate extends EnemyStats {
+  id: string;
+  archived: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
 /** One combatant in the initiative tracker. Lives at
  * /games/{gameId}/combatants/{id}. PCs read HP/AC live from their HunterCard;
  * monsters carry their own HP. */
@@ -233,6 +254,9 @@ export interface Combatant {
    * private fields out of the player-readable battle projection. */
   revealHp?: boolean;
   revealStats?: boolean;
+  /** Reusable library source plus an immutable reset snapshot for monsters. */
+  enemyTemplateId?: string | null;
+  baseStats?: EnemyStats | null;
   /** True when this PC's class is Hunter Warden. */
   isWarden?: boolean;
   createdAt: number;
