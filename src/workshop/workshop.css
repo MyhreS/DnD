@@ -49,6 +49,9 @@ button { color: inherit; }
 .attach-button span { font-size: 19px; vertical-align: -1px; }
 .primary-button { min-height: 43px; padding: 0 20px; border: 1px solid #7f1d27; border-radius: 5px; background: #7f1d27; color: white; font-weight: 700; }
 .primary-button:disabled { opacity: .45; cursor: not-allowed; }
+.primary-button.is-sending, .primary-button.is-sent { opacity: 1; }
+.primary-button.is-sending { cursor: wait; }
+.primary-button.is-sent { border-color: #4f7655; background: #4f7655; cursor: default; }
 .primary-button.compact { min-height: 36px; padding: 0 14px; font-size: 12px; }
 .attach-button.compact { font-size: 12px; }
 .file-summary, .form-error { margin: 10px 0 0; font-size: 12px; }
