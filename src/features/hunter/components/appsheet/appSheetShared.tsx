@@ -1,4 +1,4 @@
-import type { ReactNode, SelectHTMLAttributes } from "react";
+import { useState, type ReactNode, type SelectHTMLAttributes } from "react";
 import type { HunterCard, SheetData } from "@/types";
 
 export interface AppSheetModel {
@@ -44,6 +44,42 @@ export function AppPanel({ title, aside, children, className = "" }: {
       <header><h3>{title}</h3>{aside}</header>
       {children}
     </section>
+  );
+}
+
+export function AppDisclosure({
+  title,
+  summary,
+  aside,
+  children,
+  defaultOpen = false,
+  className = "",
+}: {
+  title: string;
+  summary?: ReactNode;
+  aside?: ReactNode;
+  children: ReactNode;
+  defaultOpen?: boolean;
+  className?: string;
+}) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <details
+      className={`appsheet-disclosure ${className}`.trim()}
+      open={isOpen}
+      onToggle={(event) => setIsOpen(event.currentTarget.open)}
+    >
+      <summary>
+        <span className="appsheet-disclosure-heading">
+          <b>{title}</b>
+          {summary && <span className="appsheet-disclosure-summary">{summary}</span>}
+        </span>
+        {aside && <span className="appsheet-disclosure-aside">{aside}</span>}
+        <span className="appsheet-disclosure-icon" aria-hidden="true" />
+      </summary>
+      <div className="appsheet-disclosure-content">{children}</div>
+    </details>
   );
 }
 

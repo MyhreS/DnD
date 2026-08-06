@@ -44,6 +44,14 @@ try {
     localStorage.setItem("cs-theme", "light");
   });
   const page = await context.newPage();
+  async function openAppDisclosure(title) {
+    const disclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText(title, { exact: true }) }).first();
+    await disclosure.waitFor();
+    if (!await disclosure.evaluate((element) => element.open)) {
+      await disclosure.locator(":scope > summary").click();
+    }
+    return disclosure;
+  }
   page.on("pageerror", (error) => errors.push(String(error)));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().includes("Failed to load resource")) errors.push(message.text()); });
 
@@ -89,9 +97,11 @@ try {
   }
   await finishSetup.click();
 
+  await openAppDisclosure("Change worn armor");
   await page.getByTestId("appsheet-main-armor").selectOption("reinforced-hunter-leather-vest");
   if (await page.getByTestId("appsheet-combat-ac").locator(":scope > strong").textContent() !== "15") throw new Error("App armor choice did not recalculate AC");
 
+  await openAppDisclosure("Add a catalog item");
   await page.getByTestId("appsheet-catalog-item").selectOption("torch");
   await page.getByTestId("appsheet-add-catalog-item").click();
   await page.getByTestId("appsheet-inventory").getByText("Torch", { exact: true }).waitFor();
@@ -200,6 +210,18 @@ try {
   if (overviewOrder.battle >= overviewOrder.build) {
     throw new Error(`Established characters do not see battle resources before build controls on mobile: ${JSON.stringify(overviewOrder)}`);
   }
+  const buildDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Character build", { exact: true }) }).first();
+  if (await buildDisclosure.evaluate((element) => element.open)) throw new Error("Established character build controls are expanded by default");
+  const collapsedBuildSummary = buildDisclosure.locator(".appsheet-disclosure-summary");
+  if (!await collapsedBuildSummary.isVisible()) throw new Error("Collapsed character build does not expose its useful summary");
+  await buildDisclosure.locator(":scope > summary").click();
+  if (await collapsedBuildSummary.isVisible()) throw new Error("Expanded disclosure repeats its collapsed summary");
+  if (!await page.getByTestId("appsheet-class").isVisible()) throw new Error("Expanded character build does not reveal its complete controls");
+  await buildDisclosure.locator(":scope > summary").click();
+  if (await page.getByRole("heading", { name: "Visible armor impression", exact: true }).count()) {
+    throw new Error("Visible armor impression is still duplicated inside App View");
+  }
+  await openAppDisclosure("Weapon details");
   const mobileWeaponLabels = page.locator(".appsheet-weapon-label");
   if (await mobileWeaponLabels.count() === 0 || !await mobileWeaponLabels.first().isVisible()) {
     throw new Error("Mobile weapon facts do not expose their stacked labels");

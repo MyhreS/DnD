@@ -9,7 +9,7 @@ import {
 } from "./appSheetShared";
 
 export function AppNotesSection({ model }: { model: AppSheetModel }) {
-  const { card, result } = useCharacterAutomation();
+  const { card } = useCharacterAutomation();
   const transformations = card.activeTransformations ?? [];
   const notes = sheetText(model.data, "pageNotes") || card.notes || "";
 
@@ -30,16 +30,12 @@ export function AppNotesSection({ model }: { model: AppSheetModel }) {
         </AppPanel>
       </div>
 
-      <div className="appsheet-two-column">
+      {transformations.length > 0 && (
         <AppPanel title="Active transformations">
-          {transformations.length ? <div className="appsheet-token-list">{transformations.map((entry, index) => <span key={`${entry}-${index}`}>{entry}</span>)}</div> : <p className="appsheet-empty-copy">No active transformations recorded.</p>}
+          <div className="appsheet-token-list">{transformations.map((entry, index) => <span key={`${entry}-${index}`}>{entry}</span>)}</div>
           <AutoReason reason="Transformation results are rolled physically and recorded by the DM; reducing Transformation Level clears active results." />
         </AppPanel>
-        <AppPanel title="Visible armor impression">
-          <p className="appsheet-large-readout">{String(result.fields.impressions || "No special visible impression.")}</p>
-          <AutoReason reason={result.reasons.impressions} />
-        </AppPanel>
-      </div>
+      )}
     </AppSection>
   );
 }

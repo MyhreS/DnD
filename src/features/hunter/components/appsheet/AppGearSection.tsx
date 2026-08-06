@@ -7,6 +7,7 @@ import { computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
 import type { CarrySignificance } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import {
+  AppDisclosure,
   AppPanel,
   AppSection,
   AppSelect,
@@ -60,7 +61,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
 
   return (
     <AppSection title="Gear & carrying">
-      <div className="appsheet-combat-strip">
+      <div className="appsheet-focus-strip appsheet-gear-summary">
         <DerivedValue label="Gold" value={card.coins ?? 0} reason="Saved gold pieces; coins do not consume carrying slots." />
         <DerivedValue label="Carried weight" value={result.fields.weight} reason={result.reasons.weight} />
         <DerivedValue label="Load" value={result.fields.weightCondition} reason={result.reasons.weightCondition} />
@@ -68,6 +69,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
       </div>
 
       {!model.readOnly && (
+        <AppDisclosure title="Add a catalog item" summary="Weapons, gear, tools, ammunition, and valuables">
         <AppPanel title="Add from the rules library" className="appsheet-add-item-panel">
           <div className="appsheet-catalog-add">
             <AppSelect label="Catalog item" value={catalogId} data-testid="appsheet-catalog-item" onChange={(event) => setCatalogId(event.target.value)}>
@@ -84,6 +86,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
           </div>
           <AutoReason reason="Names, carrying category, weight, and catalog notes come from the Player's Handbook equipment tables." />
         </AppPanel>
+        </AppDisclosure>
       )}
 
       <AppPanel title="Inventory" aside={<span className="appsheet-status-word">{inventory.length} item types</span>}>
@@ -106,7 +109,12 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
         </div>
       </AppPanel>
 
-      <div className="appsheet-two-column">
+      <AppDisclosure
+        title="Carrying setup"
+        summary={`${card.equippedStorageIds?.length ?? 0} storage equipped · ${slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} unstowed`}
+        aside={slots.unstowed.length ? <span className="appsheet-incomplete">Check load</span> : undefined}
+      >
+      <div className="appsheet-two-column appsheet-disclosure-grid">
         <AppPanel title="Storage worn on the body">
           <div className="appsheet-storage-list">
             {STORAGE_DEFS.map((definition) => {
@@ -140,7 +148,9 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
           {slots.unstowed.length > 0 && <p className="appsheet-inline-error">Unstowed: {slots.unstowed.map((entry) => `${entry.name} ×${entry.count}${entry.clamped ? "+" : ""}`).join(", ")}</p>}
         </AppPanel>
       </div>
+      </AppDisclosure>
 
+      <AppDisclosure title="Weapon details" summary={`${weapons.length} carried weapon ${weapons.length === 1 ? "type" : "types"}`}>
       <AppPanel title="Carried weapons" aside={<span className="appsheet-status-word">Rules-linked</span>}>
         {weapons.length ? (
           <div className="appsheet-weapon-table">
@@ -161,8 +171,10 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
         ) : <p className="appsheet-empty-copy">Carried catalog weapons appear here automatically.</p>}
         <AutoReason reason="Catalog weapon damage, properties, and mastery are transcribed from the handbook Weapons table. The Hunter Cleaver has no published statistics and remains explicitly DM-set." />
       </AppPanel>
+      </AppDisclosure>
 
       {!model.readOnly && (
+        <AppDisclosure title="Record a unique item" summary="For weapons or gear found outside the handbook">
         <AppPanel title="Item found outside the handbook" className="appsheet-found-panel">
           {!showFound ? (
             <button type="button" className="appsheet-secondary-action" onClick={() => setShowFound(true)}>Record unique weapon or gear</button>
@@ -191,6 +203,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
             </form>
           )}
         </AppPanel>
+        </AppDisclosure>
       )}
     </AppSection>
   );

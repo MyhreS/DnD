@@ -2,6 +2,7 @@ import { WHISPERS } from "@/data/characterOptions";
 import { SKILLS } from "@/data/skills";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import {
+  AppDisclosure,
   AppPanel,
   AppSection,
   AutoReason,
@@ -22,21 +23,30 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
   const classFeatures = klass?.features?.filter((feature) => feature.level <= card.level) ?? [];
   const subclassFeatures = subclass?.features.filter((feature) => feature.level <= card.level) ?? [];
   const currentProgression = klass?.progression.find((row) => row.level === card.level);
-  const pending = Object.values(result.pending).filter(Boolean);
+  const classChoiceRemaining = Math.max(0, expertiseLimit - expertise.length)
+    + Math.max(0, masteryCount - masteries.length)
+    + Math.max(0, whisperLimit - whispers.length);
 
   return (
     <AppSection title="Features & choices">
       {!klass && <PendingNotice><b>Choose a class on Overview</b><p>Class features and level choices will appear here automatically.</p></PendingNotice>}
 
       {klass && (
-        <div className="appsheet-feature-hero">
-          <div><span>{klass.title} · level {card.level}</span><h3>{(klass.signature ?? klass.tagline).split("—")[0].trim()}</h3><p>{klass.signature ?? klass.tagline}</p></div>
+        <div className="appsheet-feature-hero appsheet-feature-summary">
+          <div><span>Current class progression</span><h3>{klass.title} · level {card.level}</h3></div>
           <div>
             {Object.entries(currentProgression?.extras ?? {}).map(([label, value]) => <DerivedValue key={label} label={label} value={value} reason={`${klass.title} level ${card.level} progression table`} />)}
           </div>
         </div>
       )}
 
+      {(expertiseLimit > 0 || masteryCount > 0 || whisperLimit > 0) && (
+      <AppDisclosure
+        title="Class choices"
+        summary={classChoiceRemaining ? `${classChoiceRemaining} remaining` : "All current choices complete"}
+        aside={classChoiceRemaining ? <span className="appsheet-incomplete">Action needed</span> : <span className="appsheet-complete">Complete</span>}
+        defaultOpen={classChoiceRemaining > 0}
+      >
       {expertiseLimit > 0 && (
         <AppPanel title="Expertise" aside={<span className={expertise.length === expertiseLimit ? "appsheet-complete" : "appsheet-incomplete"}>{expertise.length}/{expertiseLimit}</span>}>
           <div className="appsheet-choice-list">
@@ -63,18 +73,12 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
           <AutoReason reason={klass?.caster ? `${klass.title} progression and the Listener feat determine how many Whispers may be prepared.` : "The Listener feat grants one Whisper of your choice."} />
         </AppPanel>
       )}
-
-      {pending.length > 0 && (
-        <AppPanel title="Decisions still required" aside={<span className="appsheet-incomplete">{pending.length}</span>}>
-          <div className="appsheet-pending-list">
-            {pending.map((choice) => choice && <div key={choice.label}><span><b>{choice.label}</b><small>{choice.reason}</small></span><strong>{choice.remaining} left</strong></div>)}
-          </div>
-          <AutoReason reason="Only decisions with finite, verified options are shown as selectors. Creation choices continue under Abilities & skills; subclass selection is under Overview." />
-        </AppPanel>
+      </AppDisclosure>
       )}
 
       {klass && (
-        <AppPanel title="Unlocked class features" aside={<span className="appsheet-status-word">Through level {card.level}</span>}>
+        <AppDisclosure title="Class feature reference" summary={`${classFeatures.length + subclassFeatures.length} unlocked through level ${card.level}`}>
+        <AppPanel title="Unlocked features" aside={<span className="appsheet-status-word">Through level {card.level}</span>}>
           <div className="appsheet-feature-timeline">
             {[...classFeatures, ...subclassFeatures].sort((a, b) => a.level - b.level).map((feature, index) => (
               <details key={`${feature.level}-${feature.name}-${index}`} open={feature.level === card.level}>
@@ -85,9 +89,14 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
           </div>
           <AutoReason reason={`${klass.title}${subclass ? ` and ${subclass.name}` : ""} feature text from the class boards and Player's Handbook.`} />
         </AppPanel>
+        </AppDisclosure>
       )}
 
-      <div className="appsheet-two-column">
+      <AppDisclosure
+        title="Feats & tools"
+        summary={`${[card.feat, ...(card.feats ?? [])].filter(Boolean).join(", ") || "No feat"} · ${String(result.fields.tools || "No tools")}`}
+      >
+      <div className="appsheet-two-column appsheet-disclosure-grid">
         <AppPanel title="Feats">
           <div className="appsheet-token-list">{[card.feat, ...(card.feats ?? [])].filter(Boolean).map((feat) => <span key={feat}>{feat}</span>)}</div>
           {!card.feat && !(card.feats?.length) && <p className="appsheet-empty-copy">No feat is currently granted.</p>}
@@ -98,6 +107,7 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
           <AutoReason reason={result.reasons.tools} />
         </AppPanel>
       </div>
+      </AppDisclosure>
     </AppSection>
   );
 }
