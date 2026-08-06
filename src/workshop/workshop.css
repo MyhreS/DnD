@@ -37,7 +37,9 @@ button { color: inherit; }
 
 .workshop-grid { width: min(1180px, 100%); margin: 0 auto; padding: clamp(36px, 6vw, 78px) clamp(20px, 5vw, 64px); display: grid; grid-template-columns: minmax(0, .95fr) minmax(360px, 1.05fr); gap: clamp(46px, 8vw, 110px); flex: 1; }
 .composer h1 { max-width: 520px; margin: 0; font: 400 clamp(38px, 5vw, 62px)/1.03 "Libre Caslon Display", serif; letter-spacing: -.025em; }
-.composer-help { max-width: 520px; margin: 18px 0 27px; color: #6f685e; line-height: 1.55; }
+.composer-help { max-width: 520px; margin: 18px 0 20px; color: #6f685e; line-height: 1.55; }
+.agent-countdown { margin: 0 0 10px; color: #71695e; font-size: 12px; }
+.agent-countdown time { color: #27241f; font-variant-numeric: tabular-nums; font-weight: 700; }
 .composer textarea { width: 100%; min-height: 220px; padding: 20px; resize: vertical; border: 1px solid #bfb5a6; border-radius: 6px; outline: none; color: #27241f; background: #fbf9f4; line-height: 1.55; }
 .composer textarea:focus, .reply-form textarea:focus { border-color: #8b5c2d; box-shadow: 0 0 0 3px #8b5c2d1a; }
 .composer-actions, .reply-actions { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 12px; }

@@ -36,6 +36,9 @@ export type AgentState = {
   lastHeartbeatAt?: Timestamp;
   workerId?: string;
   currentTicketId?: string | null;
+  checkingNow?: boolean;
+  nextPollAt?: Timestamp | null;
+  pollIntervalMs?: number;
 };
 
 export const STATUS_LABELS: Record<WorkshopStatus, string> = {

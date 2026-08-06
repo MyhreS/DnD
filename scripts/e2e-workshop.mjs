@@ -132,6 +132,7 @@ try {
   await waitForWorkspace(creator.page, "Creator");
   await creator.page.getByTestId("agent-presence").getByText("Agent offline").waitFor();
   await creator.page.getByText("Ask Simon to start the Workshop agent.").waitFor();
+  await creator.page.getByTestId("agent-countdown").getByText("Next check starts when the agent is online.").waitFor();
   await creator.page.getByTestId("ticket-body").fill("Make the game page calmer");
   await creator.page.getByTestId("ticket-body").press("Shift+Enter");
   await creator.page.getByTestId("ticket-body").pressSequentially("Only show the most important action first.");
@@ -160,6 +161,19 @@ try {
 
   await runManager("finished");
   await creator.page.getByTestId("agent-presence").getByText("Agent online").waitFor();
+  await db.doc("workshopAgent/state").set({
+    checkingNow: false,
+    currentTicketId: null,
+    nextPollAt: new Date(Date.now() + 4_000),
+  }, { merge: true });
+  const countdown = creator.page.getByTestId("agent-countdown");
+  await countdown.getByText(/Next agent check in 0:0[34]/).waitFor();
+  await creator.page.screenshot({ path: "screenshots/workshop-countdown-mobile.png", fullPage: true });
+  const firstCountdown = await countdown.textContent();
+  await creator.page.waitForTimeout(1_100);
+  if (await countdown.textContent() === firstCountdown) throw new Error("Agent countdown did not advance.");
+  await db.doc("workshopAgent/state").set({ checkingNow: true, nextPollAt: null }, { merge: true });
+  await countdown.getByText("The agent is checking requests now.").waitFor();
   await creator.page.getByText("Finished", { exact: true }).waitFor();
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
   await creator.page.getByText("requested test update is available now", { exact: false }).waitFor();
@@ -216,10 +230,16 @@ try {
 
   await creator.page.setViewportSize({ width: 1440, height: 900 });
   await creator.page.getByRole("button", { name: "Close thread" }).click();
+  await db.doc("workshopAgent/state").set({
+    checkingNow: false,
+    currentTicketId: null,
+    nextPollAt: new Date(Date.now() + 5 * 60_000),
+  }, { merge: true });
+  await countdown.getByText(/Next agent check in 5:00|Next agent check in 4:59/).waitFor();
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, heartbeat, Chris-blocked/Simon-reopened Needs Simon flow, declined flow, and responsive layout.");
+  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, heartbeat countdown, Chris-blocked/Simon-reopened Needs Simon flow, declined flow, and responsive layout.");
   await Promise.all([simon.context.close(), creator.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();

@@ -14,7 +14,7 @@ function subscribe(listener: () => void) {
   listeners.add(listener);
   if (listeners.size === 1) {
     updateTime();
-    timer = window.setInterval(updateTime, 15_000);
+    timer = window.setInterval(updateTime, 1_000);
   }
   return () => {
     listeners.delete(listener);
@@ -24,8 +24,18 @@ function subscribe(listener: () => void) {
 
 function snapshot() { return currentTime; }
 
-export function useAgentOnline(state: AgentState | null): boolean {
+export function useAgentTiming(state: AgentState | null): { online: boolean; secondsUntilCheck: number | null } {
   const now = useSyncExternalStore(subscribe, snapshot, snapshot);
   const heartbeat = state?.lastHeartbeatAt?.toMillis() ?? 0;
-  return now - heartbeat < 90_000;
+  const nextPoll = state?.nextPollAt?.toMillis();
+  return {
+    online: now - heartbeat < 90_000,
+    secondsUntilCheck: nextPoll === undefined || nextPoll === null
+      ? null
+      : Math.max(0, Math.ceil((nextPoll - now) / 1_000)),
+  };
+}
+
+export function useAgentOnline(state: AgentState | null): boolean {
+  return useAgentTiming(state).online;
 }
