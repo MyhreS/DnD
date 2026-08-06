@@ -1,5 +1,17 @@
 {
   "projects": {
     "default": "dandd-ea955"
+  },
+  "targets": {
+    "dandd-ea955": {
+      "hosting": {
+        "app": [
+          "dandd-ea955"
+        ],
+        "workshop": [
+          "dandd-ea955-workshop"
+        ]
+      }
+    }
   }
 }

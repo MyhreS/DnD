@@ -72,6 +72,7 @@ jobs:
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           channelId: live
           projectId: dandd-ea955
+          target: app
           # Pin firebase-tools: 15.22.1+ regressed against action-hosting-deploy@v0
           # ("supplied version ... is the current active version" on every release).
           # 15.22.0 is the last version this action deployed cleanly (2026-06-22).
@@ -84,16 +85,17 @@ jobs:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
           firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
           projectId: dandd-ea955
+          target: app
           firebaseToolsVersion: "15.22.0"
 
-      - name: Deploy Firestore rules
+      - name: Deploy database and upload rules
         if: github.event_name == 'push'
         env:
           FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
         run: |
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
           export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
-          bunx firebase-tools@15.22.0 deploy --only firestore:rules \
+          bunx firebase-tools@15.22.0 deploy --only firestore:rules,storage \
             --project dandd-ea955 --non-interactive
 
       - name: Deploy Cloud Functions

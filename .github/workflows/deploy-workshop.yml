@@ -1,0 +1,75 @@
+name: Deploy Workshop
+
+# Workshop has its own Hosting site and build. Normal companion-app changes do
+# not run this workflow, so Christopher's open Workshop never refreshes merely
+# because the main app was updated.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "workshop/**"
+      - "src/workshop/**"
+      - "src/api/workshop.ts"
+      - "vite.workshop.config.ts"
+      - "storage.rules"
+      - "firestore.rules"
+      - "functions/src/workshop.ts"
+      - "functions/src/index.ts"
+      - "firebase.json"
+      - ".firebaserc"
+      - "package.json"
+      - "bun.lock"
+      - ".github/workflows/deploy-workshop.yml"
+  pull_request:
+    paths:
+      - "workshop/**"
+      - "src/workshop/**"
+      - "src/api/workshop.ts"
+      - "vite.workshop.config.ts"
+      - "storage.rules"
+      - "firestore.rules"
+      - "functions/src/workshop.ts"
+      - "functions/src/index.ts"
+      - "firebase.json"
+      - ".firebaserc"
+      - "package.json"
+      - "bun.lock"
+      - ".github/workflows/deploy-workshop.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  workshop:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+      - name: Install Doppler CLI
+        run: |
+          mkdir -p "$RUNNER_TEMP/doppler-bin"
+          curl -Ls --fail --tlsv1.2 --proto "=https" \
+            --retry 5 --retry-all-errors --retry-delay 2 \
+            https://cli.doppler.com/install.sh -o "$RUNNER_TEMP/install-doppler.sh"
+          sh "$RUNNER_TEMP/install-doppler.sh" --install-path "$RUNNER_TEMP/doppler-bin"
+          echo "$RUNNER_TEMP/doppler-bin" >> "$GITHUB_PATH"
+      - name: Build independent Workshop
+        run: doppler run --token="$DOPPLER_TOKEN" -- bun run build:workshop:ci
+        env:
+          DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+      - name: Deploy Workshop
+        if: github.event_name == 'push'
+        env:
+          FIREBASE_SERVICE_ACCOUNT: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+        run: |
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT" > "$RUNNER_TEMP/sa.json"
+          export GOOGLE_APPLICATION_CREDENTIALS="$RUNNER_TEMP/sa.json"
+          bunx firebase-tools@15.22.0 deploy --only hosting:workshop \
+            --project dandd-ea955 --non-interactive

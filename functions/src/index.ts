@@ -1,4 +1,4 @@
-import { initializeApp } from "firebase-admin/app";
+import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { setGlobalOptions, logger } from "firebase-functions/v2";
 import { onDocumentCreated } from "firebase-functions/v2/firestore";
@@ -18,8 +18,14 @@ export {
   finishStandaloneGameSession,
   removeStandaloneGameParticipant,
 } from "./gameSessions";
+export {
+  claimWorkshopAccess,
+  createWorkshopTicket,
+  inviteWorkshopMember,
+  replyWorkshopTicket,
+} from "./workshop";
 
-initializeApp();
+if (!getApps().length) initializeApp();
 const db = getFirestore();
 
 setGlobalOptions({

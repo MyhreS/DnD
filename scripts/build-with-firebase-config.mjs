@@ -9,11 +9,12 @@ function run(command, args, options = {}) {
 // Firebase web configuration is public application metadata. Reading it from
 // the active Firebase project keeps local deploys reproducible when Doppler is
 // not configured, without writing credentials or a generated .env file.
-const apps = JSON.parse(run("firebase", ["apps:list", "--json"]).stdout).result;
+const projectArgs = ["--account", "simonmyhre1@gmail.com", "--project", "dandd-ea955"];
+const apps = JSON.parse(run("firebase", [...projectArgs, "apps:list", "--json"]).stdout).result;
 const webApp = apps.find((app) => app.platform === "WEB");
 if (!webApp) throw new Error("The active Firebase project has no web app.");
 const firebase = JSON.parse(
-  run("firebase", ["apps:sdkconfig", "WEB", webApp.appId, "--json"]).stdout,
+  run("firebase", [...projectArgs, "apps:sdkconfig", "WEB", webApp.appId, "--json"]).stdout,
 ).result.sdkConfig;
 
 const build = spawnSync("bun", ["run", "build:ci"], {

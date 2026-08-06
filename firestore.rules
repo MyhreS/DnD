@@ -26,6 +26,11 @@ service cloud.firestore {
       return isUser() && emailKey() in ["simonmyhre1@gmail.com"];
     }
 
+    function isWorkshopMember() {
+      return isUser()
+        && exists(/databases/$(database)/documents/workshopMembers/$(request.auth.uid));
+    }
+
     // You belong to campaign `cid`.
     function isMember(cid) {
       return isUser()
@@ -69,6 +74,37 @@ service cloud.firestore {
     match /allowlist/{email} {
       allow read: if isSuperAdmin() || (isSignedIn() && email == emailKey());
       allow write: if isSuperAdmin();
+    }
+
+    // D&D Workshop is an independently deployed, invited feedback space.
+    // All changes go through callable functions so requests and agent replies
+    // form an immutable audit trail. Members may only read that trail.
+    match /workshopMembers/{uid} {
+      allow read: if isWorkshopMember() && (uid == request.auth.uid || isSuperAdmin());
+      allow write: if false;
+    }
+
+    match /workshopInvites/{email} {
+      allow read, write: if false;
+    }
+
+    match /workshopTickets/{ticketId} {
+      allow read: if isWorkshopMember();
+      allow write: if false;
+
+      match /messages/{messageId} {
+        allow read: if isWorkshopMember();
+        allow write: if false;
+      }
+    }
+
+    match /workshopAgent/{documentId} {
+      allow read: if isWorkshopMember();
+      allow write: if false;
+    }
+
+    match /workshopRateLimits/{uid} {
+      allow read, write: if false;
     }
 
     // /users/{uid} — a signed-in user's self-set profile (name). Owner only.
