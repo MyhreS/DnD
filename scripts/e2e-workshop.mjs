@@ -177,6 +177,9 @@ try {
   await creator.page.getByText("Finished", { exact: true }).waitFor();
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
   await creator.page.getByText("requested test update is available now", { exact: false }).waitFor();
+  if (await creator.page.getByText("Received. I’ll pick this up when the Workshop agent is online.", { exact: true }).count()) {
+    throw new Error("The initial queue acknowledgement remained visible after the agent picked up the request.");
+  }
   await creator.page.getByTestId("ticket-reply").fill("Please also reduce the number of buttons.");
   await creator.page.getByTestId("ticket-reply").press("Enter");
   await creator.page.getByText("Update received. The agent will reread").waitFor();
