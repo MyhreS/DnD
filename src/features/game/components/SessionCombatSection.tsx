@@ -1,6 +1,5 @@
 import { useMemo, useState } from "react";
 import { CONDITIONS, CONDITION_NAME } from "@/data/conditions";
-import { useTurnClock } from "@/features/play/hooks/useTurnClock";
 import { emptyEncounter } from "@/features/play/lib/turnTimer";
 import { initiativeOrder, useCombatStore } from "@/features/play/store/combatStore";
 import type { Combatant, Game, GameParticipant, HunterCard } from "@/types";
@@ -80,14 +79,8 @@ export function SessionCombatControls({
   const patch = useCombatStore((state) => state.patch);
   const toggleCondition = useCombatStore((state) => state.toggleCondition);
   const nextTurn = useCombatStore((state) => state.nextTurn);
-  const designateWarden = useCombatStore((state) => state.designateWarden);
-  const startTimer = useCombatStore((state) => state.startTimer);
-  const pauseTimer = useCombatStore((state) => state.pauseTimer);
-  const resumeTimer = useCombatStore((state) => state.resumeTimer);
   const order = useMemo(() => initiativeOrder(combatants), [combatants]);
   const encounter = game.combat ?? emptyEncounter();
-  const { phase: timerPhase } = useTurnClock(encounter);
-  const wardens = order.filter((combatant) => combatant.kind === "pc" && combatant.isWarden);
 
   async function endBattle() {
     if (!window.confirm("End this battle? Everyone will return to the session view. Initiative, conditions, enemies, and damage remain saved.")) return;
@@ -106,28 +99,6 @@ export function SessionCombatControls({
           <button className="btn btn-ghost" type="button" disabled={disabled} onClick={() => void endBattle()}>End battle</button>
         </div>
       </div>
-
-      <div className="game-battle-timer-actions">
-        {timerPhase === "briefing" && <button type="button" className="btn btn-primary" disabled={disabled} onClick={() => void startTimer(game.id, game)}>Start 90 seconds</button>}
-        {timerPhase === "running" && <button type="button" className="btn btn-ghost" disabled={disabled} onClick={() => void pauseTimer(game.id, game)}>Pause timer</button>}
-        {timerPhase === "paused" && <button type="button" className="btn btn-primary" disabled={disabled} onClick={() => void resumeTimer(game.id, game)}>Resume timer</button>}
-      </div>
-
-      {wardens.length > 1 && (
-        <label className="combat-warden-select">
-          <span>Tactical briefing</span>
-          <select
-            className="input"
-            aria-label="Hunter Warden with Tactical Briefing"
-            value={encounter.designatedWardenId ?? ""}
-            onChange={(event) => void designateWarden(game.id, game, combatants, event.target.value)}
-          >
-            <option value="">No designated Warden</option>
-            {wardens.map((warden) => <option key={warden.id} value={warden.id}>{warden.name}</option>)}
-          </select>
-          <small>Only the selected Warden receives unlimited planning before their 90 seconds begin.</small>
-        </label>
-      )}
 
       <div className="game-initiative" aria-label="DM initiative controls">
         {order.map((combatant, index) => (

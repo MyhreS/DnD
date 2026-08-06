@@ -10,14 +10,7 @@ import {
 } from "@/api/combat";
 import { useGameStore } from "./gameStore";
 import { isPreviewActive, previewCombatants } from "@/dev/preview";
-import {
-  effectiveTimerPhase,
-  emptyEncounter,
-  pauseTurnTimer,
-  resumeTurnTimer,
-  startTurnTimer,
-  timerForCombatant,
-} from "../lib/turnTimer";
+import { emptyEncounter } from "../lib/turnTimer";
 
 function rollD20(): number {
   return Math.floor(Math.random() * 20) + 1;
@@ -86,12 +79,8 @@ interface CombatState {
     round: number,
   ) => Promise<boolean>;
   nextTurn: (gameId: string, game: Game, combatants: Combatant[]) => Promise<boolean>;
-  designateWarden: (gameId: string, game: Game, combatants: Combatant[], id: string) => Promise<boolean>;
-  startTimer: (gameId: string, game: Game) => Promise<boolean>;
-  pauseTimer: (gameId: string, game: Game) => Promise<boolean>;
-  resumeTimer: (gameId: string, game: Game) => Promise<boolean>;
   endEncounter: (gameId: string) => Promise<boolean>;
-  /** Stops the turn clock but retains combatants as session history. */
+  /** Closes the battle view but retains combatants as session history. */
   closeSessionEncounter: (gameId: string, encounter: EncounterState) => Promise<boolean>;
 }
 
@@ -175,7 +164,9 @@ export const useCombatStore = create<CombatState>((set, get) => {
           round: 1,
           turnId: top?.id ?? null,
           designatedWardenId,
-          ...timerForCombatant(top, designatedWardenId),
+          timerPhase: "idle",
+          timerEndsAt: null,
+          pausedRemainingMs: null,
         });
         return true;
       }
@@ -198,7 +189,9 @@ export const useCombatStore = create<CombatState>((set, get) => {
         round: 1,
         turnId: top?.id ?? null,
         designatedWardenId,
-        ...timerForCombatant(top, designatedWardenId),
+        timerPhase: "idle",
+        timerEndsAt: null,
+        pausedRemainingMs: null,
       });
     },
 
@@ -243,7 +236,9 @@ export const useCombatStore = create<CombatState>((set, get) => {
         round: Math.max(1, encounter.round),
         turnId: first.id,
         designatedWardenId,
-        ...timerForCombatant(first, designatedWardenId),
+        timerPhase: "idle",
+        timerEndsAt: null,
+        pausedRemainingMs: null,
       });
     },
 
@@ -304,20 +299,15 @@ export const useCombatStore = create<CombatState>((set, get) => {
             }
           }
         }
-        const next = rest.find((c) => c.id === turnId);
-        const timerChanged = game.combat.turnId === id
-          || (game.combat.designatedWardenId !== designatedWardenId && next?.id === designatedWardenId);
         await setCombat(gameId, {
           ...game.combat,
           active: true,
           round,
           turnId,
           designatedWardenId,
-          ...(timerChanged
-            ? next
-              ? timerForCombatant(next, designatedWardenId)
-              : { timerPhase: "idle" as const, timerEndsAt: null, pausedRemainingMs: null }
-            : {}),
+          timerPhase: "idle",
+          timerEndsAt: null,
+          pausedRemainingMs: null,
         });
       }
       if (get().preview) {
@@ -356,45 +346,16 @@ export const useCombatStore = create<CombatState>((set, get) => {
       } else {
         turnId = order[nextIdx].id;
       }
-      const next = order.find((c) => c.id === turnId);
       const encounter = game.combat ?? emptyEncounter();
       return setCombat(gameId, {
         ...encounter,
         active: true,
         round,
         turnId,
-        ...timerForCombatant(next, encounter.designatedWardenId),
+        timerPhase: "idle",
+        timerEndsAt: null,
+        pausedRemainingMs: null,
       });
-    },
-
-    designateWarden: async (gameId, game, combatants, id) => {
-      const encounter = game.combat ?? emptyEncounter();
-      const designatedWardenId = combatants.some((c) => c.id === id && c.isWarden) ? id : null;
-      const current = combatants.find((c) => c.id === encounter.turnId);
-      const affected = current?.id === encounter.designatedWardenId || current?.id === designatedWardenId;
-      return setCombat(gameId, {
-        ...encounter,
-        designatedWardenId,
-        ...(affected ? timerForCombatant(current, designatedWardenId) : {}),
-      });
-    },
-
-    startTimer: async (gameId, game) => {
-      const encounter = game.combat ?? emptyEncounter();
-      if (encounter.timerPhase !== "briefing") return false;
-      return setCombat(gameId, startTurnTimer(encounter));
-    },
-
-    pauseTimer: async (gameId, game) => {
-      const encounter = game.combat ?? emptyEncounter();
-      if (effectiveTimerPhase(encounter) !== "running") return false;
-      return setCombat(gameId, pauseTurnTimer(encounter));
-    },
-
-    resumeTimer: async (gameId, game) => {
-      const encounter = game.combat ?? emptyEncounter();
-      if (encounter.timerPhase !== "paused") return false;
-      return setCombat(gameId, resumeTurnTimer(encounter));
     },
 
     endEncounter: async (gameId) => {

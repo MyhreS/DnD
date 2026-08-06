@@ -1,10 +1,8 @@
 import { useMemo, type ReactNode } from "react";
 import { CONDITION_NAME } from "@/data/conditions";
-import { useTurnClock } from "@/features/play/hooks/useTurnClock";
-import { formatTurnTime } from "@/features/play/lib/turnTimer";
 import { initiativeOrder, useCombatStore } from "@/features/play/store/combatStore";
 import { useWakeLock } from "@/hooks/common/useWakeLock";
-import type { Combatant, Game, HunterCard, TurnTimerPhase } from "@/types";
+import type { Combatant, Game, HunterCard } from "@/types";
 import { combatVitals } from "../lib/combatPresentation";
 import "./battle-screen.css";
 
@@ -62,40 +60,12 @@ export function SessionBattleView({
               />
             ))}
           </section>
-          <BattleTimer phaseSource={encounter} combatant={current} />
         </div>
       )}
 
       {isDm && dmControls}
       {enemySection}
     </main>
-  );
-}
-
-function phaseLabel(phase: TurnTimerPhase): string {
-  if (phase === "briefing") return "Tactical briefing";
-  if (phase === "untimed") return "DM turn";
-  if (phase === "paused") return "Paused";
-  if (phase === "expired") return "Time expired";
-  if (phase === "running") return "Turn timer";
-  return "Waiting";
-}
-
-function BattleTimer({ phaseSource, combatant }: { phaseSource: NonNullable<Game["combat"]>; combatant?: Combatant }) {
-  const { phase, remainingMs } = useTurnClock(phaseSource);
-  const display = phase === "running" || phase === "paused" || phase === "expired"
-    ? formatTurnTime(remainingMs)
-    : phase === "briefing"
-      ? "Briefing"
-      : "No timer";
-  return (
-    <aside className={`battle-timer battle-timer-${phase}`} aria-live="polite" data-testid="battle-turn-timer">
-      <span>{phaseLabel(phase)}</span>
-      <strong>{display}</strong>
-      <p>{combatant?.name ?? "No active combatant"}</p>
-      {phase === "briefing" && <small>Planning only. The Warden starts 90 seconds when they act.</small>}
-      {phase === "expired" && <small>Finish the action already begun. No new action may start.</small>}
-    </aside>
   );
 }
 

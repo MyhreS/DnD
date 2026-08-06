@@ -289,21 +289,6 @@ export async function startGame(gameId: string): Promise<void> {
   });
 }
 
-export async function pauseGameClock(game: Game): Promise<void> {
-  const accumulated = game.clockElapsedMs + (game.clockRunning && game.clockStartedAt
-    ? Math.max(0, Date.now() - game.clockStartedAt)
-    : 0);
-  await updateDoc(doc(gamesCol, game.id), {
-    clockRunning: false,
-    clockStartedAt: null,
-    clockElapsedMs: accumulated,
-  });
-}
-
-export async function resumeGameClock(gameId: string): Promise<void> {
-  await updateDoc(doc(gamesCol, gameId), { clockRunning: true, clockStartedAt: Date.now() });
-}
-
 export async function setGamePhase(gameId: string, phase: GamePhase): Promise<void> {
   await updateDoc(doc(gamesCol, gameId), { phase });
 }

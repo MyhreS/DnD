@@ -73,15 +73,8 @@
 .game-creator h2 { margin: 2px 0 0; font-family: var(--font-display); font-size: clamp(1.55rem, 4vw, 2.35rem); }
 .game-session-heading p { margin-bottom: 0; }
 
-.game-clock { flex: 0 0 auto; min-width: 180px; text-align: right; }
-.game-clock > span,
-.game-clock small { display: block; color: var(--ink-faint); font-size: 0.72rem; letter-spacing: 0.1em; text-transform: uppercase; }
-.game-clock strong { display: block; color: var(--gold); font-family: var(--font-display); font-size: clamp(2rem, 5vw, 3.15rem); font-variant-numeric: tabular-nums; line-height: 1.1; }
-
 .game-session-heading-compact { align-items: center; }
 .game-session-top-actions { display: flex; align-items: center; gap: 20px; }
-.game-clock-small { min-width: 0; }
-.game-clock-small strong { color: var(--ink-dim); font-family: var(--font-body); font-size: 0.82rem; letter-spacing: 0.06em; }
 .game-primary-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 0 4px; }
 .game-primary-actions .btn { width: auto; min-height: 38px; padding: 8px 13px; }
 .game-primary-actions .btn-danger { margin-left: auto; }
@@ -143,9 +136,6 @@
 .game-dialog-player span { color: var(--ink-faint); font-size: 0.8rem; }
 .game-battle-dm-actions { display: flex; justify-content: flex-end; gap: 8px; margin: 14px 0; }
 .game-battle-dm-actions .btn { width: auto; }
-
-.game-clock-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 14px 0; border-bottom: 1px solid var(--border); }
-.game-clock-actions .btn { width: auto; min-height: 38px; padding: 8px 13px; }
 
 .game-combat-heading { align-items: center; }
 .game-combat-idle {
@@ -381,9 +371,6 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-session { flex: 0 0 min(210px, 72vw); border-left: 0; border-bottom: 2px solid transparent; }
   .game-session.is-current { border-bottom-color: var(--gold); }
   .game-session-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
-  .game-clock { min-width: 128px; }
-  .game-clock strong { font-size: 1.8rem; }
-  .game-clock-small strong { font-size: 0.82rem; }
   .game-player { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; }
   .game-player-open { grid-template-columns: 1fr; gap: 3px; }
   .game-enemy-form { grid-template-columns: repeat(3, minmax(0, 1fr)); }
@@ -402,9 +389,6 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-heading { align-items: center; }
   .game-create-button { padding-inline: 12px; }
   .game-session-heading { grid-template-columns: 1fr; }
-  .game-clock { text-align: left; }
-  .game-clock-small { text-align: right; }
-  .game-clock-actions .btn { flex: 1 1 calc(50% - 8px); }
   .game-section { padding: 24px 0; }
   .game-enemy-title { align-items: end; }
   .game-damage small { display: block; }
