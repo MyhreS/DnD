@@ -146,29 +146,31 @@ export function ManageBattleDialog({
           <button className="game-dialog-close" type="button" onClick={onClose} aria-label="Close">×</button>
         </header>
 
-        <div className="game-battle-dialog-tools">
-          <button className="btn btn-ghost" type="button" disabled={disabled} onClick={onAddEnemy}>Add enemy</button>
-          {canCreateItem && <button className="btn btn-ghost" type="button" disabled={disabled} onClick={onCreateItem}>Create item</button>}
-        </div>
+        <div className="game-battle-dialog-scroll">
+          <div className="game-battle-dialog-tools">
+            <button className="btn btn-ghost" type="button" disabled={disabled} onClick={onAddEnemy}>Add enemy</button>
+            {canCreateItem && <button className="btn btn-ghost" type="button" disabled={disabled} onClick={onCreateItem}>Create item</button>}
+          </div>
 
-        <div className="game-initiative" aria-label="DM initiative controls">
-          {order.map((combatant, index) => (
-            <InitiativeControlRow
-              key={`${combatant.id}:${combatant.initiative}`}
-              combatant={combatant}
-              position={index + 1}
-              round={Math.max(1, encounter.round)}
-              active={combatant.id === encounter.turnId}
-              characters={characters}
-              canEdit
-              disabled={disabled}
-              onInitiative={(initiative) => patch(game.id, combatant.id, { initiative })}
-              onToggleCondition={(conditionId) => toggleCondition(game.id, combatant, conditionId, Math.max(1, encounter.round))}
-            />
-          ))}
-        </div>
+          <div className="game-initiative" aria-label="DM initiative controls">
+            {order.map((combatant, index) => (
+              <InitiativeControlRow
+                key={`${combatant.id}:${combatant.initiative}`}
+                combatant={combatant}
+                position={index + 1}
+                round={Math.max(1, encounter.round)}
+                active={combatant.id === encounter.turnId}
+                characters={characters}
+                canEdit
+                disabled={disabled}
+                onInitiative={(initiative) => patch(game.id, combatant.id, { initiative })}
+                onToggleCondition={(conditionId) => toggleCondition(game.id, combatant, conditionId, Math.max(1, encounter.round))}
+              />
+            ))}
+          </div>
 
-        {enemySection}
+          {enemySection}
+        </div>
 
         <footer className="game-battle-dialog-footer">
           <button className="game-text-button game-danger-text" type="button" disabled={disabled} onClick={() => void endBattle()}>End battle</button>
