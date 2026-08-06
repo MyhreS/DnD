@@ -22,6 +22,10 @@ function messageTime(message: WorkshopMessage): string {
 
 export function TicketDetail({ ticket, uid, onClose }: { ticket: WorkshopTicket; uid: string; onClose: () => void }) {
   const { messages, error } = useTicketMessages(ticket.id);
+  const pickedUp = messages.some((message) => message.kind === "agent");
+  const visibleMessages = pickedUp
+    ? messages.filter((message) => !(message.kind === "system" && message.sequence === 2))
+    : messages;
   return (
     <div className="detail-backdrop" role="presentation" onMouseDown={(event) => {
       if (event.target === event.currentTarget) onClose();
@@ -35,7 +39,7 @@ export function TicketDetail({ ticket, uid, onClose }: { ticket: WorkshopTicket;
           {ticket.status === "needs_simon" && <p className="ticket-gate-note">Only Simon’s reply in this thread can restart this task.</p>}
         </header>
         <div className="message-list">
-          {messages.map((message) => (
+          {visibleMessages.map((message) => (
             <section className={`thread-message kind-${message.kind}`} key={message.id}>
               <div className="message-heading"><strong>{messageLabel(message)}</strong><time>{messageTime(message)}</time></div>
               <p>{message.body}</p>
