@@ -494,17 +494,51 @@ try {
     currentTicketId: "scroll-fixture-0",
     checkingNow: true,
     lastHeartbeatAt: new Date(),
+    progressStage: 4,
+    progressActivity: "Testing the update",
+    lastCompletedActivity: "Updated the Workshop request page",
+    progressUpdatedAt: new Date(),
+    workStartedAt: new Date(Date.now() - 20 * 60_000),
   }, { merge: true });
-  await creator.page.getByTestId("ticket-scroll-fixture-0").getByTestId("work-activity-list").waitFor();
+  await db.doc("workshopTickets/scroll-fixture-0/messages/legacy-working-message").set({
+    kind: "agent",
+    body: "I’m working on this now.",
+    authorUid: "workshop-agent",
+    authorName: "Workshop agent",
+    attachments: [],
+    sequence: 1,
+    createdAt: new Date(Date.now() - 15 * 60_000),
+  });
+  await db.doc("workshopTickets/scroll-fixture-0").update({ nextSequence: 2 });
+  const listProgress = creator.page.getByTestId("ticket-scroll-fixture-0").getByTestId("work-activity-list");
+  await listProgress.getByText("Testing the update", { exact: true }).waitFor();
+  await listProgress.getByText(/Stage 4 of 5 · 20m elapsed · updated just now/).waitFor();
+  await creator.page.getByTestId("ticket-scroll-fixture-0").scrollIntoViewIfNeeded();
+  await creator.page.screenshot({ path: "screenshots/workshop-progress-list-mobile.png", fullPage: true, animations: "disabled" });
   await creator.page.getByTestId("ticket-scroll-fixture-0").click();
-  await creator.page.getByTestId("work-activity-detail").waitFor();
-  await creator.page.waitForTimeout(350);
-  await creator.page.screenshot({ path: "screenshots/workshop-working-mobile.png", fullPage: true });
+  const detailProgress = creator.page.getByTestId("work-activity-detail");
+  await detailProgress.getByText("Testing the update", { exact: true }).waitFor();
+  await detailProgress.getByText("Last completed: Updated the Workshop request page", { exact: true }).waitFor();
+  await creator.page.screenshot({ path: "screenshots/workshop-working-mobile.png", fullPage: true, animations: "disabled" });
   if (await creator.page.getByText("I’m working on this now.", { exact: true }).count()) {
     throw new Error("Routine working copy appeared as a conversation reply.");
   }
+  await db.doc("workshopAgent/state").set({ progressUpdatedAt: new Date(Date.now() - 12 * 60_000) }, { merge: true });
+  await detailProgress.getByText(/No new step for \d+m\. The agent is still online\./).waitFor();
+  await db.doc("workshopAgent/state").set({ lastHeartbeatAt: new Date(Date.now() - 2 * 60_000) }, { merge: true });
+  await detailProgress.getByText("Agent paused or disconnected", { exact: true }).waitFor();
+  await detailProgress.getByText(/last update \d+m ago/).waitFor();
   await creator.page.getByRole("button", { name: "Close thread" }).click();
-  await db.doc("workshopAgent/state").set({ currentTicketId: null, checkingNow: false, lastHeartbeatAt: new Date() }, { merge: true });
+  await db.doc("workshopAgent/state").set({
+    currentTicketId: null,
+    checkingNow: false,
+    lastHeartbeatAt: new Date(),
+    progressStage: null,
+    progressActivity: null,
+    lastCompletedActivity: null,
+    progressUpdatedAt: null,
+    workStartedAt: null,
+  }, { merge: true });
 
   await creator.page.getByTestId("load-more-tickets").click();
   await requestList.locator("li").nth(18).waitFor();
@@ -678,7 +712,7 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: paged requests, durable open threads, paged conversations, compact long comments, live working indicators, direct answers, automatic retries, Simon-only replies, secure images, drafts, idempotency, read receipts, and responsive mobile/desktop layout.");
+  console.log("Workshop E2E passed: paged requests and conversations, compact long comments, detailed live progress, slow/stale-agent states, hidden routine acknowledgements, direct answers, automatic retries, Simon-only replies, secure images, drafts, idempotency, read receipts, and responsive mobile/desktop layout.");
   await Promise.all([simon.context.close(), creator.context.close(), thomas.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();

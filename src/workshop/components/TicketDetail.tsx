@@ -8,7 +8,7 @@ import { useDialogBehavior } from "@/workshop/hooks/useDialogBehavior";
 import { useMarkTicketRead } from "@/workshop/hooks/useMarkTicketRead";
 import { useTicketMessages } from "@/workshop/hooks/useTicketMessages";
 import { useWorkshopTicket } from "@/workshop/hooks/useWorkshopTicket";
-import type { WorkshopMessage, WorkshopTicket } from "@/workshop/types";
+import type { AgentState, WorkshopMessage, WorkshopTicket } from "@/workshop/types";
 
 function messageLabel(message: WorkshopMessage): string {
   if (message.kind === "agent") return "Workshop agent";
@@ -43,14 +43,18 @@ type TicketDetailProps = {
   initialTicket: WorkshopTicket | null;
   uid: string;
   isWorking: boolean;
+  agentState: AgentState | null;
+  agentOnline: boolean;
   onClose: () => void;
 };
 
 function isRoutineActivityMessage(message: WorkshopMessage): boolean {
-  return message.kind === "agent" && message.body.trim() === "I’m working on this now.";
+  if (message.kind !== "agent") return false;
+  const body = message.body.trim().toLocaleLowerCase().replaceAll("’", "'");
+  return body === "i'm working on this now." || body === "i'm working on this now";
 }
 
-export function TicketDetail({ ticketId, initialTicket, uid, isWorking, onClose }: TicketDetailProps) {
+export function TicketDetail({ ticketId, initialTicket, uid, isWorking, agentState, agentOnline, onClose }: TicketDetailProps) {
   const { ticket, error: ticketError } = useWorkshopTicket(ticketId, initialTicket);
   const { messages, error, loading, hasOlder, loadingOlder, loadOlder } = useTicketMessages(ticketId);
   const dialogRef = useDialogBehavior(onClose);
@@ -97,7 +101,7 @@ export function TicketDetail({ ticketId, initialTicket, uid, isWorking, onClose 
           </div>
           {hasNewMessage && <button className="new-message-button" type="button" onClick={jumpToLatest}>New message ↓</button>}
         </div>
-        {isWorking && ticket?.status === "doing_now" && <WorkActivity placement="detail" />}
+        {isWorking && ticket?.status === "doing_now" && <WorkActivity placement="detail" state={agentState} online={agentOnline} />}
         <TicketReply ticketId={ticketId} uid={uid} />
       </article>
     </div>
