@@ -28,7 +28,7 @@ service cloud.firestore {
 
     function isWorkshopAccount() {
       return isUser()
-        && emailKey() in ["simonmyhre1@gmail.com", "myhrefjeld@gmail.com"];
+        && emailKey() in ["simonmyhre1@gmail.com", "myhrefjeld@gmail.com", "thmyhre9@gmail.com"];
     }
 
     function isWorkshopMember() {
@@ -83,7 +83,7 @@ service cloud.firestore {
     }
 
     // D&D Workshop is an independently deployed feedback space restricted to
-    // Simon and Christoffer's two verified Google accounts.
+    // approved verified Google accounts.
     // All changes go through callable functions so requests and agent replies
     // form an immutable audit trail. Members may only read that trail.
     match /workshopMembers/{uid} {

@@ -4,7 +4,8 @@ import { HttpsError, onCall, type CallableRequest } from "firebase-functions/v2/
 
 const ADMIN_EMAIL = "simonmyhre1@gmail.com";
 const CREATOR_EMAIL = "myhrefjeld@gmail.com";
-const WORKSHOP_EMAILS = new Set([ADMIN_EMAIL, CREATOR_EMAIL]);
+const THOMAS_EMAIL = "thmyhre9@gmail.com";
+const WORKSHOP_EMAILS = new Set([ADMIN_EMAIL, CREATOR_EMAIL, THOMAS_EMAIL]);
 const REGION = "europe-west1";
 const MAX_BODY = 8_000;
 const MAX_ATTACHMENTS = 5;
@@ -31,7 +32,7 @@ function identity(request: CallableRequest): WorkshopUser {
     throw new HttpsError("unauthenticated", "Sign in with a verified Google account.");
   }
   if (!WORKSHOP_EMAILS.has(email)) {
-    throw new HttpsError("permission-denied", "This Workshop is only available to Simon and Christoffer.");
+    throw new HttpsError("permission-denied", "This Google account does not have access to the Workshop.");
   }
   return {
     uid,

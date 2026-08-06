@@ -18,8 +18,10 @@ const auth = getAdminAuth(admin);
 const db = getAdminFirestore(admin);
 const simonUid = "workshop-e2e-simon";
 const creatorUid = "workshop-e2e-creator";
+const thomasUid = "workshop-e2e-thomas";
 const outsiderUid = "workshop-e2e-outsider";
 const creatorEmail = "myhrefjeld@gmail.com";
+const thomasEmail = "thmyhre9@gmail.com";
 
 async function user(uid, email, displayName) {
   try { await auth.deleteUser(uid); } catch { /* absent */ }
@@ -27,9 +29,10 @@ async function user(uid, email, displayName) {
   return auth.createCustomToken(uid);
 }
 
-const [simonToken, creatorToken, outsiderToken] = await Promise.all([
+const [simonToken, creatorToken, thomasToken, outsiderToken] = await Promise.all([
   user(simonUid, "simonmyhre1@gmail.com", "Simon Myhre"),
   user(creatorUid, creatorEmail, "Christopher Creator"),
+  user(thomasUid, thomasEmail, "Thomas Myhre"),
   user(outsiderUid, "outsider-workshop@example.test", "Outside User"),
 ]);
 await db.doc(`workshopMembers/${outsiderUid}`).set({
@@ -139,7 +142,15 @@ try {
   const outsider = await openAs(browser, outsiderToken, { width: 390, height: 844 });
   watch(outsider.page, errors, true);
   await outsider.page.getByRole("heading", { name: "D&D Workshop" }).waitFor();
-  await outsider.page.getByText("only available to Simon and Christoffer").waitFor();
+  await outsider.page.getByText("does not have access to the Workshop").waitFor();
+  await noOverflow(outsider.page, "Denied Workshop mobile");
+  await outsider.page.screenshot({ path: "screenshots/workshop-denied-mobile.png", fullPage: true });
+
+  const thomas = await openAs(browser, thomasToken, { width: 1440, height: 900 });
+  watch(thomas.page, errors);
+  await waitForWorkspace(thomas.page, "Thomas");
+  await noOverflow(thomas.page, "Thomas Workshop desktop");
+  await thomas.page.screenshot({ path: "screenshots/workshop-thomas-desktop.png", fullPage: true });
 
   const creator = await openAs(browser, creatorToken, { width: 390, height: 844 });
   watch(creator.page, errors);
@@ -187,8 +198,10 @@ try {
   await creator.page.screenshot({ path: "screenshots/workshop-mobile.png", fullPage: true });
 
   const creatorDb = await ruleClient("creator", creatorToken);
+  const thomasDb = await ruleClient("thomas", thomasToken);
   const outsiderDb = await ruleClient("outsider", outsiderToken);
   if (!(await getDoc(doc(creatorDb, "workshopTickets", ticketId))).exists()) throw new Error("Invited creator cannot read the ticket.");
+  if (!(await getDoc(doc(thomasDb, "workshopTickets", ticketId))).exists()) throw new Error("Thomas cannot read Workshop tickets.");
   await expectDenied(() => updateDoc(doc(creatorDb, "workshopTickets", ticketId), { title: "edited" }), "Ticket edit");
   await expectDenied(() => deleteDoc(doc(creatorDb, "workshopTickets", ticketId)), "Ticket deletion");
   await expectDenied(() => getDoc(doc(outsiderDb, "workshopTickets", ticketId)), "Outsider ticket read");
@@ -280,8 +293,8 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: fixed two-account gate, stale-member denial, image ticket, immutable thread UI, visible Enter/click send feedback, scrollable long history, heartbeat countdown, Chris-blocked/Simon-reopened Needs Simon flow, declined flow, and responsive layout.");
-  await Promise.all([simon.context.close(), creator.context.close(), outsider.context.close()]);
+  console.log("Workshop E2E passed: fixed three-account gate, Thomas access, stale-member denial, image ticket, immutable thread UI, visible Enter/click send feedback, scrollable long history, heartbeat countdown, Chris-blocked/Simon-reopened Needs Simon flow, declined flow, and responsive layout.");
+  await Promise.all([simon.context.close(), creator.context.close(), thomas.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();
   server.kill("SIGTERM");
@@ -290,10 +303,12 @@ try {
     ...tickets.docs.map((item) => db.recursiveDelete(item.ref)),
     db.doc(`workshopMembers/${simonUid}`).delete(),
     db.doc(`workshopMembers/${creatorUid}`).delete(),
+    db.doc(`workshopMembers/${thomasUid}`).delete(),
     db.doc(`workshopMembers/${outsiderUid}`).delete(),
     db.doc("workshopAgent/state").delete(),
     auth.deleteUser(simonUid),
     auth.deleteUser(creatorUid),
+    auth.deleteUser(thomasUid),
     auth.deleteUser(outsiderUid),
   ]);
 }
