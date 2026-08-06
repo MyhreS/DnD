@@ -4,11 +4,12 @@ import { chromium, devices } from "playwright";
 
 const PORT = 5199;
 const BASE = `http://127.0.0.1:${PORT}`;
-const appsResult = spawnSync("firebase", ["apps:list", "--json"], { encoding: "utf8" });
+const FIREBASE_ACCOUNT = process.env.FIREBASE_ACCOUNT ?? "simonmyhre1@gmail.com";
+const appsResult = spawnSync("firebase", ["apps:list", "--json", "--account", FIREBASE_ACCOUNT], { encoding: "utf8" });
 if (appsResult.status !== 0) throw new Error(`Could not read Firebase app config: ${appsResult.stderr}`);
 const webApp = JSON.parse(appsResult.stdout).result.find((app) => app.platform === "WEB");
 if (!webApp) throw new Error("No Firebase web app found");
-const configResult = spawnSync("firebase", ["apps:sdkconfig", "WEB", webApp.appId, "--json"], { encoding: "utf8" });
+const configResult = spawnSync("firebase", ["apps:sdkconfig", "WEB", webApp.appId, "--json", "--account", FIREBASE_ACCOUNT], { encoding: "utf8" });
 if (configResult.status !== 0) throw new Error(`Could not read Firebase SDK config: ${configResult.stderr}`);
 const firebase = JSON.parse(configResult.stdout).result.sdkConfig;
 const server = spawn("bunx", ["vite", "--host", "127.0.0.1", "--port", String(PORT)], {
@@ -90,6 +91,7 @@ try {
   await search.fill("Gascoigne");
   const gascoigne = searchResults.getByRole("button", { name: /Gascoigne/ });
   await gascoigne.waitFor();
+  await gascoigne.getByText("Preview Hunter · Bloodbound · Level 3", { exact: true }).waitFor();
   await gascoigne.click();
   await owner.getByRole("button", { name: "Create session", exact: true }).click();
   await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
@@ -104,6 +106,8 @@ try {
   if (await managePlayersButton.count() !== 1) throw new Error("DM should have exactly one Manage players entry point");
   await managePlayersButton.click();
   const managePlayers = owner.getByRole("dialog", { name: "Manage players" });
+  await managePlayers.getByText("Preview Hunter · Bloodbound · Level 3", { exact: true }).waitFor();
+  await owner.screenshot({ path: "screenshots/manage-players-desktop.png" });
   await managePlayers.getByRole("button", { name: /Gascoigne/ }).click();
   const characterSheet = owner.getByRole("dialog", { name: "Character sheet" });
   await characterSheet.waitFor();
@@ -115,6 +119,14 @@ try {
     throw new Error("Session creator can add their own Hunter after session creation");
   }
   await managePlayers.getByRole("button", { name: "Done", exact: true }).click();
+
+  await owner.setViewportSize({ width: 390, height: 844 });
+  await managePlayersButton.click();
+  await managePlayers.getByText("Preview Hunter · Bloodbound · Level 3", { exact: true }).waitFor();
+  await assertNoHorizontalOverflow(owner, "Mobile Manage players dialog");
+  await owner.screenshot({ path: "screenshots/manage-players-mobile.png" });
+  await managePlayers.getByRole("button", { name: "Done", exact: true }).click();
+  await owner.setViewportSize({ width: 1440, height: 1000 });
 
   await owner.getByRole("button", { name: "Start session" }).click();
   if (await owner.getByTestId("session-clock").count()) throw new Error("Session timer is still visible.");
