@@ -1,4 +1,4 @@
-import { outcomeMessage, parseAgentResult, requiresSimonReply, ticketNeedsSimon } from "./workshop-manager-core";
+import { outcomeMessage, parseAgentResult, requiresSimonReply, ticketNeedsSimon, workshopChannelContext } from "./workshop-manager-core";
 
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
@@ -9,6 +9,15 @@ assert(ticketNeedsSimon("Delete every user in production") !== null, "destructiv
 assert(ticketNeedsSimon("Please change the authentication permissions") !== null, "access changes must stop");
 assert(requiresSimonReply("Protected change", false), "protected work must wait without Simon's thread reply");
 assert(!requiresSimonReply("Protected change", true), "Simon's thread reply must unblock one protected run");
+
+const channelContext = workshopChannelContext("myhrefjeld@gmail.com");
+assert(channelContext.includes("not chatting in Codex"), "worker must know it replies through Workshop");
+assert(channelContext.includes("myhrefjeld@gmail.com"), "worker must know the authenticated requester");
+assert(channelContext.includes("cannot do: edit or delete messages"), "worker must know creator UI limitations");
+assert(channelContext.includes("review or merge a pull request"), "worker must not delegate repository work to the creator");
+assert(channelContext.includes("technicalSummary is stored only in the internal run log"), "worker must separate visible and private output");
+assert(channelContext.includes("They do not see your reasoning"), "worker must understand what is hidden from the creator");
+assert(channelContext.includes("Only an authenticated reply from Simon"), "worker must understand Needs Simon authorization");
 
 const finished = parseAgentResult(JSON.stringify({
   outcome: "finished",
