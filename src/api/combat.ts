@@ -61,6 +61,16 @@ function fromDoc(id: string, data: DocumentData): Combatant {
     note: (data.note as string | null) ?? null,
     revealHp: data.revealHp === true,
     revealStats: data.revealStats === true,
+    enemyTemplateId: (data.enemyTemplateId as string | null) ?? null,
+    baseStats: data.baseStats ? {
+      name: String(data.baseStats.name ?? data.name ?? "Enemy"),
+      initiative: Number(data.baseStats.initiative ?? data.initiative ?? 0),
+      ac: typeof data.baseStats.ac === "number" ? data.baseStats.ac : null,
+      maxHp: Math.max(1, Number(data.baseStats.maxHp ?? data.maxHp ?? 1)),
+      note: typeof data.baseStats.note === "string" ? data.baseStats.note : null,
+      revealHp: data.baseStats.revealHp === true,
+      revealStats: data.baseStats.revealStats === true,
+    } : null,
     isWarden: data.isWarden === true,
     createdAt: ms(data.createdAt),
   };

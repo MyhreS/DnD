@@ -143,6 +143,15 @@ export function previewCombatants(): import("@/types").Combatant[] {
   ];
 }
 
+export function previewEnemyTemplates(): import("@/types").EnemyTemplate[] {
+  const now = Date.now();
+  return [
+    { id: "preview-cleric-beast", name: "Cleric Beast", initiative: 19, ac: 14, maxHp: 80, note: "Claws +6 to hit; howl frightens on hit", revealHp: false, revealStats: false, archived: false, createdAt: now, updatedAt: now },
+    { id: "preview-grave-hound", name: "Grave Hound", initiative: 14, ac: 12, maxHp: 18, note: "Fast and territorial", revealHp: false, revealStats: false, archived: false, createdAt: now, updatedAt: now },
+    { id: "preview-old-huntsman", name: "Old Huntsman", initiative: 11, ac: 13, maxHp: 24, note: null, revealHp: false, revealStats: false, archived: true, createdAt: now, updatedAt: now },
+  ];
+}
+
 /** Sample participants so the lobby / DM board look populated in preview.
  * Gascoigne is a sheet-made hunter: classId "" + the sheet's class text. */
 export function previewParticipants(): import("@/types").GameParticipant[] {
