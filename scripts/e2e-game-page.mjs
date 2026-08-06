@@ -69,7 +69,14 @@ try {
   if (huntersIndex < 0 || primaryLinks[huntersIndex + 1] !== "Game") {
     throw new Error(`Game is not directly after Hunters in navigation: ${JSON.stringify(primaryLinks)}`);
   }
+  if (primaryLinks.includes("Menu")) throw new Error(`Landing page remains in navigation: ${JSON.stringify(primaryLinks)}`);
   if (primaryLinks.includes("DM")) throw new Error(`Legacy DM page remains in navigation: ${JSON.stringify(primaryLinks)}`);
+  await owner.getByRole("link", { name: "Catacombs & Starspawns", exact: true }).click();
+  await owner.waitForURL(`${BASE}/`);
+  await owner.getByRole("heading", { name: /Welcome/ }).waitFor();
+  await owner.screenshot({ path: "screenshots/main-menu-desktop.png", fullPage: true });
+  await owner.goto(`${BASE}/game?preview=user.player&game=empty`, { waitUntil: "domcontentloaded" });
+  await owner.getByRole("heading", { name: "Game", exact: true }).waitFor();
 
   await owner.getByRole("button", { name: "Create session", exact: true }).click();
   await owner.getByLabel("Session name").fill("Night of the Pale Moon");
@@ -162,7 +169,14 @@ try {
     throw new Error("Invited player can create a second active session");
   }
   const playerLinks = await player.getByRole("navigation", { name: "Primary" }).getByRole("link").allTextContents();
+  if (playerLinks.includes("Menu")) throw new Error(`Landing page remains in mobile navigation: ${JSON.stringify(playerLinks)}`);
   if (playerLinks.includes("DM")) throw new Error(`Legacy DM page remains in player navigation: ${JSON.stringify(playerLinks)}`);
+  await player.getByRole("link", { name: "Catacombs & Starspawns", exact: true }).click();
+  await player.waitForURL(`${BASE}/`);
+  await player.getByRole("heading", { name: /Welcome/ }).waitFor();
+  await player.screenshot({ path: "screenshots/main-menu-mobile.png", fullPage: true });
+  await player.goto(`${BASE}/game?preview=user.player`, { waitUntil: "domcontentloaded" });
+  await player.getByRole("heading", { name: "The Sunless Vault", exact: true }).waitFor();
   await player.getByText("Your Hunter", { exact: true }).waitFor();
   if (await player.getByText("Cleric Beast", { exact: true }).count()) throw new Error("Normal player session page exposes the encounter roster");
   if (await player.getByText("Players", { exact: true }).count()) throw new Error("Normal player session page exposes the party roster");
@@ -181,7 +195,7 @@ try {
   await ownerContext.close();
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Game page E2E passed: one active session, owner controls, saved history, lobby discard, player visibility, and responsive layout.");
+  console.log("Game page E2E passed: logo navigation, compact primary navigation, one active session, owner controls, saved history, lobby discard, player visibility, and responsive layout.");
 } finally {
   await browser.close();
   server.kill("SIGTERM");
