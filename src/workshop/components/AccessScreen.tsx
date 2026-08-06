@@ -13,7 +13,7 @@ export function AccessScreen({
       <div className="access-mark" aria-hidden>W</div>
       <p className="eyebrow">Catacombs &amp; Starspawns</p>
       <h1>D&amp;D Workshop</h1>
-      <p>{denied ? "This Workshop is only available to Simon and Christoffer." : "A private place to send feedback directly to the person improving the game."}</p>
+      <p>{denied ? "This Google account does not have access to the Workshop." : "A private place to send feedback directly to the person improving the game."}</p>
       <button className="primary-button" type="button" onClick={() => void (denied ? onSignOut() : onSignIn())}>
         {denied ? "Use another account" : "Sign in with Google"}
       </button>
