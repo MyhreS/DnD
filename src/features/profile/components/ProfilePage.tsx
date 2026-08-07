@@ -4,6 +4,7 @@ import { fullName } from "@/config";
 import { format } from "date-fns";
 import { SignOutIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { ProfileNameForm } from "./ProfileNameForm";
 
 export function ProfilePage() {
   const user = useAuthStore((s) => s.user);
@@ -19,6 +20,8 @@ export function ProfilePage() {
       <p className="page-intro">
         {user?.email}
       </p>
+
+      <ProfileNameForm />
 
       <ThemeToggle />
 
