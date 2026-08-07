@@ -248,8 +248,8 @@ try {
       return state?.watchingChanges === true
         && state?.triggerMode === "realtime_with_fallback"
         && state?.fallbackIntervalMs === 5 * 60_000
-        && state?.model === "gpt-5.6-sol"
-        && state?.reasoningEffort === "high";
+        && state?.model === "gpt-5.6-terra"
+        && state?.reasoningEffort === "medium";
     }, "Real-time request listener");
     await Promise.all([creator, simon, thomas].map(({ page }) => (
       page.getByTestId("agent-presence").getByText("Agent online").waitFor()
