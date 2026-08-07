@@ -58,11 +58,19 @@ service cloud.firestore {
       return isUser() && (
         data.dmUid == request.auth.uid
         || request.auth.uid in data.get('participantUids', [])
+        || request.auth.uid in data.get('invitedUids', [])
+        || (data.campaignId != null && isMember(data.campaignId))
+      );
+    }
+    function canAccessGameData(data) {
+      return isUser() && (
+        data.dmUid == request.auth.uid
+        || request.auth.uid in data.get('participantUids', [])
         || (data.campaignId != null && isMember(data.campaignId))
       );
     }
     function canReadGame(gid) {
-      return canReadGameData(gameData(gid));
+      return canAccessGameData(gameData(gid));
     }
     function isGameDM(gid) {
       return isUser() && gameData(gid).dmUid == request.auth.uid;

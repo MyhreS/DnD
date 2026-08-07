@@ -63,6 +63,14 @@ try {
   });
   const owner = await ownerContext.newPage();
   watch(owner, errors);
+  await owner.goto(`${BASE}/game?preview=user.player&game=invite`, { waitUntil: "domcontentloaded" });
+  const desktopRequest = owner.getByRole("region", { name: "Session requests" });
+  await desktopRequest.getByText("The Ashen Cathedral", { exact: true }).waitFor();
+  await desktopRequest.getByText("Second DM invited you. Accepting will leave your current session.", { exact: true }).waitFor();
+  await assertNoHorizontalOverflow(owner, "Desktop session request");
+  await owner.screenshot({ path: "screenshots/session-switch-request-desktop.png", fullPage: true });
+  await desktopRequest.getByRole("button", { name: "Decline", exact: true }).click();
+  await desktopRequest.waitFor({ state: "detached" });
   await owner.goto(`${BASE}/game?preview=user.player&game=empty`, { waitUntil: "domcontentloaded" });
   await owner.getByRole("heading", { name: "Game", exact: true }).waitFor();
   const primaryLinks = await owner.getByRole("navigation", { name: "Primary" }).getByRole("link").allTextContents();
@@ -193,6 +201,14 @@ try {
   });
   const player = await playerContext.newPage();
   watch(player, errors);
+  await player.goto(`${BASE}/game?preview=user.player&game=invite`, { waitUntil: "domcontentloaded" });
+  const mobileRequest = player.getByRole("region", { name: "Session requests" });
+  await mobileRequest.getByRole("button", { name: "Join and switch", exact: true }).waitFor();
+  await assertNoHorizontalOverflow(player, "Mobile session request");
+  await player.screenshot({ path: "screenshots/session-switch-request-mobile.png", fullPage: true });
+  await mobileRequest.getByRole("button", { name: "Join and switch", exact: true }).click();
+  await player.getByRole("heading", { name: "The Ashen Cathedral", exact: true }).waitFor();
+  await mobileRequest.waitFor({ state: "detached" });
   await player.goto(`${BASE}/game?preview=user.player`, { waitUntil: "domcontentloaded" });
   await player.getByRole("heading", { name: "The Sunless Vault", exact: true }).waitFor();
   if (await player.getByRole("button", { name: "Create session", exact: true }).count()) {

@@ -9,7 +9,7 @@ import { initializeApp as adminInit, cert } from "firebase-admin/app";
 import { getAuth as adminAuth } from "firebase-admin/auth";
 import { getFirestore as adminGetFirestore } from "firebase-admin/firestore";
 import { initializeApp } from "firebase/app";
-import { connectAuthEmulator, getAuth, signInWithCustomToken } from "firebase/auth";
+import { connectAuthEmulator, getAuth, signInWithCustomToken, signInWithEmailAndPassword } from "firebase/auth";
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from "firebase/functions";
 import {
   connectFirestoreEmulator, getFirestore, doc, setDoc, addDoc, updateDoc, getDoc, getDocs,
@@ -17,28 +17,31 @@ import {
 } from "firebase/firestore";
 
 const sa = process.env.AGENT_TEST_SA;
-if (!sa) throw new Error("Missing AGENT_TEST_SA (run via doppler).");
 const useEmulators = process.env.USE_FIREBASE_EMULATORS === "1";
 const cfg = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  appId: process.env.VITE_FIREBASE_APP_ID,
+  apiKey: process.env.VITE_FIREBASE_API_KEY || (useEmulators ? "fake-api-key" : undefined),
+  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || (useEmulators ? "dandd-ea955.firebaseapp.com" : undefined),
+  projectId: process.env.VITE_FIREBASE_PROJECT_ID || (useEmulators ? "dandd-ea955" : undefined),
+  appId: process.env.VITE_FIREBASE_APP_ID || (useEmulators ? "1:123:web:emulator" : undefined),
 };
 if (!cfg.apiKey) throw new Error("Missing VITE_FIREBASE_* web config.");
+if (!sa && !useEmulators) throw new Error("Missing AGENT_TEST_SA (run via doppler).");
 
-const admin = adminInit({ credential: cert(JSON.parse(sa)) });
+const admin = useEmulators
+  ? adminInit({ projectId: cfg.projectId })
+  : adminInit({ credential: cert(JSON.parse(sa)) });
 const aauth = adminAuth(admin);
+const testPassword = "agent-emulator-password";
 if (useEmulators) {
   await Promise.all([
-    aauth.createUser({ uid: "agent-dm", email: "agent-dm@dandd-ea955.web.app", emailVerified: true }),
-    aauth.createUser({ uid: "agent-dm-2", email: "agent-dm-2@dandd-ea955.web.app", emailVerified: true }),
-    aauth.createUser({ uid: "agent-player", email: "agent-player@dandd-ea955.web.app", emailVerified: true }),
+    aauth.createUser({ uid: "agent-dm", email: "agent-dm@dandd-ea955.web.app", emailVerified: true, password: testPassword }),
+    aauth.createUser({ uid: "agent-dm-2", email: "agent-dm-2@dandd-ea955.web.app", emailVerified: true, password: testPassword }),
+    aauth.createUser({ uid: "agent-player", email: "agent-player@dandd-ea955.web.app", emailVerified: true, password: testPassword }),
   ]);
 }
-const dmTok = await aauth.createCustomToken("agent-dm");
-const dm2Tok = await aauth.createCustomToken("agent-dm-2");
-const plTok = await aauth.createCustomToken("agent-player");
+const dmTok = useEmulators ? null : await aauth.createCustomToken("agent-dm");
+const dm2Tok = useEmulators ? null : await aauth.createCustomToken("agent-dm-2");
+const plTok = useEmulators ? null : await aauth.createCustomToken("agent-player");
 
 function client(name) {
   const app = initializeApp(cfg, name);
@@ -55,9 +58,17 @@ function client(name) {
 const dm = client("dm");
 const dm2 = client("dm2");
 const pl = client("pl");
-await signInWithCustomToken(dm.auth, dmTok);
-await signInWithCustomToken(dm2.auth, dm2Tok);
-await signInWithCustomToken(pl.auth, plTok);
+if (useEmulators) {
+  await Promise.all([
+    signInWithEmailAndPassword(dm.auth, "agent-dm@dandd-ea955.web.app", testPassword),
+    signInWithEmailAndPassword(dm2.auth, "agent-dm-2@dandd-ea955.web.app", testPassword),
+    signInWithEmailAndPassword(pl.auth, "agent-player@dandd-ea955.web.app", testPassword),
+  ]);
+} else {
+  await signInWithCustomToken(dm.auth, dmTok);
+  await signInWithCustomToken(dm2.auth, dm2Tok);
+  await signInWithCustomToken(pl.auth, plTok);
+}
 const dmUid = dm.auth.currentUser.uid;
 const dm2Uid = dm2.auth.currentUser.uid;
 const plUid = pl.auth.currentUser.uid;
@@ -68,6 +79,7 @@ const createStandaloneAsSecondDm = httpsCallable(dm2.functions, "createStandalon
 const addStandaloneParticipant = httpsCallable(dm.functions, "addStandaloneGameParticipant");
 const addStandaloneParticipantAsSecondDm = httpsCallable(dm2.functions, "addStandaloneGameParticipant");
 const removeStandaloneParticipant = httpsCallable(dm.functions, "removeStandaloneGameParticipant");
+const respondStandaloneInvite = httpsCallable(pl.functions, "respondToStandaloneGameInvite");
 const createStandaloneLoot = httpsCallable(dm.functions, "createStandaloneGameLoot");
 const claimStandaloneLoot = httpsCallable(pl.functions, "claimStandaloneGameLoot");
 const finishStandalone = httpsCallable(dm.functions, "finishStandaloneGameSession");
@@ -211,14 +223,35 @@ await step("DM and invited player cannot open second sessions (negative)", async
     if (!denied) throw new Error("busy user created a second active session");
   }
 });
-await step("Another DM cannot invite a player who is already in session (negative)", async () => {
+await step("Busy player can decline or accept a request to switch sessions", async () => {
   const created = await createStandaloneAsSecondDm({ title: "Other Table", dmName: "Agent DM 2", hunterIds: [] });
   const otherGameId = created.data.gameId;
-  let denied = false;
-  try { await addStandaloneParticipantAsSecondDm({ gameId: otherGameId, characterId: plCharId }); }
-  catch { denied = true; }
+  const firstRequest = await addStandaloneParticipantAsSecondDm({ gameId: otherGameId, characterId: plCharId });
+  if (firstRequest.data.pending !== true) throw new Error("busy-player-was-not-sent-a-switch-request");
+  const visibleRequests = await getDocs(query(collection(pl.db, "games"), where("invitedUids", "array-contains", plUid)));
+  if (!visibleRequests.docs.some((item) => item.id === otherGameId)) throw new Error("switch-request-not-visible");
+  let sessionDataDenied = false;
+  try { await getDocs(collection(pl.db, "games", otherGameId, "battleView")); }
+  catch { sessionDataDenied = true; }
+  if (!sessionDataDenied) throw new Error("pending-player-could-read-session-data");
+  await respondStandaloneInvite({ gameId: otherGameId, action: "decline" });
+  const declined = await getDoc(doc(dm2.db, "games", otherGameId));
+  if (declined.data()?.invitedUids?.includes(plUid)) throw new Error("declined-request-remained");
+
+  await addStandaloneParticipantAsSecondDm({ gameId: otherGameId, characterId: plCharId });
+  await respondStandaloneInvite({ gameId: otherGameId, action: "accept" });
+  const [oldAfterSwitch, newAfterSwitch] = await Promise.all([
+    getDoc(doc(dm.db, "games", standaloneGameId)),
+    getDoc(doc(dm2.db, "games", otherGameId)),
+  ]);
+  if (oldAfterSwitch.data()?.participantUids?.includes(plUid)) throw new Error("player-remained-in-old-session");
+  if (!newAfterSwitch.data()?.participantUids?.includes(plUid)) throw new Error("player-did-not-join-new-session");
+
+  await addStandaloneParticipant({ gameId: standaloneGameId, characterId: plCharId });
+  await respondStandaloneInvite({ gameId: standaloneGameId, action: "accept" });
+  const returned = await getDoc(doc(dm.db, "games", standaloneGameId));
+  if (!returned.data()?.participantUids?.includes(plUid)) throw new Error("player-could-not-switch-back");
   await discardStandaloneAsSecondDm({ gameId: otherGameId });
-  if (!denied) throw new Error("busy player was invited to another DM's active session");
 });
 await step("Session creator cannot add themselves as a player (negative)", async () => {
   let denied = false;

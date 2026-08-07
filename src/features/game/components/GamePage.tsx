@@ -5,6 +5,7 @@ import {
   discardGameSession,
   finishGameSession,
   removeGameParticipant,
+  respondToGameInvite,
   startGame,
   subscribeActiveGameSeats,
   subscribeParticipants,
@@ -26,7 +27,7 @@ import type { EnemyStats, EnemyTemplate, Game, GameParticipant, HunterCard } fro
 import { EnemyEditorDialog } from "./EnemyEditorDialog";
 import { EnemyLibraryDialog } from "./EnemyLibraryDialog";
 import { EnemySection } from "./EnemySection";
-import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed } from "./GameSessionPanels";
+import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed, SessionSwitchRequests } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
 import { ManageBattleDialog, SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
 import "./game.css";
@@ -52,7 +53,9 @@ export function GamePage() {
   const user = useAuthStore((state) => state.user);
   const member = useAuthStore((state) => state.member);
   const preview = isPreviewActive();
-  const emptyGamePreview = preview && new URLSearchParams(window.location.search).get("game") === "empty";
+  const previewGameMode = preview ? new URLSearchParams(window.location.search).get("game") : null;
+  const emptyGamePreview = previewGameMode === "empty";
+  const switchInvitePreview = previewGameMode === "invite";
   const { characters, error: charactersError } = useAllCharacters();
   const enemyLibrary = useEnemyLibrary(user?.uid, preview);
   const otherCharacters = useMemo(
@@ -73,6 +76,7 @@ export function GamePage() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [managingPlayers, setManagingPlayers] = useState(false);
   const [managingBattle, setManagingBattle] = useState(false);
@@ -87,7 +91,20 @@ export function GamePage() {
     if (preview) {
       const timer = window.setTimeout(() => {
         const game = emptyGamePreview ? null : previewGame();
-        setGames(game ? [game] : []);
+        const request = game && switchInvitePreview ? {
+          ...previewGame(),
+          id: "preview-switch-request",
+          campaignId: null,
+          title: "The Ashen Cathedral",
+          dmUid: "preview-dm-2",
+          dmName: "Second DM",
+          participantUids: [],
+          participantRoster: [],
+          invitedUids: [user.uid],
+          inviteRoster: [previewParticipants()[0]],
+          combat: emptyEncounter(),
+        } : null;
+        setGames(game ? [game, ...(request ? [request] : [])] : []);
         setSelectedId(game?.id ?? null);
         setLoading(false);
       }, 0);
@@ -97,9 +114,10 @@ export function GamePage() {
       user.uid,
       (next) => {
         setGames(next);
-        setSelectedId((current) => current && next.some((game) => game.id === current)
+        const joined = next.filter((game) => game.dmUid === user.uid || game.participantUids.includes(user.uid));
+        setSelectedId((current) => current && joined.some((game) => game.id === current)
           ? current
-          : next.find((game) => game.status !== "ended")?.id ?? next[0]?.id ?? null);
+          : joined.find((game) => game.status !== "ended")?.id ?? joined[0]?.id ?? null);
         setLoading(false);
         setError(null);
       },
@@ -108,7 +126,7 @@ export function GamePage() {
         setError("Could not load your game sessions.");
       },
     );
-  }, [emptyGamePreview, preview, user]);
+  }, [emptyGamePreview, preview, switchInvitePreview, user]);
 
   useEffect(() => {
     if (preview) return;
@@ -119,8 +137,10 @@ export function GamePage() {
   }, [preview]);
 
   const selected = games.find((game) => game.id === selectedId) ?? null;
-  const activeGame = games.find((game) => game.status !== "ended") ?? null;
-  const history = games.filter((game) => game.status === "ended");
+  const pendingInvitations = games.filter((game) => Boolean(user && game.invitedUids.includes(user.uid)));
+  const joinedGames = games.filter((game) => Boolean(user && (game.dmUid === user.uid || game.participantUids.includes(user.uid))));
+  const activeGame = joinedGames.find((game) => game.status !== "ended") ?? null;
+  const history = joinedGames.filter((game) => game.status === "ended");
   const effectiveSeats = useMemo(() => {
     if (!preview) return activeSeats;
     const seats = new Map<string, ActiveGameSeat>();
@@ -130,10 +150,20 @@ export function GamePage() {
     }
     return seats;
   }, [activeSeats, games, preview]);
-  const occupiedOwnerUids = useMemo(() => new Set(effectiveSeats.keys()), [effectiveSeats]);
+  const switchableOwnerUids = useMemo(() => new Set(
+    [...effectiveSeats.values()].filter((seat) => seat.role === "player").map((seat) => seat.uid),
+  ), [effectiveSeats]);
+  const unavailableOwnerUids = useMemo(() => new Set(
+    [...effectiveSeats.values()].filter((seat) => seat.role === "dm").map((seat) => seat.uid),
+  ), [effectiveSeats]);
   const unavailableForSelected = useMemo(() => new Set(
     [...effectiveSeats.values()]
-      .filter((seat) => seat.gameId !== selected?.id)
+      .filter((seat) => seat.gameId !== selected?.id && seat.role === "dm")
+      .map((seat) => seat.uid),
+  ), [effectiveSeats, selected?.id]);
+  const switchableForSelected = useMemo(() => new Set(
+    [...effectiveSeats.values()]
+      .filter((seat) => seat.gameId !== selected?.id && seat.role === "player")
       .map((seat) => seat.uid),
   ), [effectiveSeats, selected?.id]);
   const isSessionDm = Boolean(user && selected?.dmUid === user.uid);
@@ -171,6 +201,7 @@ export function GamePage() {
   async function perform(work: () => Promise<void>, message: string): Promise<boolean> {
     setBusy(true);
     setError(null);
+    setNotice(null);
     try {
       await work();
       return true;
@@ -234,6 +265,8 @@ export function GamePage() {
         dmName: input.dmName,
         participantUids: hunters.map((hunter) => hunter.ownerUid),
         participantRoster: roster,
+        invitedUids: [],
+        inviteRoster: [],
         attendeeRoster: roster,
         status: "lobby",
         combat: emptyEncounter(),
@@ -258,8 +291,8 @@ export function GamePage() {
   async function addHunter(card: HunterCard) {
     if (!selected) return;
     const occupied = effectiveSeats.get(card.ownerUid);
-    if (occupied && occupied.gameId !== selected.id) {
-      setError(`${card.ownerName || card.name} is already in another active session.`);
+    if (occupied?.role === "dm" && occupied.gameId !== selected.id) {
+      setError(`${card.ownerName || card.name} is currently running another session.`);
       return;
     }
     if (preview) {
@@ -287,7 +320,44 @@ export function GamePage() {
       });
       return;
     }
-    await perform(() => addGameParticipant(selected, card), "Could not add that player.");
+    await perform(async () => {
+      const pending = await addGameParticipant(selected, card);
+      if (pending) setNotice(`Switch request sent to ${card.ownerName || card.name}.`);
+    }, "Could not add that player.");
+  }
+
+  async function respondToInvite(game: Game, action: "accept" | "decline") {
+    if (preview && user) {
+      setGames((current) => current.map((item) => {
+        if (item.id === game.id) {
+          const invitation = item.inviteRoster.find((participant) => participant.uid === user.uid);
+          return {
+            ...item,
+            participantUids: action === "accept" ? [...new Set([...item.participantUids, user.uid])] : item.participantUids,
+            participantRoster: action === "accept" && invitation
+              ? [...item.participantRoster.filter((participant) => participant.uid !== user.uid), invitation]
+              : item.participantRoster,
+            invitedUids: item.invitedUids.filter((uid) => uid !== user.uid),
+            inviteRoster: item.inviteRoster.filter((participant) => participant.uid !== user.uid),
+          };
+        }
+        if (action === "accept") {
+          return {
+            ...item,
+            participantUids: item.participantUids.filter((uid) => uid !== user.uid),
+            participantRoster: item.participantRoster.filter((participant) => participant.uid !== user.uid),
+          };
+        }
+        return item;
+      }));
+      if (action === "accept") setSelectedId(game.id);
+      return;
+    }
+    const ok = await perform(
+      () => respondToGameInvite(game.id, action),
+      `Could not ${action} that session request.`,
+    );
+    if (ok && action === "accept") setSelectedId(game.id);
   }
 
   async function removeHunter(uid: string) {
@@ -425,6 +495,13 @@ export function GamePage() {
     return (
       <div className="game-page game-page-battle">
         {(error || charactersError || combatError || enemyLibrary.error) && <div className="banner-error" role="alert">{error || charactersError || combatError || enemyLibrary.error}</div>}
+        {notice && <div className="game-notice" role="status">{notice}</div>}
+        <SessionSwitchRequests
+          invitations={pendingInvitations}
+          hasCurrentSession={Boolean(activeGame)}
+          busy={busy}
+          onRespond={respondToInvite}
+        />
         <SessionBattleView
           game={selected}
           characters={characters ?? []}
@@ -470,11 +547,20 @@ export function GamePage() {
       </header>}
 
       {(error || charactersError || combatError || enemyLibrary.error) && <div className="banner-error" role="alert">{error || charactersError || combatError || enemyLibrary.error}</div>}
+      {notice && <div className="game-notice" role="status">{notice}</div>}
+
+      <SessionSwitchRequests
+        invitations={pendingInvitations}
+        hasCurrentSession={Boolean(activeGame)}
+        busy={busy}
+        onRespond={respondToInvite}
+      />
 
       {creating && (
         <CreateSession
           characters={otherCharacters}
-          unavailableOwnerUids={occupiedOwnerUids}
+          unavailableOwnerUids={unavailableOwnerUids}
+          switchableOwnerUids={switchableOwnerUids}
           busy={busy}
           onCancel={() => setCreating(false)}
           onCreate={createSession}
@@ -566,7 +652,7 @@ export function GamePage() {
           )}
         </div>
       )}
-      {selected && managingPlayers && <ManagePlayersDialog game={selected} characters={otherCharacters.concat((characters ?? []).filter((card) => displayedParticipants.some((participant) => participant.characterId === card.id)))} participants={displayedParticipants} unavailableOwnerUids={unavailableForSelected} busy={busy} onAdd={addHunter} onRemove={removeHunter} onClose={() => setManagingPlayers(false)} />}
+      {selected && managingPlayers && <ManagePlayersDialog game={selected} characters={otherCharacters.concat((characters ?? []).filter((card) => displayedParticipants.some((participant) => participant.characterId === card.id)))} participants={displayedParticipants} invitations={selected.inviteRoster} unavailableOwnerUids={unavailableForSelected} switchableOwnerUids={switchableForSelected} busy={busy} onAdd={addHunter} onRemove={removeHunter} onClose={() => setManagingPlayers(false)} />}
       {selected && creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
       {enemyDialogs}
       {ownSheetOpen && ownCard && <PaperSheetModal card={ownCard} onClose={() => setOwnSheetOpen(false)} />}
@@ -586,12 +672,14 @@ function SessionLink({ game, selected, onSelect }: { game: Game; selected: boole
 function CreateSession({
   characters,
   unavailableOwnerUids,
+  switchableOwnerUids,
   busy,
   onCancel,
   onCreate,
 }: {
   characters: HunterCard[];
   unavailableOwnerUids: Set<string>;
+  switchableOwnerUids: Set<string>;
   busy: boolean;
   onCancel: () => void;
   onCreate: (title: string, hunters: HunterCard[]) => Promise<void>;
@@ -637,10 +725,11 @@ function CreateSession({
         {results.map((card) => {
           const picked = selected.some((hunter) => hunter.id === card.id);
           const unavailable = unavailableOwnerUids.has(card.ownerUid);
+          const switchable = switchableOwnerUids.has(card.ownerUid);
           return (
             <button key={card.id} type="button" disabled={unavailable} className={picked ? "game-hunter-result is-picked" : "game-hunter-result"} onClick={() => choose(card)}>
               <span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail} · {cardClassName(card) || "Hunter"} · Level {card.level}</small></span>
-              <span>{unavailable ? "In session" : picked ? "Added" : "Add"}</span>
+              <span>{unavailable ? "Running session" : picked ? "Added" : switchable ? "Ask to switch" : "Add"}</span>
             </button>
           );
         })}

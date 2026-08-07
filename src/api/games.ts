@@ -35,8 +35,12 @@ const createStandaloneSessionFn = httpsCallable<
 >(functions, "createStandaloneGameSession");
 const addStandaloneParticipantFn = httpsCallable<
   { gameId: string; characterId: string },
-  { ok: boolean }
+  { ok: boolean; pending: boolean }
 >(functions, "addStandaloneGameParticipant");
+const respondToStandaloneInviteFn = httpsCallable<
+  { gameId: string; action: "accept" | "decline" },
+  { ok: boolean }
+>(functions, "respondToStandaloneGameInvite");
 const removeStandaloneParticipantFn = httpsCallable<
   { gameId: string; uid: string },
   { ok: boolean }
@@ -96,6 +100,10 @@ function toGame(id: string, data: Record<string, unknown>): Game {
     participantRoster: Array.isArray(data.participantRoster)
       ? (data.participantRoster as Record<string, unknown>[]).map((participant) => toParticipant(participant))
       : [],
+    invitedUids: Array.isArray(data.invitedUids) ? (data.invitedUids as string[]) : [],
+    inviteRoster: Array.isArray(data.inviteRoster)
+      ? (data.inviteRoster as Record<string, unknown>[]).map((participant) => toParticipant(participant))
+      : [],
     attendeeRoster: Array.isArray(data.attendeeRoster)
       ? (data.attendeeRoster as Record<string, unknown>[]).map((participant) => toParticipant(participant))
       : undefined,
@@ -125,9 +133,10 @@ export function subscribeUserGames(
 ): () => void {
   let owned: Game[] = [];
   let invited: Game[] = [];
+  let pending: Game[] = [];
   const emit = () => {
     const merged = new Map<string, Game>();
-    [...owned, ...invited].forEach((game) => merged.set(game.id, game));
+    [...owned, ...invited, ...pending].forEach((game) => merged.set(game.id, game));
     cb([...merged.values()].sort((a, b) => b.createdAt - a.createdAt));
   };
   const fail = (err: unknown) => {
@@ -141,6 +150,10 @@ export function subscribeUserGames(
     }, fail),
     onSnapshot(query(gamesCol, where("participantUids", "array-contains", uid), limit(50)), (snap) => {
       invited = snap.docs.map((item) => toGame(item.id, item.data()));
+      emit();
+    }, fail),
+    onSnapshot(query(gamesCol, where("invitedUids", "array-contains", uid), limit(50)), (snap) => {
+      pending = snap.docs.map((item) => toGame(item.id, item.data()));
       emit();
     }, fail),
   ];
@@ -206,6 +219,8 @@ export async function createGame(input: CreateGameInput): Promise<string> {
     dmName: input.dmName,
     participantUids: [],
     participantRoster: [],
+    invitedUids: [],
+    inviteRoster: [],
     status: "lobby",
     phase: "exploration",
     location: "wild",
@@ -240,14 +255,23 @@ export async function createGameSession(input: CreateGameInput, hunters: HunterC
   }
 }
 
-export async function addGameParticipant(game: Game, card: HunterCard): Promise<void> {
+export async function addGameParticipant(game: Game, card: HunterCard): Promise<boolean> {
   if (card.ownerUid === game.dmUid) {
     throw new Error("The session creator cannot also join as a player.");
   }
   try {
-    await addStandaloneParticipantFn({ gameId: game.id, characterId: card.id });
+    const result = await addStandaloneParticipantFn({ gameId: game.id, characterId: card.id });
+    return result.data.pending;
   } catch (error) {
     throw callableError(error, "Could not add that player.");
+  }
+}
+
+export async function respondToGameInvite(gameId: string, action: "accept" | "decline"): Promise<void> {
+  try {
+    await respondToStandaloneInviteFn({ gameId, action });
+  } catch (error) {
+    throw callableError(error, `Could not ${action} that session request.`);
   }
 }
 

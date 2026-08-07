@@ -14,11 +14,46 @@ function participantClassName(participant: GameParticipant, card: HunterCard | u
   return (card && cardClassName(card)) || participant.className || getClass(participant.classId)?.name || participant.classId || "Hunter";
 }
 
+export function SessionSwitchRequests({
+  invitations,
+  hasCurrentSession,
+  busy,
+  onRespond,
+}: {
+  invitations: Game[];
+  hasCurrentSession: boolean;
+  busy: boolean;
+  onRespond: (game: Game, action: "accept" | "decline") => Promise<void>;
+}) {
+  if (invitations.length === 0) return null;
+  return (
+    <section className="game-switch-requests" aria-labelledby="session-requests-title">
+      <h2 id="session-requests-title">Session requests</h2>
+      {invitations.map((game) => (
+        <article key={game.id}>
+          <div>
+            <strong>{game.title}</strong>
+            <span>{game.dmName} invited you{hasCurrentSession ? ". Accepting will leave your current session." : "."}</span>
+          </div>
+          <div>
+            <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void onRespond(game, "accept")}>
+              {hasCurrentSession ? "Join and switch" : "Join"}
+            </button>
+            <button className="game-text-button" type="button" disabled={busy} onClick={() => void onRespond(game, "decline")}>Decline</button>
+          </div>
+        </article>
+      ))}
+    </section>
+  );
+}
+
 export function ManagePlayersDialog({
   game,
   characters,
   participants,
+  invitations,
   unavailableOwnerUids,
+  switchableOwnerUids,
   busy,
   onAdd,
   onRemove,
@@ -27,7 +62,9 @@ export function ManagePlayersDialog({
   game: Game;
   characters: HunterCard[];
   participants: GameParticipant[];
+  invitations: GameParticipant[];
   unavailableOwnerUids: Set<string>;
+  switchableOwnerUids: Set<string>;
   busy: boolean;
   onAdd: (card: HunterCard) => Promise<void>;
   onRemove: (uid: string) => Promise<void>;
@@ -35,7 +72,10 @@ export function ManagePlayersDialog({
 }) {
   const [query, setQuery] = useState("");
   const [openCard, setOpenCard] = useState<HunterCard | null>(null);
-  const currentUids = useMemo(() => new Set(participants.map((participant) => participant.uid)), [participants]);
+  const currentUids = useMemo(
+    () => new Set([...participants, ...invitations].map((participant) => participant.uid)),
+    [invitations, participants],
+  );
   const byId = new Map(characters.map((card) => [card.id, card]));
   const results = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase();
@@ -51,12 +91,17 @@ export function ManagePlayersDialog({
         <label className="game-field"><span>Add a player</span><input className="input" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search player or Hunter…" /></label>
         {query.trim() && <div className="game-dialog-results">{results.map((card) => {
           const unavailable = unavailableOwnerUids.has(card.ownerUid);
-          return <button key={card.id} type="button" disabled={busy || locked || unavailable} onClick={() => void onAdd(card)}><span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail} · {cardClassName(card) || "Hunter"} · Level {card.level}</small></span><span>{unavailable ? "In session" : "Add"}</span></button>;
+          const switchable = switchableOwnerUids.has(card.ownerUid);
+          return <button key={card.id} type="button" disabled={busy || locked || unavailable} onClick={() => void onAdd(card)}><span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail} · {cardClassName(card) || "Hunter"} · Level {card.level}</small></span><span>{unavailable ? "Running session" : switchable ? "Ask to switch" : "Add"}</span></button>;
         })}{results.length === 0 && <p className="muted">No available Hunters match.</p>}</div>}
         <div className="game-dialog-roster">
-          {participants.length === 0 ? <p className="muted">No players have been added.</p> : participants.map((participant) => {
+          {participants.length === 0 && invitations.length === 0 ? <p className="muted">No players have been added.</p> : participants.map((participant) => {
             const card = participant.characterId ? byId.get(participant.characterId) : undefined;
             return <div className="game-dialog-player" key={participant.uid}><button type="button" disabled={!card} onClick={() => card && setOpenCard(card)}><strong>{participant.name}</strong><span>{participant.playerName || "Player"} · {participantClassName(participant, card)} · Level {participant.level}</span></button><button className="game-text-button" type="button" disabled={busy || locked} onClick={() => void onRemove(participant.uid)}>Remove</button></div>;
+          })}
+          {invitations.map((participant) => {
+            const card = participant.characterId ? byId.get(participant.characterId) : undefined;
+            return <div className="game-dialog-player" key={`invite-${participant.uid}`}><button type="button" disabled={!card} onClick={() => card && setOpenCard(card)}><strong>{participant.name}</strong><span>{participant.playerName || "Player"} · Awaiting response</span></button><button className="game-text-button" type="button" disabled={busy || locked} onClick={() => void onRemove(participant.uid)}>Cancel request</button></div>;
           })}
         </div>
         <footer><button className="btn btn-ghost" type="button" onClick={onClose}>Done</button></footer>
