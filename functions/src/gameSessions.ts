@@ -73,20 +73,6 @@ function seatRefs(db: FirebaseFirestore.Firestore, uids: string[]): DocumentRefe
   return uids.map((uid) => db.doc(`activeGameSeats/${uid}`));
 }
 
-async function assertSeatsAvailable(
-  tx: Transaction,
-  refs: DocumentReference[],
-  gameId: string,
-  labels: Map<string, string>,
-): Promise<void> {
-  const snapshots = await Promise.all(refs.map((ref) => tx.get(ref)));
-  for (const snapshot of snapshots) {
-    if (!snapshot.exists || snapshot.data()?.gameId === gameId) continue;
-    const label = labels.get(snapshot.id) ?? "That player";
-    throw new HttpsError("failed-precondition", `${label} is already in another active session.`);
-  }
-}
-
 async function releaseSeats(
   tx: Transaction,
   refs: DocumentReference[],
@@ -109,6 +95,14 @@ function attendeeRoster(game: DocumentData, current: ParticipantSnapshot[]): Par
   const byUid = new Map(saved.map((participant) => [participant.uid, participant]));
   current.forEach((participant) => byUid.set(participant.uid, participant));
   return [...byUid.values()];
+}
+
+function readRoster(value: unknown): ParticipantSnapshot[] {
+  return Array.isArray(value) ? value as ParticipantSnapshot[] : [];
+}
+
+function withoutUid(value: unknown, uid: string): ParticipantSnapshot[] {
+  return readRoster(value).filter((participant) => participant.uid !== uid);
 }
 
 function finiteNumber(value: unknown, min: number, max: number, fallback = 0): number {
@@ -178,11 +172,27 @@ export const createStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (reque
       participants.set(participant.uid, participant);
     }
 
-    const roster = [...participants.values()];
-    const uids = [uid, ...roster.map((participant) => participant.uid)];
-    const labels = new Map<string, string>([[uid, "You"], ...roster.map((participant) => [participant.uid, participant.playerName] as const)]);
-    const refs = seatRefs(db, uids);
-    await assertSeatsAvailable(tx, refs, gameRef.id, labels);
+    const candidates = [...participants.values()];
+    const candidateUids = candidates.map((participant) => participant.uid);
+    const refs = seatRefs(db, [uid, ...candidateUids]);
+    const seatSnapshots = await Promise.all(refs.map((ref) => tx.get(ref)));
+    const dmSeat = seatSnapshots[0];
+    if (dmSeat.exists && dmSeat.data()?.gameId !== gameRef.id) {
+      throw new HttpsError("failed-precondition", "End or discard your current session before creating another one.");
+    }
+    const activeRoster: ParticipantSnapshot[] = [];
+    const inviteRoster: ParticipantSnapshot[] = [];
+    candidates.forEach((participant, index) => {
+      const seat = seatSnapshots[index + 1];
+      if (!seat.exists || seat.data()?.gameId === gameRef.id) {
+        activeRoster.push(participant);
+      } else if (seat.data()?.role === "player") {
+        inviteRoster.push(participant);
+      } else {
+        throw new HttpsError("failed-precondition", `${participant.playerName} is currently running another session.`);
+      }
+    });
+    const activeUids = [uid, ...activeRoster.map((participant) => participant.uid)];
 
     tx.create(gameRef, {
       campaignId: null,
@@ -190,10 +200,12 @@ export const createStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (reque
       title,
       dmUid: uid,
       dmName,
-      participantUids: roster.map((participant) => participant.uid),
-      participantRoster: roster,
-      attendeeRoster: roster,
-      seatUids: uids,
+      participantUids: activeRoster.map((participant) => participant.uid),
+      participantRoster: activeRoster,
+      invitedUids: inviteRoster.map((participant) => participant.uid),
+      inviteRoster,
+      attendeeRoster: activeRoster,
+      seatUids: activeUids,
       status: "lobby",
       phase: "exploration",
       location: "wild",
@@ -216,7 +228,7 @@ export const createStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (reque
       endedPhase: null,
       endedLocation: null,
     });
-    refs.forEach((ref, index) => tx.create(ref, {
+    seatRefs(db, activeUids).forEach((ref, index) => tx.create(ref, {
       uid: ref.id,
       gameId: gameRef.id,
       role: index === 0 ? "dm" : "player",
@@ -233,7 +245,7 @@ export const addStandaloneGameParticipant = onCall(CALLABLE_OPTIONS, async (requ
   if (!gameId || !characterId) throw new HttpsError("invalid-argument", "gameId and characterId are required.");
 
   const db = getFirestore();
-  await db.runTransaction(async (tx) => {
+  const pending = await db.runTransaction(async (tx) => {
     const gameRef = db.doc(`games/${gameId}`);
     const characterRef = db.doc(`characters/${characterId}`);
     const [gameSnapshot, characterSnapshot] = await Promise.all([tx.get(gameRef), tx.get(characterRef)]);
@@ -250,14 +262,28 @@ export const addStandaloneGameParticipant = onCall(CALLABLE_OPTIONS, async (requ
       throw new HttpsError("failed-precondition", "The session creator cannot also join as a player.");
     }
     const seatRef = db.doc(`activeGameSeats/${participant.uid}`);
-    await assertSeatsAvailable(tx, [seatRef], gameId, new Map([[participant.uid, participant.playerName]]));
+    const seatSnapshot = await tx.get(seatRef);
 
-    const current = Array.isArray(game.participantRoster) ? game.participantRoster as ParticipantSnapshot[] : [];
+    const current = readRoster(game.participantRoster);
     const roster = [...current.filter((item) => item.uid !== participant.uid), participant];
+    const pending = seatSnapshot.exists && seatSnapshot.data()?.gameId !== gameId;
+    if (pending) {
+      if (seatSnapshot.data()?.role !== "player") {
+        throw new HttpsError("failed-precondition", `${participant.playerName} is currently running another session.`);
+      }
+      const invites = [...withoutUid(game.inviteRoster, participant.uid), participant];
+      tx.update(gameRef, {
+        invitedUids: invites.map((item) => item.uid),
+        inviteRoster: invites,
+      });
+      return true;
+    }
     const seats = cleanStringList([...(Array.isArray(game.seatUids) ? game.seatUids : [uid]), participant.uid]);
     tx.update(gameRef, {
       participantUids: roster.map((item) => item.uid),
       participantRoster: roster,
+      invitedUids: cleanStringList(game.invitedUids).filter((item) => item !== participant.uid),
+      inviteRoster: withoutUid(game.inviteRoster, participant.uid),
       attendeeRoster: attendeeRoster(game, roster),
       seatUids: seats,
     });
@@ -267,8 +293,9 @@ export const addStandaloneGameParticipant = onCall(CALLABLE_OPTIONS, async (requ
       role: "player",
       reservedAt: FieldValue.serverTimestamp(),
     });
+    return false;
   });
-  return { ok: true };
+  return { ok: true, pending };
 });
 
 export const removeStandaloneGameParticipant = onCall(CALLABLE_OPTIONS, async (request) => {
@@ -291,14 +318,92 @@ export const removeStandaloneGameParticipant = onCall(CALLABLE_OPTIONS, async (r
 
     const seatRef = db.doc(`activeGameSeats/${participantUid}`);
     const seatSnapshot = await tx.get(seatRef);
-    const current = Array.isArray(game.participantRoster) ? game.participantRoster as ParticipantSnapshot[] : [];
+    const current = readRoster(game.participantRoster);
     const roster = current.filter((item) => item.uid !== participantUid);
     tx.update(gameRef, {
       participantUids: roster.map((item) => item.uid),
       participantRoster: roster,
+      invitedUids: cleanStringList(game.invitedUids).filter((item) => item !== participantUid),
+      inviteRoster: withoutUid(game.inviteRoster, participantUid),
       seatUids: activeSeatUids(game).filter((seatUid) => seatUid !== participantUid),
     });
     if (seatSnapshot.exists && seatSnapshot.data()?.gameId === gameId) tx.delete(seatRef);
+  });
+  return { ok: true };
+});
+
+export const respondToStandaloneGameInvite = onCall(CALLABLE_OPTIONS, async (request) => {
+  const uid = requireUid(request);
+  const gameId = cleanString(request.data?.gameId, 120);
+  const action = cleanString(request.data?.action, 20);
+  if (!gameId || !(action === "accept" || action === "decline")) {
+    throw new HttpsError("invalid-argument", "Choose whether to accept or decline the session request.");
+  }
+
+  const db = getFirestore();
+  await db.runTransaction(async (tx) => {
+    const targetRef = db.doc(`games/${gameId}`);
+    const seatRef = db.doc(`activeGameSeats/${uid}`);
+    const [targetSnapshot, seatSnapshot] = await Promise.all([tx.get(targetRef), tx.get(seatRef)]);
+    if (!targetSnapshot.exists) throw new HttpsError("not-found", "That session no longer exists.");
+    const target = targetSnapshot.data()!;
+    const invitation = readRoster(target.inviteRoster).find((participant) => participant.uid === uid);
+    if (!invitation || !cleanStringList(target.invitedUids).includes(uid)) {
+      throw new HttpsError("not-found", "That session request is no longer available.");
+    }
+
+    const targetInvites = withoutUid(target.inviteRoster, uid);
+    const targetInvitedUids = cleanStringList(target.invitedUids).filter((item) => item !== uid);
+    if (action === "decline") {
+      tx.update(targetRef, { invitedUids: targetInvitedUids, inviteRoster: targetInvites });
+      return;
+    }
+    if (target.campaignId != null || target.status === "ended") {
+      throw new HttpsError("failed-precondition", "That session is no longer accepting players.");
+    }
+    if (target.combat?.active === true) {
+      throw new HttpsError("failed-precondition", "Wait until that session's current battle is finished before joining.");
+    }
+
+    const currentGameId = seatSnapshot.exists ? cleanString(seatSnapshot.data()?.gameId, 120) : "";
+    let currentRef: DocumentReference | null = null;
+    let current: DocumentData | null = null;
+    if (currentGameId && currentGameId !== gameId) {
+      if (seatSnapshot.data()?.role !== "player") {
+        throw new HttpsError("failed-precondition", "End or discard the session you are running before joining another one.");
+      }
+      currentRef = db.doc(`games/${currentGameId}`);
+      const currentSnapshot = await tx.get(currentRef);
+      if (currentSnapshot.exists) current = currentSnapshot.data()!;
+      if (current?.combat?.active === true) {
+        throw new HttpsError("failed-precondition", "Finish the current battle before switching sessions.");
+      }
+    }
+
+    if (currentRef && current && current.status !== "ended") {
+      const currentRoster = withoutUid(current.participantRoster, uid);
+      tx.update(currentRef, {
+        participantUids: currentRoster.map((participant) => participant.uid),
+        participantRoster: currentRoster,
+        seatUids: activeSeatUids(current).filter((seatUid) => seatUid !== uid),
+      });
+    }
+
+    const targetRoster = [...withoutUid(target.participantRoster, uid), invitation];
+    tx.update(targetRef, {
+      participantUids: targetRoster.map((participant) => participant.uid),
+      participantRoster: targetRoster,
+      invitedUids: targetInvitedUids,
+      inviteRoster: targetInvites,
+      attendeeRoster: attendeeRoster(target, targetRoster),
+      seatUids: cleanStringList([...activeSeatUids(target), uid]),
+    });
+    tx.set(seatRef, {
+      uid,
+      gameId,
+      role: "player",
+      reservedAt: FieldValue.serverTimestamp(),
+    });
   });
   return { ok: true };
 });

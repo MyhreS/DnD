@@ -17,6 +17,7 @@ export {
   discardStandaloneGameSession,
   finishStandaloneGameSession,
   removeStandaloneGameParticipant,
+  respondToStandaloneGameInvite,
 } from "./gameSessions";
 export {
   claimWorkshopAccess,

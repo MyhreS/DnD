@@ -35,7 +35,7 @@
     "test:enemy-library": "bun scripts/enemy-library-test.ts",
     "test:workshop-manager": "bun scripts/workshop-manager-test.ts",
     "test:character-automation": "bun scripts/character-automation-test.ts",
-    "test:game-sessions": "npm --prefix functions run build && firebase emulators:exec --only auth,firestore,functions \"USE_FIREBASE_EMULATORS=1 doppler run -- bun scripts/smoke-rules.mjs\"",
+    "test:game-sessions": "npm --prefix functions run build && firebase emulators:exec --only auth,firestore,functions \"USE_FIREBASE_EMULATORS=1 bun scripts/smoke-rules.mjs\"",
     "migrate:character-sheets": "bun scripts/migrate-character-sheets.ts",
     "migrate:battle-view": "doppler run -- bun scripts/migrate-battle-view.ts",
     "migrate:enemy-library": "doppler run -- bun scripts/migrate-enemy-library.ts",

@@ -20,6 +20,26 @@
 .game-heading .eyebrow { margin-bottom: 4px; }
 .game-create-button { width: auto; }
 
+.game-notice {
+  margin: 0 0 18px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--gold);
+  background: rgba(201, 164, 90, 0.07);
+  color: var(--ink-dim);
+}
+
+.game-switch-requests {
+  margin: 0 0 24px;
+  border-top: 1px solid var(--border-strong);
+}
+.game-switch-requests h2 { margin: 18px 0 8px; font-family: var(--font-display); font-size: 1.25rem; }
+.game-switch-requests article { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.game-switch-requests article strong,
+.game-switch-requests article span { display: block; }
+.game-switch-requests article span { margin-top: 3px; color: var(--ink-dim); font-size: 0.86rem; }
+.game-switch-requests article > div:last-child { display: flex; align-items: center; gap: 14px; flex: none; }
+.game-switch-requests .btn { width: auto; min-height: 36px; padding: 7px 11px; }
+
 .game-layout {
   display: grid;
   grid-template-columns: 230px minmax(0, 1fr);
@@ -429,6 +449,8 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-combat-heading { display: grid; gap: 10px; }
   .game-combat-idle { align-items: stretch; flex-direction: column; }
   .game-combat-idle .btn { width: 100%; }
+  .game-switch-requests article { align-items: stretch; flex-direction: column; gap: 12px; }
+  .game-switch-requests article > div:last-child { justify-content: space-between; }
   .game-initiative-row { grid-template-columns: 24px minmax(0, 1fr) 68px; padding-inline: 2px; }
   .game-initiative-vitals { grid-column: 2 / -1; display: flex; gap: 14px; }
   .game-condition-controls { grid-column: 2 / -1; flex-wrap: wrap; justify-content: flex-start; }

@@ -277,6 +277,11 @@ export interface Game {
   /** Selected Hunter snapshots for invitation-based standalone sessions.
    * Campaign games continue to use the legacy participants subcollection. */
   participantRoster: GameParticipant[];
+  /** Players who were already seated elsewhere when this DM added them.
+   * They can accept to switch sessions or decline without disturbing either
+   * active roster. */
+  invitedUids: string[];
+  inviteRoster: GameParticipant[];
   /** Append-only attendance snapshots. Unlike the active roster, this retains
    * Hunters removed mid-session so history still records who took part. */
   attendeeRoster?: GameParticipant[];
