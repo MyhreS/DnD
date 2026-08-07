@@ -34,11 +34,11 @@ assert(channelContext.includes("equally authorized Workshop owners"), "worker mu
 assert(channelContext.includes("answer it directly with the answered outcome"), "worker must answer ordinary questions directly");
 assert(channelContext.includes("not automatically approval or an answer"), "worker must evaluate what an owner actually replied");
 assert(channelContext.includes("GitHub Actions being unavailable are not Workshop decisions"), "worker must own temporary service recovery");
-assert(WORKSHOP_MODEL === "gpt-5.6-sol", "Workshop must use Sol explicitly");
-assert(WORKSHOP_REASONING_EFFORT === "high", "Workshop must use high reasoning explicitly");
+assert(WORKSHOP_MODEL === "gpt-5.6-terra", "Workshop must use Terra explicitly");
+assert(WORKSHOP_REASONING_EFFORT === "medium", "Workshop must use medium reasoning explicitly");
 const codexArgs = workshopCodexArgs("schema.json", "result.json", "prompt");
-assert(codexArgs.includes("gpt-5.6-sol"), "coding command must pin Sol");
-assert(codexArgs.includes('model_reasoning_effort="high"'), "coding command must pin high reasoning");
+assert(codexArgs.includes("gpt-5.6-terra"), "coding command must pin Terra");
+assert(codexArgs.includes('model_reasoning_effort="medium"'), "coding command must pin medium reasoning");
 assert(codexArgs.includes("--json"), "coding command must stream structured progress events");
 
 const editingProgress = progressFromCodexEvent({

@@ -1,5 +1,5 @@
-export const WORKSHOP_MODEL = "gpt-5.6-sol";
-export const WORKSHOP_REASONING_EFFORT = "high";
+export const WORKSHOP_MODEL = "gpt-5.6-terra";
+export const WORKSHOP_REASONING_EFFORT = "medium";
 
 export type ManagerOutcome = "finished" | "answered" | "needs_simon" | "declined";
 
