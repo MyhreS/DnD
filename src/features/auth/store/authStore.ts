@@ -174,6 +174,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   saveProfile: async (firstName, lastName) => {
     const user = get().user;
     if (!user) return false;
+    set({ error: null });
     const profile = {
       uid: user.uid,
       firstName: firstName.trim(),
@@ -182,7 +183,7 @@ export const useAuthStore = create<AuthState>((set, get) => ({
     };
     try {
       await saveUserProfile(profile);
-      set({ member: profileToMember(profile), needsOnboarding: false });
+      set({ member: profileToMember(profile), needsOnboarding: false, error: null });
       return true;
     } catch (err) {
       console.error("Couldn't save your profile", err);
