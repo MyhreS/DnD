@@ -904,6 +904,29 @@
   font: 12px "Alegreya", serif;
 }
 
+.appsheet-edit-skill-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 14px 16px;
+  margin-bottom: 12px;
+  border: 1px solid var(--app-line);
+  border-radius: 6px;
+  background: var(--app-subtle);
+}
+
+.appsheet-edit-skill-actions b,
+.appsheet-edit-skill-actions span {
+  display: block;
+}
+
+.appsheet-edit-skill-actions span {
+  margin-top: 2px;
+  color: var(--app-muted);
+  font: 12px "Alegreya", serif;
+}
+
 .character-app-sheet button:not(.appsheet-stepper button) {
   width: auto;
   padding: 9px 13px;
@@ -922,4 +945,15 @@
 .character-app-sheet button:disabled {
   opacity: .42;
   cursor: not-allowed;
+}
+
+@media (max-width: 540px) {
+  .appsheet-edit-skill-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .appsheet-edit-skill-actions button {
+    width: 100%;
+  }
 }
