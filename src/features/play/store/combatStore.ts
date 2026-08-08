@@ -263,6 +263,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
         ac: m.ac,
         maxHp: m.maxHp,
         currentHp: m.maxHp,
+        defeated: false,
         conditions: [] as string[],
         note: m.note ?? null,
         revealHp: m.revealHp === true,

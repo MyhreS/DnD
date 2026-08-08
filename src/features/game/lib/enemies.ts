@@ -30,6 +30,7 @@ export function resetEnemyPatch(combatant: Combatant): Partial<Combatant> {
   return {
     ...stats,
     currentHp: stats.maxHp,
+    defeated: false,
     conditions: [],
     conditionSince: {},
   };

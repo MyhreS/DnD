@@ -47,6 +47,7 @@ const damaged: Combatant = {
 assert.deepEqual(resetEnemyPatch(damaged), {
   ...templateStats(template),
   currentHp: 80,
+  defeated: false,
   conditions: [],
   conditionSince: {},
 });

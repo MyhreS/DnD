@@ -26,7 +26,6 @@ import { useCombatStore } from "@/features/play/store/combatStore";
 import type { EnemyStats, EnemyTemplate, Game, GameParticipant, HunterCard } from "@/types";
 import { EnemyEditorDialog } from "./EnemyEditorDialog";
 import { EnemyLibraryDialog } from "./EnemyLibraryDialog";
-import { EnemySection } from "./EnemySection";
 import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed, SessionSwitchRequests } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
 import { SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
@@ -517,7 +516,6 @@ export function GamePage() {
           ) : null}
           disabled={combatBusy || busy}
         />
-        {isSessionDm && <EnemySection game={selected} isDm disabled={combatBusy || busy} />}
         {enemyDialogs}
         {creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
       </div>

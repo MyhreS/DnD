@@ -245,6 +245,8 @@ export interface Combatant {
   ac?: number | null;
   maxHp?: number | null;
   currentHp?: number | null;
+  /** Public defeat marker so players can see that a hidden-HP monster is dead. */
+  defeated?: boolean;
   /** Condition ids (see src/data/conditions.ts). */
   conditions: string[];
   /** Round each active condition was applied on (conditionId → round), so the
