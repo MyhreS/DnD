@@ -133,6 +133,13 @@ try {
   await finishSetup.click();
   const characterBuildDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Character build", { exact: true }) }).first();
   if (await characterBuildDisclosure.evaluate((element) => element.open)) throw new Error("Completed character build did not collapse to reduce clutter");
+  const editSkills = page.getByRole("button", { name: "Edit skill proficiencies" });
+  await editSkills.click();
+  if (!await skillChoiceDisclosure.evaluate((element) => element.open)) throw new Error("Edit skill proficiencies did not open completed skill choices");
+  await page.getByLabel("Perception").uncheck();
+  await page.getByLabel("Athletics").check();
+  if (await page.getByLabel("Perception").isChecked()) throw new Error("Completed skill choices could not be changed");
+  if (!await page.getByLabel("Athletics").isChecked()) throw new Error("Replacement skill choice was not saved");
 
   await openAppSection("Combat & armor");
   await openAppDisclosure("Change worn armor");
