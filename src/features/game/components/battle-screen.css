@@ -63,10 +63,11 @@
 .battle-column-headings,
 .battle-row {
   display: grid;
-  grid-template-columns: 42px minmax(150px, 1.25fr) 112px 112px 96px minmax(150px, 1fr) auto;
+  grid-template-columns: 42px minmax(180px, 1.35fr) 124px 124px 124px minmax(180px, 1fr) auto;
   gap: clamp(8px, 1.2vw, 18px);
   align-items: center;
 }
+.battle-row > * { min-width: 0; }
 .battle-column-headings {
   padding: 8px 14px;
   color: var(--ink-faint);
@@ -87,7 +88,7 @@
 .battle-name strong { overflow: hidden; font-family: var(--font-display); font-size: clamp(1.05rem, 1.45vw, 1.45rem); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .battle-name span { color: var(--ink-faint); font-size: 0.8rem; }
 .battle-ac { font-family: var(--font-display); font-size: clamp(1.15rem, 1.5vw, 1.45rem); font-variant-numeric: tabular-nums; }
-.battle-value { display: grid; grid-template-columns: 28px minmax(30px, auto) 28px; align-items: center; justify-content: start; gap: 2px; }
+.battle-value { display: grid; grid-template-columns: 28px minmax(30px, auto) 28px; align-items: center; justify-content: center; gap: 2px; }
 .battle-value strong { min-width: 30px; text-align: center; font-family: var(--font-display); font-size: clamp(1.15rem, 1.5vw, 1.45rem); font-variant-numeric: tabular-nums; line-height: 1; }
 .battle-initiative input {
   width: 42px;
@@ -121,7 +122,7 @@
 .battle-damage > span { color: var(--ink-faint); font-size: 0.75rem; }
 .battle-damage-track { width: 100%; height: 3px; margin-top: 7px; background: var(--bg-elev-3); }
 .battle-damage-track span { display: block; height: 100%; background: var(--blood-bright); }
-.battle-conditions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
+.battle-conditions { display: flex; min-width: 0; flex-wrap: wrap; align-items: center; gap: 4px; }
 .battle-conditions span { padding: 3px 6px; border: 1px solid var(--border); border-radius: 4px; color: var(--ink-dim); font-size: clamp(0.72rem, 0.9vw, 0.9rem); }
 .battle-condition,
 .battle-conditions select,
@@ -209,16 +210,18 @@
 
 @media (max-width: 980px) {
   .battle-column-headings { display: none; }
-  .battle-row { grid-template-columns: 36px minmax(0, 1fr) 104px 104px 46px auto; }
+  .battle-row { grid-template-columns: 36px minmax(0, 1fr) 112px 112px 72px auto; }
   .battle-conditions { grid-column: 2 / -1; }
+  .battle-row-actions { grid-column: 2 / -1; }
 }
 
 /* MainLayout's desktop sidebar reduces the available Game-page width well
  * before the viewport itself reaches the tablet breakpoint. */
 @media (min-width: 981px) and (max-width: 1390px) {
   .game-battle-mode .battle-column-headings { display: none; }
-  .game-battle-mode .battle-row { grid-template-columns: 36px minmax(0, 1fr) 104px 104px 46px auto; }
+  .game-battle-mode .battle-row { grid-template-columns: 36px minmax(0, 1fr) 112px 112px 72px auto; }
   .game-battle-mode .battle-conditions { grid-column: 2 / -1; }
+  .game-battle-mode .battle-row-actions { grid-column: 2 / -1; }
 }
 
 @media (max-width: 560px) {

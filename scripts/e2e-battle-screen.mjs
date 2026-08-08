@@ -250,6 +250,14 @@ try {
   if (await dmPage.locator(".battle-name").filter({ hasText: "Lady Maria" }).count() !== 1) throw new Error("The Hunter is duplicated in the default battle view.");
   if (await dmPage.locator(".game-battle-toolbar button").count() < 3) throw new Error("The DM battle actions are not available directly.");
 
+  await noHorizontalOverflow(dmPage, "Initial DM battle view");
+  await noHorizontalOverflow(playerPage, "Initial player battle view");
+  await dmPage.screenshot({ path: "screenshots/game-battle-layout-desktop.png", fullPage: true });
+  await playerPage.setViewportSize({ width: 390, height: 844 });
+  await noHorizontalOverflow(playerPage, "Initial player battle view mobile");
+  await playerPage.screenshot({ path: "screenshots/game-battle-layout-mobile.png", fullPage: true });
+  await playerPage.setViewportSize({ width: 1440, height: 900 });
+
   const enemyControl = dmPage.getByTestId(`battle-combatant-${enemyId}`);
   const enemyDisplay = playerPage.getByTestId(`battle-combatant-${enemyId}`);
   if (await enemyControl.getByRole("button", { name: "Remove dead enemy" }).count()) throw new Error("A living enemy can be removed from the battle.");
