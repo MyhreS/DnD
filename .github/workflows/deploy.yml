@@ -83,7 +83,12 @@ jobs:
           firebaseToolsVersion: "15.22.0"
 
       - name: Deploy preview channel
-        if: github.event_name == 'pull_request'
+        # Workshop workers already run local Playwright checks. Their short-lived
+        # PRs can arrive in parallel, so creating a Firebase channel for each one
+        # exhausts the site's preview quota and blocks otherwise valid releases.
+        # Keep previews for human branches while automated Workshop PRs use the
+        # successful build job itself as their required check.
+        if: github.event_name == 'pull_request' && !startsWith(github.head_ref, 'agent/workshop-')
         uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: ${{ secrets.GITHUB_TOKEN }}
