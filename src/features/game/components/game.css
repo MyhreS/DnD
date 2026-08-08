@@ -83,7 +83,7 @@
 }
 .game-history-toggle:hover { color: var(--ink); background: rgba(201, 164, 90, 0.05); }
 .game-history-toggle > span:last-child { font-size: 1rem; line-height: 0.8; }
-.game-history-toggle-inline { width: auto; border: 1px solid var(--border); padding: 7px 9px; color: var(--ink-dim); font-size: 0.72rem; }
+.game-history-toggle-inline { width: auto; border: 1px solid var(--border); padding: 5px 8px; color: var(--ink-dim); font-size: 0.68rem; }
 .game-history-list { display: grid; gap: 2px; }
 .game-history-drawer { margin: 12px 0 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
 .game-history-drawer .game-session { padding-inline: 2px; }
@@ -107,9 +107,9 @@
 .game-session span { color: var(--ink-faint); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
 
 .game-table { min-width: 0; }
-.game-session-heading { padding-bottom: 24px; border-bottom: 1px solid var(--border-strong); }
+.game-session-heading { padding-bottom: 14px; border-bottom: 1px solid var(--border-strong); }
 .game-session-heading h2,
-.game-creator h2 { margin: 2px 0 0; font-family: var(--font-display); font-size: clamp(1.3rem, 3vw, 1.85rem); }
+.game-creator h2 { margin: 2px 0 0; font-family: var(--font-display); font-size: clamp(1.1rem, 2.4vw, 1.55rem); line-height: 1.12; }
 .game-session-heading p { margin-bottom: 0; }
 
 .game-session-heading-compact { align-items: center; }
@@ -118,10 +118,10 @@
 .game-primary-actions .btn { width: auto; min-height: 38px; padding: 8px 13px; }
 .game-primary-actions .btn-danger { margin-left: auto; }
 
-.game-focus-panel { padding: clamp(28px, 6vw, 52px) 0; border-bottom: 1px solid var(--border); }
+.game-focus-panel { padding: clamp(20px, 4vw, 28px) 0; border-bottom: 1px solid var(--border); }
 .game-focus-panel > .eyebrow,
 .game-focus-panel header .eyebrow { margin: 0 0 5px; }
-.game-focus-panel h3 { margin: 0; font-family: var(--font-display); font-size: clamp(1.4rem, 4vw, 2rem); }
+.game-focus-panel h3 { margin: 0; font-family: var(--font-display); font-size: clamp(1.18rem, 3vw, 1.55rem); line-height: 1.15; }
 .game-focus-panel > .game-text-button { margin-top: 12px; }
 .game-history-enemies { margin: 18px 0 0; color: var(--ink-dim); }
 .game-focus-panel header { display: flex; justify-content: space-between; gap: 16px; align-items: end; margin-bottom: 16px; }
@@ -145,13 +145,13 @@
 .game-threat span { display: block; }
 .game-threat span { margin-top: 4px; color: var(--ink-faint); font-size: 0.82rem; }
 
-.game-notes { padding: clamp(28px, 6vw, 52px) 0; border-bottom: 1px solid var(--border); }
-.game-notes > header { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+.game-notes { padding: clamp(20px, 4vw, 28px) 0; border-bottom: 1px solid var(--border); }
+.game-notes > header { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin-bottom: 12px; }
 .game-notes .eyebrow { margin: 0 0 5px; }
-.game-notes h3 { margin: 0; font-family: var(--font-display); font-size: clamp(1.4rem, 4vw, 2rem); }
+.game-notes h3 { margin: 0; font-family: var(--font-display); font-size: clamp(1.18rem, 3vw, 1.55rem); line-height: 1.15; }
 .game-notes > header > span { color: var(--ink-faint); font-size: 0.8rem; }
-.game-notes-compose { margin-bottom: 18px; }
-.game-notes-compose textarea { min-height: 82px; resize: vertical; }
+.game-notes-compose { margin-bottom: 14px; }
+.game-notes-compose textarea { min-height: 68px; resize: vertical; }
 .game-notes-compose > div { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 8px; }
 .game-notes-compose small { color: var(--ink-faint); font-size: 0.75rem; }
 .game-notes-compose .btn { width: auto; min-height: 36px; padding: 7px 12px; }
