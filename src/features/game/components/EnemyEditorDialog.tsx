@@ -40,15 +40,15 @@ export function EnemyEditorDialog({
 
   return (
     <div className="game-dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
-      <form className="game-dialog" role="dialog" aria-modal="true" aria-labelledby="enemy-editor-title" onSubmit={submit}>
+      <form className="game-dialog game-enemy-editor" role="dialog" aria-modal="true" aria-labelledby="enemy-editor-title" onSubmit={submit}>
         <header><div><p className="eyebrow">Enemy library</p><h2 id="enemy-editor-title">{template ? "Edit enemy" : "New enemy"}</h2></div><button className="game-dialog-close" type="button" onClick={onClose} aria-label="Close">×</button></header>
         <p className="muted">Saved enemies can be reused in future battles.</p>
-        <div className="game-dialog-grid">
-          <label className="game-field game-dialog-wide"><span>Name</span><input className="input" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} autoFocus /></label>
+        <div className="game-dialog-grid game-enemy-editor-fields">
+          <label className="game-field"><span>Name</span><input className="input" value={name} maxLength={80} onChange={(event) => setName(event.target.value)} autoFocus /></label>
           <label className="game-field"><span>Max HP</span><input className="input" type="number" min="1" max="9999" value={maxHp} onChange={(event) => setMaxHp(event.target.value)} /></label>
           <label className="game-field"><span>Initiative</span><input className="input" type="number" min="-99" max="99" value={initiative} onChange={(event) => setInitiative(event.target.value)} /></label>
           <label className="game-field"><span>AC</span><input className="input" type="number" min="0" max="99" value={ac} onChange={(event) => setAc(event.target.value)} placeholder="—" /></label>
-          <label className="game-field game-dialog-wide"><span>Private notes</span><input className="input" value={note} maxLength={240} onChange={(event) => setNote(event.target.value)} placeholder="Attacks, damage, or reminders" /></label>
+          <label className="game-field"><span>Private notes</span><input className="input" value={note} maxLength={240} onChange={(event) => setNote(event.target.value)} placeholder="Attacks, damage, or reminders" /></label>
         </div>
         <fieldset className="game-visibility-options">
           <legend>Player visibility</legend>
