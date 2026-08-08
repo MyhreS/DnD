@@ -356,6 +356,40 @@
 .background-details dd { margin: 2px 0 0; font: 600 14px/1.3 "Alegreya Sans SC", sans-serif; }
 .background-details dd small { display: block; margin-top: 2px; color: var(--app-muted); font: 13px/1.3 "Alegreya", serif; }
 
+.origin-feat-info { display: inline-flex; align-items: center; gap: 5px; }
+.origin-feat-info details { position: relative; }
+.origin-feat-info summary {
+  display: grid;
+  width: 18px;
+  height: 18px;
+  place-items: center;
+  cursor: pointer;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  color: var(--app-muted);
+  font: 700 12px/1 sans-serif;
+}
+.origin-feat-info summary::-webkit-details-marker { display: none; }
+.origin-feat-info summary:focus-visible { outline: 2px solid var(--app-gold); outline-offset: 2px; }
+.origin-feat-popover {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + 7px);
+  left: -26px;
+  display: grid;
+  gap: 6px;
+  width: min(300px, calc(100vw - 48px));
+  padding: 10px;
+  border: 1px solid var(--app-line);
+  border-radius: 4px;
+  background: var(--app-surface);
+  box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
+  color: var(--app-text);
+  font: 14px/1.35 "Alegreya", serif;
+}
+.origin-feat-popover b { font: 700 14px/1.2 "Alegreya Sans SC", sans-serif; }
+.origin-feat-popover a { color: inherit; font: 700 13px/1.2 "Alegreya Sans SC", sans-serif; }
+
 .appsheet-vital-editors,
 .appsheet-inline-fields {
   margin-bottom: 20px;

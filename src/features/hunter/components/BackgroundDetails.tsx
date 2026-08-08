@@ -1,5 +1,6 @@
 import { ABILITY_NAME } from "@/data/abilities";
 import type { Background } from "@/types";
+import { OriginFeatInfo } from "./OriginFeatInfo";
 
 function list(values: string[], fallback: string) {
   return values.length > 0 ? values.join(", ") : fallback;
@@ -31,7 +32,7 @@ export function BackgroundDetails({ background, className = "" }: {
       <p>{background.text}</p>
       <dl>
         <div><dt>Ability bonuses</dt><dd>{abilities} <small>Choose +2 and +1 across different listed abilities, or +1 to all three.</small></dd></div>
-        <div><dt>Origin feat</dt><dd>{background.feat ?? "Not specified in the handbook scan"}</dd></div>
+        <div><dt>Origin feat</dt><dd>{background.feat ? <OriginFeatInfo feat={background.feat} /> : "Not specified in the handbook scan"}</dd></div>
         <div><dt>Skill proficiencies</dt><dd>{list(background.skills, "None")}</dd></div>
         <div><dt>Tool proficiency</dt><dd>{background.tool ?? "None"}</dd></div>
         <div><dt>Starting gear</dt><dd>{list(background.equipment, "None")}</dd></div>
