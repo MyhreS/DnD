@@ -4,11 +4,12 @@ import { chromium } from "playwright";
 
 const PORT = 5197;
 const BASE = `http://127.0.0.1:${PORT}`;
-const appsResult = spawnSync("firebase", ["apps:list", "--json"], { encoding: "utf8" });
+const firebaseArgs = ["--project", "dandd-ea955", "--account", "simonmyhre1@gmail.com"];
+const appsResult = spawnSync("firebase", ["apps:list", ...firebaseArgs, "--json"], { encoding: "utf8" });
 if (appsResult.status !== 0) throw new Error(`Could not read Firebase app config: ${appsResult.stderr}`);
 const webApp = JSON.parse(appsResult.stdout).result.find((app) => app.platform === "WEB");
 if (!webApp) throw new Error("No Firebase web app found");
-const configResult = spawnSync("firebase", ["apps:sdkconfig", "WEB", webApp.appId, "--json"], { encoding: "utf8" });
+const configResult = spawnSync("firebase", ["apps:sdkconfig", "WEB", webApp.appId, ...firebaseArgs, "--json"], { encoding: "utf8" });
 if (configResult.status !== 0) throw new Error(`Could not read Firebase SDK config: ${configResult.stderr}`);
 const firebase = JSON.parse(configResult.stdout).result.sdkConfig;
 const server = spawn("bunx", ["vite", "--host", "127.0.0.1", "--port", String(PORT)], {
@@ -52,6 +53,14 @@ try {
     }
     return disclosure;
   }
+  async function openAppSection(title) {
+    const section = page.locator(".appsheet-section").filter({ has: page.getByRole("heading", { name: title, exact: true }) }).first();
+    await section.waitFor();
+    if (!await section.evaluate((element) => element.open)) {
+      await section.locator(":scope > summary").click();
+    }
+    return section;
+  }
   page.on("pageerror", (error) => errors.push(String(error)));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().includes("Failed to load resource")) errors.push(message.text()); });
 
@@ -67,8 +76,10 @@ try {
   }
   await page.getByTestId("appsheet-name").fill("App Warden");
   await page.getByTestId("appsheet-class").selectOption("warden");
+  await openAppSection("Gear & carrying");
   await page.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
   await page.getByTestId("appsheet-background").selectOption("criminal");
+  await openAppSection("Abilities & skills");
   const skillChoiceDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Skill proficiency choices", { exact: true }) }).first();
   if (!await skillChoiceDisclosure.evaluate((element) => element.open)) throw new Error("Fresh required skill choices are not expanded");
 
@@ -89,8 +100,10 @@ try {
   for (const [ability, score] of [["Intelligence", "8"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "15"], ["Dexterity", "15"], ["Constitution", "15"]]) {
     await page.getByLabel(`${ability} app base`).selectOption(score);
   }
-  await page.getByLabel("Perception", { exact: true }).check();
-  await page.getByLabel("Survival", { exact: true }).check();
+  await openAppSection("Abilities & skills");
+  await openAppDisclosure("Skill proficiency choices");
+  await page.getByLabel("Perception").check();
+  await page.getByLabel("Survival").check();
   if (await skillChoiceDisclosure.evaluate((element) => element.open)) throw new Error("Completed skill choices did not collapse to reduce clutter");
   await page.getByLabel("Dexterity app background bonus").selectOption("2");
   await page.getByLabel("Constitution app background bonus").selectOption("1");
@@ -103,17 +116,20 @@ try {
   const characterBuildDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Character build", { exact: true }) }).first();
   if (await characterBuildDisclosure.evaluate((element) => element.open)) throw new Error("Completed character build did not collapse to reduce clutter");
 
+  await openAppSection("Combat & armor");
   await openAppDisclosure("Change worn armor");
   const wornArmorDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Change worn armor", { exact: true }) }).first();
   await page.getByTestId("appsheet-main-armor").selectOption("reinforced-hunter-leather-vest");
   if (await page.getByTestId("appsheet-combat-ac").locator(":scope > strong").textContent() !== "15") throw new Error("App armor choice did not recalculate AC");
   if (!await wornArmorDisclosure.evaluate((element) => element.open)) throw new Error("Editing a value collapsed its disclosure mid-task");
 
+  await openAppSection("Gear & carrying");
   await openAppDisclosure("Add a catalog item");
   await page.getByTestId("appsheet-catalog-item").selectOption("torch");
   await page.getByTestId("appsheet-add-catalog-item").click();
   await page.getByTestId("appsheet-inventory").getByText("Torch", { exact: true }).waitFor();
 
+  await openAppSection("Notes");
   await page.getByTestId("appsheet-notes").fill("Shared app-view note.");
   await page.locator(".papersheet-modal").evaluate((element) => element.scrollTo({ top: 0 }));
   await page.screenshot({ path: "screenshots/app-character-sheet-desktop.png", fullPage: true });
@@ -211,6 +227,10 @@ try {
   if (sections !== 6) {
     throw new Error(`The continuous character sheet did not render all six sections: ${sections}`);
   }
+  const closedSections = await page.getByTestId("app-character-sheet").locator(".appsheet-section:not([open])").count();
+  if (closedSections !== 5) {
+    throw new Error(`The app sheet should start with only Overview expanded, found ${closedSections} collapsed sections`);
+  }
   const overviewOrder = await page.getByTestId("app-character-sheet").evaluate((sheet) => ({
     battle: sheet.querySelector(".appsheet-battle-resources").getBoundingClientRect().top,
     build: sheet.querySelector(".appsheet-identity-panel").getBoundingClientRect().top,
@@ -229,12 +249,14 @@ try {
   if (await page.getByRole("heading", { name: "Visible armor impression", exact: true }).count()) {
     throw new Error("Visible armor impression is still duplicated inside App View");
   }
+  await openAppSection("Gear & carrying");
   await openAppDisclosure("Weapon details");
   const mobileWeaponLabels = page.locator(".appsheet-weapon-label");
   if (await mobileWeaponLabels.count() === 0 || !await mobileWeaponLabels.first().isVisible()) {
     throw new Error("Mobile weapon facts do not expose their stacked labels");
   }
   await page.getByRole("heading", { name: "Gear & carrying" }).scrollIntoViewIfNeeded();
+  await openAppSection("Notes");
   await page.getByTestId("appsheet-notes").scrollIntoViewIfNeeded();
   const mobileScroll = await page.locator(".papersheet-modal").evaluate((element) => ({
     horizontal: element.scrollWidth > element.clientWidth,
@@ -276,12 +298,16 @@ try {
     ["Features & choices", "features"],
     ["Abilities & skills", "abilities"],
     ["Gear & carrying", "gear"],
-    ["Carried weapons", "weapons"],
     ["Notes", "notes"],
   ]) {
+    await openAppSection(section);
     await page.getByRole("heading", { name: section, exact: true }).scrollIntoViewIfNeeded();
     await page.screenshot({ path: `screenshots/app-character-sheet-mobile-${screenshot}.png`, fullPage: true });
   }
+  await openAppSection("Gear & carrying");
+  await openAppDisclosure("Weapon details");
+  await page.getByRole("heading", { name: "Carried weapons", exact: true }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "screenshots/app-character-sheet-mobile-weapons.png", fullPage: true });
   await page.locator(".papersheet-modal").evaluate((element) => element.scrollTo({ top: 0 }));
   await page.evaluate(() => { document.documentElement.dataset.theme = "dark"; });
   const darkBackground = await page.locator(".papersheet-modal").evaluate((element) => getComputedStyle(element).backgroundColor);
