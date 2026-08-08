@@ -65,6 +65,26 @@
   border-bottom: 1px solid var(--border);
   border-left: 3px solid transparent;
 }
+.battle-row-controls {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 8px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+}
+.battle-row-controls label { display: grid; gap: 3px; color: var(--ink-faint); font-size: 0.72rem; }
+.battle-row-controls input,
+.battle-row-controls select,
+.battle-row-controls button { min-height: 32px; border: 1px solid var(--border-strong); border-radius: 4px; background: var(--bg-elev); color: var(--ink); font: inherit; }
+.battle-row-controls input { width: 72px; padding: 4px 6px; }
+.battle-row-controls select { padding: 4px 6px; }
+.battle-row-controls button { padding: 4px 8px; cursor: pointer; }
+.battle-row-controls button:disabled,
+.battle-row-controls input:disabled,
+.battle-row-controls select:disabled { opacity: 0.45; cursor: default; }
+.battle-condition-controls { display: flex; flex-wrap: wrap; gap: 5px; }
 .battle-row.is-current { border-left-color: var(--gold); background: rgba(201, 164, 90, 0.08); }
 .battle-position { color: var(--ink-faint); font-family: var(--font-display); font-size: clamp(1.5rem, 2.2vw, 2.4rem); text-align: center; }
 .battle-name { min-width: 0; }
@@ -124,7 +144,8 @@
   .battle-damage { grid-column: 2; }
   .battle-ac { grid-column: 3; grid-row: 2; }
   .battle-conditions { grid-column: 2 / -1; }
-  .game-battle-toolbar { justify-content: space-between; gap: 12px; }
+  .game-battle-toolbar { justify-content: flex-start; flex-wrap: wrap; gap: 10px; padding: 10px 0; }
+  .battle-row-controls { grid-column: 2 / -1; }
 }
 
 @media (prefers-reduced-motion: reduce) {

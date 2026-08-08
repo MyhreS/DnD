@@ -33,19 +33,20 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
   }
   if (isSheetCard(card)) {
     const vitals = sheetVitals(card.sheet);
+    const current = combatant.currentHp ?? vitals.hpCur;
     return {
-      currentHp: vitals.hpCur,
+      currentHp: current,
       maxHp: vitals.hpMax,
-      damageTaken: vitals.hpCur === null || vitals.hpMax === null
+      damageTaken: current === null || vitals.hpMax === null
         ? null
-        : Math.max(0, vitals.hpMax - vitals.hpCur),
+        : Math.max(0, vitals.hpMax - current),
       ac: vitals.ac,
     };
   }
 
   const klass = getClass(card.classId);
   const maximum = klass ? maxHp(klass, card.abilities, card.level) : null;
-  const current = card.currentHp ?? maximum;
+  const current = combatant.currentHp ?? card.currentHp ?? maximum;
   return {
     currentHp: current,
     maxHp: maximum,
