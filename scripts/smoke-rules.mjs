@@ -274,6 +274,20 @@ await step("DM manages players during active exploration and attendance is retai
   const game = await getDoc(doc(dm.db, "games", standaloneGameId));
   if (!game.data()?.attendeeRoster?.some((entry) => entry.uid === plUid)) throw new Error("attendance-was-lost");
 });
+await step("Session notes are shared and attributed to their author", async () => {
+  const note = doc(collection(pl.db, "games", standaloneGameId, "notes"));
+  await setDoc(note, {
+    authorUid: plUid, authorName: "Agent Player", body: "The moon door is sealed.", createdAt: serverTimestamp(),
+  });
+  const visible = await getDoc(doc(dm.db, "games", standaloneGameId, "notes", note.id));
+  if (visible.data()?.body !== "The moon door is sealed." || visible.data()?.authorUid !== plUid) {
+    throw new Error("shared-note-not-visible");
+  }
+  let rewriteDenied = false;
+  try { await updateDoc(doc(dm.db, "games", standaloneGameId, "notes", note.id), { body: "Rewritten" }); }
+  catch { rewriteDenied = true; }
+  if (!rewriteDenied) throw new Error("session-note-was-rewritable");
+});
 await step("DM creates a unique item and the invited Hunter claims it once", async () => {
   const created = await createStandaloneLoot({ gameId: standaloneGameId, item: {
     name: "Smoke Blade", category: "Weapon", carry: "Significant", weightLb: 3,
@@ -455,6 +469,8 @@ await step("cleanup", async () => {
   }
   if (standaloneGameId) {
     await del(`games/${standaloneGameId}/participants/${plUid}`);
+    const notes = await adb.collection(`games/${standaloneGameId}/notes`).get();
+    await Promise.all(notes.docs.map((note) => note.ref.delete()));
     if (standaloneMonsterId) await del(`games/${standaloneGameId}/combatants/${standaloneMonsterId}`);
     if (standaloneMonsterId) await del(`games/${standaloneGameId}/battleView/${standaloneMonsterId}`);
     await del(`games/${standaloneGameId}`);

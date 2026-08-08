@@ -295,6 +295,24 @@ service cloud.firestore {
             || (gameCampaignId(gameId) != null && isCampaignDM(gameCampaignId(gameId))));
       }
 
+      // Shared session log. Entries are attributed and immutable, so any
+      // session member can contribute without rewriting another player's note.
+      match /notes/{noteId} {
+        allow read: if canReadGame(gameId);
+        allow create: if isGameOpen(gameId)
+          && canReadGame(gameId)
+          && request.resource.data.keys().hasOnly(["authorUid", "authorName", "body", "createdAt"])
+          && request.resource.data.authorUid == request.auth.uid
+          && request.resource.data.authorName is string
+          && request.resource.data.authorName.size() > 0
+          && request.resource.data.authorName.size() <= 80
+          && request.resource.data.body is string
+          && request.resource.data.body.size() > 0
+          && request.resource.data.body.size() <= 2000
+          && request.resource.data.createdAt == request.time;
+        allow update, delete: if false;
+      }
+
       // Private combat model. Monster HP, AC and notes must never be returned
       // to a player's browser unless the DM explicitly publishes them below.
       match /combatants/{cid} {

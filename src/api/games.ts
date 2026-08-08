@@ -349,7 +349,7 @@ export async function endGame(
 
 /** Delete a game and all its participants (used to clean up sandbox runs). */
 export async function deleteGame(gameId: string): Promise<void> {
-  const childCollections = ["participants", "combatants", "battleView", "loot"];
+  const childCollections = ["participants", "combatants", "battleView", "loot", "notes"];
   const snapshots = await Promise.all(childCollections.map((name) => getDocs(collection(db, "games", gameId, name))));
   await Promise.all(snapshots.flatMap((snap) => snap.docs.map((item) => deleteDoc(item.ref))));
   await deleteDoc(doc(gamesCol, gameId));

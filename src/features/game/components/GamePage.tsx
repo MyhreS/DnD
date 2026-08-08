@@ -29,6 +29,7 @@ import { EnemyLibraryDialog } from "./EnemyLibraryDialog";
 import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed, SessionSwitchRequests } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
 import { SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
+import { SessionNotes } from "./SessionNotes";
 import "./game.css";
 
 const DEFAULT_TITLE = () => `Session ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())}`;
@@ -525,6 +526,7 @@ export function GamePage() {
           ) : null}
           disabled={combatBusy || busy}
         />
+        <SessionNotes gameId={selected.id} userId={user?.uid} userName={member?.firstName || user?.displayName || "Someone"} writable={selected.status !== "ended"} />
         {enemyDialogs}
         {creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
       </div>
@@ -668,6 +670,7 @@ export function GamePage() {
                   onAddEnemy={addEnemyToBattle}
                 />
               )}
+              <SessionNotes gameId={selected.id} userId={user?.uid} userName={member?.firstName || user?.displayName || "Someone"} writable={selected.status !== "ended"} />
             </main>
           )}
         </div>
