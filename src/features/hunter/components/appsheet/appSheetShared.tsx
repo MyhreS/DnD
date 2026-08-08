@@ -51,6 +51,8 @@ export function AppDisclosure({
   aside,
   children,
   defaultOpen = false,
+  open: controlledOpen,
+  onOpenChange,
   className = "",
 }: {
   title: string;
@@ -58,15 +60,23 @@ export function AppDisclosure({
   aside?: ReactNode;
   children: ReactNode;
   defaultOpen?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
   className?: string;
 }) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+  const isOpen = controlledOpen ?? uncontrolledOpen;
+
+  function setOpen(open: boolean) {
+    if (controlledOpen === undefined) setUncontrolledOpen(open);
+    onOpenChange?.(open);
+  }
 
   return (
     <details
       className={`appsheet-disclosure ${className}`.trim()}
       open={isOpen}
-      onToggle={(event) => setIsOpen(event.currentTarget.open)}
+      onToggle={(event) => setOpen(event.currentTarget.open)}
     >
       <summary>
         <span className="appsheet-disclosure-heading">

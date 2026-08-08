@@ -1,4 +1,5 @@
 import { ABILITIES, ABILITY_NAME, MADUHAUSU_MAX, MADUHAUSU_MIN, POINT_BUY_MAX, POINT_BUY_MIN } from "@/data/abilities";
+import { useState } from "react";
 import { TOOL_PROFICIENCIES } from "@/data/characterOptions";
 import { SHEET_SKILL_FIELD, SKILL_BY_NAME, SKILLS } from "@/data/skills";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
@@ -22,6 +23,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
   const featChoices = card.featSkills ?? [];
   const classRemaining = Math.max(0, (klass?.skillChoices.count ?? 0) - classChoices.length);
   const featRemaining = background?.feat === "Skilled" ? Math.max(0, 3 - featChoices.length) : 0;
+  const [skillChoicesOpen, setSkillChoicesOpen] = useState(classRemaining + featRemaining > 0);
   const ready = !!card.classId
     && !!card.backgroundId
     && pointsLeft === 0
@@ -68,8 +70,22 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
         key={classRemaining + featRemaining > 0 ? "skills-pending" : "skills-complete"}
         title="Skill proficiency choices"
         summary={klass ? `${card.skillProficiencies.length} proficient · ${classRemaining + featRemaining} choices remaining` : "Choose a class first"}
-        aside={classRemaining + featRemaining > 0 ? <span className="appsheet-incomplete">Action needed</span> : undefined}
+        aside={classRemaining + featRemaining > 0 ? <span className="appsheet-incomplete">Action needed</span> : (
+          <button
+            type="button"
+            className="appsheet-disclosure-edit"
+            onClick={(event) => {
+              event.preventDefault();
+              event.stopPropagation();
+              setSkillChoicesOpen(true);
+            }}
+          >
+            Edit skill bonuses
+          </button>
+        )}
         defaultOpen={classRemaining + featRemaining > 0}
+        open={skillChoicesOpen}
+        onOpenChange={setSkillChoicesOpen}
       >
       {klass ? (
         <AppPanel title={`${klass.title} skill choices`} aside={<span className={classRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{classRemaining} left</span>}>

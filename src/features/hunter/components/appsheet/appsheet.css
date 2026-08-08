@@ -558,6 +558,13 @@
   font-size: 12px;
 }
 
+.character-app-sheet .appsheet-disclosure-edit {
+  padding: 6px 8px;
+  font-size: 11px;
+  line-height: 1.15;
+  white-space: nowrap;
+}
+
 .appsheet-disclosure-icon {
   width: 9px;
   height: 9px;
