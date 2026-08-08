@@ -22,7 +22,7 @@ import type {
   InventoryEntry,
   SheetAutomationState,
   SheetData,
-  SlotLocation,
+  SlotAssignment,
 } from "@/types";
 import { budgetFor, spentFor, type BuyMode } from "../../lib/abilityBuy";
 import { automationFor } from "../../lib/characterAutomation";
@@ -326,9 +326,9 @@ export function CharacterAutomationProvider({
     commit({ inventory: mergeInventory(card.inventory ?? [], [{ itemId: id, qty: delta }]) });
   }
 
-  function setSlotAssignment(id: string, index: number, location: SlotLocation | null) {
+  function setSlotAssignment(id: string, index: number, location: SlotAssignment | null) {
     if (index < 0) return;
-    const assignments: Array<SlotLocation | null> = [...(card.slotAssignments?.[id] ?? [])];
+    const assignments: Array<SlotAssignment | null> = [...(card.slotAssignments?.[id] ?? [])];
     if (location) assignments[index] = location;
     else assignments[index] = null;
     const cleaned = assignments.slice(0, Math.max(0, (card.inventory ?? []).find((entry) => entry.itemId === id)?.qty ?? 0));

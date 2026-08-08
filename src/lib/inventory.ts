@@ -62,7 +62,16 @@ export function totalCarriedWeight(
   >,
 ): number {
   const storage = resolveStorage(card).reduce((sum, i) => sum + i.weightLb, 0);
-  const sum = totalWeight(resolveInventory(card)) + wornArmorWeight(card) + storage;
+  const wornArmorIds = new Set([
+    card.mainArmorId,
+    ...(card.addonArmorIds ?? []),
+    ...(card.extraArmorIds ?? []),
+  ]);
+  // Starting unique garments (such as the Deepcaller's robe) are retained in
+  // inventory as proof of ownership. Once worn, their weight comes from the
+  // armor slice, so exclude that same inventory entry to avoid counting it twice.
+  const inventory = totalWeight(resolveInventory(card).filter(({ item }) => !wornArmorIds.has(item.id)));
+  const sum = inventory + wornArmorWeight(card) + storage;
   return Math.round(sum * 10) / 10;
 }
 

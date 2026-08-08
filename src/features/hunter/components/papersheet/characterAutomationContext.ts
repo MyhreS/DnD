@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 import type { BACKGROUNDS } from "@/data/backgrounds";
 import type { getClass } from "@/data/classes";
 import type { ITEMS } from "@/data/items";
-import type { AbilityKey, CarrySignificance, HunterCard, LevelFeature, SheetAutomationState, SlotLocation } from "@/types";
+import type { AbilityKey, CarrySignificance, HunterCard, LevelFeature, SheetAutomationState, SlotAssignment } from "@/types";
 import type { BuyMode } from "../../lib/abilityBuy";
 import type { automationFor } from "../../lib/characterAutomation";
 
@@ -36,7 +36,7 @@ export interface CharacterAutomationController {
   setBonus: (key: AbilityKey, value: number) => void;
   switchMode: (mode: BuyMode) => void;
   changeQty: (id: string, delta: number) => void;
-  setSlotAssignment: (id: string, index: number, location: SlotLocation | null) => void;
+  setSlotAssignment: (id: string, index: number, location: SlotAssignment | null) => void;
   toggleStorage: (id: string) => void;
   chooseMainArmor: (id: string) => void;
   setAddonArmorAt: (index: number, id: string) => void;

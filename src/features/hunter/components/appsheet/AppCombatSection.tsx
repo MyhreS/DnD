@@ -20,6 +20,7 @@ const EXTRAS = [
   ["Scarf", "Scarf"],
   ["Gloves", "Gloves"],
   ["Boots", "Boots"],
+  ["Robe", "Robe"],
 ] as const;
 
 export function AppCombatSection({ model }: { model: AppSheetModel }) {
