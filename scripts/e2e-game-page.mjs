@@ -162,6 +162,22 @@ try {
   await enemyEditor.getByRole("spinbutton", { name: "AC", exact: true }).fill("14");
   await enemyEditor.getByLabel("Private notes").fill("Howls when bloodied.");
   await enemyEditor.getByLabel("Add to the current battle after saving").check();
+  const enemyFieldLayout = await enemyEditor.locator(".game-enemy-editor-fields").evaluate((form) => {
+    const inputs = Array.from(form.querySelectorAll("input.input"));
+    const boxes = inputs.map((input) => {
+      const { left, top, width } = input.getBoundingClientRect();
+      return { left, top, width };
+    });
+    return { boxes, formWidth: form.getBoundingClientRect().width };
+  });
+  if (enemyFieldLayout.boxes.some((box, index) => box.top <= enemyFieldLayout.boxes[index - 1]?.top || Math.abs(box.left - enemyFieldLayout.boxes[0].left) > 1 || Math.abs(box.width - enemyFieldLayout.formWidth) > 1)) {
+    throw new Error(`Enemy editor fields must be full-width vertical rows: ${JSON.stringify(enemyFieldLayout)}`);
+  }
+  await owner.screenshot({ path: "screenshots/enemy-editor-desktop.png" });
+  await owner.setViewportSize({ width: 390, height: 844 });
+  await assertNoHorizontalOverflow(owner, "Mobile enemy editor");
+  await owner.screenshot({ path: "screenshots/enemy-editor-mobile.png" });
+  await owner.setViewportSize({ width: 1440, height: 1000 });
   await enemyEditor.getByRole("button", { name: "Save enemy", exact: true }).click();
   await enemyLibrary.getByText("Moon Beast", { exact: true }).waitFor();
   await assertNoHorizontalOverflow(owner, "Enemy library desktop");
@@ -187,8 +203,8 @@ try {
 
   owner.once("dialog", (dialog) => dialog.accept());
   await owner.getByRole("button", { name: "End session" }).click();
-  await owner.getByText("Session history", { exact: true }).waitFor();
   const historyToggle = owner.getByRole("button", { name: "Session history" });
+  await historyToggle.waitFor();
   if (await owner.getByText("Night of the Pale Moon", { exact: true }).count() !== 1) {
     throw new Error("Saved sessions should be hidden until history is opened");
   }
