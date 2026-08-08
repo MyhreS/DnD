@@ -22,10 +22,12 @@ const simonUid = "workshop-e2e-simon";
 const creatorUid = "workshop-e2e-creator";
 const thomasUid = "workshop-e2e-thomas";
 const tobiasUid = "workshop-e2e-tobias";
+const ronaldUid = "workshop-e2e-ronald";
 const outsiderUid = "workshop-e2e-outsider";
 const creatorEmail = "myhrefjeld@gmail.com";
 const thomasEmail = "thmyhre9@gmail.com";
 const tobiasEmail = "03tobiasmyhre@gmail.com";
+const ronaldEmail = "rhmartinsen99@gmail.com";
 
 async function user(uid, email, displayName) {
   try { await auth.deleteUser(uid); } catch { /* absent */ }
@@ -33,11 +35,12 @@ async function user(uid, email, displayName) {
   return auth.createCustomToken(uid);
 }
 
-const [simonToken, creatorToken, thomasToken, tobiasToken, outsiderToken] = await Promise.all([
+const [simonToken, creatorToken, thomasToken, tobiasToken, ronaldToken, outsiderToken] = await Promise.all([
   user(simonUid, "simonmyhre1@gmail.com", "Simon Myhre"),
   user(creatorUid, creatorEmail, "Christopher Creator"),
   user(thomasUid, thomasEmail, "Thomas Myhre"),
   user(tobiasUid, tobiasEmail, "Tobias Myhre"),
+  user(ronaldUid, ronaldEmail, "Ronald Martinsen"),
   user(outsiderUid, "outsider-workshop@example.test", "Outside User"),
 ]);
 await db.doc(`workshopMembers/${outsiderUid}`).set({
@@ -233,7 +236,11 @@ try {
   watch(tobias.page, errors);
   await waitForWorkspace(tobias.page, "Tobias");
   await noOverflow(tobias.page, "Tobias Workshop mobile");
-  const approvedMembers = await Promise.all([simonUid, creatorUid, thomasUid, tobiasUid].map((uid) => db.doc(`workshopMembers/${uid}`).get()));
+  const ronald = await openAs(browser, ronaldToken, { width: 390, height: 844 });
+  watch(ronald.page, errors);
+  await waitForWorkspace(ronald.page, "Ronald");
+  await noOverflow(ronald.page, "Ronald Workshop mobile");
+  const approvedMembers = await Promise.all([simonUid, creatorUid, thomasUid, tobiasUid, ronaldUid].map((uid) => db.doc(`workshopMembers/${uid}`).get()));
   if (approvedMembers.some((member) => member.data()?.role !== "admin")) {
     throw new Error("Approved Workshop accounts did not receive equal admin access.");
   }
@@ -789,7 +796,7 @@ try {
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
   console.log("Workshop E2E passed: equal owner access without duplicate membership metadata, shared protected decisions, outsider denial, live presence, simultaneous replies, fast sync, secure images, paging, drafts, idempotency, read receipts, and responsive mobile/desktop layout.");
-  await Promise.all([simon.context.close(), creator.context.close(), thomas.context.close(), outsider.context.close()]);
+  await Promise.all([simon.context.close(), creator.context.close(), thomas.context.close(), tobias.context.close(), ronald.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();
   server.kill("SIGTERM");
@@ -801,11 +808,15 @@ try {
     db.doc(`workshopMembers/${simonUid}`).delete(),
     db.doc(`workshopMembers/${creatorUid}`).delete(),
     db.doc(`workshopMembers/${thomasUid}`).delete(),
+    db.doc(`workshopMembers/${tobiasUid}`).delete(),
+    db.doc(`workshopMembers/${ronaldUid}`).delete(),
     db.doc(`workshopMembers/${outsiderUid}`).delete(),
     db.doc("workshopAgent/state").delete(),
     auth.deleteUser(simonUid),
     auth.deleteUser(creatorUid),
     auth.deleteUser(thomasUid),
+    auth.deleteUser(tobiasUid),
+    auth.deleteUser(ronaldUid),
     auth.deleteUser(outsiderUid),
   ]);
 }

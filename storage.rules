@@ -8,7 +8,7 @@ service firebase.storage {
 
     function isWorkshopMember() {
       return isVerified()
-        && request.auth.token.email in ["simonmyhre1@gmail.com", "myhrefjeld@gmail.com", "thmyhre9@gmail.com", "03tobiasmyhre@gmail.com"];
+        && request.auth.token.email in ["simonmyhre1@gmail.com", "myhrefjeld@gmail.com", "thmyhre9@gmail.com", "03tobiasmyhre@gmail.com", "rhmartinsen99@gmail.com"];
     }
 
     match /workshop/{uid}/{draftId}/{fileId} {
