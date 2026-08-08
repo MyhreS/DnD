@@ -78,6 +78,10 @@ try {
   await page.getByTestId("appsheet-class").selectOption("warden");
   await openAppSection("Gear & carrying");
   await page.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
+  const rifleSlot = page.getByLabel("Hunter Rifle item 1 carrying slot");
+  if (await rifleSlot.inputValue() !== "") throw new Error("New equipment should start Unassigned");
+  await rifleSlot.selectOption("back");
+  await page.getByTestId("appsheet-inventory").locator(".appsheet-item-slot").filter({ hasText: "Back" }).waitFor();
   await page.getByTestId("appsheet-background").selectOption("criminal");
   await openAppSection("Abilities & skills");
   const skillChoiceDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Skill proficiency choices", { exact: true }) }).first();

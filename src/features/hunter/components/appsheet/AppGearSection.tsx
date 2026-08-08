@@ -4,7 +4,7 @@ import { STORAGE_DEFS } from "@/data/storage";
 import { itemFor } from "@/lib/customItems";
 import { resolveInventory } from "@/lib/inventory";
 import { computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
-import type { CarrySignificance } from "@/types";
+import type { CarrySignificance, SlotLocation } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import {
   AppDisclosure,
@@ -31,6 +31,11 @@ const WEAPON_FACTS: Record<string, { damage: string; properties: string; mastery
   pistol: { damage: "1d10 Piercing", properties: "Ammunition (30/90; Bullet)", mastery: "Vex" },
   "hunter-cleaver": { damage: "—", properties: "Unique Scout weapon; statistics set by the DM", mastery: "—" },
 };
+
+function assignmentLocations(carry: CarrySignificance, pinned?: SlotLocation): SlotLocation[] {
+  if (pinned) return [pinned];
+  return carry === "Oversized" ? ["hand"] : ["hand", "back", "chest", "hip", "ankle"];
+}
 
 export function AppGearSection({ model }: { model: AppSheetModel }) {
   const automation = useCharacterAutomation();
@@ -65,7 +70,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
         <DerivedValue label="Gold" value={card.coins ?? 0} reason="Saved gold pieces; coins do not consume carrying slots." />
         <DerivedValue label="Carried weight" value={result.fields.weight} reason={result.reasons.weight} />
         <DerivedValue label="Load" value={result.fields.weightCondition} reason={result.reasons.weightCondition} />
-        <DerivedValue label="Unstowed" value={slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} reason="Items remaining after the slot engine assigns every Significant and Oversized item." />
+        <DerivedValue label="Unassigned" value={slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} reason="Significant and oversized items stay unassigned until you choose a carrying slot." />
       </div>
 
       {!model.readOnly && (
@@ -92,15 +97,35 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
       <AppPanel title="Inventory" aside={<span className="appsheet-status-word">{inventory.length} item types</span>}>
         {inventory.length ? (
           <div className="appsheet-inventory-list" data-testid="appsheet-inventory">
-            {inventory.map(({ item, qty }) => (
+            {inventory.map(({ item, qty }) => {
+              const locations = assignmentLocations(item.carry, item.slotLocation);
+              const assignments = card.slotAssignments?.[item.id] ?? [];
+              return (
               <div key={item.id}>
                 <span className="appsheet-item-mark">{item.category.slice(0, 1)}</span>
-                <span className="appsheet-item-name"><b>{item.name}</b><small>{item.category} · {item.carry}{item.unique ? " · Unique" : ""}</small></span>
-                <span className="appsheet-item-slot">{slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unstowed")}</span>
+                <span className="appsheet-item-name"><b>{item.name}</b><small>{item.category} · {item.carry}{item.unique ? " · Unique" : ""}</small>
+                  {item.carry !== "Insignificant" && <span className="appsheet-item-assignments">
+                    {Array.from({ length: qty }, (_, index) => (
+                      <label key={index}>Item {index + 1}
+                        <select
+                          aria-label={`${item.name} item ${index + 1} carrying slot`}
+                          disabled={model.readOnly}
+                          value={assignments[index] ?? ""}
+                          onChange={(event) => automation.setSlotAssignment(item.id, index, event.target.value as SlotLocation || null)}
+                        >
+                          <option value="">Unassigned</option>
+                          {locations.map((location) => <option key={location} value={location}>{SLOT_LOCATION_LABEL[location]}</option>)}
+                        </select>
+                      </label>
+                    ))}
+                  </span>}
+                </span>
+                <span className="appsheet-item-slot">{slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unassigned")}</span>
                 <span className="appsheet-item-weight">{Math.round(item.weightLb * qty * 10) / 10} lb</span>
                 <NumericStepper value={qty} label={`${item.name} quantity`} disabled={model.readOnly} onChange={(next) => automation.changeQty(item.id, next - qty)} />
               </div>
-            ))}
+              );
+            })}
           </div>
         ) : <p className="appsheet-empty-copy">Choose a class to receive its starting equipment, then add a background kit or catalog items.</p>}
         <div className="appsheet-coin-editor">
@@ -111,7 +136,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
 
       <AppDisclosure
         title="Carrying setup"
-        summary={`${card.equippedStorageIds?.length ?? 0} storage equipped · ${slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} unstowed`}
+        summary={`${card.equippedStorageIds?.length ?? 0} storage equipped · ${slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} unassigned`}
         aside={slots.unstowed.length ? <span className="appsheet-incomplete">Check load</span> : undefined}
       >
       <div className="appsheet-two-column appsheet-disclosure-grid">
@@ -145,7 +170,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
               </div>
             ))}
           </div>
-          {slots.unstowed.length > 0 && <p className="appsheet-inline-error">Unstowed: {slots.unstowed.map((entry) => `${entry.name} ×${entry.count}${entry.clamped ? "+" : ""}`).join(", ")}</p>}
+          {slots.unstowed.length > 0 && <p className="appsheet-inline-error">Unassigned: {slots.unstowed.map((entry) => `${entry.name} ×${entry.count}${entry.clamped ? "+" : ""}`).join(", ")}</p>}
         </AppPanel>
       </div>
       </AppDisclosure>
