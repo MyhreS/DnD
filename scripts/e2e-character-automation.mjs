@@ -202,10 +202,18 @@ try {
   if (!await wornArmorDisclosure.evaluate((element) => element.open)) throw new Error("Editing a value collapsed its disclosure mid-task");
 
   await openAppSection("Gear & carrying");
-  await openAppDisclosure("Add a catalog item");
+  const catalogPicker = page.getByTestId("appsheet-catalog-picker");
+  await catalogPicker.locator(":scope > summary").click();
+  if (!await catalogPicker.evaluate((element) => element.open)) throw new Error("Rules-library item picker did not open from Inventory");
+  await catalogPicker.screenshot({ path: "screenshots/rules-library-picker-desktop.png" });
   await page.getByTestId("appsheet-catalog-item").selectOption("torch");
   await page.getByTestId("appsheet-add-catalog-item").click();
   await page.getByTestId("appsheet-inventory").getByText("Torch", { exact: true }).waitFor();
+  await page.setViewportSize({ width: 390, height: 844 });
+  await catalogPicker.screenshot({ path: "screenshots/rules-library-picker-mobile.png" });
+  const catalogOverflow = await catalogPicker.evaluate((element) => element.scrollWidth > element.clientWidth);
+  if (catalogOverflow) throw new Error("Rules-library item picker overflows the mobile viewport");
+  await page.setViewportSize({ width: 1440, height: 1000 });
 
   await openAppSection("Notes");
   await page.getByTestId("appsheet-notes").fill("Shared app-view note.");
