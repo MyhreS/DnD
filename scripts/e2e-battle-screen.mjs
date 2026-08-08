@@ -245,14 +245,12 @@ try {
   if (await playerPage.getByRole("button", { name: "End battle" }).count()) throw new Error("Player can end battle mode.");
   if (await playerPage.getByRole("button", { name: "+ Add enemy" }).count()) throw new Error("Player can add enemies.");
   if (await playerPage.locator(".game-battle-toolbar").count()) throw new Error("Player can see the DM control bar.");
-  if (await dmPage.locator(".game-initiative-row").count()) throw new Error("DM combatant controls are visible before opening Manage battle.");
+  if (await dmPage.getByRole("button", { name: "Manage battle" }).count()) throw new Error("Manage battle should not be needed during a battle.");
+  if (await dmPage.locator(".battle-row-controls").count() < 2) throw new Error("DM combatant controls are not available in the battle screen.");
   if (await dmPage.locator(".battle-name").filter({ hasText: "Lady Maria" }).count() !== 1) throw new Error("The Hunter is duplicated in the default battle view.");
-  if (await dmPage.locator(".game-battle-toolbar button").count() !== 2) throw new Error("The default DM control bar is not compact.");
+  if (await dmPage.locator(".game-battle-toolbar button").count() < 3) throw new Error("The DM battle actions are not available directly.");
 
-  await dmPage.getByRole("button", { name: "Manage battle" }).click();
-  const manageBattle = dmPage.getByRole("dialog", { name: "Manage battle" });
-  await manageBattle.waitFor();
-  const enemyControl = manageBattle.locator(".game-initiative-row").filter({ hasText: "Moon Beast" });
+  const enemyControl = dmPage.getByTestId(`battle-combatant-${enemyId}`);
   await enemyControl.getByLabel("Add condition to Moon Beast").selectOption("poisoned");
   const enemyDisplay = playerPage.getByTestId(`battle-combatant-${enemyId}`);
   await enemyDisplay.getByText(/Poisoned/).waitFor();
@@ -262,7 +260,7 @@ try {
     throw new Error(`Hidden monster data leaked to the player: ${playerEnemyText}`);
   }
 
-  const enemyCard = manageBattle.locator(".game-enemy").filter({ hasText: "Moon Beast" });
+  const enemyCard = dmPage.locator(".game-enemy").filter({ hasText: "Moon Beast" });
   await enemyCard.getByRole("button", { name: "+5", exact: true }).click();
   if ((await enemyDisplay.innerText()).includes("5")) throw new Error("Player saw exact damage before the DM revealed HP.");
   await enemyCard.getByLabel("HP visible").check();
@@ -272,7 +270,7 @@ try {
   await enemyDisplay.locator(".battle-ac").getByText("14", { exact: true }).waitFor();
   await enemyCard.getByRole("button", { name: "Reset stats", exact: true }).click();
   await enemyCard.getByText("0 damage", { exact: false }).waitFor();
-  if (await enemyControl.locator(".game-condition-list").getByText(/Poisoned/).count()) throw new Error("Reset stats did not clear enemy conditions.");
+  await enemyControl.locator(".battle-condition-controls").getByRole("button", { name: /Poisoned/ }).waitFor({ state: "detached" });
   await enemyDisplay.getByText(/Poisoned/).waitFor({ state: "detached" });
   await enemyDisplay.locator(".battle-ac").getByText("14", { exact: true }).waitFor({ state: "detached" });
   const resetPlayerText = await enemyDisplay.innerText();
@@ -280,24 +278,28 @@ try {
     throw new Error(`Reset stats did not restore the enemy visibility defaults: ${resetPlayerText}`);
   }
 
-  await manageBattle.getByRole("button", { name: "Add enemy", exact: true }).click();
+  await dmPage.getByRole("button", { name: "Add enemy", exact: true }).click();
   const enemyLibrary = dmPage.getByRole("dialog", { name: "Manage enemies" });
   await enemyLibrary.getByText("Moon Beast", { exact: true }).waitFor();
   await enemyLibrary.getByText("Grave Hound", { exact: true }).waitFor();
   await noHorizontalOverflow(dmPage, "Enemy library desktop");
   await dmPage.screenshot({ path: "screenshots/game-enemy-library-desktop.png", fullPage: true });
   await enemyLibrary.getByRole("button", { name: "Done", exact: true }).click();
-  await manageBattle.waitFor();
 
-  await manageBattle.getByRole("button", { name: "Create item", exact: true }).click();
+  await dmPage.getByRole("button", { name: "Create item", exact: true }).click();
   const itemDialog = dmPage.getByRole("dialog", { name: "Create an item" });
   await itemDialog.getByLabel("Name").fill("Ashen Spear");
   await itemDialog.getByLabel("Damage").fill("1d8 piercing");
   await itemDialog.getByRole("button", { name: "Create item" }).click();
 
-  await manageBattle.getByRole("button", { name: "Done", exact: true }).click();
-  await manageBattle.waitFor({ state: "detached" });
-  if (await dmPage.locator(".game-initiative-row").count()) throw new Error("Closing Manage battle left duplicate combatant controls visible.");
+  const hunterControl = dmPage.locator(".battle-row").filter({ hasText: "Lady Maria" });
+  await hunterControl.getByLabel("Lady Maria damage taken").fill("7");
+  await hunterControl.getByLabel("Lady Maria damage taken").blur();
+  await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).getByText("7", { exact: true }).waitFor();
+  const damagedHunter = await db.doc(`characters/${characterId}`).get();
+  const pcCombatants = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
+  if (pcCombatants.empty || pcCombatants.docs[0].data().currentHp !== 21) throw new Error("Direct Hunter damage did not update the battle record.");
+  if (damagedHunter.data()?.currentHp !== 24 || damagedHunter.data()?.sheet?.hpCur !== "24") throw new Error("Battle damage should not overwrite the Hunter sheet.");
 
   await noHorizontalOverflow(dmPage, "Clean DM battle view");
   await dmPage.screenshot({ path: "screenshots/game-battle-mode-dm.png", fullPage: true });
@@ -307,31 +309,6 @@ try {
   await dmPage.setViewportSize({ width: 390, height: 844 });
   await noHorizontalOverflow(dmPage, "Clean DM battle view mobile");
   await dmPage.screenshot({ path: "screenshots/game-battle-mode-dm-mobile.png", fullPage: true });
-  await dmPage.getByRole("button", { name: "Manage battle" }).click();
-  const mobileManageBattle = dmPage.getByRole("dialog", { name: "Manage battle" });
-  await noHorizontalOverflow(dmPage, "Manage battle modal mobile");
-  const mobileBackdropBox = await dmPage.locator(".game-dialog-backdrop").boundingBox();
-  if (!mobileBackdropBox || Math.abs(mobileBackdropBox.y) > 1 || Math.abs(mobileBackdropBox.height - 844) > 1) {
-    throw new Error(`Manage battle backdrop is not fixed to the mobile viewport: ${JSON.stringify(mobileBackdropBox)}`);
-  }
-  const mobileBattleScroll = mobileManageBattle.locator(".game-battle-dialog-scroll");
-  const scrollMetrics = await mobileBattleScroll.evaluate((element) => ({
-    clientHeight: element.clientHeight,
-    scrollHeight: element.scrollHeight,
-  }));
-  if (scrollMetrics.scrollHeight <= scrollMetrics.clientHeight) {
-    throw new Error(`Manage battle content should scroll on mobile: ${JSON.stringify(scrollMetrics)}`);
-  }
-  await mobileBattleScroll.evaluate((element) => { element.scrollTop = element.scrollHeight; });
-  await dmPage.waitForTimeout(250);
-  const stableScrollTop = await mobileBattleScroll.evaluate((element) => element.scrollTop);
-  if (stableScrollTop <= 0) throw new Error("Manage battle mobile scroll jumped back to the top.");
-  const endBattleBox = await mobileManageBattle.getByRole("button", { name: "End battle" }).boundingBox();
-  if (!endBattleBox || endBattleBox.y < 0 || endBattleBox.y + endBattleBox.height > 844) {
-    throw new Error(`End battle is outside the mobile viewport: ${JSON.stringify(endBattleBox)}`);
-  }
-  await dmPage.screenshot({ path: "screenshots/game-battle-manage-mobile.png", fullPage: true });
-  await mobileManageBattle.getByRole("button", { name: "Done", exact: true }).click();
 
   await dmPage.getByRole("button", { name: "Next turn" }).click();
   await playerPage.locator(".battle-live-status").getByText("Grave Hound", { exact: true }).waitFor();
@@ -340,10 +317,8 @@ try {
   await noHorizontalOverflow(playerPage, "Player battle mode mobile");
   await playerPage.screenshot({ path: "screenshots/game-battle-mode-mobile.png", fullPage: true });
 
-  await dmPage.getByRole("button", { name: "Manage battle" }).click();
-  const endBattleDialog = dmPage.getByRole("dialog", { name: "Manage battle" });
   dmPage.once("dialog", (dialog) => dialog.accept());
-  await endBattleDialog.getByRole("button", { name: "End battle" }).click();
+  await dmPage.getByRole("button", { name: "End battle" }).click();
   await Promise.all([
     dmPage.getByTestId("session-battle-screen").waitFor({ state: "detached" }),
     playerPage.getByTestId("session-battle-screen").waitFor({ state: "detached" }),
@@ -359,7 +334,7 @@ try {
   if (!claimedHunter.data()?.inventory?.some((item) => String(item.itemId).startsWith("session-"))) throw new Error("Claimed session weapon did not reach inventory.");
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Battle mode E2E passed: private enemy library, battle selection, stat reset, synced visibility, and responsive layout.");
+  console.log("Battle mode E2E passed: direct DM controls, private enemy library, synced damage, stat reset, visibility, and responsive layout.");
   await dmContext.close();
   await playerContext.close();
 } finally {

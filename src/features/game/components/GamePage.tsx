@@ -29,7 +29,7 @@ import { EnemyLibraryDialog } from "./EnemyLibraryDialog";
 import { EnemySection } from "./EnemySection";
 import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed, SessionSwitchRequests } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
-import { ManageBattleDialog, SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
+import { SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
 import "./game.css";
 
 const DEFAULT_TITLE = () => `Session ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())}`;
@@ -79,11 +79,9 @@ export function GamePage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [managingPlayers, setManagingPlayers] = useState(false);
-  const [managingBattle, setManagingBattle] = useState(false);
   const [creatingItem, setCreatingItem] = useState(false);
   const [managingEnemies, setManagingEnemies] = useState(false);
   const [editingEnemy, setEditingEnemy] = useState<EnemyTemplate | "new" | null>(null);
-  const [returnToBattleManager, setReturnToBattleManager] = useState(false);
   const [ownSheetOpen, setOwnSheetOpen] = useState(false);
 
   useEffect(() => {
@@ -430,16 +428,17 @@ export function GamePage() {
     return addMonster(selected.id, { ...templateStats(template), enemyTemplateId: template.id });
   }
 
-  function openEnemyLibrary(fromBattleManager = false) {
-    setReturnToBattleManager(fromBattleManager);
-    setManagingBattle(false);
+  function openEnemyLibrary() {
     setManagingEnemies(true);
   }
 
   function closeEnemyLibrary() {
     setManagingEnemies(false);
-    if (returnToBattleManager) setManagingBattle(true);
-    setReturnToBattleManager(false);
+  }
+
+  async function endBattle() {
+    if (!selected?.combat || !window.confirm("End this battle? Everyone will return to the session view. Initiative, conditions, enemies, and damage remain saved.")) return;
+    await useCombatStore.getState().closeSessionEncounter(selected.id, selected.combat);
   }
 
   function openEnemyEditor(template: EnemyTemplate | "new") {
@@ -510,24 +509,17 @@ export function GamePage() {
             <SessionCombatControls
               game={selected}
               disabled={combatBusy || busy}
-              onManage={() => setManagingBattle(true)}
+              onAddEnemy={openEnemyLibrary}
+              onCreateItem={() => setCreatingItem(true)}
+              canCreateItem={selected.campaignId === null}
+              onEndBattle={() => void endBattle()}
             />
           ) : null}
+          disabled={combatBusy || busy}
         />
-        {isSessionDm && managingBattle && (
-          <ManageBattleDialog
-            game={selected}
-            characters={characters ?? []}
-            disabled={combatBusy || busy}
-            canCreateItem={selected.campaignId === null}
-            enemySection={<EnemySection game={selected} isDm disabled={combatBusy || busy} />}
-            onAddEnemy={() => openEnemyLibrary(true)}
-            onCreateItem={() => { setManagingBattle(false); setCreatingItem(true); }}
-            onClose={() => setManagingBattle(false)}
-          />
-        )}
+        {isSessionDm && <EnemySection game={selected} isDm disabled={combatBusy || busy} />}
         {enemyDialogs}
-        {creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => { setCreatingItem(false); setManagingBattle(true); }} />}
+        {creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
       </div>
     );
   }
