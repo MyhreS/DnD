@@ -332,6 +332,15 @@ export interface GameParticipant {
   lastSeen: number;
 }
 
+/** A shared, attributed entry in a game's session notes. */
+export interface SessionNote {
+  id: string;
+  authorUid: string;
+  authorName: string;
+  body: string;
+  createdAt: number;
+}
+
 /** A unique item created by the DM during a standalone session. It remains in
  * session history after being claimed; claiming copies the definition into the
  * Hunter's custom item catalog. */

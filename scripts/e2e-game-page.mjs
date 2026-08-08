@@ -128,12 +128,25 @@ try {
   }
   await managePlayers.getByRole("button", { name: "Done", exact: true }).click();
 
+  const desktopNotes = owner.getByRole("region", { name: "Session notes" });
+  await desktopNotes.getByRole("textbox", { name: "Add a session note" }).fill("The bell tower overlooks the eastern gate.");
+  await desktopNotes.getByRole("button", { name: "Add note", exact: true }).click();
+  await desktopNotes.getByText("The bell tower overlooks the eastern gate.", { exact: true }).waitFor();
+  await assertNoHorizontalOverflow(owner, "Desktop session notes");
+  await owner.screenshot({ path: "screenshots/session-notes-desktop.png", fullPage: true });
+
   await owner.setViewportSize({ width: 390, height: 844 });
   await managePlayersButton.click();
   await managePlayers.getByText("Preview Hunter · Bloodbound · Level 3", { exact: true }).waitFor();
   await assertNoHorizontalOverflow(owner, "Mobile Manage players dialog");
   await owner.screenshot({ path: "screenshots/manage-players-mobile.png" });
   await managePlayers.getByRole("button", { name: "Done", exact: true }).click();
+  const mobileNotes = owner.getByRole("region", { name: "Session notes" });
+  await mobileNotes.getByRole("textbox", { name: "Add a session note" }).fill("Keep the lantern lit when crossing the bridge.");
+  await mobileNotes.getByRole("button", { name: "Add note", exact: true }).click();
+  await mobileNotes.getByText("Keep the lantern lit when crossing the bridge.", { exact: true }).waitFor();
+  await assertNoHorizontalOverflow(owner, "Mobile session notes");
+  await owner.screenshot({ path: "screenshots/session-notes-mobile.png", fullPage: true });
   await owner.setViewportSize({ width: 1440, height: 1000 });
 
   await owner.getByRole("button", { name: "Start session" }).click();
@@ -168,10 +181,8 @@ try {
   await battlePicker.getByRole("button", { name: "Start battle", exact: true }).click();
   await owner.getByTestId("session-battle-screen").waitFor();
   await owner.locator(".battle-name").getByText("Moon Beast", { exact: true }).waitFor();
-  await owner.getByRole("button", { name: "Manage battle" }).click();
-  const manageBattle = owner.getByRole("dialog", { name: "Manage battle" });
   owner.once("dialog", (dialog) => dialog.accept());
-  await manageBattle.getByRole("button", { name: "End battle" }).click();
+  await owner.getByRole("button", { name: "End battle" }).click();
   await owner.getByTestId("session-battle-screen").waitFor({ state: "detached" });
 
   owner.once("dialog", (dialog) => dialog.accept());
