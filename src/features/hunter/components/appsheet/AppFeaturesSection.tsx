@@ -27,13 +27,19 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
   const classChoiceRemaining = Math.max(0, expertiseLimit - expertise.length)
     + Math.max(0, masteryCount - masteries.length)
     + Math.max(0, whisperLimit - whispers.length);
+  const hasRequiredChoices = classChoiceRemaining > 0 || !!result.pending.levelChoices || !!result.pending.whispers;
   const choiceAbility = (choice: string) => {
     const skill = SKILL_BY_NAME[choice];
     return skill ? `Ability: ${ABILITY_NAME[skill.ability]}` : undefined;
   };
 
   return (
-    <AppSection title="Features & choices">
+    <AppSection
+      id="appsheet-features"
+      title="Features & choices"
+      defaultOpen={hasRequiredChoices}
+      attention={hasRequiredChoices}
+    >
       {!klass && <PendingNotice><b>Choose a class on Overview</b><p>Class features and level choices will appear here automatically.</p></PendingNotice>}
 
       {klass && (

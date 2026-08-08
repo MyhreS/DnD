@@ -35,7 +35,12 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
   };
 
   return (
-    <AppSection title="Abilities & skills">
+    <AppSection
+      id="appsheet-abilities"
+      title="Abilities & skills"
+      defaultOpen={classRemaining + featRemaining > 0 || (!setupComplete && ((pointsLeft != null && pointsLeft > 0) || bonusUsed < 3))}
+      attention={classRemaining + featRemaining > 0 || (!setupComplete && ((pointsLeft != null && pointsLeft > 0) || bonusUsed < 3))}
+    >
       {canEditCreationScores && (
         <AppPanel title="Build ability scores" aside={<span className={pointsLeft === 0 ? "appsheet-complete" : "appsheet-incomplete"}>{pointsLeft ?? "Invalid"} points left</span>}>
           <AppSelect label="Ability method" value={automation.mode} disabled={model.readOnly} onChange={(event) => automation.switchMode(event.target.value as BuyMode)}>

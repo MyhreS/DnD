@@ -155,6 +155,88 @@
   letter-spacing: -.025em;
 }
 
+.appsheet-section-attention {
+  border: 1px solid color-mix(in srgb, var(--app-accent) 62%, var(--app-line));
+  box-shadow: inset 3px 0 0 var(--app-accent);
+}
+
+.appsheet-section-attention > summary {
+  background: color-mix(in srgb, var(--app-danger-bg) 72%, transparent);
+}
+
+.appsheet-section-attention-label {
+  margin-left: auto;
+  padding: 4px 7px;
+  border-radius: 4px;
+  background: var(--app-danger-bg);
+  color: var(--app-danger);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: .05em;
+  text-transform: uppercase;
+}
+
+.appsheet-required-choices {
+  margin: 0 0 30px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--app-accent) 45%, var(--app-line));
+  border-left: 4px solid var(--app-accent);
+  border-radius: 7px;
+  background: var(--app-danger-bg);
+}
+
+.appsheet-required-choices-heading {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.appsheet-required-choices-heading > span {
+  color: var(--app-danger);
+  font: 800 25px/1 "Alegreya Sans SC", sans-serif;
+}
+
+.appsheet-required-choices-heading b {
+  color: var(--app-text);
+  font: 800 16px/1.2 "Alegreya Sans SC", sans-serif;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+}
+
+.appsheet-required-choices-heading p {
+  margin: 4px 0 0;
+  color: var(--app-muted);
+  font: 16px/1.35 "Alegreya", serif;
+}
+
+.appsheet-required-choices ul {
+  display: grid;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.appsheet-required-choices a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 11px;
+  border: 1px solid color-mix(in srgb, var(--app-accent) 32%, var(--app-line));
+  border-radius: 5px;
+  background: var(--app-surface);
+  color: inherit;
+  text-decoration: none;
+}
+
+.appsheet-required-choices a:hover { background: var(--app-surface-hover); }
+.appsheet-required-choices a:focus-visible { outline: 2px solid var(--app-warm); outline-offset: 2px; }
+.appsheet-required-choices a span { display: grid; gap: 2px; }
+.appsheet-required-choices a b { color: var(--app-text); font-size: 14px; }
+.appsheet-required-choices a small { color: var(--app-muted); font: 14px/1.3 "Alegreya", serif; }
+.appsheet-required-choices a em { flex: none; color: var(--app-danger); font: 700 12px/1.2 "Alegreya Sans SC", sans-serif; font-style: normal; }
+
 .appsheet-section-icon {
   width: 10px;
   height: 10px;
