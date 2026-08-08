@@ -10,7 +10,7 @@ import {
   query,
   where,
   serverTimestamp,
-  increment,
+  runTransaction,
   writeBatch,
   type Timestamp,
 } from "firebase/firestore";
@@ -20,6 +20,7 @@ import { isPreviewActive, previewCard, previewPartyCards, previewArchive } from 
 import { isTestEmail } from "@/config";
 import type { ArchivedCharacter, HunterCard, SheetData } from "@/types";
 import { characterSheetUpdate } from "@/features/hunter/lib/sheetPersistence";
+import { insightAwardPatch } from "@/features/hunter/lib/insightAward";
 
 // Characters live in /characters/{id} — a user (ownerUid) can own several.
 const charsCol = collection(db, "characters");
@@ -72,10 +73,24 @@ export async function patchCharacterSheet(
   await updateDoc(doc(charsCol, id), update);
 }
 
-/** Atomically add (or subtract) Insight — DM award. Uses a server-side increment
- * so rapid taps never lose updates the way an absolute write would. */
+/** Atomically award Insight and immediately apply every earned level. Insight is
+ * a lifetime total, so levelling never spends or resets it. */
 export async function awardInsight(id: string, delta: number): Promise<void> {
-  await setDoc(doc(charsCol, id), { insight: increment(delta) }, { merge: true });
+  if (isPreviewActive()) {
+    const { usePlayerStore } = await import("@/features/hunter/store/playerStore");
+    const card = usePlayerStore.getState().characters.find((entry) => entry.id === id);
+    if (!card) return;
+    await patchCharacter(id, insightAwardPatch(card, delta));
+    return;
+  }
+
+  const ref = doc(charsCol, id);
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists()) throw new Error("Character no longer exists.");
+    const card = normalizeCard(snapshot.data() as HunterCard);
+    transaction.update(ref, insightAwardPatch(card, delta));
+  });
 }
 
 /** Live-subscribe to all characters a user owns. */

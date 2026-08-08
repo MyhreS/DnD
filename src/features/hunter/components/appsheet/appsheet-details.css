@@ -363,45 +363,6 @@
   box-shadow: var(--app-shadow);
 }
 
-.appsheet-levelup-backdrop {
-  position: fixed;
-  z-index: 80;
-  inset: 0;
-  display: grid;
-  place-items: center;
-  padding: 18px;
-  overflow: hidden;
-  overscroll-behavior: contain;
-  background: rgba(5, 5, 8, 0.72);
-  backdrop-filter: blur(5px);
-}
-
-.appsheet-levelup-prompt {
-  width: min(580px, 100%);
-  max-height: min(760px, calc(100dvh - 36px));
-  overflow-y: auto;
-  overscroll-behavior: contain;
-  -webkit-overflow-scrolling: touch;
-  padding: clamp(20px, 4vw, 30px);
-  border: 1px solid var(--app-line);
-  border-radius: var(--radius-sm);
-  background: var(--app-surface);
-  color: var(--app-text);
-  box-shadow: var(--app-shadow);
-}
-
-.appsheet-levelup-prompt .eyebrow { margin: 0 0 4px; }
-.appsheet-levelup-prompt h2 { margin: 0; color: var(--app-text); font-family: var(--font-display); font-size: 1.8rem; }
-.appsheet-levelup-prompt > p { color: var(--app-muted); }
-.appsheet-levelup-section { padding: 14px 0; border-top: 1px solid var(--app-line); }
-.appsheet-levelup-section h3 { margin: 0 0 8px; color: var(--app-text); font-size: 0.95rem; }
-.appsheet-levelup-section p,
-.appsheet-levelup-section ul { margin: 0; color: var(--app-muted); }
-.appsheet-levelup-section ul { padding-left: 20px; }
-.appsheet-levelup-extras { margin-top: 8px !important; }
-.appsheet-levelup-prompt footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
-.appsheet-levelup-prompt footer .btn { width: auto; }
-
 .appsheet-edit-title span,
 .appsheet-edit-title b {
   display: block;

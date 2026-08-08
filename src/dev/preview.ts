@@ -68,13 +68,6 @@ export function isPreviewActive(): boolean {
   return import.meta.env.DEV && readPreviewRaw() !== null;
 }
 
-/** Extra preview knobs ride along in the preview string as extra tokens —
- * `parseIdentity` ignores what it doesn't know. E.g. `?preview=user.player.levelup`
- * gives the sample hunter a pending level-up so the LevelUpModal renders. */
-function previewHasFlag(flag: string): boolean {
-  return (readPreviewRaw() ?? "").toLowerCase().includes(flag);
-}
-
 /** A sample campaign so the main menu / scoped app render in preview mode. */
 export function previewCampaign(): import("@/types").Campaign {
   return {
@@ -275,9 +268,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     subclassId: "marksman",
     background: "Plague Doctor",
     level: 3,
-    // `…levelup` in the preview string leaves levels 2–3 unseen, so the
-    // level-up walk is reachable in preview (it needs level > lastSeenLevel).
-    lastSeenLevel: previewHasFlag("levelup") ? 1 : 3,
+    lastSeenLevel: 3,
     feats: ["Tough"],
     abilityMode: "pointbuy",
     abilities: { str: 12, dex: 15, con: 13, int: 10, wis: 12, cha: 8 },
