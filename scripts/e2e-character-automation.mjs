@@ -83,6 +83,25 @@ try {
   if (await rifleSlot.inputValue() !== "") throw new Error("New equipment should start Unassigned");
   await rifleSlot.selectOption("back");
   await page.getByTestId("appsheet-inventory").locator(".appsheet-item-slot").filter({ hasText: "Back" }).waitFor();
+  const toolBeltState = page.getByLabel("Tool Belt equipped state");
+  await toolBeltState.selectOption("equipped");
+  if (await toolBeltState.inputValue() !== "equipped") throw new Error("Tool Belt did not remain equipped");
+  if (await rifleSlot.locator("option").filter({ hasText: "Tool Belt slot 1" }).count() !== 1) {
+    throw new Error("Equipped Tool Belt did not offer its numbered carrying slots");
+  }
+  await rifleSlot.selectOption("storage:tool-belt:1");
+  await openAppDisclosure("Carrying setup");
+  if (await page.getByText("Storage worn on the body", { exact: true }).count()) {
+    throw new Error("Retired storage panel is still visible");
+  }
+  await page.getByText("Slot assignment", { exact: true }).waitFor();
+  await page.screenshot({ path: "screenshots/gear-carrying-desktop.png", fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await toolBeltState.scrollIntoViewIfNeeded();
+  await page.screenshot({ path: "screenshots/gear-carrying-mobile.png", fullPage: true });
+  const gearOverflow = await page.locator("[data-testid=appsheet-inventory]").evaluate((element) => element.scrollWidth > element.clientWidth);
+  if (gearOverflow) throw new Error("Gear inventory overflows the mobile viewport");
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByTestId("appsheet-background").selectOption("criminal");
   const appBackgroundDetails = page.getByTestId("background-details").first();
   await appBackgroundDetails.getByRole("heading", { name: "Criminal" }).waitFor();

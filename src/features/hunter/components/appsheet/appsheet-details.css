@@ -577,6 +577,12 @@
     grid-column: 2;
   }
 
+  /* Equipped / unequipped controls share the inventory row with the quantity
+   * stepper. Keep them in the content column rather than under that stepper. */
+  .appsheet-inventory-list > div > select {
+    grid-column: 2;
+  }
+
   .appsheet-inventory-list .appsheet-stepper {
     grid-column: 3;
     grid-row: 1 / 4;

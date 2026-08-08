@@ -1,9 +1,8 @@
 import { useMemo, useState } from "react";
 import { ITEMS } from "@/data/items";
 import { ARMOR_BY_ID } from "@/data/armor";
-import { STORAGE_DEFS } from "@/data/storage";
-import { itemFor } from "@/lib/customItems";
-import { resolveInventory } from "@/lib/inventory";
+import { STORAGE_BY_ITEM_ID } from "@/data/storage";
+import { resolveInventory, resolveStorage } from "@/lib/inventory";
 import { computeSlots, SLOT_LOCATION_LABEL, slotAssignmentOptions } from "@/lib/slots";
 import type { CarrySignificance, SlotAssignment } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
@@ -49,10 +48,17 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
     weaponNotes: "",
   });
   const inventory = resolveInventory(card);
+  // Worn storage leaves the carried inventory for weight/accounting purposes,
+  // but still belongs in this single equipment list so its state is editable
+  // beside every other item.
+  const displayInventory = useMemo(() => {
+    const entries = new Map(inventory.map(({ item, qty }) => [item.id, { item, qty }]));
+    for (const item of resolveStorage(card)) entries.set(item.id, { item, qty: 1 });
+    return [...entries.values()].sort((a, b) => a.item.category.localeCompare(b.item.category) || a.item.name.localeCompare(b.item.name));
+  }, [card, inventory]);
   const slots = computeSlots(card);
-  const inventoryIds = new Set((card.inventory ?? []).filter((entry) => entry.qty > 0).map((entry) => entry.itemId));
   const catalog = useMemo(() => ITEMS.filter((item) => item.category !== "Armor"), []);
-  const weapons = inventory.filter(({ item }) => item.category === "Weapon");
+  const weapons = displayInventory.filter(({ item }) => item.category === "Weapon");
 
   function addCatalogItem() {
     if (!catalogId) return;
@@ -91,10 +97,11 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
       )}
 
       <AppPanel title="Inventory" aside={<span className="appsheet-status-word">{inventory.length} item types</span>}>
-        {inventory.length ? (
+        {displayInventory.length ? (
           <div className="appsheet-inventory-list" data-testid="appsheet-inventory">
-            {inventory.map(({ item, qty }) => {
+            {displayInventory.map(({ item, qty }) => {
               const armor = ARMOR_BY_ID[item.id];
+              const storage = STORAGE_BY_ITEM_ID[item.id];
               const armorEquipped = armor?.category === "Main Armor"
                 ? card.mainArmorId === item.id
                 : armor?.category === "Add-on Armor"
@@ -102,13 +109,14 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
                   : armor?.category === "Extra"
                     ? (card.extraArmorIds ?? []).includes(item.id)
                     : false;
+              const storageEquipped = (card.equippedStorageIds ?? []).includes(item.id);
               const locations = slotAssignmentOptions(item.carry, card.equippedStorageIds, item.id, item.slotLocation);
               const assignments = card.slotAssignments?.[item.id] ?? [];
               return (
               <div key={item.id}>
                 <span className="appsheet-item-mark">{item.category.slice(0, 1)}</span>
                 <span className="appsheet-item-name"><b>{item.name}</b><small>{item.category} · {item.carry}{item.unique ? " · Unique" : ""}</small>
-                  {!armor && item.carry !== "Insignificant" && <span className="appsheet-item-assignments">
+                  {!armor && !storage && item.carry !== "Insignificant" && <span className="appsheet-item-assignments">
                     {Array.from({ length: qty }, (_, index) => (
                       <label key={index}>Item {index + 1}
                         <select
@@ -124,21 +132,23 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
                     ))}
                   </span>}
                 </span>
-                {armor ? (
+                {armor || storage ? (
                   <select
-                    aria-label={`${item.name} worn state`}
+                    aria-label={`${item.name} ${storage ? "equipped state" : "worn state"}`}
                     disabled={model.readOnly}
-                    value={armorEquipped ? "equipped" : "unequipped"}
+                    value={(armor ? armorEquipped : storageEquipped) ? "equipped" : "unequipped"}
                     onChange={(event) => {
                       const equip = event.target.value === "equipped";
-                      if (armor.category === "Main Armor") automation.chooseMainArmor(equip ? item.id : "");
-                      else if (armor.category === "Add-on Armor" && equip !== armorEquipped) automation.toggleAddonArmor(item.id);
-                      else if (armor.category === "Extra") automation.setExtra(armor.subcategory!, equip ? item.id : "");
+                      if (storage) {
+                        if (equip !== storageEquipped) automation.toggleStorage(item.id);
+                      } else if (armor?.category === "Main Armor") automation.chooseMainArmor(equip ? item.id : "");
+                      else if (armor?.category === "Add-on Armor" && equip !== armorEquipped) automation.toggleAddonArmor(item.id);
+                      else if (armor?.category === "Extra") automation.setExtra(armor.subcategory!, equip ? item.id : "");
                     }}
                   ><option value="equipped">Equipped</option><option value="unequipped">Unequipped</option></select>
                 ) : <span className="appsheet-item-slot">{slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unassigned")}</span>}
                 <span className="appsheet-item-weight">{Math.round(item.weightLb * qty * 10) / 10} lb</span>
-                <NumericStepper value={qty} label={`${item.name} quantity`} disabled={model.readOnly} onChange={(next) => automation.changeQty(item.id, next - qty)} />
+                <NumericStepper value={qty} label={`${item.name} quantity`} disabled={model.readOnly || storageEquipped} onChange={(next) => automation.changeQty(item.id, next - qty)} />
               </div>
               );
             })}
@@ -156,27 +166,6 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
         aside={slots.unstowed.length ? <span className="appsheet-incomplete">Check load</span> : undefined}
       >
       <div className="appsheet-two-column appsheet-disclosure-grid">
-        <AppPanel title="Storage worn on the body">
-          <div className="appsheet-storage-list">
-            {STORAGE_DEFS.map((definition) => {
-              const item = itemFor(card, definition.itemId);
-              if (!item) return null;
-              const equipped = (card.equippedStorageIds ?? []).includes(item.id);
-              return (
-                <div key={item.id} className={equipped ? "equipped" : ""}>
-                  <span><b>{item.name}</b><small>{definition.requires ? `Uses ${SLOT_LOCATION_LABEL[definition.requires.location]}` : "Uses no base slot"} · gives {definition.gives.count} {SLOT_LOCATION_LABEL[definition.gives.location]} slots</small></span>
-                  <button
-                    type="button"
-                    disabled={model.readOnly || (!equipped && !inventoryIds.has(item.id))}
-                    onClick={() => automation.toggleStorage(item.id)}
-                  >{equipped ? "Unequip" : inventoryIds.has(item.id) ? "Equip" : "Not carried"}</button>
-                </div>
-              );
-            })}
-          </div>
-          <AutoReason reason="Equipped storage leaves inventory, still counts toward weight, consumes its body slot, and grants its listed capacity." />
-        </AppPanel>
-
         <AppPanel title="Slot assignment">
           <div className="appsheet-slot-list">
             {slots.rows.map((row) => (
