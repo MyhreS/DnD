@@ -10,15 +10,12 @@ export function SheetCharacterView({
   card,
   autoOpen = true,
   onDismiss,
-  onDelete,
 }: {
   card: HunterCard;
   /** Pop the sheet open immediately (the "view a sheet character" behaviour). */
   autoOpen?: boolean;
   /** Called when the popup closes, so the caller can stop re-auto-opening. */
   onDismiss?: () => void;
-  /** When given, offers deletion inside the editor (main-menu Hunters only). */
-  onDelete?: (card: HunterCard) => Promise<boolean>;
 }) {
   const [open, setOpen] = useState(autoOpen);
   const cls = cardClassName(card);
@@ -41,7 +38,7 @@ export function SheetCharacterView({
           Open character
         </button>
       </div>
-      {open && <PaperSheetModal card={card} onClose={close} onDelete={onDelete} />}
+      {open && <PaperSheetModal card={card} onClose={close} />}
     </>
   );
 }

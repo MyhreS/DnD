@@ -66,6 +66,7 @@ try {
 
   await page.goto(`${BASE}/character?preview=user.player`, { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Hunters" }).waitFor({ timeout: 20000 });
+  await page.screenshot({ path: "screenshots/hunter-list-desktop.png", fullPage: true });
   await page.getByRole("button", { name: /Create (hunter|character)/ }).click();
   await page.getByTestId("app-character-sheet").waitFor();
   if (await page.getByText("Build & calculate", { exact: true }).count()) {
@@ -349,9 +350,10 @@ try {
   }
   await page.getByTestId("app-character-sheet").waitFor();
 
-  // Character deletion is reachable from the open editor (not hidden behind
-  // it), deliberately confirmed, cancellable, and returns to the hunter list.
-  const deleteTrigger = page.locator(".papersheet-toolbar").getByRole("button", { name: "Delete character" });
+  // Character deletion sits beside View character in the Hunters list, keeping
+  // the character editor focused on playing and editing the sheet.
+  await page.getByRole("button", { name: "Back" }).first().click();
+  const deleteTrigger = page.getByRole("button", { name: "Delete character" });
   await deleteTrigger.waitFor();
   await deleteTrigger.click();
   const deleteDialog = page.getByRole("dialog", { name: "Delete character?" });
@@ -375,7 +377,8 @@ try {
   await page.screenshot({ path: "screenshots/character-delete-confirmation-mobile.png", fullPage: true });
   await deleteDialog.getByRole("button", { name: "Cancel" }).click();
   if (await deleteDialog.count()) throw new Error("Cancel did not close the delete confirmation");
-  if (!await page.getByTestId("app-character-sheet").isVisible()) throw new Error("Cancel closed the character editor");
+  if (!await page.getByRole("heading", { name: "Hunters" }).isVisible()) throw new Error("Cancel left the hunters list");
+  await page.screenshot({ path: "screenshots/hunter-list-mobile.png", fullPage: true });
 
   await deleteTrigger.click();
   await deleteDialog.getByTestId("character-delete-confirmation").fill("Eileen the Crow");
