@@ -102,7 +102,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
               </div>
             ))}
           </div>
-        ) : <p className="appsheet-empty-copy">Choose a class and background for starting equipment, or add an item from the catalog.</p>}
+        ) : <p className="appsheet-empty-copy">Choose a class to receive its starting equipment, then add a background kit or catalog items.</p>}
         <div className="appsheet-coin-editor">
           <span><b>Gold pieces</b><small>Use the controls instead of retyping the total.</small></span>
           <NumericStepper value={card.coins ?? 0} label="gold pieces" disabled={model.readOnly} onChange={(coins) => model.setFields({ coins: String(coins) }, { coins })} />
