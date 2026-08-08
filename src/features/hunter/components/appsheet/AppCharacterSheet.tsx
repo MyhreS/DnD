@@ -8,6 +8,7 @@ import { AppFeaturesSection } from "./AppFeaturesSection";
 import { AppNotesSection } from "./AppNotesSection";
 import type { AppSheetModel } from "./appSheetShared";
 import { AppEditStage, AppEditTray } from "./AppEditStage";
+import { LevelUpPrompt } from "./LevelUpPrompt";
 import "./appsheet.css";
 import "./appsheet-details.css";
 
@@ -40,6 +41,7 @@ export function AppCharacterSheet({
           <AppNotesSection model={model} />
         </main>
         {!readOnly && <AppEditTray />}
+        <LevelUpPrompt card={card} readOnly={readOnly} />
       </div>
       </AppEditStage>
     </CharacterAutomationProvider>
