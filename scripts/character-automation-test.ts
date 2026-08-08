@@ -15,6 +15,13 @@ import {
 } from "../src/features/hunter/lib/characterAutomation";
 import { migrateLegacyCharacter } from "../src/features/hunter/lib/legacyMigration";
 import { levelAdjustedPool } from "../src/features/hunter/lib/levelUpVitals";
+import { levelForInsight } from "../src/lib/insight";
+import { insightAwardPatch } from "../src/features/hunter/lib/insightAward";
+
+assert.equal(levelForInsight(0), 1, "zero Insight is level one");
+assert.equal(levelForInsight(6), 2, "an Insight threshold immediately earns its level");
+assert.equal(levelForInsight(74), 5, "accumulated Insight retains all earlier levels");
+assert.equal(levelForInsight(950), 20, "the final Insight threshold earns level twenty");
 
 assert.equal(levelAdjustedPool(4, 10, 16, true), 16, "a pool is restored when a level-up increases its maximum");
 assert.equal(levelAdjustedPool(4, 10, 10, true), 4, "a level-up does not restore a pool whose maximum did not increase");
@@ -29,6 +36,14 @@ const warden = {
   abilities: { str: 10, dex: 12, con: 14, int: 10, wis: 15, cha: 13 },
   skillProficiencies: [],
 };
+
+const automaticLevel = insightAwardPatch({ ...warden, insight: 5, currentHp: 4, sanity: 3 }, 1);
+assert.equal(automaticLevel.insight, 6, "Insight awards are accumulated, not spent to level");
+assert.equal(automaticLevel.level, 2, "reaching an Insight threshold immediately levels the hunter");
+assert.equal(automaticLevel.lastSeenLevel, 2, "automatic levels do not reopen the retired confirmation prompt");
+assert.equal(automaticLevel.currentHp, 20, "automatic levels restore increased maximum HP");
+assert.equal(automaticLevel.sanity, 3, "unchanged maximum Sanity is not restored by a level");
+assert.deepEqual(insightAwardPatch({ ...warden, level: 2, lastSeenLevel: 2, insight: 6 }, 1), { insight: 7 }, "additional Insight keeps the earned level and total");
 
 const levelOne = automationFor(warden);
 assert.equal(levelOne.fields.class, "Warden");
