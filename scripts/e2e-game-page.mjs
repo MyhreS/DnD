@@ -251,14 +251,12 @@ try {
   await player.goto(`${BASE}/game?preview=user.player&game=history`, { waitUntil: "domcontentloaded" });
   await player.getByRole("heading", { name: "The Sunless Vault", exact: true }).waitFor();
   await player.getByText("Your Hunter", { exact: true }).waitFor();
-  const playerHistoryToggle = player.getByRole("button", { name: "History (1)" });
-  await playerHistoryToggle.waitFor();
-  if (await player.getByText("The Old Cathedral", { exact: true }).count()) {
-    throw new Error("Player session history should stay hidden by default");
+  if (await player.getByRole("button", { name: /History/ }).count()) {
+    throw new Error("An active player session must not expose session history controls");
   }
-  await playerHistoryToggle.click();
-  await player.getByText("The Old Cathedral", { exact: true }).waitFor();
-  await playerHistoryToggle.click();
+  if (await player.getByText("The Old Cathedral", { exact: true }).count()) {
+    throw new Error("An active player session must not expose session history");
+  }
   if (await player.getByText("Cleric Beast", { exact: true }).count()) throw new Error("Normal player session page exposes the encounter roster");
   if (await player.getByText("Players", { exact: true }).count()) throw new Error("Normal player session page exposes the party roster");
   await assertNoHorizontalOverflow(player, "Mobile Game page");

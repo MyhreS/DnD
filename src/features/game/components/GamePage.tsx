@@ -587,7 +587,7 @@ export function GamePage() {
                 <SessionLink game={activeGame} selected={activeGame.id === selectedId} onSelect={() => setSelectedId(activeGame.id)} />
               </div>
             )}
-            {history.length > 0 && (
+            {!activeGame && history.length > 0 && (
               <div className="game-session-group">
                 <button
                   className="game-history-toggle"
@@ -613,22 +613,8 @@ export function GamePage() {
                 </div>
                 <div className="game-session-top-actions">
                   {isSessionDm && selected.campaignId === null && selected.status !== "ended" && <button className="game-text-button" type="button" onClick={() => setManagingPlayers(true)}>Manage players</button>}
-                  {focusedPlayerSession && history.length > 0 && (
-                    <button
-                      className="game-history-toggle game-history-toggle-inline"
-                      type="button"
-                      aria-expanded={historyOpen}
-                      aria-controls="game-session-history"
-                      onClick={() => setHistoryOpen((open) => !open)}
-                    >
-                      <span>History ({history.length})</span>
-                      <span aria-hidden="true">{historyOpen ? "−" : "+"}</span>
-                    </button>
-                  )}
                 </div>
               </div>
-
-              {focusedPlayerSession && historyOpen && <div className="game-history-drawer"><SessionHistory games={history} selectedId={selectedId} onSelect={setSelectedId} /></div>}
 
               {isSessionDm && selected.status !== "ended" && (
                 <div className="game-primary-actions" aria-label="Session controls">
@@ -685,7 +671,7 @@ export function GamePage() {
 
 function SessionLink({ game, selected, onSelect }: { game: Game; selected: boolean; onSelect: () => void }) {
   return (
-    <button type="button" className={selected ? "game-session is-current" : "game-session"} onClick={onSelect}>
+    <button type="button" className={`game-session${selected ? " is-current" : ""}${game.status === "active" ? " is-live" : ""}`} onClick={onSelect}>
       <strong>{game.title}</strong>
       <span>{game.status === "lobby" ? "Waiting" : game.status === "active" ? "Live" : historyDate(game)}</span>
     </button>

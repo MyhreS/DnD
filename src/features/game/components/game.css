@@ -83,10 +83,7 @@
 }
 .game-history-toggle:hover { color: var(--ink); background: rgba(201, 164, 90, 0.05); }
 .game-history-toggle > span:last-child { font-size: 1rem; line-height: 0.8; }
-.game-history-toggle-inline { width: auto; border: 1px solid var(--border); padding: 5px 8px; color: var(--ink-dim); font-size: 0.68rem; }
 .game-history-list { display: grid; gap: 2px; }
-.game-history-drawer { margin: 12px 0 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-.game-history-drawer .game-session { padding-inline: 2px; }
 
 .game-session {
   display: grid;
@@ -105,6 +102,8 @@
 .game-session.is-current { border-left-color: var(--gold); color: var(--ink); background: rgba(201, 164, 90, 0.08); }
 .game-session strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-display); }
 .game-session span { color: var(--ink-faint); font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.08em; }
+.game-session.is-live span { color: var(--blood-bright); }
+.game-session.is-live span::before { content: ""; display: inline-block; width: 0.38rem; height: 0.38rem; margin: 0 0.42rem 0.08rem 0; border-radius: 50%; background: currentColor; }
 
 .game-table { min-width: 0; }
 .game-session-heading { padding-bottom: 14px; border-bottom: 1px solid var(--border-strong); }
@@ -164,6 +163,18 @@
 .game-notes-empty, .game-notes-error { margin: 0; color: var(--ink-faint); }
 .game-notes-error { color: var(--blood-bright); }
 .game-sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+
+/* A player at the table needs the current game, not a dashboard. */
+.game-layout.is-player-focus .game-session-heading { padding-bottom: 8px; border-bottom: 0; }
+.game-layout.is-player-focus .game-session-heading .eyebrow { margin-bottom: 2px; font-size: 0.68rem; }
+.game-layout.is-player-focus .game-session-heading h2 { font-size: clamp(1.2rem, 5.5vw, 1.45rem); }
+.game-layout.is-player-focus .game-focus-panel,
+.game-layout.is-player-focus .game-notes { padding: 18px 0; border-bottom: 0; }
+.game-layout.is-player-focus .game-focus-panel + .game-focus-panel,
+.game-layout.is-player-focus .game-focus-panel + .game-notes { padding-top: 12px; }
+.game-layout.is-player-focus .game-focus-panel h3,
+.game-layout.is-player-focus .game-notes h3 { font-size: clamp(1.05rem, 4.8vw, 1.25rem); }
+.game-layout.is-player-focus .game-notes > header { margin-bottom: 8px; }
 
 .game-dialog-backdrop { position: fixed; z-index: 60; inset: 0; display: grid; place-items: center; padding: 18px; overflow: hidden; overscroll-behavior: contain; background: rgba(5, 5, 8, 0.72); backdrop-filter: blur(5px); }
 .game-dialog { width: min(620px, 100%); max-height: min(760px, calc(100dvh - 36px)); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; padding: clamp(20px, 4vw, 30px); border: 1px solid var(--border-strong); border-radius: var(--radius-sm); background: var(--bg-elev); box-shadow: var(--shadow); }
@@ -466,9 +477,6 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-session-group { flex: 0 0 min(210px, 72vw); margin-bottom: 0; }
   .game-session { flex: 0 0 min(210px, 72vw); border-left: 0; border-bottom: 2px solid transparent; }
   .game-session.is-current { border-bottom-color: var(--gold); }
-  .game-history-toggle-inline { justify-self: end; }
-  .game-history-drawer .game-session { border-left: 0; border-bottom: 1px solid var(--border); }
-  .game-history-drawer .game-session.is-current { border-bottom-color: var(--gold); }
   .game-session-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
   .game-player { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; }
   .game-player-open { grid-template-columns: 1fr; gap: 3px; }
