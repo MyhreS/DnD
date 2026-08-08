@@ -134,6 +134,24 @@ try {
   const characterBuildDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Character build", { exact: true }) }).first();
   if (await characterBuildDisclosure.evaluate((element) => element.open)) throw new Error("Completed character build did not collapse to reduce clutter");
 
+  // Level-one hunters can still correct their creation ability scores after
+  // finishing setup; the normal point-buy rules must remain enforced.
+  await page.getByLabel("Strength app base").selectOption("14");
+  if (await page.getByLabel("Strength app base").inputValue() !== "14") {
+    throw new Error("Level-one ability scores remained locked after setup");
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
+  if (await page.getByLabel("Strength app base").inputValue() !== "14") {
+    throw new Error("Level-one ability scores were not available on mobile after setup");
+  }
+  await page.screenshot({ path: "screenshots/level-one-ability-edit-mobile.png", fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole("button", { name: "Increase level" }).click();
+  await page.getByRole("button", { name: "Apply changes" }).click();
+  if (await page.getByLabel("Strength app base").count()) {
+    throw new Error("Creation ability scores remained editable after level 1");
+  }
+
   await openAppSection("Combat & armor");
   await openAppDisclosure("Change worn armor");
   const wornArmorDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Change worn armor", { exact: true }) }).first();

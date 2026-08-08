@@ -214,8 +214,8 @@ export function PageOneAutomation() {
                 : `${pointsLeft} points left`}
           </span>
         </div>
-        {state.setupComplete ? (
-          <p className="sheet-auto-note">Creation scores are locked; level-up changes still update the sheet.</p>
+        {state.setupComplete && card.level > 1 ? (
+          <p className="sheet-auto-note">Creation scores lock at level 2; level-up changes still update the sheet.</p>
         ) : (
           <>
             <label className="sheet-auto-field">

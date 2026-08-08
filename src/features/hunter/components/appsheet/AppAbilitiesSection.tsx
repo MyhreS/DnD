@@ -17,6 +17,7 @@ import {
 export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
   const automation = useCharacterAutomation();
   const { card, result, state, klass, background, base, bonuses, pointsLeft, bonusUsed } = automation;
+  const canEditCreationAbilities = card.level === 1;
   const setupComplete = state.setupComplete === true;
   const classChoices = state.classSkills ?? [];
   const featChoices = card.featSkills ?? [];
@@ -35,7 +36,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
 
   return (
     <AppSection title="Abilities & skills">
-      {!setupComplete && (
+      {(!setupComplete || canEditCreationAbilities) && (
         <AppPanel title="Build ability scores" aside={<span className={pointsLeft === 0 ? "appsheet-complete" : "appsheet-incomplete"}>{pointsLeft ?? "Invalid"} points left</span>}>
           <AppSelect label="Ability method" value={automation.mode} disabled={model.readOnly} onChange={(event) => automation.switchMode(event.target.value as BuyMode)}>
             <option value="pointbuy">Standard point buy · 27 points</option>
@@ -134,7 +135,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
 
       {!setupComplete && !model.readOnly && (
         <div className="appsheet-finish-bar">
-          <div><b>{ready ? "Character decisions complete" : "Finish the remaining decisions"}</b><span>Lock creation scores when you are ready. Level-up choices remain available later.</span></div>
+          <div><b>{ready ? "Character decisions complete" : "Finish the remaining decisions"}</b><span>Ability scores remain editable at level 1. They lock when the character reaches level 2.</span></div>
           <button type="button" disabled={!ready} onClick={automation.finishSetup}>Finish setup</button>
         </div>
       )}
