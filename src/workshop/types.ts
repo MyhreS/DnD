@@ -41,21 +41,28 @@ export type WorkshopPresence = {
   lastSeenAt?: Timestamp;
 };
 
-export type AgentState = {
+export type AgentWorkState = {
+  progressStage?: number;
+  progressActivity?: string;
+  lastCompletedActivity?: string;
+  progressUpdatedAt?: Timestamp;
+  workStartedAt?: Timestamp;
+};
+
+export type AgentState = AgentWorkState & {
   lastHeartbeatAt?: Timestamp;
   workerId?: string;
   currentTicketId?: string | null;
+  activeTicketIds?: string[];
+  activeTicketCount?: number;
+  maxConcurrentTickets?: number;
+  activeTickets?: Record<string, AgentWorkState>;
   checkingNow?: boolean;
   triggerMode?: "realtime_with_fallback";
   fallbackIntervalMs?: number;
   watchingChanges?: boolean;
   model?: string;
   reasoningEffort?: string;
-  progressStage?: number;
-  progressActivity?: string;
-  lastCompletedActivity?: string;
-  progressUpdatedAt?: Timestamp;
-  workStartedAt?: Timestamp;
 };
 
 export const STATUS_LABELS: Record<WorkshopStatus, string> = {

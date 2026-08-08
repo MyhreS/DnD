@@ -1,10 +1,10 @@
 import { useCurrentTime } from "@/workshop/hooks/useAgentOnline";
-import type { AgentState } from "@/workshop/types";
+import type { AgentWorkState } from "@/workshop/types";
 
 const STAGE_COUNT = 5;
 const SLOW_PROGRESS_AFTER_MS = 10 * 60_000;
 
-function minutesSince(timestamp: AgentState["progressUpdatedAt"], now: number): number | null {
+function minutesSince(timestamp: AgentWorkState["progressUpdatedAt"], now: number): number | null {
   if (!timestamp) return null;
   return Math.max(0, Math.floor((now - timestamp.toMillis()) / 60_000));
 }
@@ -16,7 +16,7 @@ function updateAge(minutes: number | null): string {
   return `updated ${hours}h ago`;
 }
 
-function elapsedTime(timestamp: AgentState["workStartedAt"], now: number): string | null {
+function elapsedTime(timestamp: AgentWorkState["workStartedAt"], now: number): string | null {
   if (!timestamp) return null;
   const minutes = Math.max(0, Math.floor((now - timestamp.toMillis()) / 60_000));
   if (minutes < 1) return "under 1m elapsed";
@@ -28,7 +28,7 @@ function elapsedTime(timestamp: AgentState["workStartedAt"], now: number): strin
 
 type WorkActivityProps = {
   placement: "list" | "detail";
-  state: AgentState | null;
+  state: AgentWorkState | null;
   online: boolean;
 };
 

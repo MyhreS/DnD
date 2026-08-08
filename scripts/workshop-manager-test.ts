@@ -1,5 +1,6 @@
 import {
   WORKSHOP_MODEL,
+  WORKSHOP_MAX_CONCURRENT_TICKETS,
   WORKSHOP_REASONING_EFFORT,
   outcomeMessage,
   parseAgentResult,
@@ -36,6 +37,7 @@ assert(channelContext.includes("not automatically approval or an answer"), "work
 assert(channelContext.includes("GitHub Actions being unavailable are not Workshop decisions"), "worker must own temporary service recovery");
 assert(WORKSHOP_MODEL === "gpt-5.6-terra", "Workshop must use Terra explicitly");
 assert(WORKSHOP_REASONING_EFFORT === "medium", "Workshop must use medium reasoning explicitly");
+assert(WORKSHOP_MAX_CONCURRENT_TICKETS === 3, "Workshop must run at most three ticket agents");
 const codexArgs = workshopCodexArgs("schema.json", "result.json", "prompt");
 assert(codexArgs.includes("gpt-5.6-terra"), "coding command must pin Terra");
 assert(codexArgs.includes('model_reasoning_effort="medium"'), "coding command must pin medium reasoning");

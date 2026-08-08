@@ -23,7 +23,12 @@ export function WorkshopApp() {
     return <AccessScreen mode={session.status} onSignIn={session.signIn} onSignOut={session.signOut} />;
   }
   const selected = ticketBatch.tickets.find((ticket) => ticket.id === selectedId) ?? null;
-  const activeTicketId = session.agentState?.currentTicketId ?? null;
+  const reportedActiveTicketIds = session.agentState?.activeTicketIds ?? [];
+  const activeTicketIds = reportedActiveTicketIds.length > 0
+    ? reportedActiveTicketIds
+    : session.agentState?.currentTicketId ? [session.agentState.currentTicketId] : [];
+  const workStateFor = (ticketId: string) => session.agentState?.activeTickets?.[ticketId]
+    ?? (session.agentState?.currentTicketId === ticketId ? session.agentState : null);
   return (
     <div className="workshop-app">
       <header className="workshop-header">
@@ -46,7 +51,7 @@ export function WorkshopApp() {
           uid={session.user!.uid}
           hasMore={ticketBatch.hasMore}
           loadingMore={ticketBatch.loadingMore}
-          activeTicketId={activeTicketId}
+          activeTicketIds={activeTicketIds}
           agentState={session.agentState}
           agentOnline={agentOnline}
           onLoadMore={ticketBatch.loadMore}
@@ -62,8 +67,8 @@ export function WorkshopApp() {
           ticketId={selectedId}
           initialTicket={selected}
           uid={session.user!.uid}
-          isWorking={activeTicketId === selectedId}
-          agentState={session.agentState}
+          isWorking={activeTicketIds.includes(selectedId)}
+          agentState={workStateFor(selectedId)}
           agentOnline={agentOnline}
           people={presence.people}
           onClose={closeSelected}
