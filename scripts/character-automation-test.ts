@@ -7,7 +7,7 @@ import { ITEMS } from "../src/data/items";
 import { startingKit } from "../src/lib/startingEquipment";
 import { computeSlots, slotAssignmentOptions } from "../src/lib/slots";
 import { characterSheetUpdate } from "../src/features/hunter/lib/sheetPersistence";
-import { TOOL_PROFICIENCIES, WHISPERS } from "../src/data/characterOptions";
+import { DEEPCALLER_RITES, TOOL_PROFICIENCIES, WHISPERS } from "../src/data/characterOptions";
 import {
   automationFor,
   matchCatalogItem,
@@ -152,6 +152,8 @@ for (const background of BACKGROUNDS) {
   assert.deepEqual(background.equipment, rules[4] === "—" ? [] : rules[4].split(", "), `${background.name} equipment`);
 }
 assert.deepEqual(WHISPERS.map((whisper) => whisper.name), master.rites.whispers.whispers.map((whisper) => whisper.name), "Whisper dropdown matches master.json");
+assert.ok(DEEPCALLER_RITES.some((rite) => rite.name === "Armor of the Drowned Star"), "Deepcaller reference uses Armor of the Drowned Star");
+assert.ok(DEEPCALLER_RITES.some((rite) => rite.name === "Arms of Haster"), "Deepcaller reference uses Arms of Haster");
 assert.ok(TOOL_PROFICIENCIES.includes("Poisoner's Kit") && TOOL_PROFICIENCIES.includes("Blood-drainer's Tools"));
 for (const conflict of master.sourceConflicts.find((entry) => entry.topic.startsWith("Sanity")).perClass) {
   const klass = CLASSES.find((entry) => entry.id === conflict.class);

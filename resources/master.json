@@ -443,10 +443,6 @@
       "note": "The handbook's Types of Rites table (line 1545) lists 'Teleportation Rite', while the standalone rite-school PDFs (and the app's RiteType/rites data) use 'Traversal'. Same category; record only — confirm the canonical name with the DM."
     },
     {
-      "topic": "Armor of Agathys renamed to Armor of The Drowned Star",
-      "note": "The current handbook names the rite 'Armor of The Drowned Star' (Zealot feature 'Carved Armor of The Drowned Star', line 1581) and rites.bookOfDeepcaller carries the renamed rite; the standalone Protection Rite PDF (mirrored verbatim in rites.bySchool) still says 'Armor of Agathys'. The unified Codex shows both source versions separately; master's prestigeClass uses the Drowned Star name while bySchool keeps the verbatim older source."
-    },
-    {
       "topic": "Call Starborn Horror — Madness values (standalone Summoning Rite PDF vs V1.0 Book of The Deepcaller)",
       "note": "The two sources disagree on all four Madness figures for the Level 9 Summoning Rite 'Call Starborn Horror'. The standalone Summoning Rite PDF (mirrored verbatim in rites.bySchool and resources/extracted/content.json) gives the LOWER figures: on a failed save a creature suffers 6 Madness; on a success 2 Madness; each other creature that sees or hears the Horror suffers 2 Madness; the caster suffers 6 Madness. The (presumably newer) V1.0 Book of The Deepcaller (mirrored verbatim in rites.bookOfDeepcaller) gives the HIGHER figures: 10 / 5 / 4 / 10 respectively. The Mind damage (10d10), the Frightened condition and the 5-round duration are identical in both. The unified Codex shows both source versions separately. Confirm the canonical figures with the DM; if the Book of The Deepcaller wins, update resources/extracted/content.json and master.json rites.bySchool to 10/5/4/10, then regenerate the Codex. Do not change unilaterally."
     },
@@ -4682,7 +4678,7 @@
         "school": "Protection",
         "rites": [
           {
-            "name": "Armor of Agathys",
+            "name": "Armor of the Drowned Star",
             "level": 1,
             "whisper": false,
             "performing": "Bonus Action",
@@ -4720,7 +4716,7 @@
             "upgrade": ""
           },
           {
-            "name": "Arms of Hadar",
+            "name": "Arms of Haster",
             "level": 1,
             "whisper": false,
             "performing": "Action",
