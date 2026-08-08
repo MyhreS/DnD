@@ -144,6 +144,20 @@ try {
   if (ritesOverflow) throw new Error("Deepcaller Rite reference overflows the mobile viewport");
   await page.setViewportSize({ width: 1440, height: 1000 });
   await page.getByTestId("appsheet-class").selectOption("warden");
+  const weaponReference = await openAppDisclosure("Weapons");
+  await weaponReference.getByText("Hunter Rifle", { exact: true }).waitFor();
+  const rifleReference = weaponReference.locator(".appsheet-weapon-reference").filter({ has: page.getByText("Hunter Rifle", { exact: true }) });
+  await rifleReference.locator(":scope > summary").click();
+  await rifleReference.getByText("1d10", { exact: true }).waitFor();
+  await rifleReference.getByText("Piercing", { exact: true }).waitFor();
+  await rifleReference.getByText("Damage roll", { exact: true }).waitFor();
+  await weaponReference.screenshot({ path: "screenshots/weapon-reference-desktop.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await weaponReference.screenshot({ path: "screenshots/weapon-reference-mobile.png" });
+  if (await weaponReference.evaluate((element) => element.scrollWidth > element.clientWidth)) {
+    throw new Error("Weapon reference overflows the mobile viewport");
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await openAppSection("Gear & carrying");
   await page.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
   const rifleSlot = page.getByLabel("Hunter Rifle item 1 carrying slot");

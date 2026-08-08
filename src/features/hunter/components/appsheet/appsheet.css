@@ -963,6 +963,34 @@
 .appsheet-rite-reference dd { margin: 2px 0 0; color: var(--app-text); font: 13px/1.25 "Alegreya", serif; }
 .appsheet-rite-reference a { color: var(--app-warm); font-size: 13px; }
 
+.appsheet-weapon-reference-note {
+  margin: 0;
+  color: var(--app-muted);
+  font: 13px/1.35 "Alegreya", serif;
+}
+
+.appsheet-weapons-disclosure .appsheet-panel + .appsheet-panel { margin-top: 20px; }
+
+.appsheet-weapon-bonuses {
+  display: grid;
+  gap: 8px;
+}
+
+.appsheet-weapon-bonuses > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--app-line);
+}
+
+.appsheet-weapon-bonuses > div:last-child { border-bottom: 0; }
+.appsheet-weapon-bonuses span { min-width: 0; }
+.appsheet-weapon-bonuses b, .appsheet-weapon-bonuses small { display: block; }
+.appsheet-weapon-bonuses b { font-size: 14px; }
+.appsheet-weapon-bonuses small { margin-top: 2px; color: var(--app-muted); font: 12px/1.3 "Alegreya", serif; }
+.appsheet-weapon-bonuses strong { flex: none; color: var(--app-warm); font-size: 13px; text-align: right; }
+
 .appsheet-ability-builder {
   margin: 18px 0;
 }

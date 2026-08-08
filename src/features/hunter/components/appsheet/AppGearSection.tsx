@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { ITEMS } from "@/data/items";
+import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { ARMOR_BY_ID } from "@/data/armor";
 import { resolveInventory } from "@/lib/inventory";
 import { computeSlots, SLOT_LOCATION_LABEL, slotAssignmentOptions } from "@/lib/slots";
@@ -16,20 +17,6 @@ import {
   NumericStepper,
   type AppSheetModel,
 } from "./appSheetShared";
-
-const WEAPON_FACTS: Record<string, { damage: string; properties: string; mastery: string }> = {
-  dagger: { damage: "1d4 Piercing", properties: "Finesse, Light, Thrown (20/60)", mastery: "Nick" },
-  handaxe: { damage: "1d6 Slashing", properties: "Light, Thrown (20/60)", mastery: "Vex" },
-  sickle: { damage: "1d4 Slashing", properties: "Light", mastery: "Nick" },
-  greataxe: { damage: "1d12 Slashing", properties: "Heavy, Two-Handed", mastery: "Cleave" },
-  greatsword: { damage: "2d6 Slashing", properties: "Heavy, Two-Handed", mastery: "Graze" },
-  longsword: { damage: "1d8 Slashing", properties: "Versatile (1d10)", mastery: "Sap" },
-  scimitar: { damage: "1d6 Slashing", properties: "Finesse, Light", mastery: "Nick" },
-  shortsword: { damage: "1d6 Piercing", properties: "Finesse, Light", mastery: "Vex" },
-  "hunter-rifle": { damage: "1d10 Piercing", properties: "Ammunition (100/400; Bullet), Two-Handed", mastery: "Slow" },
-  pistol: { damage: "1d10 Piercing", properties: "Ammunition (30/90; Bullet)", mastery: "Vex" },
-  "hunter-cleaver": { damage: "—", properties: "Unique Scout weapon; statistics set by the DM", mastery: "—" },
-};
 
 export function AppGearSection({ model }: { model: AppSheetModel }) {
   const automation = useCharacterAutomation();
@@ -177,7 +164,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
               return (
                 <div key={item.id}>
                   <span><b>{item.name}</b>{qty > 1 ? ` ×${qty}` : ""}</span>
-                  <span><small className="appsheet-weapon-label">Damage</small>{custom?.damage || facts?.damage || "—"}</span>
+                  <span><small className="appsheet-weapon-label">Damage</small>{custom?.damage || weaponDamageLabel(facts)}</span>
                   <span><small className="appsheet-weapon-label">Properties</small>{custom?.weaponNotes || facts?.properties || item.note || "—"}</span>
                   <span><small className="appsheet-weapon-label">Mastery</small>{facts?.mastery || "—"}</span>
                 </div>
