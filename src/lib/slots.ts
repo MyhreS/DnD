@@ -3,7 +3,7 @@
 // applies each player's saved choice for every Significant/Oversized inventory
 // UNIT. An item remains Unassigned until the player chooses a valid slot.
 
-import type { HunterCard, SlotLocation } from "@/types";
+import type { CarrySignificance, HunterCard, SlotAssignment, SlotLocation } from "@/types";
 import { BASE_SLOTS, STORAGE_BY_ITEM_ID } from "@/data/storage";
 import { resolveInventory } from "@/lib/inventory";
 
@@ -14,6 +14,38 @@ export const SLOT_LOCATION_LABEL: Record<SlotLocation, string> = {
   hip: "Hip",
   ankle: "Ankle",
 };
+
+export interface SlotAssignmentOption {
+  value: SlotAssignment;
+  label: string;
+}
+
+/** Choices shown for an item. Worn storage gets its own numbered compartments
+ * so a player can deliberately put an item in, for example, Tool belt slot 3
+ * rather than the ordinary hip slot the belt itself occupies. */
+export function slotAssignmentOptions(
+  carry: CarrySignificance,
+  equippedStorageIds: string[] | undefined,
+  itemId: string,
+  pinned?: SlotLocation,
+): SlotAssignmentOption[] {
+  const body: SlotLocation[] = pinned ? [pinned] : carry === "Oversized" ? ["hand"] : ["hand", "back", "chest", "hip", "ankle"];
+  if (carry === "Oversized") return body.map((location) => ({ value: location, label: SLOT_LOCATION_LABEL[location] }));
+
+  const storage = (equippedStorageIds ?? []).flatMap((storageId) => {
+    const definition = STORAGE_BY_ITEM_ID[storageId];
+    if (!definition || (definition.gives.only && !definition.gives.only.includes(itemId))) return [];
+    return Array.from({ length: definition.gives.count }, (_, index) => ({
+      value: `storage:${storageId}:${index + 1}` as SlotAssignment,
+      label: `${itemForStorage(storageId)} slot ${index + 1}`,
+    }));
+  });
+  return [...body.map((location) => ({ value: location, label: SLOT_LOCATION_LABEL[location] })), ...storage];
+}
+
+function itemForStorage(itemId: string): string {
+  return itemId.split("-").map((word) => `${word[0].toUpperCase()}${word.slice(1)}`).join(" ");
+}
 
 /** One slot pool the panel renders, e.g. "Significant (back) 1/7 — Rope". */
 export interface SlotRow {
@@ -51,11 +83,14 @@ interface Pool {
   used: number;
   only?: string[];
   note?: string;
+  storageItemId?: string;
+  occupiedSlots?: Set<number>;
   items: Map<string, { name: string; count: number }>;
 }
 
-function stow(pool: Pool, itemId: string, name: string): void {
+function stow(pool: Pool, itemId: string, name: string, storageSlot?: number): void {
   pool.used += 1;
+  if (storageSlot) pool.occupiedSlots?.add(storageSlot);
   const cur = pool.items.get(itemId);
   if (cur) cur.count += 1;
   else pool.items.set(itemId, { name, count: 1 });
@@ -98,6 +133,8 @@ export function computeSlots(
       used: 0,
       only: def.gives.only,
       note: def.gives.only ? "Dagger or Pistol only" : undefined,
+      storageItemId: def.itemId,
+      occupiedSlots: new Set(),
       items: new Map(),
     });
   }
@@ -107,17 +144,18 @@ export function computeSlots(
   const handFreeFor = (kind: "significant" | "oversized") =>
     kind === "significant" ? handOver.used === 0 : handSig.used === 0;
 
-  const fits = (pool: Pool, itemId: string, kind: "significant" | "oversized") =>
+  const fits = (pool: Pool, itemId: string, kind: "significant" | "oversized", storageSlot?: number) =>
     pool.kind === kind &&
     pool.used < pool.capacity &&
     (!pool.only || pool.only.includes(itemId)) &&
+    (!storageSlot || (storageSlot <= pool.capacity && !pool.occupiedSlots?.has(storageSlot))) &&
     (pool.location !== "hand" || hasSack || handFreeFor(kind));
 
   // Inventory units, qty-expanded (clamped per entry); insignificant items
   // take no slot. Existing hunters have no saved choices, so they are shown as
   // Unassigned rather than being silently placed somewhere.
-  const entries = resolveInventory(card).filter((e) => e.item.carry !== "Insignificant");
-  type Unit = { itemId: string; name: string; kind: "significant" | "oversized"; assigned?: SlotLocation };
+  const entries = resolveInventory(card).filter((e) => e.item.carry !== "Insignificant" && e.item.category !== "Armor");
+  type Unit = { itemId: string; name: string; kind: "significant" | "oversized"; assigned?: SlotAssignment };
   const units: Unit[] = [];
   const clampedIds = new Set<string>();
   for (const { item, qty } of entries) {
@@ -138,11 +176,16 @@ export function computeSlots(
   const unstowedMap = new Map<string, { itemId: string; name: string; count: number; clamped?: boolean }>();
 
   for (const u of ordered) {
-    const candidates = u.assigned ? pools.filter((p) => p.location === u.assigned) : [];
-    const pool = candidates.find((p) => fits(p, u.itemId, u.kind));
+    const storageMatch = u.assigned?.match(/^storage:([^:]+):(\d+)$/);
+    const storageId = storageMatch?.[1];
+    const storageSlot = storageMatch ? Number(storageMatch[2]) : undefined;
+    const candidates = storageId
+      ? pools.filter((p) => p.storageItemId === storageId)
+      : u.assigned ? pools.filter((p) => p.location === u.assigned) : [];
+    const pool = candidates.find((p) => fits(p, u.itemId, u.kind, storageSlot));
     if (pool) {
-      stow(pool, u.itemId, u.name);
-      record(u.itemId, SLOT_LOCATION_LABEL[pool.location]);
+      stow(pool, u.itemId, u.name, storageSlot);
+      record(u.itemId, storageId ? `${itemForStorage(storageId)} slot ${storageSlot}` : SLOT_LOCATION_LABEL[pool.location]);
     } else {
       record(u.itemId, "Unassigned");
       const cur = unstowedMap.get(u.itemId);

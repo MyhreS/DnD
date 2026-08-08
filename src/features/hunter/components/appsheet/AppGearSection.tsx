@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { ITEMS } from "@/data/items";
+import { ARMOR_BY_ID } from "@/data/armor";
 import { STORAGE_DEFS } from "@/data/storage";
 import { itemFor } from "@/lib/customItems";
 import { resolveInventory } from "@/lib/inventory";
-import { computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
-import type { CarrySignificance, SlotLocation } from "@/types";
+import { computeSlots, SLOT_LOCATION_LABEL, slotAssignmentOptions } from "@/lib/slots";
+import type { CarrySignificance, SlotAssignment } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import {
   AppDisclosure,
@@ -31,11 +32,6 @@ const WEAPON_FACTS: Record<string, { damage: string; properties: string; mastery
   pistol: { damage: "1d10 Piercing", properties: "Ammunition (30/90; Bullet)", mastery: "Vex" },
   "hunter-cleaver": { damage: "—", properties: "Unique Scout weapon; statistics set by the DM", mastery: "—" },
 };
-
-function assignmentLocations(carry: CarrySignificance, pinned?: SlotLocation): SlotLocation[] {
-  if (pinned) return [pinned];
-  return carry === "Oversized" ? ["hand"] : ["hand", "back", "chest", "hip", "ankle"];
-}
 
 export function AppGearSection({ model }: { model: AppSheetModel }) {
   const automation = useCharacterAutomation();
@@ -98,29 +94,49 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
         {inventory.length ? (
           <div className="appsheet-inventory-list" data-testid="appsheet-inventory">
             {inventory.map(({ item, qty }) => {
-              const locations = assignmentLocations(item.carry, item.slotLocation);
+              const armor = ARMOR_BY_ID[item.id];
+              const armorEquipped = armor?.category === "Main Armor"
+                ? card.mainArmorId === item.id
+                : armor?.category === "Add-on Armor"
+                  ? (card.addonArmorIds ?? []).includes(item.id)
+                  : armor?.category === "Extra"
+                    ? (card.extraArmorIds ?? []).includes(item.id)
+                    : false;
+              const locations = slotAssignmentOptions(item.carry, card.equippedStorageIds, item.id, item.slotLocation);
               const assignments = card.slotAssignments?.[item.id] ?? [];
               return (
               <div key={item.id}>
                 <span className="appsheet-item-mark">{item.category.slice(0, 1)}</span>
                 <span className="appsheet-item-name"><b>{item.name}</b><small>{item.category} · {item.carry}{item.unique ? " · Unique" : ""}</small>
-                  {item.carry !== "Insignificant" && <span className="appsheet-item-assignments">
+                  {!armor && item.carry !== "Insignificant" && <span className="appsheet-item-assignments">
                     {Array.from({ length: qty }, (_, index) => (
                       <label key={index}>Item {index + 1}
                         <select
                           aria-label={`${item.name} item ${index + 1} carrying slot`}
                           disabled={model.readOnly}
                           value={assignments[index] ?? ""}
-                          onChange={(event) => automation.setSlotAssignment(item.id, index, event.target.value as SlotLocation || null)}
+                          onChange={(event) => automation.setSlotAssignment(item.id, index, event.target.value as SlotAssignment || null)}
                         >
                           <option value="">Unassigned</option>
-                          {locations.map((location) => <option key={location} value={location}>{SLOT_LOCATION_LABEL[location]}</option>)}
+                          {locations.map((location) => <option key={location.value} value={location.value}>{location.label}</option>)}
                         </select>
                       </label>
                     ))}
                   </span>}
                 </span>
-                <span className="appsheet-item-slot">{slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unassigned")}</span>
+                {armor ? (
+                  <select
+                    aria-label={`${item.name} worn state`}
+                    disabled={model.readOnly}
+                    value={armorEquipped ? "equipped" : "unequipped"}
+                    onChange={(event) => {
+                      const equip = event.target.value === "equipped";
+                      if (armor.category === "Main Armor") automation.chooseMainArmor(equip ? item.id : "");
+                      else if (armor.category === "Add-on Armor" && equip !== armorEquipped) automation.toggleAddonArmor(item.id);
+                      else if (armor.category === "Extra") automation.setExtra(armor.subcategory!, equip ? item.id : "");
+                    }}
+                  ><option value="equipped">Equipped</option><option value="unequipped">Unequipped</option></select>
+                ) : <span className="appsheet-item-slot">{slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unassigned")}</span>}
                 <span className="appsheet-item-weight">{Math.round(item.weightLb * qty * 10) / 10} lb</span>
                 <NumericStepper value={qty} label={`${item.name} quantity`} disabled={model.readOnly} onChange={(next) => automation.changeQty(item.id, next - qty)} />
               </div>

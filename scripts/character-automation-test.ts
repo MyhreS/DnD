@@ -4,7 +4,7 @@ import { emptySheetCard } from "../src/lib/character";
 import { CLASSES } from "../src/data/classes";
 import { BACKGROUNDS } from "../src/data/backgrounds";
 import { startingKit } from "../src/lib/startingEquipment";
-import { computeSlots } from "../src/lib/slots";
+import { computeSlots, slotAssignmentOptions } from "../src/lib/slots";
 import { characterSheetUpdate } from "../src/features/hunter/lib/sheetPersistence";
 import { TOOL_PROFICIENCIES, WHISPERS } from "../src/data/characterOptions";
 import {
@@ -88,6 +88,12 @@ for (const klass of CLASSES) {
 const deepcallerKit = startingKit(CLASSES.find((klass) => klass.id === "deepcaller"), null);
 assert.ok(deepcallerKit.inventory.some((entry) => entry.itemId === "robe"), "Deepcaller class kit includes its robe");
 assert.ok(deepcallerKit.inventory.some((entry) => entry.itemId === "book-of-eldritch-knowledge"), "Deepcaller class kit includes its book");
+const equippedRobe = automationFor({
+  ...warden,
+  inventory: [{ itemId: "robe", qty: 1 }],
+  extraArmorIds: ["robe"],
+});
+assert.equal(equippedRobe.fields.weight, "4 lb", "an equipped owned garment is not counted twice");
 for (const background of BACKGROUNDS) {
   assert.deepEqual(startingKit(undefined, background).unmatched, [], `${background.name} background kit maps to catalog`);
 }
@@ -140,6 +146,29 @@ const chosenSlots = computeSlots({
 });
 assert.equal(chosenSlots.byItem.longsword, "Back", "a selected slot is used");
 assert.equal(chosenSlots.byItem.dagger, "Hip · Chest", "multiple units can use separate chosen slots");
+const beltOptions = slotAssignmentOptions("Significant", ["tool-belt"], "longsword");
+assert.deepEqual(
+  beltOptions.filter((option) => option.value.startsWith("storage:" )).map((option) => option.label),
+  ["Tool Belt slot 1", "Tool Belt slot 2", "Tool Belt slot 3", "Tool Belt slot 4"],
+  "worn storage exposes individual numbered compartments",
+);
+const beltSlots = computeSlots({
+  inventory: [{ itemId: "longsword", qty: 1 }, { itemId: "dagger", qty: 2 }],
+  equippedStorageIds: ["tool-belt"],
+  customItems: [],
+  slotAssignments: {
+    longsword: ["storage:tool-belt:3"],
+    dagger: ["storage:tool-belt:1", "storage:tool-belt:2"],
+  },
+});
+assert.equal(beltSlots.byItem.longsword, "Tool Belt slot 3", "a selected tool belt compartment is shown by name");
+assert.equal(beltSlots.byItem.dagger, "Tool Belt slot 1 · Tool Belt slot 2", "separate items can use separate tool belt compartments");
+assert.equal(beltSlots.unstowed.length, 0, "numbered storage compartments hold the selected items");
+const invalidBeltSlot = computeSlots({
+  inventory: [{ itemId: "longsword", qty: 1 }], equippedStorageIds: ["tool-belt"], customItems: [],
+  slotAssignments: { longsword: ["storage:tool-belt:5"] },
+});
+assert.equal(invalidBeltSlot.byItem.longsword, "Unassigned", "a storage assignment cannot exceed its numbered capacity");
 
 const foundGear = automationFor({
   ...warden,

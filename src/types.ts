@@ -3,6 +3,8 @@
 export type AbilityKey = "str" | "dex" | "con" | "int" | "wis" | "cha";
 
 export type ArmorTraining = "Light armor" | "Medium armor" | "Heavy armor";
+/** A body location, or one numbered compartment inside worn storage. */
+export type SlotAssignment = SlotLocation | `storage:${string}:${number}`;
 
 export interface SkillChoice {
   count: number;
@@ -527,7 +529,7 @@ export interface HunterCard {
   /** Player-chosen carrying location for each significant or oversized item
    * unit. Missing entries are deliberately unassigned; nothing is placed in a
    * body/storage slot until the player chooses where it goes. */
-  slotAssignments?: Record<string, Array<SlotLocation | null>>;
+  slotAssignments?: Record<string, Array<SlotAssignment | null>>;
   /** Unique weapons, armor, and gear found during play outside the handbook. */
   customItems?: CustomItem[];
   /** Recently dropped lines, recoverable for 15 minutes (see DroppedItem). */
