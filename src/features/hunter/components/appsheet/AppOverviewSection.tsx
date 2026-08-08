@@ -17,6 +17,7 @@ import {
 } from "./appSheetShared";
 import { sheetBool, sheetText } from "./appSheetValues";
 import { useAppEditStage } from "./appEditStageContext";
+import { AppWeaponReference } from "./AppWeaponReference";
 
 function numeric(value: string, fallback = 0): number {
   const parsed = Number.parseInt(value, 10);
@@ -245,6 +246,8 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
             </AppPanel>
           </AppDisclosure>
         )}
+
+        <AppWeaponReference card={card} klass={klass} />
 
         <AppDisclosure
           title="Battle resources"
