@@ -50,7 +50,11 @@ function withStartingKit(card: HunterCard): HunterCard {
   const withoutOld = removeInventory(card.inventory ?? [], state?.startingKitInventory ?? []);
   const oldCoins = state?.startingKitCoins ?? 0;
   const kit = startingKit(getClass(card.classId), BACKGROUNDS.find((entry) => entry.id === card.backgroundId));
-  if (!card.classId || !card.backgroundId) {
+  // A class kit is mandatory in its own right, so grant it as soon as the
+  // player chooses a class. Background equipment is folded in later when a
+  // background is selected; requiring both here left a new hunter temporarily
+  // without their class-defining gear (such as the Deepcaller's robe and book).
+  if (!card.classId) {
     return {
       ...card,
       inventory: withoutOld,

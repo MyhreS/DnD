@@ -84,6 +84,9 @@ for (const klass of CLASSES) {
   }
   assert.deepEqual(startingKit(klass, null).unmatched, [], `${klass.name} class kit maps to catalog`);
 }
+const deepcallerKit = startingKit(CLASSES.find((klass) => klass.id === "deepcaller"), null);
+assert.ok(deepcallerKit.inventory.some((entry) => entry.itemId === "robe"), "Deepcaller class kit includes its robe");
+assert.ok(deepcallerKit.inventory.some((entry) => entry.itemId === "book-of-eldritch-knowledge"), "Deepcaller class kit includes its book");
 for (const background of BACKGROUNDS) {
   assert.deepEqual(startingKit(undefined, background).unmatched, [], `${background.name} background kit maps to catalog`);
 }
