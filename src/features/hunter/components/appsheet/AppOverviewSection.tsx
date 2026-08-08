@@ -1,5 +1,6 @@
 import { BACKGROUNDS } from "@/data/backgrounds";
 import { CLASSES } from "@/data/classes";
+import { BackgroundDetails } from "../BackgroundDetails";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import {
   AppDisclosure,
@@ -118,6 +119,7 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
               <option value="">Choose background…</option>
               {BACKGROUNDS.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
             </AppSelect>
+            <BackgroundDetails background={background} className="appsheet-background-details" />
             <DecisionField label="Level">
               <div className="appsheet-stepper" data-testid="appsheet-level">
                 <button type="button" aria-label="Decrease level" disabled={model.readOnly || editStage.previewCard.level <= 1} onClick={() => editStage.stageLevel(editStage.previewCard.level - 1)}>−</button>

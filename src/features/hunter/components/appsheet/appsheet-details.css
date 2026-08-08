@@ -479,6 +479,10 @@
     grid-template-columns: 1fr;
   }
 
+  .background-details dl {
+    grid-template-columns: 1fr;
+  }
+
   .appsheet-overview-layout {
     grid-template-areas:
       "state"

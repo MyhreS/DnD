@@ -10,6 +10,7 @@ import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { maxAddonPieces } from "@/lib/character";
 import { armorFor, itemFor } from "@/lib/customItems";
 import type { AbilityKey, CarrySignificance, HunterCard } from "@/types";
+import { BackgroundDetails } from "../BackgroundDetails";
 import type { BuyMode } from "../../lib/abilityBuy";
 import { Chk, F, Sel, Ta } from "./sheetPrimitives";
 import { useCharacterAutomation } from "./characterAutomationContext";
@@ -199,6 +200,8 @@ export function PageOneAutomation() {
       <p className="sheet-auto-note">
         Make choices here on the sheet. Gold-marked fields update from the cited rules.
       </p>
+
+      <BackgroundDetails background={background} className="sheet-background-details" />
 
       <div className="sheet-auto-subsection">
         <div className="sheet-auto-subtitle">
