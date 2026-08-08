@@ -50,15 +50,17 @@
 .battle-column-headings,
 .battle-row {
   display: grid;
-  grid-template-columns: 42px minmax(150px, 1.25fr) 112px 112px 96px minmax(150px, 1fr) auto;
+  grid-template-columns: 42px minmax(180px, 1.25fr) 112px 112px 112px minmax(160px, 1fr) max-content;
   gap: clamp(8px, 1.2vw, 18px);
   align-items: center;
 }
 .battle-column-headings {
-  padding: 8px 14px;
+  padding: 9px 12px;
   color: var(--ink-faint);
   font-size: clamp(0.65rem, 0.8vw, 0.78rem);
 }
+.battle-column-headings span:nth-child(n + 3):not(:nth-child(6)) { text-align: center; }
+.battle-column-headings span:last-child { text-align: right; }
 .battle-row {
   min-height: 72px;
   padding: 10px 12px;
@@ -74,8 +76,9 @@
 .battle-name strong { overflow: hidden; font-family: var(--font-display); font-size: clamp(1.05rem, 1.45vw, 1.45rem); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .battle-name span { color: var(--ink-faint); font-size: 0.8rem; }
 .battle-ac { font-family: var(--font-display); font-size: clamp(1.15rem, 1.5vw, 1.45rem); font-variant-numeric: tabular-nums; }
-.battle-value { display: grid; grid-template-columns: 28px minmax(30px, auto) 28px; align-items: center; justify-content: start; gap: 2px; }
+.battle-value { display: grid; grid-template-columns: 28px minmax(30px, 1fr) 28px; align-items: center; gap: 2px; }
 .battle-value strong { min-width: 30px; text-align: center; font-family: var(--font-display); font-size: clamp(1.15rem, 1.5vw, 1.45rem); font-variant-numeric: tabular-nums; line-height: 1; }
+.battle-value:not(:has(button)) { grid-template-columns: 1fr; justify-items: center; }
 .battle-value button {
   width: 28px;
   height: 28px;
@@ -90,7 +93,7 @@
 .battle-value button:hover:not(:disabled) { background: var(--bg-elev-2); color: var(--ink); }
 .battle-value button:disabled { opacity: 0.25; cursor: default; }
 .battle-damage .battle-value strong { color: var(--blood-bright); }
-.battle-damage > span { color: var(--ink-faint); font-size: 0.75rem; }
+.battle-damage > span { display: block; color: var(--ink-faint); font-size: 0.75rem; text-align: center; }
 .battle-damage-track { width: 100%; height: 3px; margin-top: 7px; background: var(--bg-elev-3); }
 .battle-damage-track span { display: block; height: 100%; background: var(--blood-bright); }
 .battle-conditions { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; }
@@ -182,16 +185,38 @@
 
 @media (max-width: 980px) {
   .battle-column-headings { display: none; }
-  .battle-row { grid-template-columns: 36px minmax(0, 1fr) 104px 104px 46px auto; }
-  .battle-conditions { grid-column: 2 / -1; }
+  .battle-row {
+    grid-template-columns: 36px minmax(0, 1fr) 104px 104px 46px max-content;
+    grid-template-areas:
+      "position name initiative damage ac actions"
+      ". conditions conditions conditions conditions conditions";
+  }
+  .battle-position { grid-area: position; }
+  .battle-name { grid-area: name; }
+  .battle-initiative { grid-area: initiative; }
+  .battle-damage { grid-area: damage; }
+  .battle-ac { grid-area: ac; }
+  .battle-conditions { grid-area: conditions; }
+  .battle-row-actions { grid-area: actions; }
 }
 
 /* MainLayout's desktop sidebar reduces the available Game-page width well
  * before the viewport itself reaches the tablet breakpoint. */
 @media (min-width: 981px) and (max-width: 1390px) {
   .game-battle-mode .battle-column-headings { display: none; }
-  .game-battle-mode .battle-row { grid-template-columns: 36px minmax(0, 1fr) 104px 104px 46px auto; }
-  .game-battle-mode .battle-conditions { grid-column: 2 / -1; }
+  .game-battle-mode .battle-row {
+    grid-template-columns: 36px minmax(0, 1fr) 104px 104px 46px max-content;
+    grid-template-areas:
+      "position name initiative damage ac actions"
+      ". conditions conditions conditions conditions conditions";
+  }
+  .game-battle-mode .battle-position { grid-area: position; }
+  .game-battle-mode .battle-name { grid-area: name; }
+  .game-battle-mode .battle-initiative { grid-area: initiative; }
+  .game-battle-mode .battle-damage { grid-area: damage; }
+  .game-battle-mode .battle-ac { grid-area: ac; }
+  .game-battle-mode .battle-conditions { grid-area: conditions; }
+  .game-battle-mode .battle-row-actions { grid-area: actions; }
 }
 
 @media (max-width: 560px) {
@@ -200,13 +225,40 @@
   .battle-live-status { max-width: 100%; text-align: left; }
   .battle-header-actions { width: 100%; }
   .battle-header-actions > * { flex: 1; text-align: center; }
-  .battle-row { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 6px 8px; padding: 10px 4px; }
-  .battle-initiative { grid-column: 2; }
-  .battle-damage { grid-column: 3; grid-row: 2; }
-  .battle-ac { grid-column: 3; grid-row: 1; text-align: right; }
-  .battle-conditions { grid-column: 2 / -1; }
-  .battle-row-actions { grid-column: 2 / -1; justify-self: start; }
-  .battle-value { grid-template-columns: 32px minmax(30px, auto) 32px; }
+  .battle-row {
+    grid-template-columns: 24px minmax(0, 1fr) max-content;
+    grid-template-areas:
+      "position name actions"
+      ". initiative damage"
+      ". ac ac"
+      ". conditions conditions";
+    gap: 8px;
+    padding: 12px 4px;
+  }
+  .battle-initiative,
+  .battle-damage,
+  .battle-ac {
+    position: relative;
+    padding-left: 48px;
+  }
+  .battle-initiative::before,
+  .battle-damage::before,
+  .battle-ac::before {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    color: var(--ink-faint);
+    font-family: var(--font-body);
+    font-size: 0.7rem;
+    transform: translateY(-50%);
+  }
+  .battle-initiative::before { content: "Init"; }
+  .battle-damage::before { content: "Damage"; }
+  .battle-ac::before { content: "AC"; }
+  .battle-damage > span,
+  .battle-damage-track { display: none; }
+  .battle-row-actions { justify-self: end; }
+  .battle-value { grid-template-columns: 32px minmax(30px, 1fr) 32px; }
   .battle-value button { width: 32px; height: 32px; }
   .game-battle-toolbar { justify-content: flex-start; flex-wrap: wrap; gap: 10px; padding: 10px 0; }
 }
