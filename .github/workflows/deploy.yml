@@ -59,7 +59,17 @@ jobs:
             --connect-timeout 20 --max-time 180 \
             https://cli.doppler.com/install.sh \
             -o "$RUNNER_TEMP/install-doppler.sh"
-          sh "$RUNNER_TEMP/install-doppler.sh" --install-path "$RUNNER_TEMP/doppler-bin"
+          for attempt in 1 2 3; do
+            if sh "$RUNNER_TEMP/install-doppler.sh" --install-path "$RUNNER_TEMP/doppler-bin"; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Doppler CLI installation failed after $attempt attempts."
+              exit 1
+            fi
+            rm -f "$RUNNER_TEMP/doppler-bin/doppler"
+            sleep $((attempt * 3))
+          done
           echo "$RUNNER_TEMP/doppler-bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/doppler-bin/doppler" --version
 
