@@ -8,6 +8,43 @@
 import { registerSW } from "virtual:pwa-register";
 import { create } from "zustand";
 
+const PWA_UPDATE_LOCATION_KEY = "pwa-update-location";
+
+/**
+ * iOS can reopen a standalone PWA at its manifest start URL while it applies
+ * an update. Remember the current in-app URL so the reload still returns the
+ * player to the page they chose.
+ */
+function rememberLocationForUpdate(): void {
+  try {
+    sessionStorage.setItem(
+      PWA_UPDATE_LOCATION_KEY,
+      `${window.location.pathname}${window.location.search}${window.location.hash}`,
+    );
+  } catch {
+    // Storage can be unavailable in private browsing. A normal reload still
+    // retains its URL, so this is only a best-effort safeguard for iOS PWAs.
+  }
+}
+
+function restoreLocationAfterUpdate(): void {
+  try {
+    const savedLocation = sessionStorage.getItem(PWA_UPDATE_LOCATION_KEY);
+    sessionStorage.removeItem(PWA_UPDATE_LOCATION_KEY);
+    if (!savedLocation) return;
+
+    const savedUrl = new URL(savedLocation, window.location.origin);
+    if (savedUrl.origin !== window.location.origin || !savedUrl.pathname.startsWith("/")) return;
+
+    const target = `${savedUrl.pathname}${savedUrl.search}${savedUrl.hash}`;
+    const current = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    if (target !== current) window.history.replaceState(window.history.state, "", target);
+  } catch {
+    // If a stale or invalid saved location cannot be restored, let normal app
+    // routing decide where to send the player.
+  }
+}
+
 interface PwaUpdateState {
   /** A newer build is installed and waiting to take over. */
   needRefresh: boolean;
@@ -21,6 +58,10 @@ export const usePwaUpdate = create<PwaUpdateState>(() => ({
 }));
 
 export function setupPwaUpdates(): void {
+  // Run before BrowserRouter is created so it sees the page from before the
+  // update instead of an iOS PWA's manifest start URL.
+  restoreLocationAfterUpdate();
+
   // One-off cleanup: an earlier build runtime-cached the 26MB handbook PDF,
   // which can exhaust the small iOS PWA storage quota and white-screen the app
   // on relaunch. We no longer cache it; drop that orphaned cache to free space.
@@ -59,6 +100,7 @@ export function setupPwaUpdates(): void {
   // reload picks it up.
   usePwaUpdate.setState({
     update: () => {
+      rememberLocationForUpdate();
       const waiting = swRegistration?.waiting;
       if (!waiting) {
         window.location.reload();
