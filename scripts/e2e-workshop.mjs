@@ -21,9 +21,11 @@ const db = getAdminFirestore(admin);
 const simonUid = "workshop-e2e-simon";
 const creatorUid = "workshop-e2e-creator";
 const thomasUid = "workshop-e2e-thomas";
+const tobiasUid = "workshop-e2e-tobias";
 const outsiderUid = "workshop-e2e-outsider";
 const creatorEmail = "myhrefjeld@gmail.com";
 const thomasEmail = "thmyhre9@gmail.com";
+const tobiasEmail = "03tobiasmyhre@gmail.com";
 
 async function user(uid, email, displayName) {
   try { await auth.deleteUser(uid); } catch { /* absent */ }
@@ -31,10 +33,11 @@ async function user(uid, email, displayName) {
   return auth.createCustomToken(uid);
 }
 
-const [simonToken, creatorToken, thomasToken, outsiderToken] = await Promise.all([
+const [simonToken, creatorToken, thomasToken, tobiasToken, outsiderToken] = await Promise.all([
   user(simonUid, "simonmyhre1@gmail.com", "Simon Myhre"),
   user(creatorUid, creatorEmail, "Christopher Creator"),
   user(thomasUid, thomasEmail, "Thomas Myhre"),
+  user(tobiasUid, tobiasEmail, "Tobias Myhre"),
   user(outsiderUid, "outsider-workshop@example.test", "Outside User"),
 ]);
 await db.doc(`workshopMembers/${outsiderUid}`).set({
@@ -226,7 +229,11 @@ try {
     simon.page.getByTestId("collaborator-presence").getByText("2 others here", { exact: true }).waitFor(),
     creator.page.getByTestId("collaborator-presence").getByText("2 others here", { exact: true }).waitFor(),
   ]);
-  const approvedMembers = await Promise.all([simonUid, creatorUid, thomasUid].map((uid) => db.doc(`workshopMembers/${uid}`).get()));
+  const tobias = await openAs(browser, tobiasToken, { width: 390, height: 844 });
+  watch(tobias.page, errors);
+  await waitForWorkspace(tobias.page, "Tobias");
+  await noOverflow(tobias.page, "Tobias Workshop mobile");
+  const approvedMembers = await Promise.all([simonUid, creatorUid, thomasUid, tobiasUid].map((uid) => db.doc(`workshopMembers/${uid}`).get()));
   if (approvedMembers.some((member) => member.data()?.role !== "admin")) {
     throw new Error("Approved Workshop accounts did not receive equal admin access.");
   }

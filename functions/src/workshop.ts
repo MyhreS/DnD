@@ -5,7 +5,8 @@ import { HttpsError, onCall, type CallableRequest } from "firebase-functions/v2/
 const ADMIN_EMAIL = "simonmyhre1@gmail.com";
 const CREATOR_EMAIL = "myhrefjeld@gmail.com";
 const THOMAS_EMAIL = "thmyhre9@gmail.com";
-const WORKSHOP_EMAILS = new Set([ADMIN_EMAIL, CREATOR_EMAIL, THOMAS_EMAIL]);
+const TOBIAS_EMAIL = "03tobiasmyhre@gmail.com";
+const WORKSHOP_EMAILS = new Set([ADMIN_EMAIL, CREATOR_EMAIL, THOMAS_EMAIL, TOBIAS_EMAIL]);
 const REGION = "europe-west1";
 const MAX_BODY = 8_000;
 const MAX_ATTACHMENTS = 5;

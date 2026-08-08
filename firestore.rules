@@ -28,7 +28,7 @@ service cloud.firestore {
 
     function isWorkshopAccount() {
       return isUser()
-        && emailKey() in ["simonmyhre1@gmail.com", "myhrefjeld@gmail.com", "thmyhre9@gmail.com"];
+        && emailKey() in ["simonmyhre1@gmail.com", "myhrefjeld@gmail.com", "thmyhre9@gmail.com", "03tobiasmyhre@gmail.com"];
     }
 
     function isWorkshopMember() {
