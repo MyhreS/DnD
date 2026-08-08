@@ -1,5 +1,6 @@
 import { WHISPERS } from "@/data/characterOptions";
-import { SKILLS } from "@/data/skills";
+import { ABILITY_NAME } from "@/data/abilities";
+import { SKILL_BY_NAME, SKILLS } from "@/data/skills";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import {
   AppDisclosure,
@@ -26,6 +27,10 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
   const classChoiceRemaining = Math.max(0, expertiseLimit - expertise.length)
     + Math.max(0, masteryCount - masteries.length)
     + Math.max(0, whisperLimit - whispers.length);
+  const choiceAbility = (choice: string) => {
+    const skill = SKILL_BY_NAME[choice];
+    return skill ? `Ability: ${ABILITY_NAME[skill.ability]}` : undefined;
+  };
 
   return (
     <AppSection title="Features & choices">
@@ -51,7 +56,7 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
       {expertiseLimit > 0 && (
         <AppPanel title="Expertise" aside={<span className={expertise.length === expertiseLimit ? "appsheet-complete" : "appsheet-incomplete"}>{expertise.length}/{expertiseLimit}</span>}>
           <div className="appsheet-choice-list">
-            {proficientSkills.map((skill) => <ChoiceToggle key={skill.name} label={skill.name} checked={expertise.includes(skill.name)} disabled={model.readOnly || (!expertise.includes(skill.name) && expertise.length >= expertiseLimit)} onChange={() => automation.toggleExpertise(skill.name)} />)}
+            {proficientSkills.map((skill) => <ChoiceToggle key={skill.name} label={skill.name} meta={choiceAbility(skill.name)} checked={expertise.includes(skill.name)} disabled={model.readOnly || (!expertise.includes(skill.name) && expertise.length >= expertiseLimit)} onChange={() => automation.toggleExpertise(skill.name)} />)}
           </div>
           <AutoReason reason={`${klass?.title} progression grants Expertise in ${expertiseLimit} proficient ${expertiseLimit === 1 ? "skill" : "skills"} at this level.`} />
         </AppPanel>

@@ -1,6 +1,6 @@
-import { ABILITIES, MADUHAUSU_MAX, MADUHAUSU_MIN, POINT_BUY_MAX, POINT_BUY_MIN } from "@/data/abilities";
+import { ABILITIES, ABILITY_NAME, MADUHAUSU_MAX, MADUHAUSU_MIN, POINT_BUY_MAX, POINT_BUY_MIN } from "@/data/abilities";
 import { TOOL_PROFICIENCIES } from "@/data/characterOptions";
-import { SHEET_SKILL_FIELD, SKILLS } from "@/data/skills";
+import { SHEET_SKILL_FIELD, SKILL_BY_NAME, SKILLS } from "@/data/skills";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import type { BuyMode } from "../../lib/abilityBuy";
 import {
@@ -28,6 +28,10 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
     && bonusUsed === 3
     && classRemaining === 0
     && featRemaining === 0;
+  const choiceAbility = (choice: string) => {
+    const skill = SKILL_BY_NAME[choice];
+    return skill ? `Ability: ${ABILITY_NAME[skill.ability]}` : "No ability required";
+  };
 
   return (
     <AppSection title="Abilities & skills">
@@ -71,7 +75,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
         <AppPanel title={`${klass.title} skill choices`} aside={<span className={classRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{classRemaining} left</span>}>
           <div className="appsheet-choice-list">
             {klass.skillChoices.options.map((skill) => (
-              <ChoiceToggle key={skill} label={skill} checked={classChoices.includes(skill)} disabled={model.readOnly} onChange={() => automation.toggleClassSkill(skill)} />
+              <ChoiceToggle key={skill} label={skill} meta={choiceAbility(skill)} checked={classChoices.includes(skill)} disabled={model.readOnly} onChange={() => automation.toggleClassSkill(skill)} />
             ))}
           </div>
           <AutoReason reason={`${klass.title} grants ${klass.skillChoices.count} class skill proficiencies. Background skills are added separately.`} />
@@ -84,7 +88,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
         <AppPanel title="Skilled feat choices" aside={<span className={featRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{featRemaining} left</span>}>
           <div className="appsheet-choice-list compact">
             {[...SKILLS.map((skill) => skill.name), ...TOOL_PROFICIENCIES].map((choice) => (
-              <ChoiceToggle key={choice} label={choice} checked={featChoices.includes(choice)} disabled={model.readOnly} onChange={() => automation.toggleFeatSkill(choice)} />
+              <ChoiceToggle key={choice} label={choice} meta={choiceAbility(choice)} checked={featChoices.includes(choice)} disabled={model.readOnly} onChange={() => automation.toggleFeatSkill(choice)} />
             ))}
           </div>
           <AutoReason reason="The Skilled background feat grants any combination of three skills or tool proficiencies." />
