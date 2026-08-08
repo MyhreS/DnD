@@ -78,6 +78,10 @@ try {
   await page.getByTestId("appsheet-name").fill("App Warden");
   await page.getByTestId("appsheet-class").selectOption("warden");
   await page.getByTestId("appsheet-class").selectOption("deepcaller");
+  if (!await page.getByText("Maximum 16 · Sanity die 1d20", { exact: true }).count()) {
+    throw new Error("Deepcaller Sanity Die was not shown in the overview");
+  }
+  await page.locator(".appsheet-current-state").screenshot({ path: "screenshots/sanity-die-overview-desktop.png" });
   const strains = page.getByTestId("appsheet-strains");
   await strains.waitFor();
   if (await strains.getByRole("status", { name: "Strains left" }).textContent() !== "2") throw new Error("Level-one Deepcaller did not receive two available Strains");
@@ -99,6 +103,7 @@ try {
   await preparedWhispers.getByText("1 × 1d10 Eldritch Power · 120 feet", { exact: true }).waitFor();
   await page.screenshot({ path: "screenshots/deepcaller-strains-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
+  await page.locator(".appsheet-current-state").screenshot({ path: "screenshots/sanity-die-overview-mobile.png" });
   await strains.screenshot({ path: "screenshots/deepcaller-strains-mobile.png" });
   await riteReference.screenshot({ path: "screenshots/deepcaller-rites-mobile.png" });
   const strainOverflow = await strains.evaluate((element) => element.scrollWidth > element.clientWidth);
