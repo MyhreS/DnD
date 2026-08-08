@@ -40,7 +40,9 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
       damageTaken: current === null || vitals.hpMax === null
         ? null
         : Math.max(0, vitals.hpMax - current),
-      ac: vitals.ac,
+      // An AC recorded on the combatant is the DM's encounter-only override.
+      // A missing value deliberately falls back to the Hunter sheet.
+      ac: combatant.ac ?? vitals.ac,
     };
   }
 
@@ -51,7 +53,7 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
     currentHp: current,
     maxHp: maximum,
     damageTaken: current === null || maximum === null ? null : Math.max(0, maximum - current),
-    ac: armorClass(
+    ac: combatant.ac ?? armorClass(
       card.abilities,
       card.mainArmorId,
       card.addonArmorIds,
