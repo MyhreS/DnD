@@ -20,6 +20,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
   const [editingSkills, setEditingSkills] = useState(false);
   const { card, result, state, klass, background, base, bonuses, pointsLeft, bonusUsed } = automation;
   const setupComplete = state.setupComplete === true;
+  const canEditCreationScores = !setupComplete || card.level === 1;
   const classChoices = state.classSkills ?? [];
   const featChoices = card.featSkills ?? [];
   const classRemaining = Math.max(0, (klass?.skillChoices.count ?? 0) - classChoices.length);
@@ -37,7 +38,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
 
   return (
     <AppSection title="Abilities & skills">
-      {!setupComplete && (
+      {canEditCreationScores && (
         <AppPanel title="Build ability scores" aside={<span className={pointsLeft === 0 ? "appsheet-complete" : "appsheet-incomplete"}>{pointsLeft ?? "Invalid"} points left</span>}>
           <AppSelect label="Ability method" value={automation.mode} disabled={model.readOnly} onChange={(event) => automation.switchMode(event.target.value as BuyMode)}>
             <option value="pointbuy">Standard point buy · 27 points</option>

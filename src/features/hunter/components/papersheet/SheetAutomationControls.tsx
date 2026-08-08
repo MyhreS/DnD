@@ -186,6 +186,7 @@ export function PageOneAutomation() {
   const pendingCount = Object.values(result.pending).filter(Boolean).length;
   const classRemaining = result.pending.classSkills?.remaining ?? 0;
   const featRemaining = Math.max(0, 3 - (card.featSkills?.length ?? 0));
+  const canEditCreationScores = !state.setupComplete || card.level === 1;
 
   return (
     <AutoBlock
@@ -209,12 +210,12 @@ export function PageOneAutomation() {
           <span className={pointsLeft === 0 ? "" : "pending"}>
             {pointsLeft === null
               ? "Invalid buy"
-              : state.setupComplete
+              : !canEditCreationScores
                 ? `${pointsLeft} points unspent at creation`
                 : `${pointsLeft} points left`}
           </span>
         </div>
-        {state.setupComplete ? (
+        {!canEditCreationScores ? (
           <p className="sheet-auto-note">Creation scores are locked; level-up changes still update the sheet.</p>
         ) : (
           <>
