@@ -45,7 +45,11 @@ export function BattleCombatantRow({
   }
 
   function changeInitiative(delta: number) {
-    const initiative = Math.min(99, Math.max(-99, combatant.initiative + delta));
+    setInitiative(String(combatant.initiative + delta));
+  }
+
+  function setInitiative(value: string) {
+    const initiative = Math.min(99, Math.max(-99, Number.parseInt(value, 10) || 0));
     if (initiative !== combatant.initiative) void patch(game.id, combatant.id, { initiative });
   }
 
@@ -66,7 +70,19 @@ export function BattleCombatantRow({
       </div>
       <div className="battle-value battle-initiative">
         {canManage && <button type="button" aria-label={`Decrease ${combatant.name} initiative`} disabled={disabled || combatant.initiative <= -99} onClick={() => changeInitiative(-1)}>−</button>}
-        <strong aria-label={`${combatant.name} initiative ${combatant.initiative}`}>{combatant.initiative}</strong>
+        {canManage
+          ? <input
+              key={combatant.initiative}
+              type="number"
+              min="-99"
+              max="99"
+              defaultValue={combatant.initiative}
+              aria-label={`Set ${combatant.name} initiative`}
+              disabled={disabled}
+              onBlur={(event) => setInitiative(event.target.value)}
+              onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }}
+            />
+          : <strong aria-label={`${combatant.name} initiative ${combatant.initiative}`}>{combatant.initiative}</strong>}
         {canManage && <button type="button" aria-label={`Increase ${combatant.name} initiative`} disabled={disabled || combatant.initiative >= 99} onClick={() => changeInitiative(1)}>+</button>}
       </div>
       <div className="battle-damage">

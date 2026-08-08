@@ -76,6 +76,21 @@
 .battle-ac { font-family: var(--font-display); font-size: clamp(1.15rem, 1.5vw, 1.45rem); font-variant-numeric: tabular-nums; }
 .battle-value { display: grid; grid-template-columns: 28px minmax(30px, auto) 28px; align-items: center; justify-content: start; gap: 2px; }
 .battle-value strong { min-width: 30px; text-align: center; font-family: var(--font-display); font-size: clamp(1.15rem, 1.5vw, 1.45rem); font-variant-numeric: tabular-nums; line-height: 1; }
+.battle-initiative input {
+  width: 42px;
+  min-width: 0;
+  padding: 2px 0;
+  border: 0;
+  border-bottom: 1px solid var(--border-strong);
+  border-radius: 0;
+  background: transparent;
+  color: var(--ink);
+  font: clamp(1.15rem, 1.5vw, 1.45rem)/1 var(--font-display);
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+.battle-initiative input:focus { outline: 2px solid var(--gold); outline-offset: 2px; }
+.battle-initiative input:disabled { opacity: 0.45; }
 .battle-value button {
   width: 28px;
   height: 28px;

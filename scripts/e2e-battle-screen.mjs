@@ -264,6 +264,11 @@ try {
   await enemyControl.getByRole("button", { name: "Increase Moon Beast initiative" }).click();
   await enemyControl.getByLabel("Moon Beast initiative -98").waitFor();
   await enemyControl.getByRole("button", { name: "Decrease Moon Beast initiative" }).click();
+  await enemyControl.getByLabel("Set Moon Beast initiative").fill("12");
+  await enemyControl.getByLabel("Set Moon Beast initiative").press("Enter");
+  await playerPage.getByLabel("Moon Beast initiative 12").waitFor();
+  const directInitiativeEnemy = await db.doc(`games/${gameId}/combatants/${enemyId}`).get();
+  if (directInitiativeEnemy.data()?.initiative !== 12) throw new Error("Direct initiative edit did not update the battle record.");
   await enemyControl.getByLabel("Add condition to Moon Beast").selectOption("poisoned");
   await enemyDisplay.getByText(/Poisoned/).waitFor();
 
