@@ -62,13 +62,18 @@ assert(grappled, "Grappled must be searchable");
 assert(grappled.versions.some((entry) => entry.sourceId === "rules-reference-scan"), "Grappled is missing D&D provenance");
 assert(grappled.versions.some((entry) => entry.sourceId === "game-card"), "Grappled is missing Game Card provenance");
 assert(searchEntries(CODEX_TOPICS, "hunter rifle").some((topic) => topic.versions.some((entry) => entry.sourceId === "game-card")));
+assert.equal(searchEntries(CODEX_TOPICS, "hunter rifle")[0]?.term, "Hunter Rifle", "item-name searches should open the exact Game Card row");
+assert.equal(searchEntries(CODEX_TOPICS, "longsword")[0]?.term, "Longsword", "weapon-name searches should open the exact Game Card row");
 assert(searchEntries(CODEX_TOPICS, "blood frenzy").some((topic) => topic.versions.some((entry) => entry.sourceId === "bloodbound")));
 assert(CODEX_TOPICS.filter((topic) => topic.versions.length > 1).length >= 40, "expected multi-source topic comparisons");
 const generatedTableCount = (sourceId: string) => CODEX_ENTRIES
   .filter((entry) => entry.sourceId === sourceId)
   .reduce((count, entry) => count + entry.tables.length, 0);
 assert.equal(generatedTableCount("rules-reference-scan"), master.rulesReference.tableCount, "every D&D rules table must be searchable");
-assert.equal(generatedTableCount("game-card"), 24, "every Game Card table must be searchable");
+assert.equal(CODEX_ENTRIES
+  .filter((entry) => entry.sourceId === "game-card" && !entry.id.includes("-table-"))
+  .reduce((count, entry) => count + entry.tables.length, 0), 24, "every Game Card table must be searchable");
+assert(CODEX_ENTRIES.some((entry) => entry.id.includes("game-card-weapons-table-") && entry.term === "Hunter Rifle"), "Game Card table rows must have exact searchable entries");
 for (const source of CODEX_SOURCES) {
   assert(CODEX_ENTRIES.some((entry) => entry.sourceId === source.id), `${source.id} has no searchable entries`);
 }
