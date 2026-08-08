@@ -246,13 +246,25 @@ try {
   if (await playerPage.getByRole("button", { name: "+ Add enemy" }).count()) throw new Error("Player can add enemies.");
   if (await playerPage.locator(".game-battle-toolbar").count()) throw new Error("Player can see the DM control bar.");
   if (await dmPage.getByRole("button", { name: "Manage battle" }).count()) throw new Error("Manage battle should not be needed during a battle.");
-  if (await dmPage.locator(".battle-row-controls").count() < 2) throw new Error("DM combatant controls are not available in the battle screen.");
+  if (await dmPage.getByRole("button", { name: /Decrease .* initiative/ }).count() < 2) throw new Error("Compact DM initiative controls are not available in the battle screen.");
   if (await dmPage.locator(".battle-name").filter({ hasText: "Lady Maria" }).count() !== 1) throw new Error("The Hunter is duplicated in the default battle view.");
   if (await dmPage.locator(".game-battle-toolbar button").count() < 3) throw new Error("The DM battle actions are not available directly.");
 
   const enemyControl = dmPage.getByTestId(`battle-combatant-${enemyId}`);
-  await enemyControl.getByLabel("Add condition to Moon Beast").selectOption("poisoned");
   const enemyDisplay = playerPage.getByTestId(`battle-combatant-${enemyId}`);
+  await enemyControl.getByRole("button", { name: "Mark Moon Beast dead" }).click();
+  await enemyControl.getByText("Enemy · dead", { exact: true }).waitFor();
+  await enemyDisplay.getByText("Enemy · dead", { exact: true }).waitFor();
+  await enemyControl.getByRole("button", { name: "Revive Moon Beast" }).click();
+  await enemyControl.getByText("Enemy", { exact: true }).waitFor();
+  await enemyDisplay.getByText("Enemy", { exact: true }).waitFor();
+  await enemyControl.getByLabel("More options for Moon Beast").click();
+  await enemyControl.getByRole("button", { name: "Reset stats", exact: true }).click();
+  await enemyControl.getByLabel("More options for Moon Beast").click();
+  await enemyControl.getByRole("button", { name: "Increase Moon Beast initiative" }).click();
+  await enemyControl.getByLabel("Moon Beast initiative -98").waitFor();
+  await enemyControl.getByRole("button", { name: "Decrease Moon Beast initiative" }).click();
+  await enemyControl.getByLabel("Add condition to Moon Beast").selectOption("poisoned");
   await enemyDisplay.getByText(/Poisoned/).waitFor();
 
   const playerEnemyText = await enemyDisplay.innerText();
@@ -260,17 +272,18 @@ try {
     throw new Error(`Hidden monster data leaked to the player: ${playerEnemyText}`);
   }
 
-  const enemyCard = dmPage.locator(".game-enemy").filter({ hasText: "Moon Beast" });
-  await enemyCard.getByRole("button", { name: "+5", exact: true }).click();
+  await enemyControl.getByLabel("More options for Moon Beast").click();
+  await enemyControl.getByRole("button", { name: "Add 5 damage" }).click();
   if ((await enemyDisplay.innerText()).includes("5")) throw new Error("Player saw exact damage before the DM revealed HP.");
-  await enemyCard.getByLabel("HP visible").check();
+  await enemyControl.getByRole("button", { name: "Show HP" }).click();
   await enemyDisplay.getByText("5", { exact: true }).waitFor();
-  await enemyDisplay.getByText("taken", { exact: true }).waitFor();
-  await enemyCard.getByLabel("Stats visible").check();
+  await enemyDisplay.getByText("damage", { exact: true }).waitFor();
+  await enemyControl.getByRole("button", { name: "Show stats" }).click();
   await enemyDisplay.locator(".battle-ac").getByText("14", { exact: true }).waitFor();
-  await enemyCard.getByRole("button", { name: "Reset stats", exact: true }).click();
-  await enemyCard.getByText("0 damage", { exact: false }).waitFor();
-  await enemyControl.locator(".battle-condition-controls").getByRole("button", { name: /Poisoned/ }).waitFor({ state: "detached" });
+  await enemyControl.getByRole("button", { name: "Reset stats", exact: true }).click();
+  await enemyControl.getByLabel("Moon Beast damage taken 0").waitFor();
+  await enemyControl.getByLabel("More options for Moon Beast").click();
+  await enemyControl.getByRole("button", { name: "Remove Poisoned from Moon Beast" }).waitFor({ state: "detached" });
   await enemyDisplay.getByText(/Poisoned/).waitFor({ state: "detached" });
   await enemyDisplay.locator(".battle-ac").getByText("14", { exact: true }).waitFor({ state: "detached" });
   const resetPlayerText = await enemyDisplay.innerText();
@@ -294,14 +307,12 @@ try {
   await itemDialog.waitFor({ state: "detached" });
 
   const hunterControl = dmPage.locator(".battle-row").filter({ hasText: "Lady Maria" });
-  await hunterControl.getByLabel("Lady Maria AC").fill("17");
-  await hunterControl.getByLabel("Lady Maria AC").blur();
+  await hunterControl.getByRole("button", { name: "Increase Lady Maria armor class" }).click({ clickCount: 2, delay: 100 });
   await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).locator(".battle-ac").getByText("17", { exact: true }).waitFor();
   const armoredHunter = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
   if (armoredHunter.empty || armoredHunter.docs[0].data().ac !== 17) throw new Error("Direct Hunter AC did not update the battle record.");
 
-  await hunterControl.getByLabel("Lady Maria damage taken").fill("7");
-  await hunterControl.getByLabel("Lady Maria damage taken").blur();
+  await hunterControl.getByRole("button", { name: "Damage Lady Maria by 1" }).click({ clickCount: 3, delay: 100 });
   await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).getByText("7", { exact: true }).waitFor();
   const damagedHunter = await db.doc(`characters/${characterId}`).get();
   const pcCombatants = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
