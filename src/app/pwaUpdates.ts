@@ -1,10 +1,10 @@
 // Keep the installed PWA / Safari tab fresh.
 //
-// When a newly-deployed build is detected we try to update *automatically*
-// (activate the new service worker and reload). If that doesn't take within a
-// few seconds — e.g. iOS didn't apply it — we reveal a flashing "update
-// available" pill in the header so the user can apply it by hand. We also nudge
-// an update check whenever the app regains focus, so updates land promptly.
+// When a newly-deployed build is detected, leave the current session untouched
+// and reveal an update pill instead. Reloading automatically can interrupt
+// someone mid-action and, on iOS, may return them to a different screen. We
+// still nudge an update check whenever the app regains focus, so updates are
+// ready as soon as the player chooses to apply them.
 import { registerSW } from "virtual:pwa-register";
 import { create } from "zustand";
 
@@ -32,11 +32,9 @@ export function setupPwaUpdates(): void {
   const updateSW = registerSW({
     immediate: true,
     onNeedRefresh() {
-      // Try to update automatically. updateSW(true) activates the waiting
-      // worker and reloads; if we're still here after a few seconds it didn't
-      // take, so fall back to the manual pill.
-      window.setTimeout(() => usePwaUpdate.setState({ needRefresh: true }), 4000);
-      updateSW(true).catch(() => usePwaUpdate.setState({ needRefresh: true }));
+      // A new version is ready, but never reload without the player's choice:
+      // staying on the current route preserves their work and navigation.
+      usePwaUpdate.setState({ needRefresh: true });
     },
     onRegisteredSW(_swUrl, registration) {
       swRegistration = registration;
