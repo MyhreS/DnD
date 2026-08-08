@@ -63,6 +63,7 @@ export function SessionBattleView({
                 game={game}
                 canManage={isDm}
                 disabled={disabled}
+                encounterCombatants={combatants}
               />
             ))}
           </section>

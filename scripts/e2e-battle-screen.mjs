@@ -252,6 +252,7 @@ try {
 
   const enemyControl = dmPage.getByTestId(`battle-combatant-${enemyId}`);
   const enemyDisplay = playerPage.getByTestId(`battle-combatant-${enemyId}`);
+  if (await enemyControl.getByRole("button", { name: "Remove dead enemy" }).count()) throw new Error("A living enemy can be removed from the battle.");
   await enemyControl.getByRole("button", { name: "Kill Moon Beast" }).click();
   await enemyControl.getByText("Enemy · dead", { exact: true }).waitFor();
   await enemyDisplay.getByText("Enemy · dead", { exact: true }).waitFor();
@@ -339,6 +340,19 @@ try {
   await playerPage.setViewportSize({ width: 390, height: 844 });
   await noHorizontalOverflow(playerPage, "Player battle mode mobile");
   await playerPage.screenshot({ path: "screenshots/game-battle-mode-mobile.png", fullPage: true });
+
+  await enemyControl.getByRole("button", { name: "Kill Moon Beast" }).click();
+  await enemyControl.getByLabel("More options for Moon Beast").click();
+  await enemyControl.getByRole("button", { name: "Remove dead enemy", exact: true }).click();
+  await Promise.all([
+    enemyControl.waitFor({ state: "detached" }),
+    enemyDisplay.waitFor({ state: "detached" }),
+  ]);
+  const [removedCombatant, removedBattleView] = await Promise.all([
+    db.doc(`games/${gameId}/combatants/${enemyId}`).get(),
+    db.doc(`games/${gameId}/battleView/${enemyId}`).get(),
+  ]);
+  if (removedCombatant.exists || removedBattleView.exists) throw new Error("Removing a dead enemy left battle records behind.");
 
   dmPage.once("dialog", (dialog) => dialog.accept());
   await dmPage.getByRole("button", { name: "End battle" }).click();
