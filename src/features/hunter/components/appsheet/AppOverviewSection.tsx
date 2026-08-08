@@ -1,5 +1,7 @@
 import { BACKGROUNDS } from "@/data/backgrounds";
 import { CLASSES } from "@/data/classes";
+import { DEEPCALLER_RITES, DEEPCALLER_WHISPERS, type DeepcallerReference, whisperDamageAtLevel } from "@/data/characterOptions";
+import { Link } from "react-router-dom";
 import { BackgroundDetails } from "../BackgroundDetails";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import {
@@ -31,6 +33,28 @@ const PENDING_TARGETS = {
   whispers: { href: "#appsheet-features", openLabel: "Features & choices" },
 } as const;
 
+function DeepcallerReferenceRow({ entry, characterLevel }: { entry: DeepcallerReference; characterLevel: number }) {
+  const damage = entry.kind === "Whisper" ? whisperDamageAtLevel(entry, characterLevel) : entry.damage;
+  return (
+    <details className="appsheet-rite-reference">
+      <summary>
+        <span><b>{entry.name}</b><small>{entry.kind === "Whisper" ? "Whisper" : `Level ${entry.level} Rite`} · {entry.school}</small></span>
+        <span>{damage === "—" ? "No damage" : `${damage} ${entry.damageType}`}</span>
+      </summary>
+      <div>
+        <dl>
+          <div><dt>Perform</dt><dd>{entry.performing}</dd></div>
+          <div><dt>Range</dt><dd>{entry.range}</dd></div>
+          <div><dt>Duration</dt><dd>{entry.duration}</dd></div>
+          <div><dt>Damage</dt><dd>{damage}</dd></div>
+          <div><dt>Damage type</dt><dd>{entry.damageType}</dd></div>
+        </dl>
+        <Link to={`/codex?group=Rites&q=${encodeURIComponent(entry.name)}`}>Read the full rule in Codex</Link>
+      </div>
+    </details>
+  );
+}
+
 export function AppOverviewSection({ model }: { model: AppSheetModel }) {
   const automation = useCharacterAutomation();
   const editStage = useAppEditStage();
@@ -48,6 +72,11 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
   const strainMaximum = numeric(String(result.fields.strainMax ?? 0));
   const strainCurrent = numeric(sheetText(model.data, "strainCur"), strainMaximum);
   const strainLevel = String(result.fields.strainLevel ?? "—");
+  const currentStrainLevel = numeric(strainLevel);
+  const preparedWhispers = (card.preparedWhispers ?? [])
+    .map((id) => DEEPCALLER_WHISPERS.find((entry) => entry.id === id))
+    .filter((entry): entry is DeepcallerReference => entry != null);
+  const availableRites = DEEPCALLER_RITES.filter((rite) => rite.level <= currentStrainLevel);
   const deathSuccesses = [1, 2, 3].filter((number) => sheetBool(model.data, `dsS${number}`)).length;
   const deathFailures = [1, 2, 3].filter((number) => sheetBool(model.data, `dsF${number}`)).length;
   const openPendingChoice = (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
@@ -193,6 +222,28 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
             </AppSelect>
           </div>
         </AppDisclosure>
+
+        {klass?.id === "deepcaller" && (
+          <AppDisclosure
+            title="Rites & Whispers"
+            summary={`Strain level ${strainLevel} · ${availableRites.length} Rites available`}
+            className="appsheet-rites-disclosure"
+          >
+            <p className="appsheet-rites-intro">Damage and upgrades are shown for level {card.level}. Open an entry for its casting details and the full rule.</p>
+            <AppPanel title="Prepared Whispers" aside={<span className="appsheet-status-word">{preparedWhispers.length} prepared</span>}>
+              {preparedWhispers.length > 0 ? (
+                <div className="appsheet-rite-reference-list">
+                  {preparedWhispers.map((whisper) => <DeepcallerReferenceRow key={whisper.id} entry={whisper} characterLevel={card.level} />)}
+                </div>
+              ) : <p className="appsheet-empty-copy">Choose your prepared Whispers in Features & choices.</p>}
+            </AppPanel>
+            <AppPanel title={`Rites available with level ${strainLevel} Strains`}>
+              <div className="appsheet-rite-reference-list">
+                {availableRites.map((rite) => <DeepcallerReferenceRow key={rite.id} entry={rite} characterLevel={card.level} />)}
+              </div>
+            </AppPanel>
+          </AppDisclosure>
+        )}
 
         <AppDisclosure
           title="Battle resources"

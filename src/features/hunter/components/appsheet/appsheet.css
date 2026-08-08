@@ -384,6 +384,12 @@
   }
 }
 
+@media (max-width: 560px) {
+  .appsheet-current-state .appsheet-vital-editors.has-strains {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .appsheet-identity-panel {
   grid-area: build;
 }
@@ -898,6 +904,64 @@
   color: var(--app-muted);
   font: 11px/1.25 "Alegreya", serif;
 }
+
+.appsheet-rites-disclosure .appsheet-panel + .appsheet-panel {
+  margin-top: 20px;
+}
+
+.appsheet-rites-intro {
+  margin: 2px 0 16px;
+  color: var(--app-muted);
+  font: 14px/1.35 "Alegreya", serif;
+}
+
+.appsheet-rite-reference-list {
+  display: grid;
+  gap: 6px;
+}
+
+.appsheet-rite-reference {
+  border: 1px solid var(--app-line);
+  border-radius: 5px;
+  background: var(--app-subtle);
+}
+
+.appsheet-rite-reference > summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  color: var(--app-text);
+  cursor: pointer;
+  list-style: none;
+}
+
+.appsheet-rite-reference > summary::-webkit-details-marker { display: none; }
+.appsheet-rite-reference > summary:hover { background: var(--app-subtle-hover); }
+.appsheet-rite-reference > summary:focus-visible { outline: 2px solid var(--app-warm); outline-offset: -2px; }
+.appsheet-rite-reference > summary > span:first-child { min-width: 0; }
+.appsheet-rite-reference > summary b,
+.appsheet-rite-reference > summary small { display: block; }
+.appsheet-rite-reference > summary b { font-size: 14px; }
+.appsheet-rite-reference > summary small { margin-top: 2px; color: var(--app-muted); font: 12px/1.2 "Alegreya", serif; }
+.appsheet-rite-reference > summary > span:last-child { flex: none; max-width: 42%; color: var(--app-warm); text-align: right; font-size: 13px; }
+
+.appsheet-rite-reference > div {
+  padding: 12px;
+  border-top: 1px solid var(--app-line);
+}
+
+.appsheet-rite-reference dl {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin: 0 0 13px;
+}
+
+.appsheet-rite-reference dl > div { min-width: 0; }
+.appsheet-rite-reference dt { color: var(--app-faint); font-size: 11px; }
+.appsheet-rite-reference dd { margin: 2px 0 0; color: var(--app-text); font: 13px/1.25 "Alegreya", serif; }
+.appsheet-rite-reference a { color: var(--app-warm); font-size: 13px; }
 
 .appsheet-ability-builder {
   margin: 18px 0;

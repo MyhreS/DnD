@@ -1,4 +1,4 @@
-import { WHISPERS } from "@/data/characterOptions";
+import { DEEPCALLER_WHISPERS, WHISPERS, whisperDamageAtLevel } from "@/data/characterOptions";
 import { ABILITY_NAME } from "@/data/abilities";
 import { SKILL_BY_NAME, SKILLS } from "@/data/skills";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
@@ -81,7 +81,13 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
       {whisperLimit > 0 && (
         <AppPanel title="Prepared Whispers" className={whispers.length < whisperLimit ? "appsheet-panel-attention" : ""} aside={<span className={whispers.length === whisperLimit ? "appsheet-complete" : "appsheet-incomplete"}>{whispers.length < whisperLimit ? `Choose ${whisperLimit - whispers.length}` : "Complete"}</span>}>
           <div className="appsheet-choice-list">
-            {WHISPERS.map((whisper) => <ChoiceToggle key={whisper.id} label={whisper.name} checked={whispers.includes(whisper.id)} disabled={model.readOnly || (!whispers.includes(whisper.id) && whispers.length >= whisperLimit)} onChange={() => automation.toggleWhisper(whisper.id)} />)}
+            {WHISPERS.map((whisper) => {
+              const reference = DEEPCALLER_WHISPERS.find((entry) => entry.id === whisper.id);
+              const meta = reference
+                ? `${whisperDamageAtLevel(reference, card.level)} ${reference.damageType} · ${reference.range}`
+                : undefined;
+              return <ChoiceToggle key={whisper.id} label={whisper.name} meta={meta} checked={whispers.includes(whisper.id)} disabled={model.readOnly || (!whispers.includes(whisper.id) && whispers.length >= whisperLimit)} onChange={() => automation.toggleWhisper(whisper.id)} />;
+            })}
           </div>
           <AutoReason reason={klass?.caster ? `${klass.title} progression and the Listener feat determine how many Whispers may be prepared.` : "The Listener feat grants one Whisper of your choice."} />
         </AppPanel>
