@@ -1,5 +1,7 @@
+import { useState, type FormEvent } from "react";
 import { HunterListCard } from "./HunterListCard";
 import { SheetCharacterView } from "./SheetCharacterView";
+import { CharacterDeleteDialog } from "./papersheet/CharacterDeleteDialog";
 import type { HunterCard } from "@/types";
 
 /** The /character "Hunters" screen. It ALWAYS lands on the LIST of your hunters
@@ -22,10 +24,39 @@ export function CharacterView({
   onDelete: (card: HunterCard) => Promise<boolean>;
 }) {
   const openCard = openId ? characters.find((c) => c.id === openId) ?? null : null;
+  const [deleteCard, setDeleteCard] = useState<HunterCard | null>(null);
+  const [confirmation, setConfirmation] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const deletePhrase = deleteCard?.name.trim() || "DELETE";
 
-  // Detail: a single opened hunter — the paper sheet (view/edit) auto-pops, with
-  // deletion below. This is the
-  // old "view a hunter" behaviour, now reached only by clicking a card.
+  function openDelete(card: HunterCard) {
+    setDeleteCard(card);
+    setConfirmation("");
+    setDeleteError("");
+  }
+  function closeDelete() {
+    if (deleting) return;
+    setDeleteCard(null);
+    setConfirmation("");
+    setDeleteError("");
+  }
+  async function confirmDelete(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!deleteCard || deleting || confirmation.trim() !== deletePhrase) return;
+    setDeleting(true);
+    setDeleteError("");
+    const ok = await onDelete(deleteCard);
+    if (ok) {
+      setDeleteCard(null);
+      return;
+    }
+    setDeleting(false);
+    setDeleteError("The character could not be deleted. Nothing was removed; try again.");
+  }
+
+  // Detail: a single opened hunter — the paper sheet (view/edit) auto-pops.
+  // This is the old "view a hunter" behaviour, now reached only by clicking a card.
   if (openCard) {
     return (
       <div>
@@ -41,7 +72,6 @@ export function CharacterView({
           card={openCard}
           autoOpen
           onDismiss={onBack}
-          onDelete={onDelete}
         />
       </div>
     );
@@ -57,13 +87,25 @@ export function CharacterView({
 
       <div className="stack" style={{ gap: 10 }}>
         {characters.map((c) => (
-          <HunterListCard key={c.id} card={c} onOpen={() => onOpen(c.id)} />
+          <HunterListCard key={c.id} card={c} onOpen={() => onOpen(c.id)} onDelete={() => openDelete(c)} />
         ))}
       </div>
 
       <button className="btn btn-primary" style={{ marginTop: 12 }} onClick={onNew}>
         Create hunter
       </button>
+      {deleteCard && (
+        <CharacterDeleteDialog
+          characterName={deleteCard.name.trim()}
+          deletePhrase={deletePhrase}
+          confirmation={confirmation}
+          deleting={deleting}
+          error={deleteError}
+          onConfirmationChange={setConfirmation}
+          onCancel={closeDelete}
+          onConfirm={(event) => void confirmDelete(event)}
+        />
+      )}
     </div>
   );
 }

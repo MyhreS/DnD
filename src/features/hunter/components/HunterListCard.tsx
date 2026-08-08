@@ -11,7 +11,7 @@ import { sheetClassName } from "../lib/papersheet";
  * A full-width hunter card for lists (main menu "Your hunters", the in-campaign
  * "Bring a hunter in" picker, the DM "Play as" list): class-art banner, name,
  * class + level, HP/AC, and where it currently plays. The whole card is one
- * tap target (`onOpen`); an optional small Edit button floats on top of it —
+ * tap target (`onOpen`); optional actions float on top of it —
  * absolutely positioned siblings, never a button inside a button.
  */
 export function HunterListCard({
@@ -20,6 +20,7 @@ export function HunterListCard({
   actionHint = "View →",
   onOpen,
   onEdit,
+  onDelete,
 }: {
   card: HunterCard;
   /** Name of the campaign the hunter is currently in, if any. */
@@ -28,6 +29,8 @@ export function HunterListCard({
   actionHint?: string;
   onOpen: () => void;
   onEdit?: () => void;
+  /** Main-menu Hunters only: opens the deliberate archive confirmation. */
+  onDelete?: () => void;
 }) {
   const klass = getClass(card.classId);
   const art = classArt(card.classId);
@@ -92,6 +95,16 @@ export function HunterListCard({
           )}
         </div>
       </div>
+      {onDelete && (
+        <div className="row" style={{ gap: 8, padding: "0 16px 14px", position: "relative", zIndex: 2 }}>
+          <button type="button" className="btn btn-ghost btn-sm" style={{ width: "auto" }} onClick={onOpen}>
+            View character
+          </button>
+          <button type="button" className="btn btn-ghost btn-sm" style={{ width: "auto", color: "var(--red, #b54a4a)" }} onClick={onDelete}>
+            Delete character
+          </button>
+        </div>
+      )}
     </div>
   );
 }

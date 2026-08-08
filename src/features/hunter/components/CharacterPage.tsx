@@ -46,9 +46,7 @@ export function CharacterPage() {
     setOpenId(id);
   }
   async function deleteOpen(currentCard: HunterCard) {
-    const ok = await archive(null, currentCard);
-    if (ok) setOpenId(null);
-    return ok;
+    return archive(null, currentCard);
   }
 
   // Main-menu deep links: ?new=1 → a fresh sheet, ?edit=1 → open the selected hunter.

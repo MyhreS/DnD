@@ -64,11 +64,6 @@
   color: #d8cfbc;
   border: 1px solid #6b6353;
 }
-.papersheet-toolbar .character-delete-trigger {
-  margin-left: auto;
-  border-color: #8b4945;
-  color: #e2aaa3;
-}
 .papersheet-toolbar button:hover,
 .papersheet-toolbar a:hover {
   filter: brightness(1.15);
@@ -96,7 +91,7 @@
   text-align: right;
 }
 
-/* ---------- delete confirmation ---------- */
+/* ---------- delete confirmation (opened from the Hunters list) ---------- */
 .character-delete-backdrop {
   position: fixed;
   inset: 0;

@@ -76,47 +76,6 @@
   color: var(--app-muted);
 }
 
-.view-app .papersheet-toolbar .character-delete-trigger {
-  border-color: color-mix(in srgb, var(--app-danger) 55%, var(--app-line));
-  color: var(--app-danger);
-}
-
-.view-app .character-delete-dialog {
-  border-color: var(--app-line);
-  background: var(--app-surface);
-  color: var(--app-text);
-  box-shadow: var(--app-shadow);
-}
-
-.view-app .character-delete-dialog p {
-  color: var(--app-muted);
-}
-
-.view-app .character-delete-dialog input {
-  border-color: var(--app-line);
-  background: var(--app-input);
-  color: var(--app-text);
-}
-
-.view-app .character-delete-dialog input:focus-visible {
-  outline-color: var(--app-danger);
-}
-
-.view-app .character-delete-dialog .character-delete-error {
-  color: var(--app-danger);
-}
-
-.view-app .character-delete-actions button {
-  border-color: var(--app-line);
-  color: var(--app-text);
-}
-
-.view-app .character-delete-actions .character-delete-confirm {
-  border-color: var(--app-action);
-  background: var(--app-action);
-  color: var(--app-action-text);
-}
-
 .character-view-switch {
   display: inline-flex;
   padding: 2px;
