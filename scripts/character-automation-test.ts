@@ -14,6 +14,11 @@ import {
   structuredCardFromSheet,
 } from "../src/features/hunter/lib/characterAutomation";
 import { migrateLegacyCharacter } from "../src/features/hunter/lib/legacyMigration";
+import { levelAdjustedPool } from "../src/features/hunter/lib/levelUpVitals";
+
+assert.equal(levelAdjustedPool(4, 10, 16, true), 16, "a pool is restored when a level-up increases its maximum");
+assert.equal(levelAdjustedPool(4, 10, 10, true), 4, "a level-up does not restore a pool whose maximum did not increase");
+assert.equal(levelAdjustedPool(18, 20, 12, false), 12, "a level reduction clamps a pool to its new maximum");
 
 const base = emptySheetCard({ ownerUid: "test", email: "test@example.com", displayName: "Tester" });
 assert.equal(base.sheetAutomation?.setupComplete, false, "fresh sheets start in guided setup even if the name is entered first");

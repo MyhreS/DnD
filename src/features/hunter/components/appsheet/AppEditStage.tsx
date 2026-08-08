@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { automationFor } from "../../lib/characterAutomation";
+import { levelAdjustedPool } from "../../lib/levelUpVitals";
 import type { AppSheetModel } from "./appSheetShared";
 import { AppEditStageContext, useAppEditStage, type AppEditStageValue, type StagedPatch } from "./appEditStageContext";
 
@@ -43,10 +44,14 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
     const levelPreview = automationFor({ ...model.card, ...candidate });
     const nextHpMax = optionalNumber(levelPreview.fields.hpMax);
     const nextSanityMax = optionalNumber(levelPreview.fields.sanityMax);
-    const currentHp = candidate.currentHp ?? model.card.currentHp ?? optionalNumber(currentResult.fields.hpCur) ?? 0;
-    const currentSanity = candidate.sanity ?? model.card.sanity ?? optionalNumber(currentResult.fields.sanityCur) ?? 0;
-    if (nextHpMax != null && currentHp > nextHpMax) candidate.currentHp = nextHpMax;
-    if (nextSanityMax != null && currentSanity > nextSanityMax) candidate.sanity = nextSanityMax;
+    const currentHp = model.card.currentHp ?? optionalNumber(currentResult.fields.hpCur) ?? 0;
+    const currentSanity = model.card.sanity ?? optionalNumber(currentResult.fields.sanityCur) ?? 0;
+    const hp = levelAdjustedPool(currentHp, optionalNumber(currentResult.fields.hpMax), nextHpMax, bounded > model.card.level);
+    const sanity = levelAdjustedPool(currentSanity, optionalNumber(currentResult.fields.sanityMax), nextSanityMax, bounded > model.card.level);
+    // Recalculate from the original card so returning the level to its saved
+    // value does not leave an accidental heal staged.
+    if (hp != null) candidate.currentHp = hp;
+    if (sanity != null) candidate.sanity = sanity;
     setPatch(keepDifferences(candidate));
   }
 
