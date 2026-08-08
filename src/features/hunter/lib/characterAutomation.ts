@@ -157,6 +157,15 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     put(fields, reasons, "sanityCur", String(card.sanity ?? sanity), "Current Sanity, defaulting to calculated maximum");
     put(fields, reasons, "hdMax", String(level), `${klass.title}: one Hit Die per level`);
     put(fields, reasons, "hdCur", String(level), "Starts with all Hit Dice available");
+    if (klass.caster) {
+      const progression = klass.progression.find((row) => row.level === level);
+      const strainMax = Number(progression?.extras.Strains ?? 0);
+      const strainLevel = progression?.extras["Strain Level"] ?? "—";
+      const strainCurrent = Math.max(0, Math.min(strainMax, intField(card.sheet, "strainCur", strainMax)));
+      put(fields, reasons, "strainMax", String(strainMax), `${klass.title} level ${level} progression`);
+      put(fields, reasons, "strainCur", String(strainCurrent), "Current available Strains, defaulting to the full allowance");
+      put(fields, reasons, "strainLevel", String(strainLevel), `${klass.title} level ${level} progression`);
+    }
     put(fields, reasons, "speed", `${klass.speedFt} ft`, `${klass.title} core traits`);
     put(fields, reasons, "armorLight", klass.armorTraining.includes("Light armor"), `${klass.title} Armor Training`);
     put(fields, reasons, "armorMedium", klass.armorTraining.includes("Medium armor"), `${klass.title} Armor Training`);

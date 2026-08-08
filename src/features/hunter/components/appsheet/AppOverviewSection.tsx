@@ -32,6 +32,9 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
   const hpCurrent = sheetText(model.data, "hpCur") || String(card.currentHp ?? result.fields.hpMax ?? 0);
   const sanityCurrent = sheetText(model.data, "sanityCur") || String(card.sanity ?? result.fields.sanityMax ?? 0);
   const hitDiceCurrent = numeric(sheetText(model.data, "hdCur"), numeric(String(result.fields.hdMax ?? 0)));
+  const strainMaximum = numeric(String(result.fields.strainMax ?? 0));
+  const strainCurrent = numeric(sheetText(model.data, "strainCur"), strainMaximum);
+  const strainLevel = String(result.fields.strainLevel ?? "—");
   const deathSuccesses = [1, 2, 3].filter((number) => sheetBool(model.data, `dsS${number}`)).length;
   const deathFailures = [1, 2, 3].filter((number) => sheetBool(model.data, `dsF${number}`)).length;
 
@@ -64,7 +67,7 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
 
       <div className="appsheet-overview-layout">
         <AppPanel title="At a glance" className="appsheet-current-state">
-          <div className="appsheet-vital-editors">
+          <div className={`appsheet-vital-editors${klass?.caster ? " has-strains" : ""}`}>
             <DecisionField label="Current HP">
               <NumericStepper label="HP" value={editStage.previewCard.currentHp ?? numeric(hpCurrent)} disabled={model.readOnly} onChange={editStage.stageHp} />
               <small>Maximum {result.fields.hpMax}</small>
@@ -80,6 +83,14 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
               <NumericStepper label="Transformation" value={editStage.previewCard.transformationLevel ?? 0} max={10} disabled={model.readOnly} onChange={editStage.stageTransformation} />
               <small>Reducing it clears active transformations.</small>
             </DecisionField>
+            {klass?.caster && (
+              <div data-testid="appsheet-strains">
+                <DecisionField label="Strains left">
+                  <NumericStepper label="Strains left" value={strainCurrent} max={strainMaximum} disabled={model.readOnly} onChange={(value) => model.setField("strainCur", String(value))} />
+                  <small>{strainMaximum} available · level {strainLevel} Strains</small>
+                </DecisionField>
+              </div>
+            )}
           </div>
           <div className="appsheet-metric-grid">
             <DerivedValue label="Armor class" value={result.fields.ac} reason={result.reasons.ac} testId="appsheet-ac" />

@@ -67,6 +67,13 @@ export function deriveSheetFromCard(card: HunterCard): SheetData {
     put("sanityDice", klass.sanityDie);
     put("hdMax", String(level));
     put("hdCur", String(level));
+    if (klass.caster) {
+      const progression = klass.progression.find((row) => row.level === level);
+      const strainMax = Number(progression?.extras.Strains ?? 0);
+      put("strainMax", String(strainMax));
+      put("strainCur", String(strainMax));
+      put("strainLevel", progression?.extras["Strain Level"]);
+    }
     put("speed", `${klass.speedFt} ft`);
   }
 
