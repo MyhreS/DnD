@@ -161,6 +161,16 @@ try {
   await enemyEditor.getByRole("spinbutton", { name: "Initiative", exact: true }).fill("16");
   await enemyEditor.getByRole("spinbutton", { name: "AC", exact: true }).fill("14");
   await enemyEditor.getByLabel("Private notes").fill("Howls when bloodied.");
+  const hideEnemyHp = enemyEditor.getByLabel("Hide exact HP from players");
+  if (!await hideEnemyHp.isChecked()) throw new Error("New enemies should hide exact HP by default");
+  await hideEnemyHp.uncheck();
+  await hideEnemyHp.check();
+  await assertNoHorizontalOverflow(owner, "Enemy editor desktop");
+  await owner.screenshot({ path: "screenshots/enemy-editor-desktop.png" });
+  await owner.setViewportSize({ width: 390, height: 844 });
+  await assertNoHorizontalOverflow(owner, "Enemy editor mobile");
+  await owner.screenshot({ path: "screenshots/enemy-editor-mobile.png" });
+  await owner.setViewportSize({ width: 1440, height: 1000 });
   await enemyEditor.getByLabel("Add to the current battle after saving").check();
   await enemyEditor.getByRole("button", { name: "Save enemy", exact: true }).click();
   await enemyLibrary.getByText("Moon Beast", { exact: true }).waitFor();
