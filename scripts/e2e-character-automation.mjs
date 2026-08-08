@@ -133,6 +133,10 @@ try {
   await finishSetup.click();
   const characterBuildDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Character build", { exact: true }) }).first();
   if (await characterBuildDisclosure.evaluate((element) => element.open)) throw new Error("Completed character build did not collapse to reduce clutter");
+  const appStrength = page.getByLabel("Strength app base");
+  if (await appStrength.isDisabled()) throw new Error("Level-one ability scores stayed locked after setup");
+  await appStrength.selectOption("14");
+  await appStrength.selectOption("15");
   const editSkills = page.getByRole("button", { name: "Edit skill proficiencies" });
   await editSkills.click();
   if (!await skillChoiceDisclosure.evaluate((element) => element.open)) throw new Error("Edit skill proficiencies did not open completed skill choices");
@@ -197,6 +201,10 @@ try {
   if (await page.locator('[data-f="initiative"]').inputValue() !== "+5") throw new Error("Alert did not update initiative");
   if (!(await page.locator('[data-f="hpMax"]').getAttribute("data-auto-reason"))?.includes("Hit Die")) throw new Error("Auto-filled HP has no visible reason");
   await page.getByText(/The table below fills automatically/).waitFor();
+  const paperStrength = page.getByLabel("Strength base");
+  if (await paperStrength.isDisabled()) throw new Error("Level-one paper-sheet ability scores stayed locked after setup");
+  await paperStrength.selectOption("14");
+  await paperStrength.selectOption("15");
 
   await page.getByRole("button", { name: "Add unique weapon or item found in play" }).click();
   await page.getByLabel("Unique item name").fill("Moon Saw");
