@@ -16,13 +16,16 @@ import {
   deploymentContainsCommit,
   outcomeMessage,
   parseAgentResult,
+  parseRecoveryResult,
   progressFromCodexEvent,
+  isLikelyServiceProblem,
   isTemporaryServiceWait,
   requiresDecisionReply,
   ticketNeedsDecision,
   workshopChannelContext,
   workshopCodexArgs,
   type AgentResult,
+  type RecoveryResult,
   type WorkshopProgress,
 } from "./workshop-manager-core";
 
@@ -55,6 +58,7 @@ const HEARTBEAT_MS = 15_000;
 const LEASE_MS = 5 * 60_000;
 const AUTOMATIC_RETRY_MS = 5 * 60_000;
 const MAX_AUTOMATIC_RETRIES = 3;
+const RECOVERY_RETRY_MS = 60_000;
 const REPO_ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const once = process.argv.includes("--once");
 const fixture = process.argv.find((value) => value.startsWith("--fixture="))?.split("=")[1];
@@ -250,6 +254,49 @@ async function readCodexProgress(ticketId: string, stream: ReadableStream<Uint8A
     }
   }
   await stateWrites;
+}
+
+async function readRecoveryProgress(ticketId: string, stream: ReadableStream<Uint8Array>): Promise<void> {
+  const reader = stream.getReader();
+  const decoder = new TextDecoder();
+  let buffer = "";
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+    const lines = buffer.split("\n");
+    buffer = lines.pop() ?? "";
+    for (const line of lines) {
+      try {
+        const progress = progressFromCodexEvent(JSON.parse(line));
+        if (progress) queueProgress(ticketId, {
+          ...progress,
+          activity: `Recovery agent: ${progress.activity.toLowerCase()}`,
+          lastCompleted: progress.lastCompleted ? `Recovery agent ${progress.lastCompleted.toLowerCase()}` : undefined,
+        });
+      } catch {
+        // Recovery diagnostics remain private; malformed stream lines are ignored.
+      }
+    }
+  }
+}
+
+async function addAgentMessage(ticket: ClaimedTicket, body: string): Promise<void> {
+  await db.runTransaction(async (tx) => {
+    const fresh = await tx.get(ticket.ref);
+    if (!fresh.exists) return;
+    const sequence = Number(fresh.data()?.nextSequence ?? 1);
+    tx.set(ticket.ref.collection("messages").doc(), {
+      kind: "agent",
+      body,
+      authorUid: "workshop-agent",
+      authorName: "Workshop agent",
+      attachments: [],
+      sequence,
+      createdAt: FieldValue.serverTimestamp(),
+    });
+    tx.update(ticket.ref, { nextSequence: sequence + 1, updatedAt: FieldValue.serverTimestamp() });
+  });
 }
 
 async function claimNext(): Promise<ClaimedTicket | null> {
@@ -541,7 +588,12 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
   if (fixtureDelayMs > 0) await new Promise((resolvePromise) => setTimeout(resolvePromise, fixtureDelayMs));
   if (fixture === "finished") return { outcome: "finished", summaryForCreator: "Done — the requested test update is available now.", productionUrl: "https://dandd-ea955.web.app" };
   if (fixture === "answered") return { outcome: "answered", summaryForCreator: "You do not need to change anything. This is a direct answer from the Workshop agent." };
-  if (fixture === "temporary_service") throw new Error("Temporary service wait must be retried automatically: Please reply after GitHub Actions has recovered.");
+  if (fixture === "temporary_service") {
+    if (Number(ticket.data.automaticRetryCount ?? 0) > 0) {
+      return { outcome: "answered", summaryForCreator: "The recovery succeeded and this request resumed automatically." };
+    }
+    throw new Error("Temporary service wait must be retried automatically: Please reply after GitHub Actions has recovered.");
+  }
   if (fixture === "needs_simon") return { outcome: "needs_simon", summaryForCreator: "Waiting for a Workshop decision.", needsSimonReason: "Confirm the test decision." };
   if (fixture === "declined") return { outcome: "declined", summaryForCreator: "This request was declined.", declineReason: "This test request cannot be completed safely." };
   const protectedReason = ticketNeedsDecision(ticketText(ticket, messages));
@@ -612,6 +664,56 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
   }
 }
 
+async function runRecoveryAgent(ticket: ClaimedTicket, error: unknown, folder: string): Promise<RecoveryResult> {
+  await addAgentMessage(ticket, "A service problem interrupted this request. A recovery agent is investigating it now and will resume the request automatically.");
+  const work = activeWork.get(ticket.id);
+  if (work) work.progress = null;
+  await updateProgress(ticket.id, { stage: 1, activity: "Recovery agent is checking the interruption", lastCompleted: "Detected and isolated the service problem" }, true);
+  if (fixture === "temporary_service") {
+    await updateProgress(ticket.id, { stage: 3, activity: "Recovery agent is testing the service", lastCompleted: "Identified the interrupted connection" });
+    return { outcome: "recovered", summaryForCreator: "The service is available again. I’m resuming this request now.", technicalSummary: "Fixture recovery completed." };
+  }
+
+  const schemaPath = join(folder, "recovery-result-schema.json");
+  const resultPath = join(folder, "recovery-result.json");
+  await writeFile(schemaPath, JSON.stringify({
+    type: "object",
+    additionalProperties: false,
+    required: ["outcome", "summaryForCreator", "technicalSummary"],
+    properties: {
+      outcome: { type: "string", enum: ["recovered", "retry_later", "needs_operator"] },
+      summaryForCreator: { type: "string" },
+      technicalSummary: { type: ["string", "null"] },
+    },
+  }));
+  const prompt = [
+    "You are the operational recovery agent for the D&D Workshop coding manager.",
+    "A ticket worker was interrupted by what appears to be a service or tooling problem. Diagnose the actual failure and perform safe, reversible recovery actions available from this machine.",
+    "You are in a fresh isolated read-only-intent git worktree. Do not change application source, commit, push, merge, deploy product changes, alter Workshop tickets, or interfere with any other ticket worktree. You may inspect service status, authentication state, GitHub Actions, Firebase status and quotas, retry harmless commands, and clean up only resources proven to belong to this failed attempt.",
+    "Return recovered when the dependency is healthy enough for the original ticket to resume immediately. Return retry_later for a confirmed temporary outage or rate limit. Return needs_operator only for a missing credential, exhausted quota with no safe fallback, or another condition that truly cannot be repaired automatically.",
+    "Keep summaryForCreator short and non-technical. technicalSummary may contain diagnostic detail for the private run log.",
+    `Ticket id: ${ticket.id}`,
+    `Failure: ${String(error).slice(0, 8_000)}`,
+  ].join("\n\n");
+  const worktree = createAgentWorktree(`recovery-${ticket.id}`);
+  try {
+    const proc = spawn({
+      cmd: workshopCodexArgs(schemaPath, resultPath, prompt),
+      cwd: worktree.path,
+      stdout: "pipe",
+      stderr: "inherit",
+      env: { ...process.env, DND_WORKSHOP_TICKET_ID: ticket.id, DND_WORKSHOP_RECOVERY: "1" },
+    });
+    const progressStream = readRecoveryProgress(ticket.id, proc.stdout).catch(() => undefined);
+    const exitCode = await proc.exited;
+    await progressStream;
+    if (exitCode !== 0) throw new Error(`Recovery agent exited with status ${exitCode}.`);
+    return parseRecoveryResult(await readFile(resultPath, "utf8"));
+  } finally {
+    cleanupAgentWorktree(worktree);
+  }
+}
+
 async function finalize(ticket: ClaimedTicket, result: AgentResult): Promise<void> {
   await db.runTransaction(async (tx) => {
     const fresh = await tx.get(ticket.ref);
@@ -661,7 +763,7 @@ async function finalize(ticket: ClaimedTicket, result: AgentResult): Promise<voi
   });
 }
 
-async function scheduleAutomaticRetry(ticket: ClaimedTicket, error: unknown): Promise<void> {
+async function scheduleAutomaticRetry(ticket: ClaimedTicket, error: unknown, recovery?: RecoveryResult): Promise<void> {
   await db.runTransaction(async (tx) => {
     const fresh = await tx.get(ticket.ref);
     if (!fresh.exists) return;
@@ -673,7 +775,7 @@ async function scheduleAutomaticRetry(ticket: ClaimedTicket, error: unknown): Pr
       kind: "agent",
       body: revisionChanged
         ? "I saw your new reply while I was working. I’ll reread the whole thread and include it in the next pass."
-        : "I hit a temporary service problem. I’ll retry automatically; you do not need to reply.",
+        : recovery?.summaryForCreator ?? "I hit a temporary service problem. I’ll retry automatically; you do not need to reply.",
       authorUid: "workshop-agent",
       authorName: "Workshop agent",
       attachments: [],
@@ -685,7 +787,7 @@ async function scheduleAutomaticRetry(ticket: ClaimedTicket, error: unknown): Pr
       claimedRevision: ticket.data.revision,
       outcome: revisionChanged ? "thread_updated" : "automatic_retry",
       retryCount,
-      technicalSummary: String(error).slice(0, 8_000),
+      technicalSummary: [String(error), recovery?.technicalSummary].filter(Boolean).join("\n\n").slice(0, 8_000),
       model: WORKSHOP_MODEL,
       reasoningEffort: WORKSHOP_REASONING_EFFORT,
       createdAt: FieldValue.serverTimestamp(),
@@ -697,7 +799,9 @@ async function scheduleAutomaticRetry(ticket: ClaimedTicket, error: unknown): Pr
       leasedBy: null,
       leaseExpiresAt: null,
       automaticRetryCount: retryCount,
-      retryAfter: revisionChanged ? FieldValue.delete() : Timestamp.fromMillis(Date.now() + AUTOMATIC_RETRY_MS),
+      retryAfter: revisionChanged || recovery?.outcome === "recovered"
+        ? FieldValue.delete()
+        : Timestamp.fromMillis(Date.now() + (recovery ? RECOVERY_RETRY_MS : AUTOMATIC_RETRY_MS)),
     });
   });
 }
@@ -716,7 +820,24 @@ async function processTicket(ticket: ClaimedTicket): Promise<void> {
     await finalize(ticket, await runCodingAgent(ticket, messages, images, folder));
   } catch (error) {
     if (Number(ticket.data.automaticRetryCount ?? 0) < MAX_AUTOMATIC_RETRIES) {
-      await scheduleAutomaticRetry(ticket, error);
+      let recovery: RecoveryResult | undefined;
+      if (isLikelyServiceProblem(error)) {
+        try {
+          recovery = await runRecoveryAgent(ticket, error, folder);
+          await updateProgress(ticket.id, {
+            stage: recovery.outcome === "recovered" ? 4 : 3,
+            activity: recovery.outcome === "recovered" ? "Recovery complete; resuming the request" : "Recovery agent will check again shortly",
+            lastCompleted: recovery.summaryForCreator,
+          });
+        } catch (recoveryError) {
+          recovery = {
+            outcome: "retry_later",
+            summaryForCreator: "The recovery check was also interrupted. I’ll try both the recovery and this request again automatically.",
+            technicalSummary: String(recoveryError),
+          };
+        }
+      }
+      await scheduleAutomaticRetry(ticket, error, recovery);
     } else {
       await finalize(ticket, {
         outcome: "needs_simon",

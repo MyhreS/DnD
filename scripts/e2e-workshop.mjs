@@ -439,11 +439,13 @@ try {
   });
   await runManager("temporary_service");
   const retryData = (await retryProbe.get()).data();
-  if (retryData?.status !== "not_done" || retryData?.automaticRetryCount !== 1 || !retryData?.retryAfter) {
-    throw new Error("Temporary service failure did not schedule an automatic retry.");
+  if (retryData?.status !== "finished" || retryData?.automaticRetryCount !== 0 || retryData?.retryAfter) {
+    throw new Error("Recovered service failure did not resume and finish the original ticket immediately.");
   }
   await creator.page.getByTestId("ticket-automatic-retry-probe").click();
-  await creator.page.getByText("I hit a temporary service problem. I’ll retry automatically; you do not need to reply.", { exact: true }).waitFor();
+  await creator.page.getByText("A service problem interrupted this request. A recovery agent is investigating it now and will resume the request automatically.", { exact: true }).waitFor();
+  await creator.page.getByText("The service is available again. I’m resuming this request now.", { exact: true }).waitFor();
+  await creator.page.getByText("The recovery succeeded and this request resumed automatically.", { exact: true }).waitFor();
   if (await creator.page.getByText("Needs decision", { exact: true }).count()) throw new Error("Temporary service failure incorrectly asked for a Workshop decision.");
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await db.recursiveDelete(retryProbe);
