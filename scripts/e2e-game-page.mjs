@@ -177,7 +177,13 @@ try {
   owner.once("dialog", (dialog) => dialog.accept());
   await owner.getByRole("button", { name: "End session" }).click();
   await owner.getByText("Session history", { exact: true }).waitFor();
-  await owner.getByText("History", { exact: true }).waitFor();
+  const historyToggle = owner.getByRole("button", { name: "Session history" });
+  if (await owner.getByText("Night of the Pale Moon", { exact: true }).count() !== 1) {
+    throw new Error("Saved sessions should be hidden until history is opened");
+  }
+  await historyToggle.click();
+  await owner.getByText("Night of the Pale Moon", { exact: true }).nth(1).waitFor();
+  await historyToggle.click();
   await owner.getByText("1 player attended", { exact: true }).waitFor();
   await owner.getByRole("button", { name: "Create session", exact: true }).waitFor();
 
@@ -221,9 +227,17 @@ try {
   await player.waitForURL(`${BASE}/`);
   await player.getByRole("heading", { name: /Welcome/ }).waitFor();
   await player.screenshot({ path: "screenshots/main-menu-mobile.png", fullPage: true });
-  await player.goto(`${BASE}/game?preview=user.player`, { waitUntil: "domcontentloaded" });
+  await player.goto(`${BASE}/game?preview=user.player&game=history`, { waitUntil: "domcontentloaded" });
   await player.getByRole("heading", { name: "The Sunless Vault", exact: true }).waitFor();
   await player.getByText("Your Hunter", { exact: true }).waitFor();
+  const playerHistoryToggle = player.getByRole("button", { name: "History (1)" });
+  await playerHistoryToggle.waitFor();
+  if (await player.getByText("The Old Cathedral", { exact: true }).count()) {
+    throw new Error("Player session history should stay hidden by default");
+  }
+  await playerHistoryToggle.click();
+  await player.getByText("The Old Cathedral", { exact: true }).waitFor();
+  await playerHistoryToggle.click();
   if (await player.getByText("Cleric Beast", { exact: true }).count()) throw new Error("Normal player session page exposes the encounter roster");
   if (await player.getByText("Players", { exact: true }).count()) throw new Error("Normal player session page exposes the party roster");
   await assertNoHorizontalOverflow(player, "Mobile Game page");

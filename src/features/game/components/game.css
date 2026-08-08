@@ -63,11 +63,30 @@
   margin-bottom: 18px;
 }
 
-.game-session-label {
-  padding: 0 10px 5px;
+.game-session-label { padding: 0 10px 5px; color: var(--ink-faint); font-size: 0.75rem; }
+
+.game-history-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  background: transparent;
   color: var(--ink-faint);
+  font: inherit;
   font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-align: left;
+  cursor: pointer;
 }
+.game-history-toggle:hover { color: var(--ink); background: rgba(201, 164, 90, 0.05); }
+.game-history-toggle > span:last-child { font-size: 1rem; line-height: 0.8; }
+.game-history-toggle-inline { width: auto; border: 1px solid var(--border); padding: 7px 9px; color: var(--ink-dim); font-size: 0.72rem; }
+.game-history-list { display: grid; gap: 2px; }
+.game-history-drawer { margin: 12px 0 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+.game-history-drawer .game-session { padding-inline: 2px; }
 
 .game-session {
   display: grid;
@@ -90,7 +109,7 @@
 .game-table { min-width: 0; }
 .game-session-heading { padding-bottom: 24px; border-bottom: 1px solid var(--border-strong); }
 .game-session-heading h2,
-.game-creator h2 { margin: 2px 0 0; font-family: var(--font-display); font-size: clamp(1.55rem, 4vw, 2.35rem); }
+.game-creator h2 { margin: 2px 0 0; font-family: var(--font-display); font-size: clamp(1.3rem, 3vw, 1.85rem); }
 .game-session-heading p { margin-bottom: 0; }
 
 .game-session-heading-compact { align-items: center; }
@@ -424,6 +443,9 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-session-group { flex: 0 0 min(210px, 72vw); margin-bottom: 0; }
   .game-session { flex: 0 0 min(210px, 72vw); border-left: 0; border-bottom: 2px solid transparent; }
   .game-session.is-current { border-bottom-color: var(--gold); }
+  .game-history-toggle-inline { justify-self: end; }
+  .game-history-drawer .game-session { border-left: 0; border-bottom: 1px solid var(--border); }
+  .game-history-drawer .game-session.is-current { border-bottom-color: var(--gold); }
   .game-session-heading { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; }
   .game-player { grid-template-columns: minmax(0, 1fr) auto; gap: 6px 12px; }
   .game-player-open { grid-template-columns: 1fr; gap: 3px; }
