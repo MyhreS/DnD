@@ -35,7 +35,7 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
   const deathFailures = [1, 2, 3].filter((number) => sheetBool(model.data, `dsF${number}`)).length;
 
   return (
-    <AppSection>
+    <AppSection title="Overview" defaultOpen>
       <div className="appsheet-character-profile">
         <input
           className="appsheet-character-name"

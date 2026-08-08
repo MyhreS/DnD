@@ -411,7 +411,7 @@
 
 @media (max-width: 900px) {
   .appsheet-section {
-    padding: 0 0 44px;
+    margin-bottom: 14px;
   }
 
   .appsheet-combat-strip {

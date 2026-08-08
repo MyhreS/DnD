@@ -12,15 +12,22 @@ export interface AppSheetModel {
 export function AppSection({
   title,
   children,
+  defaultOpen = false,
 }: {
-  title?: string;
+  title: string;
   children: ReactNode;
+  defaultOpen?: boolean;
 }) {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
   return (
-    <section className="appsheet-section" aria-label={title ?? "Character overview"}>
-      {title && <header className="appsheet-section-head"><h2>{title}</h2></header>}
-      {children}
-    </section>
+    <details className="appsheet-section" open={isOpen} onToggle={(event) => setIsOpen(event.currentTarget.open)}>
+      <summary>
+        <h2>{title}</h2>
+        <span className="appsheet-section-icon" aria-hidden="true" />
+      </summary>
+      <div className="appsheet-section-content">{children}</div>
+    </details>
   );
 }
 
