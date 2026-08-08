@@ -27,6 +27,7 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
   function keepDifferences(next: StagedPatch): StagedPatch {
     const filtered: StagedPatch = {};
     if (next.level != null && next.level !== model.card.level) filtered.level = next.level;
+    if (next.lastSeenLevel != null && next.lastSeenLevel !== (model.card.lastSeenLevel ?? 0)) filtered.lastSeenLevel = next.lastSeenLevel;
     if (next.currentHp != null && next.currentHp !== (model.card.currentHp ?? optionalNumber(currentResult.fields.hpCur) ?? 0)) filtered.currentHp = next.currentHp;
     if (next.sanity != null && next.sanity !== (model.card.sanity ?? optionalNumber(currentResult.fields.sanityCur) ?? 0)) filtered.sanity = next.sanity;
     if (next.subclassId !== undefined && next.subclassId !== model.card.subclassId) filtered.subclassId = next.subclassId;
@@ -37,7 +38,10 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
 
   function stageLevel(level: number) {
     const bounded = Math.max(1, Math.min(20, level));
-    const candidate: StagedPatch = { ...patch, level: bounded };
+    // Applying a staged level change completes its level-up walkthrough. Any
+    // real choices (Expertise, subclass, and so on) still remain visible in
+    // their own controls until selected.
+    const candidate: StagedPatch = { ...patch, level: bounded, lastSeenLevel: bounded };
     if (bounded < 3 && model.card.subclassId) candidate.subclassId = null;
     else if (bounded >= 3 && patch.subclassId === null) delete candidate.subclassId;
     const levelPreview = automationFor({ ...model.card, ...candidate });

@@ -70,6 +70,14 @@ const expertWarden = automationFor({
   sheetAutomation: { version: 1, classSkills: ["Perception", "Survival"], expertiseSkills: ["Perception"], backgroundBonuses: {} },
 });
 assert.equal(expertWarden.fields.skPerception, "+6", "Expertise applies twice proficiency");
+const completedWardenLevelTwo = automationFor({
+  ...warden,
+  level: 2,
+  lastSeenLevel: 2,
+  skillProficiencies: ["Perception", "Survival"],
+  sheetAutomation: { version: 1, classSkills: ["Perception", "Survival"], expertiseSkills: ["Perception", "Survival"], backgroundBonuses: {} },
+});
+assert.equal(completedWardenLevelTwo.pending.levelChoices, undefined, "reviewed level-two expertise no longer appears as a pending level-up choice");
 const listenerWarden = automationFor({ ...warden, backgroundId: "cultist" });
 assert.equal(listenerWarden.pending.whispers?.remaining, 1, "Listener exposes its finite Whisper choice");
 
