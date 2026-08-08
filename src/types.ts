@@ -524,6 +524,10 @@ export interface HunterCard {
   coins?: number;
   /** Carried items (catalog item id + quantity). */
   inventory?: InventoryEntry[];
+  /** Player-chosen carrying location for each significant or oversized item
+   * unit. Missing entries are deliberately unassigned; nothing is placed in a
+   * body/storage slot until the player chooses where it goes. */
+  slotAssignments?: Record<string, Array<SlotLocation | null>>;
   /** Unique weapons, armor, and gear found during play outside the handbook. */
   customItems?: CustomItem[];
   /** Recently dropped lines, recoverable for 15 minutes (see DroppedItem). */

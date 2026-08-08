@@ -4,6 +4,7 @@ import { emptySheetCard } from "../src/lib/character";
 import { CLASSES } from "../src/data/classes";
 import { BACKGROUNDS } from "../src/data/backgrounds";
 import { startingKit } from "../src/lib/startingEquipment";
+import { computeSlots } from "../src/lib/slots";
 import { characterSheetUpdate } from "../src/features/hunter/lib/sheetPersistence";
 import { TOOL_PROFICIENCIES, WHISPERS } from "../src/data/characterOptions";
 import {
@@ -123,6 +124,22 @@ assert.equal(equipped.fields.mainArmor, "Hunter Leather Vest");
 assert.equal(equipped.fields.ac, "12");
 assert.match(String(equipped.fields.eq_0_0), /Longsword/);
 assert.equal(equipped.fields.weight, "9 lb");
+
+const unassignedSlots = computeSlots({
+  inventory: [{ itemId: "longsword", qty: 1 }, { itemId: "dagger", qty: 2 }],
+  equippedStorageIds: [],
+  customItems: [],
+});
+assert.equal(unassignedSlots.byItem.longsword, "Unassigned", "equipment is not silently placed");
+assert.equal(unassignedSlots.byItem.dagger, "Unassigned ×2", "each unchosen item is visibly unassigned");
+const chosenSlots = computeSlots({
+  inventory: [{ itemId: "longsword", qty: 1 }, { itemId: "dagger", qty: 2 }],
+  equippedStorageIds: [],
+  customItems: [],
+  slotAssignments: { longsword: ["back"], dagger: ["hip", "chest"] },
+});
+assert.equal(chosenSlots.byItem.longsword, "Back", "a selected slot is used");
+assert.equal(chosenSlots.byItem.dagger, "Hip · Chest", "multiple units can use separate chosen slots");
 
 const foundGear = automationFor({
   ...warden,

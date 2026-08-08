@@ -22,6 +22,7 @@ import type {
   InventoryEntry,
   SheetAutomationState,
   SheetData,
+  SlotLocation,
 } from "@/types";
 import { budgetFor, spentFor, type BuyMode } from "../../lib/abilityBuy";
 import { automationFor } from "../../lib/characterAutomation";
@@ -325,6 +326,19 @@ export function CharacterAutomationProvider({
     commit({ inventory: mergeInventory(card.inventory ?? [], [{ itemId: id, qty: delta }]) });
   }
 
+  function setSlotAssignment(id: string, index: number, location: SlotLocation | null) {
+    if (index < 0) return;
+    const assignments: Array<SlotLocation | null> = [...(card.slotAssignments?.[id] ?? [])];
+    if (location) assignments[index] = location;
+    else assignments[index] = null;
+    const cleaned = assignments.slice(0, Math.max(0, (card.inventory ?? []).find((entry) => entry.itemId === id)?.qty ?? 0));
+    while (cleaned.length && !cleaned[cleaned.length - 1]) cleaned.pop();
+    const slotAssignments = { ...(card.slotAssignments ?? {}) };
+    if (cleaned.length) slotAssignments[id] = cleaned;
+    else delete slotAssignments[id];
+    commit({ slotAssignments });
+  }
+
   function toggleStorage(id: string) {
     const equipped = card.equippedStorageIds ?? [];
     const isEquipped = equipped.includes(id);
@@ -458,6 +472,7 @@ export function CharacterAutomationProvider({
     setBonus,
     switchMode,
     changeQty,
+    setSlotAssignment,
     toggleStorage,
     chooseMainArmor: (id) => commit({
       mainArmorId: id || null,

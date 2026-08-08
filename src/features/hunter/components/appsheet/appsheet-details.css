@@ -124,6 +124,28 @@
   font-size: 11px;
 }
 
+.appsheet-item-assignments {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 8px;
+  margin-top: 5px;
+}
+
+.appsheet-item-assignments label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: var(--app-muted);
+  font-size: 10px;
+}
+
+.appsheet-item-assignments select {
+  width: auto;
+  min-width: 92px;
+  padding: 3px 5px;
+  font-size: 11px;
+}
+
 .appsheet-coin-editor {
   display: flex;
   align-items: center;

@@ -1,8 +1,7 @@
 // THE single source of slot truth. `computeSlots` derives every hunter's item
 // slots — base body slots + slots granted by worn storage items — and
-// deterministically assigns each Significant/Oversized inventory UNIT to one.
-// Assignments are NEVER persisted: the storage panel and the inventory table
-// both call this one function, so they can never disagree.
+// applies each player's saved choice for every Significant/Oversized inventory
+// UNIT. An item remains Unassigned until the player chooses a valid slot.
 
 import type { HunterCard, SlotLocation } from "@/types";
 import { BASE_SLOTS, STORAGE_BY_ITEM_ID } from "@/data/storage";
@@ -31,7 +30,7 @@ export interface SlotRow {
 
 export interface SlotComputation {
   rows: SlotRow[];
-  /** itemId → table label, e.g. "Back", "Chest ×2 · Hand", or "Unstowed". */
+  /** itemId → table label, e.g. "Back", "Chest ×2 · Hand", or "Unassigned". */
   byItem: Record<string, string>;
   /** Item units that found no free slot (no mechanical penalty — a marker).
    * `clamped` marks a qty capped at MAX_UNITS_PER_ENTRY (render "×99+"). */
@@ -62,12 +61,9 @@ function stow(pool: Pool, itemId: string, name: string): void {
   else pool.items.set(itemId, { name, count: 1 });
 }
 
-/** Build the slot pools + assign every carried Significant/Oversized unit.
- * Order (deterministic): pinned-location items first, then Oversized (hands
- * are their only home), then Significant — restricted pools (ankle holster)
- * before general capacity in back → chest → hip → hand order. */
+/** Build the slot pools and apply every explicit carrying choice. */
 export function computeSlots(
-  card: Pick<HunterCard, "inventory" | "equippedStorageIds" | "customItems">,
+  card: Pick<HunterCard, "inventory" | "equippedStorageIds" | "customItems" | "slotAssignments">,
 ): SlotComputation {
   const equipped = (card.equippedStorageIds ?? []).filter((id) => STORAGE_BY_ITEM_ID[id]);
   const defs = equipped.map((id) => STORAGE_BY_ITEM_ID[id]);
@@ -118,23 +114,20 @@ export function computeSlots(
     (pool.location !== "hand" || hasSack || handFreeFor(kind));
 
   // Inventory units, qty-expanded (clamped per entry); insignificant items
-  // take no slot.
+  // take no slot. Existing hunters have no saved choices, so they are shown as
+  // Unassigned rather than being silently placed somewhere.
   const entries = resolveInventory(card).filter((e) => e.item.carry !== "Insignificant");
-  type Unit = { itemId: string; name: string; kind: "significant" | "oversized"; pinned?: SlotLocation };
+  type Unit = { itemId: string; name: string; kind: "significant" | "oversized"; assigned?: SlotLocation };
   const units: Unit[] = [];
   const clampedIds = new Set<string>();
   for (const { item, qty } of entries) {
     const kind = item.carry === "Oversized" ? "oversized" : "significant";
     const capped = Math.min(qty, MAX_UNITS_PER_ENTRY);
     if (capped < qty) clampedIds.add(item.id);
-    for (let i = 0; i < capped; i++) units.push({ itemId: item.id, name: item.name, kind, pinned: item.slotLocation });
+    const assignments = card.slotAssignments?.[item.id] ?? [];
+    for (let i = 0; i < capped; i++) units.push({ itemId: item.id, name: item.name, kind, assigned: assignments[i] ?? undefined });
   }
-  units.sort((a, b) => a.name.localeCompare(b.name));
-  const ordered = [
-    ...units.filter((u) => u.pinned),
-    ...units.filter((u) => !u.pinned && u.kind === "oversized"),
-    ...units.filter((u) => !u.pinned && u.kind === "significant"),
-  ];
+  const ordered = units.sort((a, b) => a.name.localeCompare(b.name));
 
   const placed = new Map<string, Map<string, number>>(); // itemId → poolLabel/unstowed → count
   const record = (itemId: string, label: string) => {
@@ -145,19 +138,13 @@ export function computeSlots(
   const unstowedMap = new Map<string, { itemId: string; name: string; count: number; clamped?: boolean }>();
 
   for (const u of ordered) {
-    const candidates = u.pinned
-      ? pools.filter((p) => p.location === u.pinned)
-      : [
-          ...pools.filter((p) => p.only?.includes(u.itemId)),
-          ...pools.filter((p) => !p.only && p.location !== "hand"),
-          ...pools.filter((p) => !p.only && p.location === "hand"),
-        ];
+    const candidates = u.assigned ? pools.filter((p) => p.location === u.assigned) : [];
     const pool = candidates.find((p) => fits(p, u.itemId, u.kind));
     if (pool) {
       stow(pool, u.itemId, u.name);
       record(u.itemId, SLOT_LOCATION_LABEL[pool.location]);
     } else {
-      record(u.itemId, "Unstowed");
+      record(u.itemId, "Unassigned");
       const cur = unstowedMap.get(u.itemId);
       if (cur) cur.count += 1;
       else unstowedMap.set(u.itemId, { itemId: u.itemId, name: u.name, count: 1 });
@@ -165,7 +152,7 @@ export function computeSlots(
   }
 
   // A clamped qty means units beyond the cap exist but weren't expanded —
-  // they could only have been Unstowed (see MAX_UNITS_PER_ENTRY), so flag the
+  // they could only have been Unassigned (see MAX_UNITS_PER_ENTRY), so flag the
   // Unstowed bucket and render its count open-ended ("×94+").
   for (const id of clampedIds) {
     const u = unstowedMap.get(id);
@@ -177,7 +164,7 @@ export function computeSlots(
   for (const [itemId, m] of placed) {
     byItem[itemId] = [...m.entries()]
       .map(([label, count]) => {
-        const plus = clampedIds.has(itemId) && label === "Unstowed";
+        const plus = clampedIds.has(itemId) && label === "Unassigned";
         return count > 1 || plus ? `${label} ×${count}${plus ? "+" : ""}` : label;
       })
       .join(" · ");
