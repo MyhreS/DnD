@@ -125,8 +125,8 @@ export const ITEMS: Item[] = [
     name: "Bullets",
     category: "Ammunition",
     carry: "Insignificant",
-    weightLb: 1,
-    note: "A pouch of bullets for firearms.",
+    weightLb: 0,
+    note: "A pouch of bullets for firearms. Bullets have no carried weight.",
   },
 
   // --- Tools (tool sets + tool belt) ---

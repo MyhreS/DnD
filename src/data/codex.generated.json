@@ -2439,7 +2439,7 @@
         "Book 5 lb. Significant Item",
         "Bottle, Glass 2 lb. Insignificant Item",
         "Bucket 2 lb. Oversized Item",
-        "Bullets Varies Insignificant Item",
+        "Bullets 0 lb. Insignificant Item",
         "Caltrops 2 lb. Insignificant Item",
         "Candle -- Insignificant Item",
         "Chain 10 lb. Significant Item",
@@ -2542,7 +2542,7 @@
             ],
             [
               "Bullets",
-              "Varies",
+              "0 lb.",
               "Insignificant Item"
             ],
             [
@@ -16243,7 +16243,7 @@
         "Book 5 lb Significant",
         "Bottle, Glass 2 lb Insignificant",
         "Bucket 2 lb Oversized",
-        "Bullets — Insignificant",
+        "Bullets 0 lb. Insignificant",
         "Caltrops 2 lb Insignificant",
         "Candle — Insignificant",
         "Chain 10 lb Significant",
@@ -16342,7 +16342,7 @@
             ],
             [
               "Bullets",
-              "—",
+              "0 lb.",
               "Insignificant"
             ],
             [
