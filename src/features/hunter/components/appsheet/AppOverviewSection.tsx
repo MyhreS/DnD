@@ -50,6 +50,15 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
   const strainLevel = String(result.fields.strainLevel ?? "—");
   const deathSuccesses = [1, 2, 3].filter((number) => sheetBool(model.data, `dsS${number}`)).length;
   const deathFailures = [1, 2, 3].filter((number) => sheetBool(model.data, `dsF${number}`)).length;
+  const openPendingChoice = (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
+    event.preventDefault();
+    const target = document.querySelector<HTMLElement>(href);
+    if (!target) return;
+    target.setAttribute("open", "");
+    target.scrollIntoView({ behavior: "smooth", block: "start" });
+    target.focus({ preventScroll: true });
+    window.history.replaceState(null, "", href);
+  };
 
   return (
     <AppSection title="Overview" defaultOpen>
@@ -76,19 +85,19 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
           <div className="appsheet-required-choices-heading">
             <span aria-hidden="true">!</span>
             <div>
-              <b id="required-choices-title">{pending.length} required {pending.length === 1 ? "choice" : "choices"}</b>
-              <p>Finish the highlighted choice{pending.length === 1 ? "" : "s"} below.</p>
+              <b id="required-choices-title">{pending.length} decision{pending.length === 1 ? "" : "s"} needs your attention</b>
+              <p>Use the red action below to jump straight to what needs choosing.</p>
             </div>
           </div>
           <ul>
             {pending.map((choice) => (
               <li key={choice.key}>
-                <a href={choice.href}>
+                <a href={choice.href} onClick={openPendingChoice(choice.href)}>
                   <span>
-                    <b>{choice.remaining} {choice.label}{choice.remaining === 1 ? "" : "s"} left</b>
+                    <b>Choose {choice.remaining} {choice.label}{choice.remaining === 1 ? "" : "s"}</b>
                     <small>{choice.reason}</small>
                   </span>
-                  <em>Open {choice.openLabel} →</em>
+                  <em>Choose now <span className="appsheet-visually-hidden">in {choice.openLabel}</span> →</em>
                 </a>
               </li>
             ))}

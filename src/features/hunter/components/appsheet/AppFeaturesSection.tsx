@@ -58,9 +58,10 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
         summary={classChoiceRemaining ? `${classChoiceRemaining} remaining` : "All current choices complete"}
         aside={classChoiceRemaining ? <span className="appsheet-incomplete">Action needed</span> : <span className="appsheet-complete">Complete</span>}
         defaultOpen={classChoiceRemaining > 0}
+        className={classChoiceRemaining > 0 ? "appsheet-disclosure-attention" : ""}
       >
       {expertiseLimit > 0 && (
-        <AppPanel title="Expertise" aside={<span className={expertise.length === expertiseLimit ? "appsheet-complete" : "appsheet-incomplete"}>{expertise.length}/{expertiseLimit}</span>}>
+        <AppPanel title="Expertise" className={expertise.length < expertiseLimit ? "appsheet-panel-attention" : ""} aside={<span className={expertise.length === expertiseLimit ? "appsheet-complete" : "appsheet-incomplete"}>{expertise.length < expertiseLimit ? `Choose ${expertiseLimit - expertise.length}` : "Complete"}</span>}>
           <div className="appsheet-choice-list">
             {proficientSkills.map((skill) => <ChoiceToggle key={skill.name} label={skill.name} meta={choiceAbility(skill.name)} checked={expertise.includes(skill.name)} disabled={model.readOnly || (!expertise.includes(skill.name) && expertise.length >= expertiseLimit)} onChange={() => automation.toggleExpertise(skill.name)} />)}
           </div>
@@ -69,7 +70,7 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
       )}
 
       {masteryCount > 0 && (
-        <AppPanel title="Weapon mastery" aside={<span className={masteries.length === masteryCount ? "appsheet-complete" : "appsheet-incomplete"}>{masteries.length}/{masteryCount}</span>}>
+        <AppPanel title="Weapon mastery" className={masteries.length < masteryCount ? "appsheet-panel-attention" : ""} aside={<span className={masteries.length === masteryCount ? "appsheet-complete" : "appsheet-incomplete"}>{masteries.length < masteryCount ? `Choose ${masteryCount - masteries.length}` : "Complete"}</span>}>
           <div className="appsheet-choice-list compact">
             {masteryWeapons.map((weapon) => <ChoiceToggle key={weapon.id} label={weapon.name} meta={weapon.carry} checked={masteries.includes(weapon.name)} disabled={model.readOnly || (!masteries.includes(weapon.name) && masteries.length >= masteryCount)} onChange={() => automation.toggleMastery(weapon.name)} />)}
           </div>
@@ -78,7 +79,7 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
       )}
 
       {whisperLimit > 0 && (
-        <AppPanel title="Prepared Whispers" aside={<span className={whispers.length === whisperLimit ? "appsheet-complete" : "appsheet-incomplete"}>{whispers.length}/{whisperLimit}</span>}>
+        <AppPanel title="Prepared Whispers" className={whispers.length < whisperLimit ? "appsheet-panel-attention" : ""} aside={<span className={whispers.length === whisperLimit ? "appsheet-complete" : "appsheet-incomplete"}>{whispers.length < whisperLimit ? `Choose ${whisperLimit - whispers.length}` : "Complete"}</span>}>
           <div className="appsheet-choice-list">
             {WHISPERS.map((whisper) => <ChoiceToggle key={whisper.id} label={whisper.name} checked={whispers.includes(whisper.id)} disabled={model.readOnly || (!whispers.includes(whisper.id) && whispers.length >= whisperLimit)} onChange={() => automation.toggleWhisper(whisper.id)} />)}
           </div>

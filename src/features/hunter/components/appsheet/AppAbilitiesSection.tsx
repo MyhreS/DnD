@@ -76,9 +76,10 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
         summary={klass ? `${card.skillProficiencies.length} proficient · ${classRemaining + featRemaining} choices remaining · open to update` : "Choose a class first"}
         aside={classRemaining + featRemaining > 0 ? <span className="appsheet-incomplete">Action needed</span> : undefined}
         defaultOpen={classRemaining + featRemaining > 0}
+        className={classRemaining + featRemaining > 0 ? "appsheet-disclosure-attention" : ""}
       >
       {klass ? (
-        <AppPanel title={`${klass.title} skill choices`} aside={<span className={classRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{classRemaining} left</span>}>
+        <AppPanel title={`${klass.title} skill choices`} className={classRemaining ? "appsheet-panel-attention" : ""} aside={<span className={classRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{classRemaining ? `Choose ${classRemaining}` : "Complete"}</span>}>
           <div className="appsheet-choice-list">
             {klass.skillChoices.options.map((skill) => (
               <ChoiceToggle key={skill} label={skill} meta={choiceAbility(skill)} checked={classChoices.includes(skill)} disabled={model.readOnly} onChange={() => automation.toggleClassSkill(skill)} />
@@ -91,7 +92,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
       )}
 
       {background?.feat === "Skilled" && (
-        <AppPanel title="Skilled feat choices" aside={<span className={featRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{featRemaining} left</span>}>
+        <AppPanel title="Skilled feat choices" className={featRemaining ? "appsheet-panel-attention" : ""} aside={<span className={featRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{featRemaining ? `Choose ${featRemaining}` : "Complete"}</span>}>
           <div className="appsheet-choice-list compact">
             {[...SKILLS.map((skill) => skill.name), ...TOOL_PROFICIENCIES].map((choice) => (
               <ChoiceToggle key={choice} label={choice} meta={choiceAbility(choice)} checked={featChoices.includes(choice)} disabled={model.readOnly} onChange={() => automation.toggleFeatSkill(choice)} />
