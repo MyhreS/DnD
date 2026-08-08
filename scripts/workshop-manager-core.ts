@@ -1,5 +1,6 @@
 export const WORKSHOP_MODEL = "gpt-5.6-terra";
 export const WORKSHOP_REASONING_EFFORT = "medium";
+export const WORKSHOP_MAX_CONCURRENT_TICKETS = 3;
 
 export type ManagerOutcome = "finished" | "answered" | "needs_simon" | "declined";
 

@@ -7,7 +7,9 @@ description: Process D&D Workshop feedback tickets from Firestore through a safe
 
 ## Run the manager
 
-From the repository root, run `bun run workshop:bot` for the continuous manager or `bun run workshop:bot:once` for one recovery pass. The continuous manager listens to Firestore and starts queued work immediately when a request or eligible reply arrives. It also performs a hidden five-minute recovery check in case a live notification was missed. Keep credentials in Doppler or Application Default Credentials; never write them to the repository.
+From the repository root, run `bun run workshop:bot` for the continuous manager or `bun run workshop:bot:once` for one recovery pass. The continuous manager listens to Firestore and starts queued work immediately when a request or eligible reply arrives. It runs at most three ticket agents concurrently, exactly one agent per ticket, and gives each agent a separate git worktree. It also performs a hidden five-minute recovery check in case a live notification was missed. Keep credentials in Doppler or Application Default Credentials; never write them to the repository.
+
+Coding and testing may happen concurrently, but releases may not. Ticket agents commit only inside their assigned worktree and must never push, create or merge a pull request, deploy, or modify another ticket worktree. The manager owns one serialized release gate: it publishes one finished ticket, waits for that production workflow to complete, then lets the next ticket publish from the updated main branch. This release gate is the coordination channel between concurrent agents and must never be bypassed.
 
 ## Process a ticket
 
@@ -18,7 +20,7 @@ From the repository root, run `bun run workshop:bot` for the continuous manager 
 5. Work in an isolated git worktree and follow the repository quality gates.
 6. Make reasonable product assumptions when the request is clear. Preserve existing user data.
 7. Run focused tests, the repository checks, and Playwright at phone and desktop sizes for UI work.
-8. For implemented changes, commit, push, open a pull request, merge it yourself after checks pass, deploy through the repository's normal path, and verify the live result. Never ask Simon or the creator to review or merge routine work. Skip repository changes for `answered`, `needs_simon`, and `declined` outcomes.
+8. For implemented changes, test and commit the finished changes in the assigned worktree, then return control to the manager. The manager pushes, opens the pull request, waits for checks, merges through the shared release gate, waits for the serialized production deployment, and verifies completion. Never push, merge, deploy, or ask Simon or the creator to review routine work. Skip repository changes for `answered`, `needs_simon`, and `declined` outcomes.
 9. Reply in plain language. Say what changed and that the updated version is available; avoid implementation terms unless needed.
 
 ## Workshop channel contract

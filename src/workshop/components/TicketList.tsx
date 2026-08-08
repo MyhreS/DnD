@@ -24,14 +24,14 @@ type TicketListProps = {
   uid: string;
   hasMore: boolean;
   loadingMore: boolean;
-  activeTicketId: string | null;
+  activeTicketIds: string[];
   agentState: AgentState | null;
   agentOnline: boolean;
   onLoadMore: () => void;
   onSelect: (id: string) => void;
 };
 
-export function TicketList({ tickets, uid, hasMore, loadingMore, activeTicketId, agentState, agentOnline, onLoadMore, onSelect }: TicketListProps) {
+export function TicketList({ tickets, uid, hasMore, loadingMore, activeTicketIds, agentState, agentOnline, onLoadMore, onSelect }: TicketListProps) {
   const [search, setSearch] = useState("");
   const query = search.trim().toLocaleLowerCase();
   const filtered = query
@@ -71,7 +71,9 @@ export function TicketList({ tickets, uid, hasMore, loadingMore, activeTicketId,
                         </span>
                         <strong>{ticket.title}</strong>
                         <span className="ticket-meta">{ticket.authorName}{ticket.attachmentCount ? ` · ${ticket.attachmentCount} image${ticket.attachmentCount === 1 ? "" : "s"}` : ""}</span>
-                        {ticket.id === activeTicketId && ticket.status === "doing_now" && <WorkActivity placement="list" state={agentState} online={agentOnline} />}
+                        {activeTicketIds.includes(ticket.id) && ticket.status === "doing_now" && (
+                          <WorkActivity placement="list" state={agentState?.activeTickets?.[ticket.id] ?? agentState} online={agentOnline} />
+                        )}
                       </button>
                     </li>
                   );

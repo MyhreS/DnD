@@ -9,7 +9,7 @@ import { useDialogBehavior } from "@/workshop/hooks/useDialogBehavior";
 import { useMarkTicketRead } from "@/workshop/hooks/useMarkTicketRead";
 import { useTicketMessages } from "@/workshop/hooks/useTicketMessages";
 import { useWorkshopTicket } from "@/workshop/hooks/useWorkshopTicket";
-import type { AgentState, WorkshopMessage, WorkshopPresence, WorkshopTicket } from "@/workshop/types";
+import type { AgentWorkState, WorkshopMessage, WorkshopPresence, WorkshopTicket } from "@/workshop/types";
 
 function messageLabel(message: WorkshopMessage): string {
   if (message.kind === "agent") return "Workshop agent";
@@ -44,7 +44,7 @@ type TicketDetailProps = {
   initialTicket: WorkshopTicket | null;
   uid: string;
   isWorking: boolean;
-  agentState: AgentState | null;
+  agentState: AgentWorkState | null;
   agentOnline: boolean;
   people: WorkshopPresence[];
   onClose: () => void;

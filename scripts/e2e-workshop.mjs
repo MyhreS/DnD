@@ -135,10 +135,10 @@ async function runManager(fixture) {
   if (code !== 0) throw new Error(`Fixture manager failed (${code}): ${output}`);
 }
 
-function startManager(fixture) {
+function startManager(fixture, extraEnv = {}) {
   const child = spawn("bun", ["scripts/workshop-manager.ts", `--fixture=${fixture}`], {
     stdio: ["ignore", "pipe", "pipe"],
-    env: { ...process.env },
+    env: { ...process.env, ...extraEnv },
   });
   let output = "";
   child.stdout.on("data", (data) => { output += data; });
@@ -190,7 +190,7 @@ async function expectCode(action, code, label) {
 }
 
 async function eventually(check, label) {
-  for (let attempt = 0; attempt < 100; attempt += 1) {
+  for (let attempt = 0; attempt < 200; attempt += 1) {
     if (await check()) return;
     await sleep(50);
   }
@@ -305,6 +305,68 @@ try {
     throw new Error(`${error}\nManager output:\n${triggerManager.output()}`);
   } finally {
     await triggerManager.stop();
+  }
+
+  const concurrencyProbes = Array.from({ length: 4 }, (_, index) => db.doc(`workshopTickets/concurrency-probe-${index}`));
+  await Promise.all(concurrencyProbes.map(async (probe, index) => {
+    await probe.set({
+      title: `Concurrency probe ${index + 1}`,
+      status: "not_done",
+      authorUid: creatorUid,
+      authorEmail: creatorEmail,
+      authorName: "Christopher Creator",
+      createdAt: new Date(Date.now() + index),
+      updatedAt: new Date(Date.now() + index),
+      readAtBy: {},
+      revision: 1,
+      nextSequence: 2,
+      attachmentCount: 0,
+      needsSimonReplyReceived: false,
+      leasedBy: null,
+      leaseExpiresAt: null,
+    });
+    await probe.collection("messages").doc("request").set({
+      kind: "request",
+      body: `Process independent thread ${index + 1}.`,
+      authorUid: creatorUid,
+      authorEmail: creatorEmail,
+      authorName: "Christopher Creator",
+      attachments: [],
+      sequence: 1,
+      createdAt: new Date(),
+    });
+  }));
+  const concurrentManager = startManager("finished", { WORKSHOP_FIXTURE_DELAY_MS: "1500" });
+  try {
+    await eventually(async () => {
+      const state = (await db.doc("workshopAgent/state").get()).data();
+      return state?.activeTicketCount === 3
+        && state?.maxConcurrentTickets === 3
+        && new Set(state?.activeTicketIds ?? []).size === 3
+        && state?.model === "gpt-5.6-terra"
+        && state?.reasoningEffort === "medium";
+    }, "Three-agent concurrency limit");
+    const runningSnapshot = await Promise.all(concurrencyProbes.map((probe) => probe.get()));
+    const runningStatuses = runningSnapshot.map((probe) => probe.data()?.status);
+    if (runningStatuses.filter((status) => status === "doing_now").length !== 3 || runningStatuses.filter((status) => status === "not_done").length !== 1) {
+      throw new Error(`Workshop did not keep exactly three independent threads active: ${runningStatuses.join(", ")}`);
+    }
+    await creator.page.getByTestId("agent-presence").getByText("3 agents working", { exact: true }).waitFor();
+    await eventually(async () => await creator.page.getByTestId("work-activity-list").count() === 3, "Three visible ticket workers");
+    await creator.page.screenshot({ path: "screenshots/workshop-three-agents-mobile.png", fullPage: true });
+    await eventually(async () => {
+      const finished = await Promise.all(concurrencyProbes.map((probe) => probe.get()));
+      return finished.every((probe) => probe.data()?.status === "finished");
+    }, "Four threads completing through three worker slots");
+    const agentMessages = await Promise.all(concurrencyProbes.map((probe) => probe.collection("messages").where("kind", "==", "agent").get()));
+    if (agentMessages.some((messages) => messages.size !== 1)) {
+      throw new Error("A Workshop thread was handled by more than one agent run.");
+    }
+  } catch (error) {
+    throw new Error(`${error}\nConcurrent manager output:\n${concurrentManager.output()}`);
+  } finally {
+    await concurrentManager.stop();
+    await Promise.all(concurrencyProbes.map((probe) => db.recursiveDelete(probe)));
   }
 
   const answerProbe = db.doc("workshopTickets/direct-answer-probe");
@@ -795,7 +857,7 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: equal owner access without duplicate membership metadata, shared protected decisions, outsider denial, live presence, simultaneous replies, fast sync, secure images, paging, drafts, idempotency, read receipts, and responsive mobile/desktop layout.");
+  console.log("Workshop E2E passed: exactly three independent ticket agents, one run per thread, a queued fourth thread, Terra medium reporting, per-ticket progress, equal owner access, outsider denial, live sync, secure images, paging, drafts, idempotency, and responsive mobile/desktop layout.");
   await Promise.all([simon.context.close(), creator.context.close(), thomas.context.close(), tobias.context.close(), ronald.context.close(), outsider.context.close()]);
 } finally {
   await browser.close();

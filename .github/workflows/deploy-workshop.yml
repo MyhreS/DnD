@@ -36,6 +36,10 @@ on:
       - "bun.lock"
       - ".github/workflows/deploy-workshop.yml"
 
+concurrency:
+  group: ${{ github.event_name == 'push' && 'firebase-production' || format('firebase-workshop-preview-{0}', github.event.pull_request.number) }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
