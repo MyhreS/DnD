@@ -11,7 +11,6 @@ import {
   DecisionField,
   DerivedValue,
   NumericStepper,
-  PendingNotice,
   type AppSheetModel,
 } from "./appSheetShared";
 import { sheetBool, sheetText } from "./appSheetValues";
@@ -22,12 +21,26 @@ function numeric(value: string, fallback = 0): number {
   return Number.isFinite(parsed) ? parsed : fallback;
 }
 
+const PENDING_TARGETS = {
+  background: { href: "#appsheet-character-build", openLabel: "Character build" },
+  subclass: { href: "#appsheet-character-build", openLabel: "Character build" },
+  backgroundPoints: { href: "#appsheet-abilities", openLabel: "Abilities & skills" },
+  classSkills: { href: "#appsheet-abilities", openLabel: "Abilities & skills" },
+  featSkills: { href: "#appsheet-abilities", openLabel: "Abilities & skills" },
+  levelChoices: { href: "#appsheet-features", openLabel: "Features & choices" },
+  whispers: { href: "#appsheet-features", openLabel: "Features & choices" },
+} as const;
+
 export function AppOverviewSection({ model }: { model: AppSheetModel }) {
   const automation = useCharacterAutomation();
   const editStage = useAppEditStage();
   const { card, result, klass, background, state } = automation;
   const subclassOptions = klass?.subclasses ?? [];
-  const pending = Object.values(result.pending).filter(Boolean);
+  const pending = Object.entries(result.pending).flatMap(([key, choice]) => {
+    if (!choice) return [];
+    const target = PENDING_TARGETS[key as keyof typeof PENDING_TARGETS];
+    return target ? [{ ...choice, ...target, key }] : [];
+  });
   const name = sheetText(model.data, "name") || card.name;
   const hpCurrent = sheetText(model.data, "hpCur") || String(card.currentHp ?? result.fields.hpMax ?? 0);
   const sanityCurrent = sheetText(model.data, "sanityCur") || String(card.sanity ?? result.fields.sanityMax ?? 0);
@@ -59,10 +72,28 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
       </div>
 
       {pending.length > 0 && (
-        <PendingNotice>
-          <b>{pending.length} character {pending.length === 1 ? "decision" : "decisions"} remaining</b>
-          <p>Complete the highlighted choices under Features or Abilities &amp; skills below.</p>
-        </PendingNotice>
+        <div className="appsheet-required-choices" role="status" aria-labelledby="required-choices-title">
+          <div className="appsheet-required-choices-heading">
+            <span aria-hidden="true">!</span>
+            <div>
+              <b id="required-choices-title">{pending.length} required {pending.length === 1 ? "choice" : "choices"}</b>
+              <p>Finish the highlighted choice{pending.length === 1 ? "" : "s"} below.</p>
+            </div>
+          </div>
+          <ul>
+            {pending.map((choice) => (
+              <li key={choice.key}>
+                <a href={choice.href}>
+                  <span>
+                    <b>{choice.remaining} {choice.label}{choice.remaining === 1 ? "" : "s"} left</b>
+                    <small>{choice.reason}</small>
+                  </span>
+                  <em>Open {choice.openLabel} →</em>
+                </a>
+              </li>
+            ))}
+          </ul>
+        </div>
       )}
 
       <div className="appsheet-overview-layout">
@@ -106,6 +137,7 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
           summary={`${klass?.title ?? "No class"} · ${background?.name ?? "No background"} · level ${editStage.previewCard.level}`}
           defaultOpen={state.setupComplete !== true}
           className="appsheet-identity-panel"
+          id="appsheet-character-build"
         >
           <div className="appsheet-form-grid">
             <AppSelect

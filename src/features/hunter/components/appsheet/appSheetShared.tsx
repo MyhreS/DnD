@@ -13,17 +13,22 @@ export function AppSection({
   title,
   children,
   defaultOpen = false,
+  id,
+  attention = false,
 }: {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
+  id?: string;
+  attention?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
-    <details className="appsheet-section" open={isOpen} onToggle={(event) => setIsOpen(event.currentTarget.open)}>
+    <details id={id} className={`appsheet-section ${attention ? "appsheet-section-attention" : ""}`.trim()} open={isOpen} onToggle={(event) => setIsOpen(event.currentTarget.open)}>
       <summary>
         <h2>{title}</h2>
+        {attention && <span className="appsheet-section-attention-label">Action needed</span>}
         <span className="appsheet-section-icon" aria-hidden="true" />
       </summary>
       <div className="appsheet-section-content">{children}</div>
@@ -52,6 +57,7 @@ export function AppDisclosure({
   children,
   defaultOpen = false,
   className = "",
+  id,
 }: {
   title: string;
   summary?: ReactNode;
@@ -59,11 +65,13 @@ export function AppDisclosure({
   children: ReactNode;
   defaultOpen?: boolean;
   className?: string;
+  id?: string;
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
 
   return (
     <details
+      id={id}
       className={`appsheet-disclosure ${className}`.trim()}
       open={isOpen}
       onToggle={(event) => setIsOpen(event.currentTarget.open)}
