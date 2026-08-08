@@ -152,10 +152,14 @@ try {
   if (await grappled.getByText("D&D Rules", { exact: true }).count()) throw new Error("source filter kept a D&D version");
 
   await search.fill("hunter rifle");
-  const weapons = desktop.getByTestId("codex-topic").filter({ hasText: "Weapons" }).first();
-  await weapons.waitFor();
-  await weapons.locator("summary").click();
-  await weapons.getByText("Hunter Rifle", { exact: true }).waitFor();
+  const hunterRifle = desktop.getByTestId("codex-topic").filter({ hasText: "Hunter Rifle" }).first();
+  await hunterRifle.waitFor();
+  await hunterRifle.getByText("1d10 Piercing", { exact: true }).waitFor();
+
+  await search.fill("longsword");
+  const longsword = desktop.getByTestId("codex-topic").filter({ hasText: "Longsword" }).first();
+  await longsword.waitFor();
+  await longsword.getByText("1d8 Slashing", { exact: true }).first().waitFor();
 
   await search.fill("Madness Die");
   await desktop.getByTestId("codex-empty").getByText("No Codex entries match this search.", { exact: true }).waitFor();
@@ -170,7 +174,7 @@ try {
 
   await desktop.goto(`${BASE}/game-card?q=secret+door`, { waitUntil: "domcontentloaded" });
   await desktop.waitForURL(/\/codex\?.*source=game-card/);
-  await desktop.getByTestId("codex-topic").filter({ hasText: "Doors, Secret Doors & Locks" }).waitFor();
+  await desktop.getByTestId("codex-topic").filter({ hasText: "Doors, Secret Doors & Locks" }).first().waitFor();
   await desktop.screenshot({ path: "screenshots/codex-desktop.png", fullPage: true });
 
   const mobileContext = await browser.newContext({ ...devices["iPhone 13"] });
@@ -192,11 +196,10 @@ try {
 
   const mobileSearch = mobile.getByLabel("Search every rule and reference");
   await mobileSearch.fill("hunter rifle");
-  const mobileWeapons = mobile.getByTestId("codex-topic").filter({ hasText: "Weapons" }).first();
-  await mobileWeapons.waitFor();
-  await mobileWeapons.locator("summary").click();
-  await mobileWeapons.getByText("Hunter Rifle", { exact: true }).first().waitFor();
-  const tableDimensions = await mobileWeapons.locator(".codex-table-wrap").first().evaluate((element) => ({
+  const mobileHunterRifle = mobile.getByTestId("codex-topic").filter({ hasText: "Hunter Rifle" }).first();
+  await mobileHunterRifle.waitFor();
+  await mobileHunterRifle.getByText("1d10 Piercing", { exact: true }).waitFor();
+  const tableDimensions = await mobileHunterRifle.locator(".codex-table-wrap").first().evaluate((element) => ({
     clientWidth: element.clientWidth,
     scrollWidth: element.scrollWidth,
   }));

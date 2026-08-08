@@ -109,6 +109,32 @@ function normalizeTable(raw) {
   return table(raw.title ?? raw.caption, raw.columns ?? [], (raw.rows ?? []).map((row) => Object.values(row)));
 }
 
+/** Make each reference-table row discoverable by its own name as well as through
+ * the parent table. This lets a search for an item such as "Longsword" open its
+ * exact stats instead of requiring players to infer that it lives in Weapons. */
+function addGameCardTableRows(cardEntry, tables) {
+  for (const [tableIndex, item] of tables.entries()) {
+    for (const [rowIndex, row] of item.rows.entries()) {
+      const term = row[0]?.trim();
+      if (!term || term === "—") continue;
+      const details = item.columns
+        .map((column, columnIndex) => `${column}: ${row[columnIndex] ?? "—"}`)
+        .join(" · ");
+      add({
+        id: `game-card-${cardEntry.id}-table-${tableIndex}-row-${rowIndex}-${slug(term)}`,
+        term,
+        topic: `game-card-${cardEntry.id}-${item.title ?? tableIndex}-${term}`,
+        body: [details],
+        tables: [table(item.title, item.columns, [row])],
+        group: "Game Card",
+        sourceId: "game-card",
+        locator: `${cardEntry.category} · ${cardEntry.term}`,
+        sourcePages: cardEntry.sourcePages,
+      });
+    }
+  }
+}
+
 // Handbook chapters and their embedded tables.
 for (const chapter of master.handbook.chapters) {
   for (const [sectionIndex, section] of chapter.sections.entries()) {
@@ -249,17 +275,19 @@ for (const rulesPage of master.rulesReference.pages) {
 // Player-created quick reference. The body is re-derived from paragraphs and
 // tables, so master.json never needs a second drifting copy of searchable text.
 for (const cardEntry of master.gameCard.entries) {
+  const tables = (cardEntry.tables ?? []).map(normalizeTable);
   add({
     id: `game-card-${cardEntry.id}`,
     term: cardEntry.term,
     aliases: cardEntry.aliases,
     body: cardEntry.paragraphs,
-    tables: (cardEntry.tables ?? []).map(normalizeTable),
+    tables,
     group: "Game Card",
     sourceId: "game-card",
     locator: cardEntry.category,
     sourcePages: cardEntry.sourcePages,
   });
+  addGameCardTableRows(cardEntry, tables);
 }
 
 // Character sheets are searchable as field maps and creation-step guidance.
