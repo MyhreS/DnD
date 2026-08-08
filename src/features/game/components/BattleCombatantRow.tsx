@@ -104,11 +104,11 @@ export function BattleCombatantRow({
           <button
             className="battle-death-toggle"
             type="button"
-            aria-label={dead ? `Revive ${combatant.name}` : `Mark ${combatant.name} dead`}
+            aria-label={dead ? `Revive ${combatant.name}` : `Kill ${combatant.name}`}
             aria-pressed={dead}
             disabled={disabled}
             onClick={() => void patch(game.id, combatant.id, { currentHp: dead ? 1 : 0, defeated: !dead })}
-          >{dead ? "Revive" : "Mark dead"}</button>
+          >{dead ? "Revive" : "Kill enemy"}</button>
           <details className="battle-more">
             <summary aria-label={`More options for ${combatant.name}`}>•••</summary>
             <div className="battle-more-menu">

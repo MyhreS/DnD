@@ -200,6 +200,8 @@ export type TurnTimerPhase = "idle" | "briefing" | "running" | "paused" | "untim
 /** Live combat encounter state, stored on the Game doc. */
 export interface EncounterState {
   active: boolean;
+  /** Increments for each battle in a session so completed encounters remain saved. */
+  encounterId: number;
   round: number;
   /** The combatant whose turn it is, or null. */
   turnId: string | null;
@@ -238,6 +240,8 @@ export interface EnemyTemplate extends EnemyStats {
 export interface Combatant {
   id: string;
   kind: "pc" | "monster";
+  /** The session battle this combatant belongs to. Legacy rows belong to battle 0. */
+  encounterId?: number;
   name: string;
   /** For a PC — the HunterCard to read live HP from. */
   characterId?: string | null;

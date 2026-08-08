@@ -3,6 +3,7 @@ import { initiativeOrder, useCombatStore } from "@/features/play/store/combatSto
 import { useWakeLock } from "@/hooks/common/useWakeLock";
 import type { Game, HunterCard } from "@/types";
 import { BattleCombatantRow } from "./BattleCombatantRow";
+import { encounterCombatants } from "../lib/combatPresentation";
 import "./battle-screen.css";
 
 export function SessionBattleView({
@@ -19,9 +20,10 @@ export function SessionBattleView({
   disabled: boolean;
 }) {
   useWakeLock();
-  const combatants = useCombatStore((state) => state.combatants);
-  const order = useMemo(() => initiativeOrder(combatants), [combatants]);
+  const allCombatants = useCombatStore((state) => state.combatants);
   const encounter = game.combat!;
+  const combatants = useMemo(() => encounterCombatants(allCombatants, encounter), [allCombatants, encounter]);
+  const order = useMemo(() => initiativeOrder(combatants), [combatants]);
   const current = order.find((combatant) => combatant.id === encounter.turnId) ?? order[0];
 
   return (

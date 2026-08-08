@@ -66,7 +66,9 @@ interface CombatState {
     existing: Combatant[],
     encounter: EncounterState,
   ) => Promise<boolean>;
-  addMonster: (gameId: string, m: MonsterInput) => Promise<boolean>;
+  /** Starts a distinct battle without removing the completed encounter's rows. */
+  startNewSessionEncounter: (gameId: string, pcs: PcSeed[], existing: Combatant[], encounterId: number) => Promise<boolean>;
+  addMonster: (gameId: string, m: MonsterInput, encounterId?: number) => Promise<boolean>;
   resetMonster: (gameId: string, id: string) => Promise<boolean>;
   patch: (gameId: string, id: string, partial: Partial<Combatant>) => Promise<boolean>;
   remove: (
@@ -147,6 +149,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
     startEncounter: async (gameId, pcs) => {
       const seeded = pcs.map((p) => ({
         kind: "pc" as const,
+        encounterId: 0,
         name: p.name,
         characterId: p.characterId,
         initiative: rollD20() + p.dexMod,
@@ -164,6 +167,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
         const designatedWardenId = order.find((c) => c.isWarden)?.id ?? null;
         await setCombat(gameId, {
           active: true,
+          encounterId: 0,
           round: 1,
           turnId: top?.id ?? null,
           designatedWardenId,
@@ -189,6 +193,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
       const designatedWardenId = order.find((c) => c.isWarden)?.id ?? null;
       return setCombat(gameId, {
         active: true,
+        encounterId: 0,
         round: 1,
         turnId: top?.id ?? null,
         designatedWardenId,
@@ -205,7 +210,8 @@ export const useCombatStore = create<CombatState>((set, get) => {
       const missing = pcs
         .filter((pc) => !existingCharacterIds.has(pc.characterId))
         .map((pc) => ({
-          kind: "pc" as const,
+        kind: "pc" as const,
+          encounterId: encounter.encounterId,
           name: pc.name,
           characterId: pc.characterId,
           initiative: rollD20() + pc.dexMod,
@@ -236,6 +242,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
       const designatedWardenId = savedWarden?.id ?? order.find((combatant) => combatant.isWarden)?.id ?? null;
       return setCombat(gameId, {
         active: true,
+        encounterId: encounter.encounterId,
         round: Math.max(1, encounter.round),
         turnId: first.id,
         designatedWardenId,
@@ -245,7 +252,44 @@ export const useCombatStore = create<CombatState>((set, get) => {
       });
     },
 
-    addMonster: async (gameId, m) => {
+    startNewSessionEncounter: async (gameId, pcs, existing, encounterId) => {
+      const seeded = pcs.map((p) => ({
+        kind: "pc" as const,
+        encounterId,
+        name: p.name,
+        characterId: p.characterId,
+        initiative: rollD20() + p.dexMod,
+        ac: null,
+        maxHp: null,
+        currentHp: null,
+        conditions: [] as string[],
+        isWarden: p.isWarden,
+      }));
+      let created: Combatant[] = [];
+      if (get().preview) {
+        created = seeded.map((combatant) => ({ ...combatant, id: previewId(), createdAt: Date.now() }));
+        set((state) => ({ combatants: [...state.combatants, ...created] }));
+      } else {
+        const result = await run(() => addCombatants(gameId, seeded), "Couldn't add the Hunters to the new battle.");
+        if (!result) return false;
+        created = result;
+      }
+      const order = initiativeOrder([...existing, ...created]);
+      if (order.length === 0) return false;
+      const designatedWardenId = order.find((combatant) => combatant.isWarden)?.id ?? null;
+      return setCombat(gameId, {
+        active: true,
+        encounterId,
+        round: 1,
+        turnId: order[0].id,
+        designatedWardenId,
+        timerPhase: "idle",
+        timerEndsAt: null,
+        pausedRemainingMs: null,
+      });
+    },
+
+    addMonster: async (gameId, m, encounterId = 0) => {
       const baseStats = {
         name: m.name,
         initiative: m.initiative,
@@ -257,6 +301,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
       };
       const data = {
         kind: "monster" as const,
+        encounterId,
         name: m.name,
         characterId: null,
         initiative: m.initiative,

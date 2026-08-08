@@ -14,6 +14,7 @@ const TIMER_PHASES = new Set<TurnTimerPhase>([
 export function emptyEncounter(): EncounterState {
   return {
     active: false,
+    encounterId: 0,
     round: 0,
     turnId: null,
     designatedWardenId: null,
@@ -32,6 +33,9 @@ export function normalizeEncounterState(value: unknown): EncounterState {
     : "idle";
   return {
     active: raw.active === true,
+    encounterId: typeof raw.encounterId === "number" && Number.isInteger(raw.encounterId) && raw.encounterId >= 0
+      ? raw.encounterId
+      : 0,
     round: typeof raw.round === "number" && Number.isInteger(raw.round) && raw.round >= 0 ? raw.round : 0,
     turnId: typeof raw.turnId === "string" ? raw.turnId : null,
     designatedWardenId: typeof raw.designatedWardenId === "string" ? raw.designatedWardenId : null,

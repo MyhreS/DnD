@@ -30,6 +30,7 @@ function playerProjection(combatant: Omit<Combatant, "id"> | Combatant): Documen
   const revealStats = combatant.kind !== "monster" || combatant.revealStats === true;
   return {
     kind: combatant.kind,
+    encounterId: combatant.encounterId ?? 0,
     name: combatant.name,
     characterId: combatant.characterId ?? null,
     initiative: combatant.initiative,
@@ -51,6 +52,7 @@ function fromDoc(id: string, data: DocumentData): Combatant {
   return {
     id,
     kind: (data.kind as Combatant["kind"]) ?? "monster",
+    encounterId: typeof data.encounterId === "number" ? data.encounterId : 0,
     name: (data.name as string) ?? "Combatant",
     characterId: (data.characterId as string | null) ?? null,
     initiative: (data.initiative as number) ?? 0,

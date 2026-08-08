@@ -4,14 +4,14 @@ import type { EnemyTemplate } from "@/types";
 export function StartBattleDialog({
   templates,
   preparedCount,
-  resuming,
+  mode,
   busy,
   onStart,
   onClose,
 }: {
   templates: EnemyTemplate[];
   preparedCount: number;
-  resuming: boolean;
+  mode: "start" | "resume" | "new";
   busy: boolean;
   onStart: (selected: EnemyTemplate[]) => Promise<void>;
   onClose: () => void;
@@ -27,8 +27,8 @@ export function StartBattleDialog({
   return (
     <div className="game-dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <section className="game-dialog game-start-battle" role="dialog" aria-modal="true" aria-labelledby="start-battle-title">
-        <header><div><p className="eyebrow">Battle</p><h2 id="start-battle-title">{resuming ? "Resume battle" : "Choose enemies"}</h2></div><button className="game-dialog-close" type="button" onClick={onClose} aria-label="Close">×</button></header>
-        <p className="muted">Select saved enemies to add. {preparedCount > 0 ? `${preparedCount} prepared combatant${preparedCount === 1 ? " is" : "s are"} already included.` : "Hunters are included automatically."}</p>
+        <header><div><p className="eyebrow">Battle</p><h2 id="start-battle-title">{mode === "resume" ? "Resume battle" : mode === "new" ? "Start a new battle" : "Choose enemies"}</h2></div><button className="game-dialog-close" type="button" onClick={onClose} aria-label="Close">×</button></header>
+        <p className="muted">Select saved enemies to add. {mode === "resume" && preparedCount > 0 ? `${preparedCount} prepared combatant${preparedCount === 1 ? " is" : "s are"} already included.` : "Hunters are included automatically."}</p>
         {available.length === 0 ? <p className="game-dialog-note">Your enemy library is empty. You can still start with the Hunters.</p> : (
           <div className="game-battle-picker">
             {available.map((template) => (
@@ -39,7 +39,7 @@ export function StartBattleDialog({
             ))}
           </div>
         )}
-        <footer><button className="btn btn-ghost" type="button" onClick={onClose}>Cancel</button><button className="btn btn-primary" type="button" disabled={busy} onClick={() => void onStart(available.filter((template) => selected.has(template.id)))}>{resuming ? "Resume battle" : "Start battle"}</button></footer>
+        <footer><button className="btn btn-ghost" type="button" onClick={onClose}>Cancel</button><button className="btn btn-primary" type="button" disabled={busy} onClick={() => void onStart(available.filter((template) => selected.has(template.id)))}>{mode === "resume" ? "Resume battle" : mode === "new" ? "Start new battle" : "Start battle"}</button></footer>
       </section>
     </div>
   );
