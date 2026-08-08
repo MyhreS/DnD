@@ -1724,7 +1724,7 @@
 }
 .papersheet .sheet-auto-checks label {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 1.5mm;
   color: var(--ink);
   font-size: 10.5px;
@@ -1732,6 +1732,12 @@
   text-transform: none;
 }
 .papersheet .sheet-auto-checks input { accent-color: var(--blood); }
+.papersheet .sheet-auto-checks span { display: grid; gap: 0.25mm; }
+.papersheet .sheet-auto-checks b { font: inherit; }
+.papersheet .sheet-auto-checks small {
+  color: var(--ink-soft);
+  font: 8px/1.1 "Alegreya", serif;
+}
 .papersheet .sheet-auto-abilities {
   display: grid;
   grid-template-columns: 1fr 1fr;

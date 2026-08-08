@@ -5,7 +5,7 @@ import { BACKGROUNDS } from "@/data/backgrounds";
 import { CLASSES } from "@/data/classes";
 import { TOOL_PROFICIENCIES, WHISPERS } from "@/data/characterOptions";
 import { ITEMS } from "@/data/items";
-import { SKILLS } from "@/data/skills";
+import { SKILL_BY_NAME, SKILLS } from "@/data/skills";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { maxAddonPieces } from "@/lib/character";
 import { armorFor, itemFor } from "@/lib/customItems";
@@ -46,21 +46,28 @@ function Count({ remaining }: { remaining: number }) {
   );
 }
 
+function choiceAbility(choice: string) {
+  const skill = SKILL_BY_NAME[choice];
+  return skill ? `Ability: ${ABILITY_NAME[skill.ability]}` : "No ability required";
+}
+
 function CheckGrid({
   values,
   selected,
   onToggle,
+  meta,
 }: {
   values: string[];
   selected: string[];
   onToggle: (value: string) => void;
+  meta?: (value: string) => string | undefined;
 }) {
   return (
     <div className="sheet-auto-checks">
       {values.map((value) => (
         <label key={value}>
           <input type="checkbox" checked={selected.includes(value)} onChange={() => onToggle(value)} />
-          {value}
+          <span><b>{value}</b>{meta?.(value) && <small>{meta(value)}</small>}</span>
         </label>
       ))}
     </div>
@@ -268,7 +275,7 @@ export function PageOneAutomation() {
             <Count remaining={classRemaining} />
           </div>
           <p className="sheet-auto-note">{klass.title} grants {klass.skillChoices.count} choices.</p>
-          <CheckGrid values={klass.skillChoices.options} selected={state.classSkills} onToggle={automation.toggleClassSkill} />
+          <CheckGrid values={klass.skillChoices.options} selected={state.classSkills} onToggle={automation.toggleClassSkill} meta={choiceAbility} />
         </div>
       )}
 
@@ -282,6 +289,7 @@ export function PageOneAutomation() {
             values={[...SKILLS.map((skill) => skill.name), ...TOOL_PROFICIENCIES]}
             selected={card.featSkills ?? []}
             onToggle={automation.toggleFeatSkill}
+            meta={choiceAbility}
           />
         </div>
       )}
@@ -591,7 +599,7 @@ export function ClassChoiceAutomation() {
       {expertiseLimit > 0 && (
         <div className="sheet-auto-subsection">
           <div className="sheet-auto-subtitle"><h3>Expertise</h3><Count remaining={Math.max(0, expertiseLimit - (state.expertiseSkills?.length ?? 0))} /></div>
-          <CheckGrid values={card.skillProficiencies} selected={state.expertiseSkills ?? []} onToggle={automation.toggleExpertise} />
+          <CheckGrid values={card.skillProficiencies} selected={state.expertiseSkills ?? []} onToggle={automation.toggleExpertise} meta={choiceAbility} />
         </div>
       )}
       {masteryCount > 0 && (
