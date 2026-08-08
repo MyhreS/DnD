@@ -110,6 +110,7 @@ export function previewGame(): import("@/types").Game {
     phase: "exploration",
     combat: {
       active: true,
+      encounterId: 0,
       round: 2,
       turnId: "prev-monster-1",
       designatedWardenId: "prev-pc-2",

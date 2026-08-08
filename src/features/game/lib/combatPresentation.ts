@@ -3,6 +3,13 @@ import { armorClass, isSheetCard, maxHp } from "@/lib/character";
 import { sheetVitals } from "@/features/hunter/lib/papersheet";
 import type { Combatant, EncounterState, HunterCard } from "@/types";
 
+/** Rows from finished battles stay in the session record but never appear in
+ * the active encounter's initiative order. Old records without an id are the
+ * original encounter. */
+export function encounterCombatants(combatants: Combatant[], encounter: EncounterState): Combatant[] {
+  return combatants.filter((combatant) => (combatant.encounterId ?? 0) === encounter.encounterId);
+}
+
 export interface CombatVitals {
   currentHp: number | null;
   maxHp: number | null;

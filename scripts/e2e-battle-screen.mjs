@@ -228,7 +228,7 @@ try {
   await playerPage.goto(`${BASE}/game`, { waitUntil: "domcontentloaded" });
   await playerPage.getByRole("heading", { name: "The Ashen Hunt" }).waitFor();
 
-  await dmPage.getByRole("button", { name: "Start battle screen" }).click();
+  await dmPage.getByRole("button", { name: "Start battle" }).click();
   const battlePicker = dmPage.getByRole("dialog", { name: "Choose enemies" });
   await battlePicker.getByLabel(/Grave Hound/).check();
   await battlePicker.getByRole("button", { name: "Start battle", exact: true }).click();
@@ -252,7 +252,7 @@ try {
 
   const enemyControl = dmPage.getByTestId(`battle-combatant-${enemyId}`);
   const enemyDisplay = playerPage.getByTestId(`battle-combatant-${enemyId}`);
-  await enemyControl.getByRole("button", { name: "Mark Moon Beast dead" }).click();
+  await enemyControl.getByRole("button", { name: "Kill Moon Beast" }).click();
   await enemyControl.getByText("Enemy · dead", { exact: true }).waitFor();
   await enemyDisplay.getByText("Enemy · dead", { exact: true }).waitFor();
   await enemyControl.getByRole("button", { name: "Revive Moon Beast" }).click();
@@ -350,6 +350,19 @@ try {
   const claimedHunter = await db.doc(`characters/${characterId}`).get();
   if (!claimedHunter.data()?.customItems?.some((item) => item.name === "Ashen Spear")) throw new Error("Claimed session weapon did not reach the Hunter sheet.");
   if (!claimedHunter.data()?.inventory?.some((item) => String(item.itemId).startsWith("session-"))) throw new Error("Claimed session weapon did not reach inventory.");
+
+  await dmPage.setViewportSize({ width: 1280, height: 900 });
+  await dmPage.getByRole("button", { name: "Start new battle" }).click();
+  const newBattlePicker = dmPage.getByRole("dialog", { name: "Start a new battle" });
+  await newBattlePicker.getByLabel(/Grave Hound/).check();
+  await newBattlePicker.getByRole("button", { name: "Start new battle", exact: true }).click();
+  await Promise.all([
+    dmPage.getByTestId("session-battle-screen").waitFor(),
+    playerPage.getByTestId("session-battle-screen").waitFor(),
+  ]);
+  if (await dmPage.getByTestId(`battle-combatant-${enemyId}`).count()) throw new Error("A completed battle's enemy carried into the new battle.");
+  if (await dmPage.locator(".battle-name").getByText("Lady Maria", { exact: true }).count() !== 1) throw new Error("The new battle should have one fresh Hunter row.");
+  if (await dmPage.locator(".battle-name").getByText("Grave Hound", { exact: true }).count() !== 1) throw new Error("The selected enemy did not appear in the new battle.");
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
   console.log("Battle mode E2E passed: direct DM controls, private enemy library, synced damage, stat reset, visibility, and responsive layout.");

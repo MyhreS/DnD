@@ -432,9 +432,9 @@ export function GamePage() {
     await perform(() => discardGameSession(selected.id), "Could not discard the session.");
   }
 
-  async function addEnemyToBattle(template: EnemyTemplate): Promise<boolean> {
+  async function addEnemyToBattle(template: EnemyTemplate, encounterId = selected?.combat?.encounterId ?? 0): Promise<boolean> {
     if (!selected) return false;
-    return addMonster(selected.id, { ...templateStats(template), enemyTemplateId: template.id });
+    return addMonster(selected.id, { ...templateStats(template), enemyTemplateId: template.id }, encounterId);
   }
 
   function openEnemyLibrary() {
