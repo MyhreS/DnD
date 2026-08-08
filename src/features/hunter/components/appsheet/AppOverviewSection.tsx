@@ -143,7 +143,7 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
             </DecisionField>
             <DecisionField label="Current sanity">
               <NumericStepper label="sanity" value={editStage.previewCard.sanity ?? numeric(sanityCurrent)} disabled={model.readOnly} onChange={editStage.stageSanity} />
-              <small>Maximum {result.fields.sanityMax} · Sanity die {result.fields.sanityDice}</small>
+              <small>Maximum {result.fields.sanityMax}</small>
             </DecisionField>
             <DecisionField label="Insight">
               <NumericStepper label="Insight" value={card.insight ?? numeric(sheetText(model.data, "insight"))} disabled={model.readOnly} onChange={(insight) => model.setFields({ insight: String(insight) }, { insight })} />
@@ -162,6 +162,7 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
             )}
           </div>
           <div className="appsheet-metric-grid">
+            <DerivedValue label="Sanity die" value={result.fields.sanityDice} reason={result.reasons.sanityDice} testId="appsheet-sanity-die" />
             <DerivedValue label="Armor class" value={result.fields.ac} reason={result.reasons.ac} testId="appsheet-ac" />
             <DerivedValue label="Speed" value={result.fields.speed} reason={result.reasons.speed} />
             <DerivedValue label="Initiative" value={result.fields.initiative} reason={result.reasons.initiative} />

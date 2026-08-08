@@ -2,7 +2,6 @@ import { Link, Outlet, useLocation } from "react-router-dom";
 import type { ReactNode } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { Sigil } from "./icons";
-import { UpdateBar } from "./UpdateBar";
 
 /** The app frame (sidebar on desktop, top bar on mobile). The two contexts —
  * the main menu and a campaign — supply their own title + nav via this shell. */
@@ -48,7 +47,6 @@ export function Shell({
         </nav>
 
         <div className="sidebar-foot">
-          <UpdateBar />
           <Link to="/profile" className="sidebar-profile" aria-label="Your profile & settings">
             <span className="avatar">{initial}</span>
             <span className="sidebar-profile-name">{firstName}</span>

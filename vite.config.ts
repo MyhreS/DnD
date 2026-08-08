@@ -31,8 +31,8 @@ export default defineConfig({
       },
     }),
     VitePWA({
-      // "prompt": a new build installs and waits; the app shows a flashing
-      // "update available" pill in the header instead of silently reloading.
+      // "prompt": a new build installs and waits; the app shows a passive
+      // top notice and waits for Refresh or a sustained idle/background period.
       registerType: "prompt",
       includeAssets: ["favicon.svg", "apple-touch-icon.png"],
       manifest: {

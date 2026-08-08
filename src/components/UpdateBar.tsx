@@ -1,13 +1,8 @@
 import { useState } from "react";
 import { usePwaUpdate } from "@/app/pwaUpdates";
 
-/**
- * A flashing strip in the header that only appears when a newer build is
- * installed and waiting. Tapping it activates the new version and reloads.
- * On tap it immediately switches to a steady "Updating…" spinner so the press
- * is obviously registered while the reload is being prepared (which can take a
- * moment on iOS standalone).
- */
+/** A passive, app-wide notice. It never interrupts the current screen; the
+ * player chooses when to refresh, and receives immediate feedback after tap. */
 export function UpdateBar() {
   const needRefresh = usePwaUpdate((s) => s.needRefresh);
   const update = usePwaUpdate((s) => s.update);
@@ -17,6 +12,7 @@ export function UpdateBar() {
     <button
       type="button"
       className={`update-bar${updating ? " update-bar-busy" : ""}`}
+      data-testid="app-update-notice"
       onClick={() => {
         setUpdating(true);
         update();
@@ -27,10 +23,13 @@ export function UpdateBar() {
       {updating ? (
         <>
           <span className="btn-spinner" aria-hidden />
-          Updating…
+          Refreshing…
         </>
       ) : (
-        "New version available — tap to update ↻"
+        <>
+          <span>New update available</span>
+          <strong>Refresh</strong>
+        </>
       )}
     </button>
   );

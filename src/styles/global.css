@@ -226,44 +226,55 @@ button {
   z-index: 20;
 }
 
-/* Flashing "update available" strip — only rendered when a new build waits. */
+/* A new build waits quietly until the player chooses to refresh. The notice is
+   independent of page chrome, so it stays aligned on every route and device. */
 .update-bar {
-  display: block;
-  width: 100%;
-  border: 0;
-  border-bottom: 1px solid var(--border);
-  padding: 8px 16px;
-  font-family: var(--font-display);
-  font-weight: 600;
-  font-size: 0.8rem;
-  letter-spacing: 0.02em;
-  color: #fff;
-  background: var(--blood);
+  position: fixed;
+  z-index: 1000;
+  top: max(12px, env(safe-area-inset-top));
+  right: 12px;
+  left: 12px;
+  display: flex;
+  width: min(420px, calc(100% - 24px));
+  min-height: 46px;
+  margin-inline: auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 18px;
+  padding: 10px 12px 10px 16px;
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  background: var(--bg-elev);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.88rem;
+  text-align: left;
   cursor: pointer;
-  animation: update-flash 1.25s ease-in-out infinite;
+  animation: update-notice-in 180ms ease-out both;
 }
-@keyframes update-flash {
-  0%, 100% { background: var(--blood); box-shadow: inset 0 0 0 rgba(0, 0, 0, 0); }
-  50% { background: var(--blood-bright); box-shadow: inset 0 0 24px rgba(255, 120, 120, 0.45); }
+@keyframes update-notice-in {
+  from { opacity: 0; transform: translateY(-12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
-.update-bar:active {
-  filter: brightness(0.9);
+.update-bar:hover:not(:disabled) {
+  border-color: var(--gold-dim);
 }
-/* On tap: stop the urgent flash and show a steady spinner so it's obvious the
-   press registered while the reload is prepared. */
+.update-bar strong {
+  flex: 0 0 auto;
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
 .update-bar-busy,
 .update-bar-busy:active {
-  display: flex;
-  align-items: center;
   justify-content: center;
-  gap: 8px;
   animation: none;
-  filter: none;
-  background: var(--blood-deep);
   cursor: default;
 }
 @media (prefers-reduced-motion: reduce) {
-  .update-bar { animation: none; background: var(--blood-bright); }
+  .update-bar { animation: none; }
 }
 
 /* "Return to the live game" strip — shown app-wide while a game is running. */
