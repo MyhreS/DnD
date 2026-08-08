@@ -2,6 +2,7 @@ import {
   WORKSHOP_MODEL,
   WORKSHOP_MAX_CONCURRENT_TICKETS,
   WORKSHOP_REASONING_EFFORT,
+  WORKSHOP_UI_QUALITY_BRIEF,
   outcomeMessage,
   parseAgentResult,
   progressFromCodexEvent,
@@ -37,6 +38,9 @@ assert(channelContext.includes("not automatically approval or an answer"), "work
 assert(channelContext.includes("GitHub Actions being unavailable are not Workshop decisions"), "worker must own temporary service recovery");
 assert(WORKSHOP_MODEL === "gpt-5.6-terra", "Workshop must use Terra explicitly");
 assert(WORKSHOP_REASONING_EFFORT === "medium", "Workshop must use medium reasoning explicitly");
+assert(WORKSHOP_UI_QUALITY_BRIEF.includes("not optional polish"), "every worker prompt must treat UI quality as part of implementation");
+assert(WORKSHOP_UI_QUALITY_BRIEF.includes("instead of appending another panel"), "workers must integrate features instead of bolting on UI");
+assert(WORKSHOP_UI_QUALITY_BRIEF.includes("inspect screenshots yourself"), "workers must visually review their own UI work");
 assert(WORKSHOP_MAX_CONCURRENT_TICKETS === 3, "Workshop must run at most three ticket agents");
 const codexArgs = workshopCodexArgs("schema.json", "result.json", "prompt");
 assert(codexArgs.includes("gpt-5.6-terra"), "coding command must pin Terra");

@@ -19,9 +19,11 @@ Coding and testing may happen concurrently, but releases may not. Ticket agents 
 4. Set the ticket to `doing_now` and keep its live progress state current while working. Do not post routine working acknowledgements into the permanent thread.
 5. Work in an isolated git worktree and follow the repository quality gates.
 6. Make reasonable product assumptions when the request is clear. Preserve existing user data.
-7. Run focused tests, the repository checks, and Playwright at phone and desktop sizes for UI work.
-8. For implemented changes, test and commit the finished changes in the assigned worktree, then return control to the manager. The manager pushes, opens the pull request, waits for checks, merges through the shared release gate, waits for the serialized production deployment, and verifies completion. Never push, merge, deploy, or ask Simon or the creator to review routine work. Skip repository changes for `answered`, `needs_simon`, and `declined` outcomes.
-9. Reply in plain language. Say what changed and that the updated version is available; avoid implementation terms unless needed.
+7. Treat UI and interaction quality as part of every user-facing implementation. Integrate new functionality into the existing hierarchy instead of bolting on another panel, card, button row, or duplicate control. Keep the result clean, minimal, elegant, and consistent with the app; prioritize essential information and progressively reveal secondary actions.
+8. Run focused tests and the repository checks. For UI work, use Playwright at phone and desktop sizes, exercise the complete interaction, inspect screenshots yourself, and iterate until spacing, alignment, hierarchy, wording, responsive behavior, and all relevant states look deliberate.
+9. Before finishing, inspect the whole affected page or flow and remove obsolete, duplicated, or cluttering UI introduced or exposed by the change.
+10. For implemented changes, test and commit the finished changes in the assigned worktree, then return control to the manager. The manager pushes, opens the pull request, waits for checks, merges through the shared release gate, waits for the serialized production deployment, and verifies completion. Never push, merge, deploy, or ask Simon or the creator to review routine work. Skip repository changes for `answered`, `needs_simon`, and `declined` outcomes.
+11. Reply in plain language. Say what changed and that the updated version is available; avoid implementation terms unless needed.
 
 ## Workshop channel contract
 

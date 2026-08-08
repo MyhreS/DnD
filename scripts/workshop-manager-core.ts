@@ -1,5 +1,12 @@
 export const WORKSHOP_MODEL = "gpt-5.6-terra";
 export const WORKSHOP_REASONING_EFFORT = "medium";
+export const WORKSHOP_UI_QUALITY_BRIEF = [
+  "For every user-facing feature, treat visual and interaction design as part of the implementation, not optional polish.",
+  "Integrate new functionality into the existing information hierarchy instead of appending another panel, card, button row, or duplicate control by default.",
+  "Keep the interface clean, minimal, elegant, and consistent with the surrounding app. Show the most important information first and reveal secondary actions only when needed.",
+  "Before finishing, inspect the affected page as a whole, remove duplicate or obsolete UI exposed by the change, and iterate on spacing, alignment, hierarchy, labels, responsive behavior, and loading, empty, error, disabled, and completed states.",
+  "For UI work, use Playwright at phone and desktop sizes, exercise the complete interaction, inspect screenshots yourself, and improve anything that looks cluttered, awkward, inconsistent, or merely bolted on.",
+].join(" ");
 export const WORKSHOP_MAX_CONCURRENT_TICKETS = 3;
 
 export type ManagerOutcome = "finished" | "answered" | "needs_simon" | "declined";
