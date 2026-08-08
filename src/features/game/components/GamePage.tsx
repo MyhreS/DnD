@@ -55,6 +55,7 @@ export function GamePage() {
   const previewGameMode = preview ? new URLSearchParams(window.location.search).get("game") : null;
   const emptyGamePreview = previewGameMode === "empty";
   const switchInvitePreview = previewGameMode === "invite";
+  const historyPreview = previewGameMode === "history";
   const { characters, error: charactersError } = useAllCharacters();
   const enemyLibrary = useEnemyLibrary(user?.uid, preview);
   const otherCharacters = useMemo(
@@ -68,6 +69,7 @@ export function GamePage() {
   const [games, setGames] = useState<Game[]>([]);
   const [activeSeats, setActiveSeats] = useState<Map<string, ActiveGameSeat>>(new Map());
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [participants, setParticipants] = useState<GameParticipant[]>([]);
   const [previewRosters, setPreviewRosters] = useState<Record<string, GameParticipant[]>>({
     "preview-game": previewParticipants(),
@@ -101,7 +103,14 @@ export function GamePage() {
           inviteRoster: [previewParticipants()[0]],
           combat: emptyEncounter(),
         } : null;
-        setGames(game ? [game, ...(request ? [request] : [])] : []);
+        const history = game && historyPreview ? [{
+          ...game,
+          id: "preview-history",
+          title: "The Old Cathedral",
+          status: "ended" as const,
+          endedAt: Date.now() - 86_400_000,
+        }] : [];
+        setGames(game ? [game, ...history, ...(request ? [request] : [])] : []);
         setSelectedId(game?.id ?? null);
         setLoading(false);
       }, 0);
@@ -123,7 +132,7 @@ export function GamePage() {
         setError("Could not load your game sessions.");
       },
     );
-  }, [emptyGamePreview, preview, switchInvitePreview, user]);
+  }, [emptyGamePreview, historyPreview, preview, switchInvitePreview, user]);
 
   useEffect(() => {
     if (preview) return;
@@ -170,7 +179,7 @@ export function GamePage() {
     : participants;
   const ownParticipant = displayedParticipants.find((participant) => participant.uid === user?.uid);
   const ownCard = ownParticipant?.characterId ? charactersById.get(ownParticipant.characterId) : undefined;
-  const focusedPlayerSession = Boolean(selected && !isSessionDm && selected.status !== "ended" && history.length === 0);
+  const focusedPlayerSession = Boolean(selected && !isSessionDm && selected.status !== "ended");
 
   useEffect(() => {
     if (!selectedId) {
@@ -578,10 +587,17 @@ export function GamePage() {
             )}
             {history.length > 0 && (
               <div className="game-session-group">
-                <span className="game-session-label">History</span>
-                {history.map((game) => (
-                  <SessionLink key={game.id} game={game} selected={game.id === selectedId} onSelect={() => setSelectedId(game.id)} />
-                ))}
+                <button
+                  className="game-history-toggle"
+                  type="button"
+                  aria-expanded={historyOpen}
+                  aria-controls="game-session-history"
+                  onClick={() => setHistoryOpen((open) => !open)}
+                >
+                  <span>Session history</span>
+                  <span aria-hidden="true">{historyOpen ? "−" : "+"}</span>
+                </button>
+                {historyOpen && <SessionHistory games={history} selectedId={selectedId} onSelect={setSelectedId} />}
               </div>
             )}
           </nav>}
@@ -595,8 +611,22 @@ export function GamePage() {
                 </div>
                 <div className="game-session-top-actions">
                   {isSessionDm && selected.campaignId === null && selected.status !== "ended" && <button className="game-text-button" type="button" onClick={() => setManagingPlayers(true)}>Manage players</button>}
+                  {focusedPlayerSession && history.length > 0 && (
+                    <button
+                      className="game-history-toggle game-history-toggle-inline"
+                      type="button"
+                      aria-expanded={historyOpen}
+                      aria-controls="game-session-history"
+                      onClick={() => setHistoryOpen((open) => !open)}
+                    >
+                      <span>History ({history.length})</span>
+                      <span aria-hidden="true">{historyOpen ? "−" : "+"}</span>
+                    </button>
+                  )}
                 </div>
               </div>
+
+              {focusedPlayerSession && historyOpen && <div className="game-history-drawer"><SessionHistory games={history} selectedId={selectedId} onSelect={setSelectedId} /></div>}
 
               {isSessionDm && selected.status !== "ended" && (
                 <div className="game-primary-actions" aria-label="Session controls">
@@ -656,6 +686,16 @@ function SessionLink({ game, selected, onSelect }: { game: Game; selected: boole
       <strong>{game.title}</strong>
       <span>{game.status === "lobby" ? "Waiting" : game.status === "active" ? "Live" : historyDate(game)}</span>
     </button>
+  );
+}
+
+function SessionHistory({ games, selectedId, onSelect }: { games: Game[]; selectedId: string | null; onSelect: (id: string) => void }) {
+  return (
+    <div className="game-history-list" id="game-session-history">
+      {games.map((game) => (
+        <SessionLink key={game.id} game={game} selected={game.id === selectedId} onSelect={() => onSelect(game.id)} />
+      ))}
+    </div>
   );
 }
 
