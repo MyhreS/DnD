@@ -6,8 +6,10 @@ import {
   deploymentContainsCommit,
   outcomeMessage,
   parseAgentResult,
+  parseRecoveryResult,
   progressFromCodexEvent,
   isTemporaryServiceWait,
+  isLikelyServiceProblem,
   requiresDecisionReply,
   ticketNeedsDecision,
   workshopChannelContext,
@@ -25,6 +27,16 @@ assert(requiresDecisionReply("Protected change", false), "protected work must wa
 assert(!requiresDecisionReply("Protected change", true), "an owner reply must unblock one protected run");
 assert(isTemporaryServiceWait("Please reply after GitHub Actions has recovered."), "GitHub recovery waits must retry automatically");
 assert(!isTemporaryServiceWait("Choose which old data may be removed."), "real product decisions must still wait for an owner");
+assert(isLikelyServiceProblem("Coding agent exited with status 1."), "interrupted coding processes must start recovery");
+assert(isLikelyServiceProblem("Firebase quota returned 429"), "provider quotas must start recovery");
+assert(!isLikelyServiceProblem("The coding agent did not return a valid result."), "invalid worker output is not automatically a service outage");
+
+const recovered = parseRecoveryResult(JSON.stringify({
+  outcome: "recovered",
+  summaryForCreator: "The service is available again. I’m resuming this request now.",
+  technicalSummary: "Health check passed.",
+}));
+assert(recovered.outcome === "recovered", "recovery result must parse");
 
 const channelContext = workshopChannelContext("myhrefjeld@gmail.com");
 assert(channelContext.includes("not chatting in Codex"), "worker must know it replies through Workshop");

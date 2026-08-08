@@ -34,6 +34,12 @@ export type WorkshopProgress = {
   lastCompleted?: string;
 };
 
+export type RecoveryResult = {
+  outcome: "recovered" | "retry_later" | "needs_operator";
+  summaryForCreator: string;
+  technicalSummary?: string;
+};
+
 export function workshopCodexArgs(schemaPath: string, resultPath: string, prompt: string): string[] {
   return [
     "codex", "exec",
@@ -46,6 +52,30 @@ export function workshopCodexArgs(schemaPath: string, resultPath: string, prompt
     "-o", resultPath,
     prompt,
   ];
+}
+
+export function isLikelyServiceProblem(error: unknown): boolean {
+  const message = String(error);
+  return /(?:coding agent exited|service|provider|network|socket|fetch|github|firebase|firestore|quota|rate.?limit|429|5\d\d|timed? out|timeout|unavailable|offline|connection|deployment|workflow|checks?)/i.test(message);
+}
+
+export function parseRecoveryResult(raw: string): RecoveryResult {
+  let value: unknown;
+  try {
+    value = JSON.parse(raw);
+  } catch {
+    throw new Error("The recovery agent did not return a valid result.");
+  }
+  const result = value as Partial<RecoveryResult>;
+  if (result.outcome !== "recovered" && result.outcome !== "retry_later" && result.outcome !== "needs_operator") {
+    throw new Error("The recovery agent returned an unknown outcome.");
+  }
+  if (!result.summaryForCreator?.trim()) throw new Error("The recovery agent did not explain its result.");
+  return {
+    outcome: result.outcome,
+    summaryForCreator: result.summaryForCreator.trim().slice(0, 1_000),
+    technicalSummary: result.technicalSummary?.trim().slice(0, 8_000),
+  };
 }
 
 export function workshopChannelContext(requesterEmail: string | undefined): string {
