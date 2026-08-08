@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { emptySheetCard } from "../src/lib/character";
 import { CLASSES } from "../src/data/classes";
 import { BACKGROUNDS } from "../src/data/backgrounds";
+import { ITEMS } from "../src/data/items";
 import { startingKit } from "../src/lib/startingEquipment";
 import { computeSlots, slotAssignmentOptions } from "../src/lib/slots";
 import { characterSheetUpdate } from "../src/features/hunter/lib/sheetPersistence";
@@ -152,6 +153,10 @@ assert.deepEqual(
   ["Tool Belt slot 1", "Tool Belt slot 2", "Tool Belt slot 3", "Tool Belt slot 4"],
   "worn storage exposes individual numbered compartments",
 );
+for (const weapon of ITEMS.filter((item) => item.category === "Weapon")) {
+  const locations = slotAssignmentOptions(weapon.carry, [], weapon.id, weapon.slotLocation);
+  assert.ok(locations.some((location) => location.value === "hand"), `${weapon.name} can be carried in Hand`);
+}
 const beltSlots = computeSlots({
   inventory: [{ itemId: "longsword", qty: 1 }, { itemId: "dagger", qty: 2 }],
   equippedStorageIds: ["tool-belt"],

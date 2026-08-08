@@ -1,6 +1,7 @@
 // Verifies src/data/items.ts (+ armor.ts weights) against resources/master.json,
 // the DM's source of truth: for every master item with a matching catalog entry
-// it asserts weight (lb), carrying category and slot pin ("(back)") agree.
+// it asserts weight (lb), carrying category and non-weapon slot pins agree.
+// Weapons intentionally have no pinned slots so every weapon can use Hand.
 // Master items the app doesn't carry are fine (content decision); app-only
 // items (Bedroll, Rations, …) are fine too — only overlaps must match.
 //
@@ -123,7 +124,7 @@ for (const row of rows) {
   if (row.carry && app.carry !== row.carry) {
     errors.push(`${row.name}: carry "${app.carry}" ≠ master "${row.carry}" (${row.from})`);
   }
-  if ((app.slotLocation ?? null) !== (row.slot ?? null)) {
+  if (row.from !== "Weapons" && (app.slotLocation ?? null) !== (row.slot ?? null)) {
     errors.push(`${row.name}: slot pin "${app.slotLocation ?? "—"}" ≠ master "${row.slot ?? "—"}" (${row.from})`);
   }
 }

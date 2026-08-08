@@ -12,9 +12,10 @@ import { ARMOR } from "@/data/armor";
 //     scimitars, sickles, cleavers, lanterns, shovels, crowbars, tool belts,
 //     bandoliers, backpacks, hunting traps, books.
 //   Oversized     — great weapons, heavy crates, barrels, ladders, corpses.
-// Weights, carrying categories and slot pins follow resources/master.json
-// (Weapons table, Hunter Gear table, Tools + Storage Items sections) — the
-// DM's source of truth; `scripts/verify-item-data.mjs` asserts the match.
+// Weights and carrying categories follow resources/master.json (Weapons table,
+// Hunter Gear table, Tools + Storage Items sections) — the DM's source of
+// truth; `scripts/verify-item-data.mjs` asserts the match. Weapons may always
+// be carried in Hand, even where the handbook lists a preferred slot.
 // Items with no master entry (Bedroll, Rations, …) use 5e weights as a guide.
 // Hunter Rifle, Hunter Cleaver and
 // Blood-drainer's Tools are flagged unique (the resources call them "unique
@@ -107,9 +108,8 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 10,
-    note: "The hunter's sacred thunder. Carried on the back.",
+    note: "The hunter's sacred thunder.",
     unique: true,
-    slotLocation: "back",
   },
   {
     id: "pistol",
