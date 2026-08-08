@@ -128,6 +128,16 @@ try {
   if (!await page.getByTestId("appsheet-edit-stage").locator(".negative").count()) throw new Error("HP loss did not show as a negative preview");
   await page.getByRole("button", { name: "Apply changes" }).click();
 
+  // Levelling a damaged hunter restores every pool whose maximum increases.
+  await page.getByRole("button", { name: "Increase level" }).click();
+  const stagedChanges = page.getByTestId("appsheet-edit-stage").locator(".appsheet-change-list > span");
+  const hpChange = stagedChanges.filter({ has: page.getByText("Current HP", { exact: true }) });
+  const hpMaxChange = stagedChanges.filter({ has: page.getByText("Maximum HP", { exact: true }) });
+  const hpMaximum = await hpMaxChange.locator("strong").textContent();
+  if (await hpChange.locator("strong").textContent() !== hpMaximum) throw new Error("Level-up did not restore HP to its new maximum");
+  await page.getByRole("button", { name: "Apply changes" }).click();
+  if (await page.getByLabel("HP").textContent() !== hpMaximum) throw new Error("Applied level-up did not save restored HP");
+
   // Lower scores first so the point-buy guard has budget available while the
   // three 15s are raised.
   for (const [ability, score] of [["Intelligence", "8"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "15"], ["Dexterity", "15"], ["Constitution", "15"]]) {
