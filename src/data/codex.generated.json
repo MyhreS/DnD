@@ -7957,9 +7957,9 @@
       "locator": "Mind Influence · Level 8"
     },
     {
-      "id": "rites-by-school-rite-1-armor-of-agathys",
-      "topicKey": "armor-of-agathys",
-      "term": "Armor Of Agathys",
+      "id": "rites-by-school-rite-1-armor-of-the-drowned-star",
+      "topicKey": "armor-of-the-drowned-star",
+      "term": "Armor Of The Drowned Star",
       "aliases": [
         "Protection",
         "Rite"
@@ -8034,9 +8034,9 @@
       "locator": "Summoning · Whisper"
     },
     {
-      "id": "rites-by-school-rite-1-arms-of-hadar",
-      "topicKey": "arms-of-hadar",
-      "term": "Arms Of Hadar",
+      "id": "rites-by-school-rite-1-arms-of-haster",
+      "topicKey": "arms-of-haster",
+      "term": "Arms Of Haster",
       "aliases": [
         "Summoning",
         "Rite"
@@ -27965,28 +27965,7 @@
       "warning": "The source documents disagree. This note records the current app choice; confirm unresolved values with the DM."
     },
     {
-      "id": "source-conflict-9-armor-of-agathys-renamed-to-armor-of-the-drowned-star",
-      "topicKey": "source-conflict-armor-of-agathys-renamed-to-armor-of-the-drowned-star",
-      "term": "Source conflict: Armor of Agathys renamed to Armor of The Drowned Star",
-      "aliases": [
-        "Armor of Agathys renamed to Armor of The Drowned Star"
-      ],
-      "body": [
-        "The current handbook names the rite 'Armor of The Drowned Star' (Zealot feature 'Carved Armor of The Drowned Star', line 1581) and rites.bookOfDeepcaller carries the renamed rite; the standalone Protection Rite PDF (mirrored verbatim in rites.bySchool) still says 'Armor of Agathys'. The unified Codex shows both source versions separately; master's prestigeClass uses the Drowned Star name while bySchool keeps the verbatim older source.",
-        "\"\""
-      ],
-      "paragraphs": [
-        "The current handbook names the rite 'Armor of The Drowned Star' (Zealot feature 'Carved Armor of The Drowned Star', line 1581) and rites.bookOfDeepcaller carries the renamed rite; the standalone Protection Rite PDF (mirrored verbatim in rites.bySchool) still says 'Armor of Agathys'. The unified Codex shows both source versions separately; master's prestigeClass uses the Drowned Star name while bySchool keeps the verbatim older source.",
-        "\"\""
-      ],
-      "tables": [],
-      "group": "Source Notes",
-      "sourceId": "master-notes",
-      "locator": "Master content reconciliation",
-      "warning": "The source documents disagree. This note records the current app choice; confirm unresolved values with the DM."
-    },
-    {
-      "id": "source-conflict-10-call-starborn-horror-madness-values-standalone-summoning-rite-pdf-vs-v1-0-book-of-the-deepcaller",
+      "id": "source-conflict-9-call-starborn-horror-madness-values-standalone-summoning-rite-pdf-vs-v1-0-book-of-the-deepcaller",
       "topicKey": "source-conflict-call-starborn-horror-madness-values-standalone-summoning-rite-pdf-vs-v1-0-book-of-the-deepcaller",
       "term": "Source conflict: Call Starborn Horror — Madness values (standalone Summoning Rite PDF vs V1.0 Book of The Deepcaller)",
       "aliases": [
@@ -28007,7 +27986,7 @@
       "warning": "The source documents disagree. This note records the current app choice; confirm unresolved values with the DM."
     },
     {
-      "id": "source-conflict-11-lesser-starborn-starborn-horror-stat-blocks-starborn-horror-behavior-table-missing-from-source",
+      "id": "source-conflict-10-lesser-starborn-starborn-horror-stat-blocks-starborn-horror-behavior-table-missing-from-source",
       "topicKey": "source-conflict-lesser-starborn-starborn-horror-stat-blocks-starborn-horror-behavior-table-missing-from-source",
       "term": "Source conflict: Lesser Starborn / Starborn Horror stat blocks + Starborn Horror Behavior Table — missing from source",
       "aliases": [
