@@ -66,6 +66,37 @@ try {
 
   await page.goto(`${BASE}/character?preview=user.player`, { waitUntil: "domcontentloaded" });
   await page.getByRole("heading", { name: "Hunters" }).waitFor({ timeout: 20000 });
+  await page.evaluate(async () => {
+    const modulePath = "/src/app/" + "pwaUpdates.ts";
+    const { usePwaUpdate } = await import(modulePath);
+    usePwaUpdate.setState({
+      needRefresh: true,
+      update: () => { document.body.dataset.updateApplied = "true"; },
+    });
+  });
+  const updateNotice = page.getByTestId("app-update-notice");
+  await updateNotice.getByText("New update available", { exact: true }).waitFor();
+  await updateNotice.getByText("Refresh", { exact: true }).waitFor();
+  await page.screenshot({ path: "screenshots/update-notice-desktop.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  const updateNoticeBounds = await updateNotice.boundingBox();
+  if (!updateNoticeBounds || updateNoticeBounds.x < 0 || updateNoticeBounds.x + updateNoticeBounds.width > 390) {
+    throw new Error("Update notice overflows the mobile viewport");
+  }
+  await page.screenshot({ path: "screenshots/update-notice-mobile.png" });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  const routeBeforeUpdate = page.url();
+  await updateNotice.click();
+  await updateNotice.getByText("Refreshing…", { exact: true }).waitFor();
+  if (await page.locator("body").getAttribute("data-update-applied") !== "true") {
+    throw new Error("Update notice did not apply the waiting update");
+  }
+  if (page.url() !== routeBeforeUpdate) throw new Error("Update notice changed the current route");
+  await page.evaluate(async () => {
+    const modulePath = "/src/app/" + "pwaUpdates.ts";
+    const { usePwaUpdate } = await import(modulePath);
+    usePwaUpdate.setState({ needRefresh: false });
+  });
   await page.screenshot({ path: "screenshots/hunter-list-desktop.png", fullPage: true });
   await page.getByRole("button", { name: /Create (hunter|character)/ }).click();
   await page.getByTestId("app-character-sheet").waitFor();
@@ -78,9 +109,10 @@ try {
   await page.getByTestId("appsheet-name").fill("App Warden");
   await page.getByTestId("appsheet-class").selectOption("warden");
   await page.getByTestId("appsheet-class").selectOption("deepcaller");
-  if (!await page.getByText("Maximum 16 · Sanity die 1d20", { exact: true }).count()) {
-    throw new Error("Deepcaller Sanity Die was not shown in the overview");
-  }
+  const sanityDie = page.getByTestId("appsheet-sanity-die");
+  if (await sanityDie.locator("strong").textContent() !== "1d20") throw new Error("Deepcaller Sanity Die was not derived in the overview");
+  await sanityDie.getByLabel("Why this value is automatic").click();
+  if (!(await sanityDie.textContent())?.includes("Deepcaller core traits")) throw new Error("Sanity Die did not explain its automatic class source");
   await page.locator(".appsheet-current-state").screenshot({ path: "screenshots/sanity-die-overview-desktop.png" });
   const strains = page.getByTestId("appsheet-strains");
   await strains.waitFor();

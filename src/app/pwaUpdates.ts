@@ -3,12 +3,16 @@
 // When a newly-deployed build is detected, leave the current session untouched
 // and reveal an update pill instead. Reloading automatically can interrupt
 // someone mid-action and, on iOS, may return them to a different screen. We
-// still nudge an update check whenever the app regains focus, so updates are
-// ready as soon as the player chooses to apply them.
+// still nudge an update check whenever the app regains focus. The player can
+// apply it immediately, or the app applies it after a genuinely idle period.
 import { registerSW } from "virtual:pwa-register";
 import { create } from "zustand";
+import { shouldApplyIdleUpdate } from "./pwaUpdatePolicy";
 
 const PWA_UPDATE_LOCATION_KEY = "pwa-update-location";
+export const PWA_IDLE_REFRESH_MS = 5 * 60 * 1000;
+export const PWA_BACKGROUND_REFRESH_MS = 60 * 1000;
+const PWA_IDLE_CHECK_MS = 15 * 1000;
 
 /**
  * iOS can reopen a standalone PWA at its manifest start URL while it applies
@@ -69,12 +73,67 @@ export function setupPwaUpdates(): void {
   if (!("serviceWorker" in navigator)) return;
 
   let swRegistration: ServiceWorkerRegistration | undefined;
+  let updateStarted = false;
+  let lastActivityAt = Date.now();
+  let hiddenAt: number | null = document.visibilityState === "hidden" ? Date.now() : null;
+
+  const applyUpdate = () => {
+    if (updateStarted) return;
+    updateStarted = true;
+    rememberLocationForUpdate();
+    const waiting = swRegistration?.waiting;
+    if (!waiting) {
+      window.location.reload();
+      return;
+    }
+    let reloaded = false;
+    const reload = () => {
+      if (reloaded) return;
+      reloaded = true;
+      window.location.reload();
+    };
+    waiting.addEventListener("statechange", () => {
+      if (waiting.state === "activated") reload();
+    });
+    void updateSW(true);
+    window.setTimeout(reload, 3000);
+  };
+
+  const noteActivity = () => {
+    lastActivityAt = Date.now();
+  };
+  for (const eventName of ["pointerdown", "keydown", "input", "touchstart", "scroll"] as const) {
+    window.addEventListener(eventName, noteActivity, { passive: true });
+  }
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "hidden") hiddenAt = Date.now();
+    else {
+      const now = Date.now();
+      if (usePwaUpdate.getState().needRefresh
+        && !updateStarted
+        && hiddenAt != null
+        && now - hiddenAt >= PWA_BACKGROUND_REFRESH_MS) applyUpdate();
+      hiddenAt = null;
+      noteActivity();
+    }
+  });
+
+  window.setInterval(() => {
+    if (!usePwaUpdate.getState().needRefresh || updateStarted) return;
+    const now = Date.now();
+    if (shouldApplyIdleUpdate({
+      now,
+      lastActivityAt,
+      hiddenAt,
+      isVisible: document.visibilityState === "visible",
+    }, PWA_IDLE_REFRESH_MS, PWA_BACKGROUND_REFRESH_MS)) applyUpdate();
+  }, PWA_IDLE_CHECK_MS);
 
   const updateSW = registerSW({
     immediate: true,
     onNeedRefresh() {
-      // A new version is ready, but never reload without the player's choice:
-      // staying on the current route preserves their work and navigation.
+      // Active players stay in control. Once the app has been left alone long
+      // enough, the idle watcher safely applies the update at the same URL.
       usePwaUpdate.setState({ needRefresh: true });
     },
     onRegisteredSW(_swUrl, registration) {
@@ -89,36 +148,15 @@ export function setupPwaUpdates(): void {
     },
   });
 
-  // Tapping the pill must *guarantee* a reload. In "prompt" mode updateSW(true)
+  // Applying the update must *guarantee* a reload. In "prompt" mode updateSW(true)
   // only posts SKIP_WAITING and leaves the reload to the service worker's
   // `controllerchange` event — which iOS standalone PWAs frequently never fire.
-  // Worse, the auto-attempt above has usually already activated the new worker
-  // by the time the pill shows, so there's nothing left "waiting" to message and
-  // the call is a silent no-op (this is the "tap does nothing" bug). So: if a
+  // If the waiting worker has already activated, there's nothing left to
+  // message and the call is a silent no-op (the old "tap does nothing" bug). If a
   // worker is still waiting, activate it and reload the moment it reports
   // `activated`; otherwise the new build is already the active worker and a plain
   // reload picks it up.
   usePwaUpdate.setState({
-    update: () => {
-      rememberLocationForUpdate();
-      const waiting = swRegistration?.waiting;
-      if (!waiting) {
-        window.location.reload();
-        return;
-      }
-      let reloaded = false;
-      const reload = () => {
-        if (reloaded) return;
-        reloaded = true;
-        window.location.reload();
-      };
-      // Reload on the worker's real activation, not a blind timer, so we never
-      // reload under the old controller and serve a stale page.
-      waiting.addEventListener("statechange", () => {
-        if (waiting.state === "activated") reload();
-      });
-      void updateSW(true); // posts SKIP_WAITING to the waiting worker
-      window.setTimeout(reload, 3000); // last-resort backstop if statechange never fires
-    },
+    update: applyUpdate,
   });
 }
