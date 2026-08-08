@@ -62,7 +62,17 @@ jobs:
           curl -Ls --fail --tlsv1.2 --proto "=https" \
             --retry 5 --retry-all-errors --retry-delay 2 \
             https://cli.doppler.com/install.sh -o "$RUNNER_TEMP/install-doppler.sh"
-          sh "$RUNNER_TEMP/install-doppler.sh" --install-path "$RUNNER_TEMP/doppler-bin"
+          for attempt in 1 2 3; do
+            if sh "$RUNNER_TEMP/install-doppler.sh" --install-path "$RUNNER_TEMP/doppler-bin"; then
+              break
+            fi
+            if [ "$attempt" -eq 3 ]; then
+              echo "Doppler CLI installation failed after $attempt attempts."
+              exit 1
+            fi
+            rm -f "$RUNNER_TEMP/doppler-bin/doppler"
+            sleep $((attempt * 3))
+          done
           echo "$RUNNER_TEMP/doppler-bin" >> "$GITHUB_PATH"
       - name: Build independent Workshop
         run: doppler run --token="$DOPPLER_TOKEN" -- bun run build:workshop:ci
