@@ -103,6 +103,9 @@ try {
   await gascoigne.click();
   await owner.getByRole("button", { name: "Create session", exact: true }).click();
   await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
+  await owner.getByRole("button", { name: "Sessions", exact: true }).click();
+  await owner.getByRole("navigation", { name: "Game sessions" }).getByRole("button", { name: /Night of the Pale Moon/ }).click();
+  await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
   if (await owner.getByText(/player ready|players ready|View party|Add players/).count()) {
     throw new Error("DM session body duplicates player management");
   }
@@ -191,6 +194,10 @@ try {
   await battlePicker.getByRole("button", { name: "Start battle", exact: true }).click();
   await owner.getByTestId("session-battle-screen").waitFor();
   await owner.locator(".battle-name").getByText("Moon Beast", { exact: true }).waitFor();
+  await owner.getByRole("button", { name: "Session", exact: true }).click();
+  await owner.getByRole("button", { name: "Return to battle", exact: true }).waitFor();
+  await owner.getByRole("button", { name: "Return to battle", exact: true }).click();
+  await owner.getByTestId("session-battle-screen").waitFor();
   owner.once("dialog", (dialog) => dialog.accept());
   await owner.getByRole("button", { name: "End battle" }).click();
   await owner.getByTestId("session-battle-screen").waitFor({ state: "detached" });
