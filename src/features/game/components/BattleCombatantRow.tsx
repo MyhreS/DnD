@@ -13,6 +13,7 @@ export function BattleCombatantRow({
   game,
   canManage,
   disabled,
+  encounterCombatants,
 }: {
   combatant: Combatant;
   position: number;
@@ -22,8 +23,10 @@ export function BattleCombatantRow({
   game: Game;
   canManage: boolean;
   disabled: boolean;
+  encounterCombatants: Combatant[];
 }) {
   const patch = useCombatStore((state) => state.patch);
+  const remove = useCombatStore((state) => state.remove);
   const resetMonster = useCombatStore((state) => state.resetMonster);
   const toggleCondition = useCombatStore((state) => state.toggleCondition);
   const vitals = combatVitals(combatant, characters);
@@ -132,6 +135,7 @@ export function BattleCombatantRow({
               <button type="button" aria-pressed={combatant.revealHp === true} disabled={disabled} onClick={() => void patch(game.id, combatant.id, { revealHp: combatant.revealHp !== true })}>{combatant.revealHp === true ? "Hide HP" : "Show HP"}</button>
               <button type="button" aria-pressed={combatant.revealStats === true} disabled={disabled} onClick={() => void patch(game.id, combatant.id, { revealStats: combatant.revealStats !== true })}>{combatant.revealStats === true ? "Hide stats" : "Show stats"}</button>
               <button type="button" disabled={disabled} onClick={() => void resetMonster(game.id, combatant.id)}>Reset stats</button>
+              {dead && <button type="button" disabled={disabled} onClick={() => void remove(game.id, combatant.id, game, encounterCombatants)}>Remove dead enemy</button>}
             </div>
           </details>
         </div>
