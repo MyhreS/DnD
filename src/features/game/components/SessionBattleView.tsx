@@ -50,7 +50,7 @@ export function SessionBattleView({
         <div className="battle-layout">
           <section className="battle-order" aria-label="Battle initiative order">
             <div className="battle-column-headings" aria-hidden="true">
-              <span>Order</span><span>Combatant</span><span>Initiative</span><span>Damage</span><span>AC</span><span>Conditions</span>
+              <span>Order</span><span>Combatant</span><span>Initiative</span><span>Damage</span><span>AC</span><span>Conditions</span>{isDm && <span>Actions</span>}
             </div>
             {order.map((combatant, index) => (
               <BattleCombatantRow
