@@ -87,7 +87,7 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
         <AppPanel title="Unlocked features" aside={<span className="appsheet-status-word">Through level {card.level}</span>}>
           <div className="appsheet-feature-timeline">
             {[...classFeatures, ...subclassFeatures].sort((a, b) => a.level - b.level).map((feature, index) => (
-              <details key={`${feature.level}-${feature.name}-${index}`} open={feature.level === card.level}>
+              <details key={`${feature.level}-${feature.name}-${index}`}>
                 <summary><span>Level {feature.level}</span><b>{feature.name}</b>{subclassFeatures.includes(feature) && <em>{subclass?.name}</em>}</summary>
                 <p>{feature.text}</p>
               </details>
