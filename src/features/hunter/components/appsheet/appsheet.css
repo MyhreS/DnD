@@ -255,6 +255,20 @@
   grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 
+.appsheet-current-state .appsheet-vital-editors.has-strains {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+.appsheet-vital-editors > * {
+  min-width: 0;
+}
+
+@media (max-width: 900px) {
+  .appsheet-current-state .appsheet-vital-editors.has-strains {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 .appsheet-identity-panel {
   grid-area: build;
 }

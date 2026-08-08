@@ -73,6 +73,13 @@ assert.equal(expertWarden.fields.skPerception, "+6", "Expertise applies twice pr
 const listenerWarden = automationFor({ ...warden, backgroundId: "cultist" });
 assert.equal(listenerWarden.pending.whispers?.remaining, 1, "Listener exposes its finite Whisper choice");
 
+const deepcaller = automationFor({ ...warden, classId: "deepcaller", level: 5, sheet: { strainCur: "1" } });
+assert.equal(deepcaller.fields.strainMax, "3", "Deepcaller strain allowance follows its level progression");
+assert.equal(deepcaller.fields.strainCur, "1", "Deepcaller records remaining Strains separately from the allowance");
+assert.equal(deepcaller.fields.strainLevel, "3", "Deepcaller strain level follows its level progression");
+const cappedDeepcaller = automationFor({ ...warden, classId: "deepcaller", level: 1, sheet: { strainCur: "9" } });
+assert.equal(cappedDeepcaller.fields.strainCur, "2", "remaining Strains cannot exceed the current allowance");
+
 const bruteOne = automationFor({ ...warden, classId: "brute", lastSeenLevel: 0 });
 assert.match(bruteOne.pending.levelChoices?.options?.join(" ") ?? "", /Fighting Style/i);
 

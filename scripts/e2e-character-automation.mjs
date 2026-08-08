@@ -77,6 +77,20 @@ try {
   }
   await page.getByTestId("appsheet-name").fill("App Warden");
   await page.getByTestId("appsheet-class").selectOption("warden");
+  await page.getByTestId("appsheet-class").selectOption("deepcaller");
+  const strains = page.getByTestId("appsheet-strains");
+  await strains.waitFor();
+  if (await strains.getByRole("status", { name: "Strains left" }).textContent() !== "2") throw new Error("Level-one Deepcaller did not receive two available Strains");
+  if (!await strains.getByText("2 available · level 1 Strains", { exact: true }).count()) throw new Error("Deepcaller strain allowance was not shown in the overview");
+  await strains.getByRole("button", { name: "Decrease Strains left" }).click();
+  if (await strains.getByRole("status", { name: "Strains left" }).textContent() !== "1") throw new Error("Deepcaller could not record an expended Strain");
+  await page.screenshot({ path: "screenshots/deepcaller-strains-desktop.png", fullPage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await strains.screenshot({ path: "screenshots/deepcaller-strains-mobile.png" });
+  const strainOverflow = await strains.evaluate((element) => element.scrollWidth > element.clientWidth);
+  if (strainOverflow) throw new Error("Deepcaller Strain controls overflow the mobile viewport");
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByTestId("appsheet-class").selectOption("warden");
   await openAppSection("Gear & carrying");
   await page.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
   const rifleSlot = page.getByLabel("Hunter Rifle item 1 carrying slot");
