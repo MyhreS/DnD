@@ -260,7 +260,9 @@ try {
 
   const enemyControl = dmPage.getByTestId(`battle-combatant-${enemyId}`);
   const enemyDisplay = playerPage.getByTestId(`battle-combatant-${enemyId}`);
-  if (await enemyControl.getByRole("button", { name: "Remove dead enemy" }).count()) throw new Error("A living enemy can be removed from the battle.");
+  await enemyControl.getByLabel("More options for Moon Beast").click();
+  await enemyControl.getByRole("button", { name: "Remove enemy", exact: true }).waitFor();
+  await enemyControl.getByLabel("More options for Moon Beast").click();
   await enemyControl.getByRole("button", { name: "Kill Moon Beast" }).click();
   await enemyControl.getByText("Enemy · dead", { exact: true }).waitFor();
   await enemyDisplay.getByText("Enemy · dead", { exact: true }).waitFor();
@@ -271,7 +273,6 @@ try {
   await enemyControl.getByRole("button", { name: "Reset stats", exact: true }).click();
   await enemyControl.getByLabel("More options for Moon Beast").click();
   await enemyControl.getByRole("button", { name: "Increase Moon Beast initiative" }).click();
-  await enemyControl.getByLabel("Moon Beast initiative -98").waitFor();
   await enemyControl.getByRole("button", { name: "Decrease Moon Beast initiative" }).click();
   await enemyControl.getByLabel("Set Moon Beast initiative").fill("12");
   await enemyControl.getByLabel("Set Moon Beast initiative").press("Enter");
@@ -321,12 +322,21 @@ try {
   await itemDialog.waitFor({ state: "detached" });
 
   const hunterControl = dmPage.locator(".battle-row").filter({ hasText: "Lady Maria" });
-  await hunterControl.getByRole("button", { name: "Increase Lady Maria armor class" }).click({ clickCount: 2, delay: 100 });
+  await hunterControl.getByLabel("More options for Lady Maria").click();
+  await hunterControl.getByRole("button", { name: "Remove Hunter", exact: true }).waitFor();
+  await hunterControl.getByLabel("More options for Lady Maria").click();
+  await hunterControl.getByRole("button", { name: "Increase Lady Maria armor class" }).click();
+  await hunterControl.locator(".battle-ac").getByText("16", { exact: true }).waitFor();
+  await hunterControl.getByRole("button", { name: "Increase Lady Maria armor class" }).click();
   await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).locator(".battle-ac").getByText("17", { exact: true }).waitFor();
   const armoredHunter = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
   if (armoredHunter.empty || armoredHunter.docs[0].data().ac !== 17) throw new Error("Direct Hunter AC did not update the battle record.");
 
-  await hunterControl.getByRole("button", { name: "Damage Lady Maria by 1" }).click({ clickCount: 3, delay: 100 });
+  await hunterControl.getByRole("button", { name: "Damage Lady Maria by 1" }).click();
+  await hunterControl.getByLabel("Lady Maria damage taken 5").waitFor();
+  await hunterControl.getByRole("button", { name: "Damage Lady Maria by 1" }).click();
+  await hunterControl.getByLabel("Lady Maria damage taken 6").waitFor();
+  await hunterControl.getByRole("button", { name: "Damage Lady Maria by 1" }).click();
   await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).getByText("7", { exact: true }).waitFor();
   const damagedHunter = await db.doc(`characters/${characterId}`).get();
   const pcCombatants = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
@@ -349,9 +359,8 @@ try {
   await noHorizontalOverflow(playerPage, "Player battle mode mobile");
   await playerPage.screenshot({ path: "screenshots/game-battle-mode-mobile.png", fullPage: true });
 
-  await enemyControl.getByRole("button", { name: "Kill Moon Beast" }).click();
   await enemyControl.getByLabel("More options for Moon Beast").click();
-  await enemyControl.getByRole("button", { name: "Remove dead enemy", exact: true }).click();
+  await enemyControl.getByRole("button", { name: "Remove enemy", exact: true }).click();
   await Promise.all([
     enemyControl.waitFor({ state: "detached" }),
     enemyDisplay.waitFor({ state: "detached" }),
@@ -361,6 +370,16 @@ try {
     db.doc(`games/${gameId}/battleView/${enemyId}`).get(),
   ]);
   if (removedCombatant.exists || removedBattleView.exists) throw new Error("Removing a dead enemy left battle records behind.");
+
+  await hunterControl.getByLabel("More options for Lady Maria").click();
+  await hunterControl.getByRole("button", { name: "Remove Hunter", exact: true }).click();
+  await Promise.all([
+    hunterControl.waitFor({ state: "detached" }),
+    playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).waitFor({ state: "detached" }),
+  ]);
+  const removedHunterCombatants = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
+  const preservedHunter = await db.doc(`characters/${characterId}`).get();
+  if (!removedHunterCombatants.empty || !preservedHunter.exists) throw new Error("Removing a Hunter should only remove them from the battle.");
 
   dmPage.once("dialog", (dialog) => dialog.accept());
   await dmPage.getByRole("button", { name: "End battle" }).click();
