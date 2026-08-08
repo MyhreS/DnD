@@ -1683,6 +1683,39 @@
 .papersheet .sheet-background-details dt { color: var(--ink-soft); font-size: 8.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
 .papersheet .sheet-background-details dd { margin: .4mm 0 0; font-size: 10px; font-weight: 700; line-height: 1.25; }
 .papersheet .sheet-background-details dd small { display: block; margin-top: .5mm; color: var(--ink-soft); font-size: 9px; font-weight: 600; }
+.papersheet .origin-feat-info { display: inline-flex; align-items: center; gap: 1mm; }
+.papersheet .origin-feat-info details { position: relative; }
+.papersheet .origin-feat-info summary {
+  display: grid;
+  width: 3.5mm;
+  height: 3.5mm;
+  place-items: center;
+  cursor: pointer;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  color: var(--ink-soft);
+  font: 800 8px/1 sans-serif;
+}
+.papersheet .origin-feat-info summary::-webkit-details-marker { display: none; }
+.papersheet .origin-feat-info summary:focus-visible { outline: 1px solid #b58a35; outline-offset: 1px; }
+.papersheet .origin-feat-popover {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 1mm);
+  left: -8mm;
+  display: grid;
+  gap: 1mm;
+  width: 58mm;
+  padding: 2.5mm;
+  border: 1px solid #9f947f;
+  border-radius: 2px;
+  background: #f6f1e5;
+  box-shadow: 0 1mm 2mm rgb(33 29 23 / 15%);
+  color: var(--ink);
+  font: 600 10px/1.3 "Alegreya", serif;
+}
+.papersheet .origin-feat-popover b { font: 900 10px/1.2 "Cinzel", serif; }
+.papersheet .origin-feat-popover a { color: inherit; font: 800 9px/1.2 "Alegreya Sans SC", sans-serif; }
 .papersheet .sheet-auto-subsection {
   margin-top: 4mm;
   padding-top: 3mm;

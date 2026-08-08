@@ -89,6 +89,8 @@ try {
   if (!await appBackgroundDetails.getByText("Sleight of Hand, Stealth", { exact: true }).count()) {
     throw new Error("Selected app background did not show its proficiencies");
   }
+  await appBackgroundDetails.getByRole("button", { name: "More about the Alert origin feat" }).click();
+  await appBackgroundDetails.getByText("Add your Proficiency Bonus to Initiative rolls.", { exact: false }).waitFor();
   await appBackgroundDetails.screenshot({ path: "screenshots/background-details-desktop.png" });
   await page.setViewportSize({ width: 390, height: 844 });
   await appBackgroundDetails.screenshot({ path: "screenshots/background-details-mobile.png" });
@@ -157,6 +159,8 @@ try {
   if (!await sheetBackgroundDetails.getByText("Thieves' Tools, Crowbar", { exact: true }).count()) {
     throw new Error("Selected paper background did not show its starting gear");
   }
+  await sheetBackgroundDetails.getByRole("button", { name: "More about the Alert origin feat" }).click();
+  await sheetBackgroundDetails.getByText("swap your Initiative with a willing ally", { exact: false }).waitFor();
   if (await page.locator('[data-f="pageNotes"]').inputValue() !== "Shared app-view note.") throw new Error("App notes did not synchronize into the paper sheet");
   const controlsAreOnSheet = await page.getByTestId("sheet-character-automation").evaluate(
     (element) => Boolean(element.closest(".papersheet .page")),
