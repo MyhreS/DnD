@@ -1,6 +1,5 @@
 import { ABILITIES, ABILITY_NAME, MADUHAUSU_MAX, MADUHAUSU_MIN, POINT_BUY_MAX, POINT_BUY_MIN } from "@/data/abilities";
 import { TOOL_PROFICIENCIES } from "@/data/characterOptions";
-import { useState } from "react";
 import { SHEET_SKILL_FIELD, SKILL_BY_NAME, SKILLS } from "@/data/skills";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import type { BuyMode } from "../../lib/abilityBuy";
@@ -17,7 +16,6 @@ import {
 
 export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
   const automation = useCharacterAutomation();
-  const [editingSkills, setEditingSkills] = useState(false);
   const { card, result, state, klass, background, base, bonuses, pointsLeft, bonusUsed } = automation;
   const setupComplete = state.setupComplete === true;
   const canEditCreationScores = !setupComplete || card.level === 1;
@@ -67,28 +65,12 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
         </AppPanel>
       )}
 
-      {setupComplete && !model.readOnly && (
-        <div className="appsheet-edit-skill-actions">
-          <div>
-            <b>Need to change a skill?</b>
-            <span>Your class and Skilled feat choices can be updated after setup.</span>
-          </div>
-          <button
-            type="button"
-            aria-expanded={editingSkills}
-            onClick={() => setEditingSkills((editing) => !editing)}
-          >
-            {editingSkills ? "Done editing skills" : "Edit skill proficiencies"}
-          </button>
-        </div>
-      )}
-
       <AppDisclosure
-        key={classRemaining + featRemaining > 0 ? "skills-pending" : editingSkills ? "skills-complete-editing" : "skills-complete"}
+        key={classRemaining + featRemaining > 0 ? "skills-pending" : "skills-complete"}
         title="Skill proficiency choices"
-        summary={klass ? `${card.skillProficiencies.length} proficient · ${classRemaining + featRemaining} choices remaining` : "Choose a class first"}
+        summary={klass ? `${card.skillProficiencies.length} proficient · ${classRemaining + featRemaining} choices remaining · open to update` : "Choose a class first"}
         aside={classRemaining + featRemaining > 0 ? <span className="appsheet-incomplete">Action needed</span> : undefined}
-        defaultOpen={classRemaining + featRemaining > 0 || editingSkills}
+        defaultOpen={classRemaining + featRemaining > 0}
       >
       {klass ? (
         <AppPanel title={`${klass.title} skill choices`} aside={<span className={classRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{classRemaining} left</span>}>
