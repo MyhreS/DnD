@@ -169,6 +169,8 @@
 }
 .battle-more-menu button { cursor: pointer; }
 .battle-more-menu button:hover:not(:disabled) { background: var(--bg-elev-2); color: var(--ink); }
+.battle-more-menu .battle-remove { color: var(--blood-bright); }
+.battle-more-menu .battle-remove:hover:not(:disabled) { background: color-mix(in srgb, var(--blood) 14%, transparent); color: var(--blood-bright); }
 .battle-condition:disabled,
 .battle-conditions select:disabled,
 .battle-death-toggle:disabled,

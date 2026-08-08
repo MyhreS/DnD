@@ -318,8 +318,7 @@ service cloud.firestore {
       match /combatants/{cid} {
         allow read: if isGameDM(gameId);
         allow create, update: if isGameOpen(gameId) && isGameDM(gameId);
-        allow delete: if isGameOpen(gameId) && isGameDM(gameId)
-          && (gameCampaignId(gameId) != null || gameData(gameId).status == "lobby");
+        allow delete: if isGameOpen(gameId) && isGameDM(gameId);
       }
 
       // Sanitized initiative projection. The DM client dual-writes this
@@ -327,8 +326,7 @@ service cloud.firestore {
       match /battleView/{cid} {
         allow read: if canReadGame(gameId);
         allow create, update: if isGameOpen(gameId) && isGameDM(gameId);
-        allow delete: if isGameOpen(gameId) && isGameDM(gameId)
-          && (gameCampaignId(gameId) != null || gameData(gameId).status == "lobby");
+        allow delete: if isGameOpen(gameId) && isGameDM(gameId);
       }
     }
 

@@ -118,24 +118,26 @@ export function BattleCombatantRow({
           </select>
         )}
       </div>
-      {canManage && combatant.kind === "monster" && vitals.maxHp !== null && (
+      {canManage && (
         <div className="battle-row-actions">
-          <button
+          {combatant.kind === "monster" && vitals.maxHp !== null && <button
             className="battle-death-toggle"
             type="button"
             aria-label={dead ? `Revive ${combatant.name}` : `Kill ${combatant.name}`}
             aria-pressed={dead}
             disabled={disabled}
             onClick={() => void patch(game.id, combatant.id, { currentHp: dead ? 1 : 0, defeated: !dead })}
-          >{dead ? "Revive" : "Kill enemy"}</button>
+          >{dead ? "Revive" : "Kill enemy"}</button>}
           <details className="battle-more">
             <summary aria-label={`More options for ${combatant.name}`}>•••</summary>
             <div className="battle-more-menu">
-              <button type="button" disabled={disabled || dead} onClick={() => void setDamage(String((vitals.damageTaken ?? 0) + 5))}>Add 5 damage</button>
-              <button type="button" aria-pressed={combatant.revealHp === true} disabled={disabled} onClick={() => void patch(game.id, combatant.id, { revealHp: combatant.revealHp !== true })}>{combatant.revealHp === true ? "Hide HP" : "Show HP"}</button>
-              <button type="button" aria-pressed={combatant.revealStats === true} disabled={disabled} onClick={() => void patch(game.id, combatant.id, { revealStats: combatant.revealStats !== true })}>{combatant.revealStats === true ? "Hide stats" : "Show stats"}</button>
-              <button type="button" disabled={disabled} onClick={() => void resetMonster(game.id, combatant.id)}>Reset stats</button>
-              {dead && <button type="button" disabled={disabled} onClick={() => void remove(game.id, combatant.id, game, encounterCombatants)}>Remove dead enemy</button>}
+              {combatant.kind === "monster" && <>
+                <button type="button" disabled={disabled || dead} onClick={() => void setDamage(String((vitals.damageTaken ?? 0) + 5))}>Add 5 damage</button>
+                <button type="button" aria-pressed={combatant.revealHp === true} disabled={disabled} onClick={() => void patch(game.id, combatant.id, { revealHp: combatant.revealHp !== true })}>{combatant.revealHp === true ? "Hide HP" : "Show HP"}</button>
+                <button type="button" aria-pressed={combatant.revealStats === true} disabled={disabled} onClick={() => void patch(game.id, combatant.id, { revealStats: combatant.revealStats !== true })}>{combatant.revealStats === true ? "Hide stats" : "Show stats"}</button>
+                <button type="button" disabled={disabled} onClick={() => void resetMonster(game.id, combatant.id)}>Reset stats</button>
+              </>}
+              <button className="battle-remove" type="button" disabled={disabled} onClick={() => void remove(game.id, combatant.id, game, encounterCombatants)}>Remove {combatant.kind === "monster" ? "enemy" : "Hunter"}</button>
             </div>
           </details>
         </div>

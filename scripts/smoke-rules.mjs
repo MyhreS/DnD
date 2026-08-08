@@ -12,7 +12,7 @@ import { initializeApp } from "firebase/app";
 import { connectAuthEmulator, getAuth, signInWithCustomToken, signInWithEmailAndPassword } from "firebase/auth";
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from "firebase/functions";
 import {
-  connectFirestoreEmulator, getFirestore, doc, setDoc, addDoc, updateDoc, getDoc, getDocs,
+  connectFirestoreEmulator, getFirestore, doc, setDoc, addDoc, updateDoc, deleteDoc, getDoc, getDocs,
   collection, query, where, arrayUnion, serverTimestamp,
 } from "firebase/firestore";
 
@@ -306,18 +306,17 @@ await step("DM creates a unique item and the invited Hunter claims it once", asy
   catch { duplicateDenied = true; }
   if (!duplicateDenied) throw new Error("loot-was-claimed-twice");
 });
-await step("A fought enemy cannot be removed from future history (negative)", async () => {
-  const { deleteDoc } = await import("firebase/firestore");
+await step("DM can remove an active standalone combatant without changing the Hunter", async () => {
   await updateDoc(doc(dm.db, "games", standaloneGameId), { combat: {
     active: true, round: 1, turnId: standaloneMonsterId, designatedWardenId: null,
     timerPhase: "untimed", timerEndsAt: null, pausedRemainingMs: null,
   } });
-  let denied = false;
-  try { await deleteDoc(doc(dm.db, "games", standaloneGameId, "combatants", standaloneMonsterId)); }
-  catch { denied = true; }
-  if (!denied) throw new Error("active-session enemy could be removed from history");
+  await Promise.all([
+    deleteDoc(doc(dm.db, "games", standaloneGameId, "combatants", standaloneMonsterId)),
+    deleteDoc(doc(dm.db, "games", standaloneGameId, "battleView", standaloneMonsterId)),
+  ]);
 });
-await step("Ending saves history, preserves enemies, and releases every seat", async () => {
+await step("Ending saves history and releases every seat", async () => {
   await finishStandalone({ gameId: standaloneGameId, endedPhase: "combat", endedLocation: "wild" });
   const game = await getDoc(doc(pl.db, "games", standaloneGameId));
   if (game.data()?.status !== "ended" || !game.data()?.historySavedAt) throw new Error("history-not-saved");
@@ -325,7 +324,7 @@ await step("Ending saves history, preserves enemies, and releases every seat", a
     throw new Error("ended history kept a live combat timer");
   }
   const enemy = await getDoc(doc(pl.db, "games", standaloneGameId, "battleView", standaloneMonsterId));
-  if (!enemy.exists()) throw new Error("history-enemy-missing");
+  if (enemy.exists()) throw new Error("removed-enemy-remained-in-history");
   const [dmSeat, playerSeat] = await Promise.all([
     getDoc(doc(dm.db, "activeGameSeats", dmUid)),
     getDoc(doc(dm.db, "activeGameSeats", plUid)),
