@@ -66,28 +66,27 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
         <DerivedValue label="Unassigned" value={slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} reason="Significant and oversized items stay unassigned until you choose a carrying slot." />
       </div>
 
-      {!model.readOnly && (
-        <AppDisclosure title="Add a catalog item" summary="Weapons, gear, tools, ammunition, and valuables">
-        <AppPanel title="Add from the rules library" className="appsheet-add-item-panel">
-          <div className="appsheet-catalog-add">
-            <AppSelect label="Catalog item" value={catalogId} data-testid="appsheet-catalog-item" onChange={(event) => setCatalogId(event.target.value)}>
-              <option value="">Choose an item…</option>
-              {["Weapon", "Ammunition", "Tool", "Gear", "Consumable", "Valuable"].map((category) => (
-                <optgroup key={category} label={category}>
-                  {catalog.filter((item) => item.category === category).map((item) => (
-                    <option key={item.id} value={item.id}>{item.name} · {item.carry} · {item.weightLb} lb</option>
-                  ))}
-                </optgroup>
-              ))}
-            </AppSelect>
-            <button type="button" data-testid="appsheet-add-catalog-item" disabled={!catalogId} onClick={addCatalogItem}>Add item</button>
-          </div>
-          <AutoReason reason="Names, carrying category, weight, and catalog notes come from the Player's Handbook equipment tables." />
-        </AppPanel>
-        </AppDisclosure>
-      )}
-
       <AppPanel title="Inventory" aside={<span className="appsheet-status-word">{inventory.length} item types</span>}>
+        {!model.readOnly && (
+          <details className="appsheet-catalog-picker" data-testid="appsheet-catalog-picker">
+            <summary>Add from rules library</summary>
+            <div className="appsheet-catalog-picker-content">
+              <div className="appsheet-catalog-add">
+                <AppSelect label="Catalog item" value={catalogId} data-testid="appsheet-catalog-item" onChange={(event) => setCatalogId(event.target.value)}>
+                  <option value="">Choose an item…</option>
+                  {["Weapon", "Ammunition", "Tool", "Gear", "Consumable", "Valuable"].map((category) => (
+                    <optgroup key={category} label={category}>
+                      {catalog.filter((item) => item.category === category).map((item) => (
+                        <option key={item.id} value={item.id}>{item.name} · {item.carry} · {item.weightLb} lb</option>
+                      ))}
+                    </optgroup>
+                  ))}
+                </AppSelect>
+                <button type="button" data-testid="appsheet-add-catalog-item" disabled={!catalogId} onClick={addCatalogItem}>Add</button>
+              </div>
+            </div>
+          </details>
+        )}
         {inventory.length ? (
           <div className="appsheet-inventory-list" data-testid="appsheet-inventory">
             {inventory.map(({ item, qty }) => {
