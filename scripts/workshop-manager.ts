@@ -13,6 +13,7 @@ import {
   WORKSHOP_MAX_CONCURRENT_TICKETS,
   WORKSHOP_REASONING_EFFORT,
   WORKSHOP_UI_QUALITY_BRIEF,
+  deploymentContainsCommit,
   outcomeMessage,
   parseAgentResult,
   progressFromCodexEvent,
@@ -72,6 +73,7 @@ type WorkflowRun = {
   status: string;
   conclusion: string;
   url: string;
+  headSha?: string;
 };
 
 function initializeAdmin() {
@@ -382,6 +384,23 @@ async function waitForWorkflow(commitSha: string, workflow: string, cwd: string)
     const run = (JSON.parse(raw) as WorkflowRun[])[0];
     if (run?.status === "completed") {
       if (run.conclusion === "success") return;
+      git(["fetch", "origin", "main"], cwd);
+      const laterRuns = JSON.parse(gh([
+        "run", "list", "--workflow", workflow, "--branch", "main", "--event", "push",
+        "--limit", "10", "--json", "headSha,status,conclusion,url",
+      ], cwd)) as WorkflowRun[];
+      const supersedingRuns = laterRuns.filter((candidate) => (
+        candidate.headSha
+        && candidate.headSha !== commitSha
+        && deploymentContainsCommit(commitSha, candidate.headSha, (ancestor, descendant) => (
+          spawnSync("git", ["merge-base", "--is-ancestor", ancestor, descendant], { cwd }).status === 0
+        ))
+      ));
+      if (supersedingRuns.some((candidate) => candidate.status === "completed" && candidate.conclusion === "success")) return;
+      if (supersedingRuns.some((candidate) => candidate.status !== "completed")) {
+        await new Promise((resolvePromise) => setTimeout(resolvePromise, 10_000));
+        continue;
+      }
       throw new Error(`Production deployment failed (${run.conclusion}): ${run.url}`);
     }
     await new Promise((resolvePromise) => setTimeout(resolvePromise, 10_000));

@@ -9,6 +9,14 @@ export const WORKSHOP_UI_QUALITY_BRIEF = [
 ].join(" ");
 export const WORKSHOP_MAX_CONCURRENT_TICKETS = 3;
 
+export function deploymentContainsCommit(
+  requestedCommit: string,
+  deployedCommit: string,
+  isAncestor: (ancestor: string, descendant: string) => boolean,
+): boolean {
+  return requestedCommit === deployedCommit || isAncestor(requestedCommit, deployedCommit);
+}
+
 export type ManagerOutcome = "finished" | "answered" | "needs_simon" | "declined";
 
 export type AgentResult = {

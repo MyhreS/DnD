@@ -3,6 +3,7 @@ import {
   WORKSHOP_MAX_CONCURRENT_TICKETS,
   WORKSHOP_REASONING_EFFORT,
   WORKSHOP_UI_QUALITY_BRIEF,
+  deploymentContainsCommit,
   outcomeMessage,
   parseAgentResult,
   progressFromCodexEvent,
@@ -42,6 +43,9 @@ assert(WORKSHOP_UI_QUALITY_BRIEF.includes("not optional polish"), "every worker 
 assert(WORKSHOP_UI_QUALITY_BRIEF.includes("instead of appending another panel"), "workers must integrate features instead of bolting on UI");
 assert(WORKSHOP_UI_QUALITY_BRIEF.includes("inspect screenshots yourself"), "workers must visually review their own UI work");
 assert(WORKSHOP_MAX_CONCURRENT_TICKETS === 3, "Workshop must run at most three ticket agents");
+assert(deploymentContainsCommit("old", "old", () => false), "the exact deployed commit must satisfy the release");
+assert(deploymentContainsCommit("old", "new", (ancestor, descendant) => ancestor === "old" && descendant === "new"), "a successful newer deployment containing the commit must satisfy a cancelled release");
+assert(!deploymentContainsCommit("old", "unrelated", () => false), "an unrelated deployment must not hide a failed release");
 const codexArgs = workshopCodexArgs("schema.json", "result.json", "prompt");
 assert(codexArgs.includes("gpt-5.6-terra"), "coding command must pin Terra");
 assert(codexArgs.includes('model_reasoning_effort="medium"'), "coding command must pin medium reasoning");
