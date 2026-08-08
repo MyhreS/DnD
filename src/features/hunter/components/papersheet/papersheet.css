@@ -1667,6 +1667,27 @@
   letter-spacing: 0.025em;
 }
 .papersheet .sheet-auto-note { color: var(--ink-soft); }
+.papersheet .sheet-background-details {
+  display: block;
+  margin-top: 3mm;
+  padding: 3mm;
+  border: 1px solid #9f947f;
+  border-left: 2px solid #b58a35;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--ink);
+}
+.papersheet .sheet-background-details > b,
+.papersheet .sheet-background-details > span { display: block; font-size: 10.5px; line-height: 1.35; }
+.papersheet .sheet-background-details > span { margin-top: 1mm; color: var(--ink-soft); }
+.papersheet .sheet-background-details .background-details-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 3mm; }
+.papersheet .sheet-background-details h3 { margin: 0; font: 900 12px/1.2 "Cinzel", serif; }
+.papersheet .sheet-background-details .background-details-heading span { color: var(--ink-soft); font-size: 8.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.papersheet .sheet-background-details p { margin: 1.5mm 0 0; font-size: 10.5px; font-weight: 600; line-height: 1.35; }
+.papersheet .sheet-background-details dl { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5mm 3mm; margin: 2mm 0 0; }
+.papersheet .sheet-background-details dt { color: var(--ink-soft); font-size: 8.5px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.papersheet .sheet-background-details dd { margin: .4mm 0 0; font-size: 10px; font-weight: 700; line-height: 1.25; }
+.papersheet .sheet-background-details dd small { display: block; margin-top: .5mm; color: var(--ink-soft); font-size: 9px; font-weight: 600; }
 .papersheet .sheet-auto-subsection {
   margin-top: 4mm;
   padding-top: 3mm;
@@ -1834,6 +1855,7 @@
   .papersheet .sheet-auto-grid,
   .papersheet .sheet-auto-checks,
   .papersheet .sheet-auto-abilities { grid-template-columns: 1fr; }
+  .papersheet .sheet-background-details dl { grid-template-columns: 1fr; }
   .papersheet .sheet-auto-abilities > div {
     grid-template-columns: minmax(22mm, 1fr) 20mm 25mm 8mm;
   }

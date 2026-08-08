@@ -83,6 +83,17 @@ try {
   await rifleSlot.selectOption("back");
   await page.getByTestId("appsheet-inventory").locator(".appsheet-item-slot").filter({ hasText: "Back" }).waitFor();
   await page.getByTestId("appsheet-background").selectOption("criminal");
+  const appBackgroundDetails = page.getByTestId("background-details").first();
+  await appBackgroundDetails.getByRole("heading", { name: "Criminal" }).waitFor();
+  if (!await appBackgroundDetails.getByText("Sleight of Hand, Stealth", { exact: true }).count()) {
+    throw new Error("Selected app background did not show its proficiencies");
+  }
+  await appBackgroundDetails.screenshot({ path: "screenshots/background-details-desktop.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await appBackgroundDetails.screenshot({ path: "screenshots/background-details-mobile.png" });
+  const backgroundOverflow = await appBackgroundDetails.evaluate((element) => element.scrollWidth > element.clientWidth);
+  if (backgroundOverflow) throw new Error("Background details overflow the mobile viewport");
+  await page.setViewportSize({ width: 1440, height: 1000 });
   await openAppSection("Abilities & skills");
   const skillChoiceDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Skill proficiency choices", { exact: true }) }).first();
   if (!await skillChoiceDisclosure.evaluate((element) => element.open)) throw new Error("Fresh required skill choices are not expanded");
@@ -140,6 +151,11 @@ try {
 
   await page.getByRole("button", { name: "Paper sheet" }).click();
   await page.getByTestId("sheet-character-automation").waitFor();
+  const sheetBackgroundDetails = page.getByTestId("sheet-character-automation").getByTestId("background-details");
+  await sheetBackgroundDetails.getByRole("heading", { name: "Criminal" }).waitFor();
+  if (!await sheetBackgroundDetails.getByText("Thieves' Tools, Crowbar", { exact: true }).count()) {
+    throw new Error("Selected paper background did not show its starting gear");
+  }
   if (await page.locator('[data-f="pageNotes"]').inputValue() !== "Shared app-view note.") throw new Error("App notes did not synchronize into the paper sheet");
   const controlsAreOnSheet = await page.getByTestId("sheet-character-automation").evaluate(
     (element) => Boolean(element.closest(".papersheet .page")),
