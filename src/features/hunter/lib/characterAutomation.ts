@@ -209,7 +209,7 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     const field = SHEET_SKILL_FIELD[skill.name];
     put(fields, reasons, `${field}P`, proficient, proficient ? (backgroundSkills.includes(skill.name) ? `${background?.name} background` : `${klass?.title ?? "Saved"} proficiency`) : "Not selected");
     const multiplier = expertise.has(skill.name) ? 2 : proficient ? 1 : 0;
-    put(fields, reasons, field, formatModifier(abilityModifier(card.abilities[key]) + prof * multiplier), expertise.has(skill.name) ? `${key.toUpperCase()} modifier + twice proficiency (Expertise)` : proficient ? `${key.toUpperCase()} modifier + proficiency` : `${key.toUpperCase()} modifier`);
+    put(fields, reasons, field, formatModifier(abilityModifier(card.abilities[key]) + prof * multiplier), expertise.has(skill.name) ? `${key.toUpperCase()} modifier + Expertise` : proficient ? `${key.toUpperCase()} modifier + proficiency` : `${key.toUpperCase()} modifier`);
   }
   put(fields, reasons, "initiative", formatModifier(abilityModifier(card.abilities.dex) + (featNames.has("Alert") ? prof : 0)), featNames.has("Alert") ? "Dexterity modifier + proficiency from Alert" : "Dexterity modifier");
   put(fields, reasons, "passivePerception", String(10 + abilityModifier(card.abilities.wis) + (allSkills.has("Perception") ? prof : 0)), "10 + Wisdom modifier + Perception proficiency when selected");

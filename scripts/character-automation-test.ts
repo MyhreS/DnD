@@ -89,7 +89,8 @@ const expertWarden = automationFor({
   skillProficiencies: ["Perception", "Survival"],
   sheetAutomation: { version: 1, classSkills: ["Perception", "Survival"], expertiseSkills: ["Perception"], backgroundBonuses: {} },
 });
-assert.equal(expertWarden.fields.skPerception, "+6", "Expertise applies twice proficiency");
+assert.equal(expertWarden.fields.skPerception, "+6", "Expertise applies its bonus twice");
+assert.equal(expertWarden.reasons.skPerception, "WIS modifier + Expertise", "Expertise uses its named rule in the character sheet explanation");
 const completedWardenLevelTwo = automationFor({
   ...warden,
   level: 2,
