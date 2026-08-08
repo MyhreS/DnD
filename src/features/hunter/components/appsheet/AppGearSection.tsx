@@ -1,8 +1,6 @@
 import { useMemo, useState } from "react";
 import { ITEMS } from "@/data/items";
 import { ARMOR_BY_ID } from "@/data/armor";
-import { STORAGE_DEFS } from "@/data/storage";
-import { itemFor } from "@/lib/customItems";
 import { resolveInventory } from "@/lib/inventory";
 import { computeSlots, SLOT_LOCATION_LABEL, slotAssignmentOptions } from "@/lib/slots";
 import type { CarrySignificance, SlotAssignment } from "@/types";
@@ -50,7 +48,6 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
   });
   const inventory = resolveInventory(card);
   const slots = computeSlots(card);
-  const inventoryIds = new Set((card.inventory ?? []).filter((entry) => entry.qty > 0).map((entry) => entry.itemId));
   const catalog = useMemo(() => ITEMS.filter((item) => item.category !== "Armor"), []);
   const weapons = inventory.filter(({ item }) => item.category === "Weapon");
 
@@ -152,31 +149,10 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
 
       <AppDisclosure
         title="Carrying setup"
-        summary={`${card.equippedStorageIds?.length ?? 0} storage equipped · ${slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} unassigned`}
+        summary={`${slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} unassigned`}
         aside={slots.unstowed.length ? <span className="appsheet-incomplete">Check load</span> : undefined}
       >
-      <div className="appsheet-two-column appsheet-disclosure-grid">
-        <AppPanel title="Storage worn on the body">
-          <div className="appsheet-storage-list">
-            {STORAGE_DEFS.map((definition) => {
-              const item = itemFor(card, definition.itemId);
-              if (!item) return null;
-              const equipped = (card.equippedStorageIds ?? []).includes(item.id);
-              return (
-                <div key={item.id} className={equipped ? "equipped" : ""}>
-                  <span><b>{item.name}</b><small>{definition.requires ? `Uses ${SLOT_LOCATION_LABEL[definition.requires.location]}` : "Uses no base slot"} · gives {definition.gives.count} {SLOT_LOCATION_LABEL[definition.gives.location]} slots</small></span>
-                  <button
-                    type="button"
-                    disabled={model.readOnly || (!equipped && !inventoryIds.has(item.id))}
-                    onClick={() => automation.toggleStorage(item.id)}
-                  >{equipped ? "Unequip" : inventoryIds.has(item.id) ? "Equip" : "Not carried"}</button>
-                </div>
-              );
-            })}
-          </div>
-          <AutoReason reason="Equipped storage leaves inventory, still counts toward weight, consumes its body slot, and grants its listed capacity." />
-        </AppPanel>
-
+      <div className="appsheet-disclosure-grid">
         <AppPanel title="Slot assignment">
           <div className="appsheet-slot-list">
             {slots.rows.map((row) => (

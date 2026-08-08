@@ -275,6 +275,13 @@ try {
     throw new Error("Visible armor impression is still duplicated inside App View");
   }
   await openAppSection("Gear & carrying");
+  const carryingSetup = await openAppDisclosure("Carrying setup");
+  if (await carryingSetup.getByRole("heading", { name: "Storage worn on the body", exact: true }).count()) {
+    throw new Error("Carrying setup still exposes the removed body-storage controls");
+  }
+  if (!await carryingSetup.getByRole("heading", { name: "Slot assignment", exact: true }).isVisible()) {
+    throw new Error("Carrying setup no longer exposes slot assignment");
+  }
   await openAppDisclosure("Weapon details");
   const mobileWeaponLabels = page.locator(".appsheet-weapon-label");
   if (await mobileWeaponLabels.count() === 0 || !await mobileWeaponLabels.first().isVisible()) {
