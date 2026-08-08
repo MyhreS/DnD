@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 import type { HunterCard } from "@/types";
 import { automationFor } from "../../lib/characterAutomation";
 
-export type StagedPatch = Pick<Partial<HunterCard>, "level" | "currentHp" | "sanity" | "subclassId" | "transformationLevel" | "activeTransformations">;
+export type StagedPatch = Pick<Partial<HunterCard>, "level" | "lastSeenLevel" | "currentHp" | "sanity" | "subclassId" | "transformationLevel" | "activeTransformations">;
 
 export interface AppEditStageValue {
   patch: StagedPatch;
