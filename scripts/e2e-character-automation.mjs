@@ -81,8 +81,9 @@ try {
   await page.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
   const rifleSlot = page.getByLabel("Hunter Rifle item 1 carrying slot");
   if (await rifleSlot.inputValue() !== "") throw new Error("New equipment should start Unassigned");
-  await rifleSlot.selectOption("back");
-  await page.getByTestId("appsheet-inventory").locator(".appsheet-item-slot").filter({ hasText: "Back" }).waitFor();
+  if (!await rifleSlot.locator('option[value="hand"]').count()) throw new Error("Hunter Rifle cannot be assigned to Hand");
+  await rifleSlot.selectOption("hand");
+  await page.getByTestId("appsheet-inventory").locator(".appsheet-item-slot").filter({ hasText: "Hand" }).waitFor();
   await page.getByTestId("appsheet-background").selectOption("criminal");
   const appBackgroundDetails = page.getByTestId("background-details").first();
   await appBackgroundDetails.getByRole("heading", { name: "Criminal" }).waitFor();
