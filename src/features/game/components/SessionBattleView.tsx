@@ -12,12 +12,14 @@ export function SessionBattleView({
   isDm,
   dmControls,
   disabled,
+  onBack,
 }: {
   game: Game;
   characters: HunterCard[];
   isDm: boolean;
   dmControls: ReactNode;
   disabled: boolean;
+  onBack: () => void;
 }) {
   useWakeLock();
   const allCombatants = useCombatStore((state) => state.combatants);
@@ -30,6 +32,7 @@ export function SessionBattleView({
     <main className="battle-screen game-battle-mode" aria-label={`${game.title} battle screen`} data-testid="session-battle-screen">
       <header className="battle-header">
         <div className="battle-title">
+          <button className="battle-back" type="button" onClick={onBack}>← Session</button>
           <h1>{game.title}</h1>
           <p>Round {Math.max(1, encounter.round)}</p>
         </div>

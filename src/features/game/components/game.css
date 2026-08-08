@@ -112,7 +112,7 @@
 .game-session-heading p { margin-bottom: 0; }
 
 .game-session-heading-compact { align-items: center; }
-.game-session-top-actions { display: flex; align-items: center; gap: 20px; }
+.game-session-top-actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 10px 20px; }
 .game-primary-actions { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 0 4px; }
 .game-primary-actions .btn { width: auto; min-height: 38px; padding: 8px 13px; }
 .game-primary-actions .btn-danger { margin-left: auto; }

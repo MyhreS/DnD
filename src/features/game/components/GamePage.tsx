@@ -70,6 +70,7 @@ export function GamePage() {
   const [games, setGames] = useState<Game[]>([]);
   const [activeSeats, setActiveSeats] = useState<Map<string, ActiveGameSeat>>(new Map());
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [dismissedBattleKey, setDismissedBattleKey] = useState<string | null>(null);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [participants, setParticipants] = useState<GameParticipant[]>([]);
   const [previewRosters, setPreviewRosters] = useState<Record<string, GameParticipant[]>>({
@@ -174,7 +175,8 @@ export function GamePage() {
       .map((seat) => seat.uid),
   ), [effectiveSeats, selected?.id]);
   const isSessionDm = Boolean(user && selected?.dmUid === user.uid);
-  const battleMode = Boolean(selected?.status === "active" && selected.combat?.active);
+  const battleKey = selected?.combat ? `${selected.id}:${selected.combat.encounterId}` : null;
+  const battleMode = Boolean(selected?.status === "active" && selected.combat?.active && dismissedBattleKey !== battleKey);
   const displayedParticipants = selected && selected.campaignId === null
     ? selected.participantRoster
     : participants;
@@ -198,6 +200,12 @@ export function GamePage() {
       () => setError("Could not load the players in this session."),
     );
   }, [preview, previewRosters, selected?.campaignId, selectedId]);
+
+  useEffect(() => {
+    if (!selected?.combat?.active) {
+      setDismissedBattleKey(null);
+    }
+  }, [selected?.combat?.active]);
 
   useCombatSync(selectedId, !isSessionDm);
   const combatBusy = useCombatStore((state) => state.busy);
@@ -514,6 +522,7 @@ export function GamePage() {
           game={selected}
           characters={characters ?? []}
           isDm={isSessionDm}
+          onBack={() => setDismissedBattleKey(battleKey)}
           dmControls={isSessionDm ? (
             <SessionCombatControls
               game={selected}
@@ -612,6 +621,8 @@ export function GamePage() {
                   <h2>{selected.title}</h2>
                 </div>
                 <div className="game-session-top-actions">
+                  <button className="game-text-button" type="button" onClick={() => setSelectedId(null)}>← Sessions</button>
+                  {selected.combat?.active && <button className="game-text-button" type="button" onClick={() => setDismissedBattleKey(null)}>Return to battle</button>}
                   {isSessionDm && selected.campaignId === null && selected.status !== "ended" && <button className="game-text-button" type="button" onClick={() => setManagingPlayers(true)}>Manage players</button>}
                 </div>
               </div>
