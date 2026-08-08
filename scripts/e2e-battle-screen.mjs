@@ -291,15 +291,22 @@ try {
   await itemDialog.getByLabel("Name").fill("Ashen Spear");
   await itemDialog.getByLabel("Damage").fill("1d8 piercing");
   await itemDialog.getByRole("button", { name: "Create item" }).click();
+  await itemDialog.waitFor({ state: "detached" });
 
   const hunterControl = dmPage.locator(".battle-row").filter({ hasText: "Lady Maria" });
+  await hunterControl.getByLabel("Lady Maria AC").fill("17");
+  await hunterControl.getByLabel("Lady Maria AC").blur();
+  await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).locator(".battle-ac").getByText("17", { exact: true }).waitFor();
+  const armoredHunter = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
+  if (armoredHunter.empty || armoredHunter.docs[0].data().ac !== 17) throw new Error("Direct Hunter AC did not update the battle record.");
+
   await hunterControl.getByLabel("Lady Maria damage taken").fill("7");
   await hunterControl.getByLabel("Lady Maria damage taken").blur();
   await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).getByText("7", { exact: true }).waitFor();
   const damagedHunter = await db.doc(`characters/${characterId}`).get();
   const pcCombatants = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
   if (pcCombatants.empty || pcCombatants.docs[0].data().currentHp !== 21) throw new Error("Direct Hunter damage did not update the battle record.");
-  if (damagedHunter.data()?.currentHp !== 24 || damagedHunter.data()?.sheet?.hpCur !== "24") throw new Error("Battle damage should not overwrite the Hunter sheet.");
+  if (damagedHunter.data()?.currentHp !== 24 || damagedHunter.data()?.sheet?.hpCur !== "24" || damagedHunter.data()?.sheet?.ac !== "15") throw new Error("Battle controls should not overwrite the Hunter sheet.");
 
   await noHorizontalOverflow(dmPage, "Clean DM battle view");
   await dmPage.screenshot({ path: "screenshots/game-battle-mode-dm.png", fullPage: true });

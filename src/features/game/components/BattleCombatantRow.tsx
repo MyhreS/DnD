@@ -46,6 +46,13 @@ export function BattleCombatantRow({
     if (initiative !== combatant.initiative) void patch(game.id, combatant.id, { initiative });
   }
 
+  function updateArmorClass(event: ChangeEvent<HTMLInputElement>) {
+    const value = event.currentTarget.value.trim();
+    const ac = value === "" ? null : Math.min(99, Math.max(0, Number.parseInt(value, 10) || 0));
+    event.currentTarget.value = ac === null ? "" : String(ac);
+    if (ac !== combatant.ac) void patch(game.id, combatant.id, { ac });
+  }
+
   return (
     <article className={active ? "battle-row is-current" : "battle-row"} data-testid={`battle-combatant-${combatant.id}`}>
       <span className="battle-position">{position}</span>
@@ -70,6 +77,7 @@ export function BattleCombatantRow({
       {canManage && (
         <div className="battle-row-controls" aria-label={`${combatant.name} DM controls`}>
           <label>Initiative<input aria-label={`${combatant.name} initiative`} type="number" min="-99" max="99" disabled={disabled} defaultValue={combatant.initiative} onBlur={updateInitiative} /></label>
+          <label>AC<input key={combatant.ac ?? `base-${vitals.ac ?? "unknown"}`} aria-label={`${combatant.name} AC`} type="number" min="0" max="99" disabled={disabled} defaultValue={combatant.ac ?? vitals.ac ?? ""} onBlur={updateArmorClass} /></label>
           <label>Damage<input key={vitals.damageTaken ?? "unknown"} aria-label={`${combatant.name} damage taken`} type="number" min="0" max={vitals.maxHp ?? undefined} disabled={disabled || vitals.maxHp === null} defaultValue={vitals.damageTaken ?? ""} onBlur={(event) => void setDamage(event.currentTarget.value)} /></label>
           <button type="button" disabled={disabled || vitals.maxHp === null} onClick={() => void setDamage(String((vitals.damageTaken ?? 0) - 1))}>−1</button>
           <button type="button" disabled={disabled || vitals.maxHp === null} onClick={() => void setDamage(String((vitals.damageTaken ?? 0) + 1))}>+1</button>
