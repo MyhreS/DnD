@@ -179,6 +179,9 @@
 .game-inline-check { display: flex; align-items: center; gap: 8px; color: var(--ink-dim); font-size: 0.85rem; }
 .game-check { margin-top: 10px; }
 .game-inline-check { margin-left: 6px; }
+.game-visibility-options { margin: 18px 0 0; padding: 14px 0 0; border: 0; border-top: 1px solid var(--border); }
+.game-visibility-options legend { padding: 0; color: var(--ink); font-size: 0.9rem; font-weight: 700; }
+.game-visibility-options .game-check { margin-top: 10px; }
 .game-dialog-note { padding: 10px 12px; border-left: 2px solid var(--gold); background: rgba(201, 164, 90, 0.07); color: var(--ink-dim); }
 .game-dialog-results { margin: -6px 0 18px; border-bottom: 1px solid var(--border); }
 .game-dialog-results > button { display: flex; justify-content: space-between; gap: 16px; width: 100%; padding: 10px 0; border: 0; border-top: 1px solid var(--border); background: transparent; color: var(--ink); text-align: left; cursor: pointer; }
