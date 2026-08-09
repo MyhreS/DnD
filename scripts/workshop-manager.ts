@@ -18,8 +18,10 @@ import {
   parseAgentResult,
   parseRecoveryResult,
   progressFromCodexEvent,
+  isAttachmentAccessProblem,
   isLikelyServiceProblem,
   isTemporaryServiceWait,
+  retryDelayMs,
   requiresDecisionReply,
   ticketNeedsDecision,
   workshopChannelContext,
@@ -49,6 +51,13 @@ type ThreadMessage = {
   attachments?: Array<{ path: string; name: string }>;
 };
 type ClaimedTicket = { id: string; ref: DocumentReference; data: TicketData; workerId: string };
+
+class AttachmentAccessError extends Error {
+  constructor(readonly path: string, cause: unknown) {
+    super(`The Workshop worker cannot read attachment ${path}: ${String(cause)}`, { cause });
+    this.name = "AttachmentAccessError";
+  }
+}
 
 const PROJECT_ID = process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID || "dandd-ea955";
 const WORKER_ID = `local-${process.pid}-${crypto.randomUUID().slice(0, 8)}`;
@@ -373,7 +382,12 @@ async function downloadImages(messages: ThreadMessage[], folder: string): Promis
   const paths: string[] = [];
   for (const [index, item] of files.entries()) {
     const localPath = join(folder, `${index}-${item.name.replace(/[^A-Za-z0-9._-]/g, "_")}`);
-    await getStorage().bucket().file(item.path).download({ destination: localPath });
+    try {
+      await getStorage().bucket().file(item.path).download({ destination: localPath });
+    } catch (error) {
+      if (isAttachmentAccessProblem(error)) throw new AttachmentAccessError(item.path, error);
+      throw error;
+    }
     paths.push(localPath);
   }
   return paths;
@@ -573,9 +587,18 @@ function createAgentWorktree(ticketId: string): AgentWorktree {
   const suffix = `${ticketId.slice(0, 8)}-${Date.now()}`;
   const branch = `agent/workshop-${suffix}`;
   const path = resolve(REPO_ROOT, "..", `DnD-workshop-ticket-${suffix}`);
-  git(["fetch", "origin", "main"]);
-  git(["worktree", "add", "-b", branch, path, "origin/main"]);
-  return { path, branch };
+  try {
+    git(["fetch", "origin", "main"]);
+    git(["worktree", "add", "-b", branch, path, "origin/main"]);
+    return { path, branch };
+  } catch (error) {
+    // A failed checkout can leave an incomplete manager-created directory
+    // behind (for example after a full disk). It is not a valid ticket
+    // workspace and would make every later retry more likely to fail.
+    rmSync(path, { recursive: true, force: true });
+    git(["worktree", "prune"], REPO_ROOT, true);
+    throw error;
+  }
 }
 
 function cleanupAgentWorktree(worktree: AgentWorktree): void {
@@ -764,6 +787,7 @@ async function finalize(ticket: ClaimedTicket, result: AgentResult): Promise<voi
 }
 
 async function scheduleAutomaticRetry(ticket: ClaimedTicket, error: unknown, recovery?: RecoveryResult): Promise<void> {
+  let retryAt: number | null = null;
   await db.runTransaction(async (tx) => {
     const fresh = await tx.get(ticket.ref);
     if (!fresh.exists) return;
@@ -792,6 +816,10 @@ async function scheduleAutomaticRetry(ticket: ClaimedTicket, error: unknown, rec
       reasoningEffort: WORKSHOP_REASONING_EFFORT,
       createdAt: FieldValue.serverTimestamp(),
     });
+    const nextRetryAt = revisionChanged || recovery?.outcome === "recovered"
+      ? null
+      : Date.now() + (recovery ? RECOVERY_RETRY_MS : AUTOMATIC_RETRY_MS);
+    retryAt = nextRetryAt;
     tx.update(ticket.ref, {
       status: "not_done",
       nextSequence: sequence + 1,
@@ -799,11 +827,12 @@ async function scheduleAutomaticRetry(ticket: ClaimedTicket, error: unknown, rec
       leasedBy: null,
       leaseExpiresAt: null,
       automaticRetryCount: retryCount,
-      retryAfter: revisionChanged || recovery?.outcome === "recovered"
+      retryAfter: nextRetryAt === null
         ? FieldValue.delete()
-        : Timestamp.fromMillis(Date.now() + (recovery ? RECOVERY_RETRY_MS : AUTOMATIC_RETRY_MS)),
+        : Timestamp.fromMillis(nextRetryAt),
     });
   });
+  if (retryAt !== null) scheduleRetryPollAt(retryAt);
 }
 
 async function processTicket(ticket: ClaimedTicket): Promise<void> {
@@ -819,7 +848,14 @@ async function processTicket(ticket: ClaimedTicket): Promise<void> {
     await updateProgress(ticket.id, { stage: 2, activity: "Deciding the safest next step", lastCompleted: images.length ? "Read the thread and screenshots" : "Read the thread" });
     await finalize(ticket, await runCodingAgent(ticket, messages, images, folder));
   } catch (error) {
-    if (Number(ticket.data.automaticRetryCount ?? 0) < MAX_AUTOMATIC_RETRIES) {
+    if (error instanceof AttachmentAccessError) {
+      await finalize(ticket, {
+        outcome: "needs_simon",
+        summaryForCreator: "I could not read an attached image, so I stopped instead of retrying the same failed download.",
+        needsSimonReason: "Restore the Workshop worker’s read access to the attached image, then reply here so I can continue.",
+        technicalSummary: String(error),
+      });
+    } else if (Number(ticket.data.automaticRetryCount ?? 0) < MAX_AUTOMATIC_RETRIES) {
       let recovery: RecoveryResult | undefined;
       if (isLikelyServiceProblem(error)) {
         try {
@@ -897,6 +933,8 @@ async function drainQueueOnce(): Promise<void> {
 }
 
 let fallbackTimer: ReturnType<typeof setTimeout> | undefined;
+let retryTimer: ReturnType<typeof setTimeout> | undefined;
+let scheduledRetryAt: number | undefined;
 let watchRetryTimer: ReturnType<typeof setTimeout> | undefined;
 let stopTicketWatch: (() => void) | undefined;
 
@@ -905,7 +943,26 @@ function scheduleFallbackPoll(): void {
   fallbackTimer = setTimeout(() => void requestPoll("fallback"), FALLBACK_POLL_MS);
 }
 
-async function requestPoll(source: "change" | "fallback"): Promise<void> {
+function scheduleRetryPollAt(retryAt: number): void {
+  if (scheduledRetryAt !== undefined && scheduledRetryAt <= retryAt) return;
+  clearTimeout(retryTimer);
+  scheduledRetryAt = retryAt;
+  retryTimer = setTimeout(() => {
+    scheduledRetryAt = undefined;
+    void requestPoll("retry");
+  }, retryDelayMs(retryAt, Date.now()));
+}
+
+async function scheduleEarliestRetryPoll(): Promise<void> {
+  const candidates = await db.collection("workshopTickets").where("status", "==", "not_done").limit(50).get();
+  const retryAt = candidates.docs.reduce<number | undefined>((earliest, ticket) => {
+    const value = (ticket.data().retryAfter as Timestamp | undefined)?.toMillis();
+    return value !== undefined && value > Date.now() && (earliest === undefined || value < earliest) ? value : earliest;
+  }, undefined);
+  if (retryAt !== undefined) scheduleRetryPollAt(retryAt);
+}
+
+async function requestPoll(source: "change" | "fallback" | "retry"): Promise<void> {
   if (shuttingDown) return;
   if (pollRequestActive) {
     pollAgain = true;
@@ -924,6 +981,7 @@ async function requestPoll(source: "change" | "fallback"): Promise<void> {
     } while (pollAgain);
   } finally {
     pollRequestActive = false;
+    await scheduleEarliestRetryPoll().catch((error) => console.error("Workshop retry schedule failed:", error));
     scheduleFallbackPoll();
   }
 }
@@ -951,6 +1009,7 @@ async function stopManager(heartbeatTimer: ReturnType<typeof setInterval>): Prom
   shuttingDown = true;
   clearInterval(heartbeatTimer);
   clearTimeout(fallbackTimer);
+  clearTimeout(retryTimer);
   clearTimeout(watchRetryTimer);
   stopTicketWatch?.();
   watchingChanges = false;

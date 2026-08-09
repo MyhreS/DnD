@@ -8,8 +8,10 @@ import {
   parseAgentResult,
   parseRecoveryResult,
   progressFromCodexEvent,
+  isAttachmentAccessProblem,
   isTemporaryServiceWait,
   isLikelyServiceProblem,
+  retryDelayMs,
   requiresDecisionReply,
   ticketNeedsDecision,
   workshopChannelContext,
@@ -30,6 +32,10 @@ assert(!isTemporaryServiceWait("Choose which old data may be removed."), "real p
 assert(isLikelyServiceProblem("Coding agent exited with status 1."), "interrupted coding processes must start recovery");
 assert(isLikelyServiceProblem("Firebase quota returned 429"), "provider quotas must start recovery");
 assert(!isLikelyServiceProblem("The coding agent did not return a valid result."), "invalid worker output is not automatically a service outage");
+assert(isAttachmentAccessProblem("403 Forbidden: storage.objects.get"), "attachment permission failures must not loop through service recovery");
+assert(!isAttachmentAccessProblem("socket hang up"), "transient attachment downloads may still retry");
+assert(retryDelayMs(2_000, 1_000) === 1_000, "future retries must wake at their scheduled time");
+assert(retryDelayMs(1_000, 2_000) === 0, "expired retries must wake immediately");
 
 const recovered = parseRecoveryResult(JSON.stringify({
   outcome: "recovered",
