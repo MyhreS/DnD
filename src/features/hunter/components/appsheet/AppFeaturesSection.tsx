@@ -16,13 +16,10 @@ import {
 export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
   const automation = useCharacterAutomation();
   const { card, klass, result, state, expertiseLimit, masteryCount, masteryWeapons, whisperLimit } = automation;
-  const subclass = klass?.subclasses.find((entry) => entry.id === card.subclassId);
   const expertise = state.expertiseSkills ?? [];
   const masteries = state.weaponMasteries ?? [];
   const whispers = card.preparedWhispers ?? [];
   const proficientSkills = SKILLS.filter((skill) => card.skillProficiencies.includes(skill.name));
-  const classFeatures = klass?.features?.filter((feature) => feature.level <= card.level) ?? [];
-  const subclassFeatures = subclass?.features.filter((feature) => feature.level <= card.level) ?? [];
   const currentProgression = klass?.progression.find((row) => row.level === card.level);
   const classChoiceRemaining = Math.max(0, expertiseLimit - expertise.length)
     + Math.max(0, masteryCount - masteries.length)
@@ -93,22 +90,6 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
         </AppPanel>
       )}
       </AppDisclosure>
-      )}
-
-      {klass && (
-        <AppDisclosure title="Class feature reference" summary={`${classFeatures.length + subclassFeatures.length} unlocked through level ${card.level}`}>
-        <AppPanel title="Unlocked features" aside={<span className="appsheet-status-word">Through level {card.level}</span>}>
-          <div className="appsheet-feature-timeline">
-            {[...classFeatures, ...subclassFeatures].sort((a, b) => a.level - b.level).map((feature, index) => (
-              <details key={`${feature.level}-${feature.name}-${index}`}>
-                <summary><span>Level {feature.level}</span><b>{feature.name}</b>{subclassFeatures.includes(feature) && <em>{subclass?.name}</em>}</summary>
-                <p>{feature.text}</p>
-              </details>
-            ))}
-          </div>
-          <AutoReason reason={`${klass.title}${subclass ? ` and ${subclass.name}` : ""} feature text from the class boards and Player's Handbook.`} />
-        </AppPanel>
-        </AppDisclosure>
       )}
 
       <AppDisclosure

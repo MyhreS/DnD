@@ -109,6 +109,15 @@ try {
   await page.getByTestId("appsheet-name").fill("App Warden");
   await page.getByTestId("appsheet-class").selectOption("warden");
   await page.getByTestId("appsheet-class").selectOption("deepcaller");
+  const classAbilities = await openAppDisclosure("Class abilities");
+  await classAbilities.getByText("Eldritch Comprehension", { exact: true }).waitFor();
+  if (await classAbilities.getByText("Braced Mind", { exact: true }).count() !== 0) {
+    throw new Error("Class abilities included a feature above the acquired level");
+  }
+  const eldritchComprehension = classAbilities.locator(".appsheet-feature-timeline details").filter({ has: page.getByText("Eldritch Comprehension", { exact: true }) });
+  await eldritchComprehension.locator(":scope > summary").click();
+  await eldritchComprehension.getByText("forbidden knowledge", { exact: false }).waitFor();
+  await classAbilities.screenshot({ path: "screenshots/class-abilities-overview-desktop.png" });
   const sanityDie = page.getByTestId("appsheet-sanity-die");
   if (await sanityDie.locator("strong").textContent() !== "1d20") throw new Error("Deepcaller Sanity Die was not derived in the overview");
   await sanityDie.getByLabel("Why this value is automatic").click();
@@ -135,6 +144,10 @@ try {
   await preparedWhispers.getByText("1 × 1d10 Eldritch Power · 120 feet", { exact: true }).waitFor();
   await page.screenshot({ path: "screenshots/deepcaller-strains-desktop.png", fullPage: true });
   await page.setViewportSize({ width: 390, height: 844 });
+  await classAbilities.screenshot({ path: "screenshots/class-abilities-overview-mobile.png" });
+  if (await classAbilities.evaluate((element) => element.scrollWidth > element.clientWidth)) {
+    throw new Error("Class abilities overflow the mobile viewport");
+  }
   await page.locator(".appsheet-current-state").screenshot({ path: "screenshots/sanity-die-overview-mobile.png" });
   await strains.screenshot({ path: "screenshots/deepcaller-strains-mobile.png" });
   await riteReference.screenshot({ path: "screenshots/deepcaller-rites-mobile.png" });
