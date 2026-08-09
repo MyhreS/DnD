@@ -179,10 +179,15 @@ try {
   await appViewTwo.getByRole("button", { name: "Decrease HP" }).click();
   await page.getByTestId("appsheet-edit-stage").waitFor();
   await appViewTwo.screenshot({ path: "screenshots/app-character-sheet-2-desktop.png" });
+  await appViewTwo.getByRole("button", { name: "Gear" }).click();
+  const quickGear = appViewTwo.locator(".appsheet-quick-gear");
+  await quickGear.getByRole("heading", { name: "Gear & carrying" }).waitFor();
+  await quickGear.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
+  await quickGear.screenshot({ path: "screenshots/app-character-sheet-2-gear-desktop.png" });
   await page.setViewportSize({ width: 390, height: 844 });
-  const appViewTwoOverflow = await appViewTwo.evaluate((element) => element.scrollWidth > element.clientWidth);
+  const appViewTwoOverflow = await quickGear.evaluate((element) => element.scrollWidth > element.clientWidth);
   if (appViewTwoOverflow) throw new Error("App view 2 overflows the mobile viewport");
-  await appViewTwo.screenshot({ path: "screenshots/app-character-sheet-2-mobile.png", fullPage: true });
+  await quickGear.screenshot({ path: "screenshots/app-character-sheet-2-gear-mobile.png", fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
   page.once("dialog", (dialog) => dialog.accept());
   await page.getByRole("button", { name: "App view" }).click();

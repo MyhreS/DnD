@@ -19,7 +19,7 @@ import {
   type AppSheetModel,
 } from "./appSheetShared";
 
-export function AppGearSection({ model }: { model: AppSheetModel }) {
+export function AppGearSection({ model, defaultOpen = false }: { model: AppSheetModel; defaultOpen?: boolean }) {
   const automation = useCharacterAutomation();
   const { card, result } = automation;
   const [catalogId, setCatalogId] = useState("");
@@ -51,7 +51,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
   }
 
   return (
-    <AppSection title="Gear & carrying">
+    <AppSection title="Gear & carrying" defaultOpen={defaultOpen}>
       <div className="appsheet-focus-strip appsheet-gear-summary">
         <DerivedValue label="Gold" value={card.coins ?? 0} reason="Saved gold pieces; coins do not consume carrying slots." />
         <DerivedValue label="Carried weight" value={result.fields.weight} reason={result.reasons.weight} />

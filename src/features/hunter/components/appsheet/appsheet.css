@@ -118,6 +118,33 @@
   padding-bottom: 110px;
 }
 
+.appsheet-quick-tabs {
+  display: inline-flex;
+  justify-self: start;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--app-line);
+  border-radius: 7px;
+  background: var(--app-surface);
+}
+
+.appsheet-quick-tabs button {
+  min-height: 34px;
+  padding: 5px 14px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--app-muted);
+  font: 800 14px/1 "Alegreya Sans SC", sans-serif;
+  letter-spacing: .03em;
+}
+
+.appsheet-quick-tabs button:hover { background: var(--app-subtle-hover); color: var(--app-text); }
+.appsheet-quick-tabs button[aria-pressed="true"] { background: var(--app-text); color: var(--app-bg); }
+.appsheet-quick-tabs button:focus-visible { outline: 2px solid var(--app-warm); outline-offset: 2px; }
+
+.appsheet-quick-gear .appsheet-section { margin: 0; }
+
 .appsheet-quick-header,
 .appsheet-quick-vitals,
 .appsheet-quick-grid {
