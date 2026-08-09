@@ -59,6 +59,14 @@ export function isLikelyServiceProblem(error: unknown): boolean {
   return /(?:coding agent exited|service|provider|network|socket|fetch|github|firebase|firestore|quota|rate.?limit|429|5\d\d|timed? out|timeout|unavailable|offline|connection|deployment|workflow|checks?)/i.test(message);
 }
 
+export function isAttachmentAccessProblem(error: unknown): boolean {
+  return /(?:\b403\b|forbidden|unauthori[sz]ed|access denied|permission denied|insufficient permissions?|storage\.objects\.get)/i.test(String(error));
+}
+
+export function retryDelayMs(retryAtMs: number, nowMs: number): number {
+  return Math.max(0, retryAtMs - nowMs);
+}
+
 export function parseRecoveryResult(raw: string): RecoveryResult {
   let value: unknown;
   try {
