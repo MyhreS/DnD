@@ -242,8 +242,9 @@ try {
   const addDialog = page.getByRole("dialog", { name: "Add to inventory", exact: true });
   if (await addDialog.locator(".appsheet-add-choices > button").count() !== 2) throw new Error("Inventory Add menu does not offer exactly two paths");
   await addDialog.getByRole("button", { name: "Record a unique item", exact: true }).click();
-  await page.getByRole("dialog", { name: "Record a unique item", exact: true }).getByLabel("Unique item name").waitFor();
-  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  const uniqueItemDialog = page.getByRole("dialog", { name: "Record a unique item", exact: true });
+  await uniqueItemDialog.getByLabel("Unique item name").waitFor();
+  await uniqueItemDialog.getByRole("button", { name: "Cancel", exact: true }).click();
   await addDialog.getByRole("button", { name: "Add from rules library", exact: true }).click();
   await page.getByTestId("appsheet-catalog-item").selectOption("backpack");
   await page.getByTestId("appsheet-add-catalog-item").click();

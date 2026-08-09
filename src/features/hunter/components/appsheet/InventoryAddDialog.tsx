@@ -41,8 +41,8 @@ export function InventoryAddDialog({
         </header>
         {path === "choose" && (
           <div className="appsheet-add-choices">
-            <button type="button" data-dialog-autofocus onClick={() => setPath("library")}><b>Add from rules library</b><span>Choose a handbook weapon, tool, or piece of gear.</span></button>
-            <button type="button" onClick={() => setPath("unique")}><b>Record a unique item</b><span>Add a weapon or gear item found outside the handbook.</span></button>
+            <button type="button" aria-label="Add from rules library" data-dialog-autofocus onClick={() => setPath("library")}><b>Add from rules library</b><span>Choose a handbook weapon, tool, or piece of gear.</span></button>
+            <button type="button" aria-label="Record a unique item" onClick={() => setPath("unique")}><b>Record a unique item</b><span>Add a weapon or gear item found outside the handbook.</span></button>
           </div>
         )}
         {path === "library" && (
