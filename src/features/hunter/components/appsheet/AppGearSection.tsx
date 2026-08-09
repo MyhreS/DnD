@@ -1,20 +1,20 @@
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { ITEMS } from "@/data/items";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { ARMOR_BY_ID } from "@/data/armor";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 import { resolveInventory } from "@/lib/inventory";
 import { availableSlotAssignmentOptions, computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
-import type { CarrySignificance, SlotAssignment } from "@/types";
+import type { SlotAssignment } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { CarryingCustomization } from "./CarryingCustomization";
+import { InventoryAddDialog } from "./InventoryAddDialog";
+import { CatalogItemForm, UniqueItemForm, type FoundItemDraft } from "./InventoryAddForms";
 import {
   AppDisclosure,
   AppPanel,
   AppSection,
-  AppSelect,
   AutoReason,
-  DecisionField,
   DerivedValue,
   NumericStepper,
   type AppSheetModel,
@@ -32,17 +32,20 @@ export function AppGearSection({
   const automation = useCharacterAutomation();
   const { card, result } = automation;
   const [catalogId, setCatalogId] = useState("");
+  const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [showFound, setShowFound] = useState(false);
-  const [found, setFound] = useState({
+  const addButtonRef = useRef<HTMLButtonElement>(null);
+  const [found, setFound] = useState<FoundItemDraft>({
     name: "",
-    category: "Gear" as "Weapon" | "Gear",
-    carry: "Significant" as CarrySignificance,
+    category: "Gear",
+    carry: "Significant",
     weightLb: 0,
     note: "",
     attackBonus: "",
     damage: "",
     weaponNotes: "",
   });
+  const closeAddMenu = useCallback(() => setAddMenuOpen(false), []);
   const inventory = resolveInventory(card);
   const slots = computeSlots(card);
   const catalog = useMemo(() => ITEMS.filter((item) => item.category !== "Armor"), []);
@@ -59,6 +62,12 @@ export function AppGearSection({
     setCatalogId("");
   }
 
+  function addUniqueItem() {
+    automation.addCustomItem(found);
+    setFound({ name: "", category: "Gear", carry: "Significant", weightLb: 0, note: "", attackBonus: "", damage: "", weaponNotes: "" });
+    setShowFound(false);
+  }
+
   return (
     <AppSection title="Gear & carrying" defaultOpen={defaultOpen}>
       <div className="appsheet-focus-strip appsheet-gear-summary">
@@ -68,24 +77,17 @@ export function AppGearSection({
         <DerivedValue label="Unassigned" value={slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} reason="Significant and oversized items stay unassigned until you choose a carrying slot." />
       </div>
 
-      <AppPanel title="Inventory" aside={<span className="appsheet-status-word">{inventory.length} item types</span>}>
-        {!model.readOnly && (
+      <AppPanel title="Inventory" aside={!model.readOnly && !quickView ? (
+        <button ref={addButtonRef} type="button" className="appsheet-inventory-add" data-testid="appsheet-inventory-add" aria-haspopup="dialog" aria-expanded={addMenuOpen} onClick={() => setAddMenuOpen(true)}>
+          <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg>
+          Add
+        </button>
+      ) : <span className="appsheet-status-word">{inventory.length} item types</span>}>
+        {!model.readOnly && quickView && (
           <details className="appsheet-catalog-picker" data-testid="appsheet-catalog-picker">
             <summary>Add from rules library</summary>
             <div className="appsheet-catalog-picker-content">
-              <div className="appsheet-catalog-add">
-                <AppSelect label="Catalog item" value={catalogId} data-testid="appsheet-catalog-item" onChange={(event) => setCatalogId(event.target.value)}>
-                  <option value="">Choose an item…</option>
-                  {["Weapon", "Ammunition", "Tool", "Gear", "Consumable", "Valuable"].map((category) => (
-                    <optgroup key={category} label={category}>
-                      {catalog.filter((item) => item.category === category).map((item) => (
-                        <option key={item.id} value={item.id}>{item.name} · {item.carry} · {item.weightLb} lb</option>
-                      ))}
-                    </optgroup>
-                  ))}
-                </AppSelect>
-                <button type="button" data-testid="appsheet-add-catalog-item" disabled={!catalogId} onClick={addCatalogItem}>Add</button>
-              </div>
+              <CatalogItemForm catalog={catalog} catalogId={catalogId} setCatalogId={setCatalogId} onAdd={addCatalogItem} />
             </div>
           </details>
         )}
@@ -190,38 +192,18 @@ export function AppGearSection({
       </AppPanel>
       </AppDisclosure>
 
-      {!model.readOnly && (
+      {!model.readOnly && quickView && (
         <AppDisclosure title="Record a unique item" summary="For weapons or gear found outside the handbook">
         <AppPanel title="Item found outside the handbook" className="appsheet-found-panel">
           {!showFound ? (
             <button type="button" className="appsheet-secondary-action" onClick={() => setShowFound(true)}>Record unique weapon or gear</button>
           ) : (
-            <form onSubmit={(event) => {
-              event.preventDefault();
-              automation.addCustomItem(found);
-              setFound({ name: "", category: "Gear", carry: "Significant", weightLb: 0, note: "", attackBonus: "", damage: "", weaponNotes: "" });
-              setShowFound(false);
-            }}>
-              <p className="appsheet-form-intro">This is the manual exception: record the mechanical facts supplied by the DM because the item has no catalog entry.</p>
-              <div className="appsheet-form-grid">
-                <DecisionField label="Unique item name"><input required value={found.name} onChange={(event) => setFound({ ...found, name: event.target.value })} /></DecisionField>
-                <AppSelect label="Type" value={found.category} onChange={(event) => setFound({ ...found, category: event.target.value as typeof found.category })}><option>Weapon</option><option>Gear</option></AppSelect>
-                <AppSelect label="Carrying category" value={found.carry} onChange={(event) => setFound({ ...found, carry: event.target.value as CarrySignificance })}><option>Insignificant</option><option>Significant</option><option>Oversized</option></AppSelect>
-                <DecisionField label="Weight (lb)"><input type="number" min="0" step="0.1" required value={found.weightLb} onChange={(event) => setFound({ ...found, weightLb: Number(event.target.value) })} /></DecisionField>
-              </div>
-              {found.category === "Weapon" && <div className="appsheet-form-grid">
-                <DecisionField label="Attack bonus"><input value={found.attackBonus} placeholder="e.g. +5" onChange={(event) => setFound({ ...found, attackBonus: event.target.value })} /></DecisionField>
-                <DecisionField label="Damage"><input value={found.damage} placeholder="e.g. 1d8 Piercing" onChange={(event) => setFound({ ...found, damage: event.target.value })} /></DecisionField>
-              </div>}
-              <DecisionField label={found.category === "Weapon" ? "Properties and special rule" : "Special rule or note"}>
-                <textarea value={found.category === "Weapon" ? found.weaponNotes : found.note} onChange={(event) => setFound(found.category === "Weapon" ? { ...found, weaponNotes: event.target.value } : { ...found, note: event.target.value })} />
-              </DecisionField>
-              <div className="appsheet-form-actions"><button type="button" onClick={() => setShowFound(false)}>Cancel</button><button type="submit">Add to inventory</button></div>
-            </form>
+            <UniqueItemForm found={found} setFound={setFound} onCancel={() => setShowFound(false)} onAdd={addUniqueItem} />
           )}
         </AppPanel>
         </AppDisclosure>
       )}
+      {!model.readOnly && !quickView && addMenuOpen && <InventoryAddDialog triggerRef={addButtonRef} catalog={catalog} catalogId={catalogId} setCatalogId={setCatalogId} found={found} setFound={setFound} addCatalogItem={addCatalogItem} addUniqueItem={addUniqueItem} onClose={closeAddMenu} />}
     </AppSection>
   );
 }
