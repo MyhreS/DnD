@@ -185,6 +185,8 @@ try {
   await quickGear.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
   const carryingCustomization = await openAppDisclosure("Carrying customization");
   await carryingCustomization.getByTestId("warden-carrying-figure").waitFor();
+  await carryingCustomization.getByLabel("Warden carrying loadout").waitFor();
+  await carryingCustomization.getByText("Warden loadout", { exact: true }).waitFor();
   await carryingCustomization.getByRole("heading", { name: "Slot assignment", exact: true }).waitFor();
   await carryingCustomization.screenshot({ path: "screenshots/app-character-sheet-2-carrying-desktop.png" });
   await quickGear.screenshot({ path: "screenshots/app-character-sheet-2-gear-desktop.png" });

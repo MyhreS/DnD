@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { SLOT_LOCATION_LABEL, type SlotComputation } from "@/lib/slots";
 import { AppPanel } from "./appSheetShared";
 
@@ -16,8 +17,21 @@ export function CarryingCustomization({
     <div className="appsheet-carrying-customization">
       {showWardenReference && classId === "warden" && (
         <figure className="appsheet-carrying-figure" data-testid="warden-carrying-figure">
-          <img src="/art/carrying/hunter-warden-carrying-figure.webp" alt="Hunter Warden carrying reference" />
-          <figcaption>Hunter Warden carrying reference</figcaption>
+          <div className="appsheet-carrying-loadout" aria-label="Warden carrying loadout">
+            <ul className="appsheet-carrying-slots">
+              {slots.rows.map((row, index) => {
+                const columnPosition = Math.floor(index / 2) + 1;
+                const columnLength = Math.ceil(slots.rows.length / 2) + 1;
+                return <li key={row.key} className={`appsheet-carrying-slot appsheet-carrying-slot-${index % 2 ? "right" : "left"}`} style={{ "--slot-top": `${(columnPosition / columnLength) * 100}%` } as CSSProperties}>
+                  <span>{SLOT_LOCATION_LABEL[row.location]}</span>
+                  <b>{row.items.join(", ") || "Empty"}</b>
+                  <small>{row.used}/{row.capacity} {row.kind}</small>
+                </li>
+              })}
+            </ul>
+            <img src="/art/carrying/hunter-warden-carrying-figure.webp" alt="Hunter Warden" />
+          </div>
+          <figcaption>Warden loadout</figcaption>
         </figure>
       )}
       <AppPanel title="Slot assignment">
