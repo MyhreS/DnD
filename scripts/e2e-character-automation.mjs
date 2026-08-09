@@ -217,6 +217,35 @@ try {
   await page.setViewportSize({ width: 1440, height: 1000 });
   page.once("dialog", (dialog) => dialog.accept());
   await selectCharacterView("View 2");
+  await page.getByTestId("appsheet-background").selectOption("criminal");
+  const appBackgroundDetails = page.getByTestId("background-details").first();
+  await appBackgroundDetails.getByRole("heading", { name: "Criminal" }).waitFor();
+  if (!await appBackgroundDetails.getByText("Sleight of Hand, Stealth", { exact: true }).count()) {
+    throw new Error("Selected app background did not show its proficiencies");
+  }
+  await appBackgroundDetails.screenshot({ path: "screenshots/background-details-desktop.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  await appBackgroundDetails.screenshot({ path: "screenshots/background-details-mobile.png" });
+  const backgroundOverflow = await appBackgroundDetails.evaluate((element) => element.scrollWidth > element.clientWidth);
+  if (backgroundOverflow) throw new Error("Background details overflow the mobile viewport");
+  const backgroundReadingEdges = await appBackgroundDetails.evaluate((element) => {
+    const left = (selector) => element.querySelector(selector)?.getBoundingClientRect().left;
+    return {
+      textAlign: getComputedStyle(element).textAlign,
+      title: left("h3"),
+      label: left(".background-details-heading span"),
+      description: left(":scope > p"),
+      details: left(":scope > dl"),
+    };
+  });
+  if (backgroundReadingEdges.textAlign !== "left") throw new Error("Background details are not left-aligned on mobile");
+  const mobileReadingEdges = [backgroundReadingEdges.title, backgroundReadingEdges.label, backgroundReadingEdges.description, backgroundReadingEdges.details];
+  if (mobileReadingEdges.some((edge) => edge == null || Math.abs(edge - mobileReadingEdges[0]) > 1)) {
+    throw new Error(`Background details do not share one mobile reading edge: ${JSON.stringify(backgroundReadingEdges)}`);
+  }
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await appBackgroundDetails.getByRole("button", { name: "More about the Alert origin feat" }).click();
+  await appBackgroundDetails.getByText("Add your Proficiency Bonus to Initiative rolls.", { exact: false }).waitFor();
   await openAppSection("Gear & carrying");
   const fullAppGear = page.getByTestId("app-character-sheet").locator(".appsheet-section").filter({ has: page.getByRole("heading", { name: "Gear & carrying", exact: true }) });
   if (await fullAppGear.getByText("Carrying setup", { exact: true }).count()) {
@@ -272,20 +301,6 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await inventory.screenshot({ path: "screenshots/inventory-storage-slots-mobile.png" });
   if (await inventory.evaluate((element) => element.scrollWidth > element.clientWidth)) throw new Error("Inventory storage controls overflow the mobile viewport");
-  await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.getByTestId("appsheet-background").selectOption("criminal");
-  const appBackgroundDetails = page.getByTestId("background-details").first();
-  await appBackgroundDetails.getByRole("heading", { name: "Criminal" }).waitFor();
-  if (!await appBackgroundDetails.getByText("Sleight of Hand, Stealth", { exact: true }).count()) {
-    throw new Error("Selected app background did not show its proficiencies");
-  }
-  await appBackgroundDetails.getByRole("button", { name: "More about the Alert origin feat" }).click();
-  await appBackgroundDetails.getByText("Add your Proficiency Bonus to Initiative rolls.", { exact: false }).waitFor();
-  await appBackgroundDetails.screenshot({ path: "screenshots/background-details-desktop.png" });
-  await page.setViewportSize({ width: 390, height: 844 });
-  await appBackgroundDetails.screenshot({ path: "screenshots/background-details-mobile.png" });
-  const backgroundOverflow = await appBackgroundDetails.evaluate((element) => element.scrollWidth > element.clientWidth);
-  if (backgroundOverflow) throw new Error("Background details overflow the mobile viewport");
   await page.setViewportSize({ width: 1440, height: 1000 });
   await openAppSection("Abilities & skills");
   const skillChoiceDisclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText("Skill proficiency choices", { exact: true }) }).first();
