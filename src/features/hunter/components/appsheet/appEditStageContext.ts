@@ -11,7 +11,7 @@ export interface AppEditStageValue {
   currentResult: ReturnType<typeof automationFor>;
   previewResult: ReturnType<typeof automationFor>;
   hasChanges: boolean;
-  fieldChangeLabels: string[];
+  changedFields: string[];
   stageLevel: (level: number) => void;
   stageHp: (hp: number) => void;
   stageSanity: (sanity: number) => void;
