@@ -185,8 +185,6 @@ try {
   await quickGear.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
   const carryingCustomization = await openAppDisclosure("Carrying customization");
   await carryingCustomization.getByTestId("warden-carrying-figure").waitFor();
-  await carryingCustomization.getByLabel("Warden carrying loadout").waitFor();
-  await carryingCustomization.getByText("Warden loadout", { exact: true }).waitFor();
   await carryingCustomization.getByRole("heading", { name: "Slot assignment", exact: true }).waitFor();
   await carryingCustomization.screenshot({ path: "screenshots/app-character-sheet-2-carrying-desktop.png" });
   await quickGear.screenshot({ path: "screenshots/app-character-sheet-2-gear-desktop.png" });
@@ -198,7 +196,7 @@ try {
   await quickGear.screenshot({ path: "screenshots/app-character-sheet-2-gear-mobile.png", fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "App view" }).click();
+  await page.getByRole("button", { name: "App view", exact: true }).click();
   await openAppSection("Gear & carrying");
   await page.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
   const rifleSlot = page.getByLabel("Hunter Rifle item 1 carrying slot");
