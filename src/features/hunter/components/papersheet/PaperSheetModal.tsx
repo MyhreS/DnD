@@ -11,7 +11,7 @@ import { automationFor } from "../../lib/characterAutomation";
 import { AppCharacterSheet } from "../appsheet/AppCharacterSheet";
 
 const STEPS = [1, 2, 3, 4, 5] as const;
-type CharacterViewMode = "app" | "paper";
+type CharacterViewMode = "app" | "quick" | "paper";
 const VIEW_KEY = "cs-character-sheet-view";
 
 /** The shared character editor as a full-screen popup. Its app-native and
@@ -38,17 +38,17 @@ export function PaperSheetModal({
   const [showInfo, setShowInfo] = useState(create);
   const [view, setViewState] = useState<CharacterViewMode>(() => {
     const saved = window.localStorage.getItem(VIEW_KEY);
-    return saved === "paper" || saved === "app" ? saved : "app";
+    return saved === "paper" || saved === "app" || saved === "quick" ? saved : "app";
   });
   const [appEditPending, setAppEditPending] = useState(false);
   const setView = (next: CharacterViewMode) => {
-    if (view === "app" && next !== view && appEditPending && !window.confirm("Discard the previewed changes and switch views?")) return;
+    if ((view === "app" || view === "quick") && next !== view && appEditPending && !window.confirm("Discard the previewed changes and switch views?")) return;
     setAppEditPending(false);
     setViewState(next);
     window.localStorage.setItem(VIEW_KEY, next);
   };
   const closeEditor = () => {
-    if (view === "app" && appEditPending && !window.confirm("Discard the previewed changes and close the character?")) return;
+    if ((view === "app" || view === "quick") && appEditPending && !window.confirm("Discard the previewed changes and close the character?")) return;
     onClose();
   };
   // Which creation step (1–5) is spotlighted on the sheet; null = none.
@@ -77,6 +77,7 @@ export function PaperSheetModal({
           <button type="button" className="ghost" ref={backRef} onClick={closeEditor}>← Back</button>
           <div className="character-view-switch" role="group" aria-label="Character sheet view">
             <button type="button" className={view === "app" ? "active" : ""} aria-pressed={view === "app"} onClick={() => setView("app")}>App view</button>
+            <button type="button" className={view === "quick" ? "active" : ""} aria-pressed={view === "quick"} onClick={() => setView("quick")}>App view 2</button>
             <button type="button" className={view === "paper" ? "active" : ""} aria-pressed={view === "paper"} onClick={() => setView("paper")}>Paper sheet</button>
           </div>
         </div>
@@ -115,8 +116,8 @@ export function PaperSheetModal({
           </>
         )}
       </div>
-      {view === "app" ? (
-        <AppCharacterSheet data={data} setField={sheetSetField} setFields={setFields} card={workingCard} readOnly={readOnly} onPendingEditChange={setAppEditPending} />
+      {view === "app" || view === "quick" ? (
+        <AppCharacterSheet data={data} setField={sheetSetField} setFields={setFields} card={workingCard} readOnly={readOnly} onPendingEditChange={setAppEditPending} mode={view} />
       ) : (
         <PaperSheet
           data={data}
