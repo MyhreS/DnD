@@ -45,6 +45,7 @@ try {
     localStorage.setItem("cs-theme", "light");
   });
   const page = await context.newPage();
+  let capturedViewMenuDesktop = false;
   async function openAppDisclosure(title) {
     const disclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText(title, { exact: true }) }).first();
     await disclosure.waitFor();
@@ -60,6 +61,22 @@ try {
       await section.locator(":scope > summary").click();
     }
     return section;
+  }
+  async function selectCharacterView(label) {
+    const trigger = page.getByRole("button", { name: "Choose character view", exact: true });
+    if (await trigger.count() !== 1) throw new Error("Character sheet must expose one view-menu trigger");
+    await trigger.click();
+    if (await trigger.getAttribute("aria-expanded") !== "true") throw new Error("Character view menu did not report its open state");
+    const menu = page.getByRole("menu", { name: "Character sheet views", exact: true });
+    const labels = await menu.getByRole("menuitemradio").allTextContents();
+    if (JSON.stringify(labels) !== JSON.stringify(["View 1", "View 2", "View 3"])) {
+      throw new Error(`Character view menu labels or ordering changed: ${JSON.stringify(labels)}`);
+    }
+    if (!capturedViewMenuDesktop) {
+      await page.locator(".papersheet-toolbar").screenshot({ path: "screenshots/character-view-menu-desktop.png" });
+      capturedViewMenuDesktop = true;
+    }
+    await menu.getByRole("menuitemradio", { name: label, exact: true }).click();
   }
   page.on("pageerror", (error) => errors.push(String(error)));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().includes("Failed to load resource")) errors.push(message.text()); });
@@ -171,7 +188,7 @@ try {
     throw new Error("Weapon reference overflows the mobile viewport");
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.getByRole("button", { name: "App view 2" }).click();
+  await selectCharacterView("View 3");
   const appViewTwo = page.getByTestId("app-character-sheet-2");
   await appViewTwo.waitFor();
   await appViewTwo.getByText("App Warden", { exact: true }).waitFor();
@@ -196,7 +213,7 @@ try {
   await quickGear.screenshot({ path: "screenshots/app-character-sheet-2-gear-mobile.png", fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "App view", exact: true }).click();
+  await selectCharacterView("View 2");
   await openAppSection("Gear & carrying");
   await page.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
   const rifleSlot = page.getByLabel("Hunter Rifle item 1 carrying slot");
@@ -328,7 +345,7 @@ try {
   await page.locator(".papersheet-modal").evaluate((element) => element.scrollTo({ top: 0 }));
   await page.screenshot({ path: "screenshots/app-character-sheet-desktop.png", fullPage: true });
 
-  await page.getByRole("button", { name: "Paper sheet" }).click();
+  await selectCharacterView("View 1");
   await page.getByTestId("sheet-character-automation").waitFor();
   const sheetBackgroundDetails = page.getByTestId("sheet-character-automation").getByTestId("background-details");
   await sheetBackgroundDetails.getByRole("heading", { name: "Criminal" }).waitFor();
@@ -412,7 +429,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   if (await page.locator(".papersheet-toolbar h1").count()) throw new Error("Character name still renders above the sheet toolbar");
   const toolbarAlignment = await page.locator(".papersheet-toolbar").evaluate((toolbar) => {
-    const toggle = toolbar.querySelector(".character-view-switch");
+    const toggle = toolbar.querySelector(".character-view-menu");
     const toolbarBox = toolbar.getBoundingClientRect();
     const toggleBox = toggle.getBoundingClientRect();
     return { rightGap: Math.round(toolbarBox.right - toggleBox.right), toolbarWidth: Math.round(toolbarBox.width) };
@@ -420,7 +437,18 @@ try {
   if (toolbarAlignment.rightGap > 2) {
     throw new Error(`The mobile character-view toggle is not right-aligned: ${JSON.stringify(toolbarAlignment)}`);
   }
-  await page.getByRole("button", { name: "App view" }).click();
+  const mobileViewTrigger = page.getByRole("button", { name: "Choose character view", exact: true });
+  await mobileViewTrigger.click();
+  const mobileViewMenu = page.getByRole("menu", { name: "Character sheet views", exact: true });
+  const mobileViewMenuBounds = await mobileViewMenu.boundingBox();
+  if (!mobileViewMenuBounds || mobileViewMenuBounds.x < 0 || mobileViewMenuBounds.x + mobileViewMenuBounds.width > 390) {
+    throw new Error(`Character view menu overflows the mobile viewport: ${JSON.stringify(mobileViewMenuBounds)}`);
+  }
+  await page.locator(".papersheet-toolbar").screenshot({ path: "screenshots/character-view-menu-mobile.png" });
+  await page.keyboard.press("Escape");
+  if (await mobileViewTrigger.getAttribute("aria-expanded") !== "false") throw new Error("Escape did not close the character view menu");
+  if (!await mobileViewTrigger.evaluate((element) => element === document.activeElement)) throw new Error("Closing the character view menu did not restore trigger focus");
+  await selectCharacterView("View 2");
   await page.getByTestId("app-character-sheet").waitFor();
   if (await page.getByLabel("Character section", { exact: true }).count()) {
     throw new Error("The removed character section selector is still visible");
@@ -537,7 +565,7 @@ try {
     throw new Error("Reopened character editor did not focus its Back control");
   }
   if (!await page.getByTestId("app-character-sheet").count()) {
-    await page.getByRole("button", { name: "App view" }).click();
+    await selectCharacterView("View 2");
   }
   await page.getByTestId("app-character-sheet").waitFor();
 

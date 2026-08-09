@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 import { createPortal } from "react-dom";
 import { PaperSheet } from "./PaperSheet";
 import { StepGuidance } from "./StepGuidance";
@@ -13,6 +13,11 @@ import { AppCharacterSheet } from "../appsheet/AppCharacterSheet";
 const STEPS = [1, 2, 3, 4, 5] as const;
 type CharacterViewMode = "app" | "quick" | "paper";
 const VIEW_KEY = "cs-character-sheet-view";
+const VIEW_OPTIONS: ReadonlyArray<{ view: CharacterViewMode; label: string }> = [
+  { view: "paper", label: "View 1" },
+  { view: "app", label: "View 2" },
+  { view: "quick", label: "View 3" },
+];
 
 /** The shared character editor as a full-screen popup. Its app-native and
  * paper views consume one autosave session and the same saved character.
@@ -40,12 +45,16 @@ export function PaperSheetModal({
     const saved = window.localStorage.getItem(VIEW_KEY);
     return saved === "paper" || saved === "app" || saved === "quick" ? saved : "app";
   });
+  const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const viewMenuRef = useRef<HTMLDivElement>(null);
+  const viewMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const [appEditPending, setAppEditPending] = useState(false);
   const setView = (next: CharacterViewMode) => {
     if ((view === "app" || view === "quick") && next !== view && appEditPending && !window.confirm("Discard the previewed changes and switch views?")) return;
     setAppEditPending(false);
     setViewState(next);
     window.localStorage.setItem(VIEW_KEY, next);
+    setViewMenuOpen(false);
   };
   const closeEditor = () => {
     if ((view === "app" || view === "quick") && appEditPending && !window.confirm("Discard the previewed changes and close the character?")) return;
@@ -68,17 +77,66 @@ export function PaperSheetModal({
     setField(field, value);
   };
   usePaperSheetOpen();
-  const backRef = usePaperSheetFocus(closeEditor);
+  const backRef = usePaperSheetFocus(() => {
+    if (viewMenuOpen) {
+      setViewMenuOpen(false);
+      viewMenuTriggerRef.current?.focus();
+      return;
+    }
+    closeEditor();
+  });
+  const closeViewMenuOnBlur = (event: FocusEvent<HTMLDivElement>) => {
+    if (!event.currentTarget.contains(event.relatedTarget)) setViewMenuOpen(false);
+  };
+  const closeViewMenuOnEscape = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== "Escape" || !viewMenuOpen) return;
+    event.preventDefault();
+    event.stopPropagation();
+    setViewMenuOpen(false);
+    viewMenuTriggerRef.current?.focus();
+  };
+  const activeViewLabel = VIEW_OPTIONS.find((option) => option.view === view)?.label;
 
   return createPortal(
     <div className={`papersheet-modal character-editor-modal view-${view}`} role="dialog" aria-modal="true" aria-label="Character sheet">
       <div className="papersheet-toolbar">
         <div className="papersheet-toolbar-primary">
           <button type="button" className="ghost" ref={backRef} onClick={closeEditor}>← Back</button>
-          <div className="character-view-switch" role="group" aria-label="Character sheet view">
-            <button type="button" className={view === "app" ? "active" : ""} aria-pressed={view === "app"} onClick={() => setView("app")}>App view</button>
-            <button type="button" className={view === "quick" ? "active" : ""} aria-pressed={view === "quick"} onClick={() => setView("quick")}>App view 2</button>
-            <button type="button" className={view === "paper" ? "active" : ""} aria-pressed={view === "paper"} onClick={() => setView("paper")}>Paper sheet</button>
+          <div
+            className="character-view-menu"
+            ref={viewMenuRef}
+            onBlur={closeViewMenuOnBlur}
+            onKeyDown={closeViewMenuOnEscape}
+          >
+            <button
+              type="button"
+              ref={viewMenuTriggerRef}
+              className="ghost character-view-menu-trigger"
+              aria-label="Choose character view"
+              aria-haspopup="menu"
+              aria-expanded={viewMenuOpen}
+              aria-controls="character-sheet-views"
+              onClick={() => setViewMenuOpen((open) => !open)}
+            >
+              <span aria-hidden="true">☰</span>
+              {activeViewLabel}
+            </button>
+            {viewMenuOpen && (
+              <div id="character-sheet-views" className="character-view-menu-popover" role="menu" aria-label="Character sheet views">
+                {VIEW_OPTIONS.map((option) => (
+                  <button
+                    key={option.view}
+                    type="button"
+                    role="menuitemradio"
+                    aria-checked={view === option.view}
+                    className={view === option.view ? "active" : ""}
+                    onClick={() => setView(option.view)}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         {!readOnly && (
