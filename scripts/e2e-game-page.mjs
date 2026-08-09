@@ -205,13 +205,13 @@ try {
   owner.once("dialog", (dialog) => dialog.accept());
   await owner.getByRole("button", { name: "End session" }).click();
   await owner.getByText("Session history", { exact: true }).waitFor();
-  const historyToggle = owner.getByRole("button", { name: "Session history" });
+  const historyToggle = owner.getByRole("button", { name: "View session history" });
   if (await owner.getByText("Night of the Pale Moon", { exact: true }).count() !== 1) {
     throw new Error("Saved sessions should be hidden until history is opened");
   }
   await historyToggle.click();
   await owner.getByText("Night of the Pale Moon", { exact: true }).nth(1).waitFor();
-  await historyToggle.click();
+  await owner.getByRole("button", { name: "Close session history" }).click();
   await owner.getByText("1 player attended", { exact: true }).waitFor();
   await owner.getByRole("button", { name: "Create session", exact: true }).waitFor();
 
@@ -258,14 +258,15 @@ try {
   await player.goto(`${BASE}/game?preview=user.player&game=history`, { waitUntil: "domcontentloaded" });
   await player.getByRole("heading", { name: "The Sunless Vault", exact: true }).waitFor();
   await player.getByText("Your Hunter", { exact: true }).waitFor();
-  if (await player.getByRole("button", { name: /History/ }).count()) {
-    throw new Error("An active player session must not expose session history controls");
-  }
   if (await player.getByText("The Old Cathedral", { exact: true }).count()) {
-    throw new Error("An active player session must not expose session history");
+    throw new Error("Saved sessions should stay hidden until history is opened");
   }
   if (await player.getByText("Cleric Beast", { exact: true }).count()) throw new Error("Normal player session page exposes the encounter roster");
   if (await player.getByText("Players", { exact: true }).count()) throw new Error("Normal player session page exposes the party roster");
+  await player.getByRole("button", { name: "View session history" }).click();
+  await player.getByText("The Old Cathedral", { exact: true }).waitFor();
+  await player.getByText("The Old Cathedral", { exact: true }).click();
+  await player.getByText("Session history", { exact: true }).waitFor();
   await assertNoHorizontalOverflow(player, "Mobile Game page");
   await player.screenshot({ path: "screenshots/game-page-player-mobile.png", fullPage: true });
 

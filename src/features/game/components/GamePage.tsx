@@ -589,30 +589,6 @@ export function GamePage() {
 
       {!creating && games.length > 0 && (
         <div className={focusedPlayerSession ? "game-layout is-player-focus" : "game-layout"}>
-          {!focusedPlayerSession && <nav className="game-sessions" aria-label="Game sessions">
-            {activeGame && (
-              <div className="game-session-group">
-                <span className="game-session-label">Current session</span>
-                <SessionLink game={activeGame} selected={activeGame.id === selectedId} onSelect={() => setSelectedId(activeGame.id)} />
-              </div>
-            )}
-            {!activeGame && history.length > 0 && (
-              <div className="game-session-group">
-                <button
-                  className="game-history-toggle"
-                  type="button"
-                  aria-expanded={historyOpen}
-                  aria-controls="game-session-history"
-                  onClick={() => setHistoryOpen((open) => !open)}
-                >
-                  <span>Session history</span>
-                  <span aria-hidden="true">{historyOpen ? "−" : "+"}</span>
-                </button>
-                {historyOpen && <SessionHistory games={history} selectedId={selectedId} onSelect={setSelectedId} />}
-              </div>
-            )}
-          </nav>}
-
           {selected && (
             <main className="game-table" aria-label={`${selected.title} session`}>
               <div className="game-session-heading game-session-heading-compact">
@@ -621,11 +597,30 @@ export function GamePage() {
                   <h2>{selected.title}</h2>
                 </div>
                 <div className="game-session-top-actions">
-                  <button className="game-text-button" type="button" onClick={() => setSelectedId(null)}>← Sessions</button>
+                  {history.length > 0 && <button
+                    className="game-history-button"
+                    type="button"
+                    aria-label={historyOpen ? "Close session history" : "View session history"}
+                    aria-expanded={historyOpen}
+                    aria-controls="game-session-history"
+                    title={historyOpen ? "Close session history" : "View session history"}
+                    onClick={() => setHistoryOpen((open) => !open)}
+                  >
+                    <HistoryIcon />
+                  </button>}
                   {selected.combat?.active && <button className="game-text-button" type="button" onClick={() => setDismissedBattleKey(null)}>Return to battle</button>}
                   {isSessionDm && selected.campaignId === null && selected.status !== "ended" && <button className="game-text-button" type="button" onClick={() => setManagingPlayers(true)}>Manage players</button>}
                 </div>
               </div>
+
+              {historyOpen && <SessionHistory
+                games={history}
+                selectedId={selectedId}
+                onSelect={(id) => {
+                  setSelectedId(id);
+                  setHistoryOpen(false);
+                }}
+              />}
 
               {isSessionDm && selected.status !== "ended" && (
                 <div className="game-primary-actions" aria-label="Session controls">
@@ -680,6 +675,10 @@ export function GamePage() {
   );
 }
 
+function HistoryIcon() {
+  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6.04L3.5 8.5" /><path d="M3.5 4.5v4h4M12 7v5l3.5 2" /></svg>;
+}
+
 function SessionLink({ game, selected, onSelect }: { game: Game; selected: boolean; onSelect: () => void }) {
   return (
     <button type="button" className={`game-session${selected ? " is-current" : ""}${game.status === "active" ? " is-live" : ""}`} onClick={onSelect}>
@@ -691,7 +690,7 @@ function SessionLink({ game, selected, onSelect }: { game: Game; selected: boole
 
 function SessionHistory({ games, selectedId, onSelect }: { games: Game[]; selectedId: string | null; onSelect: (id: string) => void }) {
   return (
-    <div className="game-history-list" id="game-session-history">
+    <div className="game-history-list" id="game-session-history" aria-label="Session history">
       {games.map((game) => (
         <SessionLink key={game.id} game={game} selected={game.id === selectedId} onSelect={() => onSelect(game.id)} />
       ))}
