@@ -215,6 +215,16 @@ try {
   page.once("dialog", (dialog) => dialog.accept());
   await selectCharacterView("View 2");
   await openAppSection("Gear & carrying");
+  const fullAppGear = page.getByTestId("app-character-sheet").locator(".appsheet-section").filter({ has: page.getByRole("heading", { name: "Gear & carrying", exact: true }) });
+  if (await fullAppGear.getByText("Carrying setup", { exact: true }).count()) {
+    throw new Error("View 2 still exposes the removed Carrying setup panel");
+  }
+  if (await fullAppGear.getByText("Check load", { exact: true }).count()) {
+    throw new Error("View 2 still exposes the removed carrying warning");
+  }
+  if (await fullAppGear.getByRole("heading", { name: "Slot assignment", exact: true }).count()) {
+    throw new Error("View 2 still exposes the removed slot-assignment summary");
+  }
   await page.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
   const rifleSlot = page.getByLabel("Hunter Rifle item 1 carrying slot");
   if (await rifleSlot.inputValue() !== "") throw new Error("New equipment should start Unassigned");
@@ -483,12 +493,15 @@ try {
     throw new Error("Visible armor impression is still duplicated inside App View");
   }
   await openAppSection("Gear & carrying");
-  const carryingSetup = await openAppDisclosure("Carrying setup");
-  if (await carryingSetup.getByRole("heading", { name: "Storage worn on the body", exact: true }).count()) {
-    throw new Error("Carrying setup still exposes the removed body-storage controls");
+  const mobileFullAppGear = page.getByTestId("app-character-sheet").locator(".appsheet-section").filter({ has: page.getByRole("heading", { name: "Gear & carrying", exact: true }) });
+  if (await mobileFullAppGear.getByText("Carrying setup", { exact: true }).count()) {
+    throw new Error("Mobile View 2 still exposes the removed Carrying setup panel");
   }
-  if (!await carryingSetup.getByRole("heading", { name: "Slot assignment", exact: true }).isVisible()) {
-    throw new Error("Carrying setup no longer exposes slot assignment");
+  if (await mobileFullAppGear.getByText("Check load", { exact: true }).count()) {
+    throw new Error("Mobile View 2 still exposes the removed carrying warning");
+  }
+  if (await mobileFullAppGear.getByRole("heading", { name: "Slot assignment", exact: true }).count()) {
+    throw new Error("Mobile View 2 still exposes the removed slot-assignment summary");
   }
   await openAppDisclosure("Weapon details");
   const mobileWeaponLabels = page.locator(".appsheet-weapon-label");

@@ -157,13 +157,15 @@ export function AppGearSection({
         </div>
       </AppPanel>
 
-      <AppDisclosure
-        title={quickView ? "Carrying customization" : "Carrying setup"}
-        summary={`${slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} unassigned`}
-        aside={slots.unstowed.length ? <span className="appsheet-incomplete">Check load</span> : undefined}
-      >
-        <CarryingCustomization classId={card.classId} slots={slots} showWardenReference={quickView} />
-      </AppDisclosure>
+      {quickView && (
+        <AppDisclosure
+          title={quickView ? "Carrying customization" : "Carrying setup"}
+          summary={`${slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} unassigned`}
+          aside={slots.unstowed.length ? <span className="appsheet-incomplete">Check load</span> : undefined}
+        >
+          <CarryingCustomization classId={card.classId} slots={slots} showWardenReference={quickView} />
+        </AppDisclosure>
+      )}
 
       <AppDisclosure title="Weapon details" summary={`${weapons.length} carried weapon ${weapons.length === 1 ? "type" : "types"}`}>
       <AppPanel title="Carried weapons" aside={<span className="appsheet-status-word">Rules-linked</span>}>
