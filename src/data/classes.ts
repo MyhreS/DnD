@@ -287,6 +287,7 @@ export const CLASSES: HunterClass[] = [
     baseClass: "Warlock",
     signature: "Rites & Whispers — perform forbidden Rites from your Book of the Deepcaller, fuelled by Strain and paid for in Madness.",
     caster: true,
+    subclassOptional: true,
     progressionColumns: ["Prepared Whispers", "Strains", "Strain Level"],
     progression: [
       { level: 1, profBonus: 2, features: "Eldritch Comprehension, Fracturing Mind", extras: { "Prepared Whispers": "2", "Strains": "2", "Strain Level": "1" } },

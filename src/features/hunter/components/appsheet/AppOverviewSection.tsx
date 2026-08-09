@@ -217,10 +217,10 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
               value={card.subclassId ?? ""}
               disabled={model.readOnly || !klass || card.level < 3}
               data-testid="appsheet-subclass"
-              help={card.level < 3 ? "Subclass becomes available at level 3." : "Adds its features to your progression."}
+              help={card.level < 3 ? "Subclass becomes available at level 3." : klass?.subclassOptional ? `At level 3, continue as a ${klass.name} or choose a new path.` : "Adds its features to your progression."}
               onChange={(event) => automation.chooseSubclass(event.target.value)}
             >
-              <option value="">{card.level < 3 ? "Available at level 3" : "Choose subclass…"}</option>
+              <option value="">{card.level < 3 ? "Available at level 3" : klass?.subclassOptional ? `Continue as ${klass.name}` : "Choose subclass…"}</option>
               {subclassOptions.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
             </AppSelect>
           </div>

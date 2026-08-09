@@ -147,7 +147,7 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     put(fields, reasons, "class", klass.name, `${SOURCE.class}: ${klass.title}`);
     const subclass = getSubclass(klass.id, card.subclassId);
     put(fields, reasons, "subclass", subclass?.name ?? "", `${SOURCE.class}; subclass begins at level 3`);
-    if (level >= 3 && klass.subclasses.length > 0 && !card.subclassId) pending.subclass = { label: `${klass.name} path`, remaining: 1, options: klass.subclasses.map((entry) => entry.name), reason: "Your class progression grants a subclass at level 3." };
+    if (level >= 3 && klass.subclasses.length > 0 && !klass.subclassOptional && !card.subclassId) pending.subclass = { label: `${klass.name} path`, remaining: 1, options: klass.subclasses.map((entry) => entry.name), reason: "Your class progression grants a subclass at level 3." };
     put(fields, reasons, "sanityDice", klass.sanityDie, `${klass.title} core traits`);
     const hp = maxHp(klass, card.abilities, level) + (featNames.has("Tough") ? level * 2 : 0);
     const sanity = maxSanity(klass, card.abilities, level);

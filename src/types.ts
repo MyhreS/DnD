@@ -89,6 +89,8 @@ export interface HunterClass {
   features?: LevelFeature[];
   /** Subclasses chosen at level 3. */
   subclasses: Subclass[];
+  /** A level-3 specialization is available, but hunters may remain on the core class path. */
+  subclassOptional?: boolean;
   /** True for the Deepcaller — performs Rites & Whispers with Strain. */
   caster?: boolean;
 }
