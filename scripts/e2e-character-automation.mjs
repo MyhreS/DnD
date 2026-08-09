@@ -171,6 +171,21 @@ try {
     throw new Error("Weapon reference overflows the mobile viewport");
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.getByRole("button", { name: "App view 2" }).click();
+  const appViewTwo = page.getByTestId("app-character-sheet-2");
+  await appViewTwo.waitFor();
+  await appViewTwo.getByText("App Warden", { exact: true }).waitFor();
+  await appViewTwo.getByText("Hunter Rifle", { exact: true }).waitFor();
+  await appViewTwo.getByRole("button", { name: "Decrease HP" }).click();
+  await page.getByTestId("appsheet-edit-stage").waitFor();
+  await appViewTwo.screenshot({ path: "screenshots/app-character-sheet-2-desktop.png" });
+  await page.setViewportSize({ width: 390, height: 844 });
+  const appViewTwoOverflow = await appViewTwo.evaluate((element) => element.scrollWidth > element.clientWidth);
+  if (appViewTwoOverflow) throw new Error("App view 2 overflows the mobile viewport");
+  await appViewTwo.screenshot({ path: "screenshots/app-character-sheet-2-mobile.png", fullPage: true });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  page.once("dialog", (dialog) => dialog.accept());
+  await page.getByRole("button", { name: "App view" }).click();
   await openAppSection("Gear & carrying");
   await page.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
   const rifleSlot = page.getByLabel("Hunter Rifle item 1 carrying slot");
