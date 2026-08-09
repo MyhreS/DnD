@@ -263,6 +263,7 @@ try {
   await enemyControl.getByLabel("More options for Moon Beast").click();
   await enemyControl.getByRole("button", { name: "Remove enemy", exact: true }).waitFor();
   await enemyControl.getByLabel("More options for Moon Beast").click();
+  await enemyControl.getByLabel("More options for Moon Beast").click();
   await enemyControl.getByRole("button", { name: "Kill Moon Beast" }).click();
   await enemyControl.getByText("Enemy · dead", { exact: true }).waitFor();
   await enemyDisplay.getByText("Enemy · dead", { exact: true }).waitFor();

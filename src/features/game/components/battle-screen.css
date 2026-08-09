@@ -63,10 +63,12 @@
 .battle-column-headings,
 .battle-row {
   display: grid;
-  grid-template-columns: 42px minmax(180px, 1.35fr) 124px 124px 124px minmax(180px, 1fr) auto;
+  grid-template-columns: 42px minmax(180px, 1.35fr) 124px 124px 92px minmax(180px, 1fr);
   gap: clamp(8px, 1.2vw, 18px);
   align-items: center;
 }
+.battle-column-headings.has-actions,
+.battle-row.has-actions { grid-template-columns: 42px minmax(160px, 1.35fr) 124px 124px 92px minmax(150px, 1fr) 28px; }
 .battle-row > * { min-width: 0; }
 .battle-column-headings {
   padding: 8px 14px;
@@ -87,6 +89,8 @@
 .battle-name span { display: block; }
 .battle-name strong { overflow: hidden; font-family: var(--font-display); font-size: clamp(1.05rem, 1.45vw, 1.45rem); font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
 .battle-name span { color: var(--ink-faint); font-size: 0.8rem; }
+.battle-row.is-monster .battle-name strong,
+.battle-row.is-monster .battle-name span { color: var(--blood-bright); }
 .battle-ac { font-family: var(--font-display); font-size: clamp(1.15rem, 1.5vw, 1.45rem); font-variant-numeric: tabular-nums; }
 .battle-value { display: grid; grid-template-columns: 28px minmax(30px, auto) 28px; align-items: center; justify-content: center; gap: 2px; }
 .battle-value strong { min-width: 30px; text-align: center; font-family: var(--font-display); font-size: clamp(1.15rem, 1.5vw, 1.45rem); font-variant-numeric: tabular-nums; line-height: 1; }
@@ -212,7 +216,8 @@
 
 @media (max-width: 980px) {
   .battle-column-headings { display: none; }
-  .battle-row { grid-template-columns: 36px minmax(0, 1fr) 112px 112px 72px auto; }
+  .battle-row,
+  .battle-row.has-actions { grid-template-columns: 36px minmax(0, 1fr) 112px 112px 72px 28px; }
   .battle-conditions { grid-column: 2 / -1; }
   .battle-row-actions { grid-column: 2 / -1; }
 }
@@ -221,7 +226,8 @@
  * before the viewport itself reaches the tablet breakpoint. */
 @media (min-width: 981px) and (max-width: 1390px) {
   .game-battle-mode .battle-column-headings { display: none; }
-  .game-battle-mode .battle-row { grid-template-columns: 36px minmax(0, 1fr) 112px 112px 72px auto; }
+  .game-battle-mode .battle-row,
+  .game-battle-mode .battle-row.has-actions { grid-template-columns: 36px minmax(0, 1fr) 112px 112px 72px 28px; }
   .game-battle-mode .battle-conditions { grid-column: 2 / -1; }
   .game-battle-mode .battle-row-actions { grid-column: 2 / -1; }
 }
