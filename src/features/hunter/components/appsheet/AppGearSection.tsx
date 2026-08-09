@@ -2,8 +2,9 @@ import { useMemo, useState } from "react";
 import { ITEMS } from "@/data/items";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { ARMOR_BY_ID } from "@/data/armor";
+import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 import { resolveInventory } from "@/lib/inventory";
-import { computeSlots, SLOT_LOCATION_LABEL, slotAssignmentOptions } from "@/lib/slots";
+import { availableSlotAssignmentOptions, computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
 import type { CarrySignificance, SlotAssignment } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import {
@@ -37,6 +38,11 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
   const slots = computeSlots(card);
   const catalog = useMemo(() => ITEMS.filter((item) => item.category !== "Armor"), []);
   const weapons = inventory.filter(({ item }) => item.category === "Weapon");
+  const wornStorage = (card.equippedStorageIds ?? []).flatMap((id) => {
+    const definition = STORAGE_BY_ITEM_ID[id];
+    const item = ITEMS.find((entry) => entry.id === id);
+    return definition && item ? [{ definition, item }] : [];
+  });
 
   function addCatalogItem() {
     if (!catalogId) return;
@@ -85,7 +91,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
                   : armor?.category === "Extra"
                     ? (card.extraArmorIds ?? []).includes(item.id)
                     : false;
-              const locations = slotAssignmentOptions(item.carry, card.equippedStorageIds, item.id, item.slotLocation);
+              const storage = STORAGE_BY_ITEM_ID[item.id];
               const assignments = card.slotAssignments?.[item.id] ?? [];
               return (
               <div key={item.id}>
@@ -101,7 +107,7 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
                           onChange={(event) => automation.setSlotAssignment(item.id, index, event.target.value as SlotAssignment || null)}
                         >
                           <option value="">Unassigned</option>
-                          {locations.map((location) => <option key={location.value} value={location.value}>{location.label}</option>)}
+                          {availableSlotAssignmentOptions(card, item.id, index, item.carry, item.slotLocation).map((location) => <option key={location.value} value={location.value}>{location.label}</option>)}
                         </select>
                       </label>
                     ))}
@@ -122,11 +128,20 @@ export function AppGearSection({ model }: { model: AppSheetModel }) {
                 ) : <span className="appsheet-item-slot">{slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unassigned")}</span>}
                 <span className="appsheet-item-weight">{Math.round(item.weightLb * qty * 10) / 10} lb</span>
                 <NumericStepper value={qty} label={`${item.name} quantity`} disabled={model.readOnly} onChange={(next) => automation.changeQty(item.id, next - qty)} />
+                {storage && !model.readOnly && <button type="button" className="appsheet-secondary-action" onClick={() => automation.toggleStorage(item.id)}>Wear</button>}
               </div>
               );
             })}
           </div>
         ) : <p className="appsheet-empty-copy">Choose a class to receive its starting equipment, then add a background kit or catalog items.</p>}
+        {wornStorage.length > 0 && <div className="appsheet-storage-list" data-testid="appsheet-worn-storage">
+          {wornStorage.map(({ definition, item }) => (
+            <div key={item.id}>
+              <span><b>{item.name}</b><small>{definition.gives.count} {SLOT_LOCATION_LABEL[definition.gives.location].toLowerCase()} {definition.gives.count === 1 ? "slot" : "slots"}{definition.gives.only ? " · Dagger or Pistol only" : ""}</small></span>
+              {!model.readOnly && <button type="button" className="appsheet-secondary-action" onClick={() => automation.toggleStorage(item.id)}>Remove</button>}
+            </div>
+          ))}
+        </div>}
         <div className="appsheet-coin-editor">
           <span><b>Gold pieces</b><small>Use the controls instead of retyping the total.</small></span>
           <NumericStepper value={card.coins ?? 0} label="gold pieces" disabled={model.readOnly} onChange={(coins) => model.setFields({ coins: String(coins) }, { coins })} />
