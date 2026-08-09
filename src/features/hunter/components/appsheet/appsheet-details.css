@@ -148,6 +148,12 @@
   background: var(--app-subtle);
 }
 
+/* Keep quantity controls level with the item heading instead of vertically
+   centering them across carrying and weight details. */
+.appsheet-inventory-list .appsheet-stepper {
+  align-self: start;
+}
+
 .appsheet-item-mark {
   color: var(--app-warm);
   font-weight: 700;
