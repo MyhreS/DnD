@@ -316,7 +316,18 @@ try {
   await page.getByRole("button", { name: "Decrease HP" }).click();
   await page.getByTestId("appsheet-edit-stage").waitFor();
   if (!await page.getByTestId("appsheet-edit-stage").locator(".negative").count()) throw new Error("HP loss did not show as a negative preview");
+  await page.getByRole("button", { name: "Decrease Insight" }).click();
+  const pendingStage = page.getByTestId("appsheet-edit-stage");
+  if (!await pendingStage.getByText("Current HP", { exact: true }).count() || !await pendingStage.getByText("Insight", { exact: true }).count()) {
+    throw new Error("View 2 did not collect multiple character changes in one review tray");
+  }
+  const changesBeforeNote = await pendingStage.locator(".appsheet-change-list > span").count();
+  await openAppSection("Notes");
+  await page.getByTestId("appsheet-notes").fill("This note saves directly, without review.");
+  const changesAfterNote = await pendingStage.locator(".appsheet-change-list > span").count();
+  if (changesAfterNote !== changesBeforeNote) throw new Error("View 2 notes were incorrectly added to the change review tray");
   await page.getByRole("button", { name: "Apply changes" }).click();
+  if (await page.getByTestId("appsheet-notes").inputValue() !== "This note saves directly, without review.") throw new Error("Applying View 2 changes overwrote a directly saved note");
 
   // Levelling a damaged hunter restores every pool whose maximum increases.
   await page.getByRole("button", { name: "Increase level" }).click();

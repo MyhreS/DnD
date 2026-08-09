@@ -491,7 +491,7 @@
   width: min(880px, calc(100vw - 24px));
   transform: translateX(-50%);
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: minmax(150px, auto) minmax(0, 1fr) auto;
   gap: 16px;
   align-items: center;
   padding: 14px 16px;
@@ -516,13 +516,12 @@
 }
 
 .appsheet-change-list {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
   gap: 8px;
-  overflow-x: auto;
 }
 
 .appsheet-change-list > span {
-  flex: none;
   display: grid;
   grid-template-columns: auto auto;
   gap: 2px 8px;
@@ -783,6 +782,19 @@
 
   .appsheet-edit-title b {
     display: none;
+  }
+
+  .appsheet-edit-tray {
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .appsheet-change-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .appsheet-edit-actions {
+    justify-content: flex-end;
   }
 }
 

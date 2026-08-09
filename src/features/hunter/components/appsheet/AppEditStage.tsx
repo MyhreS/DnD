@@ -17,11 +17,14 @@ function optionalNumber(value: unknown): number | undefined {
 export function AppEditStage({ model, children, onPendingChange }: { model: AppSheetModel; children: ReactNode; onPendingChange?: (pending: boolean) => void }) {
   const [patch, setPatch] = useState<StagedPatch>({});
   const [fields, setFields] = useState(model.data);
-  const [fieldChangeLabels, setFieldChangeLabels] = useState<string[]>([]);
   const currentResult = useMemo(() => automationFor(model.card), [model.card]);
   const previewCard = useMemo(() => ({ ...model.card, ...patch }), [model.card, patch]);
   const previewResult = useMemo(() => automationFor(previewCard), [previewCard]);
-  const hasChanges = Object.keys(patch).length > 0 || fieldChangeLabels.length > 0;
+  const changedFields = useMemo(
+    () => Object.keys(fields).filter((field) => fields[field] !== model.data[field]),
+    [fields, model.data],
+  );
+  const hasChanges = Object.keys(patch).length > 0 || changedFields.length > 0;
 
   useEffect(() => {
     onPendingChange?.(hasChanges);
@@ -43,7 +46,6 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
 
   function stageField(field: string, value: string | boolean) {
     stageChange({ [field]: value }, {});
-    setFieldChangeLabels((current) => current.includes(field) ? current : [...current, field]);
   }
 
   function stageLevel(level: number) {
@@ -88,10 +90,16 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
 
   function apply() {
     if (!hasChanges) return;
-    model.setFields(fields, patch);
+    // `fields` starts as a snapshot so preview calculations can use a complete
+    // sheet. Apply only the actual differences: notes intentionally save
+    // directly, and a note typed while this review is open must never be
+    // replaced with an older staged snapshot.
+    const changedFieldPatch = Object.fromEntries(
+      Object.entries(fields).filter(([field, value]) => value !== model.data[field]),
+    ) as SheetData;
+    model.setFields(changedFieldPatch, patch);
     setPatch({});
     setFields(model.data);
-    setFieldChangeLabels([]);
   }
 
   const value: AppEditStageValue = {
@@ -101,7 +109,7 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
     currentResult,
     previewResult,
     hasChanges,
-    fieldChangeLabels,
+    changedFields,
     stageLevel,
     stageHp,
     stageSanity,
@@ -112,7 +120,6 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
     cancel: () => {
       setPatch({});
       setFields(model.data);
-      setFieldChangeLabels([]);
     },
   };
   return <AppEditStageContext.Provider value={value}>{children}</AppEditStageContext.Provider>;
@@ -151,12 +158,21 @@ export function AppEditTray() {
   };
   const displayedPatchKeys = new Set(["level", "currentHp", "sanity", "transformationLevel"]);
   const otherChanges = Object.keys(stage.patch)
-    .filter((key) => !displayedPatchKeys.has(key))
+    .filter((key) => !displayedPatchKeys.has(key) && !stage.changedFields.includes(key))
     .map((key) => stagedLabels[key as keyof StagedPatch] ?? key.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase()));
   const fieldLabels: Record<string, string> = {
     strainCur: "Strains left",
     insight: "Insight",
     insane: "Insanity",
+    hpTemp: "Temporary HP",
+    hdCur: "Hit dice",
+    hdSpent: "Hit dice spent",
+    dsS1: "Death save success 1",
+    dsS2: "Death save success 2",
+    dsS3: "Death save success 3",
+    dsF1: "Death save failure 1",
+    dsF2: "Death save failure 2",
+    dsF3: "Death save failure 3",
   };
   const currentLevel = stage.currentResult.fields.level;
   const previewLevel = stage.previewResult.fields.level;
@@ -165,10 +181,10 @@ export function AppEditTray() {
   const klass = stage.previewCard.classId;
 
   return (
-    <aside className="appsheet-edit-tray" data-testid="appsheet-edit-stage" aria-label="Pending character changes">
+    <aside className="appsheet-edit-tray" data-testid="appsheet-edit-stage" aria-label="Review pending character changes">
       <div className="appsheet-edit-title">
-        <span>Previewing changes</span>
-        <b>Nothing is saved until you apply.</b>
+        <span>Review changes</span>
+        <b>{fields.length + otherChanges.length + stage.changedFields.length} pending · nothing is saved until you apply.</b>
       </div>
       <div className="appsheet-change-list">
         {fields.map(([label, before, after]) => {
@@ -183,7 +199,7 @@ export function AppEditTray() {
         {stage.patch.activeTransformations && <span className="negative"><b>Active transformations</b><s>{stage.currentResult.fields.transformation}</s><strong>Cleared by reduction</strong></span>}
         {klass && beforeLevel !== afterLevel && <span className={afterLevel > beforeLevel ? "positive" : "negative"}><b>Class progression</b><s>Level {beforeLevel}</s><strong>{afterLevel > beforeLevel ? "New features and choices added" : "Higher-level features removed"}</strong></span>}
         {otherChanges.map((label) => <span key={label} className="neutral"><b>{label}</b><s>Saved</s><strong>Will update</strong></span>)}
-        {stage.fieldChangeLabels.map((field) => <span key={field} className="neutral"><b>{fieldLabels[field] ?? "Sheet value"}</b><s>Saved</s><strong>Will update</strong></span>)}
+        {stage.changedFields.map((field) => <span key={field} className="neutral"><b>{fieldLabels[field] ?? "Character sheet"}</b><s>Saved</s><strong>Will update</strong></span>)}
       </div>
       <div className="appsheet-edit-actions">
         <button type="button" className="cancel" onClick={stage.cancel}>Cancel</button>
