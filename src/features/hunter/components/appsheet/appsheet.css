@@ -153,8 +153,6 @@
 }
 
 .appsheet-carrying-figure {
-  display: grid;
-  align-items: end;
   min-height: 320px;
   margin: 0;
   overflow: hidden;
@@ -162,13 +160,51 @@
   background: var(--app-subtle);
 }
 
-.appsheet-carrying-figure img {
+.appsheet-carrying-loadout {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  min-height: 365px;
+  padding: 12px 76px 0;
+}
+
+.appsheet-carrying-loadout > img {
   width: 100%;
   height: 100%;
   max-height: 400px;
   object-fit: contain;
   object-position: center bottom;
 }
+
+.appsheet-carrying-slots {
+  position: absolute;
+  inset: 14px 8px 8px;
+  z-index: 1;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  pointer-events: none;
+}
+
+.appsheet-carrying-slot {
+  position: absolute;
+  width: 72px;
+  padding: 5px;
+  border: 1px solid var(--app-line);
+  background: color-mix(in srgb, var(--app-surface) 92%, transparent);
+  color: var(--app-text);
+  text-align: center;
+}
+
+.appsheet-carrying-slot span,
+.appsheet-carrying-slot b,
+.appsheet-carrying-slot small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.appsheet-carrying-slot span { color: var(--app-muted); font: 800 10px/1 "Alegreya Sans SC", sans-serif; letter-spacing: .03em; }
+.appsheet-carrying-slot b { margin-top: 2px; font: 700 11px/1.15 "Alegreya", serif; }
+.appsheet-carrying-slot small { margin-top: 2px; color: var(--app-warm); font: 10px/1 "Alegreya", serif; }
+.appsheet-carrying-slot-left { left: 0; }
+.appsheet-carrying-slot-right { right: 0; }
+.appsheet-carrying-slot { top: var(--slot-top); transform: translateY(-50%); }
 
 .appsheet-carrying-figure figcaption {
   padding: 7px 10px;
@@ -280,7 +316,10 @@
   .appsheet-quick-grid { grid-template-columns: 1fr; }
   .appsheet-carrying-customization { grid-template-columns: 1fr; }
   .appsheet-carrying-figure { min-height: 270px; }
-  .appsheet-carrying-figure img { max-height: 330px; }
+  .appsheet-carrying-loadout { min-height: 330px; padding-inline: 64px; }
+  .appsheet-carrying-loadout > img { max-height: 330px; }
+  .appsheet-carrying-slot { width: 58px; padding: 4px; }
+  .appsheet-carrying-slot b { font-size: 10px; }
 }
 
 .appsheet-workspace {
