@@ -161,7 +161,7 @@ export function AutomatedIdentityField({
       onChange={(event) => automation.chooseSubclass(event.target.value)}
       {...reasonProps(result.reasons.subclass)}
     >
-      <option value="">{card.level < 3 ? "Available at level 3" : "Choose path…"}</option>
+      <option value="">{card.level < 3 ? "Available at level 3" : klass?.subclassOptional ? `Continue as ${klass.name}` : "Choose path…"}</option>
       {legacySubclass && <option value="__legacy__" disabled>{legacySubclass}</option>}
       {subclasses.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}
     </select>

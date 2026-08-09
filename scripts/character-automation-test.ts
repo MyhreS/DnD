@@ -108,6 +108,11 @@ assert.equal(deepcaller.fields.strainCur, "1", "Deepcaller records remaining Str
 assert.equal(deepcaller.fields.strainLevel, "3", "Deepcaller strain level follows its level progression");
 const cappedDeepcaller = automationFor({ ...warden, classId: "deepcaller", level: 1, sheet: { strainCur: "9" } });
 assert.equal(cappedDeepcaller.fields.strainCur, "2", "remaining Strains cannot exceed the current allowance");
+const levelThreeDeepcaller = automationFor({ ...warden, classId: "deepcaller", level: 3 });
+assert.equal(levelThreeDeepcaller.pending.subclass, undefined, "Deepcallers may continue their core path instead of becoming Zealots at level three");
+assert.match(String(levelThreeDeepcaller.fields.features1), /Opened Mind/, "a continuing Deepcaller receives their level-three core feature");
+const zealot = automationFor({ ...warden, classId: "deepcaller", subclassId: "hunter-zealot", level: 3 });
+assert.match(String(zealot.fields.features1), /Burn the Book/, "a Deepcaller can still choose the Zealot path at level three");
 
 const bruteOne = automationFor({ ...warden, classId: "brute", lastSeenLevel: 0 });
 assert.match(bruteOne.pending.levelChoices?.options?.join(" ") ?? "", /Fighting Style/i);
