@@ -45,6 +45,7 @@ try {
     localStorage.setItem("cs-theme", "light");
   });
   const page = await context.newPage();
+  let capturedViewMenuDesktop = false;
   async function openAppDisclosure(title) {
     const disclosure = page.locator(".appsheet-disclosure").filter({ has: page.getByText(title, { exact: true }) }).first();
     await disclosure.waitFor();
@@ -60,6 +61,22 @@ try {
       await section.locator(":scope > summary").click();
     }
     return section;
+  }
+  async function selectCharacterView(label) {
+    const trigger = page.getByRole("button", { name: "Choose character view", exact: true });
+    if (await trigger.count() !== 1) throw new Error("Character sheet must expose one view-menu trigger");
+    await trigger.click();
+    if (await trigger.getAttribute("aria-expanded") !== "true") throw new Error("Character view menu did not report its open state");
+    const menu = page.getByRole("menu", { name: "Character sheet views", exact: true });
+    const labels = await menu.getByRole("menuitemradio").allTextContents();
+    if (JSON.stringify(labels) !== JSON.stringify(["View 1", "View 2", "View 3"])) {
+      throw new Error(`Character view menu labels or ordering changed: ${JSON.stringify(labels)}`);
+    }
+    if (!capturedViewMenuDesktop) {
+      await page.locator(".papersheet-toolbar").screenshot({ path: "screenshots/character-view-menu-desktop.png" });
+      capturedViewMenuDesktop = true;
+    }
+    await menu.getByRole("menuitemradio", { name: label, exact: true }).click();
   }
   page.on("pageerror", (error) => errors.push(String(error)));
   page.on("console", (message) => { if (message.type() === "error" && !message.text().includes("Failed to load resource")) errors.push(message.text()); });
@@ -171,7 +188,7 @@ try {
     throw new Error("Weapon reference overflows the mobile viewport");
   }
   await page.setViewportSize({ width: 1440, height: 1000 });
-  await page.getByRole("button", { name: "App view 2" }).click();
+  await selectCharacterView("View 3");
   const appViewTwo = page.getByTestId("app-character-sheet-2");
   await appViewTwo.waitFor();
   await appViewTwo.getByText("App Warden", { exact: true }).waitFor();
@@ -183,6 +200,9 @@ try {
   const quickGear = appViewTwo.locator(".appsheet-quick-gear");
   await quickGear.getByRole("heading", { name: "Gear & carrying" }).waitFor();
   await quickGear.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
+  if (await quickGear.getByTestId("appsheet-inventory-add").count()) throw new Error("View 3 unexpectedly uses the View 2 inventory Add menu");
+  if (await quickGear.getByTestId("appsheet-catalog-picker").count() !== 1) throw new Error("View 3 lost its rules-library picker");
+  if (await quickGear.getByText("Record a unique item", { exact: true }).count() !== 1) throw new Error("View 3 lost its unique-item disclosure");
   const carryingCustomization = await openAppDisclosure("Carrying customization");
   await carryingCustomization.getByTestId("warden-carrying-figure").waitFor();
   await carryingCustomization.getByRole("heading", { name: "Slot assignment", exact: true }).waitFor();
@@ -196,8 +216,18 @@ try {
   await quickGear.screenshot({ path: "screenshots/app-character-sheet-2-gear-mobile.png", fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
   page.once("dialog", (dialog) => dialog.accept());
-  await page.getByRole("button", { name: "App view", exact: true }).click();
+  await selectCharacterView("View 2");
   await openAppSection("Gear & carrying");
+  const fullAppGear = page.getByTestId("app-character-sheet").locator(".appsheet-section").filter({ has: page.getByRole("heading", { name: "Gear & carrying", exact: true }) });
+  if (await fullAppGear.getByText("Carrying setup", { exact: true }).count()) {
+    throw new Error("View 2 still exposes the removed Carrying setup panel");
+  }
+  if (await fullAppGear.getByText("Check load", { exact: true }).count()) {
+    throw new Error("View 2 still exposes the removed carrying warning");
+  }
+  if (await fullAppGear.getByRole("heading", { name: "Slot assignment", exact: true }).count()) {
+    throw new Error("View 2 still exposes the removed slot-assignment summary");
+  }
   await page.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
   const rifleSlot = page.getByLabel("Hunter Rifle item 1 carrying slot");
   if (await rifleSlot.inputValue() !== "") throw new Error("New equipment should start Unassigned");
@@ -205,24 +235,40 @@ try {
   await rifleSlot.selectOption("hand");
   await page.getByTestId("appsheet-inventory").locator(".appsheet-item-slot").filter({ hasText: "Hand" }).waitFor();
   const inventory = page.getByTestId("appsheet-inventory");
-  const gearCatalog = page.getByTestId("appsheet-catalog-picker");
-  await gearCatalog.locator(":scope > summary").click();
+  if (await fullAppGear.getByTestId("appsheet-catalog-picker").count()) throw new Error("View 2 still exposes the separate rules-library disclosure");
+  if (await fullAppGear.getByText("Record a unique item", { exact: true }).count()) throw new Error("View 2 still exposes the separate unique-item disclosure");
+  const inventoryAdd = fullAppGear.getByTestId("appsheet-inventory-add");
+  await inventoryAdd.click();
+  const addDialog = page.getByRole("dialog", { name: "Add to inventory", exact: true });
+  if (await addDialog.locator(".appsheet-add-choices > button").count() !== 2) throw new Error("Inventory Add menu does not offer exactly two paths");
+  await addDialog.getByRole("button", { name: "Record a unique item", exact: true }).click();
+  const uniqueItemDialog = page.getByRole("dialog", { name: "Record a unique item", exact: true });
+  await uniqueItemDialog.getByLabel("Unique item name").waitFor();
+  await uniqueItemDialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  await addDialog.getByRole("button", { name: "Add from rules library", exact: true }).click();
   await page.getByTestId("appsheet-catalog-item").selectOption("backpack");
   await page.getByTestId("appsheet-add-catalog-item").click();
   const backpackRow = inventory.locator(":scope > div").filter({ has: page.getByText("Backpack", { exact: true }) });
   await backpackRow.getByRole("button", { name: "Wear" }).click();
   const wornStorage = page.getByTestId("appsheet-worn-storage");
   await wornStorage.getByText("7 back slots", { exact: true }).waitFor();
+  await inventoryAdd.click();
+  await page.getByRole("dialog", { name: "Add to inventory", exact: true }).getByRole("button", { name: "Add from rules library", exact: true }).click();
   await page.getByTestId("appsheet-catalog-item").selectOption("mace");
   await page.getByTestId("appsheet-add-catalog-item").click();
   const maceSlot = page.getByLabel("Mace item 1 carrying slot");
   if (!await maceSlot.locator('option[value="storage:backpack:1"]').count()) throw new Error("Worn storage does not offer its extra slots in Inventory");
   await maceSlot.selectOption("storage:backpack:1");
+  await inventoryAdd.click();
+  await page.getByRole("dialog", { name: "Add to inventory", exact: true }).getByRole("button", { name: "Add from rules library", exact: true }).click();
   await page.getByTestId("appsheet-catalog-item").selectOption("flail");
   await page.getByTestId("appsheet-add-catalog-item").click();
   const flailSlot = page.getByLabel("Flail item 1 carrying slot");
   if (await flailSlot.locator('option[value="storage:backpack:1"]').count()) throw new Error("An occupied storage slot remains selectable for another item");
   if (!await flailSlot.locator('option[value="storage:backpack:2"]').count()) throw new Error("Unused storage slots are not offered after assigning an item");
+  await inventoryAdd.click();
+  await page.getByTestId("appsheet-add-backdrop").dispatchEvent("click");
+  if (await page.getByRole("dialog", { name: "Add to inventory", exact: true }).count()) throw new Error("Outside click did not close the Inventory Add menu");
   await page.setViewportSize({ width: 390, height: 844 });
   await inventory.screenshot({ path: "screenshots/inventory-storage-slots-mobile.png" });
   if (await inventory.evaluate((element) => element.scrollWidth > element.clientWidth)) throw new Error("Inventory storage controls overflow the mobile viewport");
@@ -310,17 +356,22 @@ try {
   if (!await wornArmorDisclosure.evaluate((element) => element.open)) throw new Error("Editing a value collapsed its disclosure mid-task");
 
   await openAppSection("Gear & carrying");
-  const catalogPicker = page.getByTestId("appsheet-catalog-picker");
-  await catalogPicker.locator(":scope > summary").click();
-  if (!await catalogPicker.evaluate((element) => element.open)) throw new Error("Rules-library item picker did not open from Inventory");
+  const inventoryAddMenu = page.getByTestId("appsheet-inventory-add");
+  await inventoryAddMenu.click();
+  await page.getByRole("dialog", { name: "Add to inventory", exact: true }).getByRole("button", { name: "Add from rules library", exact: true }).click();
+  const catalogPicker = page.getByRole("dialog", { name: "Add from rules library", exact: true });
   await catalogPicker.screenshot({ path: "screenshots/rules-library-picker-desktop.png" });
   await page.getByTestId("appsheet-catalog-item").selectOption("torch");
   await page.getByTestId("appsheet-add-catalog-item").click();
   await page.getByTestId("appsheet-inventory").getByText("Torch", { exact: true }).waitFor();
+  await inventoryAddMenu.click();
+  await page.getByRole("dialog", { name: "Add to inventory", exact: true }).getByRole("button", { name: "Add from rules library", exact: true }).click();
   await page.setViewportSize({ width: 390, height: 844 });
   await catalogPicker.screenshot({ path: "screenshots/rules-library-picker-mobile.png" });
-  const catalogOverflow = await catalogPicker.evaluate((element) => element.scrollWidth > element.clientWidth);
+  const catalogOverflow = await fullAppGear.evaluate((element) => element.scrollWidth > element.clientWidth);
   if (catalogOverflow) throw new Error("Rules-library item picker overflows the mobile viewport");
+  await page.keyboard.press("Escape");
+  if (!await inventoryAddMenu.evaluate((element) => element === document.activeElement)) throw new Error("Closing the Inventory Add menu did not restore trigger focus");
   await page.setViewportSize({ width: 1440, height: 1000 });
 
   await openAppSection("Notes");
@@ -328,7 +379,7 @@ try {
   await page.locator(".papersheet-modal").evaluate((element) => element.scrollTo({ top: 0 }));
   await page.screenshot({ path: "screenshots/app-character-sheet-desktop.png", fullPage: true });
 
-  await page.getByRole("button", { name: "Paper sheet" }).click();
+  await selectCharacterView("View 1");
   await page.getByTestId("sheet-character-automation").waitFor();
   const sheetBackgroundDetails = page.getByTestId("sheet-character-automation").getByTestId("background-details");
   await sheetBackgroundDetails.getByRole("heading", { name: "Criminal" }).waitFor();
@@ -412,7 +463,7 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   if (await page.locator(".papersheet-toolbar h1").count()) throw new Error("Character name still renders above the sheet toolbar");
   const toolbarAlignment = await page.locator(".papersheet-toolbar").evaluate((toolbar) => {
-    const toggle = toolbar.querySelector(".character-view-switch");
+    const toggle = toolbar.querySelector(".character-view-menu");
     const toolbarBox = toolbar.getBoundingClientRect();
     const toggleBox = toggle.getBoundingClientRect();
     return { rightGap: Math.round(toolbarBox.right - toggleBox.right), toolbarWidth: Math.round(toolbarBox.width) };
@@ -420,7 +471,18 @@ try {
   if (toolbarAlignment.rightGap > 2) {
     throw new Error(`The mobile character-view toggle is not right-aligned: ${JSON.stringify(toolbarAlignment)}`);
   }
-  await page.getByRole("button", { name: "App view" }).click();
+  const mobileViewTrigger = page.getByRole("button", { name: "Choose character view", exact: true });
+  await mobileViewTrigger.click();
+  const mobileViewMenu = page.getByRole("menu", { name: "Character sheet views", exact: true });
+  const mobileViewMenuBounds = await mobileViewMenu.boundingBox();
+  if (!mobileViewMenuBounds || mobileViewMenuBounds.x < 0 || mobileViewMenuBounds.x + mobileViewMenuBounds.width > 390) {
+    throw new Error(`Character view menu overflows the mobile viewport: ${JSON.stringify(mobileViewMenuBounds)}`);
+  }
+  await page.locator(".papersheet-toolbar").screenshot({ path: "screenshots/character-view-menu-mobile.png" });
+  await page.keyboard.press("Escape");
+  if (await mobileViewTrigger.getAttribute("aria-expanded") !== "false") throw new Error("Escape did not close the character view menu");
+  if (!await mobileViewTrigger.evaluate((element) => element === document.activeElement)) throw new Error("Closing the character view menu did not restore trigger focus");
+  await selectCharacterView("View 2");
   await page.getByTestId("app-character-sheet").waitFor();
   if (await page.getByLabel("Character section", { exact: true }).count()) {
     throw new Error("The removed character section selector is still visible");
@@ -455,12 +517,15 @@ try {
     throw new Error("Visible armor impression is still duplicated inside App View");
   }
   await openAppSection("Gear & carrying");
-  const carryingSetup = await openAppDisclosure("Carrying setup");
-  if (await carryingSetup.getByRole("heading", { name: "Storage worn on the body", exact: true }).count()) {
-    throw new Error("Carrying setup still exposes the removed body-storage controls");
+  const mobileFullAppGear = page.getByTestId("app-character-sheet").locator(".appsheet-section").filter({ has: page.getByRole("heading", { name: "Gear & carrying", exact: true }) });
+  if (await mobileFullAppGear.getByText("Carrying setup", { exact: true }).count()) {
+    throw new Error("Mobile View 2 still exposes the removed Carrying setup panel");
   }
-  if (!await carryingSetup.getByRole("heading", { name: "Slot assignment", exact: true }).isVisible()) {
-    throw new Error("Carrying setup no longer exposes slot assignment");
+  if (await mobileFullAppGear.getByText("Check load", { exact: true }).count()) {
+    throw new Error("Mobile View 2 still exposes the removed carrying warning");
+  }
+  if (await mobileFullAppGear.getByRole("heading", { name: "Slot assignment", exact: true }).count()) {
+    throw new Error("Mobile View 2 still exposes the removed slot-assignment summary");
   }
   await openAppDisclosure("Weapon details");
   const mobileWeaponLabels = page.locator(".appsheet-weapon-label");
@@ -537,7 +602,7 @@ try {
     throw new Error("Reopened character editor did not focus its Back control");
   }
   if (!await page.getByTestId("app-character-sheet").count()) {
-    await page.getByRole("button", { name: "App view" }).click();
+    await selectCharacterView("View 2");
   }
   await page.getByTestId("app-character-sheet").waitFor();
 
