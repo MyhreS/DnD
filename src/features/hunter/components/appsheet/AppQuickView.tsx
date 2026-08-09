@@ -88,7 +88,7 @@ export function AppQuickView({ model }: { model: AppSheetModel }) {
         </div>
       ) : (
         <section className="appsheet-quick-gear">
-          <AppGearSection model={model} defaultOpen />
+          <AppGearSection model={model} defaultOpen quickView />
         </section>
       )}
     </main>

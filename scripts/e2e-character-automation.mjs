@@ -183,10 +183,16 @@ try {
   const quickGear = appViewTwo.locator(".appsheet-quick-gear");
   await quickGear.getByRole("heading", { name: "Gear & carrying" }).waitFor();
   await quickGear.getByTestId("appsheet-inventory").getByText("Hunter Rifle", { exact: true }).waitFor();
+  const carryingCustomization = await openAppDisclosure("Carrying customization");
+  await carryingCustomization.getByTestId("warden-carrying-figure").waitFor();
+  await carryingCustomization.getByRole("heading", { name: "Slot assignment", exact: true }).waitFor();
+  await carryingCustomization.screenshot({ path: "screenshots/app-character-sheet-2-carrying-desktop.png" });
   await quickGear.screenshot({ path: "screenshots/app-character-sheet-2-gear-desktop.png" });
   await page.setViewportSize({ width: 390, height: 844 });
   const appViewTwoOverflow = await quickGear.evaluate((element) => element.scrollWidth > element.clientWidth);
   if (appViewTwoOverflow) throw new Error("App view 2 overflows the mobile viewport");
+  await carryingCustomization.scrollIntoViewIfNeeded();
+  await carryingCustomization.screenshot({ path: "screenshots/app-character-sheet-2-carrying-mobile.png" });
   await quickGear.screenshot({ path: "screenshots/app-character-sheet-2-gear-mobile.png", fullPage: true });
   await page.setViewportSize({ width: 1440, height: 1000 });
   page.once("dialog", (dialog) => dialog.accept());

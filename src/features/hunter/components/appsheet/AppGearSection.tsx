@@ -7,6 +7,7 @@ import { resolveInventory } from "@/lib/inventory";
 import { availableSlotAssignmentOptions, computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
 import type { CarrySignificance, SlotAssignment } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
+import { CarryingCustomization } from "./CarryingCustomization";
 import {
   AppDisclosure,
   AppPanel,
@@ -19,7 +20,15 @@ import {
   type AppSheetModel,
 } from "./appSheetShared";
 
-export function AppGearSection({ model, defaultOpen = false }: { model: AppSheetModel; defaultOpen?: boolean }) {
+export function AppGearSection({
+  model,
+  defaultOpen = false,
+  quickView = false,
+}: {
+  model: AppSheetModel;
+  defaultOpen?: boolean;
+  quickView?: boolean;
+}) {
   const automation = useCharacterAutomation();
   const { card, result } = automation;
   const [catalogId, setCatalogId] = useState("");
@@ -149,23 +158,11 @@ export function AppGearSection({ model, defaultOpen = false }: { model: AppSheet
       </AppPanel>
 
       <AppDisclosure
-        title="Carrying setup"
+        title={quickView ? "Carrying customization" : "Carrying setup"}
         summary={`${slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} unassigned`}
         aside={slots.unstowed.length ? <span className="appsheet-incomplete">Check load</span> : undefined}
       >
-      <div className="appsheet-disclosure-grid">
-        <AppPanel title="Slot assignment">
-          <div className="appsheet-slot-list">
-            {slots.rows.map((row) => (
-              <div key={row.key} className={row.used > row.capacity ? "over" : ""}>
-                <span><b>{SLOT_LOCATION_LABEL[row.location]} · {row.kind}</b><small>{row.items.join(", ") || row.note || "Available"}</small></span>
-                <strong>{row.used}/{row.capacity}</strong>
-              </div>
-            ))}
-          </div>
-          {slots.unstowed.length > 0 && <p className="appsheet-inline-error">Unassigned: {slots.unstowed.map((entry) => `${entry.name} ×${entry.count}${entry.clamped ? "+" : ""}`).join(", ")}</p>}
-        </AppPanel>
-      </div>
+        <CarryingCustomization classId={card.classId} slots={slots} showWardenReference={quickView} />
       </AppDisclosure>
 
       <AppDisclosure title="Weapon details" summary={`${weapons.length} carried weapon ${weapons.length === 1 ? "type" : "types"}`}>
