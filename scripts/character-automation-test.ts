@@ -5,7 +5,7 @@ import { CLASSES } from "../src/data/classes";
 import { BACKGROUNDS } from "../src/data/backgrounds";
 import { ITEMS } from "../src/data/items";
 import { startingKit } from "../src/lib/startingEquipment";
-import { computeSlots, slotAssignmentOptions } from "../src/lib/slots";
+import { availableSlotAssignmentOptions, computeSlots, slotAssignmentOptions } from "../src/lib/slots";
 import { characterSheetUpdate } from "../src/features/hunter/lib/sheetPersistence";
 import { DEEPCALLER_RITES, TOOL_PROFICIENCIES, WHISPERS } from "../src/data/characterOptions";
 import {
@@ -207,6 +207,19 @@ const beltSlots = computeSlots({
 assert.equal(beltSlots.byItem.longsword, "Tool Belt slot 3", "a selected tool belt compartment is shown by name");
 assert.equal(beltSlots.byItem.dagger, "Tool Belt slot 1 · Tool Belt slot 2", "separate items can use separate tool belt compartments");
 assert.equal(beltSlots.unstowed.length, 0, "numbered storage compartments hold the selected items");
+const remainingBeltOptions = availableSlotAssignmentOptions({
+  inventory: [{ itemId: "longsword", qty: 1 }, { itemId: "dagger", qty: 2 }],
+  equippedStorageIds: ["tool-belt"],
+  customItems: [],
+  slotAssignments: {
+    longsword: ["storage:tool-belt:3"],
+    dagger: ["storage:tool-belt:1", "storage:tool-belt:2"],
+  },
+}, "dagger", 1, "Significant");
+assert.ok(!remainingBeltOptions.some((option) => option.value === "storage:tool-belt:1"), "used storage compartments disappear from other item pickers");
+assert.ok(!remainingBeltOptions.some((option) => option.value === "storage:tool-belt:3"), "a different equipped item's compartment is unavailable");
+assert.ok(remainingBeltOptions.some((option) => option.value === "storage:tool-belt:2"), "the item's own selected compartment remains available so it can be changed");
+assert.ok(remainingBeltOptions.some((option) => option.value === "storage:tool-belt:4"), "unused storage compartments remain selectable");
 const invalidBeltSlot = computeSlots({
   inventory: [{ itemId: "longsword", qty: 1 }], equippedStorageIds: ["tool-belt"], customItems: [],
   slotAssignments: { longsword: ["storage:tool-belt:5"] },

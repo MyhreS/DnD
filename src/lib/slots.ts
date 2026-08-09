@@ -43,6 +43,43 @@ export function slotAssignmentOptions(
   return [...body.map((location) => ({ value: location, label: SLOT_LOCATION_LABEL[location] })), ...storage];
 }
 
+/**
+ * The choices that are still usable for one inventory unit. Its saved choice
+ * remains visible, so an item can always be moved away from a now-conflicting
+ * slot, but slots used by every other item disappear from the picker.
+ */
+export function availableSlotAssignmentOptions(
+  card: Pick<HunterCard, "inventory" | "equippedStorageIds" | "customItems" | "slotAssignments">,
+  itemId: string,
+  index: number,
+  carry: CarrySignificance,
+  pinned?: SlotLocation,
+): SlotAssignmentOption[] {
+  const current = card.slotAssignments?.[itemId]?.[index] ?? null;
+  const assignments = [...(card.slotAssignments?.[itemId] ?? [])];
+  assignments[index] = null;
+  const slotAssignments = { ...(card.slotAssignments ?? {}), [itemId]: assignments };
+  const withoutCurrent = { ...card, slotAssignments };
+
+  return slotAssignmentOptions(carry, card.equippedStorageIds, itemId, pinned).filter((option) => {
+    if (option.value === current) return true;
+    const withCandidate = [...assignments];
+    withCandidate[index] = option.value;
+    const result = computeSlots({
+      ...withoutCurrent,
+      slotAssignments: { ...slotAssignments, [itemId]: withCandidate },
+    });
+    const displaced = Object.entries(card.slotAssignments ?? {}).some(([otherItemId, otherAssignments]) =>
+      otherAssignments.some((assignment, otherIndex) =>
+        assignment === option.value
+        && !(otherItemId === itemId && otherIndex === index)
+        && result.placedAssignments[otherItemId]?.[otherIndex] !== assignment,
+      ),
+    );
+    return result.placedAssignments[itemId]?.[index] === option.value && !displaced;
+  });
+}
+
 function itemForStorage(itemId: string): string {
   return itemId.split("-").map((word) => `${word[0].toUpperCase()}${word.slice(1)}`).join(" ");
 }
@@ -67,6 +104,8 @@ export interface SlotComputation {
   /** Item units that found no free slot (no mechanical penalty — a marker).
    * `clamped` marks a qty capped at MAX_UNITS_PER_ENTRY (render "×99+"). */
   unstowed: { itemId: string; name: string; count: number; clamped?: boolean }[];
+  /** The valid saved location for each inventory unit, if it was placed. */
+  placedAssignments: Record<string, Array<SlotAssignment | null>>;
 }
 
 /** Per-entry expansion cap: a corrupt qty (e.g. 10^7) must never freeze every
@@ -155,7 +194,7 @@ export function computeSlots(
   // take no slot. Existing hunters have no saved choices, so they are shown as
   // Unassigned rather than being silently placed somewhere.
   const entries = resolveInventory(card).filter((e) => e.item.carry !== "Insignificant" && e.item.category !== "Armor");
-  type Unit = { itemId: string; name: string; kind: "significant" | "oversized"; assigned?: SlotAssignment };
+  type Unit = { itemId: string; name: string; kind: "significant" | "oversized"; index: number; assigned?: SlotAssignment };
   const units: Unit[] = [];
   const clampedIds = new Set<string>();
   for (const { item, qty } of entries) {
@@ -163,7 +202,7 @@ export function computeSlots(
     const capped = Math.min(qty, MAX_UNITS_PER_ENTRY);
     if (capped < qty) clampedIds.add(item.id);
     const assignments = card.slotAssignments?.[item.id] ?? [];
-    for (let i = 0; i < capped; i++) units.push({ itemId: item.id, name: item.name, kind, assigned: assignments[i] ?? undefined });
+    for (let i = 0; i < capped; i++) units.push({ itemId: item.id, name: item.name, kind, index: i, assigned: assignments[i] ?? undefined });
   }
   const ordered = units.sort((a, b) => a.name.localeCompare(b.name));
 
@@ -174,6 +213,7 @@ export function computeSlots(
     placed.set(itemId, m);
   };
   const unstowedMap = new Map<string, { itemId: string; name: string; count: number; clamped?: boolean }>();
+  const placedAssignments: Record<string, Array<SlotAssignment | null>> = {};
 
   for (const u of ordered) {
     const storageMatch = u.assigned?.match(/^storage:([^:]+):(\d+)$/);
@@ -186,6 +226,7 @@ export function computeSlots(
     if (pool) {
       stow(pool, u.itemId, u.name, storageSlot);
       record(u.itemId, storageId ? `${itemForStorage(storageId)} slot ${storageSlot}` : SLOT_LOCATION_LABEL[pool.location]);
+      (placedAssignments[u.itemId] ??= [])[u.index] = u.assigned ?? null;
     } else {
       record(u.itemId, "Unassigned");
       const cur = unstowedMap.get(u.itemId);
@@ -256,5 +297,5 @@ export function computeSlots(
     });
   }
 
-  return { rows, byItem, unstowed: [...unstowedMap.values()] };
+  return { rows, byItem, unstowed: [...unstowedMap.values()], placedAssignments };
 }
