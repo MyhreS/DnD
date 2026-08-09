@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
+import type { HunterCard, SheetData } from "@/types";
 import { automationFor } from "../../lib/characterAutomation";
 import { levelAdjustedPool } from "../../lib/levelUpVitals";
 import type { AppSheetModel } from "./appSheetShared";
@@ -15,10 +16,12 @@ function optionalNumber(value: unknown): number | undefined {
 
 export function AppEditStage({ model, children, onPendingChange }: { model: AppSheetModel; children: ReactNode; onPendingChange?: (pending: boolean) => void }) {
   const [patch, setPatch] = useState<StagedPatch>({});
+  const [fields, setFields] = useState(model.data);
+  const [fieldChangeLabels, setFieldChangeLabels] = useState<string[]>([]);
   const currentResult = useMemo(() => automationFor(model.card), [model.card]);
   const previewCard = useMemo(() => ({ ...model.card, ...patch }), [model.card, patch]);
   const previewResult = useMemo(() => automationFor(previewCard), [previewCard]);
-  const hasChanges = Object.keys(patch).length > 0;
+  const hasChanges = Object.keys(patch).length > 0 || fieldChangeLabels.length > 0;
 
   useEffect(() => {
     onPendingChange?.(hasChanges);
@@ -27,14 +30,20 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
 
   function keepDifferences(next: StagedPatch): StagedPatch {
     const filtered: StagedPatch = {};
-    if (next.level != null && next.level !== model.card.level) filtered.level = next.level;
-    if (next.lastSeenLevel != null && next.lastSeenLevel !== (model.card.lastSeenLevel ?? 0)) filtered.lastSeenLevel = next.lastSeenLevel;
-    if (next.currentHp != null && next.currentHp !== (model.card.currentHp ?? optionalNumber(currentResult.fields.hpCur) ?? 0)) filtered.currentHp = next.currentHp;
-    if (next.sanity != null && next.sanity !== (model.card.sanity ?? optionalNumber(currentResult.fields.sanityCur) ?? 0)) filtered.sanity = next.sanity;
-    if (next.subclassId !== undefined && next.subclassId !== model.card.subclassId) filtered.subclassId = next.subclassId;
-    if (next.transformationLevel != null && next.transformationLevel !== (model.card.transformationLevel ?? 0)) filtered.transformationLevel = next.transformationLevel;
-    if (next.activeTransformations !== undefined && JSON.stringify(next.activeTransformations) !== JSON.stringify(model.card.activeTransformations ?? [])) filtered.activeTransformations = next.activeTransformations;
+    for (const [key, value] of Object.entries(next) as Array<[keyof HunterCard, HunterCard[keyof HunterCard]]>) {
+      if (JSON.stringify(value) !== JSON.stringify(model.card[key])) filtered[key] = value as never;
+    }
     return filtered;
+  }
+
+  function stageChange(nextFields: SheetData, partial: Partial<HunterCard>) {
+    setFields((current) => ({ ...current, ...nextFields }));
+    setPatch((current) => keepDifferences({ ...current, ...partial }));
+  }
+
+  function stageField(field: string, value: string | boolean) {
+    stageChange({ [field]: value }, {});
+    setFieldChangeLabels((current) => current.includes(field) ? current : [...current, field]);
   }
 
   function stageLevel(level: number) {
@@ -78,23 +87,33 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
   }
 
   function apply() {
-    if (Object.keys(patch).length === 0) return;
-    model.setFields(previewResult.fields, patch);
+    if (!hasChanges) return;
+    model.setFields(fields, patch);
     setPatch({});
+    setFields(model.data);
+    setFieldChangeLabels([]);
   }
 
   const value: AppEditStageValue = {
     patch,
     previewCard,
+    previewData: fields,
     currentResult,
     previewResult,
     hasChanges,
+    fieldChangeLabels,
     stageLevel,
     stageHp,
     stageSanity,
     stageTransformation,
+    stageChange,
+    stageField,
     apply,
-    cancel: () => setPatch({}),
+    cancel: () => {
+      setPatch({});
+      setFields(model.data);
+      setFieldChangeLabels([]);
+    },
   };
   return <AppEditStageContext.Provider value={value}>{children}</AppEditStageContext.Provider>;
 }
@@ -116,6 +135,29 @@ export function AppEditTray() {
     ["Proficiency", stage.currentResult.fields.profBonus, stage.previewResult.fields.profBonus],
     ["Transformation", stage.currentResult.fields.transformation, stage.previewResult.fields.transformation],
   ] as Array<[string, string | boolean | undefined, string | boolean | undefined]>).filter(([, before, after]) => before !== after);
+  const stagedLabels: Partial<Record<keyof StagedPatch, string>> = {
+    inventory: "Inventory",
+    slotAssignments: "Carrying",
+    equippedStorageIds: "Worn storage",
+    mainArmorId: "Main armor",
+    addonArmorIds: "Add-on armor",
+    extraArmorIds: "Extra armor",
+    coins: "Gold",
+    customItems: "Unique items",
+    name: "Name",
+    classId: "Class",
+    lastSeenLevel: "Level tracking",
+    sheetAutomation: "Character setup",
+  };
+  const displayedPatchKeys = new Set(["level", "currentHp", "sanity", "transformationLevel"]);
+  const otherChanges = Object.keys(stage.patch)
+    .filter((key) => !displayedPatchKeys.has(key))
+    .map((key) => stagedLabels[key as keyof StagedPatch] ?? key.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase()));
+  const fieldLabels: Record<string, string> = {
+    strainCur: "Strains left",
+    insight: "Insight",
+    insane: "Insanity",
+  };
   const currentLevel = stage.currentResult.fields.level;
   const previewLevel = stage.previewResult.fields.level;
   const beforeLevel = numeric(currentLevel) ?? stage.previewCard.level;
@@ -140,6 +182,8 @@ export function AppEditTray() {
         {stage.patch.subclassId === null && <span className="negative"><b>Subclass</b><s>Selected</s><strong>Removed below level 3</strong></span>}
         {stage.patch.activeTransformations && <span className="negative"><b>Active transformations</b><s>{stage.currentResult.fields.transformation}</s><strong>Cleared by reduction</strong></span>}
         {klass && beforeLevel !== afterLevel && <span className={afterLevel > beforeLevel ? "positive" : "negative"}><b>Class progression</b><s>Level {beforeLevel}</s><strong>{afterLevel > beforeLevel ? "New features and choices added" : "Higher-level features removed"}</strong></span>}
+        {otherChanges.map((label) => <span key={label} className="neutral"><b>{label}</b><s>Saved</s><strong>Will update</strong></span>)}
+        {stage.fieldChangeLabels.map((field) => <span key={field} className="neutral"><b>{fieldLabels[field] ?? "Sheet value"}</b><s>Saved</s><strong>Will update</strong></span>)}
       </div>
       <div className="appsheet-edit-actions">
         <button type="button" className="cancel" onClick={stage.cancel}>Cancel</button>
