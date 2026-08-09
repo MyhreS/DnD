@@ -513,6 +513,12 @@
 .appsheet-edit-title b {
   color: var(--app-muted);
   font: 11px "Alegreya", serif;
+  font-size: 0;
+}
+
+.appsheet-edit-title b::after {
+  content: "Changes are only saved after you apply.";
+  font-size: 11px;
 }
 
 .appsheet-change-list {

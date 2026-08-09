@@ -174,6 +174,13 @@ export function AppEditTray() {
     dsF2: "Death save failure 2",
     dsF3: "Death save failure 3",
   };
+  // Automation writes a complete, consistent sheet snapshot after a character
+  // choice. That can legitimately touch many calculated fields, but showing
+  // every one as "Character sheet: Saved to Will update" overwhelms the review
+  // tray and hides the decision the player actually made. Keep individually
+  // editable fields explicit and collapse the rest into one truthful summary.
+  const namedFieldChanges = stage.changedFields.filter((field) => fieldLabels[field]);
+  const calculatedFieldChangeCount = stage.changedFields.length - namedFieldChanges.length;
   const currentLevel = stage.currentResult.fields.level;
   const previewLevel = stage.previewResult.fields.level;
   const beforeLevel = numeric(currentLevel) ?? stage.previewCard.level;
@@ -199,7 +206,10 @@ export function AppEditTray() {
         {stage.patch.activeTransformations && <span className="negative"><b>Active transformations</b><s>{stage.currentResult.fields.transformation}</s><strong>Cleared by reduction</strong></span>}
         {klass && beforeLevel !== afterLevel && <span className={afterLevel > beforeLevel ? "positive" : "negative"}><b>Class progression</b><s>Level {beforeLevel}</s><strong>{afterLevel > beforeLevel ? "New features and choices added" : "Higher-level features removed"}</strong></span>}
         {otherChanges.map((label) => <span key={label} className="neutral"><b>{label}</b><s>Saved</s><strong>Will update</strong></span>)}
-        {stage.changedFields.map((field) => <span key={field} className="neutral"><b>{fieldLabels[field] ?? "Character sheet"}</b><s>Saved</s><strong>Will update</strong></span>)}
+        {namedFieldChanges.map((field) => <span key={field} className="neutral"><b>{fieldLabels[field]}</b><s>Saved</s><strong>Will update</strong></span>)}
+        {calculatedFieldChangeCount > 0 && (
+          <span className="neutral"><b>Character details</b><s>Saved</s><strong>Will update automatically</strong></span>
+        )}
       </div>
       <div className="appsheet-edit-actions">
         <button type="button" className="cancel" onClick={stage.cancel}>Cancel</button>
