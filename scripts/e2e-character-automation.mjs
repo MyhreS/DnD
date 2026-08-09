@@ -328,6 +328,8 @@ try {
   if (changesAfterNote !== changesBeforeNote) throw new Error("View 2 notes were incorrectly added to the change review tray");
   await page.getByRole("button", { name: "Apply changes" }).click();
   if (await page.getByTestId("appsheet-notes").inputValue() !== "This note saves directly, without review.") throw new Error("Applying View 2 changes overwrote a directly saved note");
+  await page.getByTestId("appsheet-notes").fill("A note by itself must save live.");
+  if (await page.getByTestId("appsheet-edit-stage").count()) throw new Error("Editing only View 2 notes opened the change review tray");
 
   // Levelling a damaged hunter restores every pool whose maximum increases.
   await page.getByRole("button", { name: "Increase level" }).click();
