@@ -321,6 +321,12 @@
   font: 15px/1.45 "Alegreya", serif;
 }
 
+.appsheet-abilities-intro {
+  margin: 0 0 10px;
+  color: var(--app-muted);
+  font: 15px/1.45 "Alegreya", serif;
+}
+
 .appsheet-feature-timeline {
   display: grid;
   gap: 4px;
