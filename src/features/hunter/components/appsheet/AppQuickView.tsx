@@ -54,7 +54,7 @@ export function AppQuickView({ model }: { model: AppSheetModel }) {
         {klass?.caster && (
           <div>
             <span>Strains</span>
-            <NumericStepper label="Strains left" value={numeric(sheetText(model.data, "strainCur"), numeric(String(result.fields.strainMax)))} max={numeric(String(result.fields.strainMax))} disabled={model.readOnly} onChange={(value) => model.setField("strainCur", String(value))} />
+            <NumericStepper label="Strains left" value={numeric(String(result.fields.strainCur), numeric(String(result.fields.strainMax)))} max={numeric(String(result.fields.strainMax))} disabled={model.readOnly} onChange={(value) => model.setField("strainCur", String(value))} />
             <small>level {String(result.fields.strainLevel ?? "—")}</small>
           </div>
         )}

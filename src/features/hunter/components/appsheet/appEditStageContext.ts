@@ -1,19 +1,23 @@
 import { createContext, useContext } from "react";
-import type { HunterCard } from "@/types";
+import type { HunterCard, SheetData } from "@/types";
 import { automationFor } from "../../lib/characterAutomation";
 
-export type StagedPatch = Pick<Partial<HunterCard>, "level" | "lastSeenLevel" | "currentHp" | "sanity" | "subclassId" | "transformationLevel" | "activeTransformations">;
+export type StagedPatch = Partial<HunterCard>;
 
 export interface AppEditStageValue {
   patch: StagedPatch;
   previewCard: HunterCard;
+  previewData: SheetData;
   currentResult: ReturnType<typeof automationFor>;
   previewResult: ReturnType<typeof automationFor>;
   hasChanges: boolean;
+  fieldChangeLabels: string[];
   stageLevel: (level: number) => void;
   stageHp: (hp: number) => void;
   stageSanity: (sanity: number) => void;
   stageTransformation: (level: number) => void;
+  stageChange: (fields: SheetData, patch: Partial<HunterCard>) => void;
+  stageField: (field: string, value: string | boolean) => void;
   apply: () => void;
   cancel: () => void;
 }
