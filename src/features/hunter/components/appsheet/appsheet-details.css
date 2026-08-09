@@ -620,6 +620,17 @@
     grid-template-columns: 1fr;
   }
 
+  .appsheet-background-details {
+    text-align: left;
+  }
+
+  .appsheet-background-details .background-details-heading {
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 4px;
+  }
+
   .appsheet-overview-layout {
     grid-template-areas:
       "state"
