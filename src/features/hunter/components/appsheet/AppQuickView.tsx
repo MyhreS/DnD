@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { abilityModifier } from "@/data/abilities";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { resolveInventory } from "@/lib/inventory";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { useAppEditStage } from "./appEditStageContext";
+import { AppGearSection } from "./AppGearSection";
 import { AppPanel, DerivedValue, NumericStepper, type AppSheetModel } from "./appSheetShared";
 import { sheetText } from "./appSheetValues";
 
@@ -18,6 +20,7 @@ function signed(value: number): string {
 export function AppQuickView({ model }: { model: AppSheetModel }) {
   const { card, klass, result } = useCharacterAutomation();
   const editStage = useAppEditStage();
+  const [activeTab, setActiveTab] = useState<"overview" | "gear">("overview");
   const name = sheetText(model.data, "name") || card.name || "Unnamed hunter";
   const weapons = resolveInventory(card).filter(({ item }) => item.category === "Weapon");
   const hp = editStage.previewCard.currentHp ?? numeric(sheetText(model.data, "hpCur"), numeric(String(result.fields.hpMax)));
@@ -57,26 +60,37 @@ export function AppQuickView({ model }: { model: AppSheetModel }) {
         )}
       </section>
 
-      <div className="appsheet-quick-grid">
-        <AppPanel title="Weapons">
-          {weapons.length ? <ul className="appsheet-quick-list">
-            {weapons.map(({ item, qty }) => {
-              const facts = WEAPON_FACTS[item.id];
-              const modifier = facts?.attack === "Ranged" ? abilityModifier(card.abilities.dex) : abilityModifier(card.abilities.str);
-              const custom = card.customItems?.find((entry) => entry.id === item.id);
-              return <li key={item.id}><span><b>{item.name}{qty > 1 ? ` ×${qty}` : ""}</b><small>{facts?.attack ?? "Weapon"} · {facts?.mastery ?? "DM-set mastery"}</small></span><strong>{custom?.damage || weaponDamageLabel(facts)} <em>{signed(modifier)}</em></strong></li>;
-            })}
-          </ul> : <p className="appsheet-empty-copy">No carried weapons yet.</p>}
-        </AppPanel>
-        <AppPanel title="Ready reference">
-          <dl className="appsheet-quick-reference">
-            <div><dt>Armor</dt><dd>{String(result.fields.armorCategory || "Unarmored")}</dd></div>
-            <div><dt>Sanity die</dt><dd>{String(result.fields.sanityDice || "—")}</dd></div>
-            <div><dt>Passive perception</dt><dd>{String(result.fields.passivePerception || "—")}</dd></div>
-            <div><dt>Tools</dt><dd>{String(result.fields.tools || "—")}</dd></div>
-          </dl>
-        </AppPanel>
+      <div className="appsheet-quick-tabs" role="group" aria-label="App view 2 sections">
+        <button type="button" aria-pressed={activeTab === "overview"} onClick={() => setActiveTab("overview")}>Overview</button>
+        <button type="button" aria-pressed={activeTab === "gear"} onClick={() => setActiveTab("gear")}>Gear</button>
       </div>
+
+      {activeTab === "overview" ? (
+        <div className="appsheet-quick-grid">
+          <AppPanel title="Weapons">
+            {weapons.length ? <ul className="appsheet-quick-list">
+              {weapons.map(({ item, qty }) => {
+                const facts = WEAPON_FACTS[item.id];
+                const modifier = facts?.attack === "Ranged" ? abilityModifier(card.abilities.dex) : abilityModifier(card.abilities.str);
+                const custom = card.customItems?.find((entry) => entry.id === item.id);
+                return <li key={item.id}><span><b>{item.name}{qty > 1 ? ` ×${qty}` : ""}</b><small>{facts?.attack ?? "Weapon"} · {facts?.mastery ?? "DM-set mastery"}</small></span><strong>{custom?.damage || weaponDamageLabel(facts)} <em>{signed(modifier)}</em></strong></li>;
+              })}
+            </ul> : <p className="appsheet-empty-copy">No carried weapons yet.</p>}
+          </AppPanel>
+          <AppPanel title="Ready reference">
+            <dl className="appsheet-quick-reference">
+              <div><dt>Armor</dt><dd>{String(result.fields.armorCategory || "Unarmored")}</dd></div>
+              <div><dt>Sanity die</dt><dd>{String(result.fields.sanityDice || "—")}</dd></div>
+              <div><dt>Passive perception</dt><dd>{String(result.fields.passivePerception || "—")}</dd></div>
+              <div><dt>Tools</dt><dd>{String(result.fields.tools || "—")}</dd></div>
+            </dl>
+          </AppPanel>
+        </div>
+      ) : (
+        <section className="appsheet-quick-gear">
+          <AppGearSection model={model} defaultOpen />
+        </section>
+      )}
     </main>
   );
 }
