@@ -34,7 +34,7 @@ const LEFT: Array<{ panel: Panel; icon: View4IconName; label: string }> = [
 const RIGHT: Array<{ panel: Panel; icon: View4IconName; label: string }> = [
   { panel: "combat", icon: "combat", label: "Combat" },
   { panel: "notes", icon: "notes", label: "Notes" },
-  { panel: "resources", icon: "resources", label: "More" },
+  { panel: "resources", icon: "resources", label: "Resources" },
 ];
 
 function numberOf(value: unknown, fallback = 0): number {
@@ -43,22 +43,32 @@ function numberOf(value: unknown, fallback = 0): number {
 }
 
 function Rail({ items, open }: { items: typeof LEFT; open: (panel: Panel) => void }) {
-  return <nav>{items.map((item) => <button key={item.panel} type="button" onClick={() => open(item.panel)}><View4Icon name={item.icon} /><span>{item.label}</span></button>)}</nav>;
+  return <nav aria-label="Character sheet sections">{items.map((item) => <button key={item.panel} type="button" aria-haspopup="dialog" onClick={() => open(item.panel)}><View4Icon name={item.icon} /><span>{item.label}</span></button>)}</nav>;
 }
 
-export function View4CharacterSheet({ model }: { model: AppSheetModel }) {
+export function View4CharacterSheet({ model, notesModel }: { model: AppSheetModel; notesModel: AppSheetModel }) {
   const [panel, setPanel] = useState<Panel | null>(null);
   const stage = useAppEditStage();
   const { card, klass, background, result } = useCharacterAutomation();
   const name = sheetText(model.data, "name") || card.name || "Unnamed hunter";
   const hpMax = numberOf(result.fields.hpMax);
   const hp = stage.previewCard.currentHp ?? hpMax;
+  const tempHp = numberOf(sheetText(model.data, "hpTemp"));
   const sanityMax = numberOf(result.fields.sanityMax);
   const sanity = stage.previewCard.sanity ?? sanityMax;
   const insight = card.insight ?? numberOf(sheetText(model.data, "insight"));
   const pending = Object.values(result.pending).filter(Boolean).length;
   const overlay = panel ? PANELS[panel] : null;
-  return <div className="v4-sheet" data-testid="view4-character-sheet">
+  return <div
+    className="v4-sheet"
+    data-testid="view4-character-sheet"
+    onKeyDownCapture={(event) => {
+      if (event.key !== "Escape" || !panel) return;
+      event.preventDefault();
+      event.stopPropagation();
+      setPanel(null);
+    }}
+  >
     <header className="v4-identity">
       <button type="button" onClick={() => setPanel("profile")}><small>{klass?.title ?? "Unbound hunter"}</small><h1>{name}</h1><span>{background?.name ?? "No background"}</span></button>
       <div><button type="button" onClick={() => setPanel("resources")}><small>Level</small><strong>{card.level}</strong></button><button type="button" onClick={() => setPanel("resources")}><small>Insight</small><strong>{insight}</strong></button></div>
@@ -76,17 +86,20 @@ export function View4CharacterSheet({ model }: { model: AppSheetModel }) {
       <button type="button" onClick={() => setPanel("combat")}><small>Initiative</small><strong>{String(result.fields.initiative ?? "—")}</strong></button>
     </section>
     <section className="v4-vitals" aria-label="Current resources">
-      <button type="button" onClick={() => setPanel("resources")}><span><b>Hit points</b><em>{hp} / {hpMax}</em></span><i><span style={{ width: `${hpMax ? Math.max(0, Math.min(100, hp / hpMax * 100)) : 0}%` }} /></i></button>
+      <button type="button" onClick={() => setPanel("resources")}><span><b>Hit points</b><em>{hp} / {hpMax}{tempHp > 0 && <small> +{tempHp} temp</small>}</em></span><i><span style={{ width: `${hpMax ? Math.max(0, Math.min(100, hp / hpMax * 100)) : 0}%` }} /></i></button>
       <button type="button" onClick={() => setPanel("resources")}><span><b>Sanity</b><em>{sanity} / {sanityMax}</em></span><i><span style={{ width: `${sanityMax ? Math.max(0, Math.min(100, sanity / sanityMax * 100)) : 0}%` }} /></i></button>
     </section>
     <button className="v4-inventory-shortcut" type="button" onClick={() => setPanel("inventory")}><View4Icon name="inventory" /><span>Inventory</span><small>{card.inventory?.reduce((sum, item) => sum + item.qty, 0) ?? 0} carried</small></button>
     {panel && overlay && <View4Overlay title={overlay.title} eyebrow={overlay.eyebrow} classId={card.classId} onClose={() => setPanel(null)}>
-      {panel === "profile" && <AppOverviewSection model={model} />}
+      {panel === "profile" && <AppOverviewSection model={model} onNavigate={(href) => {
+        if (href === "#appsheet-abilities") setPanel("abilities");
+        if (href === "#appsheet-features") setPanel("features");
+      }} />}
       {panel === "abilities" && <AppAbilitiesSection model={model} />}
       {panel === "features" && <AppFeaturesSection model={model} />}
       {panel === "combat" && <AppCombatSection model={model} />}
       {panel === "inventory" && <AppGearSection model={model} />}
-      {panel === "notes" && <AppNotesSection model={model} />}
+      {panel === "notes" && <AppNotesSection model={notesModel} />}
       {panel === "equipment" && <View4Equipment model={model} />}
       {panel === "resources" && <View4Resources model={model} />}
     </View4Overlay>}
