@@ -1,4 +1,4 @@
-import { useState, type ReactNode, type SelectHTMLAttributes } from "react";
+import { createContext, useContext, useState, type ReactNode, type SelectHTMLAttributes } from "react";
 import type { HunterCard, SheetData } from "@/types";
 
 export interface AppSheetModel {
@@ -7,6 +7,12 @@ export interface AppSheetModel {
   readOnly: boolean;
   setField: (field: string, value: string | boolean) => void;
   setFields: (fields: SheetData, patch: Partial<HunterCard>) => void;
+}
+
+const AppSectionsExpandedContext = createContext(false);
+
+export function AppSectionsExpanded({ children }: { children: ReactNode }) {
+  return <AppSectionsExpandedContext.Provider value>{children}</AppSectionsExpandedContext.Provider>;
 }
 
 export function AppSection({
@@ -23,9 +29,10 @@ export function AppSection({
   attention?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
+  const expanded = useContext(AppSectionsExpandedContext);
 
   return (
-    <details id={id} className={`appsheet-section ${attention ? "appsheet-section-attention" : ""}`.trim()} open={isOpen} onToggle={(event) => setIsOpen(event.currentTarget.open)}>
+    <details id={id} className={`appsheet-section ${attention ? "appsheet-section-attention" : ""}`.trim()} open={expanded || isOpen} onToggle={(event) => { if (!expanded) setIsOpen(event.currentTarget.open); }}>
       <summary>
         <h2>{title}</h2>
         {attention && <span className="appsheet-section-attention-label">Action needed</span>}
@@ -159,16 +166,17 @@ export function PendingNotice({ children }: { children: ReactNode }) {
   return <div className="appsheet-pending"><span aria-hidden="true">!</span><div>{children}</div></div>;
 }
 
-export function NumericStepper({ value, onChange, disabled = false, label, max }: {
+export function NumericStepper({ value, onChange, disabled = false, label, min = 0, max }: {
   value: number;
   onChange: (next: number) => void;
   disabled?: boolean;
   label: string;
+  min?: number;
   max?: number;
 }) {
   return (
     <div className="appsheet-stepper compact">
-      <button type="button" aria-label={`Decrease ${label}`} disabled={disabled || value <= 0} onClick={() => onChange(Math.max(0, value - 1))}>−</button>
+      <button type="button" aria-label={`Decrease ${label}`} disabled={disabled || value <= min} onClick={() => onChange(Math.max(min, value - 1))}>−</button>
       <output aria-label={label}>{value}</output>
       <button type="button" aria-label={`Increase ${label}`} disabled={disabled || (max != null && value >= max)} onClick={() => onChange(value + 1)}>+</button>
     </div>

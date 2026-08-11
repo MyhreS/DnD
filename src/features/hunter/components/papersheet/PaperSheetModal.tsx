@@ -11,12 +11,13 @@ import { automationFor } from "../../lib/characterAutomation";
 import { AppCharacterSheet } from "../appsheet/AppCharacterSheet";
 
 const STEPS = [1, 2, 3, 4, 5] as const;
-type CharacterViewMode = "app" | "quick" | "paper";
+type CharacterViewMode = "app" | "quick" | "paper" | "hud";
 const VIEW_KEY = "cs-character-sheet-view";
 const VIEW_OPTIONS: ReadonlyArray<{ view: CharacterViewMode; label: string }> = [
   { view: "paper", label: "View 1" },
   { view: "app", label: "View 2" },
   { view: "quick", label: "View 3" },
+  { view: "hud", label: "View 4" },
 ];
 
 /** The shared character editor as a full-screen popup. Its app-native and
@@ -43,21 +44,21 @@ export function PaperSheetModal({
   const [showInfo, setShowInfo] = useState(create);
   const [view, setViewState] = useState<CharacterViewMode>(() => {
     const saved = window.localStorage.getItem(VIEW_KEY);
-    return saved === "paper" || saved === "app" || saved === "quick" ? saved : "app";
+    return saved === "paper" || saved === "app" || saved === "quick" || saved === "hud" ? saved : "app";
   });
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const viewMenuRef = useRef<HTMLDivElement>(null);
   const viewMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const [appEditPending, setAppEditPending] = useState(false);
   const setView = (next: CharacterViewMode) => {
-    if ((view === "app" || view === "quick") && next !== view && appEditPending && !window.confirm("Discard the previewed changes and switch views?")) return;
+    if (view !== "paper" && next !== view && appEditPending && !window.confirm("Discard the previewed changes and switch views?")) return;
     setAppEditPending(false);
     setViewState(next);
     window.localStorage.setItem(VIEW_KEY, next);
     setViewMenuOpen(false);
   };
   const closeEditor = () => {
-    if ((view === "app" || view === "quick") && appEditPending && !window.confirm("Discard the previewed changes and close the character?")) return;
+    if (view !== "paper" && appEditPending && !window.confirm("Discard the previewed changes and close the character?")) return;
     onClose();
   };
   // Which creation step (1–5) is spotlighted on the sheet; null = none.
@@ -174,7 +175,7 @@ export function PaperSheetModal({
           </>
         )}
       </div>
-      {view === "app" || view === "quick" ? (
+      {view !== "paper" ? (
         <AppCharacterSheet data={data} setField={sheetSetField} setFields={setFields} card={workingCard} readOnly={readOnly} onPendingEditChange={setAppEditPending} mode={view} />
       ) : (
         <PaperSheet
