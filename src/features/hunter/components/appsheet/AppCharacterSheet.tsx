@@ -7,11 +7,13 @@ import { AppGearSection } from "./AppGearSection";
 import { AppFeaturesSection } from "./AppFeaturesSection";
 import { AppNotesSection } from "./AppNotesSection";
 import { AppQuickView } from "./AppQuickView";
+import { View4CharacterSheet } from "../view4/View4CharacterSheet";
 import type { AppSheetModel } from "./appSheetShared";
 import { AppEditStage, AppEditTray } from "./AppEditStage";
 import { useAppEditStage } from "./appEditStageContext";
 import "./appsheet.css";
 import "./appsheet-details.css";
+import "../view4/view4.css";
 
 export function AppCharacterSheet({
   data,
@@ -28,7 +30,7 @@ export function AppCharacterSheet({
   card: HunterCard;
   readOnly: boolean;
   onPendingEditChange?: (pending: boolean) => void;
-  mode?: "app" | "quick";
+  mode?: "app" | "quick" | "hud";
 }) {
   const model: AppSheetModel = { data, setField, setFields, card, readOnly };
   return (
@@ -40,25 +42,24 @@ export function AppCharacterSheet({
 
 function StagedCharacterSheet({ model, mode }: {
   model: AppSheetModel;
-  mode: "app" | "quick";
+  mode: "app" | "quick" | "hud";
 }) {
   const stage = useAppEditStage();
-  const staged = mode === "app" || mode === "quick";
-  const stageModel: AppSheetModel = staged ? {
+  const stageModel: AppSheetModel = {
     ...model,
     card: stage.previewCard,
     data: stage.previewData,
     setField: stage.stageField,
     setFields: stage.stageChange,
-  } : model;
+  };
   return <CharacterAutomationProvider
-    card={staged ? stage.previewCard : model.card}
+    card={stage.previewCard}
     readOnly={model.readOnly}
-    onApply={staged ? stage.stageChange : model.setFields}
+    onApply={stage.stageChange}
   >
     <div className="character-app-sheet" data-testid="app-character-sheet">
       <main className="appsheet-workspace">
-        {mode === "quick" ? <AppQuickView model={stageModel} /> : <>
+        {mode === "hud" ? <View4CharacterSheet model={stageModel} /> : mode === "quick" ? <AppQuickView model={stageModel} /> : <>
           <AppOverviewSection model={stageModel} />
           <AppCombatSection model={stageModel} />
           <AppFeaturesSection model={stageModel} />
