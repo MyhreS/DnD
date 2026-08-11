@@ -1,6 +1,5 @@
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { AppAbilitiesSection } from "../appsheet/AppAbilitiesSection";
-import { AppCombatSection } from "../appsheet/AppCombatSection";
 import { AppFeaturesSection } from "../appsheet/AppFeaturesSection";
 import { AppGearSection } from "../appsheet/AppGearSection";
 import { AppOverviewSection } from "../appsheet/AppOverviewSection";
@@ -14,12 +13,11 @@ import { View4Overlay } from "./View4Overlay";
 import { View4Resources } from "./View4Resources";
 import { View4Notes } from "./View4Notes";
 
-export type View4Panel = "profile" | "abilities" | "features" | "combat" | "inventory" | "notes" | "equipment" | "resources";
+export type View4Panel = "profile" | "abilities" | "features" | "inventory" | "notes" | "equipment" | "resources";
 const PANELS: Record<View4Panel, { title: string; eyebrow: string }> = {
   profile: { title: "Hunter & build", eyebrow: "Identity, class and background" },
   abilities: { title: "Abilities & skills", eyebrow: "Scores, saves and proficiencies" },
   features: { title: "Features & choices", eyebrow: "Class progression, feats and tools" },
-  combat: { title: "Combat & armor", eyebrow: "Defence, weapons and armor rules" },
   inventory: { title: "Inventory", eyebrow: "Gear, carrying and found items" },
   notes: { title: "Notes", eyebrow: "Clues, promises and transformations" },
   equipment: { title: "Equipment", eyebrow: "Choose what your hunter wears" },
@@ -31,7 +29,6 @@ const LEFT: Array<{ panel: View4Panel; icon: View4IconName; label: string }> = [
   { panel: "features", icon: "features", label: "Features" },
 ];
 const RIGHT: Array<{ panel: View4Panel; icon: View4IconName; label: string }> = [
-  { panel: "combat", icon: "combat", label: "Combat" },
   { panel: "notes", icon: "notes", label: "Notes" },
   { panel: "resources", icon: "resources", label: "Resources" },
 ];
@@ -78,10 +75,10 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange }:
       <div className="v4-rail v4-rail-right"><Rail items={RIGHT} open={onPanelChange} /></div>
     </div>
     <section className="v4-readouts" aria-label="At a glance">
-      <button type="button" onClick={() => onPanelChange("combat")}><small>AC</small><strong>{String(result.fields.ac ?? "—")}</strong></button>
-      <button type="button" onClick={() => onPanelChange("combat")}><small>Speed</small><strong>{String(result.fields.speed ?? "—")}</strong></button>
+      <button type="button" onClick={() => onPanelChange("equipment")}><small>AC</small><strong>{String(result.fields.ac ?? "—")}</strong></button>
+      <button type="button" onClick={() => onPanelChange("abilities")}><small>Speed</small><strong>{String(result.fields.speed ?? "—")}</strong></button>
       <button type="button" onClick={() => onPanelChange("abilities")}><small>Passive</small><strong>{String(result.fields.passivePerception ?? "—")}</strong></button>
-      <button type="button" onClick={() => onPanelChange("combat")}><small>Initiative</small><strong>{String(result.fields.initiative ?? "—")}</strong></button>
+      <button type="button" onClick={() => onPanelChange("abilities")}><small>Initiative</small><strong>{String(result.fields.initiative ?? "—")}</strong></button>
     </section>
     <section className="v4-vitals" aria-label="Current resources">
       <button type="button" onClick={() => onPanelChange("resources")}><span><b>Hit points</b><em>{hp} / {hpMax}{tempHp > 0 && <small> +{tempHp} temp</small>}</em></span><i><span style={{ width: `${hpMax ? Math.max(0, Math.min(100, hp / hpMax * 100)) : 0}%` }} /></i></button>
@@ -95,7 +92,6 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange }:
       }} />}
       {panel === "abilities" && <AppAbilitiesSection model={model} />}
       {panel === "features" && <AppFeaturesSection model={model} />}
-      {panel === "combat" && <AppCombatSection model={model} />}
       {panel === "inventory" && <AppGearSection model={model} />}
       {panel === "notes" && <View4Notes model={notesModel} />}
       {panel === "equipment" && <View4Equipment model={model} />}
