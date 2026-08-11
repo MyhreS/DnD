@@ -9,6 +9,7 @@ import { usePaperSheetFocus } from "../../hooks/usePaperSheetFocus";
 import type { HunterCard } from "@/types";
 import { automationFor } from "../../lib/characterAutomation";
 import { AppCharacterSheet } from "../appsheet/AppCharacterSheet";
+import type { View4Panel } from "../view4/View4CharacterSheet";
 
 const STEPS = [1, 2, 3, 4, 5] as const;
 type CharacterViewMode = "app" | "quick" | "paper" | "hud";
@@ -47,12 +48,14 @@ export function PaperSheetModal({
     return saved === "paper" || saved === "app" || saved === "quick" || saved === "hud" ? saved : "app";
   });
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
+  const [view4Panel, setView4Panel] = useState<View4Panel | null>(null);
   const viewMenuRef = useRef<HTMLDivElement>(null);
   const viewMenuTriggerRef = useRef<HTMLButtonElement>(null);
   const [appEditPending, setAppEditPending] = useState(false);
   const setView = (next: CharacterViewMode) => {
     if (view !== "paper" && next !== view && appEditPending && !window.confirm("Discard the previewed changes and switch views?")) return;
     setAppEditPending(false);
+    setView4Panel(null);
     setViewState(next);
     window.localStorage.setItem(VIEW_KEY, next);
     setViewMenuOpen(false);
@@ -60,6 +63,18 @@ export function PaperSheetModal({
   const closeEditor = () => {
     if (view !== "paper" && appEditPending && !window.confirm("Discard the previewed changes and close the character?")) return;
     onClose();
+  };
+  const handleBack = () => {
+    if (viewMenuOpen) {
+      setViewMenuOpen(false);
+      viewMenuTriggerRef.current?.focus();
+      return;
+    }
+    if (view === "hud" && view4Panel) {
+      setView4Panel(null);
+      return;
+    }
+    closeEditor();
   };
   // Which creation step (1–5) is spotlighted on the sheet; null = none.
   const [activeStep, setActiveStep] = useState<number | null>(null);
@@ -78,14 +93,7 @@ export function PaperSheetModal({
     setField(field, value);
   };
   usePaperSheetOpen();
-  const backRef = usePaperSheetFocus(() => {
-    if (viewMenuOpen) {
-      setViewMenuOpen(false);
-      viewMenuTriggerRef.current?.focus();
-      return;
-    }
-    closeEditor();
-  });
+  const backRef = usePaperSheetFocus(handleBack);
   const closeViewMenuOnBlur = (event: FocusEvent<HTMLDivElement>) => {
     if (!event.currentTarget.contains(event.relatedTarget)) setViewMenuOpen(false);
   };
@@ -102,7 +110,7 @@ export function PaperSheetModal({
     <div className={`papersheet-modal character-editor-modal view-${view}`} role="dialog" aria-modal="true" aria-label="Character sheet">
       <div className="papersheet-toolbar">
         <div className="papersheet-toolbar-primary">
-          <button type="button" className="ghost" ref={backRef} onClick={closeEditor}>← Back</button>
+          <button type="button" className="ghost" ref={backRef} onClick={handleBack}>← Back</button>
           <div
             className="character-view-menu"
             ref={viewMenuRef}
@@ -176,7 +184,7 @@ export function PaperSheetModal({
         )}
       </div>
       {view !== "paper" ? (
-        <AppCharacterSheet data={data} setField={sheetSetField} setFields={setFields} card={workingCard} readOnly={readOnly} onPendingEditChange={setAppEditPending} mode={view} />
+        <AppCharacterSheet data={data} setField={sheetSetField} setFields={setFields} card={workingCard} readOnly={readOnly} onPendingEditChange={setAppEditPending} mode={view} view4Panel={view4Panel} onView4PanelChange={setView4Panel} />
       ) : (
         <PaperSheet
           data={data}

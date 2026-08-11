@@ -1,18 +1,20 @@
 import type { ReactNode } from "react";
 import { useOverlayFocus } from "../../hooks/useOverlayFocus";
 import { AppSectionsExpanded } from "../appsheet/appSheetShared";
-import { View4Figure } from "./View4Figure";
+import type { View4Panel } from "./View4CharacterSheet";
 
-export function View4Overlay({ title, eyebrow, classId, onClose, children }: { title: string; eyebrow: string; classId: string; onClose: () => void; children: ReactNode }) {
+export function View4Overlay({ title, eyebrow, panel, onClose, children }: { title: string; eyebrow: string; panel: View4Panel; onClose: () => void; children: ReactNode }) {
   const overlayRef = useOverlayFocus<HTMLElement>();
-  return <section ref={overlayRef} className="v4-overlay" role="dialog" aria-modal="true" aria-label={title} tabIndex={-1} onKeyDown={(event) => {
+  return <section ref={overlayRef} className="v4-overlay" data-panel={panel} role="dialog" aria-modal="true" aria-labelledby="view4-drawer-title" tabIndex={-1} onKeyDown={(event) => {
     if (event.key !== "Escape") return;
     event.preventDefault();
     event.stopPropagation();
     onClose();
   }}>
-    <View4Figure classId={classId} ghost />
-    <header className="v4-overlay-header"><div><small>{eyebrow}</small><h2>{title}</h2></div><button type="button" aria-label={`Close ${title}`} onClick={onClose}>×</button></header>
-    <div className="v4-overlay-content"><AppSectionsExpanded>{children}</AppSectionsExpanded></div>
+    <div className="v4-drawer">
+      <span className="v4-drawer-handle" aria-hidden="true" />
+      <header className="v4-overlay-header"><small>{eyebrow}</small><h2 id="view4-drawer-title">{title}</h2></header>
+      <div className="v4-overlay-content"><AppSectionsExpanded>{children}</AppSectionsExpanded></div>
+    </div>
   </section>;
 }
