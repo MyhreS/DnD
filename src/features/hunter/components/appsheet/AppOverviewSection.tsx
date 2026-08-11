@@ -57,7 +57,10 @@ function DeepcallerReferenceRow({ entry, characterLevel }: { entry: DeepcallerRe
   );
 }
 
-export function AppOverviewSection({ model }: { model: AppSheetModel }) {
+export function AppOverviewSection({ model, onNavigate }: {
+  model: AppSheetModel;
+  onNavigate?: (href: string) => void;
+}) {
   const automation = useCharacterAutomation();
   const editStage = useAppEditStage();
   const { card, result, klass, background, state } = automation;
@@ -84,7 +87,10 @@ export function AppOverviewSection({ model }: { model: AppSheetModel }) {
   const openPendingChoice = (href: string) => (event: React.MouseEvent<HTMLAnchorElement>) => {
     event.preventDefault();
     const target = document.querySelector<HTMLElement>(href);
-    if (!target) return;
+    if (!target) {
+      onNavigate?.(href);
+      return;
+    }
     target.setAttribute("open", "");
     target.scrollIntoView({ behavior: "smooth", block: "start" });
     target.focus({ preventScroll: true });

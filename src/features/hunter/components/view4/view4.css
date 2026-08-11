@@ -128,6 +128,7 @@
 .v4-vitals button > span { display: flex; justify-content: space-between; gap: 8px; }
 .v4-vitals b { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
 .v4-vitals em { color: var(--app-muted); font: 600 13px/1 "Cinzel", serif; font-style: normal; }
+.v4-vitals em small { color: var(--app-warm); font: 700 9px/1 "Alegreya Sans SC", sans-serif; letter-spacing: .03em; text-transform: uppercase; }
 .v4-vitals i { height: 5px; overflow: hidden; border-radius: 99px; background: var(--app-line); }
 .v4-vitals i span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #762a2a, #c14d45); }
 .v4-vitals button:nth-child(2) i span { background: linear-gradient(90deg, #334d73, #7595c2); }
@@ -141,7 +142,7 @@
 .v4-overlay-header { position: relative; z-index: 1; display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 13px clamp(14px, 2.5vw, 25px); border-bottom: 1px solid var(--app-line); background: color-mix(in srgb, var(--app-surface), transparent 5%); }
 .v4-overlay-header small { color: var(--app-muted); font-size: 10px; letter-spacing: .11em; text-transform: uppercase; }
 .v4-overlay-header h2 { margin: 2px 0 0; color: var(--app-text); font: 600 clamp(20px, 3vw, 29px)/1.1 "Cinzel", serif; }
-.v4-overlay-header button { width: 40px; height: 40px; padding: 0 !important; border: 1px solid var(--app-line) !important; border-radius: 50% !important; background: var(--app-control) !important; color: var(--app-text) !important; font: 300 28px/1 sans-serif !important; }
+.v4-overlay-header button { flex: 0 0 40px; width: 40px; height: 40px; padding: 0 !important; border: 1px solid var(--app-line) !important; border-radius: 50% !important; background: var(--app-control) !important; color: var(--app-text) !important; font: 300 28px/1 sans-serif !important; }
 .v4-overlay-content { position: relative; z-index: 1; min-height: 0; overflow-y: auto; padding: clamp(10px, 2vw, 20px); overscroll-behavior: contain; }
 .v4-overlay-content > .appsheet-section,
 .v4-overlay-content > * > .appsheet-section { margin: 0; background: transparent; overflow: visible; }
@@ -216,7 +217,7 @@
   .v4-overlay { border-radius: 8px; }
   .v4-overlay-header { padding: 9px 11px; }
   .v4-overlay-header h2 { font-size: 19px; }
-  .v4-overlay-header button { width: 36px; height: 36px; }
+  .v4-overlay-header button { flex-basis: 36px; width: 36px; height: 36px; }
   .v4-resource-grid, .v4-state-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .v4-paper-doll { height: 500px; }
   .v4-paper-doll > .v4-figure { inset: 12% 25%; width: 50%; height: 70%; }

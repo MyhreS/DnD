@@ -59,7 +59,7 @@ function StagedCharacterSheet({ model, mode }: {
   >
     <div className="character-app-sheet" data-testid="app-character-sheet">
       <main className="appsheet-workspace">
-        {mode === "hud" ? <View4CharacterSheet model={stageModel} /> : mode === "quick" ? <AppQuickView model={stageModel} /> : <>
+        {mode === "hud" ? <View4CharacterSheet model={stageModel} notesModel={model} /> : mode === "quick" ? <AppQuickView model={stageModel} /> : <>
           <AppOverviewSection model={stageModel} />
           <AppCombatSection model={stageModel} />
           <AppFeaturesSection model={stageModel} />
