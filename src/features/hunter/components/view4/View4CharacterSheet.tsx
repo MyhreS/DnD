@@ -3,13 +3,13 @@ import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { AppAbilitiesSection } from "../appsheet/AppAbilitiesSection";
 import { AppFeaturesSection } from "../appsheet/AppFeaturesSection";
 import { AppGearSection } from "../appsheet/AppGearSection";
-import { AppOverviewSection } from "../appsheet/AppOverviewSection";
 import { sheetText } from "../appsheet/appSheetValues";
 import { useAppEditStage } from "../appsheet/appEditStageContext";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { View4Equipment } from "./View4Equipment";
 import { View4Figure } from "./View4Figure";
 import { View4Health } from "./View4Health";
+import { View4Hunter } from "./View4Hunter";
 import { View4Icon, type View4IconName } from "./View4Icons";
 import { View4Overlay } from "./View4Overlay";
 import { View4Progress } from "./View4Progress";
@@ -28,7 +28,7 @@ const PANELS: Record<View4Panel, { title: string; eyebrow: string }> = {
   health: { title: "Health", eyebrow: "Hit points and temporary protection" },
   sanity: { title: "Sanity", eyebrow: "Your hunter's remaining grip" },
   progress: { title: "Insight & level", eyebrow: "Knowledge earned through the hunt" },
-  resources: { title: "Resources", eyebrow: "Hit dice, states and supplies" },
+  resources: { title: "Resources", eyebrow: "Hit dice, strains and death saves" },
 };
 const LEFT: Array<{ panel: View4Panel; icon: View4IconName; label: string }> = [
   { panel: "profile", icon: "profile", label: "Hunter" },
@@ -94,13 +94,10 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange }:
     </section>
     <button className="v4-inventory-shortcut" type="button" onClick={() => onPanelChange("inventory")}><View4Icon name="inventory" /><span>Inventory</span><small>{card.inventory?.reduce((sum, item) => sum + item.qty, 0) ?? 0} carried</small></button>
     {panel && overlay && <View4Overlay title={overlay.title} eyebrow={overlay.eyebrow} panel={panel} onClose={() => onPanelChange(null)}>
-      {panel === "profile" && <AppOverviewSection model={model} onNavigate={(href) => {
-        if (href === "#appsheet-abilities") onPanelChange("abilities");
-        if (href === "#appsheet-features") onPanelChange("features");
-      }} />}
+      {panel === "profile" && <View4Hunter model={model} onOpen={onPanelChange} />}
       {panel === "abilities" && <AppAbilitiesSection model={model} />}
-      {panel === "features" && <AppFeaturesSection model={model} />}
-      {panel === "inventory" && <AppGearSection model={model} />}
+      {panel === "features" && <AppFeaturesSection model={model} includeClassReferences />}
+      {panel === "inventory" && <AppGearSection model={model} hideArmor hideGoldSummary includeDamageBonuses />}
       {panel === "notes" && <View4Notes model={notesModel} />}
       {panel === "equipment" && <View4Equipment model={model} />}
       {panel === "health" && <View4Health model={model} />}

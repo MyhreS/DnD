@@ -2,6 +2,8 @@ import { DEEPCALLER_WHISPERS, WHISPERS, whisperDamageAtLevel } from "@/data/char
 import { ABILITY_NAME } from "@/data/abilities";
 import { SKILL_BY_NAME, SKILLS } from "@/data/skills";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
+import { AppClassAbilities } from "./AppClassAbilities";
+import { AppDeepcallerReference } from "./AppDeepcallerReference";
 import {
   AppDisclosure,
   AppPanel,
@@ -13,7 +15,7 @@ import {
   type AppSheetModel,
 } from "./appSheetShared";
 
-export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
+export function AppFeaturesSection({ model, includeClassReferences = false }: { model: AppSheetModel; includeClassReferences?: boolean }) {
   const automation = useCharacterAutomation();
   const { card, klass, result, state, expertiseLimit, masteryCount, masteryWeapons, whisperLimit } = automation;
   const expertise = state.expertiseSkills ?? [];
@@ -47,6 +49,10 @@ export function AppFeaturesSection({ model }: { model: AppSheetModel }) {
           </div>
         </div>
       )}
+
+      {includeClassReferences && klass && <AppClassAbilities klass={klass} subclassId={card.subclassId} level={card.level} />}
+
+      {includeClassReferences && <AppDeepcallerReference />}
 
       {(expertiseLimit > 0 || masteryCount > 0 || whisperLimit > 0) && (
       <AppDisclosure
