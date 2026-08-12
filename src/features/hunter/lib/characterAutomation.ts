@@ -179,6 +179,9 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
       card.feats?.length ? `Chosen feats: ${card.feats.join(", ")}` : "",
       card.sheetAutomation?.expertiseSkills?.length ? `Expertise: ${card.sheetAutomation.expertiseSkills.join(", ")}` : "",
       card.sheetAutomation?.weaponMasteries?.length ? `Weapon Mastery: ${card.sheetAutomation.weaponMasteries.join(", ")}` : "",
+      Object.entries(card.sheetAutomation?.levelChoices ?? {}).length
+        ? `Level choices: ${Object.values(card.sheetAutomation?.levelChoices ?? {}).join(", ")}`
+        : "",
     ].filter(Boolean).join("\n");
     const text = [featureText(card), chosen].filter(Boolean).join("\n\n");
     put(fields, reasons, "features1", text, `${klass.title} progression through level ${level}`);

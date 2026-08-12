@@ -1,6 +1,3 @@
-import { DEEPCALLER_WHISPERS, WHISPERS, whisperDamageAtLevel } from "@/data/characterOptions";
-import { ABILITY_NAME } from "@/data/abilities";
-import { SKILL_BY_NAME, SKILLS } from "@/data/skills";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { AppClassAbilities } from "./AppClassAbilities";
 import { AppDeepcallerReference } from "./AppDeepcallerReference";
@@ -9,37 +6,22 @@ import {
   AppPanel,
   AppSection,
   AutoReason,
-  ChoiceToggle,
   DerivedValue,
   PendingNotice,
   type AppSheetModel,
 } from "./appSheetShared";
 
-export function AppFeaturesSection({ model, includeClassReferences = false }: { model: AppSheetModel; includeClassReferences?: boolean }) {
+export function AppFeaturesSection({ includeClassReferences = false }: { model: AppSheetModel; includeClassReferences?: boolean }) {
   const automation = useCharacterAutomation();
-  const { card, klass, result, state, expertiseLimit, masteryCount, masteryWeapons, whisperLimit } = automation;
-  const expertise = state.expertiseSkills ?? [];
-  const masteries = state.weaponMasteries ?? [];
-  const whispers = card.preparedWhispers ?? [];
-  const proficientSkills = SKILLS.filter((skill) => card.skillProficiencies.includes(skill.name));
+  const { card, klass, result } = automation;
   const currentProgression = klass?.progression.find((row) => row.level === card.level);
-  const classChoiceRemaining = Math.max(0, expertiseLimit - expertise.length)
-    + Math.max(0, masteryCount - masteries.length)
-    + Math.max(0, whisperLimit - whispers.length);
-  const hasRequiredChoices = classChoiceRemaining > 0 || !!result.pending.levelChoices || !!result.pending.whispers;
-  const choiceAbility = (choice: string) => {
-    const skill = SKILL_BY_NAME[choice];
-    return skill ? `Ability: ${ABILITY_NAME[skill.ability]}` : undefined;
-  };
 
   return (
     <AppSection
       id="appsheet-features"
-      title="Features & choices"
-      defaultOpen={hasRequiredChoices}
-      attention={hasRequiredChoices}
+      title="Features"
     >
-      {!klass && <PendingNotice><b>Choose a class on Overview</b><p>Class features and level choices will appear here automatically.</p></PendingNotice>}
+      {!klass && <PendingNotice><b>Choose a class in Hunter &amp; build</b><p>Class features will appear here automatically.</p></PendingNotice>}
 
       {klass && (
         <div className="appsheet-feature-hero appsheet-feature-summary">
@@ -53,50 +35,6 @@ export function AppFeaturesSection({ model, includeClassReferences = false }: { 
       {includeClassReferences && klass && <AppClassAbilities klass={klass} subclassId={card.subclassId} level={card.level} />}
 
       {includeClassReferences && <AppDeepcallerReference />}
-
-      {(expertiseLimit > 0 || masteryCount > 0 || whisperLimit > 0) && (
-      <AppDisclosure
-        key={classChoiceRemaining > 0 ? "class-choices-pending" : "class-choices-complete"}
-        title="Class choices"
-        summary={classChoiceRemaining ? `${classChoiceRemaining} remaining` : "All current choices complete"}
-        aside={classChoiceRemaining ? <span className="appsheet-incomplete">Action needed</span> : <span className="appsheet-complete">Complete</span>}
-        defaultOpen={classChoiceRemaining > 0}
-        className={classChoiceRemaining > 0 ? "appsheet-disclosure-attention" : ""}
-      >
-      {expertiseLimit > 0 && (
-        <AppPanel title="Expertise" className={expertise.length < expertiseLimit ? "appsheet-panel-attention" : ""} aside={<span className={expertise.length === expertiseLimit ? "appsheet-complete" : "appsheet-incomplete"}>{expertise.length < expertiseLimit ? `Choose ${expertiseLimit - expertise.length}` : "Complete"}</span>}>
-          <div className="appsheet-choice-list">
-            {proficientSkills.map((skill) => <ChoiceToggle key={skill.name} label={skill.name} meta={choiceAbility(skill.name)} checked={expertise.includes(skill.name)} disabled={model.readOnly || (!expertise.includes(skill.name) && expertise.length >= expertiseLimit)} onChange={() => automation.toggleExpertise(skill.name)} />)}
-          </div>
-          <AutoReason reason={`${klass?.title} progression grants Expertise in ${expertiseLimit} proficient ${expertiseLimit === 1 ? "skill" : "skills"} at this level.`} />
-        </AppPanel>
-      )}
-
-      {masteryCount > 0 && (
-        <AppPanel title="Weapon mastery" className={masteries.length < masteryCount ? "appsheet-panel-attention" : ""} aside={<span className={masteries.length === masteryCount ? "appsheet-complete" : "appsheet-incomplete"}>{masteries.length < masteryCount ? `Choose ${masteryCount - masteries.length}` : "Complete"}</span>}>
-          <div className="appsheet-choice-list compact">
-            {masteryWeapons.map((weapon) => <ChoiceToggle key={weapon.id} label={weapon.name} meta={weapon.carry} checked={masteries.includes(weapon.name)} disabled={model.readOnly || (!masteries.includes(weapon.name) && masteries.length >= masteryCount)} onChange={() => automation.toggleMastery(weapon.name)} />)}
-          </div>
-          <AutoReason reason={`${klass?.title} allows ${masteryCount} eligible weapon ${masteryCount === 1 ? "mastery" : "masteries"} at level ${card.level}.`} />
-        </AppPanel>
-      )}
-
-      {whisperLimit > 0 && (
-        <AppPanel title="Prepared Whispers" className={whispers.length < whisperLimit ? "appsheet-panel-attention" : ""} aside={<span className={whispers.length === whisperLimit ? "appsheet-complete" : "appsheet-incomplete"}>{whispers.length < whisperLimit ? `Choose ${whisperLimit - whispers.length}` : "Complete"}</span>}>
-          <div className="appsheet-choice-list">
-            {WHISPERS.map((whisper) => {
-              const reference = DEEPCALLER_WHISPERS.find((entry) => entry.id === whisper.id);
-              const meta = reference
-                ? `${whisperDamageAtLevel(reference, card.level)} ${reference.damageType} · ${reference.range}`
-                : undefined;
-              return <ChoiceToggle key={whisper.id} label={whisper.name} meta={meta} checked={whispers.includes(whisper.id)} disabled={model.readOnly || (!whispers.includes(whisper.id) && whispers.length >= whisperLimit)} onChange={() => automation.toggleWhisper(whisper.id)} />;
-            })}
-          </div>
-          <AutoReason reason={klass?.caster ? `${klass.title} progression and the Listener feat determine how many Whispers may be prepared.` : "The Listener feat grants one Whisper of your choice."} />
-        </AppPanel>
-      )}
-      </AppDisclosure>
-      )}
 
       <AppDisclosure
         title="Feats & tools"

@@ -12,11 +12,10 @@ import { AppCharacterSheet } from "../appsheet/AppCharacterSheet";
 import type { View4Panel } from "../view4/View4CharacterSheet";
 
 const STEPS = [1, 2, 3, 4, 5] as const;
-type CharacterViewMode = "app" | "quick" | "paper" | "hud";
+type CharacterViewMode = "quick" | "paper" | "hud";
 const VIEW_KEY = "cs-character-sheet-view";
 const VIEW_OPTIONS: ReadonlyArray<{ view: CharacterViewMode; label: string }> = [
   { view: "paper", label: "View 1" },
-  { view: "app", label: "View 2" },
   { view: "quick", label: "View 3" },
   { view: "hud", label: "View 4" },
 ];
@@ -45,7 +44,7 @@ export function PaperSheetModal({
   const [showInfo, setShowInfo] = useState(create);
   const [view, setViewState] = useState<CharacterViewMode>(() => {
     const saved = window.localStorage.getItem(VIEW_KEY);
-    return saved === "paper" || saved === "app" || saved === "quick" || saved === "hud" ? saved : "app";
+    return saved === "paper" || saved === "quick" || saved === "hud" ? saved : "hud";
   });
   const [viewMenuOpen, setViewMenuOpen] = useState(false);
   const [view4Panel, setView4Panel] = useState<View4Panel | null>(null);

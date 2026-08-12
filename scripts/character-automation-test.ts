@@ -17,6 +17,7 @@ import { migrateLegacyCharacter } from "../src/features/hunter/lib/legacyMigrati
 import { levelAdjustedPool } from "../src/features/hunter/lib/levelUpVitals";
 import { levelForInsight } from "../src/lib/insight";
 import { insightAwardPatch } from "../src/features/hunter/lib/insightAward";
+import { earnedLevel, upgradeFeatures } from "../src/features/hunter/components/view4/upgradeModel";
 
 assert.equal(levelForInsight(0), 1, "zero Insight is level one");
 assert.equal(levelForInsight(6), 2, "an Insight threshold immediately earns its level");
@@ -39,11 +40,12 @@ const warden = {
 
 const automaticLevel = insightAwardPatch({ ...warden, insight: 5, currentHp: 4, sanity: 3 }, 1);
 assert.equal(automaticLevel.insight, 6, "Insight awards are accumulated, not spent to level");
-assert.equal(automaticLevel.level, 2, "reaching an Insight threshold immediately levels the hunter");
-assert.equal(automaticLevel.lastSeenLevel, 2, "automatic levels do not reopen the retired confirmation prompt");
-assert.equal(automaticLevel.currentHp, 20, "automatic levels restore increased maximum HP");
-assert.equal(automaticLevel.sanity, 3, "unchanged maximum Sanity is not restored by a level");
+assert.deepEqual(automaticLevel, { insight: 6 }, "Insight unlocks an upgrade without changing the saved level or pools");
 assert.deepEqual(insightAwardPatch({ ...warden, level: 2, lastSeenLevel: 2, insight: 6 }, 1), { insight: 7 }, "additional Insight keeps the earned level and total");
+assert.equal(earnedLevel({ ...warden, insight: 6 }), 2, "the upgrade model exposes the level earned by Insight");
+const wardenUpgrade = upgradeFeatures(CLASSES.find((entry) => entry.id === "warden"), null, 1, 3);
+assert.ok(wardenUpgrade.some((feature) => feature.level === 2 && /Expertise/i.test(feature.name)), "the upgrade preview lists level two features");
+assert.ok(wardenUpgrade.some((feature) => feature.level === 3 && /Subclass/i.test(feature.name)), "the upgrade preview lists the subclass unlock");
 
 const levelOne = automationFor(warden);
 assert.equal(levelOne.fields.class, "Warden");

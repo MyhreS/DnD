@@ -1,11 +1,5 @@
 import type { HunterCard, SheetData } from "@/types";
 import { CharacterAutomationProvider } from "../papersheet/CharacterAutomationProvider";
-import { AppOverviewSection } from "./AppOverviewSection";
-import { AppAbilitiesSection } from "./AppAbilitiesSection";
-import { AppCombatSection } from "./AppCombatSection";
-import { AppGearSection } from "./AppGearSection";
-import { AppFeaturesSection } from "./AppFeaturesSection";
-import { AppNotesSection } from "./AppNotesSection";
 import { AppQuickView } from "./AppQuickView";
 import { View4CharacterSheet, type View4Panel } from "../view4/View4CharacterSheet";
 import type { AppSheetModel } from "./appSheetShared";
@@ -22,7 +16,7 @@ export function AppCharacterSheet({
   card,
   readOnly,
   onPendingEditChange,
-  mode = "app",
+  mode = "hud",
   view4Panel = null,
   onView4PanelChange,
 }: {
@@ -32,7 +26,7 @@ export function AppCharacterSheet({
   card: HunterCard;
   readOnly: boolean;
   onPendingEditChange?: (pending: boolean) => void;
-  mode?: "app" | "quick" | "hud";
+  mode?: "quick" | "hud";
   view4Panel?: View4Panel | null;
   onView4PanelChange: (panel: View4Panel | null) => void;
 }) {
@@ -46,7 +40,7 @@ export function AppCharacterSheet({
 
 function StagedCharacterSheet({ model, mode, view4Panel, onView4PanelChange }: {
   model: AppSheetModel;
-  mode: "app" | "quick" | "hud";
+  mode: "quick" | "hud";
   view4Panel: View4Panel | null;
   onView4PanelChange: (panel: View4Panel | null) => void;
 }) {
@@ -65,16 +59,9 @@ function StagedCharacterSheet({ model, mode, view4Panel, onView4PanelChange }: {
   >
     <div className="character-app-sheet" data-testid="app-character-sheet">
       <main className="appsheet-workspace">
-        {mode === "hud" ? <View4CharacterSheet model={stageModel} notesModel={model} panel={view4Panel} onPanelChange={onView4PanelChange} /> : mode === "quick" ? <AppQuickView model={stageModel} /> : <>
-          <AppOverviewSection model={stageModel} />
-          <AppCombatSection model={stageModel} />
-          <AppFeaturesSection model={stageModel} />
-          <AppAbilitiesSection model={stageModel} />
-          <AppGearSection model={stageModel} />
-          <AppNotesSection model={model} />
-        </>}
+        {mode === "hud" ? <View4CharacterSheet model={stageModel} notesModel={model} panel={view4Panel} onPanelChange={onView4PanelChange} /> : <AppQuickView model={stageModel} />}
       </main>
-      {!model.readOnly && <AppEditTray />}
+      {!model.readOnly && !(mode === "hud" && view4Panel === "upgrade") && <AppEditTray onResumeUpgrade={mode === "hud" ? () => onView4PanelChange("upgrade") : undefined} />}
     </div>
   </CharacterAutomationProvider>;
 }

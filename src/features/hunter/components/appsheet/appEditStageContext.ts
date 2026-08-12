@@ -4,8 +4,24 @@ import { automationFor } from "../../lib/characterAutomation";
 
 export type StagedPatch = Partial<HunterCard>;
 
+const UPGRADE_PATCH_KEYS = new Set<keyof HunterCard>([
+  "level",
+  "classId",
+  "backgroundId",
+  "subclassId",
+  "skillProficiencies",
+  "featSkills",
+  "preparedWhispers",
+  "sheetAutomation",
+]);
+
+export function hasStagedUpgrade(patch: StagedPatch): boolean {
+  return (Object.keys(patch) as Array<keyof HunterCard>).some((key) => UPGRADE_PATCH_KEYS.has(key));
+}
+
 export interface AppEditStageValue {
   patch: StagedPatch;
+  savedCard: HunterCard;
   previewCard: HunterCard;
   previewData: SheetData;
   currentResult: ReturnType<typeof automationFor>;
@@ -18,7 +34,7 @@ export interface AppEditStageValue {
   stageTransformation: (level: number) => void;
   stageChange: (fields: SheetData, patch: Partial<HunterCard>) => void;
   stageField: (field: string, value: string | boolean) => void;
-  apply: () => void;
+  apply: (extraPatch?: Partial<HunterCard>) => void;
   cancel: () => void;
 }
 

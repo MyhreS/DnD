@@ -500,6 +500,15 @@
   box-shadow: var(--app-shadow);
 }
 
+.appsheet-edit-tray.upgrade-draft {
+  grid-template-columns: minmax(150px, 1fr) auto;
+  width: min(620px, calc(100vw - 24px));
+}
+
+.appsheet-edit-tray.upgrade-draft .appsheet-edit-title b::after {
+  content: "Nothing is saved. Resume when you are ready.";
+}
+
 .appsheet-edit-title span,
 .appsheet-edit-title b {
   display: block;
@@ -597,19 +606,10 @@
 }
 
 @media (max-width: 640px) {
-  .character-editor-modal.view-app {
-    padding-inline: 8px;
-  }
-
   .character-app-sheet input:not([type="checkbox"]),
   .character-app-sheet select,
   .character-app-sheet textarea {
     font-size: 16px;
-  }
-
-  .view-app .papersheet-toolbar {
-    gap: 7px;
-    margin-bottom: 12px;
   }
 
   .appsheet-overview-layout,

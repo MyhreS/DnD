@@ -1,10 +1,11 @@
+import { useState } from "react";
 import { levelForInsight } from "@/lib/insight";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { AppAbilitiesSection } from "../appsheet/AppAbilitiesSection";
 import { AppFeaturesSection } from "../appsheet/AppFeaturesSection";
 import { AppGearSection } from "../appsheet/AppGearSection";
 import { sheetText } from "../appsheet/appSheetValues";
-import { useAppEditStage } from "../appsheet/appEditStageContext";
+import { hasStagedUpgrade, useAppEditStage } from "../appsheet/appEditStageContext";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { View4Equipment } from "./View4Equipment";
 import { View4Figure } from "./View4Figure";
@@ -16,12 +17,13 @@ import { View4Progress } from "./View4Progress";
 import { View4Resources } from "./View4Resources";
 import { View4Notes } from "./View4Notes";
 import { View4Sanity } from "./View4Sanity";
+import { View4Upgrade } from "./View4Upgrade";
 
-export type View4Panel = "profile" | "abilities" | "features" | "inventory" | "notes" | "equipment" | "health" | "sanity" | "progress" | "resources";
+export type View4Panel = "profile" | "abilities" | "features" | "inventory" | "notes" | "equipment" | "health" | "sanity" | "progress" | "resources" | "upgrade";
 const PANELS: Record<View4Panel, { title: string; eyebrow: string }> = {
   profile: { title: "Hunter & build", eyebrow: "Identity, class and background" },
   abilities: { title: "Abilities & skills", eyebrow: "Scores, saves and proficiencies" },
-  features: { title: "Features & choices", eyebrow: "Class progression, feats and tools" },
+  features: { title: "Features", eyebrow: "Class progression, feats and tools" },
   inventory: { title: "Inventory", eyebrow: "Gear, carrying and found items" },
   notes: { title: "Notes", eyebrow: "Clues, promises and transformations" },
   equipment: { title: "Equipment", eyebrow: "Choose what your hunter wears" },
@@ -29,6 +31,7 @@ const PANELS: Record<View4Panel, { title: string; eyebrow: string }> = {
   sanity: { title: "Sanity", eyebrow: "Your hunter's remaining grip" },
   progress: { title: "Insight & level", eyebrow: "Knowledge earned through the hunt" },
   resources: { title: "Resources", eyebrow: "Hit dice, strains and death saves" },
+  upgrade: { title: "Upgrade character", eyebrow: "Preview, choose and apply" },
 };
 const LEFT: Array<{ panel: View4Panel; icon: View4IconName; label: string }> = [
   { panel: "profile", icon: "profile", label: "Hunter" },
@@ -59,8 +62,10 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange }:
   const sanityMax = numberOf(result.fields.sanityMax);
   const sanity = stage.previewCard.sanity ?? sanityMax;
   const insight = stage.previewCard.insight ?? numberOf(sheetText(model.data, "insight"));
-  const displayedLevel = Math.max(stage.previewCard.level, levelForInsight(insight));
-  const pending = Object.values(result.pending).filter(Boolean).length;
+  const displayedLevel = stage.savedCard.level;
+  const earned = Math.max(stage.savedCard.level, levelForInsight(insight));
+  const upgradePending = earned > stage.savedCard.level || hasStagedUpgrade(stage.patch) || Object.values(result.pending).some(Boolean);
+  const [completedUpgrade, setCompletedUpgrade] = useState(0);
   const overlay = panel ? PANELS[panel] : null;
   return <div
     className="v4-sheet"
@@ -74,9 +79,9 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange }:
   >
     <header className="v4-identity">
       <button type="button" onClick={() => onPanelChange("profile")}><small>{klass?.title ?? "Unbound hunter"}</small><h1>{name}</h1><span>{background?.name ?? "No background"}</span></button>
-      <div><button type="button" onClick={() => onPanelChange("progress")}><small>Level</small><strong>{displayedLevel}</strong></button><button type="button" onClick={() => onPanelChange("progress")}><small>Insight</small><strong>{insight}</strong></button></div>
+      <div><button className={upgradePending ? "v4-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Level</small><strong>{displayedLevel}</strong></button><button className={upgradePending ? "v4-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Insight</small><strong>{insight}</strong></button></div>
     </header>
-    {pending > 0 && <button className="v4-pending" type="button" onClick={() => onPanelChange("profile")}><span>!</span>{pending} choice{pending === 1 ? "" : "s"} waiting</button>}
+    {completedUpgrade > 0 && <span key={completedUpgrade} className="v4-upgrade-complete" role="status">Upgrade complete</span>}
     <div className="v4-stage">
       <div className="v4-rail v4-rail-left"><Rail items={LEFT} open={onPanelChange} /></div>
       <button className="v4-character" type="button" aria-label="Open equipment slots" onClick={() => onPanelChange("equipment")}><span>Tap to equip</span><View4Figure classId={card.classId} /><small><View4Icon name="armor" /> Equipment</small></button>
@@ -94,7 +99,7 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange }:
     </section>
     <button className="v4-inventory-shortcut" type="button" onClick={() => onPanelChange("inventory")}><View4Icon name="inventory" /><span>Inventory</span><small>{card.inventory?.reduce((sum, item) => sum + item.qty, 0) ?? 0} carried</small></button>
     {panel && overlay && <View4Overlay title={overlay.title} eyebrow={overlay.eyebrow} panel={panel} onClose={() => onPanelChange(null)}>
-      {panel === "profile" && <View4Hunter model={model} onOpen={onPanelChange} />}
+      {panel === "profile" && <View4Hunter model={model} />}
       {panel === "abilities" && <AppAbilitiesSection model={model} />}
       {panel === "features" && <AppFeaturesSection model={model} includeClassReferences />}
       {panel === "inventory" && <AppGearSection model={model} hideArmor hideGoldSummary includeDamageBonuses />}
@@ -102,8 +107,9 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange }:
       {panel === "equipment" && <View4Equipment model={model} />}
       {panel === "health" && <View4Health model={model} />}
       {panel === "sanity" && <View4Sanity model={model} />}
-      {panel === "progress" && <View4Progress model={model} />}
+      {panel === "progress" && <View4Progress model={model} upgradePending={upgradePending} onUpgrade={() => onPanelChange("upgrade")} />}
       {panel === "resources" && <View4Resources model={model} />}
+      {panel === "upgrade" && <View4Upgrade model={model} onOpenHunter={() => onPanelChange("profile")} onComplete={() => { setCompletedUpgrade((value) => value + 1); onPanelChange(null); }} />}
     </View4Overlay>}
   </div>;
 }

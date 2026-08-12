@@ -1,46 +1,16 @@
-import { ABILITIES, ABILITY_NAME, MADUHAUSU_MAX, MADUHAUSU_MIN, POINT_BUY_MAX, POINT_BUY_MIN } from "@/data/abilities";
-import { TOOL_PROFICIENCIES } from "@/data/characterOptions";
-import { SHEET_SKILL_FIELD, SKILL_BY_NAME, SKILLS } from "@/data/skills";
+import { ABILITIES, MADUHAUSU_MAX, MADUHAUSU_MIN, POINT_BUY_MAX, POINT_BUY_MIN } from "@/data/abilities";
+import { SHEET_SKILL_FIELD, SKILLS } from "@/data/skills";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import type { BuyMode } from "../../lib/abilityBuy";
-import {
-  AppDisclosure,
-  AppPanel,
-  AppSection,
-  AppSelect,
-  AutoReason,
-  ChoiceToggle,
-  PendingNotice,
-  type AppSheetModel,
-} from "./appSheetShared";
+import { AppDisclosure, AppPanel, AppSection, AppSelect, AutoReason, type AppSheetModel } from "./appSheetShared";
 
 export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
   const automation = useCharacterAutomation();
-  const { card, result, state, klass, background, base, bonuses, pointsLeft, bonusUsed } = automation;
-  const setupComplete = state.setupComplete === true;
-  const canEditCreationScores = !setupComplete || card.level === 1;
-  const classChoices = state.classSkills ?? [];
-  const featChoices = card.featSkills ?? [];
-  const classRemaining = Math.max(0, (klass?.skillChoices.count ?? 0) - classChoices.length);
-  const featRemaining = background?.feat === "Skilled" ? Math.max(0, 3 - featChoices.length) : 0;
-  const ready = !!card.classId
-    && !!card.backgroundId
-    && pointsLeft === 0
-    && bonusUsed === 3
-    && classRemaining === 0
-    && featRemaining === 0;
-  const choiceAbility = (choice: string) => {
-    const skill = SKILL_BY_NAME[choice];
-    return skill ? `Ability: ${ABILITY_NAME[skill.ability]}` : "No ability required";
-  };
+  const { card, result, state, background, base, bonuses, pointsLeft } = automation;
+  const canEditCreationScores = state.setupComplete !== true || card.level === 1;
 
   return (
-    <AppSection
-      id="appsheet-abilities"
-      title="Abilities & skills"
-      defaultOpen={classRemaining + featRemaining > 0 || (!setupComplete && ((pointsLeft != null && pointsLeft > 0) || bonusUsed < 3))}
-      attention={classRemaining + featRemaining > 0 || (!setupComplete && ((pointsLeft != null && pointsLeft > 0) || bonusUsed < 3))}
-    >
+    <AppSection id="appsheet-abilities" title="Abilities & skills">
       {canEditCreationScores && (
         <AppPanel title="Build ability scores" aside={<span className={pointsLeft === 0 ? "appsheet-complete" : "appsheet-incomplete"}>{pointsLeft ?? "Invalid"} points left</span>}>
           <AppSelect label="Ability method" value={automation.mode} disabled={model.readOnly} onChange={(event) => automation.switchMode(event.target.value as BuyMode)}>
@@ -51,100 +21,44 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
             {ABILITIES.map((ability) => {
               const min = automation.mode === "maduhausu" ? MADUHAUSU_MIN : POINT_BUY_MIN;
               const max = automation.mode === "maduhausu" ? MADUHAUSU_MAX : POINT_BUY_MAX;
-              const eligible = background?.abilityScores.includes(ability.key) ?? false;
               return (
                 <div key={ability.key}>
                   <span className="appsheet-ability-name"><b>{ability.short}</b>{ability.name}</span>
                   <AppSelect label="Base" aria-label={`${ability.name} app base`} value={base[ability.key]} disabled={model.readOnly} onChange={(event) => automation.setBase(ability.key, Number(event.target.value))}>
                     {Array.from({ length: max - min + 1 }, (_, index) => min + index).map((score) => <option key={score}>{score}</option>)}
                   </AppSelect>
-                  <AppSelect label="Background" aria-label={`${ability.name} app background bonus`} value={bonuses[ability.key] ?? 0} disabled={model.readOnly || !eligible} onChange={(event) => automation.setBonus(ability.key, Number(event.target.value))}>
-                    <option value="0">+0</option><option value="1">+1</option><option value="2">+2</option>
-                  </AppSelect>
+                  <span className="appsheet-ability-background">Background +{bonuses[ability.key] ?? 0}</span>
                   <output>{card.abilities[ability.key]}</output>
                 </div>
               );
             })}
           </div>
-          <AutoReason reason={background ? `${background.name} allows bonuses to ${background.abilityScores.map((key) => key.toUpperCase()).join(", ")}; exactly 3 bonus points are required.` : "Choose a background to reveal which abilities can receive its 3 bonus points."} />
+          <AutoReason reason={background ? `${background.name} allows bonuses to ${background.abilityScores.map((key) => key.toUpperCase()).join(", ")}; assign them in Upgrade.` : "Choose a background in Hunter & build, then assign its ability bonuses in Upgrade."} />
         </AppPanel>
       )}
-
-      <AppDisclosure
-        key={classRemaining + featRemaining > 0 ? "skills-pending" : "skills-complete"}
-        title="Skill proficiency choices"
-        summary={klass ? `${card.skillProficiencies.length} proficient · ${classRemaining + featRemaining} choices remaining · open to update` : "Choose a class first"}
-        aside={classRemaining + featRemaining > 0 ? <span className="appsheet-incomplete">Action needed</span> : undefined}
-        defaultOpen={classRemaining + featRemaining > 0}
-        className={classRemaining + featRemaining > 0 ? "appsheet-disclosure-attention" : ""}
-      >
-      {klass ? (
-        <AppPanel title={`${klass.title} skill choices`} className={classRemaining ? "appsheet-panel-attention" : ""} aside={<span className={classRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{classRemaining ? `Choose ${classRemaining}` : "Complete"}</span>}>
-          <div className="appsheet-choice-list">
-            {klass.skillChoices.options.map((skill) => (
-              <ChoiceToggle key={skill} label={skill} meta={choiceAbility(skill)} checked={classChoices.includes(skill)} disabled={model.readOnly} onChange={() => automation.toggleClassSkill(skill)} />
-            ))}
-          </div>
-          <AutoReason reason={`${klass.title} grants ${klass.skillChoices.count} class skill proficiencies. Background skills are added separately.`} />
-        </AppPanel>
-      ) : (
-        <PendingNotice><b>Choose a class on Overview</b><p>Your available class skills depend on that choice.</p></PendingNotice>
-      )}
-
-      {background?.feat === "Skilled" && (
-        <AppPanel title="Skilled feat choices" className={featRemaining ? "appsheet-panel-attention" : ""} aside={<span className={featRemaining ? "appsheet-incomplete" : "appsheet-complete"}>{featRemaining ? `Choose ${featRemaining}` : "Complete"}</span>}>
-          <div className="appsheet-choice-list compact">
-            {[...SKILLS.map((skill) => skill.name), ...TOOL_PROFICIENCIES].map((choice) => (
-              <ChoiceToggle key={choice} label={choice} meta={choiceAbility(choice)} checked={featChoices.includes(choice)} disabled={model.readOnly} onChange={() => automation.toggleFeatSkill(choice)} />
-            ))}
-          </div>
-          <AutoReason reason="The Skilled background feat grants any combination of three skills or tool proficiencies." />
-        </AppPanel>
-      )}
-      </AppDisclosure>
 
       <AppPanel title="Final abilities and saves">
         <div className="appsheet-final-abilities">
           {ABILITIES.map((ability) => (
             <div className="appsheet-final-score" key={ability.key}>
-              <span>{ability.name}</span>
-              <strong>{result.fields[`${ability.key}Score`]}</strong>
-              <b>{result.fields[`${ability.key}Mod`]}</b>
-              <small>Save {result.fields[`${ability.key}Save`]}</small>
+              <span>{ability.name}</span><strong>{result.fields[`${ability.key}Score`]}</strong><b>{result.fields[`${ability.key}Mod`]}</b><small>Save {result.fields[`${ability.key}Save`]}</small>
               <AutoReason reason={result.reasons[`${ability.key}Save`]} />
             </div>
           ))}
         </div>
       </AppPanel>
 
-      <AppDisclosure
-        title="All skill bonuses"
-        summary={`${SKILLS.filter((skill) => result.fields[`${SHEET_SKILL_FIELD[skill.name]}P`] === true).length} proficient · passive Perception ${result.fields.passivePerception}`}
-      >
-      <AppPanel title="Calculated skills" aside={<span className="appsheet-status-word">Rules-linked</span>}>
-        <div className="appsheet-skill-table">
-          {SKILLS.map((skill) => {
-            const field = SHEET_SKILL_FIELD[skill.name];
-            const proficient = result.fields[`${field}P`] === true;
-            return (
-              <div key={skill.name} className={proficient ? "proficient" : ""}>
-                <span className="appsheet-skill-prof" aria-label={proficient ? "Proficient" : "Not proficient"}>{proficient ? "●" : "○"}</span>
-                <span><b>{skill.name}</b><small>{skill.ability.toUpperCase()}</small></span>
-                <strong>{result.fields[field]}</strong>
-                <AutoReason reason={result.reasons[field]} />
-              </div>
-            );
-          })}
-        </div>
-      </AppPanel>
+      <AppDisclosure title="All skill bonuses" summary={`${SKILLS.filter((skill) => result.fields[`${SHEET_SKILL_FIELD[skill.name]}P`] === true).length} proficient · passive Perception ${result.fields.passivePerception}`}>
+        <AppPanel title="Calculated skills" aside={<span className="appsheet-status-word">Rules-linked</span>}>
+          <div className="appsheet-skill-table">
+            {SKILLS.map((skill) => {
+              const field = SHEET_SKILL_FIELD[skill.name];
+              const proficient = result.fields[`${field}P`] === true;
+              return <div key={skill.name} className={proficient ? "proficient" : ""}><span className="appsheet-skill-prof" aria-label={proficient ? "Proficient" : "Not proficient"}>{proficient ? "●" : "○"}</span><span><b>{skill.name}</b><small>{skill.ability.toUpperCase()}</small></span><strong>{result.fields[field]}</strong><AutoReason reason={result.reasons[field]} /></div>;
+            })}
+          </div>
+        </AppPanel>
       </AppDisclosure>
-
-      {!setupComplete && !model.readOnly && (
-        <div className="appsheet-finish-bar">
-          <div><b>{ready ? "Character decisions complete" : "Finish the remaining decisions"}</b><span>Lock creation scores when you are ready. Level-up choices remain available later.</span></div>
-          <button type="button" disabled={!ready} onClick={automation.finishSetup}>Finish setup</button>
-        </div>
-      )}
     </AppSection>
   );
 }

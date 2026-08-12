@@ -20,22 +20,19 @@ export function AppSection({
   children,
   defaultOpen = false,
   id,
-  attention = false,
 }: {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
   id?: string;
-  attention?: boolean;
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const expanded = useContext(AppSectionsExpandedContext);
 
   return (
-    <details id={id} className={`appsheet-section ${attention ? "appsheet-section-attention" : ""}`.trim()} open={expanded || isOpen} onToggle={(event) => { if (!expanded) setIsOpen(event.currentTarget.open); }}>
+    <details id={id} className="appsheet-section" open={expanded || isOpen} onToggle={(event) => { if (!expanded) setIsOpen(event.currentTarget.open); }}>
       <summary>
         <h2>{title}</h2>
-        {attention && <span className="appsheet-section-attention-label">Action needed</span>}
         <span className="appsheet-section-icon" aria-hidden="true" />
       </summary>
       <div className="appsheet-section-content">{children}</div>
