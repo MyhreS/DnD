@@ -66,22 +66,30 @@ function WeaponRow({ item, quantity, card }: { item: Item; quantity: number; car
   );
 }
 
+export function AppWeaponDamageBonuses({ card, klass, contextLabel = "Class & feats", reason = "Conditional damage bonuses use this hunter's class, subclass, progression, and selected feats." }: {
+  card: HunterCard;
+  klass: HunterClass | undefined;
+  contextLabel?: string;
+  reason?: string;
+}) {
+  if (!klass) return null;
+  const bonuses = bonusesFor(card, klass);
+  return <AppPanel title="Potential damage bonuses" aside={<span className="appsheet-status-word">{contextLabel}</span>}>
+    <div className="appsheet-weapon-bonuses">{bonuses.map((bonus) => <div key={bonus.label}><span><b>{bonus.label}</b><small>{bonus.detail}</small></span><strong>{bonus.value}</strong></div>)}</div>
+    <AutoReason reason={reason} />
+    <Link to="/codex?group=Game%20Card&q=weapons">Open the complete weapons table in Codex</Link>
+  </AppPanel>;
+}
+
 export function AppWeaponReference({ card, klass }: { card: HunterCard; klass: HunterClass | undefined }) {
   if (!klass) return null;
   const weapons = resolveInventory(card).filter(({ item }) => item.category === "Weapon");
-  const bonuses = bonusesFor(card, klass);
   return (
     <AppDisclosure title="Weapons" summary={`${weapons.length} carried type${weapons.length === 1 ? "" : "s"} · ${klass.weaponProficiencies}`} className="appsheet-weapons-disclosure">
       <AppPanel title="Carried weapon reference" aside={<span className="appsheet-status-word">Damage & type</span>}>
         {weapons.length ? <div className="appsheet-rite-reference-list">{weapons.map(({ item, qty }) => <WeaponRow key={item.id} item={item} quantity={qty} card={card} />)}</div> : <p className="appsheet-empty-copy">Add a weapon in Gear & carrying to see its damage and type here.</p>}
       </AppPanel>
-      <AppPanel title="Potential damage bonuses" aside={<span className="appsheet-status-word">Level {card.level}</span>}>
-        <div className="appsheet-weapon-bonuses">
-          {bonuses.map((bonus) => <div key={bonus.label}><span><b>{bonus.label}</b><small>{bonus.detail}</small></span><strong>{bonus.value}</strong></div>)}
-        </div>
-        <AutoReason reason="Weapon damage and properties come from the handbook Weapons table. Conditional bonuses use this hunter's current class, subclass, level, and selected feats." />
-        <Link to="/codex?group=Game%20Card&q=weapons">Open the complete weapons table in Codex</Link>
-      </AppPanel>
+      <AppWeaponDamageBonuses card={card} klass={klass} contextLabel={`Level ${card.level}`} reason="Weapon damage and properties come from the handbook Weapons table. Conditional bonuses use this hunter's current class, subclass, level, and selected feats." />
     </AppDisclosure>
   );
 }

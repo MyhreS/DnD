@@ -1,22 +1,16 @@
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { sheetBool, sheetText } from "../appsheet/appSheetValues";
-import { useAppEditStage } from "../appsheet/appEditStageContext";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { View4ResourceControl } from "./View4ResourceControl";
 import { view4Number } from "./view4Values";
 
 export function View4Resources({ model }: { model: AppSheetModel }) {
-  const stage = useAppEditStage();
   const { card, klass, result } = useCharacterAutomation();
   const strainMax = view4Number(result.fields.strainMax);
   const disabled = model.readOnly;
-  const setNumber = (field: string, patchKey?: "insight" | "coins") => (value: number) => {
-    model.setFields({ [field]: String(value) }, patchKey ? { [patchKey]: value } : {});
-  };
+  const setNumber = (field: string) => (value: number) => model.setField(field, String(value));
   return <div className="v4-resource-layout">
-    <section className="v4-resource-group"><h3>Other resources</h3><div className="v4-resource-grid">
-      <View4ResourceControl label="Transformation" value={stage.previewCard.transformationLevel ?? 0} max={10} disabled={disabled} onChange={stage.stageTransformation} />
-      <View4ResourceControl label="Gold" value={card.coins ?? 0} disabled={disabled} onChange={setNumber("coins", "coins")} />
+    <section className="v4-resource-group"><h3>Recovery</h3><div className="v4-resource-grid">
       <View4ResourceControl label="Hit dice left" value={view4Number(sheetText(model.data, "hdCur"), view4Number(result.fields.hdMax))} max={view4Number(result.fields.hdMax)} disabled={disabled} onChange={setNumber("hdCur")} />
       <View4ResourceControl label="Hit dice spent" value={view4Number(sheetText(model.data, "hdSpent"))} max={view4Number(result.fields.hdMax)} disabled={disabled} onChange={setNumber("hdSpent")} />
       {klass?.caster && <View4ResourceControl label="Strains left" value={view4Number(sheetText(model.data, "strainCur"), strainMax)} max={strainMax} disabled={disabled} onChange={setNumber("strainCur")} />}

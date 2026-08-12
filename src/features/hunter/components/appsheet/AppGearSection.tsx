@@ -10,6 +10,7 @@ import { useCharacterAutomation } from "../papersheet/characterAutomationContext
 import { CarryingCustomization } from "./CarryingCustomization";
 import { InventoryAddDialog } from "./InventoryAddDialog";
 import { CatalogItemForm, UniqueItemForm, type FoundItemDraft } from "./InventoryAddForms";
+import { AppWeaponDamageBonuses } from "./AppWeaponReference";
 import {
   AppDisclosure,
   AppPanel,
@@ -24,10 +25,16 @@ export function AppGearSection({
   model,
   defaultOpen = false,
   quickView = false,
+  hideArmor = false,
+  hideGoldSummary = false,
+  includeDamageBonuses = false,
 }: {
   model: AppSheetModel;
   defaultOpen?: boolean;
   quickView?: boolean;
+  hideArmor?: boolean;
+  hideGoldSummary?: boolean;
+  includeDamageBonuses?: boolean;
 }) {
   const automation = useCharacterAutomation();
   const { card, result } = automation;
@@ -46,7 +53,7 @@ export function AppGearSection({
     weaponNotes: "",
   });
   const closeAddMenu = useCallback(() => setAddMenuOpen(false), []);
-  const inventory = resolveInventory(card);
+  const inventory = resolveInventory(card).filter(({ item }) => !hideArmor || item.category !== "Armor");
   const slots = computeSlots(card);
   const catalog = useMemo(() => ITEMS.filter((item) => item.category !== "Armor"), []);
   const weapons = inventory.filter(({ item }) => item.category === "Weapon");
@@ -71,7 +78,7 @@ export function AppGearSection({
   return (
     <AppSection title="Gear & carrying" defaultOpen={defaultOpen}>
       <div className="appsheet-focus-strip appsheet-gear-summary">
-        <DerivedValue label="Gold" value={card.coins ?? 0} reason="Saved gold pieces; coins do not consume carrying slots." />
+        {!hideGoldSummary && <DerivedValue label="Gold" value={card.coins ?? 0} reason="Saved gold pieces; coins do not consume carrying slots." />}
         <DerivedValue label="Carried weight" value={result.fields.weight} reason={result.reasons.weight} />
         <DerivedValue label="Load" value={result.fields.weightCondition} reason={result.reasons.weightCondition} />
         <DerivedValue label="Unassigned" value={slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} reason="Significant and oversized items stay unassigned until you choose a carrying slot." />
@@ -190,6 +197,7 @@ export function AppGearSection({
         ) : <p className="appsheet-empty-copy">Carried catalog weapons appear here automatically.</p>}
         <AutoReason reason="Catalog weapon damage, properties, and mastery are transcribed from the handbook Weapons table. The Hunter Cleaver has no published statistics and remains explicitly DM-set." />
       </AppPanel>
+      {includeDamageBonuses && <AppWeaponDamageBonuses card={card} klass={automation.klass} />}
       </AppDisclosure>
 
       {!model.readOnly && quickView && (
