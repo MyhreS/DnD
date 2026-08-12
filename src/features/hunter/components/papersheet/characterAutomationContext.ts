@@ -33,6 +33,7 @@ export interface CharacterAutomationController {
   toggleMastery: (weapon: string) => void;
   toggleWhisper: (id: string) => void;
   setLevelChoice: (key: string, value: string) => void;
+  setUpgradeFeat: (key: string, feat: string, bonuses: Partial<Record<AbilityKey, number>>) => void;
   setBase: (key: AbilityKey, value: number) => void;
   setBonus: (key: AbilityKey, value: number) => void;
   switchMode: (mode: BuyMode) => void;

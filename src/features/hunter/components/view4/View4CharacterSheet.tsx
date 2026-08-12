@@ -109,7 +109,7 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange }:
       {panel === "sanity" && <View4Sanity model={model} />}
       {panel === "progress" && <View4Progress model={model} upgradePending={upgradePending} onUpgrade={() => onPanelChange("upgrade")} />}
       {panel === "resources" && <View4Resources model={model} />}
-      {panel === "upgrade" && <View4Upgrade model={model} onOpenHunter={() => onPanelChange("profile")} onComplete={() => { setCompletedUpgrade((value) => value + 1); onPanelChange(null); }} />}
+      {panel === "upgrade" && <View4Upgrade model={model} onComplete={() => { setCompletedUpgrade((value) => value + 1); onPanelChange(null); }} />}
     </View4Overlay>}
   </div>;
 }

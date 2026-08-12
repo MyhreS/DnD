@@ -110,10 +110,17 @@ function normalizedAutomation(card: HunterCard): SheetAutomationState {
   return { version: 1, classSkills, backgroundBonuses, setupComplete: existingWrittenSheet };
 }
 
-function finalAbilities(card: HunterCard, bonuses: Partial<Record<AbilityKey, number>>) {
+function finalAbilities(
+  card: HunterCard,
+  bonuses: Partial<Record<AbilityKey, number>>,
+  levelBonuses = card.sheetAutomation?.levelAbilityBonuses ?? {},
+) {
   const base = card.baseAbilities ?? card.abilities;
   return Object.fromEntries(
-    ABILITY_KEYS.map((key) => [key, base[key] + (bonuses[key] ?? 0)]),
+    ABILITY_KEYS.map((key) => [
+      key,
+      base[key] + (bonuses[key] ?? 0) + Object.values(levelBonuses).reduce((sum, entry) => sum + (entry[key] ?? 0), 0),
+    ]),
   ) as HunterCard["abilities"];
 }
 
@@ -285,6 +292,31 @@ export function CharacterAutomationProvider({
     if (choice) levelChoices[key] = value;
     else delete levelChoices[key];
     commit({ sheetAutomation: { ...state, levelChoices } });
+  }
+
+  function setUpgradeFeat(key: string, feat: string, nextBonuses: Partial<Record<AbilityKey, number>>) {
+    const levelFeats = { ...(state.levelFeats ?? {}) };
+    const levelAbilityBonuses = { ...(state.levelAbilityBonuses ?? {}) };
+    const levelChoices = { ...(state.levelChoices ?? {}) };
+    if (feat) {
+      levelFeats[key] = feat;
+      levelAbilityBonuses[key] = nextBonuses;
+      const increases = ABILITY_KEYS.filter((ability) => (nextBonuses[ability] ?? 0) > 0)
+        .map((ability) => `${ability.toUpperCase()} +${nextBonuses[ability]}`);
+      levelChoices[key] = [feat, increases.join(", ")].filter(Boolean).join(" — ");
+    } else {
+      delete levelFeats[key];
+      delete levelAbilityBonuses[key];
+      delete levelChoices[key];
+    }
+    const managedBefore = new Set(Object.values(state.levelFeats ?? {}));
+    const unmanagedFeats = (card.feats ?? []).filter((name) => !managedBefore.has(name));
+    const nextState = { ...state, levelChoices, levelFeats, levelAbilityBonuses };
+    commit({
+      feats: [...new Set([...unmanagedFeats, ...Object.values(levelFeats)])],
+      abilities: finalAbilities(card, bonuses, levelAbilityBonuses),
+      sheetAutomation: nextState,
+    });
   }
 
   function setBase(key: AbilityKey, value: number) {
@@ -477,6 +509,7 @@ export function CharacterAutomationProvider({
     toggleMastery,
     toggleWhisper,
     setLevelChoice,
+    setUpgradeFeat,
     setBase,
     setBonus,
     switchMode,

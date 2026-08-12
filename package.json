@@ -40,7 +40,7 @@
     "migrate:character-sheets": "bun scripts/migrate-character-sheets.ts",
     "migrate:battle-view": "doppler run -- bun scripts/migrate-battle-view.ts",
     "migrate:enemy-library": "doppler run -- bun scripts/migrate-enemy-library.ts",
-    "codex:generate": "node scripts/generate-codex-data.mjs",
+    "codex:generate": "node scripts/generate-codex-data.mjs && node scripts/generate-feats-data.mjs",
     "test:codex": "bun scripts/codex-data-test.ts",
     "smoke": "doppler run -- bun scripts/smoke-rules.mjs",
     "icons": "bun run scripts/generate-icons.mjs",
