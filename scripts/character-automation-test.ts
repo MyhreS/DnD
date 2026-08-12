@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import { emptySheetCard } from "../src/lib/character";
 import { CLASSES } from "../src/data/classes";
 import { BACKGROUNDS } from "../src/data/backgrounds";
+import { EPIC_BOON_FEATS, FIGHTING_STYLE_FEATS, GENERAL_FEATS } from "../src/data/feats";
 import { ITEMS } from "../src/data/items";
 import { startingKit } from "../src/lib/startingEquipment";
 import { availableSlotAssignmentOptions, computeSlots, slotAssignmentOptions } from "../src/lib/slots";
@@ -17,7 +18,7 @@ import { migrateLegacyCharacter } from "../src/features/hunter/lib/legacyMigrati
 import { levelAdjustedPool } from "../src/features/hunter/lib/levelUpVitals";
 import { levelForInsight } from "../src/lib/insight";
 import { insightAwardPatch } from "../src/features/hunter/lib/insightAward";
-import { earnedLevel, upgradeFeatures } from "../src/features/hunter/components/view4/upgradeModel";
+import { earnedLevel, upgradeFeatureComplete, upgradeFeatures } from "../src/features/hunter/components/view4/upgradeModel";
 
 assert.equal(levelForInsight(0), 1, "zero Insight is level one");
 assert.equal(levelForInsight(6), 2, "an Insight threshold immediately earns its level");
@@ -46,6 +47,12 @@ assert.equal(earnedLevel({ ...warden, insight: 6 }), 2, "the upgrade model expos
 const wardenUpgrade = upgradeFeatures(CLASSES.find((entry) => entry.id === "warden"), null, 1, 3);
 assert.ok(wardenUpgrade.some((feature) => feature.level === 2 && /Expertise/i.test(feature.name)), "the upgrade preview lists level two features");
 assert.ok(wardenUpgrade.some((feature) => feature.level === 3 && /Subclass/i.test(feature.name)), "the upgrade preview lists the subclass unlock");
+assert.equal(GENERAL_FEATS.length, 29, "all general feats are parsed from the handbook");
+assert.equal(FIGHTING_STYLE_FEATS.length, 9, "all fighting styles are available inside upgrades");
+assert.equal(EPIC_BOON_FEATS.length, 9, "all epic boons are available inside upgrades");
+const abilityImprovement = upgradeFeatures(CLASSES[0], null, 3, 4).find((feature) => feature.name === "Ability Score Improvement")!;
+assert.equal(upgradeFeatureComplete(abilityImprovement, { version: 1, classSkills: [], backgroundBonuses: {}, levelFeats: { [abilityImprovement.key]: "Ability Score Improvement" }, levelAbilityBonuses: { [abilityImprovement.key]: { str: 2 } } }), true, "a fully assigned structured ASI completes its upgrade page");
+assert.equal(upgradeFeatureComplete(abilityImprovement, { version: 1, classSkills: [], backgroundBonuses: {}, levelFeats: { [abilityImprovement.key]: "Ability Score Improvement" }, levelAbilityBonuses: { [abilityImprovement.key]: { str: 1 } } }), false, "an unassigned ASI point keeps the upgrade incomplete");
 
 const levelOne = automationFor(warden);
 assert.equal(levelOne.fields.class, "Warden");
@@ -78,6 +85,8 @@ const levelFive = automationFor({ ...warden, level: 5 });
 assert.equal(levelFive.fields.profBonus, "+3");
 assert.match(String(levelFive.fields.features1), /Level 5.*Effectiveness/i);
 assert.match(String(levelFive.fields.features1), /Bands Directive Die: D8/i);
+const boonHealth = automationFor({ ...warden, level: 19, feats: ["Boon of Fortitude"] });
+assert.equal(Number(boonHealth.fields.hpMax) - Number(automationFor({ ...warden, level: 19 }).fields.hpMax), 40, "Boon of Fortitude previews its 40 maximum HP increase");
 
 const levelThree = automationFor({ ...warden, level: 3 });
 assert.equal(levelThree.pending.subclass?.remaining, 1);

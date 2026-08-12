@@ -454,6 +454,10 @@ export interface SheetAutomationState {
   /** Free-form decisions from level features that do not have a dedicated
    * mechanical selector yet, keyed by `level:feature name`. */
   levelChoices?: Record<string, string>;
+  /** Structured feat picks made at individual level-up steps. */
+  levelFeats?: Record<string, string>;
+  /** Ability increases granted by each structured level-up feat. */
+  levelAbilityBonuses?: Record<string, Partial<Record<AbilityKey, number>>>;
   backgroundBonuses: Partial<Record<AbilityKey, number>>;
   startingKitApplied?: boolean;
   setupComplete?: boolean;

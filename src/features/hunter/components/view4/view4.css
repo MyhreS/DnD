@@ -253,49 +253,72 @@
 .v4-upgrade-launch.pending { border-color: color-mix(in srgb, var(--app-warm), transparent 18%) !important; background: color-mix(in srgb, var(--app-surface), var(--app-warm) 12%) !important; color: var(--app-text) !important; animation: v4-upgrade-glow 1.8s ease-in-out infinite; }
 .v4-upgrade-launch small { color: var(--app-faint); font: 12px/1.3 "Alegreya", serif; }
 
-.v4-upgrade-flow { display: grid; gap: 26px; padding-bottom: 12px; }
-.v4-upgrade-hero { display: grid; gap: 12px; padding: 2px 2px 23px; border-bottom: 1px solid var(--app-line); }
-.v4-upgrade-hero > span, .v4-upgrade-section header > span { color: var(--app-warm); font-size: 10px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
-.v4-upgrade-hero > div { display: flex; align-items: center; gap: 16px; }
-.v4-upgrade-hero > div small { color: var(--app-muted); font: 600 20px/1 "Cinzel", serif; }
-.v4-upgrade-hero > div i { color: var(--app-warm); font-style: normal; }
-.v4-upgrade-hero > div strong { color: var(--app-warm); font: 600 clamp(30px, 5vw, 46px)/1 "Cinzel", serif; }
-.v4-upgrade-hero p, .v4-upgrade-empty { margin: 0; color: var(--app-muted); font: 14px/1.45 "Alegreya", serif; }
-.v4-upgrade-section { display: grid; gap: 14px; padding-bottom: 24px; border-bottom: 1px solid var(--app-line); }
-.v4-upgrade-section header h3 { margin: 4px 0 0; color: var(--app-text); font: 600 19px/1.15 "Cinzel", serif; }
-.v4-upgrade-changes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 30%); }
-.v4-upgrade-changes article { display: grid; grid-template-columns: 1fr auto; gap: 5px 12px; padding: 13px 12px; border-right: 1px solid color-mix(in srgb, var(--app-line), transparent 30%); border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 30%); }
-.v4-upgrade-changes article:last-child { border-right: 0; }
-.v4-upgrade-changes span { grid-column: 1 / -1; color: var(--app-muted); font-size: 10px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
-.v4-upgrade-changes s { color: var(--app-faint); }
-.v4-upgrade-changes b { color: var(--app-positive); text-align: right; }
-.v4-upgrade-features { display: grid; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 30%); }
-.v4-upgrade-features details { border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 30%); }
-.v4-upgrade-features summary { display: flex; align-items: baseline; gap: 13px; padding: 13px 2px; cursor: pointer; }
-.v4-upgrade-features summary small { color: var(--app-warm); font-size: 10px; font-weight: 700; text-transform: uppercase; }
-.v4-upgrade-features summary b { color: var(--app-text); }
-.v4-upgrade-features p { margin: 0; padding: 0 2px 16px; color: var(--app-muted); font: 14px/1.5 "Alegreya", serif; white-space: pre-line; }
+.v4-overlay[data-panel="upgrade"] .v4-overlay-header { padding-bottom: 9px; }
+.v4-overlay[data-panel="upgrade"] .v4-overlay-header h2 { font-size: 17px; }
+.v4-overlay[data-panel="upgrade"] .v4-overlay-content { padding-top: 8px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+.v4-upgrade-flow { display: grid; grid-template-rows: auto minmax(240px, 1fr) auto; min-height: 100%; }
+.v4-upgrade-step-header { display: grid; grid-template-columns: auto minmax(80px, 1fr); align-items: center; gap: 5px 12px; padding: 4px 0 9px; border-bottom: 1px solid var(--app-line); }
+.v4-upgrade-step-header > span { color: var(--app-warm); font-size: 9px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+.v4-upgrade-step-header > i { height: 3px; overflow: hidden; border-radius: 3px; background: var(--app-line); }
+.v4-upgrade-step-header > i b { display: block; height: 100%; background: var(--app-warm); transition: width .2s ease; }
+.v4-upgrade-step-header h3 { grid-column: 1 / -1; margin: 0; color: var(--app-text); font: 600 16px/1.15 "Cinzel", serif; }
+.v4-upgrade-step { min-height: 0; padding: 12px 0; animation: v4-upgrade-page-in .18s ease; }
+@keyframes v4-upgrade-page-in { from { opacity: 0; transform: translateX(5px) } }
+.v4-upgrade-step p { margin: 0 0 10px; color: var(--app-muted); font: 14px/1.42 "Alegreya", serif; }
+.v4-upgrade-automatic { display: grid; gap: 0; }
+.v4-upgrade-automatic article { display: grid; grid-template-columns: minmax(0, 1fr) auto auto auto auto; align-items: center; gap: 8px; min-height: 56px; padding: 8px 2px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 32%); }
+.v4-upgrade-automatic article > span { display: grid; }
+.v4-upgrade-automatic article small { color: var(--app-faint); font: 11px/1.2 "Alegreya", serif; }
+.v4-upgrade-automatic s { color: var(--app-faint); }
+.v4-upgrade-automatic i { color: var(--app-muted); font-style: normal; }
+.v4-upgrade-automatic strong { color: var(--app-positive); font-size: 17px; }
+.v4-upgrade-automatic em { min-width: 34px; padding: 3px 6px; border-radius: 99px; background: color-mix(in srgb, var(--app-positive), transparent 87%); color: var(--app-positive); font-size: 10px; font-style: normal; text-align: center; }
 .v4-upgrade-select, .v4-upgrade-record { display: grid; gap: 7px; padding: 14px 2px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 32%); }
 .v4-upgrade-select > span, .v4-upgrade-record b { color: var(--app-text); font-weight: 700; }
 .v4-upgrade-select > small, .v4-upgrade-record small { color: var(--app-faint); font: 12px/1.35 "Alegreya", serif; }
-.v4-upgrade-record { grid-template-columns: minmax(0, 1fr) minmax(180px, .7fr); align-items: center; gap: 14px; }
+.v4-upgrade-record { grid-template-columns: minmax(0, 1fr) minmax(160px, .7fr); align-items: center; gap: 10px; }
 .v4-upgrade-record > span { display: grid; gap: 4px; }
-.v4-upgrade-choice-group { display: grid; padding-top: 8px; }
-.v4-upgrade-choice-group h4 { display: flex; justify-content: space-between; margin: 0; padding: 10px 2px; color: var(--app-text); }
-.v4-upgrade-choice-group h4 small { color: var(--app-warm); }
-.v4-upgrade-choice-group > p { margin: -4px 2px 10px; color: var(--app-muted); font: 13px/1.4 "Alegreya", serif; }
-.v4-upgrade-foundation { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px; border: 1px solid color-mix(in srgb, var(--app-warm), transparent 45%); border-radius: 11px; background: color-mix(in srgb, var(--app-surface), var(--app-warm) 7%); }
-.v4-upgrade-foundation > span { display: grid; gap: 4px; }
-.v4-upgrade-foundation b { color: var(--app-text); }
-.v4-upgrade-foundation small { color: var(--app-muted); font: 13px/1.4 "Alegreya", serif; }
-.v4-upgrade-foundation button { flex: none; }
+.v4-upgrade-choice-page { display: grid; align-content: start; }
+.v4-upgrade-choice-page > .appsheet-choice { min-height: 44px; padding-block: 6px; }
+.v4-upgrade-detail, .v4-upgrade-feat-detail { display: grid; gap: 8px; margin-top: 10px; padding: 12px; border: 1px solid color-mix(in srgb, var(--app-line), transparent 18%); border-radius: 9px; background: color-mix(in srgb, var(--app-surface), transparent 35%); }
+.v4-upgrade-detail > b, .v4-upgrade-feat-detail b { color: var(--app-text); }
+.v4-upgrade-detail p, .v4-upgrade-feat-detail p { margin: 0; white-space: pre-line; }
+.v4-upgrade-detail > small, .v4-upgrade-feat-detail small { color: var(--app-warm); }
+.v4-upgrade-detail dl { display: grid; gap: 5px; margin: 0; }
+.v4-upgrade-detail dl div { display: grid; grid-template-columns: 80px 1fr; gap: 10px; }
+.v4-upgrade-detail dt { color: var(--app-faint); }
+.v4-upgrade-detail dd { margin: 0; color: var(--app-text); }
+.v4-upgrade-inline-rule { padding-top: 8px; border-top: 1px solid var(--app-line); }
 .v4-upgrade-ability-picks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
 .v4-upgrade-ability-picks label { display: grid; gap: 6px; min-width: 0; padding: 10px; border: 1px solid color-mix(in srgb, var(--app-line), transparent 25%); border-radius: 8px; }
-.v4-upgrade-ability-picks span { color: var(--app-muted); font-size: 11px; font-weight: 700; }
+.v4-upgrade-ability-picks span { display: flex; justify-content: space-between; gap: 6px; color: var(--app-muted); font-size: 11px; font-weight: 700; }
+.v4-upgrade-ability-picks small { color: var(--app-positive); }
+.v4-upgrade-feature-text { max-height: 185px; overflow-y: auto; padding-right: 5px; white-space: pre-line; }
+.v4-upgrade-feat-detail header { display: flex; justify-content: space-between; gap: 10px; }
+.v4-upgrade-feat-detail header small { text-align: right; }
+.v4-upgrade-feat-abilities { display: grid; gap: 8px; padding-top: 8px; border-top: 1px solid var(--app-line); }
+.v4-upgrade-feat-abilities > span { display: flex; justify-content: space-between; color: var(--app-text); font-size: 12px; font-weight: 700; }
+.v4-upgrade-feat-abilities > div { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.v4-upgrade-feat-abilities label { display: grid; grid-template-columns: 1fr 62px; align-items: center; gap: 6px; padding: 7px; border: 1px solid var(--app-line); border-radius: 7px; }
+.v4-upgrade-feat-abilities label > span { display: grid; color: var(--app-text); font-size: 11px; }
+.v4-upgrade-feat-abilities label small { color: var(--app-positive); font-size: 10px; }
+.v4-upgrade-subclass-features { display: grid; max-height: 235px; overflow-y: auto; border-top: 1px solid var(--app-line); }
+.v4-upgrade-subclass-features > span { display: grid; gap: 3px; padding: 9px 0; border-bottom: 1px solid var(--app-line); }
+.v4-upgrade-subclass-features > span small { color: var(--app-warm); font-size: 9px; text-transform: uppercase; }
+.v4-upgrade-review > div { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-block: 1px solid var(--app-line); }
+.v4-upgrade-review > div span { display: grid; padding: 8px; border-right: 1px solid var(--app-line); }
+.v4-upgrade-review > div small { color: var(--app-faint); font-size: 9px; text-transform: uppercase; }
+.v4-upgrade-review > div b { color: var(--app-positive); }
+.v4-upgrade-review ul { display: grid; max-height: 250px; overflow-y: auto; margin: 10px 0 0; padding: 0; list-style: none; }
+.v4-upgrade-review li { display: flex; justify-content: space-between; gap: 14px; padding: 8px 2px; border-bottom: 1px solid var(--app-line); }
+.v4-upgrade-review li span { display: grid; }
+.v4-upgrade-review li small { color: var(--app-warm); font-size: 9px; text-transform: uppercase; }
+.v4-upgrade-review li em { color: var(--app-muted); font: 12px/1.3 "Alegreya", serif; text-align: right; }
 .appsheet-ability-background { align-self: center; color: var(--app-muted); font-size: 11px; }
-.v4-upgrade-actions { position: sticky; bottom: -12px; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 16px 2px calc(10px + env(safe-area-inset-bottom)); background: linear-gradient(transparent 0, color-mix(in srgb, var(--app-bg), var(--app-surface) 38%) 18%); }
-.v4-upgrade-actions span { color: var(--app-muted); font: 13px/1.35 "Alegreya", serif; }
-.v4-upgrade-actions button { flex: none; min-width: 160px; background: var(--app-apply) !important; color: white !important; }
+.v4-upgrade-actions { position: sticky; bottom: -12px; display: grid; grid-template-columns: minmax(92px, auto) 1fr minmax(92px, auto); align-items: center; gap: 10px; padding: 10px 0 calc(6px + env(safe-area-inset-bottom)); background: color-mix(in srgb, var(--app-bg), var(--app-surface) 38%); }
+.v4-upgrade-actions span { color: var(--app-muted); font: 12px/1.25 "Alegreya", serif; text-align: center; }
+.v4-upgrade-actions button { min-width: 92px; background: var(--app-apply) !important; color: white !important; }
+.v4-upgrade-actions button.back { background: transparent !important; color: var(--app-muted) !important; }
 
 .v4-notes { display: grid; gap: 22px; }
 .v4-notes-paper { overflow: hidden; border: 0; border-radius: 0; background: transparent; box-shadow: none; }
@@ -405,13 +428,10 @@
   .v4-insight-progress > span { display: grid; gap: 3px; }
   .v4-insight-progress b { font-size: 13px; }
   .v4-upgrade-launch { justify-self: stretch; min-width: 0; }
-  .v4-upgrade-changes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .v4-upgrade-record { grid-template-columns: 1fr; }
-  .v4-upgrade-foundation { align-items: stretch; flex-direction: column; }
-  .v4-upgrade-foundation button { width: 100%; }
   .v4-upgrade-ability-picks { grid-template-columns: 1fr; }
-  .v4-upgrade-actions { align-items: stretch; flex-direction: column; }
-  .v4-upgrade-actions button { width: 100%; }
+  .v4-upgrade-feat-abilities > div { grid-template-columns: repeat(2, 1fr); }
+  .v4-upgrade-review > div { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .v4-notes-paper textarea { min-height: clamp(240px, 42vh, 380px); }
   .v4-paper-doll { height: 500px; }
   .v4-paper-doll > .v4-figure { inset: 12% 25%; width: 50%; height: 70%; }

@@ -1,5 +1,7 @@
 import type { HunterCard, HunterClass } from "@/types";
 import { levelForInsight } from "@/lib/insight";
+import { EPIC_BOON_FEATS, FIGHTING_STYLE_FEATS, GENERAL_FEATS, type FeatOption } from "@/data/feats";
+import type { SheetAutomationState } from "@/types";
 
 export type UpgradeFeature = {
   key: string;
@@ -58,7 +60,20 @@ export function upgradeFeatures(klass: HunterClass | undefined, subclassId: stri
   return rows;
 }
 
-export function recordedUpgradeChoices(klass: HunterClass | undefined, card: HunterCard, toLevel: number): UpgradeFeature[] {
-  const acknowledged = Math.min(card.level, card.lastSeenLevel ?? card.level);
-  return upgradeFeatures(klass, card.subclassId, acknowledged, toLevel).filter((entry) => entry.choice);
+export function featOptionsFor(feature: UpgradeFeature): FeatOption[] {
+  if (/^ability score improvement/i.test(feature.name)) return GENERAL_FEATS;
+  if (/epic boon/i.test(feature.name)) return [...EPIC_BOON_FEATS, ...GENERAL_FEATS];
+  if (/fighting style/i.test(feature.name)) return FIGHTING_STYLE_FEATS;
+  return [];
+}
+
+export function upgradeFeatureComplete(feature: UpgradeFeature, state: SheetAutomationState): boolean {
+  if (!feature.choice) return true;
+  const options = featOptionsFor(feature);
+  if (options.length === 0) return !!state.levelChoices?.[feature.key]?.trim();
+  const selected = options.find((feat) => feat.name === state.levelFeats?.[feature.key]);
+  if (!selected) return false;
+  if (selected.abilityPoints === 0) return true;
+  const bonuses = state.levelAbilityBonuses?.[feature.key] ?? {};
+  return Object.values(bonuses).reduce((sum, value) => sum + (value ?? 0), 0) === selected.abilityPoints;
 }
