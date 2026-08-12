@@ -32,6 +32,7 @@ export interface CharacterAutomationController {
   toggleExpertise: (skill: string) => void;
   toggleMastery: (weapon: string) => void;
   toggleWhisper: (id: string) => void;
+  setLevelChoice: (key: string, value: string) => void;
   setBase: (key: AbilityKey, value: number) => void;
   setBonus: (key: AbilityKey, value: number) => void;
   switchMode: (mode: BuyMode) => void;

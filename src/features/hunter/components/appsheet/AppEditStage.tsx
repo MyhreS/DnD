@@ -3,7 +3,7 @@ import type { HunterCard, SheetData } from "@/types";
 import { automationFor } from "../../lib/characterAutomation";
 import { levelAdjustedPool } from "../../lib/levelUpVitals";
 import type { AppSheetModel } from "./appSheetShared";
-import { AppEditStageContext, useAppEditStage, type AppEditStageValue, type StagedPatch } from "./appEditStageContext";
+import { AppEditStageContext, hasStagedUpgrade, useAppEditStage, type AppEditStageValue, type StagedPatch } from "./appEditStageContext";
 
 function optionalNumber(value: unknown): number | undefined {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -50,10 +50,9 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
 
   function stageLevel(level: number) {
     const bounded = Math.max(1, Math.min(20, level));
-    // Applying a staged level change completes its level-up walkthrough. Any
-    // real choices (Expertise, subclass, and so on) still remain visible in
-    // their own controls until selected.
-    const candidate: StagedPatch = { ...patch, level: bounded, lastSeenLevel: bounded };
+    // Level changes stay staged until the Upgrade drawer applies them together
+    // with their required choices.
+    const candidate: StagedPatch = { ...patch, level: bounded };
     if (bounded < 3 && model.card.subclassId) candidate.subclassId = null;
     else if (bounded >= 3 && patch.subclassId === null) delete candidate.subclassId;
     const levelPreview = automationFor({ ...model.card, ...candidate });
@@ -88,8 +87,11 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
     setPatch(keepDifferences(candidate));
   }
 
-  function apply() {
-    if (!hasChanges) return;
+  function apply(extraPatch: Partial<HunterCard> = {}) {
+    const finalPatch = keepDifferences({ ...patch, ...extraPatch });
+    if (!hasChanges && Object.keys(finalPatch).length === 0) return;
+    const nextLevel = finalPatch.level ?? model.card.level;
+    if (nextLevel > model.card.level && (finalPatch.lastSeenLevel ?? 0) < nextLevel) return;
     // `fields` starts as a snapshot so preview calculations can use a complete
     // sheet. Apply only the actual differences: notes intentionally save
     // directly, and a note typed while this review is open must never be
@@ -97,13 +99,14 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
     const changedFieldPatch = Object.fromEntries(
       Object.entries(fields).filter(([field, value]) => value !== model.data[field]),
     ) as SheetData;
-    model.setFields(changedFieldPatch, patch);
+    model.setFields(changedFieldPatch, finalPatch);
     setPatch({});
-    setFields(model.data);
+    setFields({ ...model.data, ...changedFieldPatch });
   }
 
   const value: AppEditStageValue = {
     patch,
+    savedCard: model.card,
     previewCard,
     previewData: fields,
     currentResult,
@@ -130,9 +133,10 @@ function numeric(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function AppEditTray() {
+export function AppEditTray({ onResumeUpgrade }: { onResumeUpgrade?: () => void }) {
   const stage = useAppEditStage();
   if (!stage.hasChanges) return null;
+  const upgradeDraft = hasStagedUpgrade(stage.patch);
   const fields = ([
     ["Level", stage.currentResult.fields.level, stage.previewResult.fields.level],
     ["Current HP", stage.currentResult.fields.hpCur, stage.previewResult.fields.hpCur],
@@ -188,12 +192,12 @@ export function AppEditTray() {
   const klass = stage.previewCard.classId;
 
   return (
-    <aside className="appsheet-edit-tray" data-testid="appsheet-edit-stage" aria-label="Review pending character changes">
+    <aside className={`appsheet-edit-tray ${upgradeDraft ? "upgrade-draft" : ""}`} data-testid="appsheet-edit-stage" aria-label="Review pending character changes">
       <div className="appsheet-edit-title">
-        <span>Review changes</span>
+        <span>{upgradeDraft ? "Upgrade paused" : "Review changes"}</span>
         <b>{fields.length + otherChanges.length + stage.changedFields.length} pending · nothing is saved until you apply.</b>
       </div>
-      <div className="appsheet-change-list">
+      {!upgradeDraft && <div className="appsheet-change-list">
         {fields.map(([label, before, after]) => {
           const beforeNumber = numeric(before);
           const afterNumber = numeric(after);
@@ -210,10 +214,10 @@ export function AppEditTray() {
         {calculatedFieldChangeCount > 0 && (
           <span className="neutral"><b>Character details</b><s>Saved</s><strong>Will update automatically</strong></span>
         )}
-      </div>
+      </div>}
       <div className="appsheet-edit-actions">
         <button type="button" className="cancel" onClick={stage.cancel}>Cancel</button>
-        <button type="button" className="apply" onClick={stage.apply}>Apply changes</button>
+        <button type="button" className="apply" disabled={upgradeDraft && !onResumeUpgrade} onClick={upgradeDraft ? onResumeUpgrade : () => stage.apply()}>{upgradeDraft ? "Resume upgrade" : "Apply changes"}</button>
       </div>
     </aside>
   );

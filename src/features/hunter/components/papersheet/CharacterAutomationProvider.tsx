@@ -279,6 +279,14 @@ export function CharacterAutomationProvider({
     commit({ preparedWhispers });
   }
 
+  function setLevelChoice(key: string, value: string) {
+    const levelChoices = { ...(state.levelChoices ?? {}) };
+    const choice = value.trim();
+    if (choice) levelChoices[key] = value;
+    else delete levelChoices[key];
+    commit({ sheetAutomation: { ...state, levelChoices } });
+  }
+
   function setBase(key: AbilityKey, value: number) {
     const nextBase = { ...base, [key]: value };
     if (mode === "maduhausu" && value + (bonuses[key] ?? 0) > MADUHAUSU_FINAL_MAX) return;
@@ -468,6 +476,7 @@ export function CharacterAutomationProvider({
     toggleExpertise,
     toggleMastery,
     toggleWhisper,
+    setLevelChoice,
     setBase,
     setBonus,
     switchMode,

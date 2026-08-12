@@ -60,7 +60,7 @@ export function AppQuickView({ model }: { model: AppSheetModel }) {
         )}
       </section>
 
-      <div className="appsheet-quick-tabs" role="group" aria-label="App view 2 sections">
+      <div className="appsheet-quick-tabs" role="group" aria-label="Quick character view sections">
         <button type="button" aria-pressed={activeTab === "overview"} onClick={() => setActiveTab("overview")}>Overview</button>
         <button type="button" aria-pressed={activeTab === "gear"} onClick={() => setActiveTab("gear")}>Gear</button>
       </div>

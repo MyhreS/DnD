@@ -1,9 +1,7 @@
 import { Link } from "react-router-dom";
 import { abilityModifier } from "@/data/abilities";
-import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
-import { resolveInventory } from "@/lib/inventory";
-import type { HunterCard, HunterClass, Item } from "@/types";
-import { AppDisclosure, AppPanel, AutoReason } from "./appSheetShared";
+import type { HunterCard, HunterClass } from "@/types";
+import { AppPanel, AutoReason } from "./appSheetShared";
 
 interface DamageBonus {
   label: string;
@@ -42,30 +40,6 @@ function bonusesFor(card: HunterCard, klass: HunterClass): DamageBonus[] {
   return bonuses;
 }
 
-function WeaponRow({ item, quantity, card }: { item: Item; quantity: number; card: HunterCard }) {
-  const custom = (card.customItems ?? []).find((entry) => entry.id === item.id);
-  const facts = WEAPON_FACTS[item.id];
-  const ability = facts?.attack === "Ranged" ? "Dexterity" : "Strength";
-  const modifier = facts?.attack === "Ranged" ? abilityModifier(card.abilities.dex) : abilityModifier(card.abilities.str);
-  return (
-    <details className="appsheet-rite-reference appsheet-weapon-reference">
-      <summary>
-        <span><b>{item.name}{quantity > 1 ? ` ×${quantity}` : ""}</b><small>{facts?.attack ?? "Weapon"} · {facts?.properties ?? custom?.weaponNotes ?? item.note ?? "DM-set details"}</small></span>
-        <span>{custom?.damage || weaponDamageLabel(facts)}</span>
-      </summary>
-      <div>
-        <dl>
-          <div><dt>Damage die</dt><dd>{facts?.damage ?? "DM-set"}</dd></div>
-          <div><dt>Damage type</dt><dd>{facts?.damageType ?? "DM-set"}</dd></div>
-          <div><dt>Damage roll</dt><dd>{custom?.damage ? "Use the DM-set weapon rule" : `${signed(modifier)} ${ability} modifier`}</dd></div>
-          <div><dt>Mastery</dt><dd>{facts?.mastery ?? "DM-set"}</dd></div>
-        </dl>
-        <p className="appsheet-weapon-reference-note">{custom?.weaponNotes || facts?.properties || item.note || "Check the table ruling for this weapon."}</p>
-      </div>
-    </details>
-  );
-}
-
 export function AppWeaponDamageBonuses({ card, klass, contextLabel = "Class & feats", reason = "Conditional damage bonuses use this hunter's class, subclass, progression, and selected feats." }: {
   card: HunterCard;
   klass: HunterClass | undefined;
@@ -79,17 +53,4 @@ export function AppWeaponDamageBonuses({ card, klass, contextLabel = "Class & fe
     <AutoReason reason={reason} />
     <Link to="/codex?group=Game%20Card&q=weapons">Open the complete weapons table in Codex</Link>
   </AppPanel>;
-}
-
-export function AppWeaponReference({ card, klass }: { card: HunterCard; klass: HunterClass | undefined }) {
-  if (!klass) return null;
-  const weapons = resolveInventory(card).filter(({ item }) => item.category === "Weapon");
-  return (
-    <AppDisclosure title="Weapons" summary={`${weapons.length} carried type${weapons.length === 1 ? "" : "s"} · ${klass.weaponProficiencies}`} className="appsheet-weapons-disclosure">
-      <AppPanel title="Carried weapon reference" aside={<span className="appsheet-status-word">Damage & type</span>}>
-        {weapons.length ? <div className="appsheet-rite-reference-list">{weapons.map(({ item, qty }) => <WeaponRow key={item.id} item={item} quantity={qty} card={card} />)}</div> : <p className="appsheet-empty-copy">Add a weapon in Gear & carrying to see its damage and type here.</p>}
-      </AppPanel>
-      <AppWeaponDamageBonuses card={card} klass={klass} contextLabel={`Level ${card.level}`} reason="Weapon damage and properties come from the handbook Weapons table. Conditional bonuses use this hunter's current class, subclass, level, and selected feats." />
-    </AppDisclosure>
-  );
 }

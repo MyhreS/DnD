@@ -451,6 +451,9 @@ export interface SheetAutomationState {
   classSkills: string[];
   expertiseSkills?: string[];
   weaponMasteries?: string[];
+  /** Free-form decisions from level features that do not have a dedicated
+   * mechanical selector yet, keyed by `level:feature name`. */
+  levelChoices?: Record<string, string>;
   backgroundBonuses: Partial<Record<AbilityKey, number>>;
   startingKitApplied?: boolean;
   setupComplete?: boolean;
