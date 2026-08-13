@@ -461,8 +461,8 @@
   .v4-overlay[data-panel="sanity"] .v4-drawer { --v4-drawer-max-height: 76%; }
   .v4-overlay[data-panel="progress"] .v4-drawer { --v4-drawer-min-height: 70%; --v4-drawer-max-height: 86%; }
   .v4-overlay[data-panel="inventory"] .v4-drawer,
-  .v4-overlay[data-panel="equipment"] .v4-drawer,
-  .v4-overlay[data-panel="upgrade"] .v4-drawer { --v4-drawer-max-height: 94%; }
+  .v4-overlay[data-panel="equipment"] .v4-drawer { --v4-drawer-max-height: 94%; }
+  .v4-overlay[data-panel="upgrade"] .v4-drawer { --v4-drawer-max-height: 80%; }
   .v4-overlay-header { padding: 4px 18px 13px; }
   .v4-overlay-header h2 { font-size: 19px; }
   .v4-overlay-content { padding: 14px 16px max(28px, env(safe-area-inset-bottom)); }
