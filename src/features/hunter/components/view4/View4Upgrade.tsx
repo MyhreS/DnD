@@ -5,8 +5,10 @@ import { useCharacterAutomation } from "../papersheet/characterAutomationContext
 import { View4UpgradeChoices, type UpgradeChoiceKind } from "./View4UpgradeChoices";
 import { View4UpgradeFeatPage } from "./View4UpgradeFeatPage";
 import { earnedLevel, upgradeFeatureComplete, upgradeFeatures, type UpgradeFeature } from "./upgradeModel";
+import type { LevelFeature, Subclass } from "@/types";
 
 type Step = { id: string; title: string; kind: "automatic" | "choice" | "feature" | "review"; choice?: UpgradeChoiceKind; feature?: UpgradeFeature };
+type Change = [label: string, before: unknown, after: unknown, reason: string];
 
 function numberValue(value: unknown): number | null {
   const parsed = Number(value);
@@ -43,24 +45,31 @@ export function View4Upgrade({ model, onComplete }: { model: AppSheetModel; onCo
     ["Maximum sanity", stage.currentResult.fields.sanityMax, stage.previewResult.fields.sanityMax, "Class progression"],
     ["Hit dice", stage.currentResult.fields.hdMax, stage.previewResult.fields.hdMax, "One die per level"],
     ["Proficiency", stage.currentResult.fields.profBonus, stage.previewResult.fields.profBonus, "Class table"],
-  ] as Array<[string, unknown, unknown, string]>).filter(([, before, after]) => before !== after);
+  ] as Change[]).filter(([, before, after]) => before !== after);
+  const selectedSubclass = klass?.subclasses.find((entry) => entry.id === card.subclassId);
+  const subclassChanged = !!selectedSubclass && saved.subclassId !== selectedSubclass.id;
+  const gainedSubclassFeatures = subclassChanged ? selectedSubclass.features.filter((feature) => feature.level <= target) : [];
+  const gainedSubclassKeys = new Set(gainedSubclassFeatures.map((feature) => `${feature.level}:${feature.name}`));
   const [choicePages] = useState(() => ({
+    automatic: changes.length > 0,
+    subclass: needsSubclass || subclassChanged,
     expertise: expertiseRemaining > 0 || features.some((feature) => /^expertise$/i.test(feature.name)),
     mastery: masteryRemaining > 0 || features.some((feature) => /weapon mastery/i.test(feature.name)),
     whispers: whisperRemaining > 0,
   }));
 
-  const steps: Step[] = [{ id: "automatic", title: "Automatic changes", kind: "automatic" }];
+  const steps: Step[] = [];
+  if (choicePages.automatic) steps.push({ id: "automatic", title: "Automatic changes", kind: "automatic" });
   if (needsSetup) steps.push({ id: "class", title: "Choose class", kind: "choice", choice: "class" });
   if (needsSetup) steps.push({ id: "background", title: "Choose background", kind: "choice", choice: "background" });
   if (needsSetup && automation.background) steps.push({ id: "background-abilities", title: "Background abilities", kind: "choice", choice: "background-abilities" });
   if (needsSetup && klass) steps.push({ id: "class-skills", title: "Class skills", kind: "choice", choice: "class-skills" });
   if (needsSetup && automation.background?.feat === "Skilled") steps.push({ id: "skilled", title: "Skilled feat", kind: "choice", choice: "skilled" });
-  if ((needsSubclass || features.some((feature) => /subclass/i.test(feature.name))) && klass?.subclasses.length) steps.push({ id: "subclass", title: "Choose subclass", kind: "choice", choice: "subclass" });
+  if (choicePages.subclass && klass?.subclasses.length) steps.push({ id: "subclass", title: "Choose subclass", kind: "choice", choice: "subclass" });
   if (choicePages.expertise) steps.push({ id: "expertise", title: "Choose Expertise", kind: "choice", choice: "expertise" });
   if (choicePages.mastery) steps.push({ id: "mastery", title: "Weapon mastery", kind: "choice", choice: "mastery" });
   if (choicePages.whispers) steps.push({ id: "whispers", title: "Prepare Whispers", kind: "choice", choice: "whispers" });
-  for (const feature of features.filter((entry) => !/subclass|^expertise$|weapon mastery/i.test(entry.name))) steps.push({ id: feature.key, title: feature.name, kind: "feature", feature });
+  for (const feature of features.filter((entry) => !/subclass|^expertise$|weapon mastery/i.test(entry.name) && !(choicePages.subclass && gainedSubclassKeys.has(`${entry.level}:${entry.name}`)))) steps.push({ id: feature.key, title: feature.name, kind: "feature", feature });
   steps.push({ id: "review", title: "Review & save", kind: "review" });
   const stepIndex = Math.min(requestedStep, steps.length - 1);
   const step = steps[stepIndex];
@@ -83,16 +92,23 @@ export function View4Upgrade({ model, onComplete }: { model: AppSheetModel; onCo
       {step.kind === "automatic" && <AutomaticChanges changes={changes} />}
       {step.kind === "choice" && step.choice && <View4UpgradeChoices kind={step.choice} target={target} />}
       {step.kind === "feature" && step.feature && <View4UpgradeFeatPage feature={step.feature} state={state} />}
-      {step.kind === "review" && <Review changes={changes} features={features} state={state} remaining={remaining} />}
+      {step.kind === "review" && <Review changes={changes} features={features.filter((feature) => !/subclass/i.test(feature.name) && !gainedSubclassKeys.has(`${feature.level}:${feature.name}`))} state={state} remaining={remaining} subclass={subclassChanged ? selectedSubclass : undefined} subclassFeatures={gainedSubclassFeatures} />}
     </main>
     <footer className="v4-upgrade-actions"><button type="button" className="back" disabled={stepIndex === 0} onClick={() => goToStep(stepIndex - 1)}>Previous</button><span>{remaining > 0 ? `${remaining} choice${remaining === 1 ? "" : "s"} left` : "Ready to save"}</span>{step.kind === "review" ? <button type="button" disabled={!canSave} onClick={saveUpgrade}>Save upgrade</button> : <button type="button" onClick={() => goToStep(stepIndex + 1)}>Next</button>}</footer>
   </div>;
 }
 
-function AutomaticChanges({ changes }: { changes: Array<[string, unknown, unknown, string]> }) {
+function AutomaticChanges({ changes }: { changes: Change[] }) {
   return <div className="v4-upgrade-automatic"><p>These values update automatically when the upgrade is saved.</p>{changes.map(([label, before, after, reason]) => { const a = numberValue(before); const b = numberValue(after); return <article key={label}><span><b>{label}</b><small>{reason}</small></span><s>{String(before ?? "—")}</s><i>→</i><strong>{String(after ?? "—")}</strong>{a != null && b != null && a !== b && <em>+{b - a}</em>}</article>; })}</div>;
 }
 
-function Review({ changes, features, state, remaining }: { changes: Array<[string, unknown, unknown, string]>; features: UpgradeFeature[]; state: ReturnType<typeof useCharacterAutomation>["state"]; remaining: number }) {
-  return <div className="v4-upgrade-review"><p>{remaining > 0 ? `Finish ${remaining} highlighted choice${remaining === 1 ? "" : "s"} before saving.` : "Everything below will be applied together."}</p><div>{changes.map(([label, , after]) => <span key={label}><small>{label}</small><b>{String(after ?? "—")}</b></span>)}</div>{features.length > 0 && <ul>{features.map((feature) => <li key={feature.key}><span><small>Level {feature.level}</small><b>{feature.name}</b></span><em>{state.levelChoices?.[feature.key] ?? "Automatic"}</em></li>)}</ul>}</div>;
+function Review({ changes, features, state, remaining, subclass, subclassFeatures }: { changes: Change[]; features: UpgradeFeature[]; state: ReturnType<typeof useCharacterAutomation>["state"]; remaining: number; subclass?: Subclass; subclassFeatures: LevelFeature[] }) {
+  const hasSummary = changes.length > 0 || !!subclass || features.length > 0;
+  return <div className="v4-upgrade-review">
+    <p>{remaining > 0 ? `Finish ${remaining} highlighted choice${remaining === 1 ? "" : "s"} before saving.` : "Everything below will be applied together."}</p>
+    {changes.length > 0 && <div className="v4-upgrade-review-values">{changes.map(([label, before, after]) => <span key={label}><small>{label}</small><b>{String(before ?? "—")} → {String(after ?? "—")}</b></span>)}</div>}
+    {subclass && <section className="v4-upgrade-review-subclass"><small>Subclass selected</small><h4>{subclass.name}</h4><p>{subclass.tagline}</p>{subclassFeatures.map((feature) => <article key={`${feature.level}:${feature.name}`}><span><small>Gained at level {feature.level}</small><b>{feature.name}</b></span><p>{feature.text}</p></article>)}</section>}
+    {features.length > 0 && <ul>{features.map((feature) => <li key={feature.key}><span><small>Level {feature.level}</small><b>{feature.name}</b><p>{feature.text}</p></span>{feature.choice && <em>{state.levelChoices?.[feature.key] ?? "Choice required"}</em>}</li>)}</ul>}
+    {!hasSummary && <p className="v4-upgrade-review-empty">No character changes are waiting to be saved.</p>}
+  </div>;
 }
