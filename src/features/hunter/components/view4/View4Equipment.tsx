@@ -5,6 +5,7 @@ import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { View4Figure } from "./View4Figure";
 import { View4ArmorRules } from "./View4ArmorRules";
+import { View4CarryingSlots } from "./View4CarryingSlots";
 import { View4UniqueArmor } from "./View4UniqueArmor";
 
 const EXTRA_SLOTS = [["Head Gear", "Head"], ["Scarf", "Scarf"], ["Gloves", "Hands"], ["Boots", "Boots"], ["Robe", "Robe"]] as const;
@@ -19,6 +20,7 @@ export function View4Equipment({ model }: { model: AppSheetModel }) {
   const studded = new Set(studdedAddonIdsOf(card));
   return <div className="v4-equipment">
     <div className="v4-equipment-summary"><span><small>Armor class</small><strong>{String(result.fields.ac ?? "—")}</strong></span><span><small>Add-ons</small><strong>{card.addonArmorIds?.length ?? 0}/{addonLimit}</strong></span><span><small>Shield arm</small><strong>{result.fields.shieldArm === true ? "Active" : "—"}</strong></span></div>
+    <View4CarryingSlots model={model} />
     <div className="v4-paper-doll">
       <View4Figure classId={card.classId} />
       {EXTRA_SLOTS.map(([subcategory, label]) => {

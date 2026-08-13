@@ -363,7 +363,13 @@ export function CharacterAutomationProvider({
   }
 
   function changeQty(id: string, delta: number) {
-    commit({ inventory: mergeInventory(card.inventory ?? [], [{ itemId: id, qty: delta }]) });
+    const inventory = mergeInventory(card.inventory ?? [], [{ itemId: id, qty: delta }]);
+    const nextQty = inventory.find((entry) => entry.itemId === id)?.qty ?? 0;
+    const keptAssignments = (card.slotAssignments?.[id] ?? []).filter(Boolean).slice(0, nextQty);
+    const slotAssignments = { ...(card.slotAssignments ?? {}) };
+    if (keptAssignments.length) slotAssignments[id] = keptAssignments;
+    else delete slotAssignments[id];
+    commit({ inventory, slotAssignments });
   }
 
   function setSlotAssignment(id: string, index: number, location: SlotAssignment | null) {
@@ -387,6 +393,9 @@ export function CharacterAutomationProvider({
       const other = STORAGE_BY_ITEM_ID[entry]?.requires;
       return !!other && other.kind === definition.requires?.kind && other.location === definition.requires?.location;
     });
+    const slotAssignments = { ...(card.slotAssignments ?? {}) };
+    delete slotAssignments[id];
+    for (const itemId of conflicts) delete slotAssignments[itemId];
     commit({
       equippedStorageIds: isEquipped
         ? equipped.filter((entry) => entry !== id)
@@ -395,6 +404,7 @@ export function CharacterAutomationProvider({
         { itemId: id, qty: isEquipped ? 1 : -1 },
         ...conflicts.map((itemId) => ({ itemId, qty: 1 })),
       ]),
+      slotAssignments,
     });
   }
 
