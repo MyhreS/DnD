@@ -227,6 +227,10 @@
   border-radius: 4px;
 }
 
+.appsheet-inventory-list.appsheet-inventory-loose > div {
+  grid-template-columns: 28px minmax(140px, 1.5fr) 60px auto;
+}
+
 .appsheet-inventory-list > div:hover {
   background: var(--app-subtle);
 }
@@ -713,6 +717,10 @@
   }
 
   .appsheet-inventory-list > div {
+    grid-template-columns: 25px minmax(0, 1fr) auto;
+  }
+
+  .appsheet-inventory-list.appsheet-inventory-loose > div {
     grid-template-columns: 25px minmax(0, 1fr) auto;
   }
 

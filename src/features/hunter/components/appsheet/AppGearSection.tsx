@@ -3,6 +3,7 @@ import { ITEMS } from "@/data/items";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { ARMOR_BY_ID } from "@/data/armor";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
+import { resolveUnassignedInventory } from "@/features/hunter/lib/inventoryPlacement";
 import { resolveInventory } from "@/lib/inventory";
 import { availableSlotAssignmentOptions, computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
 import type { SlotAssignment } from "@/types";
@@ -28,6 +29,7 @@ export function AppGearSection({
   hideArmor = false,
   hideGoldSummary = false,
   includeDamageBonuses = false,
+  manageEquipmentSeparately = false,
 }: {
   model: AppSheetModel;
   defaultOpen?: boolean;
@@ -35,6 +37,7 @@ export function AppGearSection({
   hideArmor?: boolean;
   hideGoldSummary?: boolean;
   includeDamageBonuses?: boolean;
+  manageEquipmentSeparately?: boolean;
 }) {
   const automation = useCharacterAutomation();
   const { card, result } = automation;
@@ -53,7 +56,8 @@ export function AppGearSection({
     weaponNotes: "",
   });
   const closeAddMenu = useCallback(() => setAddMenuOpen(false), []);
-  const inventory = resolveInventory(card).filter(({ item }) => !hideArmor || item.category !== "Armor");
+  const inventory = (manageEquipmentSeparately ? resolveUnassignedInventory(card) : resolveInventory(card))
+    .filter(({ item }) => !hideArmor || item.category !== "Armor");
   const slots = computeSlots(card);
   const catalog = useMemo(() => ITEMS.filter((item) => item.category !== "Armor"), []);
   const weapons = inventory.filter(({ item }) => item.category === "Weapon");
@@ -99,7 +103,7 @@ export function AppGearSection({
           </details>
         )}
         {inventory.length ? (
-          <div className="appsheet-inventory-list" data-testid="appsheet-inventory">
+          <div className={`appsheet-inventory-list${manageEquipmentSeparately ? " appsheet-inventory-loose" : ""}`} data-testid="appsheet-inventory">
             {inventory.map(({ item, qty }) => {
               const armor = ARMOR_BY_ID[item.id];
               const armorEquipped = armor?.category === "Main Armor"
@@ -115,7 +119,7 @@ export function AppGearSection({
               <div key={item.id}>
                 <span className="appsheet-item-mark">{item.category.slice(0, 1)}</span>
                 <span className="appsheet-item-name"><b>{item.name}</b><small>{item.category} · {item.carry}{item.unique ? " · Unique" : ""}</small>
-                  {!armor && item.carry !== "Insignificant" && <span className="appsheet-item-assignments">
+                  {!manageEquipmentSeparately && !armor && item.carry !== "Insignificant" && <span className="appsheet-item-assignments">
                     {Array.from({ length: qty }, (_, index) => (
                       <label key={index}>Item {index + 1}
                         <select
@@ -143,16 +147,16 @@ export function AppGearSection({
                       else if (armor.category === "Extra") automation.setExtra(armor.subcategory!, equip ? item.id : "");
                     }}
                   ><option value="equipped">Equipped</option><option value="unequipped">Unequipped</option></select>
-                ) : <span className="appsheet-item-slot">{slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unassigned")}</span>}
+                ) : !manageEquipmentSeparately && <span className="appsheet-item-slot">{slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unassigned")}</span>}
                 <span className="appsheet-item-weight">{Math.round(item.weightLb * qty * 10) / 10} lb</span>
                 <NumericStepper value={qty} label={`${item.name} quantity`} disabled={model.readOnly} onChange={(next) => automation.changeQty(item.id, next - qty)} />
-                {storage && !model.readOnly && <button type="button" className="appsheet-secondary-action" onClick={() => automation.toggleStorage(item.id)}>Wear</button>}
+                {!manageEquipmentSeparately && storage && !model.readOnly && <button type="button" className="appsheet-secondary-action" onClick={() => automation.toggleStorage(item.id)}>Wear</button>}
               </div>
               );
             })}
           </div>
-        ) : <p className="appsheet-empty-copy">Choose a class to receive its starting equipment, then add a background kit or catalog items.</p>}
-        {wornStorage.length > 0 && <div className="appsheet-storage-list" data-testid="appsheet-worn-storage">
+        ) : <p className="appsheet-empty-copy">{manageEquipmentSeparately ? "Everything is equipped. Add another item or return equipment to Inventory." : "Choose a class to receive its starting equipment, then add a background kit or catalog items."}</p>}
+        {!manageEquipmentSeparately && wornStorage.length > 0 && <div className="appsheet-storage-list" data-testid="appsheet-worn-storage">
           {wornStorage.map(({ definition, item }) => (
             <div key={item.id}>
               <span><b>{item.name}</b><small>{definition.gives.count} {SLOT_LOCATION_LABEL[definition.gives.location].toLowerCase()} {definition.gives.count === 1 ? "slot" : "slots"}{definition.gives.only ? " · Dagger or Pistol only" : ""}</small></span>

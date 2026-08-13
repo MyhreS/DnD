@@ -1,4 +1,5 @@
 import { useState, type RefObject } from "react";
+import { resolveUnassignedInventory } from "@/features/hunter/lib/inventoryPlacement";
 import { levelForInsight } from "@/lib/insight";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { AppAbilitiesSection } from "../appsheet/AppAbilitiesSection";
@@ -66,6 +67,9 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange, o
   const displayedLevel = stage.savedCard.level;
   const earned = Math.max(stage.savedCard.level, levelForInsight(insight));
   const upgradePending = earned > stage.savedCard.level || hasStagedUpgrade(stage.patch) || Object.values(result.pending).some(Boolean);
+  const inventoryCount = resolveUnassignedInventory(card)
+    .filter(({ item }) => item.category !== "Armor")
+    .reduce((total, { qty }) => total + qty, 0);
   const [completedUpgrade, setCompletedUpgrade] = useState(0);
   const overlay = panel ? PANELS[panel] : null;
   useView4DrawerSafeArea(panel !== null);
@@ -99,13 +103,13 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange, o
     <section className="v4-vitals" aria-label="Current resources">
       <button type="button" onClick={() => onPanelChange("health")}><span><b>Hit points</b><em>{hp} / {hpMax}{tempHp > 0 && <small> +{tempHp} temp</small>}</em></span><i><span style={{ width: `${hpMax ? Math.max(0, Math.min(100, hp / hpMax * 100)) : 0}%` }} /></i></button>
       <button type="button" onClick={() => onPanelChange("sanity")}><span><b>Sanity</b><em>{sanity} / {sanityMax}</em></span><i><span style={{ width: `${sanityMax ? Math.max(0, Math.min(100, sanity / sanityMax * 100)) : 0}%` }} /></i></button>
-      <button className="v4-inventory-shortcut" type="button" onClick={() => onPanelChange("inventory")}><View4Icon name="inventory" /><span>Inventory</span><small>{card.inventory?.reduce((sum, item) => sum + item.qty, 0) ?? 0} carried</small></button>
+      <button className="v4-inventory-shortcut" type="button" onClick={() => onPanelChange("inventory")}><View4Icon name="inventory" /><span>Inventory</span><small>{inventoryCount} carried</small></button>
     </section>
     {panel && overlay && <View4Overlay title={overlay.title} eyebrow={overlay.eyebrow} panel={panel} onClose={() => onPanelChange(null)}>
       {panel === "profile" && <View4Hunter model={model} />}
       {panel === "abilities" && <AppAbilitiesSection model={model} />}
       {panel === "features" && <AppFeaturesSection model={model} includeClassReferences />}
-      {panel === "inventory" && <AppGearSection model={model} hideArmor hideGoldSummary includeDamageBonuses />}
+      {panel === "inventory" && <AppGearSection model={model} hideArmor hideGoldSummary includeDamageBonuses manageEquipmentSeparately />}
       {panel === "notes" && <View4Notes model={notesModel} />}
       {panel === "equipment" && <View4Equipment model={model} />}
       {panel === "health" && <View4Health model={model} />}
