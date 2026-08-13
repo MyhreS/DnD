@@ -5,8 +5,7 @@ import { CharacterDeleteDialog } from "./papersheet/CharacterDeleteDialog";
 import type { HunterCard } from "@/types";
 
 /** The /character "Hunters" screen. It ALWAYS lands on the LIST of your hunters
- * (it never auto-opens one); click a card to view/edit that hunter's paper
- * sheet. */
+ * (it never auto-opens one); click a card to view or edit that hunter. */
 export function CharacterView({
   characters,
   openId,

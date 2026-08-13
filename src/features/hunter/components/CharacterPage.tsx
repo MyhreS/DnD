@@ -84,8 +84,8 @@ export function CharacterPage() {
         <div className="center" style={{ maxWidth: 320 }}>
           <h1 style={{ marginBottom: 6 }}>No hunter yet</h1>
           <p className="muted">
-            Build your character in the guided app view or switch to the paper
-            sheet at any time. Both views share the same automatically saved data.
+            Build and play your hunter in the guided app character views. Your
+            choices and resources are saved automatically.
           </p>
         </div>
         <button className="btn btn-primary" style={{ maxWidth: 280 }} onClick={startNew}>

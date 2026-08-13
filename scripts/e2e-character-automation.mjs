@@ -69,7 +69,7 @@ try {
     if (await trigger.getAttribute("aria-expanded") !== "true") throw new Error("Character view menu did not report its open state");
     const menu = page.getByRole("menu", { name: "Character sheet views", exact: true });
     const labels = await menu.getByRole("menuitemradio").allTextContents();
-    if (JSON.stringify(labels) !== JSON.stringify(["View 1", "View 2", "View 3"])) {
+    if (JSON.stringify(labels) !== JSON.stringify(["View 3", "View 4"])) {
       throw new Error(`Character view menu labels or ordering changed: ${JSON.stringify(labels)}`);
     }
     if (!capturedViewMenuDesktop) {
@@ -424,85 +424,9 @@ try {
   await page.locator(".papersheet-modal").evaluate((element) => element.scrollTo({ top: 0 }));
   await page.screenshot({ path: "screenshots/app-character-sheet-desktop.png", fullPage: true });
 
-  await selectCharacterView("View 1");
-  await page.getByTestId("sheet-character-automation").waitFor();
-  const sheetBackgroundDetails = page.getByTestId("sheet-character-automation").getByTestId("background-details");
-  await sheetBackgroundDetails.getByRole("heading", { name: "Criminal" }).waitFor();
-  if (!await sheetBackgroundDetails.getByText("Thieves' Tools, Crowbar", { exact: true }).count()) {
-    throw new Error("Selected paper background did not show its starting gear");
-  }
-  await sheetBackgroundDetails.getByRole("button", { name: "More about the Alert origin feat" }).click();
-  await sheetBackgroundDetails.getByText("swap your Initiative with a willing ally", { exact: false }).waitFor();
-  if (await page.locator('[data-f="pageNotes"]').inputValue() !== "Shared app-view note.") throw new Error("App notes did not synchronize into the paper sheet");
-  const controlsAreOnSheet = await page.getByTestId("sheet-character-automation").evaluate(
-    (element) => Boolean(element.closest(".papersheet .page")),
-  );
-  if (!controlsAreOnSheet) throw new Error("Paper automation is not integrated into the white sheet");
-  await page.getByLabel("Head Gear", { exact: true }).selectOption("tricorn");
-  for (const dropdown of [page.getByTestId("sheet-main-armor"), page.getByLabel("Head Gear", { exact: true })]) {
-    const appearance = await dropdown.evaluate((element) => {
-      const style = getComputedStyle(element);
-      return { backgroundColor: style.backgroundColor, boxShadow: style.boxShadow };
-    });
-    if (appearance.backgroundColor !== "rgba(0, 0, 0, 0)" || appearance.boxShadow !== "none") {
-      throw new Error(`Paper dropdown has a coloured automation box: ${JSON.stringify(appearance)}`);
-    }
-  }
-
-  const sheetClass = page.locator('[data-f="class"]');
-  await sheetClass.waitFor();
-  if (!/Warden/.test(await sheetClass.locator("option:checked").textContent())) throw new Error("Class did not fill the paper sheet");
-  if (await page.locator('[data-f="level"]').inputValue() !== "1") throw new Error("New class did not default to level 1");
-  if (await page.locator('[data-f="ac"]').inputValue() !== "15") throw new Error("Armor Class did not recalculate");
-  if (!/Tricorn/.test(await page.locator('[data-f="headGear"]').locator("option:checked").textContent())) throw new Error("Extra armor did not fill its legacy paper field");
-  if (await page.locator('[data-f="wisSaveP"]').isChecked() !== true) throw new Error("Warden Wisdom save did not fill");
-  if (await page.locator('[data-f="chaSaveP"]').isChecked() !== true) throw new Error("Warden Charisma save did not fill");
-  const equipmentNames = await page.locator('[data-f^="eq_"][data-f$="_0"]').evaluateAll((fields) => fields.map((field) => field.value));
-  if (!equipmentNames.some((name) => /Hunter Rifle/.test(name))) throw new Error("Warden starting equipment did not fill");
-  if (await page.locator('[data-f="initiative"]').inputValue() !== "+5") throw new Error("Alert did not update initiative");
-  if (!(await page.locator('[data-f="hpMax"]').getAttribute("data-auto-reason"))?.includes("Hit Die")) throw new Error("Auto-filled HP has no visible reason");
-  await page.getByText(/The table below fills automatically/).waitFor();
-  const paperStrength = page.getByLabel("Strength base");
-  if (await paperStrength.isDisabled()) throw new Error("Level-one paper-sheet ability scores stayed locked after setup");
-  await paperStrength.selectOption("14");
-  await paperStrength.selectOption("15");
-
-  await page.getByRole("button", { name: "Add unique weapon or item found in play" }).click();
-  await page.getByLabel("Unique item name").fill("Moon Saw");
-  await page.getByLabel("Unique item weight").fill("4");
-  await page.getByLabel("Unique weapon attack bonus").fill("+4");
-  await page.getByLabel("Unique weapon damage").fill("1d8 slashing");
-  await page.getByLabel("Unique item note").fill("Found beneath the old chapel.");
-  await page.getByRole("button", { name: "Add unique item", exact: true }).click();
-  const foundEquipmentNames = await page.locator('[data-f^="eq_"][data-f$="_0"]').evaluateAll((fields) => fields.map((field) => field.value));
-  if (!foundEquipmentNames.includes("Moon Saw")) throw new Error("Unique found weapon did not fill the equipment sheet");
-  if (await page.locator('[data-f="wd_0_0"]').inputValue() !== "Moon Saw") throw new Error("Unique found weapon did not fill the weapon table");
-
-  const addonIds = ["full-leather-cuirass", "leather-pauldron-right", "leather-pauldron-left", "leather-vambrace-right", "leather-vambrace-left"];
-  for (const [index, id] of addonIds.entries()) await page.getByTestId(`sheet-addon-armor-${index + 1}`).selectOption(id);
-  await page.getByLabel("Studs for add-on armor 1").check();
-  const armoredAc = await page.locator('[data-f="ac"]').inputValue();
-  if (armoredAc !== "18") throw new Error(`Integrated add-on armor, Shield Arm, and studs did not recalculate AC (received ${armoredAc})`);
-  await page.getByRole("button", { name: "Add unique armor found in play" }).click();
-  await page.getByLabel("Unique armor type").selectOption("Add-on Armor");
-  if (!await page.getByRole("button", { name: "Add and equip unique armor" }).isDisabled()) throw new Error("Unique add-on armor can exceed the worn-piece limit");
-  await page.getByText(/All add-on slots are full/).waitFor();
-  await page.getByRole("button", { name: "Cancel unique armor" }).click();
-  for (let index = addonIds.length; index > 0; index -= 1) await page.getByTestId(`sheet-addon-armor-${index}`).selectOption("");
-  await page.getByRole("button", { name: "Add unique armor found in play" }).click();
-  await page.getByLabel("Unique armor type").selectOption("Main Armor");
-  await page.getByLabel("Unique armor name").fill("Moon Plate");
-  await page.getByLabel("Unique armor AC").fill("14");
-  await page.getByLabel("Unique armor weight").fill("8");
-  await page.getByLabel("Unique armor note").fill("Glows near Dreadbloods.");
-  await page.getByRole("button", { name: "Add and equip unique armor" }).click();
-  if (await page.locator('[data-f="ac"]').inputValue() !== "16") throw new Error("Unique found armor did not recalculate AC");
-  if (!/Moon Plate/.test(await page.getByTestId("sheet-main-armor").locator("option:checked").textContent())) throw new Error("Unique found armor was not equipped");
-  await page.screenshot({ path: "screenshots/character-automation-desktop.png", fullPage: true });
-
   await page.getByRole("button", { name: "Back" }).first().click();
   await page.getByRole("button", { name: /Open Eileen the Crow/ }).click();
-  await page.locator('[data-f="name"]').waitFor();
+  await page.getByTestId("app-character-sheet").waitFor();
   if (await page.getByTestId("legacy-conversion-wizard").count()) throw new Error("Legacy sheets still show a player-facing migration popup");
 
   await page.setViewportSize({ width: 390, height: 844 });
