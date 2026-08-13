@@ -83,7 +83,7 @@ function filesUnder(root: string): string[] {
   for (const entry of readdirSync(root, { withFileTypes: true })) {
     const path = join(root, entry.name);
     if (entry.isDirectory()) output.push(...filesUnder(path));
-    else if (entry.name.endsWith(".pdf")) output.push(relative(".", path));
+    else if (entry.name.endsWith(".pdf")) output.push(relative(".", path).replaceAll("\\", "/"));
   }
   return output;
 }
