@@ -5,7 +5,8 @@ import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { View4Figure } from "./View4Figure";
 import { View4ArmorRules } from "./View4ArmorRules";
-import { View4CarryingSlots } from "./View4CarryingSlots";
+import { View4ItemSlots } from "./View4ItemSlots";
+import { View4StorageEquipment } from "./View4StorageEquipment";
 import { View4UniqueArmor } from "./View4UniqueArmor";
 
 const EXTRA_SLOTS = [["Head Gear", "Head"], ["Scarf", "Scarf"], ["Gloves", "Hands"], ["Boots", "Boots"], ["Robe", "Robe"]] as const;
@@ -20,7 +21,6 @@ export function View4Equipment({ model }: { model: AppSheetModel }) {
   const studded = new Set(studdedAddonIdsOf(card));
   return <div className="v4-equipment">
     <div className="v4-equipment-summary"><span><small>Armor class</small><strong>{String(result.fields.ac ?? "—")}</strong></span><span><small>Add-ons</small><strong>{card.addonArmorIds?.length ?? 0}/{addonLimit}</strong></span><span><small>Shield arm</small><strong>{result.fields.shieldArm === true ? "Active" : "—"}</strong></span></div>
-    <View4CarryingSlots model={model} />
     <div className="v4-paper-doll">
       <View4Figure classId={card.classId} />
       {EXTRA_SLOTS.map(([subcategory, label]) => {
@@ -29,11 +29,13 @@ export function View4Equipment({ model }: { model: AppSheetModel }) {
       })}
       <label className="v4-equip-slot v4-equip-main"><span>Main armor</span><select value={card.mainArmorId ?? ""} disabled={model.readOnly} onChange={(event) => automation.chooseMainArmor(event.target.value)}><option value="">Unarmored</option>{mainOptions.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}{entry.unique ? " · Unique" : ""} · {entry.ac} · {entry.weightLb} lb</option>)}</select></label>
     </div>
+    <View4StorageEquipment model={model} />
     <section className="v4-addon-slots"><header><h3>Add-on armor</h3><small>Choose up to {addonLimit} pieces</small></header><div>{Array.from({ length: addonLimit }, (_, index) => {
       const selectedId = card.addonArmorIds?.[index] ?? "";
       const wornElsewhere = new Set((card.addonArmorIds ?? []).filter((_, selectedIndex) => selectedIndex !== index));
       return <div className="v4-addon-slot" key={index}><label><span>Slot {index + 1}</span><select value={selectedId} disabled={model.readOnly} onChange={(event) => automation.setAddonArmorAt(index, event.target.value)}><option value="">Empty</option>{addonOptions.map((entry) => <option key={entry.id} value={entry.id} disabled={wornElsewhere.has(entry.id)}>{entry.name}{entry.unique ? " · Unique" : ""} · {entry.ac} · {entry.weightLb} lb</option>)}</select></label><label className="v4-studs-control"><input type="checkbox" checked={!!selectedId && studded.has(selectedId)} disabled={model.readOnly || !selectedId} onChange={() => selectedId && automation.toggleStuds(selectedId)} />Studded · +3 lb</label></div>;
     })}</div></section>
+    <View4ItemSlots model={model} />
     <View4ArmorRules />
     <View4UniqueArmor />
   </div>;

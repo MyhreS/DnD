@@ -361,24 +361,29 @@
 .v4-equipment-summary > span { display: grid; justify-items: center; padding: 10px; border: 1px solid var(--app-line); border-radius: 7px; background: var(--app-surface); }
 .v4-equipment-summary small { color: var(--app-muted); font-size: 9px; letter-spacing: .08em; text-transform: uppercase; }
 .v4-equipment-summary strong { font: 600 20px "Cinzel", serif; }
-.v4-carrying-slots { display: grid; gap: 13px; padding: 15px; border: 1px solid var(--app-line); border-radius: 9px; background: var(--app-surface); }
-.v4-carrying-slots > header { display: flex; align-items: end; justify-content: space-between; gap: 14px; }
-.v4-carrying-slots > header small { color: var(--app-warm); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
-.v4-carrying-slots > header h3 { margin: 3px 0 0; color: var(--app-text); font: 600 17px/1.1 "Cinzel", serif; }
-.v4-carrying-slots > header strong { color: var(--app-muted); font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
-.v4-carrying-slots > p { margin: 0; color: var(--app-faint); font: 13px/1.35 "Alegreya", serif; }
-.v4-carrying-capacity { display: grid; grid-template-columns: repeat(auto-fit, minmax(105px, 1fr)); border-block: 1px solid color-mix(in srgb, var(--app-line), transparent 25%); }
-.v4-carrying-capacity > span { display: grid; gap: 2px; padding: 8px 9px; }
-.v4-carrying-capacity b { color: var(--app-text); font-size: 11px; text-transform: uppercase; }
-.v4-carrying-capacity small { color: var(--app-muted); font-size: 9px; text-transform: capitalize; }
-.v4-worn-storage, .v4-carrying-items { display: grid; gap: 7px; }
-.v4-worn-storage > div, .v4-carrying-items > label, .v4-carrying-storage { display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, .55fr); align-items: center; gap: 10px; padding: 9px 10px; border: 1px solid color-mix(in srgb, var(--app-line), transparent 22%); border-radius: 7px; background: color-mix(in srgb, var(--app-bg), transparent 38%); }
-.v4-worn-storage span, .v4-carrying-items label > span, .v4-carrying-storage > span { min-width: 0; }
-.v4-worn-storage b, .v4-carrying-items b { display: block; color: var(--app-text); font-size: 12px; }
-.v4-worn-storage small, .v4-carrying-items small { display: block; margin-top: 2px; color: var(--app-muted); font-size: 10px; }
-.v4-worn-storage button, .v4-carrying-storage button { min-height: 38px; }
-.v4-carrying-items select { width: 100%; min-width: 0; }
-.v4-carrying-empty { margin: 0; color: var(--app-muted); font: 13px/1.4 "Alegreya", serif; }
+.v4-storage-equipment, .v4-item-slots { display: grid; gap: 13px; padding: 15px; border: 1px solid var(--app-line); border-radius: 9px; background: var(--app-surface); }
+.v4-storage-equipment > header small, .v4-item-slots > header small { color: var(--app-warm); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
+.v4-storage-equipment > header h3, .v4-item-slots > header h3 { margin: 3px 0 0; color: var(--app-text); font: 600 17px/1.1 "Cinzel", serif; }
+.v4-storage-equipment > p, .v4-item-slots > p { margin: 0; color: var(--app-faint); font: 13px/1.35 "Alegreya", serif; }
+.v4-storage-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+.v4-storage-grid > label { display: grid; align-content: start; gap: 5px; min-width: 0; padding: 10px; border: 1px solid color-mix(in srgb, var(--app-line), transparent 22%); border-radius: 7px; background: color-mix(in srgb, var(--app-bg), transparent 38%); }
+.v4-storage-grid > label > span { color: var(--app-muted); font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+.v4-storage-grid select { width: 100%; min-width: 0; }
+.v4-storage-grid small { color: var(--app-faint); font: 11px/1.25 "Alegreya", serif; }
+.v4-item-slot-group { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 25%); }
+.v4-item-slot-group > header { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; }
+.v4-item-slot-group > header b { color: var(--app-text); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; }
+.v4-item-slot-group > header small { color: var(--app-muted); font-size: 10px; text-align: right; }
+.v4-item-slot-group > div { display: grid; grid-template-columns: repeat(auto-fit, minmax(145px, 1fr)); gap: 7px; }
+.v4-item-slot { display: grid; align-content: start; gap: 7px; min-width: 0; padding: 9px; border: 1px solid color-mix(in srgb, var(--app-line), transparent 20%); border-radius: 7px; background: color-mix(in srgb, var(--app-bg), transparent 38%); }
+.v4-item-slot.is-filled { border-color: color-mix(in srgb, var(--app-warm), transparent 48%); background: color-mix(in srgb, var(--app-warm), transparent 94%); }
+.v4-item-slot > span { display: grid; gap: 1px; }
+.v4-item-slot > span b { color: var(--app-muted); font-size: 10px; text-transform: uppercase; }
+.v4-item-slot > span small { overflow: hidden; color: var(--app-faint); font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
+.v4-item-slot select { width: 100%; min-width: 0; }
+.v4-item-slot button { display: grid; justify-items: start; min-width: 0; min-height: 45px; padding: 7px 9px !important; text-align: left; }
+.v4-item-slot button strong { overflow: hidden; max-width: 100%; color: var(--app-text); font-size: 11px; text-overflow: ellipsis; white-space: nowrap; }
+.v4-item-slot button small { color: var(--app-muted); font-size: 9px; }
 .v4-paper-doll { position: relative; width: min(660px, 100%); height: clamp(410px, 58vh, 620px); margin: 0 auto; }
 .v4-paper-doll > .v4-figure { position: absolute; inset: 5% 29%; width: 42%; height: 88%; }
 .v4-equip-slot { position: absolute; z-index: 2; display: grid; gap: 4px; width: min(210px, 31%); padding: 8px; border: 1px solid var(--app-line); border-radius: 7px; background: color-mix(in srgb, var(--app-surface), transparent 4%); }
@@ -476,7 +481,7 @@
   .v4-upgrade-review-values { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .v4-notes-paper textarea { min-height: clamp(240px, 42vh, 380px); }
   .v4-paper-doll { height: 500px; }
-  .v4-worn-storage > div, .v4-carrying-items > label, .v4-carrying-storage { grid-template-columns: minmax(0, 1fr) minmax(118px, .7fr); }
+  .v4-storage-grid, .v4-item-slot-group > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .v4-paper-doll > .v4-figure { inset: 12% 25%; width: 50%; height: 70%; }
   .v4-equip-slot { width: 38%; padding: 6px; }
   .v4-equip-head-gear { top: 1%; }
