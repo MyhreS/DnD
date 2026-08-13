@@ -136,7 +136,7 @@
 .v4-readouts button { display: flex !important; align-items: baseline; justify-content: center; gap: 7px; min-height: 43px; padding: 6px !important; border: 1px solid var(--app-line) !important; border-radius: 7px !important; background: color-mix(in srgb, var(--app-surface), transparent 14%) !important; color: var(--app-text) !important; }
 .v4-readouts small { color: var(--app-muted); font: 700 9px/1 "Alegreya Sans SC", sans-serif; letter-spacing: .08em; text-transform: uppercase; }
 .v4-readouts strong { font: 700 clamp(15px, 2.6vw, 21px)/1 "Cinzel", serif; }
-.v4-vitals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 9px; padding-right: min(150px, 18%); }
+.v4-vitals { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)) minmax(130px, .25fr); gap: 9px; }
 .v4-vitals button { display: grid !important; gap: 6px; padding: 7px 10px !important; border: 1px solid var(--app-line) !important; border-radius: 7px !important; background: var(--app-surface) !important; color: var(--app-text) !important; }
 .v4-vitals button > span { display: flex; justify-content: space-between; gap: 8px; }
 .v4-vitals b { font-size: 11px; letter-spacing: .06em; text-transform: uppercase; }
@@ -145,12 +145,12 @@
 .v4-vitals i { height: 5px; overflow: hidden; border-radius: 99px; background: var(--app-line); }
 .v4-vitals i span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, #762a2a, #c14d45); }
 .v4-vitals button:nth-child(2) i span { background: linear-gradient(90deg, #334d73, #7595c2); }
-.v4-inventory-shortcut { position: absolute; right: 0; bottom: 0; display: grid !important; grid-template-columns: auto auto; align-items: center; gap: 1px 7px; width: min(140px, 17%); height: 55px; padding: 7px 10px !important; border: 1px solid var(--app-line) !important; border-radius: 7px !important; background: var(--app-surface) !important; color: var(--app-text) !important; text-align: left; }
+.v4-inventory-shortcut { display: grid !important; grid-template-columns: auto auto; align-items: center; align-self: stretch; gap: 1px 7px !important; min-height: 55px; padding: 7px 10px !important; border: 1px solid var(--app-line) !important; border-radius: 7px !important; background: var(--app-surface) !important; color: var(--app-text) !important; text-align: left; }
 .v4-inventory-shortcut svg { grid-row: 1 / 3; width: 24px; height: 24px; color: var(--app-warm); }
 .v4-inventory-shortcut span { font-size: 11px; font-weight: 700; text-transform: uppercase; }
 .v4-inventory-shortcut small { color: var(--app-muted); font-size: 10px; }
 
-.v4-overlay { --v4-scrim-opacity: .58; position: absolute; z-index: 20; inset: 0; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; background: rgba(2, 3, 5, var(--v4-scrim-opacity)); backdrop-filter: blur(3px); transition: background-color .22s ease-out, backdrop-filter .22s ease-out; animation: v4-scrim-in .22s ease-out; }
+.v4-overlay { --v4-scrim-opacity: .58; position: fixed; z-index: 20; inset: 0; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; background: rgba(2, 3, 5, var(--v4-scrim-opacity)); backdrop-filter: blur(3px); transition: background-color .22s ease-out, backdrop-filter .22s ease-out; animation: v4-scrim-in .22s ease-out; }
 .v4-overlay.is-dismissing { --v4-scrim-opacity: 0 !important; backdrop-filter: blur(0); }
 .v4-drawer { --v4-drawer-drag-y: 0px; --v4-drawer-min-height: 0px; --v4-drawer-max-height: min(86%, 760px); position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); width: min(980px, calc(100% - 32px)); height: auto; min-height: var(--v4-drawer-min-height); max-height: var(--v4-drawer-max-height); overflow: hidden; transform: translateY(var(--v4-drawer-drag-y)); transition: transform .28s cubic-bezier(.22, .8, .26, 1); border: 1px solid color-mix(in srgb, var(--app-line), white 5%); border-bottom: 0; border-radius: 25px 25px 0 0; background: color-mix(in srgb, var(--app-bg), var(--app-surface) 38%); box-shadow: 0 -18px 70px rgba(0, 0, 0, .58); will-change: transform; animation: v4-drawer-in .34s cubic-bezier(.22, .8, .26, 1); }
 .v4-drawer.is-dragging { cursor: grabbing; transition: none; animation: none; }
@@ -423,11 +423,11 @@
   .v4-readouts { gap: 4px; }
   .v4-readouts button { display: grid !important; justify-items: center; gap: 2px; min-height: 38px; }
   .v4-readouts strong { font-size: 14px; }
-  .v4-vitals { gap: 5px; padding-right: 103px; }
+  .v4-vitals { grid-template-columns: repeat(2, minmax(0, 1fr)) 98px; gap: 5px; }
   .v4-vitals button { padding: 6px 7px !important; }
   .v4-vitals b { font-size: 9px; }
   .v4-vitals em { font-size: 11px; }
-  .v4-inventory-shortcut { width: 98px; height: 48px; padding: 5px 7px !important; }
+  .v4-inventory-shortcut { min-height: 48px; padding: 5px 7px !important; }
   .v4-inventory-shortcut svg { width: 20px; height: 20px; }
   .v4-inventory-shortcut span { font-size: 9px; }
   .v4-inventory-shortcut small { font-size: 8px; }
