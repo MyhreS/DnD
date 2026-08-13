@@ -1,4 +1,5 @@
 import { useEffect, useRef, type FormEvent } from "react";
+import "../character-editor.css";
 
 export function CharacterDeleteDialog({
   characterName,

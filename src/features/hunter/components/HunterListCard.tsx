@@ -38,7 +38,7 @@ export function HunterListCard({
   const classLine = klass
     ? `${klass.name} · Level ${card.level}${inCampaign}`
     : isSheetCard(card)
-      ? `${sheetClassName(card.sheet) || "Paper sheet"} · Level ${card.level}${inCampaign}`
+      ? `${sheetClassName(card.sheet) || "Legacy hunter"} · Level ${card.level}${inCampaign}`
       : "Draft — finish the build";
 
   return (
