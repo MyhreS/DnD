@@ -6,6 +6,7 @@ import { AppFeaturesSection } from "../appsheet/AppFeaturesSection";
 import { AppGearSection } from "../appsheet/AppGearSection";
 import { sheetText } from "../appsheet/appSheetValues";
 import { hasStagedUpgrade, useAppEditStage } from "../appsheet/appEditStageContext";
+import { useView4DrawerSafeArea } from "../../hooks/useView4DrawerSafeArea";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { View4Equipment } from "./View4Equipment";
 import { View4Figure } from "./View4Figure";
@@ -67,6 +68,7 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange }:
   const upgradePending = earned > stage.savedCard.level || hasStagedUpgrade(stage.patch) || Object.values(result.pending).some(Boolean);
   const [completedUpgrade, setCompletedUpgrade] = useState(0);
   const overlay = panel ? PANELS[panel] : null;
+  useView4DrawerSafeArea(panel !== null);
   return <div
     className="v4-sheet"
     data-testid="view4-character-sheet"

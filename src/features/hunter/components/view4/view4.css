@@ -1,3 +1,18 @@
+:root {
+  --v4-drawer-safe-area: #0e0f13;
+}
+
+:root[data-theme="light"] {
+  --v4-drawer-safe-area: #f4f0e7;
+}
+
+:root.v4-drawer-safe-area,
+:root.v4-drawer-safe-area body,
+:root.v4-drawer-safe-area body::before {
+  background-color: var(--v4-drawer-safe-area);
+  background-image: none;
+}
+
 .character-editor-modal.view-hud {
   --app-bg: #090a0d;
   --app-surface: #15171c;
