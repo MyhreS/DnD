@@ -221,7 +221,7 @@ export function computeSlots(
     const storageSlot = storageMatch ? Number(storageMatch[2]) : undefined;
     const candidates = storageId
       ? pools.filter((p) => p.storageItemId === storageId)
-      : u.assigned ? pools.filter((p) => p.location === u.assigned) : [];
+      : u.assigned ? pools.filter((p) => p.location === u.assigned && !p.storageItemId) : [];
     const pool = candidates.find((p) => fits(p, u.itemId, u.kind, storageSlot));
     if (pool) {
       stow(pool, u.itemId, u.name, storageSlot);

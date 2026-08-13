@@ -241,6 +241,20 @@ const invalidBeltSlot = computeSlots({
   slotAssignments: { longsword: ["storage:tool-belt:5"] },
 });
 assert.equal(invalidBeltSlot.byItem.longsword, "Unassigned", "a storage assignment cannot exceed its numbered capacity");
+const bandolierConsumesFront = computeSlots({
+  inventory: [{ itemId: "longsword", qty: 1 }], equippedStorageIds: ["bandolier"], customItems: [],
+  slotAssignments: { longsword: ["chest"] },
+});
+assert.equal(
+  bandolierConsumesFront.byItem.longsword,
+  "Unassigned",
+  "a normal Front assignment cannot silently spill into Bandolier slots",
+);
+const bandolierSlot = computeSlots({
+  inventory: [{ itemId: "longsword", qty: 1 }], equippedStorageIds: ["bandolier"], customItems: [],
+  slotAssignments: { longsword: ["storage:bandolier:1"] },
+});
+assert.equal(bandolierSlot.byItem.longsword, "Bandolier slot 1", "Bandolier slots require an explicit selection");
 
 const foundGear = automationFor({
   ...warden,
