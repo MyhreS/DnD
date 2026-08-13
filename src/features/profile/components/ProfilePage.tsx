@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { SignOutIcon } from "@/components/icons";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { ProfileNameForm } from "./ProfileNameForm";
+import { CharacterViewSetting } from "./CharacterViewSetting";
 
 export function ProfilePage() {
   const user = useAuthStore((s) => s.user);
@@ -24,6 +25,8 @@ export function ProfilePage() {
       <ProfileNameForm />
 
       <ThemeToggle />
+
+      <CharacterViewSetting />
 
       <div className="card">
         <p className="eyebrow">App</p>

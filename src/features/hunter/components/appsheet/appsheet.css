@@ -66,87 +66,6 @@
   color-scheme: light;
 }
 
-.view-quick .papersheet-toolbar {
-  max-width: 1120px;
-  color: var(--app-muted);
-}
-
-.view-quick .papersheet-toolbar .ghost {
-  border-color: var(--app-line);
-  color: var(--app-muted);
-}
-
-.character-view-menu {
-  position: relative;
-}
-
-.papersheet-toolbar .character-view-menu-trigger {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  white-space: nowrap;
-}
-
-.papersheet-toolbar .character-view-menu-trigger > span {
-  font-size: 16px;
-  line-height: 1;
-}
-
-.character-view-menu-popover {
-  position: absolute;
-  z-index: 3;
-  top: calc(100% + 6px);
-  right: 0;
-  display: grid;
-  width: min(160px, calc(100vw - 28px));
-  padding: 4px;
-  border: 1px solid #6b6353;
-  border-radius: 5px;
-  background: #302b23;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, .3);
-}
-
-.character-view-menu-popover button {
-  width: 100%;
-  padding: 9px 10px;
-  border: 0;
-  border-radius: 3px;
-  background: transparent;
-  color: #e9e0ce;
-  text-align: left;
-}
-
-.character-view-menu-popover button:hover,
-.character-view-menu-popover button:focus-visible,
-.character-view-menu-popover button.active {
-  background: rgba(255, 255, 255, .11);
-}
-
-.character-view-menu-popover button:focus-visible {
-  outline: 2px solid #dfc997;
-  outline-offset: -2px;
-}
-
-.view-quick .character-view-menu-popover {
-  border-color: var(--app-line);
-  background: var(--app-surface);
-  box-shadow: var(--app-shadow);
-}
-
-.view-quick .character-view-menu-popover button {
-  color: var(--app-text);
-}
-
-.view-quick .character-view-menu-popover button:hover,
-.view-quick .character-view-menu-popover button:focus-visible,
-.view-quick .character-view-menu-popover button.active {
-  background: var(--app-subtle-hover);
-}
-
-.view-quick .character-view-menu-popover button:focus-visible {
-  outline-color: var(--app-warm);
-}
-
 .character-app-sheet,
 .character-app-sheet * {
   box-sizing: border-box;
@@ -241,6 +160,38 @@
   gap: 22px;
   padding: 22px;
 }
+
+.appsheet-quick-heading { min-width: 0; }
+
+.character-sheet-topline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  margin-bottom: 13px;
+}
+
+.character-sheet-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 7px 11px;
+  border: 1px solid var(--app-line);
+  border-radius: 7px;
+  background: var(--app-subtle);
+  color: var(--app-muted);
+  font: 800 11px/1 "Alegreya Sans SC", sans-serif;
+  letter-spacing: .09em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.character-sheet-back:hover,
+.character-sheet-back:focus-visible { border-color: var(--app-warm); background: var(--app-subtle-hover); color: var(--app-text); }
+.character-sheet-back:focus-visible { outline: 2px solid var(--app-warm); outline-offset: 2px; }
+.character-sheet-back > span:first-child { font-size: 17px; line-height: .7; }
+.character-sheet-save { color: var(--app-muted); font: 12px/1.1 "Alegreya", serif; }
 
 .appsheet-quick-header h1 {
   margin: 0;
@@ -1224,7 +1175,7 @@
   text-align: right;
 }
 
-.character-app-sheet button:not(.appsheet-stepper button) {
+.character-app-sheet button:not(.appsheet-stepper button):not(.character-sheet-back) {
   width: auto;
   padding: 9px 13px;
   border: 0;
@@ -1235,8 +1186,24 @@
   cursor: pointer;
 }
 
-.character-app-sheet button:not(.appsheet-stepper button):hover:not(:disabled) {
+.character-app-sheet button:not(.appsheet-stepper button):not(.character-sheet-back):hover:not(:disabled) {
   background: var(--app-action-hover);
+}
+
+.character-app-sheet .character-sheet-back {
+  padding: 7px 11px;
+  border: 1px solid var(--app-line);
+  border-radius: 7px;
+  background: var(--app-subtle);
+  color: var(--app-muted);
+  font-size: 11px;
+}
+
+.character-app-sheet .character-sheet-back:hover:not(:disabled),
+.character-app-sheet .character-sheet-back:focus-visible {
+  border-color: var(--app-warm);
+  background: var(--app-subtle-hover);
+  color: var(--app-text);
 }
 
 .character-app-sheet button:disabled {

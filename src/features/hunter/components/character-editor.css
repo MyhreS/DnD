@@ -8,43 +8,6 @@
   font-family: "Alegreya Sans SC", sans-serif;
 }
 
-.papersheet-toolbar {
-  max-width: 210mm;
-  margin: 0 auto 18px;
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  flex-wrap: wrap;
-  position: relative;
-}
-
-.papersheet-toolbar-primary { display: contents; }
-
-.papersheet-toolbar button,
-.papersheet-toolbar a {
-  width: auto;
-  padding: 8px 16px;
-  border: 1px solid #5e1414;
-  border-radius: 3px;
-  background: #8e1f1f;
-  color: #f3e9d8;
-  font: 700 13px/normal "Alegreya Sans SC", sans-serif;
-  letter-spacing: 0.08em;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.papersheet-toolbar button:hover,
-.papersheet-toolbar a:hover { filter: brightness(1.15); }
-
-.papersheet-toolbar .savemsg {
-  min-width: 60px;
-  color: #9a917d;
-  font-size: 12px;
-  letter-spacing: 0.06em;
-  text-align: right;
-}
-
 .character-delete-backdrop {
   position: fixed;
   inset: 0;

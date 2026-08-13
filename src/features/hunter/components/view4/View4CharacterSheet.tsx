@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type RefObject } from "react";
 import { levelForInsight } from "@/lib/insight";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { AppAbilitiesSection } from "../appsheet/AppAbilitiesSection";
@@ -53,7 +53,7 @@ function Rail({ items, open }: { items: typeof LEFT; open: (panel: View4Panel) =
   return <nav aria-label="Character sheet sections">{items.map((item) => <button key={item.panel} type="button" aria-haspopup="dialog" onClick={() => open(item.panel)}><View4Icon name={item.icon} /><span>{item.label}</span></button>)}</nav>;
 }
 
-export function View4CharacterSheet({ model, notesModel, panel, onPanelChange }: { model: AppSheetModel; notesModel: AppSheetModel; panel: View4Panel | null; onPanelChange: (panel: View4Panel | null) => void }) {
+export function View4CharacterSheet({ model, notesModel, panel, onPanelChange, onBack, backRef, saveMsg }: { model: AppSheetModel; notesModel: AppSheetModel; panel: View4Panel | null; onPanelChange: (panel: View4Panel | null) => void; onBack: () => void; backRef: RefObject<HTMLButtonElement | null>; saveMsg: string }) {
   const stage = useAppEditStage();
   const { card, klass, background, result } = useCharacterAutomation();
   const name = sheetText(model.data, "name") || card.name || "Unnamed hunter";
@@ -80,8 +80,9 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange }:
     }}
   >
     <header className="v4-identity">
-      <button type="button" onClick={() => onPanelChange("profile")}><small>{klass?.title ?? "Unbound hunter"}</small><h1>{name}</h1><span>{background?.name ?? "No background"}</span></button>
-      <div><button className={upgradePending ? "v4-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Level</small><strong>{displayedLevel}</strong></button><button className={upgradePending ? "v4-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Insight</small><strong>{insight}</strong></button></div>
+      <div className="v4-header-tools"><button type="button" className="character-sheet-back" ref={backRef} onClick={onBack} aria-label="Back to hunters"><span aria-hidden="true">←</span><span>Back</span></button>{saveMsg && <small className="character-sheet-save" role="status">{saveMsg}</small>}</div>
+      <button className="v4-identity-profile" type="button" onClick={() => onPanelChange("profile")}><small>{klass?.title ?? "Unbound hunter"}</small><h1>{name}</h1><span>{background?.name ?? "No background"}</span></button>
+      <div className="v4-identity-progress"><button className={upgradePending ? "v4-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Level</small><strong>{displayedLevel}</strong></button><button className={upgradePending ? "v4-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Insight</small><strong>{insight}</strong></button></div>
     </header>
     {completedUpgrade > 0 && <span key={completedUpgrade} className="v4-upgrade-complete" role="status">Upgrade complete</span>}
     <div className="v4-stage">

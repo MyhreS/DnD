@@ -551,6 +551,10 @@ button {
   margin-top: 14px;
 }
 
+.settings-card-title { margin: 6px 0 0; font-size: 1.25rem; }
+.settings-card-copy { margin: 8px 0 0; font-size: .9rem; line-height: 1.45; }
+.settings-choice-row { margin-top: 14px; }
+
 .card-hover {
   transition: border-color 0.18s ease, transform 0.18s ease;
 }
