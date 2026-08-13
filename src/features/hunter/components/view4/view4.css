@@ -141,15 +141,17 @@
 
 .v4-overlay { --v4-scrim-opacity: .58; position: absolute; z-index: 20; inset: 0; display: flex; align-items: flex-end; justify-content: center; overflow: hidden; background: rgba(2, 3, 5, var(--v4-scrim-opacity)); backdrop-filter: blur(3px); transition: background-color .22s ease-out, backdrop-filter .22s ease-out; animation: v4-scrim-in .22s ease-out; }
 .v4-overlay.is-dismissing { --v4-scrim-opacity: 0 !important; backdrop-filter: blur(0); }
-.v4-drawer { --v4-drawer-drag-y: 0px; position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); width: min(980px, calc(100% - 32px)); height: min(82%, 760px); overflow: hidden; transform: translateY(var(--v4-drawer-drag-y)); transition: transform .28s cubic-bezier(.22, .8, .26, 1); border: 1px solid color-mix(in srgb, var(--app-line), white 5%); border-bottom: 0; border-radius: 25px 25px 0 0; background: color-mix(in srgb, var(--app-bg), var(--app-surface) 38%); box-shadow: 0 -18px 70px rgba(0, 0, 0, .58); will-change: transform; animation: v4-drawer-in .34s cubic-bezier(.22, .8, .26, 1); }
+.v4-drawer { --v4-drawer-drag-y: 0px; --v4-drawer-min-height: 0px; --v4-drawer-max-height: min(86%, 760px); position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr); width: min(980px, calc(100% - 32px)); height: auto; min-height: var(--v4-drawer-min-height); max-height: var(--v4-drawer-max-height); overflow: hidden; transform: translateY(var(--v4-drawer-drag-y)); transition: transform .28s cubic-bezier(.22, .8, .26, 1); border: 1px solid color-mix(in srgb, var(--app-line), white 5%); border-bottom: 0; border-radius: 25px 25px 0 0; background: color-mix(in srgb, var(--app-bg), var(--app-surface) 38%); box-shadow: 0 -18px 70px rgba(0, 0, 0, .58); will-change: transform; animation: v4-drawer-in .34s cubic-bezier(.22, .8, .26, 1); }
 .v4-drawer.is-dragging { cursor: grabbing; transition: none; animation: none; }
 .v4-drawer.is-dismissing { transform: translateY(calc(100% + 24px)); transition: transform .22s cubic-bezier(.4, 0, 1, 1); animation: none; }
 .v4-overlay[data-panel="notes"] .v4-drawer,
-.v4-overlay[data-panel="resources"] .v4-drawer { height: min(74%, 660px); }
+.v4-overlay[data-panel="resources"] .v4-drawer { --v4-drawer-max-height: min(80%, 680px); }
 .v4-overlay[data-panel="health"] .v4-drawer,
-.v4-overlay[data-panel="sanity"] .v4-drawer,
-.v4-overlay[data-panel="progress"] .v4-drawer { height: min(58%, 520px); }
-.v4-overlay[data-panel="upgrade"] .v4-drawer { height: min(91%, 820px); }
+.v4-overlay[data-panel="sanity"] .v4-drawer { --v4-drawer-max-height: min(72%, 620px); }
+.v4-overlay[data-panel="progress"] .v4-drawer { --v4-drawer-min-height: min(68%, 620px); --v4-drawer-max-height: min(82%, 700px); }
+.v4-overlay[data-panel="inventory"] .v4-drawer,
+.v4-overlay[data-panel="equipment"] .v4-drawer,
+.v4-overlay[data-panel="upgrade"] .v4-drawer { --v4-drawer-max-height: min(92%, 840px); }
 .v4-drawer-grabber { cursor: grab; touch-action: none; user-select: none; }
 .v4-drawer-handle { display: block; width: 42px; height: 5px; margin: 9px auto 3px; border-radius: 999px; background: color-mix(in srgb, var(--app-muted), transparent 38%); transition: width .18s ease, background-color .18s ease; }
 .v4-drawer-grabber:hover .v4-drawer-handle { width: 48px; background: color-mix(in srgb, var(--app-muted), transparent 18%); }
@@ -226,6 +228,7 @@
 .v4-hunter-build-grid > label > small, .v4-hunter-build-value > small { color: var(--app-faint); font: 12px/1.35 "Alegreya", serif; }
 .v4-hunter-build-value > strong { min-height: 42px; padding: 10px 2px; border-bottom: 1px solid var(--app-line); color: var(--app-text); font-size: 14px; }
 .v4-vital-drawer, .v4-progress-drawer { display: grid; gap: 20px; }
+.v4-overlay[data-panel="progress"] .v4-progress-drawer { min-height: 100%; align-content: center; }
 .v4-vital-summary { display: grid; gap: 4px; padding: 4px 2px 18px; border-bottom: 1px solid var(--app-line); }
 .v4-vital-summary small, .v4-level-summary small { color: var(--app-muted); font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
 .v4-vital-summary strong { color: var(--app-text); font: 600 clamp(30px, 5vw, 46px)/1 "Cinzel", serif; }
@@ -407,15 +410,15 @@
   .v4-inventory-shortcut svg { width: 20px; height: 20px; }
   .v4-inventory-shortcut span { font-size: 9px; }
   .v4-inventory-shortcut small { font-size: 8px; }
-  .v4-drawer { width: 100%; height: 88%; border-right: 0; border-left: 0; border-radius: 22px 22px 0 0; }
+  .v4-drawer { --v4-drawer-max-height: 88%; width: 100%; border-right: 0; border-left: 0; border-radius: 22px 22px 0 0; }
   .v4-overlay[data-panel="notes"] .v4-drawer,
-  .v4-overlay[data-panel="resources"] .v4-drawer { height: 78%; }
+  .v4-overlay[data-panel="resources"] .v4-drawer { --v4-drawer-max-height: 82%; }
   .v4-overlay[data-panel="health"] .v4-drawer,
-  .v4-overlay[data-panel="sanity"] .v4-drawer,
-  .v4-overlay[data-panel="progress"] .v4-drawer { height: 62%; }
+  .v4-overlay[data-panel="sanity"] .v4-drawer { --v4-drawer-max-height: 76%; }
+  .v4-overlay[data-panel="progress"] .v4-drawer { --v4-drawer-min-height: 70%; --v4-drawer-max-height: 86%; }
   .v4-overlay[data-panel="inventory"] .v4-drawer,
   .v4-overlay[data-panel="equipment"] .v4-drawer,
-  .v4-overlay[data-panel="upgrade"] .v4-drawer { height: 94%; }
+  .v4-overlay[data-panel="upgrade"] .v4-drawer { --v4-drawer-max-height: 94%; }
   .v4-overlay-header { padding: 4px 18px 13px; }
   .v4-overlay-header h2 { font-size: 19px; }
   .v4-overlay-content { padding: 14px 16px max(28px, env(safe-area-inset-bottom)); }
@@ -456,12 +459,12 @@
   .v4-rail button { padding-block: 3px !important; }
   .v4-character::before { inset-block: 1%; }
   .v4-readouts button { min-height: 34px; }
-  .v4-drawer { height: 92%; }
+  .v4-drawer { --v4-drawer-max-height: 92%; }
   .v4-overlay[data-panel="notes"] .v4-drawer,
-  .v4-overlay[data-panel="resources"] .v4-drawer { height: 84%; }
+  .v4-overlay[data-panel="resources"] .v4-drawer { --v4-drawer-max-height: 86%; }
   .v4-overlay[data-panel="health"] .v4-drawer,
   .v4-overlay[data-panel="sanity"] .v4-drawer,
-  .v4-overlay[data-panel="progress"] .v4-drawer { height: 74%; }
+  .v4-overlay[data-panel="progress"] .v4-drawer { --v4-drawer-min-height: 72%; --v4-drawer-max-height: 82%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
