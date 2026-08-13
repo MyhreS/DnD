@@ -305,13 +305,23 @@
 .v4-upgrade-feat-abilities label { display: grid; grid-template-columns: 1fr 62px; align-items: center; gap: 6px; padding: 7px; border: 1px solid var(--app-line); border-radius: 7px; }
 .v4-upgrade-feat-abilities label > span { display: grid; color: var(--app-text); font-size: 11px; }
 .v4-upgrade-feat-abilities label small { color: var(--app-positive); font-size: 10px; }
-.v4-upgrade-subclass-features { display: grid; max-height: 235px; overflow-y: auto; border-top: 1px solid var(--app-line); }
-.v4-upgrade-subclass-features > span { display: grid; gap: 3px; padding: 9px 0; border-bottom: 1px solid var(--app-line); }
-.v4-upgrade-subclass-features > span small { color: var(--app-warm); font-size: 9px; text-transform: uppercase; }
-.v4-upgrade-review > div { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-block: 1px solid var(--app-line); }
-.v4-upgrade-review > div span { display: grid; padding: 8px; border-right: 1px solid var(--app-line); }
-.v4-upgrade-review > div small { color: var(--app-faint); font-size: 9px; text-transform: uppercase; }
-.v4-upgrade-review > div b { color: var(--app-positive); }
+.v4-upgrade-subclass-features { display: grid; gap: 12px; border-top: 1px solid var(--app-line); }
+.v4-upgrade-subclass-features section { display: grid; }
+.v4-upgrade-subclass-features h4 { margin: 10px 0 0; color: var(--app-warm); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.v4-upgrade-subclass-features section > span { display: grid; gap: 3px; padding: 9px 0; border-bottom: 1px solid var(--app-line); }
+.v4-upgrade-subclass-features section > span small { color: var(--app-warm); font-size: 9px; text-transform: uppercase; }
+.v4-upgrade-review-values { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); border-block: 1px solid var(--app-line); }
+.v4-upgrade-review-values span { display: grid; padding: 8px; border-right: 1px solid var(--app-line); }
+.v4-upgrade-review-values small, .v4-upgrade-review-subclass > small { color: var(--app-faint); font-size: 9px; text-transform: uppercase; }
+.v4-upgrade-review-values b { color: var(--app-positive); }
+.v4-upgrade-review-subclass { display: grid; gap: 5px; margin-top: 10px; padding: 12px; border: 1px solid color-mix(in srgb, var(--app-warm), transparent 55%); border-radius: 9px; background: color-mix(in srgb, var(--app-warm), transparent 94%); }
+.v4-upgrade-review-subclass h4 { margin: 0; color: var(--app-text); font: 600 17px/1.2 "Cinzel", serif; }
+.v4-upgrade-review-subclass > p { margin-bottom: 2px; }
+.v4-upgrade-review-subclass article { display: grid; gap: 5px; padding-top: 9px; border-top: 1px solid var(--app-line); }
+.v4-upgrade-review-subclass article span { display: grid; }
+.v4-upgrade-review-subclass article small { color: var(--app-warm); font-size: 9px; text-transform: uppercase; }
+.v4-upgrade-review-subclass article p, .v4-upgrade-review li p { margin: 3px 0 0; color: var(--app-muted); font: 12px/1.35 "Alegreya", serif; white-space: pre-line; }
+.v4-upgrade-review-empty { padding: 14px 0; border-block: 1px solid var(--app-line); }
 .v4-upgrade-review ul { display: grid; max-height: 250px; overflow-y: auto; margin: 10px 0 0; padding: 0; list-style: none; }
 .v4-upgrade-review li { display: flex; justify-content: space-between; gap: 14px; padding: 8px 2px; border-bottom: 1px solid var(--app-line); }
 .v4-upgrade-review li span { display: grid; }
@@ -434,7 +444,7 @@
   .v4-upgrade-record { grid-template-columns: 1fr; }
   .v4-upgrade-ability-picks { grid-template-columns: 1fr; }
   .v4-upgrade-feat-abilities > div { grid-template-columns: repeat(2, 1fr); }
-  .v4-upgrade-review > div { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .v4-upgrade-review-values { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .v4-notes-paper textarea { min-height: clamp(240px, 42vh, 380px); }
   .v4-paper-doll { height: 500px; }
   .v4-paper-doll > .v4-figure { inset: 12% 25%; width: 50%; height: 70%; }
