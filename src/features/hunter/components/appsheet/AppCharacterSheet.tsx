@@ -61,7 +61,7 @@ function StagedCharacterSheet({ model, mode, view4Panel, onView4PanelChange }: {
       <main className="appsheet-workspace">
         {mode === "hud" ? <View4CharacterSheet model={stageModel} notesModel={model} panel={view4Panel} onPanelChange={onView4PanelChange} /> : <AppQuickView model={stageModel} />}
       </main>
-      {!model.readOnly && !(mode === "hud" && view4Panel === "upgrade") && <AppEditTray onResumeUpgrade={mode === "hud" ? () => onView4PanelChange("upgrade") : undefined} />}
+      {!model.readOnly && !(mode === "hud" && view4Panel === "upgrade") && <AppEditTray />}
     </div>
   </CharacterAutomationProvider>;
 }

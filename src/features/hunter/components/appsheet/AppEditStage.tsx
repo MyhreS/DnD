@@ -133,10 +133,9 @@ function numeric(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function AppEditTray({ onResumeUpgrade }: { onResumeUpgrade?: () => void }) {
+export function AppEditTray() {
   const stage = useAppEditStage();
-  if (!stage.hasChanges) return null;
-  const upgradeDraft = hasStagedUpgrade(stage.patch);
+  if (!stage.hasChanges || hasStagedUpgrade(stage.patch)) return null;
   const fields = ([
     ["Level", stage.currentResult.fields.level, stage.previewResult.fields.level],
     ["Current HP", stage.currentResult.fields.hpCur, stage.previewResult.fields.hpCur],
@@ -192,12 +191,12 @@ export function AppEditTray({ onResumeUpgrade }: { onResumeUpgrade?: () => void 
   const klass = stage.previewCard.classId;
 
   return (
-    <aside className={`appsheet-edit-tray ${upgradeDraft ? "upgrade-draft" : ""}`} data-testid="appsheet-edit-stage" aria-label="Review pending character changes">
+    <aside className="appsheet-edit-tray" data-testid="appsheet-edit-stage" aria-label="Review pending character changes">
       <div className="appsheet-edit-title">
-        <span>{upgradeDraft ? "Upgrade paused" : "Review changes"}</span>
+        <span>Review changes</span>
         <b>{fields.length + otherChanges.length + stage.changedFields.length} pending · nothing is saved until you apply.</b>
       </div>
-      {!upgradeDraft && <div className="appsheet-change-list">
+      <div className="appsheet-change-list">
         {fields.map(([label, before, after]) => {
           const beforeNumber = numeric(before);
           const afterNumber = numeric(after);
@@ -214,10 +213,10 @@ export function AppEditTray({ onResumeUpgrade }: { onResumeUpgrade?: () => void 
         {calculatedFieldChangeCount > 0 && (
           <span className="neutral"><b>Character details</b><s>Saved</s><strong>Will update automatically</strong></span>
         )}
-      </div>}
+      </div>
       <div className="appsheet-edit-actions">
         <button type="button" className="cancel" onClick={stage.cancel}>Cancel</button>
-        <button type="button" className="apply" disabled={upgradeDraft && !onResumeUpgrade} onClick={upgradeDraft ? onResumeUpgrade : () => stage.apply()}>{upgradeDraft ? "Resume upgrade" : "Apply changes"}</button>
+        <button type="button" className="apply" onClick={() => stage.apply()}>Apply changes</button>
       </div>
     </aside>
   );
