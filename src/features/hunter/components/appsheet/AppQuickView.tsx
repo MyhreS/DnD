@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, type RefObject } from "react";
 import { abilityModifier } from "@/data/abilities";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { resolveInventory } from "@/lib/inventory";
@@ -17,7 +17,7 @@ function signed(value: number): string {
   return value >= 0 ? `+${value}` : String(value);
 }
 
-export function AppQuickView({ model }: { model: AppSheetModel }) {
+export function AppQuickView({ model, onBack, backRef, saveMsg }: { model: AppSheetModel; onBack: () => void; backRef: RefObject<HTMLButtonElement | null>; saveMsg: string }) {
   const { card, klass, result } = useCharacterAutomation();
   const editStage = useAppEditStage();
   const [activeTab, setActiveTab] = useState<"overview" | "gear">("overview");
@@ -29,7 +29,11 @@ export function AppQuickView({ model }: { model: AppSheetModel }) {
   return (
     <main className="appsheet-quick-view" data-testid="app-character-sheet-2">
       <header className="appsheet-quick-header">
-        <div>
+        <div className="appsheet-quick-heading">
+          <div className="character-sheet-topline">
+            <button type="button" className="character-sheet-back" ref={backRef} onClick={onBack}><span aria-hidden="true">←</span> Back</button>
+            {saveMsg && <span className="character-sheet-save" role="status">{saveMsg}</span>}
+          </div>
           <h1>{name}</h1>
           <p>{klass?.title ?? "Choose a class"} · Level {card.level}</p>
         </div>

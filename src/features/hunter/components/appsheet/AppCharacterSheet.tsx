@@ -1,3 +1,4 @@
+import type { RefObject } from "react";
 import type { HunterCard, SheetData } from "@/types";
 import { CharacterAutomationProvider } from "../papersheet/CharacterAutomationProvider";
 import { AppQuickView } from "./AppQuickView";
@@ -17,6 +18,9 @@ export function AppCharacterSheet({
   readOnly,
   onPendingEditChange,
   mode = "hud",
+  onBack,
+  backRef,
+  saveMsg,
   view4Panel = null,
   onView4PanelChange,
 }: {
@@ -27,20 +31,26 @@ export function AppCharacterSheet({
   readOnly: boolean;
   onPendingEditChange?: (pending: boolean) => void;
   mode?: "quick" | "hud";
+  onBack: () => void;
+  backRef: RefObject<HTMLButtonElement | null>;
+  saveMsg: string;
   view4Panel?: View4Panel | null;
   onView4PanelChange: (panel: View4Panel | null) => void;
 }) {
   const model: AppSheetModel = { data, setField, setFields, card, readOnly };
   return (
     <AppEditStage model={model} onPendingChange={onPendingEditChange}>
-      <StagedCharacterSheet model={model} mode={mode} view4Panel={view4Panel} onView4PanelChange={onView4PanelChange} />
+      <StagedCharacterSheet model={model} mode={mode} onBack={onBack} backRef={backRef} saveMsg={saveMsg} view4Panel={view4Panel} onView4PanelChange={onView4PanelChange} />
     </AppEditStage>
   );
 }
 
-function StagedCharacterSheet({ model, mode, view4Panel, onView4PanelChange }: {
+function StagedCharacterSheet({ model, mode, onBack, backRef, saveMsg, view4Panel, onView4PanelChange }: {
   model: AppSheetModel;
   mode: "quick" | "hud";
+  onBack: () => void;
+  backRef: RefObject<HTMLButtonElement | null>;
+  saveMsg: string;
   view4Panel: View4Panel | null;
   onView4PanelChange: (panel: View4Panel | null) => void;
 }) {
@@ -59,7 +69,7 @@ function StagedCharacterSheet({ model, mode, view4Panel, onView4PanelChange }: {
   >
     <div className="character-app-sheet" data-testid="app-character-sheet">
       <main className="appsheet-workspace">
-        {mode === "hud" ? <View4CharacterSheet model={stageModel} notesModel={model} panel={view4Panel} onPanelChange={onView4PanelChange} /> : <AppQuickView model={stageModel} />}
+        {mode === "hud" ? <View4CharacterSheet model={stageModel} notesModel={model} panel={view4Panel} onPanelChange={onView4PanelChange} onBack={onBack} backRef={backRef} saveMsg={saveMsg} /> : <AppQuickView model={stageModel} onBack={onBack} backRef={backRef} saveMsg={saveMsg} />}
       </main>
       {!model.readOnly && !(mode === "hud" && view4Panel === "upgrade") && <AppEditTray />}
     </div>

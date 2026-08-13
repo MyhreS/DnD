@@ -6,8 +6,10 @@ import type { View4Panel } from "./View4CharacterSheet";
 
 export function View4Overlay({ title, eyebrow, panel, onClose, children }: { title: string; eyebrow: string; panel: View4Panel; onClose: () => void; children: ReactNode }) {
   const overlayRef = useOverlayFocus<HTMLElement>();
-  const { drawerRef, dragHandlers } = useDrawerDrag(onClose);
-  return <section ref={overlayRef} className="v4-overlay" data-panel={panel} role="dialog" aria-modal="true" aria-labelledby="view4-drawer-title" tabIndex={-1} onKeyDown={(event) => {
+  const { drawerRef, dragHandlers, dismiss } = useDrawerDrag(onClose);
+  return <section ref={overlayRef} className="v4-overlay" data-panel={panel} role="dialog" aria-modal="true" aria-labelledby="view4-drawer-title" tabIndex={-1} onClick={(event) => {
+    if (event.target === event.currentTarget) dismiss();
+  }} onKeyDown={(event) => {
     if (event.key !== "Escape") return;
     event.preventDefault();
     event.stopPropagation();

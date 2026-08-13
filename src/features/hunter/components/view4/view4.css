@@ -84,26 +84,22 @@
   color-scheme: light;
 }
 
-.view-hud .papersheet-toolbar { flex: none; width: min(1180px, 100%); margin: 0 auto 8px; color: var(--app-muted); }
-.view-hud .papersheet-toolbar .ghost { border-color: var(--app-line); color: var(--app-muted); }
-.view-hud .character-view-menu-popover { border-color: var(--app-line); background: var(--app-surface); box-shadow: var(--app-shadow); }
-.view-hud .character-view-menu-popover button { color: var(--app-text); }
-.view-hud .character-view-menu-popover button:hover,
-.view-hud .character-view-menu-popover button:focus-visible,
-.view-hud .character-view-menu-popover button.active { background: var(--app-subtle-hover); }
 .view-hud > .character-app-sheet { flex: 1; width: min(1180px, 100%); min-height: 0; }
 .view-hud .appsheet-workspace { height: 100%; min-height: 0; }
 
 .v4-sheet { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: clamp(7px, 1.4vh, 13px); height: 100%; min-height: 0; overflow: hidden; padding-bottom: max(10px, env(safe-area-inset-bottom)); color: var(--app-text); }
-.v4-identity { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 5px clamp(6px, 2vw, 22px) 9px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 25%); }
+.v4-identity { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 5px clamp(6px, 2vw, 22px) 9px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 25%); }
 .v4-identity button { border: 0 !important; background: transparent !important; color: inherit !important; text-align: left; }
-.v4-identity > button { min-width: 0; padding: 0 !important; }
+.v4-identity-profile { min-width: 0; padding: 0 !important; }
 .v4-identity h1 { overflow: hidden; margin: 1px 0; color: var(--app-text); font: 600 clamp(21px, 3.5vw, 36px)/1.05 "Cinzel", serif; text-overflow: ellipsis; white-space: nowrap; }
-.v4-identity small, .v4-identity span { color: var(--app-muted); font: 700 10px/1.1 "Alegreya Sans SC", sans-serif; letter-spacing: .12em; text-transform: uppercase; }
-.v4-identity > div { display: flex; gap: 8px; }
-.v4-identity > div button { display: grid; justify-items: center; min-width: 58px; padding: 6px 10px !important; border: 1px solid var(--app-line) !important; border-radius: 7px; background: var(--app-subtle) !important; text-align: center; }
+.v4-identity-profile small, .v4-identity-profile span, .v4-identity-progress small { color: var(--app-muted); font: 700 10px/1.1 "Alegreya Sans SC", sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.v4-header-tools { display: grid; justify-items: start; gap: 4px; }
+.v4-header-tools .character-sheet-back { border: 1px solid var(--app-line) !important; background: var(--app-subtle) !important; }
+.v4-header-tools .character-sheet-back:hover, .v4-header-tools .character-sheet-back:focus-visible { border-color: var(--app-warm) !important; background: var(--app-subtle-hover) !important; }
+.v4-identity-progress { display: flex; gap: 8px; }
+.v4-identity-progress button { display: grid; justify-items: center; min-width: 58px; padding: 6px 10px !important; border: 1px solid var(--app-line) !important; border-radius: 7px; background: var(--app-subtle) !important; text-align: center; }
 .v4-identity strong { font: 700 19px/1.05 "Cinzel", serif; }
-.v4-identity > div button.v4-upgrade-pending { border-color: color-mix(in srgb, var(--app-warm), transparent 20%) !important; color: var(--app-warm) !important; animation: v4-upgrade-glow 1.8s ease-in-out infinite; }
+.v4-identity-progress button.v4-upgrade-pending { border-color: color-mix(in srgb, var(--app-warm), transparent 20%) !important; color: var(--app-warm) !important; animation: v4-upgrade-glow 1.8s ease-in-out infinite; }
 .v4-upgrade-complete { position: absolute; z-index: 4; top: 62px; left: 50%; padding: 7px 14px; border: 1px solid color-mix(in srgb, var(--app-positive), white 18%); border-radius: 999px; background: color-mix(in srgb, var(--app-bg), var(--app-positive) 25%); color: #dff5e4; font: 700 11px/1 "Alegreya Sans SC", sans-serif; letter-spacing: .1em; text-transform: uppercase; pointer-events: none; animation: v4-upgrade-celebrate 2.8s ease both; }
 @keyframes v4-upgrade-glow { 0%, 100% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--app-warm), transparent 76%) } 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--app-warm), transparent 88%), 0 0 20px color-mix(in srgb, var(--app-warm), transparent 45%) } }
 @keyframes v4-upgrade-celebrate { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.9) } 15%, 70% { opacity: 1; transform: translate(-50%, 0) scale(1) } 100% { opacity: 0; transform: translate(-50%, -10px) scale(1.04) } }
@@ -407,13 +403,13 @@
 .v4-unique-error { color: var(--app-danger) !important; font-weight: 700 !important; }
 
 @media (max-width: 700px) {
-  .view-hud .papersheet-toolbar { margin-bottom: 4px; }
-  .view-hud .papersheet-toolbar .savemsg { display: none; }
   .v4-sheet { gap: 6px; }
   .v4-identity { padding-bottom: 6px; }
   .v4-identity h1 { font-size: clamp(18px, 6vw, 25px); }
-  .v4-identity > div { gap: 4px; }
-  .v4-identity > div button { min-width: 48px; padding: 5px 6px !important; }
+  .v4-header-tools .character-sheet-back { min-width: 38px; padding: 5px 8px; }
+  .v4-header-tools .character-sheet-back > span:last-child, .v4-header-tools .character-sheet-save { display: none; }
+  .v4-identity-progress { gap: 4px; }
+  .v4-identity-progress button { min-width: 48px; padding: 5px 6px !important; }
   .v4-identity strong { font-size: 16px; }
   .v4-upgrade-complete { top: 55px; }
   .v4-stage { grid-template-columns: 68px minmax(120px, 1fr) 68px; }
@@ -478,7 +474,7 @@
 }
 
 @media (max-height: 700px) {
-  .v4-identity span, .v4-character > small { display: none; }
+  .v4-identity-profile span, .v4-character > small { display: none; }
   .v4-stage { grid-template-columns: 62px minmax(110px, 1fr) 62px; }
   .v4-rail nav { gap: 2px; }
   .v4-rail button { padding-block: 3px !important; }

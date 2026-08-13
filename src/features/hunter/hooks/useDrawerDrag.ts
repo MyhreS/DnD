@@ -80,5 +80,5 @@ export function useDrawerDrag(onClose: () => void) {
 
   const onPointerCancel = () => reset();
 
-  return { drawerRef, dragHandlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel } };
+  return { drawerRef, dismiss, dragHandlers: { onPointerDown, onPointerMove, onPointerUp, onPointerCancel } };
 }
