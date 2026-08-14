@@ -372,6 +372,16 @@ export function CharacterAutomationProvider({
     commit({ inventory, slotAssignments });
   }
 
+  function addCatalogItemToSlot(id: string, target: SlotAssignment) {
+    const index = (card.inventory ?? []).find((entry) => entry.itemId === id)?.qty ?? 0;
+    const assignments = [...(card.slotAssignments?.[id] ?? [])];
+    assignments[index] = target;
+    commit({
+      inventory: mergeInventory(card.inventory ?? [], [{ itemId: id, qty: 1 }]),
+      slotAssignments: { ...(card.slotAssignments ?? {}), [id]: assignments },
+    });
+  }
+
   function setSlotAssignment(id: string, index: number, location: SlotAssignment | null) {
     if (index < 0) return;
     const assignments: Array<SlotAssignment | null> = [...(card.slotAssignments?.[id] ?? [])];
@@ -463,7 +473,10 @@ export function CharacterAutomationProvider({
     });
   }
 
-  function addCustomItem(draft: Parameters<CharacterAutomationController["addCustomItem"]>[0]) {
+  function addCustomItem(
+    draft: Parameters<CharacterAutomationController["addCustomItem"]>[0],
+    target?: SlotAssignment,
+  ) {
     const item: CustomItem = {
       id: `found-${crypto.randomUUID()}`,
       name: draft.name.trim(),
@@ -482,6 +495,7 @@ export function CharacterAutomationProvider({
       ...card,
       customItems: [...(card.customItems ?? []), item],
       inventory: mergeInventory(card.inventory ?? [], [{ itemId: item.id, qty: 1 }]),
+      ...(target ? { slotAssignments: { ...(card.slotAssignments ?? {}), [item.id]: [target] } } : {}),
       sheetAutomation: state,
     };
     const weaponFields: SheetData = {};
@@ -499,7 +513,7 @@ export function CharacterAutomationProvider({
     }
     onApply(
       { ...automatedFields(next), ...weaponFields },
-      { customItems: next.customItems, inventory: next.inventory, sheetAutomation: state },
+      { customItems: next.customItems, inventory: next.inventory, slotAssignments: next.slotAssignments, sheetAutomation: state },
     );
   }
 
@@ -535,6 +549,7 @@ export function CharacterAutomationProvider({
     setBonus,
     switchMode,
     changeQty,
+    addCatalogItemToSlot,
     setSlotAssignment,
     toggleStorage,
     chooseMainArmor: (id) => commit({
