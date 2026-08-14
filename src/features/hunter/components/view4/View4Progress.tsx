@@ -27,7 +27,7 @@ export function View4Progress({ model, upgradePending, onUpgrade }: { model: App
     onUpgrade();
   }
 
-  return <div className="v4-progress-drawer">
+  return <div className="v4-progress-page">
     <section className="v4-level-summary" aria-label="Level and Insight progress">
       <div><small>Current level</small><strong>{level}</strong><span>Level is set by Insight</span></div>
       <div className="v4-insight-progress">

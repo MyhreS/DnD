@@ -10,7 +10,7 @@ export function View4Sanity({ model }: { model: AppSheetModel }) {
   const { result } = useCharacterAutomation();
   const sanityMax = view4Number(result.fields.sanityMax);
   const sanity = stage.previewCard.sanity ?? sanityMax;
-  return <div className="v4-vital-drawer v4-sanity-drawer">
+  return <div className="v4-vital-page v4-sanity-page">
     <div className="v4-vital-summary"><small>Mind remaining</small><strong>{sanity}<span> / {sanityMax} Sanity</span></strong></div>
     <div className="v4-resource-grid v4-vital-controls">
       <View4ResourceControl label="Sanity" value={sanity} max={sanityMax} disabled={model.readOnly} onChange={stage.stageSanity} />

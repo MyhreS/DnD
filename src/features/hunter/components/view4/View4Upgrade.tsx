@@ -83,7 +83,7 @@ export function View4Upgrade({ model, onComplete }: { model: AppSheetModel; onCo
 
   function goToStep(next: number) {
     setRequestedStep(next);
-    flowRef.current?.closest(".v4-overlay-content")?.scrollTo({ top: 0, behavior: "smooth" });
+    flowRef.current?.closest(".v4-page-content")?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   return <div ref={flowRef} className="v4-upgrade-flow">

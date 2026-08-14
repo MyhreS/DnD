@@ -10,7 +10,7 @@ export function View4Health({ model }: { model: AppSheetModel }) {
   const { result } = useCharacterAutomation();
   const hpMax = view4Number(result.fields.hpMax);
   const tempHp = view4Number(sheetText(model.data, "hpTemp"));
-  return <div className="v4-vital-drawer v4-health-drawer">
+  return <div className="v4-vital-page v4-health-page">
     <div className="v4-vital-summary"><small>Current condition</small><strong>{stage.previewCard.currentHp ?? hpMax}<span> / {hpMax} HP</span></strong></div>
     <div className="v4-resource-grid v4-vital-controls">
       <View4ResourceControl label="Hit points" value={stage.previewCard.currentHp ?? hpMax} max={hpMax} disabled={model.readOnly} onChange={stage.stageHp} />

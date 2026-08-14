@@ -147,46 +147,6 @@
   stroke-width: 1.8;
 }
 
-.appsheet-add-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: max(18px, env(safe-area-inset-top)) 14px max(18px, env(safe-area-inset-bottom));
-  background: rgba(7, 7, 9, .74);
-}
-
-.appsheet-add-dialog {
-  width: min(520px, 100%);
-  max-height: min(720px, calc(100dvh - 36px));
-  overflow: auto;
-  padding: 20px;
-  border: 1px solid var(--app-line);
-  border-radius: 7px;
-  background: var(--app-surface);
-  color: var(--app-text);
-  box-shadow: var(--app-shadow);
-}
-
-.appsheet-add-dialog > header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 18px;
-}
-
-.appsheet-add-dialog > header h2 { margin: 0; font: 700 20px/1.2 "Cinzel", serif; }
-
-.appsheet-add-close {
-  min-width: 34px;
-  min-height: 34px;
-  padding: 4px 9px !important;
-  background: var(--app-secondary) !important;
-  font-size: 20px !important;
-}
-
 .appsheet-add-choices { display: grid; gap: 8px; }
 
 .appsheet-add-choices > button {
@@ -205,10 +165,8 @@
 .appsheet-add-choices span { color: var(--app-muted); font: 14px/1.35 "Alegreya", serif; }
 .appsheet-add-form { display: grid; gap: 14px; }
 .appsheet-add-form .appsheet-form-intro { margin-top: 0; }
-.appsheet-add-back { justify-self: start; }
 
 @media (max-width: 640px) {
-  .appsheet-add-dialog { padding: 17px 14px; }
   .appsheet-add-form .appsheet-catalog-add { grid-template-columns: 1fr; }
   .appsheet-add-form .appsheet-catalog-add > button { width: 100% !important; }
 }
