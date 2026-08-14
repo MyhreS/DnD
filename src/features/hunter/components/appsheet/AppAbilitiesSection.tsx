@@ -14,6 +14,17 @@ function SkillList({ result }: { result: ReturnType<typeof useCharacterAutomatio
   </div>;
 }
 
+function FinalAbilities({ result }: { result: ReturnType<typeof useCharacterAutomation>["result"] }) {
+  return <div className="appsheet-final-abilities">
+    {ABILITIES.map((ability) => (
+      <div className="appsheet-final-score" key={ability.key}>
+        <span>{ability.name}</span><strong>{result.fields[`${ability.key}Score`]}</strong><b>{result.fields[`${ability.key}Mod`]}</b><small>Save {result.fields[`${ability.key}Save`]}</small>
+        <AutoReason reason={result.reasons[`${ability.key}Save`]} />
+      </div>
+    ))}
+  </div>;
+}
+
 export function AppAbilitiesSection({ model, view = "all" }: { model: AppSheetModel; view?: "all" | "abilities" | "skills" }) {
   const automation = useCharacterAutomation();
   const { card, result, state, background, base, bonuses, pointsLeft } = automation;
@@ -47,16 +58,8 @@ export function AppAbilitiesSection({ model, view = "all" }: { model: AppSheetMo
         </AppPanel>
       )}
 
-      {view !== "skills" && <AppPanel title="Final abilities and saves">
-        <div className="appsheet-final-abilities">
-          {ABILITIES.map((ability) => (
-            <div className="appsheet-final-score" key={ability.key}>
-              <span>{ability.name}</span><strong>{result.fields[`${ability.key}Score`]}</strong><b>{result.fields[`${ability.key}Mod`]}</b><small>Save {result.fields[`${ability.key}Save`]}</small>
-              <AutoReason reason={result.reasons[`${ability.key}Save`]} />
-            </div>
-          ))}
-        </div>
-      </AppPanel>}
+      {view === "abilities" && <FinalAbilities result={result} />}
+      {view === "all" && <AppPanel title="Final abilities and saves"><FinalAbilities result={result} /></AppPanel>}
 
       {view === "skills" && <SkillList result={result} />}
       {view === "all" && <AppPanel title="Skills"><SkillList result={result} /></AppPanel>}

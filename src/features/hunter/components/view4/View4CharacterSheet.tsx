@@ -1,7 +1,7 @@
 import { useState, type RefObject } from "react";
 import { resolveUnassignedInventory } from "@/features/hunter/lib/inventoryPlacement";
 import { levelForInsight } from "@/lib/insight";
-import type { AppSheetModel } from "../appsheet/appSheetShared";
+import { AppAutoReasonsHidden, type AppSheetModel } from "../appsheet/appSheetShared";
 import { AppAbilitiesSection } from "../appsheet/AppAbilitiesSection";
 import { AppGearSection } from "../appsheet/AppGearSection";
 import { sheetText } from "../appsheet/appSheetValues";
@@ -111,7 +111,7 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange, o
       root={{
         id: panel,
         title: pageDefinition.title,
-        content: <>
+        content: <AppAutoReasonsHidden>
           {panel === "profile" && <View4Hunter model={model} />}
           {panel === "abilities" && <AppAbilitiesSection model={model} view="abilities" />}
           {panel === "skills" && <AppAbilitiesSection model={model} view="skills" />}
@@ -128,7 +128,7 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange, o
           {panel === "progress" && <View4Progress model={model} upgradePending={upgradePending} onUpgrade={() => onPanelChange("upgrade")} />}
           {panel === "resources" && <View4Resources model={model} />}
           {panel === "upgrade" && <View4Upgrade model={model} onComplete={() => { setCompletedUpgrade((value) => value + 1); onPanelChange(null); }} />}
-        </>,
+        </AppAutoReasonsHidden>,
       }}
     />}
   </div>;

@@ -10,9 +10,14 @@ export interface AppSheetModel {
 }
 
 const AppSectionsExpandedContext = createContext(false);
+const AppAutoReasonsVisibleContext = createContext(true);
 
 export function AppSectionsExpanded({ children }: { children: ReactNode }) {
   return <AppSectionsExpandedContext.Provider value>{children}</AppSectionsExpandedContext.Provider>;
+}
+
+export function AppAutoReasonsHidden({ children }: { children: ReactNode }) {
+  return <AppAutoReasonsVisibleContext.Provider value={false}>{children}</AppAutoReasonsVisibleContext.Provider>;
 }
 
 export function AppSection({
@@ -94,7 +99,8 @@ export function AppDisclosure({
 }
 
 export function AutoReason({ reason }: { reason?: string }) {
-  if (!reason) return null;
+  const visible = useContext(AppAutoReasonsVisibleContext);
+  if (!reason || !visible) return null;
   return (
     <details className="appsheet-auto-reason">
       <summary aria-label="Why this value is automatic" title="Why this value is automatic">ⓘ</summary>
