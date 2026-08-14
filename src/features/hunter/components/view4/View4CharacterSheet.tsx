@@ -28,7 +28,7 @@ const PANELS: Record<View4Panel, { title: string; eyebrow: string }> = {
   abilities: { title: "Abilities & skills", eyebrow: "Scores, saves and proficiencies" },
   features: { title: "Features", eyebrow: "Class progression, feats and tools" },
   inventory: { title: "Inventory", eyebrow: "Gear, carrying and found items" },
-  notes: { title: "Notes", eyebrow: "Clues, promises and transformations" },
+  notes: { title: "Notes", eyebrow: "Personal journal and session records" },
   equipment: { title: "Equipment", eyebrow: "Choose what your hunter wears" },
   health: { title: "Health", eyebrow: "Hit points and temporary protection" },
   sanity: { title: "Sanity", eyebrow: "Your hunter's remaining grip" },
