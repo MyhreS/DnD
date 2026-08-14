@@ -6,7 +6,6 @@ import {
   POINT_BUY_MAX,
   POINT_BUY_MIN,
 } from "@/data/abilities";
-import { ARMOR_BY_ID } from "@/data/armor";
 import { BACKGROUNDS } from "@/data/backgrounds";
 import { getClass } from "@/data/classes";
 import { ITEMS } from "@/data/items";
@@ -14,6 +13,7 @@ import { SKILLS } from "@/data/skills";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { maxAddonPieces } from "@/lib/character";
+import { armorFor } from "@/lib/customItems";
 import { startingKit } from "@/lib/startingEquipment";
 import type {
   AbilityKey,
@@ -26,7 +26,7 @@ import type {
 } from "@/types";
 import { budgetFor, spentFor, type BuyMode } from "../../lib/abilityBuy";
 import { automationFor } from "../../lib/characterAutomation";
-import { CharacterAutomationContext, type CharacterAutomationController } from "./characterAutomationContext";
+import { CharacterAutomationContext, type CharacterAutomationController, type SlotReplacement } from "./characterAutomationContext";
 
 type Apply = (fields: SheetData, patch: Partial<HunterCard>) => void;
 
@@ -372,31 +372,57 @@ export function CharacterAutomationProvider({
     commit({ inventory, slotAssignments });
   }
 
-  function addCatalogItemToSlot(id: string, target: SlotAssignment) {
-    const index = (card.inventory ?? []).find((entry) => entry.itemId === id)?.qty ?? 0;
-    const assignments = [...(card.slotAssignments?.[id] ?? [])];
+  function slotStateWithout(replace?: SlotReplacement) {
+    let inventory = card.inventory ?? [];
+    let equippedStorageIds = card.equippedStorageIds ?? [];
+    const slotAssignments = Object.fromEntries(
+      Object.entries(card.slotAssignments ?? {}).flatMap(([itemId, values]) => {
+        const assignments = [...values];
+        if (replace?.storage) {
+          for (let index = 0; index < assignments.length; index += 1) {
+            if (assignments[index]?.startsWith(`storage:${replace.id}:`)) assignments[index] = null;
+          }
+        } else if (itemId === replace?.id && replace.index != null) assignments[replace.index] = null;
+        while (assignments.length && !assignments[assignments.length - 1]) assignments.pop();
+        return assignments.length ? [[itemId, assignments]] : [];
+      }),
+    );
+    if (replace?.storage) {
+      equippedStorageIds = equippedStorageIds.filter((id) => id !== replace.id);
+      inventory = mergeInventory(inventory, [{ itemId: replace.id, qty: 1 }]);
+    }
+    return { inventory, equippedStorageIds, slotAssignments };
+  }
+
+  function addCatalogItemToSlot(id: string, target: SlotAssignment, replace?: SlotReplacement) {
+    const base = slotStateWithout(replace);
+    const index = base.inventory.find((entry) => entry.itemId === id)?.qty ?? 0;
+    const assignments = [...(base.slotAssignments[id] ?? [])];
     assignments[index] = target;
     commit({
-      inventory: mergeInventory(card.inventory ?? [], [{ itemId: id, qty: 1 }]),
-      slotAssignments: { ...(card.slotAssignments ?? {}), [id]: assignments },
+      inventory: mergeInventory(base.inventory, [{ itemId: id, qty: 1 }]),
+      equippedStorageIds: base.equippedStorageIds,
+      slotAssignments: { ...base.slotAssignments, [id]: assignments },
     });
   }
 
-  function setSlotAssignment(id: string, index: number, location: SlotAssignment | null) {
+  function setSlotAssignment(id: string, index: number, location: SlotAssignment | null, replace?: SlotReplacement) {
     if (index < 0) return;
-    const assignments: Array<SlotAssignment | null> = [...(card.slotAssignments?.[id] ?? [])];
+    const base = slotStateWithout(replace);
+    const assignments: Array<SlotAssignment | null> = [...(base.slotAssignments[id] ?? [])];
     if (location) assignments[index] = location;
     else assignments[index] = null;
     const cleaned = assignments.slice(0, Math.max(0, (card.inventory ?? []).find((entry) => entry.itemId === id)?.qty ?? 0));
     while (cleaned.length && !cleaned[cleaned.length - 1]) cleaned.pop();
-    const slotAssignments = { ...(card.slotAssignments ?? {}) };
+    const slotAssignments = { ...base.slotAssignments };
     if (cleaned.length) slotAssignments[id] = cleaned;
     else delete slotAssignments[id];
-    commit({ slotAssignments });
+    commit({ slotAssignments, inventory: base.inventory, equippedStorageIds: base.equippedStorageIds });
   }
 
-  function toggleStorage(id: string) {
-    const equipped = card.equippedStorageIds ?? [];
+  function toggleStorage(id: string, replace?: SlotReplacement) {
+    const base = slotStateWithout(replace);
+    const equipped = base.equippedStorageIds;
     const isEquipped = equipped.includes(id);
     const definition = STORAGE_BY_ITEM_ID[id];
     const conflicts = isEquipped || !definition?.requires ? [] : equipped.filter((entry) => {
@@ -406,7 +432,7 @@ export function CharacterAutomationProvider({
     const removedStorageIds = isEquipped ? [id] : conflicts;
     const vacatedLocation = !isEquipped ? definition?.requires?.location : undefined;
     const slotAssignments = Object.fromEntries(
-      Object.entries(card.slotAssignments ?? {}).flatMap(([itemId, assignments]) => {
+      Object.entries(base.slotAssignments).flatMap(([itemId, assignments]) => {
         if (itemId === id || conflicts.includes(itemId)) return [];
         const cleaned = assignments.map((assignment) => {
           if (assignment === vacatedLocation) return null;
@@ -421,7 +447,7 @@ export function CharacterAutomationProvider({
       equippedStorageIds: isEquipped
         ? equipped.filter((entry) => entry !== id)
         : [...equipped.filter((entry) => !conflicts.includes(entry)), id],
-      inventory: mergeInventory(card.inventory ?? [], [
+      inventory: mergeInventory(base.inventory, [
         { itemId: id, qty: isEquipped ? 1 : -1 },
         ...conflicts.map((itemId) => ({ itemId, qty: 1 })),
       ]),
@@ -431,7 +457,7 @@ export function CharacterAutomationProvider({
 
   function setExtra(subcategory: string, id: string) {
     const kept = (card.extraArmorIds ?? []).filter(
-      (entry) => ARMOR_BY_ID[entry]?.subcategory !== subcategory,
+      (entry) => armorFor(card, entry)?.subcategory !== subcategory,
     );
     commit({ extraArmorIds: id ? [...kept, id] : kept });
   }
@@ -453,6 +479,7 @@ export function CharacterAutomationProvider({
       note: draft.note.trim() || undefined,
       source: "found",
       armorCategory: draft.armorCategory,
+      armorSubcategory: draft.armorSubcategory,
       acValue: Math.max(0, Math.floor(draft.acValue)),
       unique: true,
     };
@@ -465,17 +492,27 @@ export function CharacterAutomationProvider({
           mainArmorId: item.id,
           addonArmorIds: (card.addonArmorIds ?? []).slice(0, maxAddonPieces(item.id, customItems)),
         }
-        : {
-          addonArmorIds: (card.addonArmorIds ?? []).length < maxAddonPieces(card.mainArmorId, customItems)
-            ? [...(card.addonArmorIds ?? []), item.id]
-            : card.addonArmorIds,
-        }),
+        : item.armorCategory === "Extra" && item.armorSubcategory
+          ? {
+            extraArmorIds: [
+              ...(card.extraArmorIds ?? []).filter((id) => armorFor(card, id)?.subcategory !== item.armorSubcategory),
+              item.id,
+            ],
+          }
+          : (() => {
+            const limit = maxAddonPieces(card.mainArmorId, customItems);
+            const selected = [...(card.addonArmorIds ?? [])].slice(0, limit);
+            const index = draft.addonIndex ?? selected.length;
+            if (index < limit) selected[index] = item.id;
+            return { addonArmorIds: selected.filter(Boolean).slice(0, limit) };
+          })()),
     });
   }
 
   function addCustomItem(
     draft: Parameters<CharacterAutomationController["addCustomItem"]>[0],
     target?: SlotAssignment,
+    replace?: SlotReplacement,
   ) {
     const item: CustomItem = {
       id: `found-${crypto.randomUUID()}`,
@@ -489,13 +526,16 @@ export function CharacterAutomationProvider({
       attackBonus: draft.attackBonus.trim() || undefined,
       damage: draft.damage.trim() || undefined,
       weaponNotes: draft.weaponNotes.trim() || undefined,
+      catalogBaseId: draft.catalogBaseId,
     };
     if (!item.name) return;
+    const base = slotStateWithout(replace);
     const next: HunterCard = {
       ...card,
       customItems: [...(card.customItems ?? []), item],
-      inventory: mergeInventory(card.inventory ?? [], [{ itemId: item.id, qty: 1 }]),
-      ...(target ? { slotAssignments: { ...(card.slotAssignments ?? {}), [item.id]: [target] } } : {}),
+      inventory: mergeInventory(base.inventory, [{ itemId: item.id, qty: 1 }]),
+      equippedStorageIds: base.equippedStorageIds,
+      ...(target ? { slotAssignments: { ...base.slotAssignments, [item.id]: [target] } } : {}),
       sheetAutomation: state,
     };
     const weaponFields: SheetData = {};
@@ -513,7 +553,7 @@ export function CharacterAutomationProvider({
     }
     onApply(
       { ...automatedFields(next), ...weaponFields },
-      { customItems: next.customItems, inventory: next.inventory, slotAssignments: next.slotAssignments, sheetAutomation: state },
+      { customItems: next.customItems, inventory: next.inventory, equippedStorageIds: next.equippedStorageIds, slotAssignments: next.slotAssignments, sheetAutomation: state },
     );
   }
 

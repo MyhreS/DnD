@@ -21,10 +21,11 @@ export function armorFor(card: WithCustomItems, id: string): ArmorPiece | undefi
     id: custom.id,
     name: custom.name,
     category: custom.armorCategory,
-    ac: custom.armorCategory === "Main Armor" ? `AC ${custom.acValue}` : `+${custom.acValue} AC`,
+    ac: custom.armorCategory === "Main Armor" ? `AC ${custom.acValue}` : custom.armorCategory === "Extra" ? "0" : `+${custom.acValue} AC`,
     acValue: custom.acValue,
     weightLb: custom.weightLb,
     special: custom.note ?? "Unique armor found during play.",
+    subcategory: custom.armorSubcategory,
     unique: true,
   };
 }

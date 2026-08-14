@@ -31,7 +31,7 @@ export function View4AddonArmor({ model }: { model: AppSheetModel }) {
       onRemove: current ? () => automation.setAddonArmorAt(index, "") : undefined,
       inventory: available.filter((entry) => owned.has(entry.id)).map((entry) => option(entry, () => automation.setAddonArmorAt(index, entry.id))),
       catalogue: available.filter((entry) => !entry.unique).map((entry) => option(entry, () => automation.setAddonArmorAt(index, entry.id))),
-      unique: current ? undefined : { kind: "armor", armorCategory: "Add-on Armor" },
+      unique: { kind: "armor", armorCategory: "Add-on Armor", addonIndex: index },
     });
   }
 

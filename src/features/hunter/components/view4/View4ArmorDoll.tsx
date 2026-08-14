@@ -1,4 +1,4 @@
-import { ARMOR, ARMOR_BY_ID } from "@/data/armor";
+import { ARMOR } from "@/data/armor";
 import { armorFor } from "@/lib/customItems";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
@@ -38,8 +38,11 @@ export function View4ArmorDoll({ model }: { model: AppSheetModel }) {
   return <div className="v4-paper-doll">
     <View4Figure classId={card.classId} />
     {EXTRA_SLOTS.map(([subcategory, label]) => {
-      const selected = (card.extraArmorIds ?? []).find((id) => ARMOR_BY_ID[id]?.subcategory === subcategory) ?? "";
-      const options = ARMOR.filter((entry) => entry.category === "Extra" && entry.subcategory === subcategory);
+      const customExtras = (card.customItems ?? [])
+        .filter((item) => item.category === "Armor" && item.armorCategory === "Extra" && item.armorSubcategory === subcategory)
+        .flatMap((item) => armorFor(card, item.id) ?? []);
+      const selected = (card.extraArmorIds ?? []).find((id) => armorFor(card, id)?.subcategory === subcategory) ?? "";
+      const options = [...ARMOR.filter((entry) => entry.category === "Extra" && entry.subcategory === subcategory), ...customExtras];
       const current = options.find((entry) => entry.id === selected);
       return <div key={subcategory} className={`v4-equip-slot v4-equip-${subcategory.toLowerCase().replaceAll(" ", "-")}`}><View4EquipmentSocket label={label} name={current?.name} detail={current ? `${current.weightLb} lb` : undefined} kind="armor" disabled={model.readOnly} compact onClick={() => picker.openPicker({
         title: label,
@@ -48,6 +51,7 @@ export function View4ArmorDoll({ model }: { model: AppSheetModel }) {
         onRemove: current ? () => automation.setExtra(subcategory, "") : undefined,
         inventory: options.filter((entry) => owned.has(entry.id)).map((entry) => option(entry, () => automation.setExtra(subcategory, entry.id))),
         catalogue: options.filter((entry) => !entry.unique).map((entry) => option(entry, () => automation.setExtra(subcategory, entry.id))),
+        unique: { kind: "armor", armorCategory: "Extra", armorSubcategory: subcategory },
       })} /></div>;
     })}
     <div className="v4-equip-slot v4-equip-main"><View4EquipmentSocket label="Main armor" name={mainOptions.find((entry) => entry.id === card.mainArmorId)?.name} detail={mainOptions.find((entry) => entry.id === card.mainArmorId)?.ac ?? "Unarmored"} kind="armor" disabled={model.readOnly} compact onClick={openMain} /></div>

@@ -132,7 +132,11 @@ export interface Item {
 export interface CustomItem extends Item {
   source: "found";
   /** Present only when category is Armor. */
-  armorCategory?: "Main Armor" | "Add-on Armor";
+  armorCategory?: ArmorCategory;
+  /** The body slot occupied by custom Extra armor. */
+  armorSubcategory?: ExtraSubcategory;
+  /** Catalog item whose slot restrictions this unique variant follows. */
+  catalogBaseId?: string;
   /** Main Armor uses this as base AC; Add-on Armor uses it as a bonus. */
   acValue?: number;
   /** Optional weapon-sheet facts supplied by the table when the item is found. */
