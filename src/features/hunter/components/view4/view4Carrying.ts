@@ -1,4 +1,5 @@
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
+import { ITEMS } from "@/data/items";
 import { resolveInventory } from "@/lib/inventory";
 import { availableSlotAssignmentOptions, computeSlots } from "@/lib/slots";
 import type { HunterCard, Item, SlotAssignment } from "@/types";
@@ -40,13 +41,19 @@ export function availableUnitsFor(
   });
 }
 
-export function unitValue(unit: CarryUnit): string {
-  return `unit:${unit.item.id}:${unit.index}`;
-}
-
-export function parseUnitValue(value: string): { itemId: string; index: number } | null {
-  const match = value.match(/^unit:(.+):(\d+)$/);
-  return match ? { itemId: match[1], index: Number(match[2]) } : null;
+export function catalogueItemsForTarget(card: HunterCard, target: SlotAssignment): Item[] {
+  return ITEMS.filter((item) => {
+    if (item.category === "Armor" || item.carry === "Insignificant" || item.unique || STORAGE_BY_ITEM_ID[item.id]) return false;
+    const qty = card.inventory?.find((entry) => entry.itemId === item.id)?.qty ?? 0;
+    const inventory = [...(card.inventory ?? []).filter((entry) => entry.itemId !== item.id), { itemId: item.id, qty: qty + 1 }];
+    return availableSlotAssignmentOptions(
+      { ...card, inventory },
+      item.id,
+      qty,
+      item.carry,
+      item.slotLocation,
+    ).some((option) => option.value === target);
+  });
 }
 
 export function unitLabel(unit: CarryUnit, units: CarryUnit[]): string {

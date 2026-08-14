@@ -38,6 +38,7 @@ export interface CharacterAutomationController {
   setBonus: (key: AbilityKey, value: number) => void;
   switchMode: (mode: BuyMode) => void;
   changeQty: (id: string, delta: number) => void;
+  addCatalogItemToSlot: (id: string, target: SlotAssignment) => void;
   setSlotAssignment: (id: string, index: number, location: SlotAssignment | null) => void;
   toggleStorage: (id: string) => void;
   chooseMainArmor: (id: string) => void;
@@ -61,7 +62,7 @@ export interface CharacterAutomationController {
     attackBonus: string;
     damage: string;
     weaponNotes: string;
-  }) => void;
+  }, target?: SlotAssignment) => void;
   restoreCalculated: (key: string) => void;
   finishSetup: () => void;
 }
