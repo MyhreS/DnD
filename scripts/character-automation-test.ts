@@ -256,6 +256,17 @@ const bandolierSlot = computeSlots({
 });
 assert.equal(bandolierSlot.byItem.longsword, "Bandolier slot 1", "Bandolier slots require an explicit selection");
 
+const uniqueHolsterWeapon = computeSlots({
+  inventory: [{ itemId: "found-silver-pistol", qty: 1 }],
+  equippedStorageIds: ["ankle-holster"],
+  customItems: [{
+    id: "found-silver-pistol", name: "Silver Pistol", category: "Weapon", carry: "Significant",
+    weightLb: 2, unique: true, source: "found", catalogBaseId: "pistol",
+  }],
+  slotAssignments: { "found-silver-pistol": ["storage:ankle-holster:1"] },
+});
+assert.equal(uniqueHolsterWeapon.byItem["found-silver-pistol"], "Ankle Holster slot 1", "unique variants inherit catalog slot restrictions");
+
 const foundGear = automationFor({
   ...warden,
   mainArmorId: "found-moon-plate",

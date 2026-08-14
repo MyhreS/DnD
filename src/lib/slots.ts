@@ -3,7 +3,7 @@
 // applies each player's saved choice for every Significant/Oversized inventory
 // UNIT. An item remains Unassigned until the player chooses a valid slot.
 
-import type { CarrySignificance, HunterCard, SlotAssignment, SlotLocation } from "@/types";
+import type { CarrySignificance, CustomItem, HunterCard, SlotAssignment, SlotLocation } from "@/types";
 import { BASE_SLOTS, STORAGE_BY_ITEM_ID } from "@/data/storage";
 import { resolveInventory } from "@/lib/inventory";
 
@@ -28,13 +28,15 @@ export function slotAssignmentOptions(
   equippedStorageIds: string[] | undefined,
   itemId: string,
   pinned?: SlotLocation,
+  customItems?: CustomItem[],
 ): SlotAssignmentOption[] {
   const body: SlotLocation[] = pinned ? [pinned] : carry === "Oversized" ? ["hand"] : ["hand", "back", "chest", "hip", "ankle"];
   if (carry === "Oversized") return body.map((location) => ({ value: location, label: SLOT_LOCATION_LABEL[location] }));
 
   const storage = (equippedStorageIds ?? []).flatMap((storageId) => {
     const definition = STORAGE_BY_ITEM_ID[storageId];
-    if (!definition || (definition.gives.only && !definition.gives.only.includes(itemId))) return [];
+    const restrictedId = customItems?.find((item) => item.id === itemId)?.catalogBaseId ?? itemId;
+    if (!definition || (definition.gives.only && !definition.gives.only.includes(restrictedId))) return [];
     return Array.from({ length: definition.gives.count }, (_, index) => ({
       value: `storage:${storageId}:${index + 1}` as SlotAssignment,
       label: `${itemForStorage(storageId)} slot ${index + 1}`,
@@ -61,7 +63,7 @@ export function availableSlotAssignmentOptions(
   const slotAssignments = { ...(card.slotAssignments ?? {}), [itemId]: assignments };
   const withoutCurrent = { ...card, slotAssignments };
 
-  return slotAssignmentOptions(carry, card.equippedStorageIds, itemId, pinned).filter((option) => {
+  return slotAssignmentOptions(carry, card.equippedStorageIds, itemId, pinned, card.customItems).filter((option) => {
     if (option.value === current) return true;
     const withCandidate = [...assignments];
     withCandidate[index] = option.value;
@@ -183,12 +185,16 @@ export function computeSlots(
   const handFreeFor = (kind: "significant" | "oversized") =>
     kind === "significant" ? handOver.used === 0 : handSig.used === 0;
 
-  const fits = (pool: Pool, itemId: string, kind: "significant" | "oversized", storageSlot?: number) =>
-    pool.kind === kind &&
-    pool.used < pool.capacity &&
-    (!pool.only || pool.only.includes(itemId)) &&
-    (!storageSlot || (storageSlot <= pool.capacity && !pool.occupiedSlots?.has(storageSlot))) &&
-    (pool.location !== "hand" || hasSack || handFreeFor(kind));
+  const fits = (pool: Pool, itemId: string, kind: "significant" | "oversized", storageSlot?: number) => {
+    const restrictedId = card.customItems?.find((item) => item.id === itemId)?.catalogBaseId ?? itemId;
+    return (
+      pool.kind === kind &&
+      pool.used < pool.capacity &&
+      (!pool.only || pool.only.includes(restrictedId)) &&
+      (!storageSlot || (storageSlot <= pool.capacity && !pool.occupiedSlots?.has(storageSlot))) &&
+      (pool.location !== "hand" || hasSack || handFreeFor(kind))
+    );
+  };
 
   // Inventory units, qty-expanded (clamped per entry); insignificant items
   // take no slot. Existing hunters have no saved choices, so they are shown as

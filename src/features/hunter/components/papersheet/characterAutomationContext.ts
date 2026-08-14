@@ -2,9 +2,15 @@ import { createContext, useContext } from "react";
 import type { BACKGROUNDS } from "@/data/backgrounds";
 import type { getClass } from "@/data/classes";
 import type { ITEMS } from "@/data/items";
-import type { AbilityKey, CarrySignificance, HunterCard, LevelFeature, SheetAutomationState, SlotAssignment } from "@/types";
+import type { AbilityKey, CarrySignificance, ExtraSubcategory, HunterCard, LevelFeature, SheetAutomationState, SlotAssignment } from "@/types";
 import type { BuyMode } from "../../lib/abilityBuy";
 import type { automationFor } from "../../lib/characterAutomation";
+
+export interface SlotReplacement {
+  id: string;
+  index?: number;
+  storage?: boolean;
+}
 
 export interface CharacterAutomationController {
   card: HunterCard;
@@ -38,9 +44,9 @@ export interface CharacterAutomationController {
   setBonus: (key: AbilityKey, value: number) => void;
   switchMode: (mode: BuyMode) => void;
   changeQty: (id: string, delta: number) => void;
-  addCatalogItemToSlot: (id: string, target: SlotAssignment) => void;
-  setSlotAssignment: (id: string, index: number, location: SlotAssignment | null) => void;
-  toggleStorage: (id: string) => void;
+  addCatalogItemToSlot: (id: string, target: SlotAssignment, replace?: SlotReplacement) => void;
+  setSlotAssignment: (id: string, index: number, location: SlotAssignment | null, replace?: SlotReplacement) => void;
+  toggleStorage: (id: string, replace?: SlotReplacement) => void;
   chooseMainArmor: (id: string) => void;
   setAddonArmorAt: (index: number, id: string) => void;
   toggleAddonArmor: (id: string) => void;
@@ -48,7 +54,9 @@ export interface CharacterAutomationController {
   setExtra: (subcategory: string, id: string) => void;
   addCustomArmor: (draft: {
     name: string;
-    armorCategory: "Main Armor" | "Add-on Armor";
+    armorCategory: "Main Armor" | "Add-on Armor" | "Extra";
+    armorSubcategory?: ExtraSubcategory;
+    addonIndex?: number;
     acValue: number;
     weightLb: number;
     note: string;
@@ -62,7 +70,8 @@ export interface CharacterAutomationController {
     attackBonus: string;
     damage: string;
     weaponNotes: string;
-  }, target?: SlotAssignment) => void;
+    catalogBaseId?: string;
+  }, target?: SlotAssignment, replace?: SlotReplacement) => void;
   restoreCalculated: (key: string) => void;
   finishSetup: () => void;
 }
