@@ -1,4 +1,5 @@
 import type { AppSheetModel } from "../appsheet/appSheetShared";
+import { useAppEditStage } from "../appsheet/appEditStageContext";
 import { sheetBool, sheetText } from "../appsheet/appSheetValues";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { View4ResourceControl } from "./View4ResourceControl";
@@ -6,6 +7,7 @@ import { view4Number } from "./view4Values";
 
 export function View4Resources({ model }: { model: AppSheetModel }) {
   const { card, klass, result } = useCharacterAutomation();
+  const stage = useAppEditStage();
   const strainMax = view4Number(result.fields.strainMax);
   const disabled = model.readOnly;
   const setNumber = (field: string) => (value: number) => model.setField(field, String(value));
@@ -20,5 +22,12 @@ export function View4Resources({ model }: { model: AppSheetModel }) {
       {["dsS1", "dsS2", "dsS3"].map((field, index) => <label key={field}><input type="checkbox" checked={sheetBool(model.data, field)} disabled={disabled} onChange={(event) => model.setField(field, event.target.checked)} /> Death save success {index + 1}</label>)}
       {["dsF1", "dsF2", "dsF3"].map((field, index) => <label key={field}><input type="checkbox" checked={sheetBool(model.data, field)} disabled={disabled} onChange={(event) => model.setField(field, event.target.checked)} /> Death save failure {index + 1}</label>)}
     </div></section>
+    <section className="v4-resource-group v4-transformations"><h3>Transformations</h3>
+      <View4ResourceControl label="Transformation level" value={stage.previewCard.transformationLevel ?? 0} max={10} note="Reducing this level clears all active transformations." disabled={disabled} onChange={stage.stageTransformation} />
+      <span>Active transformations</span>
+      {(stage.previewCard.activeTransformations ?? []).length > 0
+        ? <div>{(stage.previewCard.activeTransformations ?? []).map((entry, index) => <b key={`${entry}-${index}`}>{entry}</b>)}</div>
+        : <small>No active transformations.</small>}
+    </section>
   </div>;
 }

@@ -1,35 +1,35 @@
+import { useState } from "react";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
-import { useAppEditStage } from "../appsheet/appEditStageContext";
 import { sheetText } from "../appsheet/appSheetValues";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
-import { View4ResourceControl } from "./View4ResourceControl";
+import { View4SessionNotes } from "./View4SessionNotes";
+
+type NotesView = "personal" | "sessions";
 
 export function View4Notes({ model }: { model: AppSheetModel }) {
   const { card } = useCharacterAutomation();
-  const stage = useAppEditStage();
+  const [view, setView] = useState<NotesView>("personal");
   const notes = sheetText(model.data, "pageNotes") || card.notes || "";
-  const transformations = card.activeTransformations ?? [];
   const words = notes.trim() ? notes.trim().split(/\s+/).length : 0;
 
   return <div className="v4-notes">
-    <section className="v4-notes-paper">
-      <label htmlFor="view4-campaign-notes">Campaign journal</label>
+    <div className="v4-notes-tabs" role="tablist" aria-label="Choose notes">
+      <button type="button" role="tab" aria-selected={view === "personal"} onClick={() => setView("personal")}><span>Personal</span><small>This character</small></button>
+      <button type="button" role="tab" aria-selected={view === "sessions"} onClick={() => setView("sessions")}><span>Sessions</span><small>Shared records</small></button>
+    </div>
+
+    {view === "personal" ? <section className="v4-notes-paper" role="tabpanel">
+      <label htmlFor="view4-personal-notes">Personal journal</label>
       <textarea
-        id="view4-campaign-notes"
+        id="view4-personal-notes"
         data-testid="appsheet-notes"
         data-f="pageNotes"
         value={notes}
         disabled={model.readOnly}
-        placeholder="People, places, promises, clues…"
+        placeholder="Thoughts, clues and promises…"
         onChange={(event) => model.setFields({ pageNotes: event.target.value }, { notes: event.target.value })}
       />
-      <footer><span>Shared with your other character views</span><span>{words} word{words === 1 ? "" : "s"}</span></footer>
-    </section>
-
-    <section className="v4-notes-transformations">
-      <View4ResourceControl label="Transformation level" value={stage.previewCard.transformationLevel ?? 0} max={10} note="Reducing this level clears all active transformations." disabled={model.readOnly} onChange={stage.stageTransformation} />
-      <span>Active transformations</span>
-      {transformations.length > 0 ? <div>{transformations.map((entry, index) => <b key={`${entry}-${index}`}>{entry}</b>)}</div> : <small>No active transformations.</small>}
-    </section>
+      <footer><span>Saved with {card.name}</span><span>{words} word{words === 1 ? "" : "s"}</span></footer>
+    </section> : <View4SessionNotes card={card} readOnly={model.readOnly} />}
   </div>;
 }

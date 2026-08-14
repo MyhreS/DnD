@@ -19,6 +19,8 @@ import { levelAdjustedPool } from "../src/features/hunter/lib/levelUpVitals";
 import { levelForInsight } from "../src/lib/insight";
 import { insightAwardPatch } from "../src/features/hunter/lib/insightAward";
 import { earnedLevel, upgradeFeatureComplete, upgradeFeatures } from "../src/features/hunter/components/view4/upgradeModel";
+import { sessionsForCharacter } from "../src/features/hunter/lib/characterSessions";
+import type { Game } from "../src/types";
 
 assert.equal(levelForInsight(0), 1, "zero Insight is level one");
 assert.equal(levelForInsight(6), 2, "an Insight threshold immediately earns its level");
@@ -31,6 +33,15 @@ assert.equal(levelAdjustedPool(18, 20, 12, false), 12, "a level reduction clamps
 
 const base = emptySheetCard({ ownerUid: "test", email: "test@example.com", displayName: "Tester" });
 assert.equal(base.sheetAutomation?.setupComplete, false, "fresh sheets start in guided setup even if the name is entered first");
+const attendedSession: Game = {
+  id: "attended", campaignId: "campaign-a", sessionId: null, title: "Attended", dmUid: "dm", dmName: "DM",
+  participantUids: [base.ownerUid], participantRoster: [{ uid: base.ownerUid, characterId: base.id, name: base.name, classId: base.classId, level: base.level, role: "player", joinedAt: 1, lastSeen: 1 }],
+  invitedUids: [], inviteRoster: [], status: "ended", phase: "exploration", clockRunning: false, clockStartedAt: null, clockElapsedMs: 0, createdAt: 1, endedAt: 2,
+};
+const unrelatedSession: Game = { ...attendedSession, id: "unrelated", campaignId: "campaign-b", participantRoster: [], createdAt: 3, endedAt: 4 };
+assert.deepEqual(sessionsForCharacter([unrelatedSession, attendedSession], { ...base, campaignId: null }).map((game) => game.id), ["attended"], "standalone hunters only see sessions they attended");
+assert.deepEqual(sessionsForCharacter([unrelatedSession, attendedSession], { ...base, campaignId: "campaign-a" }).map((game) => game.id), ["attended"], "campaign hunters see their campaign session journal");
+assert.deepEqual(sessionsForCharacter([{ ...attendedSession, sandbox: true }], base), [], "test sessions never appear in character notes");
 const warden = {
   ...base,
   classId: "warden",
