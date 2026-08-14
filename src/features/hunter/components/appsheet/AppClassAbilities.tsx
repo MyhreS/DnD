@@ -16,10 +16,11 @@ function abilitiesThroughLevel(klass: HunterClass, subclassId: string | null | u
     .sort((a, b) => a.level - b.level || a.name.localeCompare(b.name));
 }
 
-export function AppClassAbilities({ klass, subclassId, level }: {
+export function AppClassAbilities({ klass, subclassId, level, defaultOpen = false }: {
   klass: HunterClass;
   subclassId?: string | null;
   level: number;
+  defaultOpen?: boolean;
 }) {
   const subclass = klass.subclasses.find((entry) => entry.id === subclassId);
   const abilities = abilitiesThroughLevel(klass, subclassId, level);
@@ -29,6 +30,7 @@ export function AppClassAbilities({ klass, subclassId, level }: {
       title="Class abilities"
       summary={`${abilities.length} unlocked through level ${level}`}
       className="appsheet-class-abilities"
+      defaultOpen={defaultOpen}
     >
       <AppPanel title={`${klass.title}${subclass ? ` · ${subclass.name}` : ""}`} aside={<span className="appsheet-status-word">Level {level}</span>}>
         <p className="appsheet-abilities-intro">Open an ability to see how you can use it in play.</p>

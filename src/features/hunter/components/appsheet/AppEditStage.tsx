@@ -18,7 +18,7 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
   const [patch, setPatch] = useState<StagedPatch>({});
   const [fields, setFields] = useState(model.data);
   const currentResult = useMemo(() => automationFor(model.card), [model.card]);
-  const previewCard = useMemo(() => ({ ...model.card, ...patch }), [model.card, patch]);
+  const previewCard = useMemo(() => ({ ...model.card, ...patch, sheet: fields }), [fields, model.card, patch]);
   const previewResult = useMemo(() => automationFor(previewCard), [previewCard]);
   const changedFields = useMemo(
     () => Object.keys(fields).filter((field) => fields[field] !== model.data[field]),
@@ -168,6 +168,10 @@ export function AppEditTray() {
     insight: "Insight",
     insane: "Insanity",
     hpTemp: "Temporary HP",
+    acModifier: "AC modifier",
+    speedModifier: "Speed modifier",
+    passivePerceptionModifier: "Passive Perception modifier",
+    initiativeModifier: "Initiative modifier",
     hdCur: "Hit dice",
     hdSpent: "Hit dice spent",
     dsS1: "Death save success 1",
