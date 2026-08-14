@@ -3,7 +3,7 @@ import { createContext, useContext, type ReactNode } from "react";
 export interface View4PageSpec {
   id: string;
   title: string;
-  eyebrow: string;
+  eyebrow?: string;
   content: ReactNode;
 }
 

@@ -24,23 +24,23 @@ import { View4Sanity } from "./View4Sanity";
 import { View4Upgrade } from "./View4Upgrade";
 
 export type View4Panel = "profile" | "abilities" | "skills" | "classAbilities" | "ac" | "speed" | "passive" | "initiative" | "inventory" | "notes" | "equipment" | "health" | "sanity" | "progress" | "resources" | "upgrade";
-const PANELS: Record<View4Panel, { title: string; eyebrow: string }> = {
-  profile: { title: "Hunter & build", eyebrow: "Identity, class and background" },
-  abilities: { title: "Abilities", eyebrow: "Scores, modifiers and saving throws" },
-  skills: { title: "Skills", eyebrow: "Training and calculated bonuses" },
-  classAbilities: { title: "Class abilities", eyebrow: "Your unlocked class powers" },
-  ac: { title: "Armor Class", eyebrow: "Protection, Dexterity and modifiers" },
-  speed: { title: "Speed", eyebrow: "Movement and modifiers" },
-  passive: { title: "Passive Perception", eyebrow: "Awareness without an active check" },
-  initiative: { title: "Initiative", eyebrow: "How quickly you enter the fight" },
-  inventory: { title: "Inventory", eyebrow: "Gear, carrying and found items" },
-  notes: { title: "Notes", eyebrow: "Personal journal and session records" },
-  equipment: { title: "Equipment", eyebrow: "Choose what your hunter wears" },
-  health: { title: "Health", eyebrow: "Hit points and temporary protection" },
-  sanity: { title: "Sanity", eyebrow: "Your hunter's remaining grip" },
-  progress: { title: "Insight & level", eyebrow: "Knowledge earned through the hunt" },
-  resources: { title: "Resources", eyebrow: "Hit dice, strains and death saves" },
-  upgrade: { title: "Upgrade character", eyebrow: "Preview, choose and apply" },
+const PANELS: Record<View4Panel, { title: string }> = {
+  profile: { title: "Hunter & build" },
+  abilities: { title: "Abilities" },
+  skills: { title: "Skills" },
+  classAbilities: { title: "Class abilities" },
+  ac: { title: "Armor Class" },
+  speed: { title: "Speed" },
+  passive: { title: "Passive Perception" },
+  initiative: { title: "Initiative" },
+  inventory: { title: "Inventory" },
+  notes: { title: "Notes" },
+  equipment: { title: "Equipment" },
+  health: { title: "Health" },
+  sanity: { title: "Sanity" },
+  progress: { title: "Insight & level" },
+  resources: { title: "Resources" },
+  upgrade: { title: "Upgrade character" },
 };
 const LEFT: Array<{ panel: View4Panel; icon: View4IconName; label: string }> = [
   { panel: "profile", icon: "profile", label: "Hunter" },
@@ -111,7 +111,6 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange, o
       root={{
         id: panel,
         title: pageDefinition.title,
-        eyebrow: pageDefinition.eyebrow,
         content: <>
           {panel === "profile" && <View4Hunter model={model} />}
           {panel === "abilities" && <AppAbilitiesSection model={model} view="abilities" />}

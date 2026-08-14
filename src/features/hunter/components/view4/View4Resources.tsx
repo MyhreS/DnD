@@ -1,4 +1,5 @@
 import type { AppSheetModel } from "../appsheet/appSheetShared";
+import { AppDeepcallerReference } from "../appsheet/AppDeepcallerReference";
 import { useAppEditStage } from "../appsheet/appEditStageContext";
 import { sheetBool, sheetText } from "../appsheet/appSheetValues";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
@@ -29,5 +30,6 @@ export function View4Resources({ model }: { model: AppSheetModel }) {
         ? <div>{(stage.previewCard.activeTransformations ?? []).map((entry, index) => <b key={`${entry}-${index}`}>{entry}</b>)}</div>
         : <small>No active transformations.</small>}
     </section>
+    <AppDeepcallerReference />
   </div>;
 }

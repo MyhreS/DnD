@@ -157,8 +157,7 @@
 .v4-page-shell { display: grid; grid-template-rows: auto minmax(0, 1fr); width: 100%; height: 100%; min-height: 0; animation: v4-page-in .34s cubic-bezier(.22, .8, .26, 1); }
 .v4-page-header { width: min(1180px, 100%); margin-inline: auto; }
 .v4-page-heading { min-width: 0; }
-.v4-page-heading small { color: var(--app-muted); font-size: 10px; font-weight: 700; letter-spacing: .11em; text-transform: uppercase; }
-.v4-page-heading h2 { overflow: hidden; margin: 2px 0 0; color: var(--app-text); font: 600 clamp(20px, 3vw, 29px)/1.1 "Cinzel", serif; text-overflow: ellipsis; white-space: nowrap; }
+.v4-page-heading h2 { overflow: hidden; margin: 0; color: var(--app-text); font: 600 clamp(20px, 3vw, 29px)/1.1 "Cinzel", serif; text-overflow: ellipsis; white-space: nowrap; }
 .v4-page-header-balance { width: 124px; }
 .v4-page-content { position: relative; z-index: 1; width: min(1180px, 100%); min-height: 0; margin-inline: auto; overflow-y: auto; padding: clamp(16px, 2.8vw, 30px) clamp(18px, 3.4vw, 38px) max(34px, env(safe-area-inset-bottom)); overscroll-behavior: contain; scrollbar-gutter: stable; }
 .v4-page-content > .appsheet-section,
@@ -193,7 +192,9 @@
 .v4-page-content .appsheet-final-score { padding: 12px 10px; border-right: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); border-radius: 0; background: transparent; }
 .v4-page-content .appsheet-final-score:nth-child(3n) { border-right: 0; }
 .v4-page-content .appsheet-skill-table { gap: 0; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); }
-.v4-page-content .appsheet-skill-table > div { padding: 10px 4px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); border-radius: 0; }
+.v4-page-content .appsheet-skill-table > div { grid-template-columns: 18px minmax(0, 1fr) 42px 28px; gap: 8px; padding: 10px 4px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); border-radius: 0; }
+.v4-page-content .appsheet-skill-table .appsheet-auto-reason:not([open]) { grid-column: 4; justify-self: end; }
+.v4-page-content .appsheet-skill-table .appsheet-auto-reason[open] { grid-column: 2 / -1; }
 .v4-page-content .appsheet-skill-table > div:hover { background: color-mix(in srgb, var(--app-subtle), transparent 30%); }
 .v4-page-content .appsheet-skill-table .proficient { background: transparent; box-shadow: inset 2px 0 var(--app-positive); }
 .v4-page-content .appsheet-feature-timeline { gap: 0; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); }
@@ -228,13 +229,12 @@
 .v4-hunter-build-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 18px; }
 .v4-hunter-build-grid > label > small, .v4-hunter-build-value > small { color: var(--app-faint); font: 12px/1.35 "Alegreya", serif; }
 .v4-hunter-build-value > strong { min-height: 42px; padding: 10px 2px; border-bottom: 1px solid var(--app-line); color: var(--app-text); font-size: 14px; }
-.v4-class-abilities { display: grid; gap: 10px; }
-.v4-class-summary { display: grid; grid-template-columns: minmax(180px, .75fr) minmax(0, 1.25fr); gap: 20px; padding: 4px 2px 18px; border-bottom: 1px solid var(--app-line); }
-.v4-class-summary > span { display: grid; align-content: start; gap: 4px; }
-.v4-class-summary small { color: var(--app-muted); font-size: 10px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
-.v4-class-summary strong { color: var(--app-text); font: 600 clamp(21px, 3.2vw, 31px)/1.1 "Cinzel", serif; }
-.v4-class-summary em { color: var(--app-warm); font-size: 12px; font-style: normal; font-weight: 700; text-transform: uppercase; }
-.v4-class-summary > div { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); align-content: start; gap: 8px; }
+.v4-hunter-feats-tools { gap: clamp(20px, 3vw, 34px); }
+.v4-reference-list { display: grid; gap: 0; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); }
+.v4-reference-list article { display: grid; gap: 5px; padding: 14px 2px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); }
+.v4-reference-list h4 { margin: 0; color: var(--app-text); font: 700 15px/1.2 "Alegreya Sans SC", sans-serif; }
+.v4-reference-list small { color: var(--app-warm); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.v4-reference-list p { margin: 0; color: var(--app-muted); font: 14px/1.4 "Alegreya", serif; white-space: pre-line; }
 .v4-derived-stat-page { display: grid; gap: 22px; max-width: 780px; }
 .v4-derived-total { display: grid; gap: 5px; padding: 4px 2px 20px; border-bottom: 1px solid var(--app-line); }
 .v4-derived-total small { color: var(--app-muted); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
@@ -557,8 +557,6 @@
   .v4-page-content { padding: 14px 16px max(28px, env(safe-area-inset-bottom)); }
   .v4-resource-grid, .v4-state-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .v4-hunter-build-grid { grid-template-columns: 1fr; gap: 16px; }
-  .v4-class-summary { grid-template-columns: 1fr; gap: 14px; }
-  .v4-class-summary > div { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .v4-vital-controls { grid-template-columns: 1fr; }
   .v4-level-summary { grid-template-columns: 92px minmax(0, 1fr); }
   .v4-level-summary > div { padding: 13px 12px; }

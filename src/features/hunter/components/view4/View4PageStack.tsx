@@ -45,7 +45,6 @@ export function View4PageStack({
             <View4BackButton onClick={goBack} />
           </div>
           <div className="v4-page-heading">
-            <small>{activePage.eyebrow}</small>
             <h2 id="view4-page-title">{activePage.title}</h2>
           </div>
           <span className="v4-page-header-balance" aria-hidden="true" />

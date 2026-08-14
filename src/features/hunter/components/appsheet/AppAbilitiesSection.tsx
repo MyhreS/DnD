@@ -2,7 +2,17 @@ import { ABILITIES, MADUHAUSU_MAX, MADUHAUSU_MIN, POINT_BUY_MAX, POINT_BUY_MIN }
 import { SHEET_SKILL_FIELD, SKILLS } from "@/data/skills";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import type { BuyMode } from "../../lib/abilityBuy";
-import { AppDisclosure, AppPanel, AppSection, AppSelect, AutoReason, type AppSheetModel } from "./appSheetShared";
+import { AppPanel, AppSection, AppSelect, AutoReason, type AppSheetModel } from "./appSheetShared";
+
+function SkillList({ result }: { result: ReturnType<typeof useCharacterAutomation>["result"] }) {
+  return <div className="appsheet-skill-table">
+    {SKILLS.map((skill) => {
+      const field = SHEET_SKILL_FIELD[skill.name];
+      const proficient = result.fields[`${field}P`] === true;
+      return <div key={skill.name} className={proficient ? "proficient" : ""}><span className="appsheet-skill-prof" aria-label={proficient ? "Proficient" : "Not proficient"}>{proficient ? "●" : "○"}</span><span><b>{skill.name}</b><small>{skill.ability.toUpperCase()}</small></span><strong>{result.fields[field]}</strong><AutoReason reason={result.reasons[field]} /></div>;
+    })}
+  </div>;
+}
 
 export function AppAbilitiesSection({ model, view = "all" }: { model: AppSheetModel; view?: "all" | "abilities" | "skills" }) {
   const automation = useCharacterAutomation();
@@ -48,17 +58,8 @@ export function AppAbilitiesSection({ model, view = "all" }: { model: AppSheetMo
         </div>
       </AppPanel>}
 
-      {view !== "abilities" && <AppDisclosure title="All skill bonuses" summary={`${SKILLS.filter((skill) => result.fields[`${SHEET_SKILL_FIELD[skill.name]}P`] === true).length} proficient`} defaultOpen={view === "skills"}>
-        <AppPanel title="Calculated skills" aside={<span className="appsheet-status-word">Rules-linked</span>}>
-          <div className="appsheet-skill-table">
-            {SKILLS.map((skill) => {
-              const field = SHEET_SKILL_FIELD[skill.name];
-              const proficient = result.fields[`${field}P`] === true;
-              return <div key={skill.name} className={proficient ? "proficient" : ""}><span className="appsheet-skill-prof" aria-label={proficient ? "Proficient" : "Not proficient"}>{proficient ? "●" : "○"}</span><span><b>{skill.name}</b><small>{skill.ability.toUpperCase()}</small></span><strong>{result.fields[field]}</strong><AutoReason reason={result.reasons[field]} /></div>;
-            })}
-          </div>
-        </AppPanel>
-      </AppDisclosure>}
+      {view === "skills" && <SkillList result={result} />}
+      {view === "all" && <AppPanel title="Skills"><SkillList result={result} /></AppPanel>}
     </AppSection>
   );
 }
