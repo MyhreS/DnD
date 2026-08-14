@@ -3,13 +3,14 @@ import { resolveUnassignedInventory } from "@/features/hunter/lib/inventoryPlace
 import { levelForInsight } from "@/lib/insight";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { AppAbilitiesSection } from "../appsheet/AppAbilitiesSection";
-import { AppFeaturesSection } from "../appsheet/AppFeaturesSection";
 import { AppGearSection } from "../appsheet/AppGearSection";
 import { sheetText } from "../appsheet/appSheetValues";
 import { hasStagedUpgrade, useAppEditStage } from "../appsheet/appEditStageContext";
 import { useView4PageSafeArea } from "../../hooks/useView4PageSafeArea";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { View4BackButton } from "./View4BackButton";
+import { View4ClassAbilities } from "./View4ClassAbilities";
+import { View4DerivedStat } from "./View4DerivedStat";
 import { View4Equipment } from "./View4Equipment";
 import { View4Figure } from "./View4Figure";
 import { View4Health } from "./View4Health";
@@ -22,11 +23,16 @@ import { View4Notes } from "./View4Notes";
 import { View4Sanity } from "./View4Sanity";
 import { View4Upgrade } from "./View4Upgrade";
 
-export type View4Panel = "profile" | "abilities" | "features" | "inventory" | "notes" | "equipment" | "health" | "sanity" | "progress" | "resources" | "upgrade";
+export type View4Panel = "profile" | "abilities" | "skills" | "classAbilities" | "ac" | "speed" | "passive" | "initiative" | "inventory" | "notes" | "equipment" | "health" | "sanity" | "progress" | "resources" | "upgrade";
 const PANELS: Record<View4Panel, { title: string; eyebrow: string }> = {
   profile: { title: "Hunter & build", eyebrow: "Identity, class and background" },
-  abilities: { title: "Abilities & skills", eyebrow: "Scores, saves and proficiencies" },
-  features: { title: "Features", eyebrow: "Class progression, feats and tools" },
+  abilities: { title: "Abilities", eyebrow: "Scores, modifiers and saving throws" },
+  skills: { title: "Skills", eyebrow: "Training and calculated bonuses" },
+  classAbilities: { title: "Class abilities", eyebrow: "Your unlocked class powers" },
+  ac: { title: "Armor Class", eyebrow: "Protection, Dexterity and modifiers" },
+  speed: { title: "Speed", eyebrow: "Movement and modifiers" },
+  passive: { title: "Passive Perception", eyebrow: "Awareness without an active check" },
+  initiative: { title: "Initiative", eyebrow: "How quickly you enter the fight" },
   inventory: { title: "Inventory", eyebrow: "Gear, carrying and found items" },
   notes: { title: "Notes", eyebrow: "Personal journal and session records" },
   equipment: { title: "Equipment", eyebrow: "Choose what your hunter wears" },
@@ -38,8 +44,9 @@ const PANELS: Record<View4Panel, { title: string; eyebrow: string }> = {
 };
 const LEFT: Array<{ panel: View4Panel; icon: View4IconName; label: string }> = [
   { panel: "profile", icon: "profile", label: "Hunter" },
-  { panel: "abilities", icon: "abilities", label: "Skills" },
-  { panel: "features", icon: "features", label: "Features" },
+  { panel: "abilities", icon: "abilities", label: "Abilities" },
+  { panel: "skills", icon: "skills", label: "Skills" },
+  { panel: "classAbilities", icon: "features", label: "Class abilities" },
 ];
 const RIGHT: Array<{ panel: View4Panel; icon: View4IconName; label: string }> = [
   { panel: "notes", icon: "notes", label: "Notes" },
@@ -87,10 +94,10 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange, o
       <div className="v4-rail v4-rail-right"><Rail items={RIGHT} open={onPanelChange} /></div>
     </div>
     <section className="v4-readouts" aria-label="At a glance">
-      <button type="button" onClick={() => onPanelChange("equipment")}><small>AC</small><strong>{String(result.fields.ac ?? "—")}</strong></button>
-      <button type="button" onClick={() => onPanelChange("abilities")}><small>Speed</small><strong>{String(result.fields.speed ?? "—")}</strong></button>
-      <button type="button" onClick={() => onPanelChange("abilities")}><small>Passive</small><strong>{String(result.fields.passivePerception ?? "—")}</strong></button>
-      <button type="button" onClick={() => onPanelChange("abilities")}><small>Initiative</small><strong>{String(result.fields.initiative ?? "—")}</strong></button>
+      <button type="button" onClick={() => onPanelChange("ac")}><small>AC</small><strong>{String(result.fields.ac ?? "—")}</strong></button>
+      <button type="button" onClick={() => onPanelChange("speed")}><small>Speed</small><strong>{String(result.fields.speed ?? "—")}</strong></button>
+      <button type="button" onClick={() => onPanelChange("passive")}><small>Passive</small><strong>{String(result.fields.passivePerception ?? "—")}</strong></button>
+      <button type="button" onClick={() => onPanelChange("initiative")}><small>Initiative</small><strong>{String(result.fields.initiative ?? "—")}</strong></button>
     </section>
     <section className="v4-vitals" aria-label="Current resources">
       <button type="button" onClick={() => onPanelChange("health")}><span><b>Hit points</b><em>{hp} / {hpMax}{tempHp > 0 && <small> +{tempHp} temp</small>}</em></span><i><span style={{ width: `${hpMax ? Math.max(0, Math.min(100, hp / hpMax * 100)) : 0}%` }} /></i></button>
@@ -107,8 +114,13 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange, o
         eyebrow: pageDefinition.eyebrow,
         content: <>
           {panel === "profile" && <View4Hunter model={model} />}
-          {panel === "abilities" && <AppAbilitiesSection model={model} />}
-          {panel === "features" && <AppFeaturesSection model={model} includeClassReferences />}
+          {panel === "abilities" && <AppAbilitiesSection model={model} view="abilities" />}
+          {panel === "skills" && <AppAbilitiesSection model={model} view="skills" />}
+          {panel === "classAbilities" && <View4ClassAbilities />}
+          {panel === "ac" && <View4DerivedStat model={model} kind="ac" />}
+          {panel === "speed" && <View4DerivedStat model={model} kind="speed" />}
+          {panel === "passive" && <View4DerivedStat model={model} kind="passive" />}
+          {panel === "initiative" && <View4DerivedStat model={model} kind="initiative" />}
           {panel === "inventory" && <AppGearSection model={model} hideArmor hideGoldSummary includeDamageBonuses manageEquipmentSeparately />}
           {panel === "notes" && <View4Notes model={notesModel} />}
           {panel === "equipment" && <View4Equipment model={model} />}

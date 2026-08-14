@@ -83,6 +83,21 @@ assert.match(levelOne.reasons.hpMax, /Warden.*Hit Die.*Constitution/i);
 assert.match(String(levelOne.fields.features1), /Bands Directive/i);
 assert.match(String(levelOne.fields.features1), /Tactical Command/i);
 
+const modifiedReadouts = automationFor({
+  ...warden,
+  sheet: {
+    acModifier: "2",
+    speedModifier: "5",
+    passivePerceptionModifier: "-1",
+    initiativeModifier: "3",
+  },
+});
+assert.equal(modifiedReadouts.fields.ac, "13", "the AC modifier augments the armor calculation");
+assert.equal(modifiedReadouts.fields.speed, "35 ft", "the speed modifier augments class speed");
+assert.equal(modifiedReadouts.fields.passivePerception, "11", "the passive modifier augments passive Perception");
+assert.equal(modifiedReadouts.fields.initiative, "+4", "the initiative modifier augments Dexterity");
+assert.match(modifiedReadouts.reasons.ac, /custom modifier \+2/i, "the AC explanation names the custom modifier");
+
 const skilled = automationFor({
   ...warden,
   skillProficiencies: ["Perception", "Survival"],

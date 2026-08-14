@@ -4,14 +4,14 @@ import { useCharacterAutomation } from "../papersheet/characterAutomationContext
 import type { BuyMode } from "../../lib/abilityBuy";
 import { AppDisclosure, AppPanel, AppSection, AppSelect, AutoReason, type AppSheetModel } from "./appSheetShared";
 
-export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
+export function AppAbilitiesSection({ model, view = "all" }: { model: AppSheetModel; view?: "all" | "abilities" | "skills" }) {
   const automation = useCharacterAutomation();
   const { card, result, state, background, base, bonuses, pointsLeft } = automation;
   const canEditCreationScores = state.setupComplete !== true || card.level === 1;
 
   return (
-    <AppSection id="appsheet-abilities" title="Abilities & skills">
-      {canEditCreationScores && (
+    <AppSection id="appsheet-abilities" title={view === "abilities" ? "Abilities" : view === "skills" ? "Skills" : "Abilities & skills"}>
+      {view !== "skills" && canEditCreationScores && (
         <AppPanel title="Build ability scores" aside={<span className={pointsLeft === 0 ? "appsheet-complete" : "appsheet-incomplete"}>{pointsLeft ?? "Invalid"} points left</span>}>
           <AppSelect label="Ability method" value={automation.mode} disabled={model.readOnly} onChange={(event) => automation.switchMode(event.target.value as BuyMode)}>
             <option value="pointbuy">Standard point buy · 27 points</option>
@@ -37,7 +37,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
         </AppPanel>
       )}
 
-      <AppPanel title="Final abilities and saves">
+      {view !== "skills" && <AppPanel title="Final abilities and saves">
         <div className="appsheet-final-abilities">
           {ABILITIES.map((ability) => (
             <div className="appsheet-final-score" key={ability.key}>
@@ -46,9 +46,9 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
             </div>
           ))}
         </div>
-      </AppPanel>
+      </AppPanel>}
 
-      <AppDisclosure title="All skill bonuses" summary={`${SKILLS.filter((skill) => result.fields[`${SHEET_SKILL_FIELD[skill.name]}P`] === true).length} proficient · passive Perception ${result.fields.passivePerception}`}>
+      {view !== "abilities" && <AppDisclosure title="All skill bonuses" summary={`${SKILLS.filter((skill) => result.fields[`${SHEET_SKILL_FIELD[skill.name]}P`] === true).length} proficient`} defaultOpen={view === "skills"}>
         <AppPanel title="Calculated skills" aside={<span className="appsheet-status-word">Rules-linked</span>}>
           <div className="appsheet-skill-table">
             {SKILLS.map((skill) => {
@@ -58,7 +58,7 @@ export function AppAbilitiesSection({ model }: { model: AppSheetModel }) {
             })}
           </div>
         </AppPanel>
-      </AppDisclosure>
+      </AppDisclosure>}
     </AppSection>
   );
 }

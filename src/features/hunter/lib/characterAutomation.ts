@@ -135,6 +135,10 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
   const prof = proficiencyBonus(level);
   const background = BACKGROUNDS.find((entry) => entry.id === card.backgroundId);
   const featNames = new Set([background?.feat, ...(card.feats ?? [])].filter(Boolean));
+  const speedModifier = intField(card.sheet, "speedModifier", 0);
+  const initiativeModifier = intField(card.sheet, "initiativeModifier", 0);
+  const passiveModifier = intField(card.sheet, "passivePerceptionModifier", 0);
+  const acModifier = intField(card.sheet, "acModifier", 0);
 
   put(fields, reasons, "name", card.name, "Your saved hunter name");
   put(fields, reasons, "level", String(level), "Character level");
@@ -168,7 +172,7 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
       put(fields, reasons, "strainCur", String(strainCurrent), "Current available Strains, defaulting to the full allowance");
       put(fields, reasons, "strainLevel", String(strainLevel), `${klass.title} level ${level} progression`);
     }
-    put(fields, reasons, "speed", `${klass.speedFt} ft`, `${klass.title} core traits`);
+    put(fields, reasons, "speed", `${klass.speedFt + speedModifier} ft`, `${klass.title} core traits${speedModifier ? ` + custom modifier ${formatModifier(speedModifier)} ft` : ""}`);
     put(fields, reasons, "armorLight", klass.armorTraining.includes("Light armor"), `${klass.title} Armor Training`);
     put(fields, reasons, "armorMedium", klass.armorTraining.includes("Medium armor"), `${klass.title} Armor Training`);
     put(fields, reasons, "armorHeavy", klass.armorTraining.includes("Heavy armor"), `${klass.title} Armor Training`);
@@ -216,14 +220,14 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     const multiplier = expertise.has(skill.name) ? 2 : proficient ? 1 : 0;
     put(fields, reasons, field, formatModifier(abilityModifier(card.abilities[key]) + prof * multiplier), expertise.has(skill.name) ? `${key.toUpperCase()} modifier + Expertise` : proficient ? `${key.toUpperCase()} modifier + proficiency` : `${key.toUpperCase()} modifier`);
   }
-  put(fields, reasons, "initiative", formatModifier(abilityModifier(card.abilities.dex) + (featNames.has("Alert") ? prof : 0)), featNames.has("Alert") ? "Dexterity modifier + proficiency from Alert" : "Dexterity modifier");
-  put(fields, reasons, "passivePerception", String(10 + abilityModifier(card.abilities.wis) + (allSkills.has("Perception") ? prof : 0)), "10 + Wisdom modifier + Perception proficiency when selected");
+  put(fields, reasons, "initiative", formatModifier(abilityModifier(card.abilities.dex) + (featNames.has("Alert") ? prof : 0) + initiativeModifier), `${featNames.has("Alert") ? "Dexterity modifier + proficiency from Alert" : "Dexterity modifier"}${initiativeModifier ? ` + custom modifier ${formatModifier(initiativeModifier)}` : ""}`);
+  put(fields, reasons, "passivePerception", String(10 + abilityModifier(card.abilities.wis) + (allSkills.has("Perception") ? prof : 0) + passiveModifier), `10 + Wisdom modifier + Perception proficiency when selected${passiveModifier ? ` + custom modifier ${formatModifier(passiveModifier)}` : ""}`);
   const tools = [klass?.toolProficiencies !== "—" ? klass?.toolProficiencies : null, background?.tool, ...(card.featSkills ?? []).filter((choice) => !SKILLS.some((skill) => skill.name === choice))].filter(Boolean);
   put(fields, reasons, "tools", [...new Set(tools)].join(", "), `${SOURCE.class} and ${SOURCE.background}`);
   put(fields, reasons, "feats", [background?.feat, ...(card.feats ?? [])].filter(Boolean).join("\n"), `${SOURCE.background} and level-up choices`);
 
   const armor = armorClassFor(card);
-  put(fields, reasons, "ac", String(armor.total), `${SOURCE.armor}: base ${armor.baseArmorAc} + Dexterity ${formatModifier(armor.dexApplied)}`);
+  put(fields, reasons, "ac", String(armor.total + acModifier), `${SOURCE.armor}: base ${armor.baseArmorAc} + Dexterity ${formatModifier(armor.dexApplied)}${acModifier ? ` + custom modifier ${formatModifier(acModifier)}` : ""}`);
   put(fields, reasons, "armorCategory", armor.category, `${SOURCE.armor}; category comes from base armor AC ${armor.baseArmorAc}`);
   put(fields, reasons, "shieldArm", armor.shieldArm, "Pauldron + vambrace on the same arm");
   put(fields, reasons, "mainArmor", card.mainArmorId ? armorFor(card, card.mainArmorId)?.name ?? "" : "", SOURCE.armor);
