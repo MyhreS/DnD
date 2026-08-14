@@ -1,5 +1,6 @@
-import { useState, type ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 import { PickerContext, type EquipmentPickerOption, type EquipmentPickerRequest } from "./view4EquipmentPickerContext";
+import { useView4PageNavigation } from "./view4PageNavigation";
 import { View4UniquePickerForm } from "./View4UniquePickerForm";
 
 function Picker({ request, close }: { request: EquipmentPickerRequest; close: () => void }) {
@@ -22,10 +23,7 @@ function Picker({ request, close }: { request: EquipmentPickerRequest; close: ()
   }
 
   return <section className="v4-slot-picker" aria-label={request.title}>
-      <header>
-        <button type="button" onClick={close} aria-label="Back">←</button>
-        <div><small>Choose equipment</small><h3>{request.title}</h3>{request.hint && <p>{request.hint}</p>}</div>
-      </header>
+      {request.hint && <p className="v4-slot-picker-hint">{request.hint}</p>}
       {request.current && <div className="v4-slot-current"><span><small>Equipped</small><strong>{request.current.name}</strong>{request.current.detail && <em>{request.current.detail}</em>}</span>{request.onRemove && <button type="button" onClick={() => { request.onRemove?.(); close(); }}>Remove</button>}</div>}
       <nav className="v4-slot-picker-tabs" aria-label="Item source">{tabs.map((entry) => <button type="button" aria-pressed={tab === entry} key={entry} onClick={() => setTab(entry)}>{entry === "catalogue" ? "Game catalogue" : entry}</button>)}</nav>
       {(tabs.length > 0) && <div className="v4-slot-picker-body">
@@ -40,11 +38,15 @@ function Picker({ request, close }: { request: EquipmentPickerRequest; close: ()
 }
 
 export function View4EquipmentPickerProvider({ children }: { children: ReactNode }) {
-  const [request, setRequest] = useState<EquipmentPickerRequest | null>(null);
-  const closePicker = () => setRequest(null);
-  return <PickerContext.Provider value={{ openPicker: setRequest, closePicker }}>
-    {request
-      ? <Picker key={`${request.title}-${request.current?.id ?? "empty"}`} request={request} close={closePicker} />
-      : children}
-  </PickerContext.Provider>;
+  const navigation = useView4PageNavigation();
+  const closePicker = navigation.popPage;
+  const openPicker = useCallback((request: EquipmentPickerRequest) => {
+    navigation.pushPage({
+      id: `equipment-picker-${request.title}-${request.current?.id ?? "empty"}`,
+      title: request.title,
+      eyebrow: "Choose equipment",
+      content: <Picker request={request} close={closePicker} />,
+    });
+  }, [closePicker, navigation]);
+  return <PickerContext.Provider value={{ openPicker, closePicker }}>{children}</PickerContext.Provider>;
 }

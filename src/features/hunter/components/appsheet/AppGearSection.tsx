@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import { ITEMS } from "@/data/items";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { ARMOR_BY_ID } from "@/data/armor";
@@ -8,8 +8,9 @@ import { resolveInventory } from "@/lib/inventory";
 import { availableSlotAssignmentOptions, computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
 import type { SlotAssignment } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
+import { useOptionalView4PageNavigation } from "../view4/view4PageNavigation";
 import { CarryingCustomization } from "./CarryingCustomization";
-import { InventoryAddDialog } from "./InventoryAddDialog";
+import { InventoryAddPageMenu } from "./InventoryAddPages";
 import { CatalogItemForm, UniqueItemForm, type FoundItemDraft } from "./InventoryAddForms";
 import { AppWeaponDamageBonuses } from "./AppWeaponReference";
 import {
@@ -40,11 +41,10 @@ export function AppGearSection({
   manageEquipmentSeparately?: boolean;
 }) {
   const automation = useCharacterAutomation();
+  const pageNavigation = useOptionalView4PageNavigation();
   const { card, result } = automation;
   const [catalogId, setCatalogId] = useState("");
-  const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [showFound, setShowFound] = useState(false);
-  const addButtonRef = useRef<HTMLButtonElement>(null);
   const [found, setFound] = useState<FoundItemDraft>({
     name: "",
     category: "Gear",
@@ -55,7 +55,6 @@ export function AppGearSection({
     damage: "",
     weaponNotes: "",
   });
-  const closeAddMenu = useCallback(() => setAddMenuOpen(false), []);
   const inventory = (manageEquipmentSeparately ? resolveUnassignedInventory(card) : resolveInventory(card))
     .filter(({ item }) => !hideArmor || item.category !== "Armor");
   const slots = computeSlots(card);
@@ -89,7 +88,7 @@ export function AppGearSection({
       </div>
 
       <AppPanel title="Inventory" aside={!model.readOnly && !quickView ? (
-        <button ref={addButtonRef} type="button" className="appsheet-inventory-add" data-testid="appsheet-inventory-add" aria-haspopup="dialog" aria-expanded={addMenuOpen} onClick={() => setAddMenuOpen(true)}>
+        <button type="button" className="appsheet-inventory-add" data-testid="appsheet-inventory-add" onClick={() => pageNavigation?.pushPage({ id: "inventory-add", title: "Add to inventory", eyebrow: "Choose item source", content: <InventoryAddPageMenu /> })}>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg>
           Add
         </button>
@@ -215,7 +214,6 @@ export function AppGearSection({
         </AppPanel>
         </AppDisclosure>
       )}
-      {!model.readOnly && !quickView && addMenuOpen && <InventoryAddDialog triggerRef={addButtonRef} catalog={catalog} catalogId={catalogId} setCatalogId={setCatalogId} found={found} setFound={setFound} addCatalogItem={addCatalogItem} addUniqueItem={addUniqueItem} onClose={closeAddMenu} />}
     </AppSection>
   );
 }

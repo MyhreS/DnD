@@ -50,7 +50,7 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
 
   function stageLevel(level: number) {
     const bounded = Math.max(1, Math.min(20, level));
-    // Level changes stay staged until the Upgrade drawer applies them together
+    // Level changes stay staged until the Upgrade page applies them together
     // with their required choices.
     const candidate: StagedPatch = { ...patch, level: bounded };
     if (bounded < 3 && model.card.subclassId) candidate.subclassId = null;
