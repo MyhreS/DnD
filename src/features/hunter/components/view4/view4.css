@@ -1,9 +1,10 @@
 :root {
-  --v4-page-safe-area: #0e0f13;
+  --v4-page-bottom: #07080a;
+  --v4-page-safe-area: var(--v4-page-bottom);
 }
 
 :root[data-theme="light"] {
-  --v4-page-safe-area: #f4f0e7;
+  --v4-page-bottom: #ded4c5;
 }
 
 :root.v4-page-safe-area,
@@ -150,8 +151,8 @@
 .v4-inventory-shortcut span { font-size: 11px; font-weight: 700; text-transform: uppercase; }
 .v4-inventory-shortcut small { color: var(--app-muted); font-size: 10px; }
 
-.v4-page-stack { position: fixed; z-index: 20; inset: 0; overflow: hidden; padding: max(10px, env(safe-area-inset-top)) clamp(8px, 2vw, 24px) 0; background: radial-gradient(circle at 50% 34%, #191c22 0, #0c0d11 52%, #07080a 100%); color: var(--app-text); }
-:root[data-theme="light"] .v4-page-stack { background: radial-gradient(circle at 50% 34%, #fffdf7 0, #eee7da 62%, #ded4c5 100%); }
+.v4-page-stack { position: fixed; z-index: 20; inset: 0; overflow: hidden; padding: max(10px, env(safe-area-inset-top)) clamp(8px, 2vw, 24px) 0; background: radial-gradient(circle at 50% 34%, #191c22 0, #0c0d11 52%, var(--v4-page-bottom) 100%); color: var(--app-text); }
+:root[data-theme="light"] .v4-page-stack { background: radial-gradient(circle at 50% 34%, #fffdf7 0, #eee7da 62%, var(--v4-page-bottom) 100%); }
 .v4-page-shell { display: grid; grid-template-rows: auto minmax(0, 1fr); width: 100%; height: 100%; min-height: 0; animation: v4-page-in .34s cubic-bezier(.22, .8, .26, 1); }
 .v4-page-header { width: min(1180px, 100%); margin-inline: auto; }
 .v4-page-heading { min-width: 0; }
