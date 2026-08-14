@@ -191,14 +191,16 @@
 .v4-page-content .appsheet-final-abilities { gap: 0; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 28%); border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 28%); }
 .v4-page-content .appsheet-final-score { padding: 12px 10px; border-right: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); border-radius: 0; background: transparent; }
 .v4-page-content .appsheet-final-score:nth-child(3n) { border-right: 0; }
-.v4-page-content .appsheet-skill-table { gap: 0; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); }
+.v4-page-content .appsheet-skill-table { gap: 0; }
 .v4-page-content .appsheet-skill-table > div { grid-template-columns: 18px minmax(0, 1fr) 42px 28px; gap: 8px; padding: 10px 4px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); border-radius: 0; }
+.v4-page-content .appsheet-skill-table > div:last-child { border-bottom: 0; }
 .v4-page-content .appsheet-skill-table .appsheet-auto-reason:not([open]) { grid-column: 4; justify-self: end; }
 .v4-page-content .appsheet-skill-table .appsheet-auto-reason[open] { grid-column: 2 / -1; }
 .v4-page-content .appsheet-skill-table > div:hover { background: color-mix(in srgb, var(--app-subtle), transparent 30%); }
 .v4-page-content .appsheet-skill-table .proficient { background: transparent; box-shadow: inset 2px 0 var(--app-positive); }
-.v4-page-content .appsheet-feature-timeline { gap: 0; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); }
+.v4-page-content .appsheet-feature-timeline { gap: 0; }
 .v4-page-content .appsheet-feature-timeline details { border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); border-radius: 0; }
+.v4-page-content .appsheet-feature-timeline details:last-child { border-bottom: 0; }
 .v4-page-content .appsheet-feature-timeline details[open] { background: transparent; }
 .v4-page-content .appsheet-combat-strip { gap: 0; padding: 0; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 28%); border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 28%); border-radius: 0; background: transparent; }
 .v4-page-content .appsheet-combat-strip .appsheet-derived { border-right: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); }
