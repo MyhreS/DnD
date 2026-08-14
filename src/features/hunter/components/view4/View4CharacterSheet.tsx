@@ -9,6 +9,7 @@ import { sheetText } from "../appsheet/appSheetValues";
 import { hasStagedUpgrade, useAppEditStage } from "../appsheet/appEditStageContext";
 import { useView4PageSafeArea } from "../../hooks/useView4PageSafeArea";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
+import { View4BackButton } from "./View4BackButton";
 import { View4Equipment } from "./View4Equipment";
 import { View4Figure } from "./View4Figure";
 import { View4Health } from "./View4Health";
@@ -75,7 +76,7 @@ export function View4CharacterSheet({ model, notesModel, panel, onPanelChange, o
   useView4PageSafeArea(panel !== null);
   return <div className="v4-sheet" data-testid="view4-character-sheet">
     <header className="v4-identity">
-      <div className="v4-header-tools"><button type="button" className="character-sheet-back" ref={backRef} onClick={onBack} aria-label="Back to hunters"><span aria-hidden="true">←</span><span>Back</span></button>{saveMsg && <small className="character-sheet-save" role="status">{saveMsg}</small>}</div>
+      <div className="v4-header-tools"><View4BackButton backRef={backRef} onClick={onBack} ariaLabel="Back to hunters" />{saveMsg && <small className="character-sheet-save" role="status">{saveMsg}</small>}</div>
       <button className="v4-identity-profile" type="button" onClick={() => onPanelChange("profile")}><small>{klass?.title ?? "Unbound hunter"}</small><h1>{name}</h1><span>{background?.name ?? "No background"}</span></button>
       <div className="v4-identity-progress"><button className={upgradePending ? "v4-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Level</small><strong>{displayedLevel}</strong></button><button className={upgradePending ? "v4-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Insight</small><strong>{insight}</strong></button></div>
     </header>

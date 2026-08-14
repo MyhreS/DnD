@@ -95,7 +95,8 @@
 .v4-identity h1 { overflow: hidden; margin: 1px 0; color: var(--app-text); font: 600 clamp(21px, 3.5vw, 36px)/1.05 "Cinzel", serif; text-overflow: ellipsis; white-space: nowrap; }
 .v4-identity-profile small, .v4-identity-profile span, .v4-identity-progress small { color: var(--app-muted); font: 700 10px/1.1 "Alegreya Sans SC", sans-serif; letter-spacing: .12em; text-transform: uppercase; }
 .v4-header-tools { display: grid; justify-items: start; gap: 4px; }
-.v4-header-tools .character-sheet-back { border: 1px solid var(--app-line) !important; background: var(--app-subtle) !important; }
+.v4-header-tools .character-sheet-back { justify-content: center; border: 1px solid var(--app-line) !important; background: var(--app-subtle) !important; }
+.v4-header-tools .character-sheet-back > svg { width: 18px; height: 18px; flex: none; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
 .v4-header-tools .character-sheet-back:hover, .v4-header-tools .character-sheet-back:focus-visible { border-color: var(--app-warm) !important; background: var(--app-subtle-hover) !important; }
 .v4-identity-progress { display: flex; gap: 8px; }
 .v4-identity-progress button { display: grid; justify-items: center; min-width: 58px; padding: 6px 10px !important; border: 1px solid var(--app-line) !important; border-radius: 7px; background: var(--app-subtle) !important; text-align: center; }
@@ -480,7 +481,7 @@
   .v4-sheet { gap: 6px; }
   .v4-identity { padding-bottom: 6px; }
   .v4-identity h1 { font-size: clamp(18px, 6vw, 25px); }
-  .v4-header-tools .character-sheet-back { min-width: 38px; padding: 5px 8px; }
+  .v4-header-tools .character-sheet-back { width: 38px; min-width: 38px; min-height: 38px; padding: 0 !important; }
   .v4-header-tools .character-sheet-back > span:last-child, .v4-header-tools .character-sheet-save { display: none; }
   .v4-identity-progress { gap: 4px; }
   .v4-identity-progress button { min-width: 48px; padding: 5px 6px !important; }

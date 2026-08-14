@@ -1,6 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { useOverlayFocus } from "../../hooks/useOverlayFocus";
 import { AppSectionsExpanded } from "../appsheet/appSheetShared";
+import { View4BackButton } from "./View4BackButton";
 import type { View4Panel } from "./View4CharacterSheet";
 import { View4PageNavigationContext, type View4PageSpec } from "./view4PageNavigation";
 
@@ -41,9 +42,7 @@ export function View4PageStack({
       <div key={activePage.id} className="v4-page-shell">
         <header className="v4-identity v4-page-header">
           <div className="v4-header-tools">
-            <button type="button" className="character-sheet-back" onClick={goBack} aria-label="Back">
-              <span aria-hidden="true">←</span><span>Back</span>
-            </button>
+            <View4BackButton onClick={goBack} />
           </div>
           <div className="v4-page-heading">
             <small>{activePage.eyebrow}</small>
