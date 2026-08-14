@@ -8,8 +8,8 @@ export function View4ArmorRules() {
   const studdedCount = studdedAddonIdsOf(card).length;
   const shieldArm = result.fields.shieldArm === true;
 
-  return <section className="v4-armor-rules">
-    <header><small>Armor rules</small><h3>How your armor works</h3></header>
+  return <details className="v4-armor-rules">
+    <summary><i aria-hidden="true">i</i><span><strong>Armor rules</strong><small>Training, studs and Shield Arm</small></span></summary>
     <div className="v4-armor-rule-list">
       <article><span>Armor training</span><strong>{klass?.armorTraining.join(" · ") || "Choose a class"}</strong><p>{result.reasons.armorLight || "Your class determines which armor you can use effectively."}</p></article>
       <article><span>Armor Class</span><strong>{String(result.fields.ac ?? "—")} · {String(result.fields.armorCategory || "Unarmored")}</strong><p>{result.reasons.ac || "Unarmored AC starts at 10 + Dexterity. Worn armor, add-ons, and upgrades modify it."}</p></article>
@@ -21,5 +21,5 @@ export function View4ArmorRules() {
       <div><span>Current worn effects</span><p>{String(result.fields.special || "No worn armor effects.")}</p></div>
       <div><span>Current impression</span><p>{String(result.fields.impressions || "No visible armor impression.")}</p></div>
     </div>
-  </section>;
+  </details>;
 }

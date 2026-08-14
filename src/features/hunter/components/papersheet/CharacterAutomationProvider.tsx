@@ -393,9 +393,20 @@ export function CharacterAutomationProvider({
       const other = STORAGE_BY_ITEM_ID[entry]?.requires;
       return !!other && other.kind === definition.requires?.kind && other.location === definition.requires?.location;
     });
-    const slotAssignments = { ...(card.slotAssignments ?? {}) };
-    delete slotAssignments[id];
-    for (const itemId of conflicts) delete slotAssignments[itemId];
+    const removedStorageIds = isEquipped ? [id] : conflicts;
+    const vacatedLocation = !isEquipped ? definition?.requires?.location : undefined;
+    const slotAssignments = Object.fromEntries(
+      Object.entries(card.slotAssignments ?? {}).flatMap(([itemId, assignments]) => {
+        if (itemId === id || conflicts.includes(itemId)) return [];
+        const cleaned = assignments.map((assignment) => {
+          if (assignment === vacatedLocation) return null;
+          if (removedStorageIds.some((storageId) => assignment?.startsWith(`storage:${storageId}:`))) return null;
+          return assignment;
+        });
+        while (cleaned.length && !cleaned[cleaned.length - 1]) cleaned.pop();
+        return cleaned.length ? [[itemId, cleaned]] : [];
+      }),
+    );
     commit({
       equippedStorageIds: isEquipped
         ? equipped.filter((entry) => entry !== id)
