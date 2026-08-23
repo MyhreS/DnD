@@ -30,9 +30,10 @@ type WorkActivityProps = {
   placement: "list" | "detail";
   state: AgentWorkState | null;
   online: boolean;
+  replySync?: "included" | "queued";
 };
 
-export function WorkActivity({ placement, state, online }: WorkActivityProps) {
+export function WorkActivity({ placement, state, online, replySync }: WorkActivityProps) {
   const tick = useCurrentTime();
   const minutes = minutesSince(state?.progressUpdatedAt, tick);
   const elapsed = elapsedTime(state?.workStartedAt, tick);
@@ -59,6 +60,16 @@ export function WorkActivity({ placement, state, online }: WorkActivityProps) {
         <span>{timing}</span>
         {placement === "detail" && state?.lastCompletedActivity && (
           <span className="work-activity-last">Last completed: {state.lastCompletedActivity}</span>
+        )}
+        {replySync === "included" && (
+          <span className="work-activity-reply is-included">
+            {placement === "detail" ? "Latest reply included: this pass started after your newest message." : "Latest reply included in this pass."}
+          </span>
+        )}
+        {replySync === "queued" && (
+          <span className="work-activity-reply is-queued">
+            {placement === "detail" ? "Latest reply saved: this pass will stop before publishing and restart with it." : "Latest reply saved; safe restart pending."}
+          </span>
         )}
         {placement === "detail" && slow && (
           <span className="work-activity-slow">No new step for {minutes}m. The agent is still online.</span>
