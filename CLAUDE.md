@@ -8,6 +8,15 @@ permissions are per-campaign (see "Access model & roles").
 > This is a **public repo**. Never commit secrets. Real config/secrets live in
 > **Doppler** (project `dnd`) and GitHub Actions secrets — not in the repo.
 
+> **Christoffer's separate private app is a special security boundary.** For
+> any work on its page, route, URL, resources, assets, API, or data, first read
+> `AGENTS.md` and `skills/protect-christoffer-private-app/SKILL.md`. Its intended
+> end-user identity is the verified Google account `myhrefjell@gmail.com`; no
+> other app user, including Simon's normal or super-admin account, may access
+> it. Never commit its private content or assets here: this repository and
+> normal Firebase Hosting bundles are public. The skill defines the mandatory
+> architecture, identity checks, denial tests, and infrastructure-owner limit.
+
 ## What it does (v1)
 
 - **Sessions** — next session with a live countdown + upcoming dates. Members
