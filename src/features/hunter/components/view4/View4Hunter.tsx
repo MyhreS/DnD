@@ -10,14 +10,16 @@ export function View4Hunter({ model }: { model: AppSheetModel }) {
   const automation = useCharacterAutomation();
   const { card, klass, result } = automation;
   const name = sheetText(model.data, "name") || card.name;
+  const setupComplete = automation.state.setupComplete === true;
   const feats = [...new Set([card.feat, ...(card.feats ?? [])].filter((feat): feat is string => !!feat))];
   const tools = String(result.fields.tools || "").split(",").map((tool) => tool.trim().replace(/\s+\(unique item\)$/i, "")).filter(Boolean);
 
   return <div className="v4-hunter-build">
     <label className="v4-hunter-name"><span>Hunter name</span><input value={name} disabled={model.readOnly} placeholder="Unnamed hunter" onChange={(event) => model.setFields({ name: event.target.value }, { name: event.target.value })} /></label>
     <div className="v4-hunter-build-grid">
-      <label><span>Class</span><select value={card.classId} disabled={model.readOnly} onChange={(event) => automation.chooseClass(event.target.value)}><option value="">Choose class...</option>{CLASSES.map((entry) => <option key={entry.id} value={entry.id}>{entry.title}</option>)}</select><small>Sets core traits, training, and class features.</small></label>
-      <label><span>Background</span><select value={card.backgroundId ?? ""} disabled={model.readOnly} onChange={(event) => automation.chooseBackground(event.target.value)}><option value="">Choose background...</option>{BACKGROUNDS.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select><small>Sets creation bonuses, skills, and starting kit.</small></label>
+      {setupComplete
+        ? <><div className="v4-hunter-build-value"><span>Class</span><strong>{klass?.title ?? "Unbound hunter"}</strong><small>Core traits, training, and class features.</small></div><div className="v4-hunter-build-value"><span>Background</span><strong>{(automation.background?.name ?? card.background) || "No background"}</strong><small>Origin, skills, feat, and starting kit.</small></div></>
+        : <><label><span>Class</span><select value={card.classId} disabled={model.readOnly} onChange={(event) => automation.chooseClass(event.target.value)}><option value="">Choose class...</option>{CLASSES.map((entry) => <option key={entry.id} value={entry.id}>{entry.title}</option>)}</select><small>Sets core traits, training, and class features.</small></label><label><span>Background</span><select value={card.backgroundId ?? ""} disabled={model.readOnly} onChange={(event) => automation.chooseBackground(event.target.value)}><option value="">Choose background...</option>{BACKGROUNDS.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select><small>Sets creation bonuses, skills, and starting kit.</small></label></>}
       <div className="v4-hunter-build-value"><span>Subclass</span><strong>{klass?.subclasses.find((entry) => entry.id === card.subclassId)?.name ?? (card.level < 3 ? "Available at level 3" : "Choose during upgrade")}</strong><small>Your specialized class path is selected and saved through Upgrade.</small></div>
     </div>
     <div className="appsheet-two-column v4-hunter-feats-tools">

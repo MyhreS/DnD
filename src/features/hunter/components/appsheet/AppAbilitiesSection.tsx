@@ -28,7 +28,7 @@ function FinalAbilities({ result }: { result: ReturnType<typeof useCharacterAuto
 export function AppAbilitiesSection({ model, view = "all" }: { model: AppSheetModel; view?: "all" | "abilities" | "skills" }) {
   const automation = useCharacterAutomation();
   const { card, result, state, background, base, bonuses, pointsLeft } = automation;
-  const canEditCreationScores = state.setupComplete !== true || card.level === 1;
+  const canEditCreationScores = state.setupComplete !== true;
 
   return (
     <AppSection id="appsheet-abilities" title={view === "abilities" ? "Abilities" : view === "skills" ? "Skills" : "Abilities & skills"}>

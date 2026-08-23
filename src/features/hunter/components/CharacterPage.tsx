@@ -19,7 +19,7 @@ export function CharacterPage() {
   const status = usePlayerStore((s) => s.status);
   const error = usePlayerStore((s) => s.error);
   const archive = usePlayerStore((s) => s.archive);
-  // A brand-new sheet being written (the only creation flow).
+  // A local guided-creation draft. It is not written until the player finishes.
   const [sheetDraft, setSheetDraft] = useState<HunterCard | null>(null);
   // Which hunter's sheet is open (detail); null = the list. Nothing opens on
   // mount, so the page always lands on the list — never inside a hunter.
