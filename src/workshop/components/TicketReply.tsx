@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useCallback, useRef, useState, type FormEvent } from "react";
 import { replyWorkshopTicket, uploadWorkshopImages } from "@/api/workshop";
 import { AttachmentPicker } from "@/workshop/components/AttachmentPicker";
 import { useOnlineStatus } from "@/workshop/hooks/useOnlineStatus";
@@ -18,11 +18,11 @@ export function TicketReply({ ticketId, uid }: { ticketId: string; uid: string }
   const submissionId = useRef<string | null>(null);
   const online = useOnlineStatus();
 
-  function changeFiles(selected: File[]) {
+  const changeFiles = useCallback((selected: File[]) => {
     setFiles(selected);
     setSent(false);
     submissionId.current = null;
-  }
+  }, [setFiles, setSent]);
   const pasteImages = useWorkshopImagePaste({ files, disabled: busy, onChange: changeFiles, onError: setError });
 
   async function submit(event: FormEvent) {

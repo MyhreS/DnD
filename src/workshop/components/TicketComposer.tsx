@@ -1,4 +1,4 @@
-import { useRef, useState, type FormEvent } from "react";
+import { useCallback, useRef, useState, type FormEvent } from "react";
 import { createWorkshopTicket, uploadWorkshopImages } from "@/api/workshop";
 import { AttachmentPicker } from "@/workshop/components/AttachmentPicker";
 import { WorkshopTip } from "@/workshop/components/WorkshopTip";
@@ -18,11 +18,11 @@ export function TicketComposer({ uid, onCreated }: { uid: string; onCreated: (id
   const submissionId = useRef<string | null>(null);
   const online = useOnlineStatus();
 
-  function changeFiles(selected: File[]) {
+  const changeFiles = useCallback((selected: File[]) => {
     setSent(false);
     submissionId.current = null;
     setFiles(selected);
-  }
+  }, [setFiles, setSent]);
   const pasteImages = useWorkshopImagePaste({ files, disabled: busy, onChange: changeFiles, onError: setError });
 
   async function submit(event: FormEvent) {

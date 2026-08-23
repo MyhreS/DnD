@@ -137,6 +137,31 @@ async function pasteImages(locator, files) {
   }, payload);
 }
 
+async function watchPreviewStability(image) {
+  await image.waitFor();
+  await image.evaluate(async (node) => {
+    if (!node.complete) await new Promise((resolve) => node.addEventListener("load", resolve, { once: true }));
+    const probe = { node, src: node.src, loads: 0 };
+    node.addEventListener("load", () => { probe.loads += 1; });
+    window.__workshopImageProbe = probe;
+  });
+}
+
+async function assertPreviewStable(image, label) {
+  const state = await image.evaluate((current) => {
+    const probe = window.__workshopImageProbe;
+    return {
+      connected: probe?.node?.isConnected ?? false,
+      sameNode: probe?.node === current,
+      sameSrc: probe?.src === current.src,
+      reloads: probe?.loads ?? -1,
+    };
+  });
+  if (!state.connected || !state.sameNode || !state.sameSrc || state.reloads !== 0) {
+    throw new Error(`${label} changed while typing: ${JSON.stringify(state)}`);
+  }
+}
+
 async function runManager(fixture, timeoutMs = 30_000) {
   const child = spawn("bun", ["scripts/workshop-manager.ts", "--once", `--fixture=${fixture}`], {
     stdio: ["ignore", "pipe", "pipe"],
@@ -551,6 +576,12 @@ try {
   const ticketBody = creator.page.getByTestId("ticket-body");
   await pasteImages(ticketBody, [{ name: "pasted-game-page.png", mimeType: "image/png", buffer: tinyPng }]);
   await creator.page.getByRole("button", { name: "Remove pasted-game-page.png" }).waitFor();
+  const requestPreview = creator.page.getByTestId("attachment-previews").locator("img").first();
+  await watchPreviewStability(requestPreview);
+  const requestBodyBeforePreviewCheck = await ticketBody.inputValue();
+  await ticketBody.pressSequentially(" Preview stays visible.");
+  await ticketBody.fill(requestBodyBeforePreviewCheck);
+  await assertPreviewStable(requestPreview, "New-request image preview");
   await pasteImages(ticketBody, Array.from({ length: 5 }, (_, index) => ({ name: `too-many-${index}.png`, mimeType: "image/png", buffer: tinyPng })));
   await creator.page.getByText("Add up to 5 images.", { exact: true }).waitFor();
   if (await creator.page.getByTestId("attachment-previews").locator(".attachment-preview").count() !== 1) throw new Error("Invalid clipboard batch changed the selected images.");
@@ -843,6 +874,11 @@ try {
   await eventually(async () => messageList.evaluate((element) => element.scrollHeight - element.scrollTop - element.clientHeight < 90), "Jump to latest message");
   const ticketReply = creator.page.getByTestId("ticket-reply");
   await pasteImages(ticketReply, [{ name: "pasted-reply-image.png", mimeType: "image/png", buffer: tinyPng }]);
+  const replyPreview = creator.page.getByTestId("attachment-previews").locator("img").first();
+  await watchPreviewStability(replyPreview);
+  await ticketReply.pressSequentially("Preview stays visible.");
+  await ticketReply.fill("");
+  await assertPreviewStable(replyPreview, "Reply image preview");
   await ticketReply.press("Enter");
   await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
   const longMessages = await longThreadRef.collection("messages").get();

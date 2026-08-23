@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { memo, useRef } from "react";
 import { useFilePreview } from "@/workshop/hooks/useFilePreviews";
 import { WORKSHOP_IMAGE_ACCEPT, validateWorkshopFiles } from "@/workshop/lib/attachments";
 
@@ -13,7 +13,7 @@ function SelectedFilePreview({ file, disabled, onRemove }: { file: File; disable
   );
 }
 
-export function AttachmentPicker({
+export const AttachmentPicker = memo(function AttachmentPicker({
   files,
   disabled,
   compact = false,
@@ -57,4 +57,4 @@ export function AttachmentPicker({
       </label>
     </div>
   );
-}
+});
