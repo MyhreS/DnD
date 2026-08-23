@@ -9,6 +9,7 @@ import { collection, connectFirestoreEmulator, deleteDoc, doc, getDoc, getDocs, 
 import { connectFunctionsEmulator, getFunctions, httpsCallable } from "firebase/functions";
 import { connectStorageEmulator, getStorage, ref, uploadBytes } from "firebase/storage";
 import { chromium } from "playwright";
+import sharp from "sharp";
 
 const PORT = 5202;
 const BASE = `http://127.0.0.1:${PORT}`;
@@ -489,6 +490,15 @@ try {
   await creator.page.getByTestId("ticket-body").press("Shift+Enter");
   await creator.page.getByTestId("ticket-body").pressSequentially("Only show the most important action first.");
   const tinyPng = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=", "base64");
+  const portraitPng = await sharp(Buffer.from(`
+    <svg width="320" height="900" xmlns="http://www.w3.org/2000/svg">
+      <rect width="320" height="900" fill="#10131a"/>
+      <rect x="20" y="30" width="280" height="150" rx="12" fill="#d3b26c"/>
+      <text x="40" y="115" fill="#10131a" font-size="28" font-family="sans-serif">TOP CONTROLS</text>
+      <rect x="20" y="720" width="280" height="150" rx="12" fill="#4f7655"/>
+      <text x="35" y="805" fill="white" font-size="26" font-family="sans-serif">BOTTOM ACTIONS</text>
+    </svg>
+  `)).png().toBuffer();
   const ticketBody = creator.page.getByTestId("ticket-body");
   await pasteImages(ticketBody, [{ name: "pasted-game-page.png", mimeType: "image/png", buffer: tinyPng }]);
   await creator.page.getByRole("button", { name: "Remove pasted-game-page.png" }).waitFor();
@@ -555,13 +565,31 @@ try {
   await eventually(async () => !(await simon.page.getByTestId(`ticket-${ticketId}`).getAttribute("aria-label"))?.includes("unread"), "Read marker clearing");
   if (await detail.getByRole("button", { name: /delete|edit/i }).count()) throw new Error("Thread exposes destructive edit/delete controls.");
   await detail.getByRole("button", { name: "Close thread" }).click();
-  await pasteImages(ticketBody, [{ name: "pasted-image-only.png", mimeType: "image/png", buffer: tinyPng }]);
+  await pasteImages(ticketBody, [{ name: "pasted-image-only.png", mimeType: "image/png", buffer: portraitPng }]);
   await ticketBody.press("Enter");
   await creator.page.getByRole("heading", { name: "Image request" }).waitFor();
   const imageOnlyTicket = (await db.collection("workshopTickets").where("title", "==", "Image request").limit(1).get()).docs[0];
   if (!imageOnlyTicket || imageOnlyTicket.data().attachmentCount !== 1) throw new Error("Image-only request was not created correctly.");
   const imageOnlyMessages = await imageOnlyTicket.ref.collection("messages").orderBy("sequence", "asc").get();
   if (imageOnlyMessages.docs[0]?.data().body !== "") throw new Error("Image-only request stored unexpected text.");
+  const portraitImage = creator.page.locator(".message-attachment img").first();
+  await portraitImage.waitFor();
+  const portraitPresentation = await portraitImage.evaluate((image) => ({
+    naturalWidth: image.naturalWidth,
+    naturalHeight: image.naturalHeight,
+    objectFit: getComputedStyle(image).objectFit,
+    imageHeight: image.getBoundingClientRect().height,
+    frameHeight: image.parentElement?.getBoundingClientRect().height ?? 0,
+  }));
+  if (portraitPresentation.naturalHeight <= portraitPresentation.naturalWidth
+    || portraitPresentation.objectFit !== "contain"
+    || portraitPresentation.imageHeight > portraitPresentation.frameHeight) {
+    throw new Error(`Portrait attachment was cropped or distorted: ${JSON.stringify(portraitPresentation)}`);
+  }
+  await creator.page.screenshot({ path: "screenshots/workshop-portrait-image-mobile.png", fullPage: true });
+  await creator.page.setViewportSize({ width: 1440, height: 900 });
+  await creator.page.screenshot({ path: "screenshots/workshop-portrait-image-desktop.png", fullPage: true });
+  await creator.page.setViewportSize({ width: 390, height: 844 });
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await imageOnlyTicket.ref.update({ status: "finished" });
 
@@ -656,6 +684,21 @@ try {
     progressUpdatedAt: new Date(),
     workStartedAt: new Date(Date.now() - 20 * 60_000),
   }, { merge: true });
+  await db.doc("workshopTickets/scroll-fixture-0").update({
+    revision: 2,
+    claimedRevision: 2,
+    lastMessageAt: new Date(),
+    nextSequence: 3,
+  });
+  await db.doc("workshopTickets/scroll-fixture-0/messages/latest-human-reply").set({
+    kind: "follow_up",
+    body: "Please include this newer detail.",
+    authorUid: creatorUid,
+    authorName: "Christopher Creator",
+    attachments: [],
+    sequence: 2,
+    createdAt: new Date(),
+  });
   await db.doc("workshopTickets/scroll-fixture-0/messages/legacy-working-message").set({
     kind: "agent",
     body: "I’m working on this now.",
@@ -675,10 +718,14 @@ try {
   const detailProgress = creator.page.getByTestId("work-activity-detail");
   await detailProgress.getByText("Testing the update", { exact: true }).waitFor();
   await detailProgress.getByText("Last completed: Updated the Workshop request page", { exact: true }).waitFor();
+  await detailProgress.getByText("Latest reply included: this pass started after your newest message.", { exact: true }).waitFor();
   await creator.page.screenshot({ path: "screenshots/workshop-working-mobile.png", fullPage: true, animations: "disabled" });
   if (await creator.page.getByText("I’m working on this now.", { exact: true }).count()) {
     throw new Error("Routine working copy appeared as a conversation reply.");
   }
+  await db.doc("workshopTickets/scroll-fixture-0").update({ revision: 3, lastMessageAt: new Date() });
+  await detailProgress.getByText("Latest reply saved: this pass will stop before publishing and restart with it.", { exact: true }).waitFor();
+  await creator.page.screenshot({ path: "screenshots/workshop-reply-sync-mobile.png", fullPage: true, animations: "disabled" });
   await db.doc("workshopAgent/state").set({ progressUpdatedAt: new Date(Date.now() - 12 * 60_000) }, { merge: true });
   await detailProgress.getByText(/No new step for \d+m\. The agent is still online\./).waitFor();
   await db.doc("workshopAgent/state").set({ lastHeartbeatAt: new Date(Date.now() - 2 * 60_000) }, { merge: true });

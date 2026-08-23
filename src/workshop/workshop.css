@@ -126,6 +126,9 @@ button { color: inherit; }
 .work-activity-detail .work-activity-copy > strong { font-size: 13px; }
 .work-activity-detail .work-activity-copy > span { font-size: 11px; }
 .work-activity-detail .work-activity-last { color: #5e5549; }
+.work-activity-detail .work-activity-reply, .work-activity-list .work-activity-reply { font-weight: 700; }
+.work-activity-reply.is-included { color: #35613c; }
+.work-activity-reply.is-queued { color: #8b4d21; }
 .work-activity-detail .work-activity-slow { color: #8b4d21; font-weight: 700; }
 .work-activity.is-paused { color: #7a7064; }
 .work-activity.is-paused .work-activity-dots i { animation: none; opacity: .45; }
@@ -168,8 +171,9 @@ button { color: inherit; }
 .message-body > button { margin-top: 8px; padding: 0; border: 0; border-bottom: 1px solid currentColor; color: #7f1d27; background: transparent; font-size: 11px; font-weight: 700; cursor: pointer; }
 .kind-system .message-body > p { margin-top: 4px; font-size: 12px; }
 .message-images { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-top: 14px; }
-.message-attachment { display: block; overflow: hidden; border-radius: 5px; background: #e3ded4; }
-.message-attachment img { display: block; width: 100%; height: 170px; object-fit: cover; }
+.message-attachment:only-child { grid-column: 1 / -1; }
+.message-attachment { position: relative; height: min(52vh, 520px); display: block; overflow: hidden; border-radius: 5px; background: #111318; }
+.message-attachment img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; }
 .attachment-loading { min-height: 100px; display: grid; place-items: center; background: #e3ded4; color: #756d62; font-size: 11px; }
 .attachment-error { min-height: 100px; display: grid; place-content: center; justify-items: center; gap: 8px; border: 1px dashed #cbbdad; border-radius: 5px; color: #756d62; background: #eee9df; font-size: 11px; }
 .attachment-error button { padding: 5px 9px; border: 1px solid #b9ad9d; border-radius: 4px; background: #f8f5ee; cursor: pointer; }

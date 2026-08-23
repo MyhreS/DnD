@@ -22,6 +22,7 @@ export type WorkshopTicket = {
   retryAfter?: Timestamp;
   readAtBy?: Record<string, Timestamp>;
   revision: number;
+  claimedRevision?: number;
   lastCompletedRevision?: number;
   lastOutcome?: "finished" | "answered" | "needs_simon" | "declined";
   attachmentCount: number;
