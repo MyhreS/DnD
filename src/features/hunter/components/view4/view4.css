@@ -15,6 +15,7 @@
 }
 
 .character-editor-modal.view-hud {
+  --v4-desktop-bottom-gutter: 20px;
   --app-bg: #090a0d;
   --app-surface: #15171c;
   --app-surface-hover: #1d2026;
@@ -47,7 +48,7 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: max(10px, env(safe-area-inset-top)) clamp(8px, 2vw, 24px) 0;
+  padding: max(10px, env(safe-area-inset-top)) clamp(8px, 2vw, 24px) var(--v4-desktop-bottom-gutter);
   background: radial-gradient(circle at 50% 34%, #191c22 0, #0c0d11 52%, #07080a 100%);
   color-scheme: dark;
 }
@@ -88,7 +89,7 @@
 .view-hud > .character-app-sheet { flex: 1; width: min(1180px, 100%); min-height: 0; }
 .view-hud .appsheet-workspace { height: 100%; min-height: 0; }
 
-.v4-sheet { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: clamp(7px, 1.4vh, 13px); height: 100%; min-height: 0; overflow: hidden; padding-bottom: max(10px, env(safe-area-inset-bottom)); color: var(--app-text); }
+.v4-sheet { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: clamp(7px, 1.4vh, 13px); height: 100%; min-height: 0; overflow: hidden; padding-bottom: env(safe-area-inset-bottom); color: var(--app-text); }
 .v4-identity { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 5px clamp(6px, 2vw, 22px) 9px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 25%); }
 .v4-identity button { border: 0 !important; background: transparent !important; color: inherit !important; text-align: left; }
 .v4-identity-profile { min-width: 0; padding: 0 !important; }
@@ -154,7 +155,7 @@
 
 .v4-page-stack { position: fixed; z-index: 20; inset: 0; overflow: hidden; background: radial-gradient(circle at 50% 34%, #191c22 0, #0c0d11 52%, var(--v4-page-bottom) 100%); color: var(--app-text); }
 :root[data-theme="light"] .v4-page-stack { background: radial-gradient(circle at 50% 34%, #fffdf7 0, #eee7da 62%, var(--v4-page-bottom) 100%); }
-.v4-page-layer { position: absolute; isolation: isolate; inset: 0; padding: max(10px, env(safe-area-inset-top)) clamp(8px, 2vw, 24px) 0; }
+.v4-page-layer { position: absolute; isolation: isolate; inset: 0; padding: max(10px, env(safe-area-inset-top)) clamp(8px, 2vw, 24px) var(--v4-desktop-bottom-gutter); }
 .v4-page-layer.is-covered { pointer-events: none; }
 .v4-page-layout { display: grid; grid-template-rows: auto minmax(0, 1fr) auto; height: 100%; min-height: 0; }
 .v4-page-layout-content { min-height: 0; }
@@ -553,7 +554,8 @@
 .v4-armor-effects { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; padding: 12px; }
 
 @media (max-width: 700px) {
-  .v4-sheet { gap: 6px; }
+  .character-editor-modal.view-hud { --v4-desktop-bottom-gutter: 0px; }
+  .v4-sheet { gap: 6px; padding-bottom: max(10px, env(safe-area-inset-bottom)); }
   .v4-identity { padding-bottom: 6px; }
   .v4-identity h1 { font-size: clamp(18px, 6vw, 25px); }
   .v4-header-tools .character-sheet-back { width: 38px; min-width: 38px; min-height: 38px; padding: 0 !important; }
