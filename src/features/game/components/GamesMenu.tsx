@@ -58,16 +58,24 @@ export function GamesMenu({
           <h1 className="page-title" id="games-menu-title">Games</h1>
           <p>{showingPrevious ? "Previous" : "Current"}</p>
         </div>
-        <button
-          className="games-menu-switch"
-          type="button"
-          aria-pressed={showingPrevious}
-          aria-label={showingPrevious ? "Show current games" : "Show previous games"}
-          onClick={onTogglePrevious}
-        >
-          <HistoryIcon />
-          <span>{showingPrevious ? "Current" : "Previous"}</span>
-        </button>
+        <div className="games-menu-actions">
+          {!showingPrevious && (
+            <button className="games-menu-create" type="button" onClick={onCreate}>
+              <PlusIcon />
+              <span>Create game</span>
+            </button>
+          )}
+          <button
+            className="games-menu-switch"
+            type="button"
+            aria-pressed={showingPrevious}
+            aria-label={showingPrevious ? "Show current games" : "Show previous games"}
+            onClick={onTogglePrevious}
+          >
+            <HistoryIcon />
+            <span>{showingPrevious ? "Current" : "Previous"}</span>
+          </button>
+        </div>
       </header>
 
       <nav className="games-menu-list" aria-label={listName}>
@@ -75,13 +83,6 @@ export function GamesMenu({
           <GameRow key={game.id} game={game} onOpen={() => onOpen(game.id)} />
         )) : <p className="games-menu-empty">No {showingPrevious ? "previous" : "current"} games.</p>}
       </nav>
-
-      {!showingPrevious && (
-        <button className="games-menu-create" type="button" onClick={onCreate}>
-          <PlusIcon />
-          <span>Create game</span>
-        </button>
-      )}
     </section>
   );
 }
