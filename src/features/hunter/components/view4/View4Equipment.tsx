@@ -17,7 +17,7 @@ function EquipmentPage({ model }: { model: AppSheetModel }) {
   const [layer, setLayer] = useState<"armor" | "carrying">("armor");
   const addonLimit = maxAddonPieces(card.mainArmorId, card.customItems);
   return <div className="v4-equipment">
-    <div className="v4-equipment-summary"><span><small>Armor class</small><strong>{String(result.fields.ac ?? "—")}</strong></span><span><small>Add-ons</small><strong>{card.addonArmorIds?.length ?? 0}/{addonLimit}</strong></span><span><small>Shield arm</small><strong>{result.fields.shieldArm === true ? "Active" : "—"}</strong></span></div>
+    <div className="v4-equipment-summary"><span><small>Armor class</small><strong>{String(result.fields.ac ?? "—")}</strong></span><span><small>Carried weight</small><strong>{String(result.fields.weight ?? "0 lb")}</strong></span><span><small>Load effect</small><strong>{String(result.fields.weightCondition ?? "Unburdened")}</strong></span><span><small>Add-ons</small><strong>{card.addonArmorIds?.length ?? 0}/{addonLimit}</strong></span></div>
     <View4ArmorRules />
     <div className="v4-equipment-layer" role="tablist" aria-label="Equipment view">
       <button type="button" role="tab" aria-selected={layer === "armor"} onClick={() => setLayer("armor")}><span>Armor</span><small>What you wear</small></button>

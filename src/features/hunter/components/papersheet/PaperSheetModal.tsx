@@ -20,6 +20,10 @@ export function PaperSheetModal({ card, onClose, readOnly = false, create = fals
   const view = useCharacterView((state) => state.view);
   const [view4Panel, setView4Panel] = useState<View4Panel | null>(null);
   const [appEditPending, setAppEditPending] = useState(false);
+  const [creationFinished, setCreationFinished] = useState(false);
+  const creating = !readOnly
+    && !creationFinished
+    && (create || workingCard.sheetAutomation?.setupComplete === false);
 
   const closeEditor = () => {
     if (appEditPending && !window.confirm("Discard the previewed changes and close the character?")) return;
@@ -45,6 +49,8 @@ export function PaperSheetModal({ card, onClose, readOnly = false, create = fals
         card={workingCard}
         readOnly={readOnly}
         onPendingEditChange={setAppEditPending}
+        creating={creating}
+        onCreationComplete={() => setCreationFinished(true)}
         mode={view}
         onBack={handleBack}
         backRef={backRef}
