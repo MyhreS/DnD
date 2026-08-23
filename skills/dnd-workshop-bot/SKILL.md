@@ -11,6 +11,8 @@ From the repository root, run `bun run workshop:bot` for the continuous manager 
 
 Coding and testing may happen concurrently, but releases may not. Ticket agents commit only inside their assigned worktree and must never fetch, pull, rebase, push, create or merge a pull request, deploy, or modify another ticket worktree. The manager owns one distributed, fenced release gate: it refreshes main every five minutes, rebases only non-overlapping committed work, reruns checks after synchronization, and restarts overlapping work from a fresh main worktree. It publishes one finished ticket, waits for that production workflow to complete, then lets the next ticket publish. This release gate is the coordination channel between concurrent agents and must never be bypassed.
 
+Manager updates use interrupt-and-resume. A graceful stop first disables new claims, saves a private durable checkpoint for every active ticket (including its isolated worktree, Codex session, completed result, and release position when available), releases the fenced ticket claims, and stops the owned child processes. The replacement manager starts in recovery mode, reclaims interrupted checkpoints before ordinary queued tickets, resumes the exact saved Codex session when possible, and falls back to the preserved worktree or full immutable thread when a local session is unavailable. Do not drain active tickets as an update prerequisite, and do not accept pending tickets until the startup checkpoint pass is complete.
+
 ## Process a ticket
 
 1. Read `CLAUDE.md`, the full ticket thread in sequence, and every attached image.

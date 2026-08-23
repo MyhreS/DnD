@@ -3,8 +3,8 @@ import { getApps, initializeApp, applicationDefault, cert, type Credential } fro
 import { FieldValue, Timestamp, getFirestore, type DocumentReference } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { mkdtempSync, rmSync, writeFileSync } from "node:fs";
-import { homedir, tmpdir } from "node:os";
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { homedir, hostname, tmpdir } from "node:os";
 import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
@@ -16,12 +16,14 @@ import {
   WORKSHOP_CODEX_STDIN,
   WORKSHOP_UI_QUALITY_BRIEF,
   agentRunWatchdogDecision,
+  codexSessionIdFromEvent,
   deploymentContainsCommit,
   outcomeMessage,
   parseAgentResult,
   parseRecoveryResult,
   progressFromCodexEvent,
   isAttachmentAccessProblem,
+  isCodexSessionId,
   isLikelyServiceProblem,
   isTemporaryServiceWait,
   overlappingChangeScopes,
@@ -31,6 +33,7 @@ import {
   ticketNeedsDecision,
   workshopChannelContext,
   workshopCodexArgs,
+  workshopCodexResumeArgs,
   type AgentResult,
   type RecoveryResult,
   type WorkshopAgentConfig,
@@ -109,6 +112,13 @@ class ReleaseLeaseLostError extends Error {
   }
 }
 
+class ManagerRestartCheckpointError extends Error {
+  constructor() {
+    super("The Workshop manager is stopping after saving a durable ticket checkpoint.");
+    this.name = "ManagerRestartCheckpointError";
+  }
+}
+
 const PROJECT_ID = process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID || "dandd-ea955";
 const WORKER_ID = `local-${process.pid}-${crypto.randomUUID().slice(0, 8)}`;
 const FALLBACK_POLL_MS = 5 * 60_000;
@@ -122,6 +132,14 @@ const REPO_ROOT = resolve(fileURLToPath(new URL("..", import.meta.url)));
 const once = process.argv.includes("--once");
 const fixture = process.argv.find((value) => value.startsWith("--fixture="))?.split("=")[1];
 const fixtureDelayMs = Math.max(0, Math.min(10_000, Number(process.env.WORKSHOP_FIXTURE_DELAY_MS ?? 0) || 0));
+const fixtureInterruptAfterMs = fixture
+  ? Math.max(0, Math.min(30_000, Number(process.env.WORKSHOP_FIXTURE_INTERRUPT_AFTER_MS ?? 0) || 0))
+  : 0;
+const maxConcurrentTickets = fixture
+  ? Math.max(1, Math.min(WORKSHOP_MAX_CONCURRENT_TICKETS, Number(process.env.WORKSHOP_FIXTURE_MAX_CONCURRENT ?? WORKSHOP_MAX_CONCURRENT_TICKETS) || WORKSHOP_MAX_CONCURRENT_TICKETS))
+  : WORKSHOP_MAX_CONCURRENT_TICKETS;
+const CHECKPOINT_COLLECTION = "workshopAgentCheckpoints";
+const CHECKPOINT_VERSION = 1;
 
 type AgentWorktree = {
   path: string;
@@ -129,12 +147,24 @@ type AgentWorktree = {
   baseSha: string;
   ticketPaths?: string[];
 };
+type ResumeCheckpoint = {
+  checkpointNonce: string;
+  agentConfig: WorkshopAgentConfig;
+  claimedThroughSequence: number;
+  worktree?: AgentWorktree;
+  sessionId?: string;
+  completedResult?: AgentResult;
+  mergeSha?: string;
+  releaseInfo?: { productionUrl: string; includesWorkshop: boolean };
+  savedAt?: Timestamp;
+};
 type PullRequest = {
   number: number;
   state: "OPEN" | "CLOSED" | "MERGED";
   isDraft: boolean;
   headRefOid: string;
   url: string;
+  mergeCommit?: { oid?: string };
 };
 type WorkflowRun = {
   databaseId: number;
@@ -181,19 +211,189 @@ let pollAgain = false;
 let pollRequestActive = false;
 let watchingChanges = false;
 let shuttingDown = false;
+let managerLifecycle: "starting" | "recovering" | "ready" | "stopping" = "starting";
+const shutdownController = new AbortController();
 let currentAgentConfig: WorkshopAgentConfig = WORKSHOP_DEFAULT_AGENT_CONFIG;
 let lastMainRefreshAt: Timestamp | null = null;
 let activeRelease: { ticketId: string; nonce: string } | null = null;
 type ActiveWork = {
+  ticket: ClaimedTicket;
   progress: WorkshopProgress | null;
   workStartedAt: Timestamp;
   progressUpdatedAt: Timestamp;
   claimNonce: string;
   agentConfig: WorkshopAgentConfig;
+  checkpointNonce: string;
+  checkpointWrites: Promise<void>;
+  worktree?: AgentWorktree;
+  sessionId?: string;
+  agentProcess?: WatchedCodexProcess;
+  agentProcessPath?: string;
+  completedResult?: AgentResult;
+  mergeSha?: string;
+  releaseInfo?: { productionUrl: string; includesWorkshop: boolean };
+  preserveForRestart?: boolean;
+  finalized?: boolean;
 };
 const activeWork = new Map<string, ActiveWork>();
 const activeRuns = new Map<string, Promise<void>>();
 let stateWrites = Promise.resolve();
+
+function comparablePath(value: string): string {
+  return resolve(value).replaceAll("\\", "/").toLowerCase();
+}
+
+function managerWorktreePrefix(): string {
+  return comparablePath(join(resolve(REPO_ROOT, ".."), "DnD-workshop-ticket-"));
+}
+
+function isManagerWorktreePath(value: string): boolean {
+  return comparablePath(value).startsWith(managerWorktreePrefix());
+}
+
+function checkpointRef(ticketId: string): DocumentReference {
+  return db.collection(CHECKPOINT_COLLECTION).doc(ticketId);
+}
+
+function serializedAgentResult(result: AgentResult): Record<string, unknown> {
+  return {
+    outcome: result.outcome,
+    summaryForCreator: result.summaryForCreator,
+    ...(result.technicalSummary ? { technicalSummary: result.technicalSummary } : {}),
+    ...(result.productionUrl ? { productionUrl: result.productionUrl } : {}),
+    ...(result.needsSimonReason ? { needsSimonReason: result.needsSimonReason } : {}),
+    ...(result.declineReason ? { declineReason: result.declineReason } : {}),
+  };
+}
+
+function checkpointPayload(work: ActiveWork): Record<string, unknown> {
+  return {
+    version: CHECKPOINT_VERSION,
+    checkpointNonce: work.checkpointNonce,
+    ticketId: work.ticket.id,
+    savedByWorkerId: WORKER_ID,
+    savedOnHost: hostname(),
+    savedAt: Timestamp.now(),
+    claimedRevision: work.ticket.data.revision,
+    claimedThroughSequence: work.ticket.claimedThroughSequence,
+    agentConfig: work.agentConfig,
+    phase: work.mergeSha ? "deploying" : work.completedResult ? "publishing" : work.worktree ? "coding" : "preparing",
+    ...(work.worktree ? { worktree: {
+      path: work.worktree.path,
+      branch: work.worktree.branch,
+      baseSha: work.worktree.baseSha,
+      ...(work.worktree.ticketPaths ? { ticketPaths: work.worktree.ticketPaths } : {}),
+    } } : {}),
+    ...(work.sessionId ? { sessionId: work.sessionId } : {}),
+    ...(work.completedResult ? { completedResult: serializedAgentResult(work.completedResult) } : {}),
+    ...(work.mergeSha ? { mergeSha: work.mergeSha } : {}),
+    ...(work.releaseInfo ? { releaseInfo: work.releaseInfo } : {}),
+  };
+}
+
+function parseResumeCheckpoint(value: unknown, ticketId: string): ResumeCheckpoint | null {
+  if (!value || typeof value !== "object") return null;
+  const data = value as Record<string, unknown>;
+  if (data.version !== CHECKPOINT_VERSION || data.ticketId !== ticketId || typeof data.checkpointNonce !== "string") return null;
+  const rawWorktree = data.worktree && typeof data.worktree === "object" ? data.worktree as Record<string, unknown> : null;
+  let worktree: AgentWorktree | undefined;
+  if (rawWorktree
+    && typeof rawWorktree.path === "string"
+    && typeof rawWorktree.branch === "string"
+    && typeof rawWorktree.baseSha === "string"
+    && rawWorktree.branch.startsWith("agent/workshop-")
+    && /^[0-9a-f]{7,64}$/i.test(rawWorktree.baseSha)
+    && isManagerWorktreePath(rawWorktree.path)) {
+    worktree = {
+      path: resolve(rawWorktree.path),
+      branch: rawWorktree.branch,
+      baseSha: rawWorktree.baseSha,
+      ticketPaths: Array.isArray(rawWorktree.ticketPaths)
+        ? rawWorktree.ticketPaths.filter((path): path is string => typeof path === "string")
+        : undefined,
+    };
+  }
+  let completedResult: AgentResult | undefined;
+  if (data.completedResult) {
+    try {
+      completedResult = parseAgentResult(JSON.stringify(data.completedResult));
+    } catch {
+      completedResult = undefined;
+    }
+  }
+  const rawReleaseInfo = data.releaseInfo && typeof data.releaseInfo === "object" ? data.releaseInfo as Record<string, unknown> : null;
+  const releaseInfo = rawReleaseInfo
+    && typeof rawReleaseInfo.productionUrl === "string"
+    && rawReleaseInfo.productionUrl.startsWith("https://")
+    && typeof rawReleaseInfo.includesWorkshop === "boolean"
+    ? { productionUrl: rawReleaseInfo.productionUrl, includesWorkshop: rawReleaseInfo.includesWorkshop }
+    : undefined;
+  return {
+    checkpointNonce: data.checkpointNonce,
+    agentConfig: resolveWorkshopAgentConfig(data.agentConfig),
+    claimedThroughSequence: Math.max(0, Number(data.claimedThroughSequence ?? 0) || 0),
+    worktree,
+    sessionId: worktree && isCodexSessionId(data.sessionId) ? data.sessionId : undefined,
+    completedResult: worktree ? completedResult : undefined,
+    mergeSha: worktree && typeof data.mergeSha === "string" && /^[0-9a-f]{7,64}$/i.test(data.mergeSha) ? data.mergeSha : undefined,
+    releaseInfo: worktree ? releaseInfo : undefined,
+    savedAt: data.savedAt instanceof Timestamp ? data.savedAt : undefined,
+  };
+}
+
+function restoredWorktree(checkpoint: ResumeCheckpoint): AgentWorktree | undefined {
+  const worktree = checkpoint.worktree;
+  if (!worktree || !existsSync(worktree.path)) return undefined;
+  if (comparablePath(git(["rev-parse", "--show-toplevel"], worktree.path, true)) !== comparablePath(worktree.path)) return undefined;
+  if (git(["branch", "--show-current"], worktree.path, true) !== worktree.branch) return undefined;
+  return worktree;
+}
+
+async function writeCheckpoint(work: ActiveWork, releaseClaim: boolean): Promise<void> {
+  await db.runTransaction(async (tx) => {
+    const fresh = await tx.get(work.ticket.ref);
+    const ownsClaim = fresh.exists
+      && fresh.data()?.status === "doing_now"
+      && fresh.data()?.leasedBy === work.ticket.workerId
+      && fresh.data()?.claimNonce === work.claimNonce;
+    if (!ownsClaim) return;
+    tx.set(checkpointRef(work.ticket.id), checkpointPayload(work));
+    if (releaseClaim) {
+      tx.update(work.ticket.ref, {
+        leasedBy: null,
+        claimNonce: null,
+        leaseExpiresAt: null,
+      });
+    }
+  });
+}
+
+function queueCheckpointWrite(work: ActiveWork, releaseClaim = false): Promise<void> {
+  const write = work.checkpointWrites.then(() => writeCheckpoint(work, releaseClaim));
+  work.checkpointWrites = write.catch(() => undefined);
+  return write;
+}
+
+function throwIfManagerStopping(): void {
+  if (shuttingDown) throw new ManagerRestartCheckpointError();
+}
+
+async function managerDelay(milliseconds: number): Promise<void> {
+  throwIfManagerStopping();
+  await new Promise<void>((resolvePromise, reject) => {
+    const finish = () => {
+      shutdownController.signal.removeEventListener("abort", stop);
+      resolvePromise();
+    };
+    const timer = setTimeout(finish, milliseconds);
+    const stop = () => {
+      clearTimeout(timer);
+      reject(new ManagerRestartCheckpointError());
+    };
+    shutdownController.signal.addEventListener("abort", stop, { once: true });
+  });
+  throwIfManagerStopping();
+}
 
 function activeTicketIds(): string[] {
   return [...activeWork.keys()];
@@ -230,7 +430,7 @@ async function writeAgentState(): Promise<void> {
     currentTicketId: ids[0] ?? null,
     activeTicketIds: ids,
     activeTicketCount: ids.length,
-    maxConcurrentTickets: WORKSHOP_MAX_CONCURRENT_TICKETS,
+    maxConcurrentTickets,
     activeTickets: activeTicketProgress(),
     checkingNow: polling,
     lastHeartbeatAt: FieldValue.serverTimestamp(),
@@ -242,7 +442,10 @@ async function writeAgentState(): Promise<void> {
     mainRefreshIntervalMs: WORKSHOP_MAIN_REFRESH_MS,
     lastMainRefreshAt,
     activeReleaseTicketId: activeRelease?.ticketId ?? null,
-    version: 9,
+    lifecycle: managerLifecycle,
+    acceptingTickets: managerLifecycle === "ready" && !shuttingDown,
+    checkpointRecoveryComplete: managerLifecycle === "ready" || managerLifecycle === "stopping",
+    version: 10,
     ...legacyProgressFields(),
   });
 }
@@ -300,7 +503,7 @@ function queueProgress(ticketId: string, next: WorkshopProgress): void {
     .catch((error) => console.error("Workshop progress update failed:", error));
 }
 
-async function readCodexProgress(ticketId: string, stream: ReadableStream<Uint8Array>): Promise<void> {
+async function readCodexProgress(ticket: ClaimedTicket, stream: ReadableStream<Uint8Array>): Promise<void> {
   const reader = stream.getReader();
   const decoder = new TextDecoder();
   let buffer = "";
@@ -312,8 +515,15 @@ async function readCodexProgress(ticketId: string, stream: ReadableStream<Uint8A
     buffer = lines.pop() ?? "";
     for (const line of lines) {
       try {
-        const progress = progressFromCodexEvent(JSON.parse(line));
-        if (progress) queueProgress(ticketId, progress);
+        const event = JSON.parse(line) as unknown;
+        const work = activeWork.get(ticket.id);
+        const sessionId = codexSessionIdFromEvent(event);
+        if (work && sessionId && work.sessionId !== sessionId) {
+          work.sessionId = sessionId;
+          await queueCheckpointWrite(work);
+        }
+        const progress = progressFromCodexEvent(event);
+        if (progress) queueProgress(ticket.id, progress);
       } catch {
         // Ignore non-JSON diagnostic output; raw agent output is never shown in Workshop.
       }
@@ -322,8 +532,15 @@ async function readCodexProgress(ticketId: string, stream: ReadableStream<Uint8A
   const tail = `${buffer}${decoder.decode()}`.trim();
   if (tail) {
     try {
-      const progress = progressFromCodexEvent(JSON.parse(tail));
-      if (progress) queueProgress(ticketId, progress);
+      const event = JSON.parse(tail) as unknown;
+      const work = activeWork.get(ticket.id);
+      const sessionId = codexSessionIdFromEvent(event);
+      if (work && sessionId && work.sessionId !== sessionId) {
+        work.sessionId = sessionId;
+        await queueCheckpointWrite(work);
+      }
+      const progress = progressFromCodexEvent(event);
+      if (progress) queueProgress(ticket.id, progress);
     } catch {
       // A partial final diagnostic line does not affect the coding result file.
     }
@@ -378,7 +595,69 @@ async function addAgentMessage(ticket: ClaimedTicket, body: string): Promise<voi
   });
 }
 
+async function claimInterruptedCheckpoint(): Promise<{ ticket: ClaimedTicket; checkpoint: ResumeCheckpoint } | null> {
+  if (shuttingDown) return null;
+  const snapshots = await db.collection(CHECKPOINT_COLLECTION).limit(100).get();
+  const candidates = snapshots.docs.sort((left, right) => {
+    const leftAt = (left.data().savedAt as Timestamp | undefined)?.toMillis() ?? 0;
+    const rightAt = (right.data().savedAt as Timestamp | undefined)?.toMillis() ?? 0;
+    return leftAt - rightAt;
+  });
+  for (const candidate of candidates) {
+    const ticketRef = db.doc(`workshopTickets/${candidate.id}`);
+    const claimNonce = crypto.randomUUID();
+    const claimed = await db.runTransaction(async (tx) => {
+      const checkpointSnapshot = await tx.get(candidate.ref);
+      const ticketSnapshot = await tx.get(ticketRef);
+      if (!checkpointSnapshot.exists) return null;
+      if (!ticketSnapshot.exists || ticketSnapshot.data()?.status !== "doing_now") {
+        tx.delete(candidate.ref);
+        return null;
+      }
+      if (shuttingDown) return null;
+      const expiry = ticketSnapshot.data()?.leaseExpiresAt as Timestamp | null | undefined;
+      if (ticketSnapshot.data()?.leasedBy && expiry && expiry.toMillis() > Date.now()) return null;
+      const data = ticketSnapshot.data() as TicketData;
+      const checkpoint = parseResumeCheckpoint(checkpointSnapshot.data(), candidate.id) ?? {
+        checkpointNonce: crypto.randomUUID(),
+        agentConfig: WORKSHOP_DEFAULT_AGENT_CONFIG,
+        claimedThroughSequence: Math.max(0, Number(data.nextSequence ?? 1) - 1),
+      };
+      tx.update(ticketRef, {
+        leasedBy: WORKER_ID,
+        claimNonce,
+        leaseExpiresAt: Timestamp.fromMillis(Date.now() + LEASE_MS),
+        claimedRevision: data.revision,
+      });
+      return { data, checkpoint };
+    });
+    if (!claimed) continue;
+    const worktree = restoredWorktree(claimed.checkpoint);
+    const checkpoint = worktree
+      ? { ...claimed.checkpoint, worktree }
+      : {
+        checkpointNonce: claimed.checkpoint.checkpointNonce,
+        agentConfig: claimed.checkpoint.agentConfig,
+        claimedThroughSequence: claimed.checkpoint.claimedThroughSequence,
+        savedAt: claimed.checkpoint.savedAt,
+      };
+    const ticket: ClaimedTicket = {
+      id: candidate.id,
+      ref: ticketRef,
+      data: claimed.data,
+      workerId: WORKER_ID,
+      claimNonce,
+      claimedThroughSequence: Math.max(claimed.checkpoint.claimedThroughSequence, Math.max(0, Number(claimed.data.nextSequence ?? 1) - 1)),
+      agentConfig: checkpoint.agentConfig,
+    };
+    currentAgentConfig = { ...ticket.agentConfig };
+    return { ticket, checkpoint };
+  }
+  return null;
+}
+
 async function claimNext(): Promise<ClaimedTicket | null> {
+  if (shuttingDown) return null;
   await recoverExpiredLeases();
   const candidates = await db.collection("workshopTickets").where("status", "==", "not_done").limit(25).get();
   const sorted = candidates.docs.sort((a, b) => {
@@ -396,6 +675,7 @@ async function claimNext(): Promise<ClaimedTicket | null> {
         tx.get(db.doc("workshopAgent/config")),
       ]);
       if (!fresh.exists || fresh.data()?.status !== "not_done") return null;
+      if (shuttingDown) return null;
       const data = fresh.data() as TicketData;
       if (data.retryAfter && data.retryAfter.toMillis() > Date.now()) return null;
       const agentConfig = resolveWorkshopAgentConfig(configSnapshot.data());
@@ -426,17 +706,35 @@ async function claimNext(): Promise<ClaimedTicket | null> {
   return null;
 }
 
+async function releaseUnstartedClaim(ticket: ClaimedTicket, interrupted: boolean): Promise<void> {
+  await db.runTransaction(async (tx) => {
+    const fresh = await tx.get(ticket.ref);
+    if (!fresh.exists
+      || fresh.data()?.status !== "doing_now"
+      || fresh.data()?.leasedBy !== ticket.workerId
+      || fresh.data()?.claimNonce !== ticket.claimNonce) return;
+    tx.update(ticket.ref, {
+      status: interrupted ? "doing_now" : "not_done",
+      leasedBy: null,
+      claimNonce: null,
+      leaseExpiresAt: null,
+    });
+  });
+}
+
 async function recoverExpiredLeases(): Promise<void> {
   const active = await db.collection("workshopTickets").where("status", "==", "doing_now").limit(50).get();
   const now = Date.now();
   for (const item of active.docs) {
     const expires = item.data().leaseExpiresAt as Timestamp | null | undefined;
-    if (!expires || expires.toMillis() >= now) continue;
+    if (expires && expires.toMillis() >= now) continue;
     await db.runTransaction(async (tx) => {
       const fresh = await tx.get(item.ref);
+      const checkpoint = await tx.get(checkpointRef(item.id));
       const data = fresh.data() as TicketData | undefined;
       const freshExpiry = fresh.data()?.leaseExpiresAt as Timestamp | null | undefined;
-      if (!fresh.exists || data?.status !== "doing_now" || !freshExpiry || freshExpiry.toMillis() >= Date.now()) return;
+      if (!fresh.exists || data?.status !== "doing_now" || (freshExpiry && freshExpiry.toMillis() >= Date.now())) return;
+      if (checkpoint.exists) return;
       const sequence = Number(data.nextSequence ?? 1);
       tx.update(item.ref, {
         status: "not_done",
@@ -541,7 +839,7 @@ async function assertTicketClaimCurrent(ticket: ClaimedTicket): Promise<void> {
 function pullRequestForBranch(branch: string, cwd: string): PullRequest | null {
   const raw = gh([
     "pr", "list", "--head", branch, "--state", "all", "--limit", "1",
-    "--json", "number,state,isDraft,headRefOid,url",
+    "--json", "number,state,isDraft,headRefOid,url,mergeCommit",
   ], cwd);
   const requests = JSON.parse(raw) as PullRequest[];
   return requests[0] ?? null;
@@ -559,7 +857,7 @@ async function waitForPullRequestChecks(number: number, cwd: string): Promise<vo
     } else if (!output.includes("no checks reported")) {
       throw new Error(output.trim() || "Pull request checks could not be read.");
     }
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 10_000));
+    await managerDelay(10_000);
   }
   throw new Error("Pull request checks stayed unavailable or pending during the automatic wait window.");
 }
@@ -588,12 +886,12 @@ async function waitForWorkflow(commitSha: string, workflow: string, cwd: string)
       ));
       if (supersedingRuns.some((candidate) => candidate.status === "completed" && candidate.conclusion === "success")) return;
       if (supersedingRuns.some((candidate) => candidate.status !== "completed")) {
-        await new Promise((resolvePromise) => setTimeout(resolvePromise, 10_000));
+        await managerDelay(10_000);
         continue;
       }
       throw new Error(`Production deployment failed (${run.conclusion}): ${run.url}`);
     }
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, 10_000));
+    await managerDelay(10_000);
   }
   throw new Error(`${workflow} did not finish during the release window.`);
 }
@@ -645,9 +943,12 @@ async function ensureFinishedWorkIsMerged(
     throw new Error("The coding agent reported completion with uncommitted changes.");
   }
 
-  integrateLatestMain(worktree);
   let request = pullRequestForBranch(worktree.branch, worktree.path);
-  if (request?.state === "MERGED") return null;
+  if (request?.state === "MERGED") return request.mergeCommit?.oid ?? null;
+  if (request?.state === "CLOSED") throw new Error(`The coding agent closed ${request.url} without merging it.`);
+  integrateLatestMain(worktree);
+  request = pullRequestForBranch(worktree.branch, worktree.path);
+  if (request?.state === "MERGED") return request.mergeCommit?.oid ?? null;
   if (request?.state === "CLOSED") throw new Error(`The coding agent closed ${request.url} without merging it.`);
 
   if (!request) {
@@ -753,7 +1054,7 @@ async function acquireReleaseLease(ticket: ClaimedTicket): Promise<string> {
       activity: "Waiting for another update to finish publishing",
       lastCompleted: "Completed and tested the coding work",
     });
-    await new Promise((resolvePromise) => setTimeout(resolvePromise, RELEASE_LEASE_RETRY_MS));
+    await managerDelay(RELEASE_LEASE_RETRY_MS);
   }
   throw new Error("The shared Workshop release slot stayed busy for too long.");
 }
@@ -807,8 +1108,17 @@ async function publishFinishedWork(ticket: ClaimedTicket, worktree: AgentWorktre
       await assertTicketClaimCurrent(ticket);
       await assertReleaseLease(ticket, releaseNonce);
       await updateProgress(ticket.id, { stage: 5, activity: "Publishing this update safely", lastCompleted: "Received the shared release slot" });
-      const releaseInfo = releaseInfoForWorktree(worktree);
-      const mergeSha = await ensureFinishedWorkIsMerged(ticket, worktree, result, releaseNonce);
+      const work = activeWork.get(ticket.id);
+      const releaseInfo = work?.releaseInfo ?? releaseInfoForWorktree(worktree);
+      if (work && !work.releaseInfo) {
+        work.releaseInfo = releaseInfo;
+        await queueCheckpointWrite(work);
+      }
+      const mergeSha = work?.mergeSha ?? await ensureFinishedWorkIsMerged(ticket, worktree, result, releaseNonce);
+      if (work && mergeSha && work.mergeSha !== mergeSha) {
+        work.mergeSha = mergeSha;
+        await queueCheckpointWrite(work);
+      }
       if (mergeSha) {
         await waitForWorkflow(mergeSha, "Deploy", worktree.path);
         if (releaseInfo.includesWorkshop) await waitForWorkflow(mergeSha, "Deploy Workshop", worktree.path);
@@ -827,7 +1137,8 @@ async function publishFinishedWork(ticket: ClaimedTicket, worktree: AgentWorktre
 }
 
 function createAgentWorktree(ticketId: string): AgentWorktree {
-  const suffix = `${ticketId.slice(0, 8)}-${Date.now()}`;
+  const safeTicketId = ticketId.replace(/[^A-Za-z0-9]/g, "").slice(0, 8) || "ticket";
+  const suffix = `${safeTicketId}-${Date.now()}`;
   const branch = `agent/workshop-${suffix}`;
   const path = resolve(REPO_ROOT, "..", `DnD-workshop-ticket-${suffix}`);
   try {
@@ -846,10 +1157,9 @@ function createAgentWorktree(ticketId: string): AgentWorktree {
 }
 
 function cleanupAgentWorktree(worktree: AgentWorktree): void {
-  const expectedRoot = resolve(REPO_ROOT, "..");
   const resolvedPath = resolve(worktree.path);
   if (!worktree.branch.startsWith("agent/workshop-")
-    || !resolvedPath.startsWith(join(expectedRoot, "DnD-workshop-ticket-"))) return;
+    || !isManagerWorktreePath(resolvedPath)) return;
   stopOwnedWorktreeProcesses(resolvedPath);
   git(["rebase", "--abort"], resolvedPath, true);
   git(["worktree", "remove", "--force", resolvedPath], REPO_ROOT, true);
@@ -858,9 +1168,8 @@ function cleanupAgentWorktree(worktree: AgentWorktree): void {
 }
 
 function stopOwnedWorktreeProcesses(worktreePath: string, rootPid?: number): void {
-  const expectedRoot = resolve(REPO_ROOT, "..");
   const resolvedPath = resolve(worktreePath);
-  if (!resolvedPath.startsWith(join(expectedRoot, "DnD-workshop-ticket-"))) return;
+  if (!isManagerWorktreePath(resolvedPath)) return;
   if (rootPid && process.platform === "win32") {
     spawnSync("taskkill", ["/PID", String(rootPid), "/T", "/F"], { stdio: "ignore" });
   } else if (rootPid) {
@@ -950,8 +1259,14 @@ function abandonStalePullRequest(worktree: AgentWorktree): void {
   git(["push", "origin", "--delete", worktree.branch], worktree.path, true);
 }
 
-async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], imagePaths: string[], folder: string): Promise<AgentResult> {
-  if (fixtureDelayMs > 0) await new Promise((resolvePromise) => setTimeout(resolvePromise, fixtureDelayMs));
+async function runCodingAgent(
+  ticket: ClaimedTicket,
+  messages: ThreadMessage[],
+  imagePaths: string[],
+  folder: string,
+  resumeCheckpoint?: ResumeCheckpoint,
+): Promise<AgentResult> {
+  if (fixtureDelayMs > 0) await managerDelay(fixtureDelayMs);
   if (fixture === "finished") return { outcome: "finished", summaryForCreator: "Done — the requested test update is available now.", productionUrl: "https://dandd-ea955.web.app" };
   if (fixture === "answered") return { outcome: "answered", summaryForCreator: "You do not need to change anything. This is a direct answer from the Workshop agent." };
   if (fixture === "temporary_service") {
@@ -1002,9 +1317,43 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
     `WORKSHOP_TICKET=${JSON.stringify({ id: ticket.id, claimedRevision: ticket.data.revision, decisionReplyReceived, messages })}`,
   ].join("\n\n");
   await updateProgress(ticket.id, { stage: 2, activity: "Preparing a safe workspace", lastCompleted: "Read the request and its screenshots" });
-  const worktree = createAgentWorktree(ticket.id);
-  try {
-    await updateProgress(ticket.id, { stage: 2, activity: "Understanding the request", lastCompleted: "Prepared a safe workspace" });
+  throwIfManagerStopping();
+  const work = activeWork.get(ticket.id);
+  if (!work) throw new TicketClaimLostError();
+  const worktree = resumeCheckpoint?.worktree ?? createAgentWorktree(ticket.id);
+  work.worktree = worktree;
+  work.sessionId = resumeCheckpoint?.sessionId;
+  work.completedResult = resumeCheckpoint?.completedResult;
+  work.mergeSha = resumeCheckpoint?.mergeSha;
+  work.releaseInfo = resumeCheckpoint?.releaseInfo;
+  await queueCheckpointWrite(work);
+    await updateProgress(ticket.id, {
+      stage: 2,
+      activity: resumeCheckpoint ? "Resuming the saved work" : "Understanding the request",
+      lastCompleted: resumeCheckpoint ? "Restored the interrupted workspace" : "Prepared a safe workspace",
+    });
+    if (work.completedResult) {
+      await publishFinishedWork(ticket, worktree, work.completedResult);
+      return work.completedResult;
+    }
+    if (fixture === "restart_checkpoint" && resumeCheckpoint) {
+      await managerDelay(Math.max(250, fixtureDelayMs || 2_000));
+      const resumedResult: AgentResult = {
+        outcome: "answered",
+        summaryForCreator: "The interrupted request resumed from its saved checkpoint.",
+      };
+      work.completedResult = resumedResult;
+      await queueCheckpointWrite(work);
+      await publishFinishedWork(ticket, worktree, resumedResult);
+      return resumedResult;
+    }
+    const resumedPrompt = resumeCheckpoint
+      ? [
+        "The Workshop manager restarted after saving this ticket. Continue from the existing workspace and saved conversation. Inspect the current files before changing anything, include the latest thread below, and finish the same request without repeating completed work.",
+        prompt,
+      ].join("\n\n")
+      : prompt;
+    const checkpointFixtureSessionId = crypto.randomUUID();
     const command = fixture === "stuck_result"
       ? [process.execPath, "-e", [
         `await Bun.write(${JSON.stringify(resultPath)}, ${JSON.stringify(JSON.stringify({
@@ -1017,7 +1366,14 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
         }))});`,
         "setInterval(() => undefined, 60_000);",
       ].join("\n")]
-      : workshopCodexArgs(schemaPath, resultPath, prompt, ticket.agentConfig);
+      : fixture === "restart_checkpoint"
+        ? [process.execPath, "-e", [
+          `console.log(JSON.stringify({ type: "thread.started", thread_id: ${JSON.stringify(checkpointFixtureSessionId)} }));`,
+          "setInterval(() => undefined, 60_000);",
+        ].join("\n")]
+        : resumeCheckpoint?.sessionId
+          ? workshopCodexResumeArgs(schemaPath, resultPath, resumeCheckpoint.sessionId, resumedPrompt, ticket.agentConfig)
+          : workshopCodexArgs(schemaPath, resultPath, resumedPrompt, ticket.agentConfig);
     const proc = spawn({
       cmd: command,
       cwd: worktree.path,
@@ -1026,7 +1382,9 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
       stderr: "inherit",
       env: { ...process.env, DND_WORKSHOP_TICKET_ID: ticket.id },
     });
-    const progressStream = readCodexProgress(ticket.id, proc.stdout).catch(async (error) => {
+    work.agentProcess = proc;
+    work.agentProcessPath = worktree.path;
+    const progressStream = readCodexProgress(ticket, proc.stdout).catch(async (error) => {
       console.error("Workshop progress stream stopped:", error);
       await stateWrites;
     });
@@ -1034,15 +1392,20 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
     try {
       watched = await waitForCodexProcess({ ticketId: ticket.id, worktreePath: worktree.path, resultPath, proc, parse: parseAgentResult });
     } finally {
+      work.agentProcess = undefined;
+      work.agentProcessPath = undefined;
       stopOwnedWorktreeProcesses(worktree.path);
       await progressStream;
     }
+    throwIfManagerStopping();
     if (watched.salvagedResult === undefined && watched.exitCode !== 0) throw new Error(`Coding agent exited with status ${watched.exitCode}.`);
     await updateProgress(ticket.id, { stage: 5, activity: "Confirming the result", lastCompleted: "Completed the coding work" });
     const result = watched.salvagedResult ?? parseAgentResult(await readFile(resultPath, "utf8"));
     if (result.outcome === "needs_simon" && isTemporaryServiceWait(result.needsSimonReason)) {
       throw new Error(`Temporary service wait must be retried automatically: ${result.needsSimonReason}`);
     }
+    work.completedResult = result;
+    await queueCheckpointWrite(work);
     try {
       await publishFinishedWork(ticket, worktree, result);
     } catch (error) {
@@ -1054,9 +1417,6 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
     }
     await updateProgress(ticket.id, { stage: 5, activity: "Finishing the request", lastCompleted: result.outcome === "finished" ? "Confirmed the published update" : "Prepared the final answer" });
     return result;
-  } finally {
-    cleanupAgentWorktree(worktree);
-  }
 }
 
 async function runRecoveryAgent(ticket: ClaimedTicket, error: unknown, folder: string): Promise<RecoveryResult> {
@@ -1100,11 +1460,19 @@ async function runRecoveryAgent(ticket: ClaimedTicket, error: unknown, folder: s
       stderr: "inherit",
       env: { ...process.env, DND_WORKSHOP_TICKET_ID: ticket.id, DND_WORKSHOP_RECOVERY: "1" },
     });
+    if (work) {
+      work.agentProcess = proc;
+      work.agentProcessPath = worktree.path;
+    }
     const progressStream = readRecoveryProgress(ticket.id, proc.stdout).catch(() => undefined);
     let watched: Awaited<ReturnType<typeof waitForCodexProcess<RecoveryResult>>>;
     try {
       watched = await waitForCodexProcess({ ticketId: ticket.id, worktreePath: worktree.path, resultPath, proc, parse: parseRecoveryResult });
     } finally {
+      if (work) {
+        work.agentProcess = undefined;
+        work.agentProcessPath = undefined;
+      }
       stopOwnedWorktreeProcesses(worktree.path);
       await progressStream;
     }
@@ -1127,6 +1495,7 @@ async function finalize(ticket: ClaimedTicket, result: AgentResult): Promise<voi
     const sequence = Number(data.nextSequence ?? 1);
     const revisionChanged = Number(data.revision) !== Number(ticket.data.revision);
     if (revisionChanged) {
+      tx.delete(checkpointRef(ticket.id));
       tx.update(ticket.ref, {
         status: "not_done",
         leasedBy: null,
@@ -1140,6 +1509,7 @@ async function finalize(ticket: ClaimedTicket, result: AgentResult): Promise<voi
     const status = result.outcome === "answered" ? "finished" : result.outcome;
     const body = outcomeMessage(result);
     const messageRef = ticket.ref.collection("messages").doc();
+    tx.delete(checkpointRef(ticket.id));
     tx.set(messageRef, {
       kind: "agent",
       body,
@@ -1198,6 +1568,7 @@ async function scheduleAutomaticRetry(ticket: ClaimedTicket, error: unknown, rec
     const sequence = Number(data.nextSequence ?? 1);
     const revisionChanged = Number(data.revision) !== Number(ticket.data.revision);
     const retryCount = revisionChanged ? 0 : Number(data.automaticRetryCount ?? 0) + 1;
+    tx.delete(checkpointRef(ticket.id));
     tx.set(ticket.ref.collection("messages").doc(), {
       kind: "agent",
       body: revisionChanged
@@ -1249,6 +1620,7 @@ async function scheduleCoordinationRetry(ticket: ClaimedTicket, error: unknown):
     if (data.status !== "doing_now"
       || fresh.data()?.leasedBy !== ticket.workerId
       || fresh.data()?.claimNonce !== ticket.claimNonce) return;
+    tx.delete(checkpointRef(ticket.id));
     tx.update(ticket.ref, {
       status: "not_done",
       leasedBy: null,
@@ -1271,15 +1643,25 @@ async function scheduleCoordinationRetry(ticket: ClaimedTicket, error: unknown):
   });
 }
 
-async function processTicket(ticket: ClaimedTicket): Promise<void> {
+async function processTicket(ticket: ClaimedTicket, resumeCheckpoint?: ResumeCheckpoint): Promise<void> {
   const now = Timestamp.now();
-  activeWork.set(ticket.id, {
+  const work: ActiveWork = {
+    ticket,
     progress: null,
     workStartedAt: now,
     progressUpdatedAt: now,
     claimNonce: ticket.claimNonce,
     agentConfig: ticket.agentConfig,
-  });
+    checkpointNonce: resumeCheckpoint?.checkpointNonce ?? crypto.randomUUID(),
+    checkpointWrites: Promise.resolve(),
+    worktree: resumeCheckpoint?.worktree,
+    sessionId: resumeCheckpoint?.sessionId,
+    completedResult: resumeCheckpoint?.completedResult,
+    mergeSha: resumeCheckpoint?.mergeSha,
+    releaseInfo: resumeCheckpoint?.releaseInfo,
+  };
+  activeWork.set(ticket.id, work);
+  await queueCheckpointWrite(work);
   await updateProgress(ticket.id, { stage: 1, activity: "Opening the request" }, true);
   const folder = await mkdtemp(join(tmpdir(), "dnd-workshop-"));
   try {
@@ -1288,14 +1670,18 @@ async function processTicket(ticket: ClaimedTicket): Promise<void> {
     await updateProgress(ticket.id, { stage: 1, activity: "Checking attached images", lastCompleted: "Read the full thread" });
     const images = fixture ? [] : await downloadImages(messages, folder, Number(ticket.data.lastCompletedSequence ?? 0));
     await updateProgress(ticket.id, { stage: 2, activity: "Deciding the safest next step", lastCompleted: images.length ? "Read the thread and screenshots" : "Read the thread" });
-    await finalize(ticket, await runCodingAgent(ticket, messages, images, folder));
+    await finalize(ticket, await runCodingAgent(ticket, messages, images, folder, resumeCheckpoint));
+    work.finalized = true;
   } catch (error) {
-    if (error instanceof TicketClaimLostError) {
+    if (error instanceof ManagerRestartCheckpointError) {
+      console.log(`Workshop ticket ${ticket.id} stopped at a durable checkpoint for manager restart.`);
+    } else if (error instanceof TicketClaimLostError) {
       console.warn(`Workshop ticket ${ticket.id} lost its fenced claim; the stale worker stopped without changing the ticket.`);
     } else if (error instanceof FreshMainRequiredError
       || error instanceof ThreadUpdatedError
       || error instanceof ReleaseLeaseLostError) {
       await scheduleCoordinationRetry(ticket, error);
+      work.finalized = true;
     } else {
       let recovery: RecoveryResult | undefined;
       if (isLikelyServiceProblem(error) || error instanceof AttachmentAccessError) {
@@ -1315,14 +1701,19 @@ async function processTicket(ticket: ClaimedTicket): Promise<void> {
         }
       }
       await scheduleAutomaticRetry(ticket, error, recovery);
+      work.finalized = true;
     }
   } finally {
+    if (work.worktree && (!work.preserveForRestart || work.finalized)) {
+      cleanupAgentWorktree(work.worktree);
+      work.worktree = undefined;
+    }
     await rm(folder, { recursive: true, force: true });
   }
 }
 
-function startTicket(ticket: ClaimedTicket): void {
-  const run = processTicket(ticket).catch((error) => {
+function startTicket(ticket: ClaimedTicket, resumeCheckpoint?: ResumeCheckpoint): void {
+  const run = processTicket(ticket, resumeCheckpoint).catch((error) => {
     console.error(`Workshop ticket ${ticket.id} stopped unexpectedly:`, error);
   }).finally(async () => {
     activeRuns.delete(ticket.id);
@@ -1333,15 +1724,21 @@ function startTicket(ticket: ClaimedTicket): void {
   activeRuns.set(ticket.id, run);
 }
 
-async function fillAvailableSlots(): Promise<number> {
+async function fillAvailableSlots(allowPending = true): Promise<number> {
   let started = 0;
-  while (activeRuns.size < WORKSHOP_MAX_CONCURRENT_TICKETS) {
-    const ticket = await claimNext();
+  while (activeRuns.size < maxConcurrentTickets) {
+    if (shuttingDown) break;
+    const interrupted = await claimInterruptedCheckpoint();
+    const ticket = interrupted?.ticket ?? (allowPending ? await claimNext() : null);
     if (!ticket) break;
+    if (shuttingDown) {
+      await releaseUnstartedClaim(ticket, Boolean(interrupted));
+      break;
+    }
     if (activeRuns.has(ticket.id)) {
       throw new Error(`Ticket ${ticket.id} was claimed twice by the same manager.`);
     }
-    startTicket(ticket);
+    startTicket(ticket, interrupted?.checkpoint);
     started += 1;
   }
   return started;
@@ -1399,7 +1796,7 @@ async function scheduleEarliestRetryPoll(): Promise<void> {
 }
 
 async function requestPoll(source: "change" | "fallback" | "retry"): Promise<void> {
-  if (shuttingDown) return;
+  if (shuttingDown || managerLifecycle !== "ready") return;
   if (pollRequestActive) {
     pollAgain = true;
     return;
@@ -1417,8 +1814,10 @@ async function requestPoll(source: "change" | "fallback" | "retry"): Promise<voi
     } while (pollAgain);
   } finally {
     pollRequestActive = false;
-    await scheduleEarliestRetryPoll().catch((error) => console.error("Workshop retry schedule failed:", error));
-    scheduleFallbackPoll();
+    if (!shuttingDown) {
+      await scheduleEarliestRetryPoll().catch((error) => console.error("Workshop retry schedule failed:", error));
+      scheduleFallbackPoll();
+    }
   }
 }
 
@@ -1467,9 +1866,30 @@ function startMainRefresh(): void {
   }, WORKSHOP_MAIN_REFRESH_MS);
 }
 
+async function releaseOwnedReleaseLease(): Promise<void> {
+  const release = activeRelease;
+  if (!release) return;
+  const releaseRef = db.doc("workshopAgent/release");
+  await db.runTransaction(async (tx) => {
+    const snapshot = await tx.get(releaseRef);
+    if (snapshot.data()?.leasedBy !== WORKER_ID
+      || snapshot.data()?.ticketId !== release.ticketId
+      || snapshot.data()?.nonce !== release.nonce) return;
+    tx.set(releaseRef, {
+      leasedBy: null,
+      ticketId: null,
+      nonce: null,
+      leaseExpiresAt: null,
+      updatedAt: FieldValue.serverTimestamp(),
+    }, { merge: true });
+  });
+  activeRelease = null;
+}
+
 async function stopManager(heartbeatTimer: ReturnType<typeof setInterval>): Promise<void> {
   if (shuttingDown) return;
   shuttingDown = true;
+  managerLifecycle = "stopping";
   clearInterval(heartbeatTimer);
   clearTimeout(fallbackTimer);
   clearTimeout(retryTimer);
@@ -1478,23 +1898,53 @@ async function stopManager(heartbeatTimer: ReturnType<typeof setInterval>): Prom
   stopTicketWatch?.();
   stopConfigWatch?.();
   watchingChanges = false;
-  await Promise.allSettled([...activeRuns.values()]);
+  for (let attempt = 0; pollRequestActive && attempt < 100; attempt += 1) {
+    await new Promise((resolvePromise) => setTimeout(resolvePromise, 50));
+  }
+  const workAtShutdown = [...activeWork.values()];
+  for (const work of workAtShutdown) work.preserveForRestart = true;
+  shutdownController.abort();
+  await heartbeat().catch((error) => console.error("Workshop stopping heartbeat failed:", error));
+  const checkpoints = await Promise.allSettled(workAtShutdown.map((work) => queueCheckpointWrite(work, true)));
+  checkpoints.forEach((result, index) => {
+    if (result.status === "rejected") {
+      console.error(`Workshop checkpoint failed for ${workAtShutdown[index]?.ticket.id}:`, result.reason);
+    }
+  });
+  for (const work of workAtShutdown) {
+    if (work.agentProcess && work.agentProcessPath) stopOwnedWorktreeProcesses(work.agentProcessPath, work.agentProcess.pid);
+  }
+  await releaseOwnedReleaseLease().catch((error) => console.error("Workshop release lease cleanup failed:", error));
+  await Promise.race([
+    Promise.allSettled([...activeRuns.values()]),
+    new Promise((resolvePromise) => setTimeout(resolvePromise, 10_000)),
+  ]);
   await heartbeat().catch((error) => console.error("Final Workshop heartbeat failed:", error));
   process.exit(0);
 }
 
 if (once) {
+  managerLifecycle = "recovering";
+  await fillAvailableSlots(false);
+  managerLifecycle = "ready";
   await drainQueueOnce();
 } else {
   const heartbeatTimer = setInterval(() => {
     void heartbeat().catch((error) => console.error("Workshop heartbeat failed:", error));
   }, HEARTBEAT_MS);
+  process.on("SIGINT", () => void stopManager(heartbeatTimer));
+  process.on("SIGTERM", () => void stopManager(heartbeatTimer));
   startConfigWatch();
+  managerLifecycle = "recovering";
   await refreshMainAndReport();
+  await recoverExpiredLeases();
+  await fillAvailableSlots(false);
+  managerLifecycle = "ready";
   await poll();
+  if (fixtureInterruptAfterMs > 0) {
+    setTimeout(() => void stopManager(heartbeatTimer), fixtureInterruptAfterMs);
+  }
   startTicketWatch();
   startMainRefresh();
   scheduleFallbackPoll();
-  process.on("SIGINT", () => void stopManager(heartbeatTimer));
-  process.on("SIGTERM", () => void stopManager(heartbeatTimer));
 }

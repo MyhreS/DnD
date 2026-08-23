@@ -35,6 +35,7 @@
     "test:game-presentation": "bun scripts/game-presentation-test.ts",
     "test:enemy-library": "bun scripts/enemy-library-test.ts",
     "test:workshop-manager": "bun scripts/workshop-manager-test.ts",
+    "test:workshop-manager-restart": "firebase emulators:exec --only firestore \"bun scripts/workshop-manager-restart-test.mjs\"",
     "test:pwa-update-policy": "bun scripts/pwa-update-policy-test.ts",
     "test:character-automation": "bun scripts/character-automation-test.ts",
     "test:game-sessions": "npm --prefix functions run build && firebase emulators:exec --only auth,firestore,functions \"USE_FIREBASE_EMULATORS=1 bun scripts/smoke-rules.mjs\"",
