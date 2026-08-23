@@ -1061,35 +1061,122 @@
 .appsheet-weapon-bonuses small { margin-top: 2px; color: var(--app-muted); font: 12px/1.3 "Alegreya", serif; }
 .appsheet-weapon-bonuses strong { flex: none; color: var(--app-warm); font-size: 13px; text-align: right; }
 
-.appsheet-ability-builder {
-  margin: 18px 0;
-}
-
-.appsheet-ability-builder > div {
-  display: grid;
-  grid-template-columns: 1.2fr 1fr 1fr 50px;
-  gap: 12px;
-  align-items: end;
-  padding: 9px 0;
-}
-
-.appsheet-ability-name {
-  align-self: center;
+.appsheet-ability-intro {
+  max-width: 42rem;
+  margin: 0 0 14px;
   color: var(--app-muted);
+  font: 15px/1.4 "Alegreya", serif;
 }
 
-.appsheet-ability-name b {
-  display: inline-block;
-  width: 40px;
-  color: var(--app-warm);
+.appsheet-ability-method {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+  max-width: 420px;
+  margin-bottom: 14px;
+  padding: 4px;
+  border: 1px solid var(--app-line);
+  border-radius: 9px;
+  background: var(--app-input);
 }
 
-.appsheet-ability-builder output {
-  align-self: center;
+.character-app-sheet .appsheet-ability-method button {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  min-height: 48px;
+  padding: 7px 12px !important;
+  border: 0 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  color: var(--app-muted) !important;
+  font: 700 14px/1.1 "Alegreya Sans SC", sans-serif;
+  cursor: pointer;
+}
+
+.appsheet-ability-method button small { color: var(--app-faint); font: 12px/1.1 "Alegreya", serif; }
+.character-app-sheet .appsheet-ability-method button:hover:not(:disabled) { background: var(--app-subtle-hover) !important; color: var(--app-text) !important; }
+.character-app-sheet .appsheet-ability-method button[aria-pressed="true"] { background: var(--app-surface-hover) !important; color: var(--app-text) !important; box-shadow: var(--app-shadow); }
+.appsheet-ability-method button[aria-pressed="true"] small { color: var(--app-warm); }
+.appsheet-ability-method button:focus-visible { outline: 2px solid var(--app-warm); outline-offset: 1px; }
+.appsheet-ability-method button:disabled { cursor: not-allowed; opacity: .58; }
+
+.appsheet-ability-budget {
+  display: grid;
+  grid-template-columns: minmax(160px, auto) minmax(120px, 1fr);
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 14px;
+  padding: 13px 15px;
+  border: 1px solid color-mix(in srgb, var(--app-warm), transparent 58%);
+  border-radius: 10px;
+  background: var(--app-token-bg);
+}
+
+.appsheet-ability-budget > span { display: grid; gap: 2px; }
+.appsheet-ability-budget strong { color: var(--app-text); font: 700 18px/1.1 "Cinzel", serif; }
+.appsheet-ability-budget small { color: var(--app-muted); font: 13px/1.2 "Alegreya", serif; }
+.appsheet-ability-budget > div { height: 7px; overflow: hidden; border-radius: 8px; background: var(--app-line); }
+.appsheet-ability-budget i { display: block; height: 100%; border-radius: inherit; background: var(--app-warm); transition: width .18s ease; }
+.appsheet-ability-budget.is-complete { border-color: color-mix(in srgb, var(--app-positive), transparent 48%); background: var(--app-positive-bg); }
+.appsheet-ability-budget.is-complete strong { color: var(--app-positive); }
+.appsheet-ability-budget.is-complete i { background: var(--app-positive); }
+
+.appsheet-ability-builder {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 0 0 18px;
+}
+
+.appsheet-ability-builder > article {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid color-mix(in srgb, var(--app-line), transparent 18%);
+  border-radius: 10px;
+  background: var(--app-subtle);
+}
+
+.appsheet-ability-builder article > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.appsheet-ability-builder article > header > span { display: grid; min-width: 0; }
+.appsheet-ability-builder article > header b { color: var(--app-warm); font-size: 15px; letter-spacing: .06em; }
+.appsheet-ability-builder article > header small { overflow: hidden; color: var(--app-muted); font: 12px/1.1 "Alegreya", serif; text-overflow: ellipsis; }
+.appsheet-ability-builder article > header em { flex: none; color: var(--app-muted); font: 11px/1.15 "Alegreya", serif; text-align: right; }
+
+.appsheet-ability-controls {
+  display: grid;
+  grid-template-columns: 42px minmax(48px, 1fr) 42px;
+  min-height: 50px;
+  overflow: hidden;
+  border: 1px solid var(--app-line);
+  border-radius: 8px;
+  background: var(--app-input);
+}
+
+.character-app-sheet .appsheet-ability-controls button {
+  width: 100%;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: var(--app-control) !important;
   color: var(--app-text);
-  text-align: right;
-  font: 700 20px "Cinzel", serif;
+  font: 700 21px/1 sans-serif;
+  cursor: pointer;
 }
+
+.character-app-sheet .appsheet-ability-controls button:hover:not(:disabled) { background: var(--app-control-hover) !important; }
+.appsheet-ability-controls button:focus-visible { position: relative; outline: 2px solid var(--app-warm); outline-offset: -3px; }
+.appsheet-ability-controls button:disabled { cursor: not-allowed; opacity: .3; }
+.appsheet-ability-controls > span { display: grid; place-content: center; text-align: center; }
+.appsheet-ability-controls output { color: var(--app-text); font: 700 23px/1 "Cinzel", serif; }
+.appsheet-ability-controls small { margin-top: 3px; color: var(--app-faint); font: 9px/1 "Alegreya Sans SC", sans-serif; letter-spacing: .06em; text-transform: uppercase; }
 
 .appsheet-final-abilities {
   display: grid;

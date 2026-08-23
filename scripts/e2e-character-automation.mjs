@@ -360,8 +360,14 @@ try {
 
   // Lower scores first so the point-buy guard has budget available while the
   // three 15s are raised.
-  for (const [ability, score] of [["Intelligence", "8"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "15"], ["Dexterity", "15"], ["Constitution", "15"]]) {
-    await page.getByLabel(`${ability} app base`).selectOption(score);
+  for (const [ability, target] of [["Intelligence", 8], ["Wisdom", 8], ["Charisma", 8], ["Strength", 15], ["Dexterity", 15], ["Constitution", 15]]) {
+    const score = page.getByLabel(`${ability} base score`, { exact: true });
+    let current = Number(await score.textContent());
+    const button = page.getByRole("button", { name: `${target < current ? "Decrease" : "Increase"} ${ability} score`, exact: true });
+    while (current !== target) {
+      await button.click();
+      current = Number(await score.textContent());
+    }
   }
   await openAppSection("Abilities & skills");
   await openAppDisclosure("Skill proficiency choices");
@@ -382,10 +388,12 @@ try {
   await page.setViewportSize({ width: 390, height: 844 });
   await skillChoiceDisclosure.screenshot({ path: "screenshots/skill-choices-collapsed-mobile.png" });
   await page.setViewportSize({ width: 1440, height: 1000 });
-  const appStrength = page.getByLabel("Strength app base");
-  if (await appStrength.isDisabled()) throw new Error("Level-one ability scores stayed locked after setup");
-  await appStrength.selectOption("14");
-  await appStrength.selectOption("15");
+  const appStrength = page.getByLabel("Strength base score", { exact: true });
+  const decreaseStrength = page.getByRole("button", { name: "Decrease Strength score", exact: true });
+  const increaseStrength = page.getByRole("button", { name: "Increase Strength score", exact: true });
+  if (!await appStrength.count() || await decreaseStrength.isDisabled()) throw new Error("Level-one ability scores stayed locked after setup");
+  await decreaseStrength.click();
+  await increaseStrength.click();
   await openAppDisclosure("Skill proficiency choices");
   if (!await skillChoiceDisclosure.evaluate((element) => element.open)) throw new Error("Completed skill choices could not be reopened for an update");
   await page.getByLabel("Perception").uncheck();

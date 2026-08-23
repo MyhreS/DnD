@@ -658,13 +658,11 @@
     grid-column: 2 / -1;
   }
 
-  .appsheet-ability-builder > div {
-    grid-template-columns: 1fr 1fr 42px;
-  }
-
-  .appsheet-ability-name {
-    grid-column: 1 / -1;
-  }
+  .appsheet-ability-budget { grid-template-columns: 1fr; gap: 10px; }
+  .appsheet-ability-builder { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+  .appsheet-ability-builder > article { padding: 10px; }
+  .appsheet-ability-builder article > header em { font-size: 10px; }
+  .appsheet-ability-controls { grid-template-columns: 38px minmax(44px, 1fr) 38px; }
 
   .appsheet-catalog-add {
     grid-template-columns: minmax(0, 1fr) auto;
