@@ -12,10 +12,11 @@ API, or data as security-sensitive. Before doing that work, read and follow
 in full.
 
 The intended end-user account is exactly the verified Google account
-`myhrefjell@gmail.com`. This is not the same address as
-`myhrefjeld@gmail.com`, which already appears in Workshop configuration. Never
-copy or inherit Workshop membership, campaign membership, DM status,
-super-admin status, or any other existing role for this private app.
+`myhrefjeld@gmail.com`, which is already used for Christoffer's Google login.
+`myhrefjell@gmail.com` was a previously supplied typo and must not be authorized.
+Although the correct account also appears in Workshop configuration, never copy
+or inherit Workshop membership, campaign membership, DM status, super-admin
+status, or any other existing role as authorization for this private app.
 
 The non-negotiable product rule is deny by default:
 
@@ -55,3 +56,22 @@ access code or data. Never claim otherwise. If "not Simon" includes protection
 from Simon acting as infrastructure owner or administrator, do not place the
 private app or its unencrypted data in this repository/project. Require a
 Christoffer-owned private repository and cloud project before implementation.
+
+## GitHub Actions deployment
+
+The `Deploy` workflow automatically deploys the main D&D app to Firebase after
+a merge to `main` and also supports a one-click manual production run. Any
+GitHub repository collaborator with write access may open **Actions → Deploy →
+Run workflow**, select `main`, and run it. Manual production runs from any other
+branch must fail closed.
+
+The workflow uses protected repository secrets; never print, copy, expose, or
+replace them to let a collaborator deploy. Automatic and manual production
+deployments share one non-cancelling concurrency group so they cannot overwrite
+one another in parallel.
+
+The current workflow deploys the existing main-app Hosting target, Firestore and
+Storage rules, and Cloud Functions. When Christoffer's separate app receives its
+own protected deployment target, add that target to GitHub Actions in the same
+implementation change and verify it with a manual run from `main`. Do not claim
+the private app is deployable merely because the existing main-app job passes.

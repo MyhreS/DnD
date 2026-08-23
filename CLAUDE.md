@@ -11,7 +11,7 @@ permissions are per-campaign (see "Access model & roles").
 > **Christoffer's separate private app is a special security boundary.** For
 > any work on its page, route, URL, resources, assets, API, or data, first read
 > `AGENTS.md` and `skills/protect-christoffer-private-app/SKILL.md`. Its intended
-> end-user identity is the verified Google account `myhrefjell@gmail.com`; no
+> end-user identity is the verified Google account `myhrefjeld@gmail.com`; no
 > other app user, including Simon's normal or super-admin account, may access
 > it. Never commit its private content or assets here: this repository and
 > normal Firebase Hosting bundles are public. The skill defines the mandatory
@@ -296,11 +296,28 @@ git anyway.) First-time on a new machine: `doppler login && doppler setup -p dnd
 
 - **Locally:** `bun run deploy` (hosting + whatever's configured) as the
   `simonmyhre1` account.
-- **CI (GitHub Actions):** `.github/workflows/deploy.yml` builds and deploys on
-  push to `main` (live) and on PRs (preview channel). Requires two repo secrets:
+- **Automatically:** `.github/workflows/deploy.yml` builds and deploys after a
+  push/merge to `main` (live) and on PRs (preview channel).
+- **Manually:** any GitHub repository collaborator with **write access** may go
+  to **Actions → Deploy → Run workflow**, leave the branch as `main`, and click
+  **Run workflow**. The same production build deploys the live main-app Hosting
+  target, Firestore and Storage rules, and Cloud Functions. Manual production
+  runs reject non-`main` branches and serialize with automatic production runs.
+- **CLI equivalent:** `gh workflow run deploy.yml --ref main`, then follow it
+  with `gh run watch --exit-status`.
+
+The workflow requires two protected repository secrets. Collaborators can run
+the workflow without receiving or viewing their values:
+
   - `DOPPLER_TOKEN` — Doppler **service token** for `dnd`/`prd`.
   - `FIREBASE_SERVICE_ACCOUNT` — service-account JSON with Hosting + Firestore
     deploy perms (`firebase init hosting:github` generates one).
+
+The current `Deploy` workflow covers the existing main D&D app only. When a
+separate Hosting target or server boundary is added for Christoffer's private
+app, update GitHub Actions to build and deploy that target in the same change;
+do not treat the private app as wired until a manual `main` run and its full
+owner-only denial matrix pass in production.
 
 ## Updating game content
 
