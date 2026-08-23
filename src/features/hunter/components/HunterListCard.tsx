@@ -1,6 +1,6 @@
 import type { HunterCard } from "@/types";
 import { getClass } from "@/data/classes";
-import { maxHp, armorClassFor, isSheetCard } from "@/lib/character";
+import { armorClassFor, isSheetCard } from "@/lib/character";
 import { classArt } from "@/data/classArt";
 import { CreatureSprite } from "@/data/CreatureSprite";
 import { classCreatureId } from "@/data/creatures";
@@ -10,14 +10,13 @@ import { sheetClassName } from "../lib/papersheet";
 /**
  * A full-width hunter card for lists (main menu "Your hunters", the in-campaign
  * "Bring a hunter in" picker, the DM "Play as" list): class-art banner, name,
- * class + level, HP/AC, and where it currently plays. The whole card is one
+ * class + level, AC, and where it currently plays. The whole card is one
  * tap target (`onOpen`); optional actions float on top of it —
  * absolutely positioned siblings, never a button inside a button.
  */
 export function HunterListCard({
   card,
   campaignName,
-  actionHint = "View →",
   onOpen,
   onEdit,
   onDelete,
@@ -25,8 +24,6 @@ export function HunterListCard({
   card: HunterCard;
   /** Name of the campaign the hunter is currently in, if any. */
   campaignName?: string | null;
-  /** The gold call-to-action line, e.g. "Bring in →". */
-  actionHint?: string;
   onOpen: () => void;
   onEdit?: () => void;
   /** Main-menu Hunters only: opens the deliberate archive confirmation. */
@@ -34,12 +31,11 @@ export function HunterListCard({
 }) {
   const klass = getClass(card.classId);
   const art = classArt(card.classId);
-  const inCampaign = campaignName ? ` · in ${campaignName}` : "";
-  const classLine = klass
-    ? `${klass.name} · Level ${card.level}${inCampaign}`
+  const className = klass
+    ? klass.name
     : isSheetCard(card)
-      ? `${sheetClassName(card.sheet) || "Legacy hunter"} · Level ${card.level}${inCampaign}`
-      : "Draft — finish the build";
+      ? sheetClassName(card.sheet) || "Legacy hunter"
+      : null;
 
   return (
     <div className="card card-hover" style={{ position: "relative", padding: 0, overflow: "hidden" }}>
@@ -73,13 +69,20 @@ export function HunterListCard({
           <div style={{ fontFamily: "var(--font-display)", fontWeight: 600, fontSize: "1.1rem" }}>
             {card.name || "Unnamed hunter"}
           </div>
-          <div className="faint" style={{ fontSize: "0.82rem", marginTop: 2 }}>{classLine}</div>
+          {className ? (
+            <div className="hunter-list-card-meta">
+              <span>{className}</span>
+              <span className="hunter-list-card-level">Level {card.level}</span>
+              {campaignName && <span className="hunter-list-card-campaign">in {campaignName}</span>}
+            </div>
+          ) : (
+            <div className="faint" style={{ fontSize: "0.82rem", marginTop: 4 }}>Draft — finish the build</div>
+          )}
           {klass && (
-            <div className="muted" style={{ fontSize: "0.82rem", marginTop: 2 }}>
-              HP {maxHp(klass, card.abilities, card.level)} · AC {armorClassFor(card).total}
+            <div className="hunter-list-card-armor">
+              AC {armorClassFor(card).total}
             </div>
           )}
-          <div className="gold" style={{ fontSize: "0.8rem", marginTop: 6 }}>{actionHint}</div>
         </div>
         <div className="row" style={{ gap: 10, flex: "none", alignItems: "center" }}>
           {klass && !art && <CreatureSprite id={classCreatureId(card.classId)} size={40} />}

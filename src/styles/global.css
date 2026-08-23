@@ -562,6 +562,45 @@ button {
   transform: scale(0.99);
 }
 
+.hunter-list-card-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-top: 4px;
+  color: var(--ink-faint);
+  font-size: 0.82rem;
+}
+
+.hunter-list-card-level {
+  display: inline-flex;
+  align-items: center;
+  min-height: 22px;
+  padding: 3px 8px;
+  border: 1px solid var(--gold-dim);
+  border-radius: 999px;
+  background: var(--bg-elev-3);
+  color: var(--gold);
+  font-family: var(--font-display);
+  font-size: 0.67rem;
+  line-height: 1;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+}
+
+.hunter-list-card-campaign::before {
+  content: "·";
+  margin-right: 8px;
+  color: var(--gold-dim);
+}
+
+.hunter-list-card-armor {
+  margin-top: 5px;
+  color: var(--ink-dim);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+}
+
 .divider {
   height: 1px;
   background: var(--border);
