@@ -17,6 +17,14 @@ permissions are per-campaign (see "Access model & roles").
 > normal Firebase Hosting bundles are public. The skill defines the mandatory
 > architecture, identity checks, denial tests, and infrastructure-owner limit.
 
+> **Talk with Christoffer in ordinary language.** When the authenticated author
+> or recipient is `myhrefjeld@gmail.com`, treat him as the creator and game
+> expert, but not as a software engineer. Lead with the player-visible outcome,
+> avoid unexplained engineering terms, and never ask him to use code, a terminal,
+> GitHub, Firebase, or deployment tools unless he explicitly requests technical
+> detail. Follow `AGENTS.md` and `skills/dnd-workshop-bot/SKILL.md` for the full
+> communication rule. Do not talk down to him or overexplain his own game.
+
 ## What it does (v1)
 
 - **Sessions** — next session with a live countdown + upcoming dates. Members
