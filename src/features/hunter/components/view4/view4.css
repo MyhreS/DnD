@@ -194,8 +194,7 @@
 .v4-page-content .appsheet-inventory-list { gap: 0; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); }
 .v4-page-content .appsheet-inventory-list > div { padding: 13px 4px; border: 0; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); border-radius: 0; background: transparent; box-shadow: none; }
 .v4-page-content .appsheet-inventory-list > div:hover { background: var(--app-subtle); }
-.v4-page-content .appsheet-ability-builder { margin: 4px 0 18px; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); }
-.v4-page-content .appsheet-ability-builder > div { padding: 12px 2px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); }
+.v4-page-content .appsheet-ability-builder { margin: 0 0 18px; }
 .v4-page-content .appsheet-final-abilities { gap: 0; border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 28%); border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 28%); }
 .v4-page-content .appsheet-final-score { padding: 12px 10px; border-right: 1px solid color-mix(in srgb, var(--app-line), transparent 35%); border-radius: 0; background: transparent; }
 .v4-page-content .appsheet-final-score:nth-child(3n) { border-right: 0; }
@@ -379,7 +378,6 @@
 .v4-upgrade-review li span { display: grid; }
 .v4-upgrade-review li small { color: var(--app-warm); font-size: 9px; text-transform: uppercase; }
 .v4-upgrade-review li em { color: var(--app-muted); font: 12px/1.3 "Alegreya", serif; text-align: right; }
-.appsheet-ability-background { align-self: center; color: var(--app-muted); font-size: 11px; }
 .v4-upgrade-actions { display: grid; grid-template-columns: minmax(92px, auto) 1fr minmax(92px, auto); align-items: center; gap: 10px; padding: 10px 0 calc(6px + env(safe-area-inset-bottom)); border-top: 1px solid var(--app-line); background: transparent; }
 .v4-upgrade-actions span { color: var(--app-muted); font: 12px/1.25 "Alegreya", serif; text-align: center; }
 .v4-upgrade-actions button { min-width: 92px; background: var(--app-apply) !important; color: white !important; }

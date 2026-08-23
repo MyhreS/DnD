@@ -136,7 +136,7 @@ export function View4Upgrade({ model, onComplete, creating = false }: { model: A
   >
       {step.kind === "automatic" && <AutomaticChanges changes={changes} />}
       {step.kind === "name" && <CreationName model={model} name={card.name} />}
-      {step.kind === "abilities" && <AppAbilitiesSection model={model} view="abilities" />}
+      {step.kind === "abilities" && <AppAbilitiesSection model={model} view="abilities" creation />}
       {step.kind === "choice" && step.choice && <View4UpgradeChoices kind={step.choice} target={target} />}
       {step.kind === "equipment" && <CreationEquipment model={model} />}
       {step.kind === "feature" && step.feature && <View4UpgradeFeatPage feature={step.feature} state={state} />}
