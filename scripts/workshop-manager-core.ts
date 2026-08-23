@@ -130,6 +130,40 @@ export function workshopCodexArgs(
   ];
 }
 
+export function workshopCodexResumeArgs(
+  schemaPath: string,
+  resultPath: string,
+  sessionId: string,
+  prompt: string,
+  config: WorkshopAgentConfig = WORKSHOP_DEFAULT_AGENT_CONFIG,
+): string[] {
+  return [
+    "codex", "exec", "resume",
+    "--model", config.model,
+    "--config", `model_reasoning_effort="${config.reasoningEffort}"`,
+    "--dangerously-bypass-approvals-and-sandbox",
+    "--json",
+    "--output-schema", schemaPath,
+    "-o", resultPath,
+    sessionId,
+    prompt,
+  ];
+}
+
+const CODEX_SESSION_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function isCodexSessionId(value: unknown): value is string {
+  return typeof value === "string" && CODEX_SESSION_ID.test(value);
+}
+
+export function codexSessionIdFromEvent(value: unknown): string | null {
+  if (!value || typeof value !== "object") return null;
+  const event = value as Record<string, unknown>;
+  return event.type === "thread.started" && isCodexSessionId(event.thread_id)
+    ? event.thread_id
+    : null;
+}
+
 export function isLikelyServiceProblem(error: unknown): boolean {
   const message = String(error);
   return /(?:coding agent exited|service|provider|network|socket|fetch|github|firebase|firestore|quota|rate.?limit|429|5\d\d|timed? out|timeout|unavailable|offline|connection|deployment|workflow|checks?)/i.test(message);

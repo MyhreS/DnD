@@ -10,6 +10,7 @@ import {
   WORKSHOP_REASONING_EFFORT,
   WORKSHOP_UI_QUALITY_BRIEF,
   agentRunWatchdogDecision,
+  codexSessionIdFromEvent,
   deploymentContainsCommit,
   outcomeMessage,
   parseAgentResult,
@@ -26,6 +27,7 @@ import {
   ticketNeedsDecision,
   workshopChannelContext,
   workshopCodexArgs,
+  workshopCodexResumeArgs,
 } from "./workshop-manager-core";
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -97,6 +99,22 @@ const configuredCodexArgs = workshopCodexArgs("schema.json", "result.json", "pro
 assert(configuredCodexArgs.includes("gpt-5.6-terra"), "coding command must honor Simon's selected model");
 assert(configuredCodexArgs.includes('model_reasoning_effort="low"'), "coding command must honor Simon's selected reasoning effort");
 assert(codexArgs.includes("--json"), "coding command must stream structured progress events");
+const resumedCodexArgs = workshopCodexResumeArgs(
+  "schema.json",
+  "result.json",
+  "019d2c2b-8bea-7d40-8bfe-9866a5618c72",
+  "Continue after the Workshop manager restart.",
+  { model: "gpt-5.6-terra", reasoningEffort: "high" },
+);
+assert(resumedCodexArgs.slice(0, 3).join(" ") === "codex exec resume", "checkpoint recovery must use Codex exec resume");
+assert(resumedCodexArgs.includes("019d2c2b-8bea-7d40-8bfe-9866a5618c72"), "checkpoint recovery must select the exact saved session");
+assert(resumedCodexArgs.includes("--output-schema") && resumedCodexArgs.includes("--json"), "resumed agents must keep structured output and progress");
+assert(resumedCodexArgs.includes("--dangerously-bypass-approvals-and-sandbox"), "resumed unattended agents must not pause for approvals");
+assert(codexSessionIdFromEvent({
+  type: "thread.started",
+  thread_id: "019d2c2b-8bea-7d40-8bfe-9866a5618c72",
+}) === "019d2c2b-8bea-7d40-8bfe-9866a5618c72", "the durable checkpoint must capture the Codex session id");
+assert(codexSessionIdFromEvent({ type: "turn.started", thread_id: "not-a-session" }) === null, "untrusted progress events must not create checkpoints");
 
 const editingProgress = progressFromCodexEvent({
   type: "item.started",
