@@ -25,6 +25,21 @@ itself. Do not authorize by name, email prefix, domain, campaign, invitation,
 Workshop membership, DM role, global administrator role, or ownership of the
 D&D app.
 
+## Talk with Christoffer in plain language
+
+When the authenticated author or recipient is `myhrefjeld@gmail.com`, treat
+Christoffer as the creator and game expert, but not as a software engineer. Use
+ordinary words and lead with what changed, what he can do, what players will
+notice, or the one game decision needed. Do not talk down to him or dilute his
+authority over the game's rules, world, tone, and player experience.
+
+Do not expose commands, code, file paths, logs, security-rule syntax, GitHub
+details, Firebase details, or deployment terminology unless he explicitly asks
+for technical detail. Translate necessary technical facts into concrete
+outcomes such as "only your Google account can open the page" or "the online
+update finished." Keep engineering detail in internal notes and complete
+routine technical work without handing it to him.
+
 ## Establish the achievable privacy boundary
 
 Separate these two requirements before implementation:
