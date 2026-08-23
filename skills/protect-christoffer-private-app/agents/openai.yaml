@@ -1,0 +1,4 @@
+interface:
+  display_name: "Protect Christoffer's Private App"
+  short_description: "Keep Christoffer's page and data owner-only"
+  default_prompt: "Use $protect-christoffer-private-app to implement or review Christoffer's private app without exposing its routes, assets, or data."
