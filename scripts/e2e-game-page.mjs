@@ -108,8 +108,29 @@ try {
   if (await createGameAction.evaluate((element) => element.classList.contains("btn") || element.classList.contains("btn-primary"))) {
     throw new Error("Create game should be a quiet text action, not a primary button");
   }
+  const currentGamesList = owner.getByRole("navigation", { name: "Current games" });
+  if (await currentGamesList.getByRole("button", { name: "Create game", exact: true }).count()) {
+    throw new Error("Create game should not be inside the games list");
+  }
+  const actionLayout = await owner.locator(".games-menu-actions").evaluate((container) => {
+    const buttons = [...container.querySelectorAll("button")];
+    return buttons.map((button) => {
+      const box = button.getBoundingClientRect();
+      return { label: button.textContent?.trim(), x: box.x, y: box.y };
+    });
+  });
+  if (actionLayout.length !== 2 || actionLayout[0].label !== "Create game" || actionLayout[1].label !== "Previous"
+      || actionLayout[0].x >= actionLayout[1].x || Math.abs(actionLayout[0].y - actionLayout[1].y) > 2) {
+    throw new Error(`Create game should sit directly left of Previous: ${JSON.stringify(actionLayout)}`);
+  }
+  await owner.locator(".fade-in").evaluate((element) => Promise.all(element.getAnimations().map((animation) => animation.finished)));
   await assertNoHorizontalOverflow(owner, "Desktop Games menu");
   await owner.screenshot({ path: "screenshots/games-menu-empty-desktop.png", fullPage: true });
+
+  await owner.setViewportSize({ width: 390, height: 844 });
+  await assertNoHorizontalOverflow(owner, "Mobile Games menu");
+  await owner.screenshot({ path: "screenshots/games-menu-empty-mobile.png", fullPage: true });
+  await owner.setViewportSize({ width: 1440, height: 1000 });
 
   await createGameAction.click();
   await owner.getByLabel("Session name").fill("Night of the Pale Moon");
