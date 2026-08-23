@@ -28,6 +28,7 @@
     "e2e:codex": "node scripts/e2e-codex.mjs",
     "e2e:character-automation": "node scripts/e2e-character-automation.mjs",
     "e2e:game": "node scripts/e2e-game-page.mjs",
+    "e2e:upgrade": "node scripts/e2e-upgrade-required-choices.mjs",
     "e2e:battle": "npm --prefix functions run build && firebase emulators:exec --only auth,firestore,functions \"node scripts/e2e-battle-screen.mjs\"",
     "e2e:workshop": "npm --prefix functions run build && firebase emulators:exec --only auth,firestore,functions,storage \"node scripts/with-firebase-web-config.mjs node scripts/e2e-workshop.mjs\"",
     "test:game-card": "bun scripts/game-card-data-test.ts",

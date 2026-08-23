@@ -6,11 +6,12 @@ import { CODEX_ENTRIES, CODEX_SOURCES, CODEX_SOURCE_BY_ID, CODEX_TOPICS } from "
 import { searchEntries } from "../src/lib/search";
 
 const master = JSON.parse(readFileSync("resources/master.json", "utf8"));
-const generatedBefore = readFileSync("src/data/codex.generated.json", "utf8");
-const gameCardBefore = readFileSync("src/data/gameCard.generated.json", "utf8");
+const generatedText = (path: string) => readFileSync(path, "utf8").replaceAll("\r\n", "\n");
+const generatedBefore = generatedText("src/data/codex.generated.json");
+const gameCardBefore = generatedText("src/data/gameCard.generated.json");
 execFileSync("node", ["scripts/generate-codex-data.mjs"], { stdio: "pipe" });
-assert.equal(readFileSync("src/data/codex.generated.json", "utf8"), generatedBefore, "Codex index is stale; regenerate it");
-assert.equal(readFileSync("src/data/gameCard.generated.json", "utf8"), gameCardBefore, "Game Card data is stale; regenerate it");
+assert.equal(generatedText("src/data/codex.generated.json"), generatedBefore, "Codex index is stale; regenerate it");
+assert.equal(generatedText("src/data/gameCard.generated.json"), gameCardBefore, "Game Card data is stale; regenerate it");
 
 assert.equal(master.meta.schemaVersion, 2);
 assert.equal(master.gameCard.pageCount, 9);
