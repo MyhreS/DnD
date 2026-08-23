@@ -13,6 +13,7 @@ import {
   type ActiveGameSeat,
 } from "@/api/games";
 import { getClass } from "@/data/classes";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview";
 import { useAllCharacters } from "@/features/game/hooks/useAllCharacters";
 import { useEnemyLibrary } from "@/features/game/hooks/useEnemyLibrary";
@@ -34,6 +35,7 @@ import { SessionNotes } from "./SessionNotes";
 import "./game.css";
 
 const DEFAULT_TITLE = () => `Session ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())}`;
+type GameConfirmation = "end-battle" | "finish-session" | "discard-session";
 
 function displayClass(participant: GameParticipant): string {
   return participant.className || getClass(participant.classId)?.name || participant.classId || "Hunter";
@@ -87,6 +89,7 @@ export function GamePage() {
   const [managingEnemies, setManagingEnemies] = useState(false);
   const [editingEnemy, setEditingEnemy] = useState<EnemyTemplate | "new" | null>(null);
   const [ownSheetOpen, setOwnSheetOpen] = useState(false);
+  const [confirmation, setConfirmation] = useState<GameConfirmation | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -403,7 +406,6 @@ export function GamePage() {
 
   async function finishSession() {
     if (!selected || selected.status !== "active") return;
-    if (!window.confirm("End this session? The party, enemies, and damage will be saved in session history.")) return;
     if (preview) {
       updatePreviewGame(selected.id, {
         status: "ended",
@@ -426,7 +428,6 @@ export function GamePage() {
 
   async function discardSession() {
     if (!selected || selected.status !== "lobby") return;
-    if (!window.confirm("Discard this unstarted session? It will not be added to history.")) return;
     if (preview) {
       setPreviewRosters((current) => {
         const next = { ...current };
@@ -454,8 +455,16 @@ export function GamePage() {
   }
 
   async function endBattle() {
-    if (!selected?.combat || !window.confirm("End this battle? Everyone will return to the session view. Initiative, conditions, enemies, and damage remain saved.")) return;
+    if (!selected?.combat) return;
     await useCombatStore.getState().closeSessionEncounter(selected.id, selected.combat);
+  }
+
+  async function confirmGameAction() {
+    const action = confirmation;
+    setConfirmation(null);
+    if (action === "end-battle") await endBattle();
+    if (action === "finish-session") await finishSession();
+    if (action === "discard-session") await discardSession();
   }
 
   function openEnemyEditor(template: EnemyTemplate | "new") {
@@ -506,6 +515,29 @@ export function GamePage() {
       )}
     </>
   ) : null;
+  const confirmationCopy = confirmation === "end-battle" ? {
+    title: "End battle?",
+    description: "Everyone will return to the session view. Initiative, conditions, enemies, and damage stay saved.",
+    confirmLabel: "End battle",
+    cancelLabel: "Keep battling",
+  } : confirmation === "finish-session" ? {
+    title: "End session?",
+    description: "The party, enemies, and damage will be saved in session history.",
+    confirmLabel: "End session",
+    cancelLabel: "Keep playing",
+  } : confirmation === "discard-session" ? {
+    title: "Discard session?",
+    description: "This unstarted session will be removed and will not appear in session history.",
+    confirmLabel: "Discard session",
+    cancelLabel: "Keep session",
+  } : null;
+  const confirmationDialog = confirmationCopy ? (
+    <ConfirmDialog
+      {...confirmationCopy}
+      onCancel={() => setConfirmation(null)}
+      onConfirm={() => void confirmGameAction()}
+    />
+  ) : null;
 
   if (!creating && selected && battleMode) {
     return (
@@ -530,7 +562,7 @@ export function GamePage() {
               onAddEnemy={openEnemyLibrary}
               onCreateItem={() => setCreatingItem(true)}
               canCreateItem={selected.campaignId === null}
-              onEndBattle={() => void endBattle()}
+              onEndBattle={() => setConfirmation("end-battle")}
             />
           ) : null}
           disabled={combatBusy || busy}
@@ -538,6 +570,7 @@ export function GamePage() {
         <SessionNotes gameId={selected.id} userId={user?.uid} userName={member?.firstName || user?.displayName || "Someone"} writable={selected.status !== "ended"} />
         {enemyDialogs}
         {creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
+        {confirmationDialog}
       </div>
     );
   }
@@ -613,9 +646,9 @@ export function GamePage() {
                   {selected.campaignId === null && selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => setCreatingItem(true)}>Create item</button>}
                   {selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => openEnemyLibrary()}>Manage enemies</button>}
                   {selected.status === "active" ? (
-                    <button className="btn btn-danger" type="button" disabled={busy} onClick={finishSession}>End session</button>
+                    <button className="btn btn-danger" type="button" disabled={busy} onClick={() => setConfirmation("finish-session")}>End session</button>
                   ) : (
-                    <button className="btn btn-danger" type="button" disabled={busy} onClick={discardSession}>Discard session</button>
+                    <button className="btn btn-danger" type="button" disabled={busy} onClick={() => setConfirmation("discard-session")}>Discard session</button>
                   )}
                 </div>
               )}
@@ -653,6 +686,7 @@ export function GamePage() {
       {selected && creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
       {enemyDialogs}
       {ownSheetOpen && ownCard && <PaperSheetModal card={ownCard} onClose={() => setOwnSheetOpen(false)} />}
+      {confirmationDialog}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { useCharacterView } from "@/app/characterView";
+import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { HunterCard } from "@/types";
 import { usePaperSheetAutosave } from "../../hooks/usePaperSheetAutosave";
 import { usePaperSheetFocus } from "../../hooks/usePaperSheetFocus";
@@ -20,16 +21,24 @@ export function PaperSheetModal({ card, onClose, readOnly = false, create = fals
   const view = useCharacterView((state) => state.view);
   const [view4Panel, setView4Panel] = useState<View4Panel | null>(null);
   const [appEditPending, setAppEditPending] = useState(false);
+  const [confirmingClose, setConfirmingClose] = useState(false);
   const [creationFinished, setCreationFinished] = useState(false);
   const creating = !readOnly
     && !creationFinished
     && (create || workingCard.sheetAutomation?.setupComplete === false);
 
   const closeEditor = () => {
-    if (appEditPending && !window.confirm("Discard the previewed changes and close the character?")) return;
+    if (appEditPending) {
+      setConfirmingClose(true);
+      return;
+    }
     onClose();
   };
   const handleBack = () => {
+    if (confirmingClose) {
+      setConfirmingClose(false);
+      return;
+    }
     if (view === "hud" && view4Panel) {
       setView4Panel(null);
       return;
@@ -58,6 +67,15 @@ export function PaperSheetModal({ card, onClose, readOnly = false, create = fals
         view4Panel={view4Panel}
         onView4PanelChange={setView4Panel}
       />
+      {confirmingClose && (
+        <ConfirmDialog
+          title="Discard changes?"
+          description="These previewed character changes have not been applied. Closing now will leave the saved character unchanged."
+          confirmLabel="Discard changes"
+          onCancel={() => setConfirmingClose(false)}
+          onConfirm={onClose}
+        />
+      )}
     </div>,
     document.body,
   );
