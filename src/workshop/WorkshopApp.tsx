@@ -1,6 +1,7 @@
 import { useCallback, useState } from "react";
 import { AccessScreen } from "@/workshop/components/AccessScreen";
 import { AgentPresence } from "@/workshop/components/AgentPresence";
+import { AgentSettings } from "@/workshop/components/AgentSettings";
 import { CollaboratorPresence } from "@/workshop/components/CollaboratorPresence";
 import { TicketComposer } from "@/workshop/components/TicketComposer";
 import { TicketDetail } from "@/workshop/components/TicketDetail";
@@ -40,6 +41,12 @@ export function WorkshopApp() {
             currentName={session.user!.displayName || session.user!.email?.split("@")[0] || "You"}
           />
           <AgentPresence state={session.agentState} />
+          {session.canManageAgentSettings && (
+            <AgentSettings
+              key={`${session.agentConfig?.model ?? "default"}-${session.agentConfig?.reasoningEffort ?? "default"}-${session.agentConfig?.revision ?? 0}`}
+              config={session.agentConfig}
+            />
+          )}
           <button className="account-button" type="button" onClick={() => void session.signOut()} title="Sign out">{session.user?.displayName?.slice(0, 1) || "S"}</button>
         </div>
       </header>

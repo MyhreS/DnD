@@ -1,0 +1,4 @@
+interface:
+  display_name: "Publish Workshop Task"
+  short_description: "Queue a task for the D&D Workshop agent"
+  default_prompt: "Use $publish-workshop-task to publish this request to the D&D Workshop agent."

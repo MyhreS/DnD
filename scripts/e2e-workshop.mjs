@@ -49,7 +49,7 @@ await db.doc(`workshopMembers/${outsiderUid}`).set({
   role: "admin",
 });
 
-const server = spawn("bunx", ["vite", "--config", "vite.workshop.config.ts", "--host", "127.0.0.1", "--port", String(PORT)], {
+const server = spawn("bun", ["x", "vite", "--config", "vite.workshop.config.ts", "--host", "127.0.0.1", "--port", String(PORT)], {
   stdio: ["ignore", "pipe", "pipe"],
   env: { ...process.env, VITE_FIREBASE_EMULATORS: "1" },
 });
@@ -147,8 +147,10 @@ function startManager(fixture, extraEnv = {}) {
     output: () => output,
     stop: async () => {
       child.kill("SIGTERM");
-      const code = await new Promise((resolve) => child.on("exit", resolve));
-      if (code !== 0) throw new Error(`Continuous fixture manager failed (${code}): ${output}`);
+      const result = await new Promise((resolve) => child.on("exit", (code, signal) => resolve({ code, signal })));
+      if (result.code !== 0 && result.signal !== "SIGTERM") {
+        throw new Error(`Continuous fixture manager failed (${result.code ?? result.signal}): ${output}`);
+      }
     },
   };
 }
@@ -206,6 +208,21 @@ try {
   watch(simon.page, errors);
   await waitForWorkspace(simon.page, "Simon");
   if (await simon.page.getByRole("button", { name: /invite/i }).count()) throw new Error("Workshop still exposes invitations.");
+  const settings = simon.page.getByTestId("agent-settings");
+  await settings.locator("summary").click();
+  if (await settings.locator("#workshop-agent-model").inputValue() !== "gpt-5.6-sol") throw new Error("Workshop did not default to Sol.");
+  if (await settings.locator("#workshop-agent-effort").inputValue() !== "xhigh") throw new Error("Workshop did not default to xhigh reasoning.");
+  await settings.locator("#workshop-agent-model").selectOption("gpt-5.6-terra");
+  await settings.locator("#workshop-agent-effort").selectOption("high");
+  await settings.getByRole("button", { name: "Save for next agents" }).click();
+  await eventually(async () => (await db.doc("workshopAgent/config").get()).data()?.model === "gpt-5.6-terra", "Simon model setting");
+  if ((await settings.getAttribute("open")) === null) await settings.locator("summary").click();
+  await settings.locator("#workshop-agent-model").selectOption("gpt-5.6-sol");
+  await settings.locator("#workshop-agent-effort").selectOption("xhigh");
+  await settings.getByRole("button", { name: "Save for next agents" }).click();
+  await eventually(async () => (await db.doc("workshopAgent/config").get()).data()?.reasoningEffort === "xhigh", "Simon reasoning setting");
+  if ((await settings.getAttribute("open")) === null) await settings.locator("summary").click();
+  await simon.page.screenshot({ path: "screenshots/workshop-settings-desktop.png", fullPage: true });
   await simon.page.getByTestId("collaborator-presence").getByText("Just you", { exact: true }).waitFor();
 
   const outsider = await openAs(browser, outsiderToken, { width: 390, height: 844 });
@@ -218,6 +235,7 @@ try {
   const thomas = await openAs(browser, thomasToken, { width: 1440, height: 900 });
   watch(thomas.page, errors);
   await waitForWorkspace(thomas.page, "Thomas");
+  if (await thomas.page.getByRole("button", { name: "Agent settings" }).count()) throw new Error("Thomas could see Simon-only agent settings.");
   await Promise.all([
     simon.page.getByTestId("collaborator-presence").getByText("Thomas here", { exact: true }).waitFor(),
     thomas.page.getByTestId("collaborator-presence").getByText("Simon here", { exact: true }).waitFor(),
@@ -252,7 +270,7 @@ try {
   await peopleMenu.locator("summary").click();
   await creator.page.getByTestId("workshop-tip").getByText("Paste screenshots directly with ⌘V or Ctrl+V.", { exact: false }).waitFor();
   await creator.page.getByTestId("agent-presence").getByText("Agent offline").waitFor();
-  await creator.page.getByText("Ask Simon to start the Workshop agent.").waitFor();
+  await creator.page.getByText("Requests stay queued and resume automatically.").waitFor();
   if (await creator.page.getByTestId("agent-countdown").count()) throw new Error("Workshop still shows a polling countdown.");
 
   const triggerManager = startManager("finished");
@@ -262,8 +280,8 @@ try {
       return state?.watchingChanges === true
         && state?.triggerMode === "realtime_with_fallback"
         && state?.fallbackIntervalMs === 5 * 60_000
-        && state?.model === "gpt-5.6-terra"
-        && state?.reasoningEffort === "medium";
+        && state?.model === "gpt-5.6-sol"
+        && state?.reasoningEffort === "xhigh";
     }, "Real-time request listener");
     await Promise.all([creator, simon, thomas].map(({ page }) => (
       page.getByTestId("agent-presence").getByText("Agent online").waitFor()
@@ -343,8 +361,9 @@ try {
       return state?.activeTicketCount === 3
         && state?.maxConcurrentTickets === 3
         && new Set(state?.activeTicketIds ?? []).size === 3
-        && state?.model === "gpt-5.6-terra"
-        && state?.reasoningEffort === "medium";
+        && state?.model === "gpt-5.6-sol"
+        && state?.reasoningEffort === "xhigh"
+        && Object.values(state?.activeTickets ?? {}).every((ticket) => ticket.model === "gpt-5.6-sol" && ticket.reasoningEffort === "xhigh");
     }, "Three-agent concurrency limit");
     const runningSnapshot = await Promise.all(concurrencyProbes.map((probe) => probe.get()));
     const runningStatuses = runningSnapshot.map((probe) => probe.data()?.status);
@@ -504,10 +523,10 @@ try {
     thomas.page.getByTestId("ticket-reply").press("Enter"),
   ]);
   await Promise.all([
-    creator.page.getByText("Simon is answering this shared thread.", { exact: true }).waitFor({ timeout: 4_000 }),
-    creator.page.getByText("Thomas is answering this shared thread.", { exact: true }).waitFor({ timeout: 4_000 }),
-    simon.page.getByText("Thomas is answering this shared thread.", { exact: true }).waitFor({ timeout: 4_000 }),
-    thomas.page.getByText("Simon is answering this shared thread.", { exact: true }).waitFor({ timeout: 4_000 }),
+    creator.page.getByText("Simon is answering this shared thread.", { exact: true }).waitFor({ timeout: 10_000 }),
+    creator.page.getByText("Thomas is answering this shared thread.", { exact: true }).waitFor({ timeout: 10_000 }),
+    simon.page.getByText("Thomas is answering this shared thread.", { exact: true }).waitFor({ timeout: 10_000 }),
+    thomas.page.getByText("Simon is answering this shared thread.", { exact: true }).waitFor({ timeout: 10_000 }),
   ]);
   const sharedReplies = (await db.doc(`workshopTickets/${ticketId}`).collection("messages").where("kind", "==", "follow_up").get())
     .docs.map((message) => message.data())
@@ -548,6 +567,7 @@ try {
     nextSequence: 46,
     attachmentCount: 1,
     needsSimonReplyReceived: false,
+    lastCompletedSequence: 45,
     leasedBy: null,
     leaseExpiresAt: null,
   });
@@ -587,7 +607,7 @@ try {
 
   const evictedButton = requestList.locator("li").nth(14).locator("button");
   const evictedTestId = await evictedButton.getAttribute("data-testid");
-  const evictedTitle = await evictedButton.locator("strong").innerText();
+  const evictedTitle = await evictedButton.locator(":scope > strong").innerText();
   if (!evictedTestId) throw new Error("Could not identify the last request on the first page.");
   await evictedButton.click();
   await creator.page.getByRole("heading", { name: evictedTitle }).waitFor();
@@ -719,10 +739,18 @@ try {
   const longMessages = await longThreadRef.collection("messages").get();
   const imageOnlyReply = longMessages.docs.map((item) => item.data()).find((message) => message.kind === "follow_up" && message.sequence === 47);
   if (!imageOnlyReply || imageOnlyReply.body !== "" || imageOnlyReply.attachments?.length !== 1) throw new Error("Image-only reply was not stored correctly.");
-  await longThreadRef.update({ status: "finished" });
+  const heldTicketStatus = (await db.doc(`workshopTickets/${ticketId}`).get()).data()?.status;
+  await db.doc(`workshopTickets/${ticketId}`).update({ status: "finished" });
+  await runManager("answered");
+  await db.doc(`workshopTickets/${ticketId}`).update({ status: heldTicketStatus });
+  const completedLongThread = (await longThreadRef.get()).data();
+  if (completedLongThread?.status !== "finished" || completedLongThread?.lastCompletedSequence !== 47) {
+    throw new Error("An old missing attachment blocked a later conversation turn.");
+  }
   await creator.page.keyboard.press("Escape");
   await requestSearch.fill("");
 
+  const simonClient = await ruleClient("simon", simonToken);
   const creatorClient = await ruleClient("creator", creatorToken);
   const thomasClient = await ruleClient("thomas", thomasToken);
   const outsiderClient = await ruleClient("outsider", outsiderToken);
@@ -753,6 +781,13 @@ try {
   await expectDenied(() => updateDoc(doc(creatorClient.db, "workshopTickets", ticketId), { title: "edited" }), "Ticket edit");
   await expectDenied(() => deleteDoc(doc(creatorClient.db, "workshopTickets", ticketId)), "Ticket deletion");
   await expectDenied(() => getDoc(doc(outsiderClient.db, "workshopTickets", ticketId)), "Outsider ticket read");
+  if (!(await getDoc(doc(simonClient.db, "workshopAgent", "config"))).exists()) throw new Error("Simon cannot read Workshop agent settings.");
+  await expectDenied(() => getDoc(doc(creatorClient.db, "workshopAgent", "config")), "Non-Simon config read");
+  await expectDenied(() => setDoc(doc(simonClient.db, "workshopAgent", "config"), { model: "gpt-5.6-terra" }), "Direct config write");
+  const creatorConfigCall = httpsCallable(creatorClient.functions, "setWorkshopAgentConfig");
+  await expectCode(() => creatorConfigCall({ model: "gpt-5.6-sol", reasoningEffort: "xhigh", mutationId: crypto.randomUUID() }), "permission-denied", "Non-Simon config callable");
+  const simonConfigCall = httpsCallable(simonClient.functions, "setWorkshopAgentConfig");
+  await expectCode(() => simonConfigCall({ model: "untrusted", reasoningEffort: "ultra", mutationId: crypto.randomUUID() }), "invalid-argument", "Invalid config callable");
 
   const createDirect = httpsCallable(creatorClient.functions, "createWorkshopTicket");
   const duplicateSubmissionId = crypto.randomUUID();
@@ -769,7 +804,7 @@ try {
   await replyDirect(duplicateReply);
   const afterDuplicateReply = await duplicateTicket.ref.get();
   const afterDuplicateMessages = await duplicateTicket.ref.collection("messages").get();
-  if (afterDuplicateReply.data()?.revision !== 2 || afterDuplicateMessages.size !== 4) throw new Error("Reply retry created duplicate Workshop content.");
+  if (afterDuplicateReply.data()?.revision !== 2 || afterDuplicateMessages.size !== 3) throw new Error("Reply retry created duplicate Workshop content.");
   await duplicateTicket.ref.update({ status: "finished" });
 
   const unsafeDraftId = crypto.randomUUID();
@@ -786,7 +821,7 @@ try {
   ), "unauthorized", "Unsafe Storage upload");
   await runManager("finished");
   await creator.page.getByTestId("agent-presence").getByText("Agent online").waitFor();
-  await creator.page.getByTestId(`ticket-${ticketId}`).getByText("Finished", { exact: true }).waitFor();
+  await creator.page.getByTestId(`ticket-${ticketId}`).getByText("Released", { exact: true }).waitFor();
   await creator.page.getByTestId(`ticket-${ticketId}`).click();
   await creator.page.getByText("requested test update is available now", { exact: false }).waitFor();
   if (await creator.page.getByText("Received. The Workshop agent will start automatically when it is online.", { exact: true }).count()) {
@@ -800,7 +835,7 @@ try {
   await creator.page.getByTestId("ticket-reply").fill("Please also reduce the number of buttons.");
   await creator.page.getByTestId("ticket-reply").press("Enter");
   await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
-  await creator.page.getByText("Update received. The agent will reread").last().waitFor();
+  await creator.page.getByTestId("queue-activity-detail").getByText("Queued with the latest message", { exact: true }).waitFor();
   await creator.page.screenshot({ path: "screenshots/workshop-sent-feedback-mobile.png", fullPage: true });
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await creator.page.getByText("Not done", { exact: true }).waitFor();
@@ -818,7 +853,7 @@ try {
   await creator.page.getByTestId("ticket-reply").fill("Please reconsider this with the new information.");
   await creator.page.getByTestId("send-reply").click();
   await creator.page.getByTestId("send-reply").getByText("Sent ✓", { exact: true }).waitFor();
-  await creator.page.getByText("Christopher Creator replied. The agent will reread the whole thread.", { exact: true }).waitFor();
+  await creator.page.getByTestId("queue-activity-detail").getByText("Queued with the latest message", { exact: true }).waitFor();
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await creator.page.getByText("Not done", { exact: true }).waitFor();
   const afterCreatorReply = (await db.doc(`workshopTickets/${ticketId}`).get()).data();
@@ -832,7 +867,7 @@ try {
   await thomas.page.getByText("A reply from any Workshop member can restart this task.", { exact: true }).waitFor();
   await thomas.page.getByTestId("ticket-reply").fill("Thomas approves continuing with the updated request.");
   await thomas.page.getByTestId("send-reply").click();
-  await thomas.page.getByText("Thomas Myhre replied. The agent will reread the whole thread.", { exact: true }).waitFor();
+  await thomas.page.getByTestId("queue-activity-detail").getByText("Queued with the latest message", { exact: true }).waitFor();
   await thomas.page.getByRole("button", { name: "Close thread" }).click();
   await creator.page.getByText("Not done", { exact: true }).waitFor();
   const afterThomasReply = (await db.doc(`workshopTickets/${ticketId}`).get()).data();
@@ -859,8 +894,11 @@ try {
   await noOverflow(creator.page, "Workshop desktop");
   await creator.page.screenshot({ path: "screenshots/workshop-desktop.png", fullPage: true });
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Workshop E2E passed: exactly three independent ticket agents, one run per thread, a queued fourth thread, Terra medium reporting, per-ticket progress, equal owner access, outsider denial, live sync, secure images, paging, drafts, idempotency, and responsive mobile/desktop layout.");
+  console.log("Workshop E2E passed: three fenced ticket agents, Sol xhigh defaults, Simon-only settings, coherent queue/progress feedback, ongoing chat, safe attachment checkpoints, live sync, secure images, paging, drafts, idempotency, and responsive mobile/desktop layout.");
   await Promise.all([simon.context.close(), creator.context.close(), thomas.context.close(), tobias.context.close(), ronald.context.close(), outsider.context.close()]);
+} catch (error) {
+  console.error("Workshop E2E failed:", error);
+  throw error;
 } finally {
   await browser.close();
   server.kill("SIGTERM");

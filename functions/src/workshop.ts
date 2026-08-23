@@ -14,6 +14,8 @@ const MAX_ATTACHMENTS = 5;
 const ACTION_WINDOW_MS = 60_000;
 const MAX_ACTIONS_PER_WINDOW = 12;
 const SAFE_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
+const WORKSHOP_AGENT_MODELS = new Set(["gpt-5.6-sol", "gpt-5.6-terra"]);
+const WORKSHOP_REASONING_EFFORTS = new Set(["low", "medium", "high", "xhigh", "max"]);
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
 if (!getApps().length) initializeApp();
@@ -153,7 +155,40 @@ export const claimWorkshopAccess = onCall({ region: REGION }, async (request) =>
   } else {
     await memberRef.set({ email: user.email, name: user.name, role: user.role }, { merge: true });
   }
-  return { ok: true, role: user.role };
+  return { ok: true, role: user.role, canManageAgentSettings: user.email === ADMIN_EMAIL };
+});
+
+export const setWorkshopAgentConfig = onCall({ region: REGION }, async (request) => {
+  const user = identity(request);
+  if (user.email !== ADMIN_EMAIL) {
+    throw new HttpsError("permission-denied", "Only Simon can change Workshop agent settings.");
+  }
+  const model = String(request.data?.model ?? "");
+  const reasoningEffort = String(request.data?.reasoningEffort ?? "");
+  const mutationId = validId(request.data?.mutationId, "settings update");
+  if (!WORKSHOP_AGENT_MODELS.has(model) || !WORKSHOP_REASONING_EFFORTS.has(reasoningEffort)) {
+    throw new HttpsError("invalid-argument", "Choose a supported Workshop model and reasoning effort.");
+  }
+  const configRef = db.doc("workshopAgent/config");
+  const historyRef = configRef.collection("history").doc(mutationId);
+  await db.runTransaction(async (tx) => {
+    const [config, history] = await Promise.all([tx.get(configRef), tx.get(historyRef)]);
+    if (history.exists || config.data()?.lastMutationId === mutationId) return;
+    const revision = Number(config.data()?.revision ?? 0) + 1;
+    const next = {
+      schemaVersion: 1,
+      model,
+      reasoningEffort,
+      revision,
+      updatedAt: FieldValue.serverTimestamp(),
+      updatedByUid: user.uid,
+      updatedByEmail: user.email,
+      lastMutationId: mutationId,
+    };
+    tx.set(configRef, next);
+    tx.set(historyRef, next);
+  });
+  return { ok: true };
 });
 
 export const createWorkshopTicket = onCall({ region: REGION }, async (request) => {
@@ -182,6 +217,7 @@ export const createWorkshopTicket = onCall({ region: REGION }, async (request) =
       authorName: user.name,
       createdAt: FieldValue.serverTimestamp(),
       updatedAt: FieldValue.serverTimestamp(),
+      lastMessageAt: FieldValue.serverTimestamp(),
       readAtBy: { [user.uid]: FieldValue.serverTimestamp() },
       revision: 1,
       nextSequence: 3,
@@ -189,7 +225,9 @@ export const createWorkshopTicket = onCall({ region: REGION }, async (request) =
       needsSimonReplyReceived: false,
       automaticRetryCount: 0,
       leasedBy: null,
+      claimNonce: null,
       leaseExpiresAt: null,
+      lastCompletedSequence: 0,
     });
     tx.set(ticketRef.collection("messages").doc(`${submissionId}-request`), messageData("request", body, user, 1, attachments));
     tx.set(ticketRef.collection("messages").doc(`${submissionId}-ack`), messageData("system", "Received. The Workshop agent will start automatically when it is online.", null, 2));
@@ -228,17 +266,14 @@ export const replyWorkshopTicket = onCall({ region: REGION }, async (request) =>
     const nextStatus = data.status === "doing_now"
       ? "doing_now"
       : "not_done";
-    const acknowledgement = waitingForDecision
-      ? `${user.name} replied. The agent will reread the whole thread.`
-      : "Update received. The agent will reread the whole thread.";
     tx.set(messageRef, messageData("follow_up", body, user, sequence, attachments));
-    tx.set(ticketRef.collection("messages").doc(`${submissionId}-ack`), messageData("system", acknowledgement, null, sequence + 1));
     tx.update(ticketRef, {
       status: nextStatus,
       updatedAt: FieldValue.serverTimestamp(),
+      lastMessageAt: FieldValue.serverTimestamp(),
       readAtBy: { ...(data.readAtBy ?? {}), [user.uid]: FieldValue.serverTimestamp() },
       revision: FieldValue.increment(1),
-      nextSequence: sequence + 2,
+      nextSequence: sequence + 1,
       attachmentCount: FieldValue.increment(attachments.length),
       automaticRetryCount: 0,
       retryAfter: FieldValue.delete(),

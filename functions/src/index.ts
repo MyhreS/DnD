@@ -24,6 +24,7 @@ export {
   createWorkshopTicket,
   markWorkshopTicketRead,
   replyWorkshopTicket,
+  setWorkshopAgentConfig,
 } from "./workshop";
 
 if (!getApps().length) initializeApp();

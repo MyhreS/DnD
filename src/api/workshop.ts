@@ -16,6 +16,7 @@ import { getBlob, ref, uploadBytes } from "firebase/storage";
 import { workshopDb, workshopFunctions, workshopStorage } from "@/workshop/firebase";
 import type {
   AgentState,
+  WorkshopAgentConfig,
   WorkshopAttachment,
   WorkshopMessage,
   WorkshopPresence,
@@ -35,7 +36,7 @@ export type WorkshopMessagePage = {
   hasOlder: boolean;
 };
 
-const claimAccessCall = httpsCallable<undefined, { ok: boolean; role: "admin" }>(
+const claimAccessCall = httpsCallable<undefined, { ok: boolean; role: "admin"; canManageAgentSettings: boolean }>(
   workshopFunctions,
   "claimWorkshopAccess",
 );
@@ -48,8 +49,17 @@ const replyTicketCall = httpsCallable<
   { ok: boolean }
 >(workshopFunctions, "replyWorkshopTicket");
 const markTicketReadCall = httpsCallable<{ ticketId: string }, { ok: boolean }>(workshopFunctions, "markWorkshopTicketRead");
-export async function claimWorkshopAccess(): Promise<"admin"> {
-  return (await claimAccessCall()).data.role;
+const setAgentConfigCall = httpsCallable<
+  WorkshopAgentConfig & { mutationId: string },
+  { ok: boolean }
+>(workshopFunctions, "setWorkshopAgentConfig");
+export async function claimWorkshopAccess(): Promise<{ role: "admin"; canManageAgentSettings: boolean }> {
+  const { role, canManageAgentSettings } = (await claimAccessCall()).data;
+  return { role, canManageAgentSettings };
+}
+
+export async function setWorkshopAgentConfig(config: WorkshopAgentConfig, mutationId: string): Promise<void> {
+  await setAgentConfigCall({ ...config, mutationId });
 }
 
 export async function createWorkshopTicket(body: string, attachments: WorkshopAttachment[], submissionId: string) {
@@ -150,6 +160,15 @@ export async function loadOlderWorkshopMessages(ticketId: string, beforeSequence
 export function subscribeAgentState(next: (state: AgentState | null) => void, fail: (error: Error) => void): Unsubscribe {
   return onSnapshot(doc(workshopDb, "workshopAgent", "state"), (snapshot) => {
     next(snapshot.exists() ? snapshot.data() as AgentState : null);
+  }, fail);
+}
+
+export function subscribeWorkshopAgentConfig(
+  next: (config: WorkshopAgentConfig | null) => void,
+  fail: (error: Error) => void,
+): Unsubscribe {
+  return onSnapshot(doc(workshopDb, "workshopAgent", "config"), (snapshot) => {
+    next(snapshot.exists() ? snapshot.data() as WorkshopAgentConfig : null);
   }, fail);
 }
 

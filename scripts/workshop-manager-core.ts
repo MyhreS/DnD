@@ -1,5 +1,24 @@
-export const WORKSHOP_MODEL = "gpt-5.6-terra";
-export const WORKSHOP_REASONING_EFFORT = "medium";
+export const WORKSHOP_AGENT_MODELS = ["gpt-5.6-sol", "gpt-5.6-terra"] as const;
+export const WORKSHOP_REASONING_EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
+export type WorkshopAgentModel = typeof WORKSHOP_AGENT_MODELS[number];
+export type WorkshopReasoningEffort = typeof WORKSHOP_REASONING_EFFORTS[number];
+export type WorkshopAgentConfig = {
+  model: WorkshopAgentModel;
+  reasoningEffort: WorkshopReasoningEffort;
+};
+export const WORKSHOP_DEFAULT_AGENT_CONFIG: WorkshopAgentConfig = {
+  model: "gpt-5.6-sol",
+  reasoningEffort: "xhigh",
+};
+export const WORKSHOP_MODEL = WORKSHOP_DEFAULT_AGENT_CONFIG.model;
+export const WORKSHOP_REASONING_EFFORT = WORKSHOP_DEFAULT_AGENT_CONFIG.reasoningEffort;
+export const WORKSHOP_MAIN_REFRESH_MS = 5 * 60_000;
+export const WORKSHOP_MAIN_SYNC_BRIEF = [
+  "Your isolated worktree starts from current origin/main.",
+  "Do not pull, fetch, merge, rebase, reset, push, or rewrite the branch yourself; the Workshop manager alone synchronizes and publishes it.",
+  "Commit one coherent result and leave the worktree clean. The manager regularly fetches main, rebases only non-overlapping work inside its serialized release gate, reruns checks, and restarts stale overlapping work from a fresh worktree.",
+  "Never discard or overwrite another agent's work.",
+].join(" ");
 export const WORKSHOP_UI_QUALITY_BRIEF = [
   "For every user-facing feature, treat visual and interaction design as part of the implementation, not optional polish.",
   "Integrate new functionality into the existing information hierarchy instead of appending another panel, card, button row, or duplicate control by default.",
@@ -8,6 +27,38 @@ export const WORKSHOP_UI_QUALITY_BRIEF = [
   "For UI work, use Playwright at phone and desktop sizes, exercise the complete interaction, inspect screenshots yourself, and improve anything that looks cluttered, awkward, inconsistent, or merely bolted on.",
 ].join(" ");
 export const WORKSHOP_MAX_CONCURRENT_TICKETS = 3;
+
+export function resolveWorkshopAgentConfig(value: unknown): WorkshopAgentConfig {
+  const candidate = value && typeof value === "object" ? value as Record<string, unknown> : {};
+  const model = typeof candidate.model === "string" && (WORKSHOP_AGENT_MODELS as readonly string[]).includes(candidate.model)
+    ? candidate.model as WorkshopAgentModel
+    : WORKSHOP_DEFAULT_AGENT_CONFIG.model;
+  const reasoningEffort = typeof candidate.reasoningEffort === "string"
+    && (WORKSHOP_REASONING_EFFORTS as readonly string[]).includes(candidate.reasoningEffort)
+    ? candidate.reasoningEffort as WorkshopReasoningEffort
+    : WORKSHOP_DEFAULT_AGENT_CONFIG.reasoningEffort;
+  return { model, reasoningEffort };
+}
+
+export function overlappingChangedPaths(left: string[], right: string[]): string[] {
+  const rightPaths = new Set(right);
+  return [...new Set(left.filter((path) => rightPaths.has(path)))].sort();
+}
+
+function collaborationScope(path: string): string {
+  const normalized = path.replaceAll("\\", "/");
+  const feature = normalized.match(/^src\/features\/([^/]+)\//)?.[1];
+  if (feature) return `feature:${feature}`;
+  if (normalized.startsWith("src/workshop/")) return "feature:workshop";
+  if (normalized.startsWith("functions/src/workshop")) return "feature:workshop-backend";
+  if (normalized.startsWith("scripts/workshop-manager")) return "feature:workshop-manager";
+  return `file:${normalized}`;
+}
+
+export function overlappingChangeScopes(left: string[], right: string[]): string[] {
+  const rightScopes = new Set(right.map(collaborationScope));
+  return [...new Set(left.map(collaborationScope).filter((scope) => rightScopes.has(scope)))].sort();
+}
 
 export function deploymentContainsCommit(
   requestedCommit: string,
@@ -40,11 +91,16 @@ export type RecoveryResult = {
   technicalSummary?: string;
 };
 
-export function workshopCodexArgs(schemaPath: string, resultPath: string, prompt: string): string[] {
+export function workshopCodexArgs(
+  schemaPath: string,
+  resultPath: string,
+  prompt: string,
+  config: WorkshopAgentConfig = WORKSHOP_DEFAULT_AGENT_CONFIG,
+): string[] {
   return [
     "codex", "exec",
-    "--model", WORKSHOP_MODEL,
-    "--config", `model_reasoning_effort="${WORKSHOP_REASONING_EFFORT}"`,
+    "--model", config.model,
+    "--config", `model_reasoning_effort="${config.reasoningEffort}"`,
     "--sandbox", "danger-full-access",
     "--config", "approval_policy=never",
     "--json",
@@ -163,7 +219,6 @@ const RISK_PATTERNS = [
 const REVIEW_REQUEST = /\b(?:ready for|needs?|please|can you|could you)\b.{0,80}\b(?:review|approve|merge)\b/i;
 
 export function ticketNeedsDecision(text: string): string | null {
-  if (text.length > 40_000) return "The request is unusually large and needs to be split into a clear first change.";
   if (RISK_PATTERNS.some((pattern) => pattern.test(text))) {
     return "This request touches a protected or high-impact area. A Workshop owner needs to approve the exact change.";
   }

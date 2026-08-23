@@ -47,6 +47,18 @@ button { color: inherit; }
 .agent-presence strong { font-size: 12px; }
 .agent-presence small { max-width: 180px; margin-top: 1px; color: #8a8276; font-size: 10px; }
 .account-button { width: 36px; height: 36px; border: 1px solid #cfc6b7; border-radius: 50%; background: transparent; cursor: pointer; }
+.agent-settings { position: relative; }
+.agent-settings > summary { width: 36px; height: 36px; display: grid; place-items: center; border: 1px solid #cfc6b7; border-radius: 50%; list-style: none; background: transparent; cursor: pointer; }
+.agent-settings > summary::-webkit-details-marker { display: none; }
+.agent-settings[open] > summary { background: #eee8db; }
+.agent-settings form { position: absolute; top: calc(100% + 10px); right: 0; z-index: 30; width: 270px; padding: 17px; border: 1px solid #cfc6b7; border-radius: 6px; background: #fffdf8; box-shadow: 0 12px 34px #32271d24; }
+.agent-settings form > strong, .agent-settings form > label, .agent-settings form > span { display: block; }
+.agent-settings form > strong { font: 400 19px "Libre Caslon Display", serif; }
+.agent-settings form > p { margin: 5px 0 14px; color: #81786c; font-size: 10px; line-height: 1.45; }
+.agent-settings form > label { margin: 10px 0 4px; color: #665f55; font-size: 10px; font-weight: 700; }
+.agent-settings select { width: 100%; height: 36px; padding: 0 9px; border: 1px solid #c9bfaf; border-radius: 4px; background: #fff; }
+.agent-settings .primary-button { width: 100%; margin-top: 14px; }
+.agent-settings .settings-saved { margin-top: 8px; color: #35613c; font-size: 11px; font-weight: 700; text-align: center; }
 
 .workshop-grid { width: min(1180px, 100%); margin: 0 auto; padding: clamp(36px, 6vw, 78px) clamp(20px, 5vw, 64px); display: grid; grid-template-columns: minmax(0, .95fr) minmax(360px, 1.05fr); gap: clamp(46px, 8vw, 110px); flex: 1; }
 .composer h1 { max-width: 520px; margin: 0; font: 400 clamp(38px, 5vw, 62px)/1.03 "Libre Caslon Display", serif; letter-spacing: -.025em; }
@@ -117,6 +129,11 @@ button { color: inherit; }
 .work-activity-detail .work-activity-slow { color: #8b4d21; font-weight: 700; }
 .work-activity.is-paused { color: #7a7064; }
 .work-activity.is-paused .work-activity-dots i { animation: none; opacity: .45; }
+.queue-activity { display: flex; flex-direction: column; gap: 2px; color: #665f55; }
+.queue-activity-list { margin-top: 9px; font-size: 11px; }
+.queue-activity-detail { flex: none; min-height: 42px; padding: 9px 34px; border-top: 1px solid #d8d1c3; background: #eee9df; }
+.queue-activity > strong { font-size: 12px; }
+.queue-activity > span { color: #81786c; font-size: 10px; line-height: 1.35; }
 .page-more-button { width: 100%; min-height: 42px; padding: 0 12px; border: 0; border-bottom: 1px solid #cfc6b7; color: #665f55; background: transparent; font-size: 12px; font-weight: 700; cursor: pointer; }
 .page-more-button:hover { background: #eee8db; }
 .page-more-button:disabled { color: #91897d; cursor: wait; }
@@ -176,6 +193,7 @@ button { color: inherit; }
   .collaborator-presence summary { padding: 0 4px; }
   .collaborator-presence summary strong { max-width: 72px; }
   .presence-menu { position: fixed; top: 62px; right: 12px; width: min(230px, calc(100vw - 24px)); }
+  .agent-settings form { position: fixed; top: 62px; right: 12px; width: min(270px, calc(100vw - 24px)); }
   .workshop-wordmark > span { width: 34px; height: 34px; }
   .header-actions { gap: 11px; }
   .workshop-grid { display: block; padding: 38px 18px 54px; }
@@ -184,7 +202,7 @@ button { color: inherit; }
   .ticket-history { margin-top: 62px; }
   .workshop-footer { align-items: flex-start; }
   .workshop-footer > span { max-width: 250px; }
-  .ticket-detail > header, .message-list, .reply-form, .work-activity-detail { padding-left: 20px; padding-right: 20px; }
+  .ticket-detail > header, .message-list, .reply-form, .work-activity-detail, .queue-activity-detail { padding-left: 20px; padding-right: 20px; }
   .ticket-detail > header { padding-top: 20px; padding-bottom: 16px; }
   .ticket-detail h2 { font-size: 26px; }
   .reply-form { padding-top: 12px; padding-bottom: max(14px, env(safe-area-inset-bottom)); }

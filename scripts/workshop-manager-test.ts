@@ -1,5 +1,7 @@
 import {
   WORKSHOP_MODEL,
+  WORKSHOP_MAIN_REFRESH_MS,
+  WORKSHOP_MAIN_SYNC_BRIEF,
   WORKSHOP_MAX_CONCURRENT_TICKETS,
   WORKSHOP_REASONING_EFFORT,
   WORKSHOP_UI_QUALITY_BRIEF,
@@ -11,7 +13,10 @@ import {
   isAttachmentAccessProblem,
   isTemporaryServiceWait,
   isLikelyServiceProblem,
+  overlappingChangeScopes,
+  overlappingChangedPaths,
   retryDelayMs,
+  resolveWorkshopAgentConfig,
   requiresDecisionReply,
   ticketNeedsDecision,
   workshopChannelContext,
@@ -23,6 +28,7 @@ function assert(condition: unknown, message: string): asserts condition {
 }
 
 assert(ticketNeedsDecision("Make the mobile buttons cleaner") === null, "ordinary UI work must proceed");
+assert(ticketNeedsDecision("detail ".repeat(8_000)) === null, "long-lived conversations must not become permanently blocked by total size");
 assert(ticketNeedsDecision("Delete every user in production") !== null, "destructive production work must stop");
 assert(ticketNeedsDecision("Please change the authentication permissions") !== null, "access changes must stop");
 assert(requiresDecisionReply("Protected change", false), "protected work must wait without an owner reply");
@@ -55,18 +61,29 @@ assert(channelContext.includes("equally authorized Workshop owners"), "worker mu
 assert(channelContext.includes("answer it directly with the answered outcome"), "worker must answer ordinary questions directly");
 assert(channelContext.includes("not automatically approval or an answer"), "worker must evaluate what an owner actually replied");
 assert(channelContext.includes("GitHub Actions being unavailable are not Workshop decisions"), "worker must own temporary service recovery");
-assert(WORKSHOP_MODEL === "gpt-5.6-terra", "Workshop must use Terra explicitly");
-assert(WORKSHOP_REASONING_EFFORT === "medium", "Workshop must use medium reasoning explicitly");
+assert(WORKSHOP_MODEL === "gpt-5.6-sol", "Workshop must default to Sol explicitly");
+assert(WORKSHOP_REASONING_EFFORT === "xhigh", "Workshop must default to xhigh reasoning explicitly");
+assert(WORKSHOP_MAIN_REFRESH_MS === 5 * 60_000, "Workshop must refresh origin/main every five minutes");
+assert(WORKSHOP_MAIN_SYNC_BRIEF.includes("Do not pull, fetch, merge, rebase"), "ticket agents must leave synchronization to the manager");
+assert(WORKSHOP_MAIN_SYNC_BRIEF.includes("serialized release gate"), "the manager must own final main synchronization");
 assert(WORKSHOP_UI_QUALITY_BRIEF.includes("not optional polish"), "every worker prompt must treat UI quality as part of implementation");
 assert(WORKSHOP_UI_QUALITY_BRIEF.includes("instead of appending another panel"), "workers must integrate features instead of bolting on UI");
 assert(WORKSHOP_UI_QUALITY_BRIEF.includes("inspect screenshots yourself"), "workers must visually review their own UI work");
 assert(WORKSHOP_MAX_CONCURRENT_TICKETS === 3, "Workshop must run at most three ticket agents");
+assert(resolveWorkshopAgentConfig(null).model === "gpt-5.6-sol", "missing config must fall back to Sol");
+assert(resolveWorkshopAgentConfig({ model: "gpt-5.6-terra", reasoningEffort: "high" }).reasoningEffort === "high", "allowed config must be preserved");
+assert(resolveWorkshopAgentConfig({ model: "untrusted", reasoningEffort: "ultra" }).reasoningEffort === "xhigh", "unsupported config must fail closed to the default");
+assert(overlappingChangedPaths(["src/a.ts", "src/b.ts"], ["src/b.ts", "src/c.ts"]).join() === "src/b.ts", "same-file main changes must be detected");
+assert(overlappingChangeScopes(["src/features/play/components/Page.tsx"], ["src/features/play/components/Toolbar.tsx"]).join() === "feature:play", "same-feature main changes must be treated as overlapping work");
 assert(deploymentContainsCommit("old", "old", () => false), "the exact deployed commit must satisfy the release");
 assert(deploymentContainsCommit("old", "new", (ancestor, descendant) => ancestor === "old" && descendant === "new"), "a successful newer deployment containing the commit must satisfy a cancelled release");
 assert(!deploymentContainsCommit("old", "unrelated", () => false), "an unrelated deployment must not hide a failed release");
 const codexArgs = workshopCodexArgs("schema.json", "result.json", "prompt");
-assert(codexArgs.includes("gpt-5.6-terra"), "coding command must pin Terra");
-assert(codexArgs.includes('model_reasoning_effort="medium"'), "coding command must pin medium reasoning");
+assert(codexArgs.includes("gpt-5.6-sol"), "coding command must pin Sol by default");
+assert(codexArgs.includes('model_reasoning_effort="xhigh"'), "coding command must pin xhigh reasoning by default");
+const configuredCodexArgs = workshopCodexArgs("schema.json", "result.json", "prompt", { model: "gpt-5.6-terra", reasoningEffort: "low" });
+assert(configuredCodexArgs.includes("gpt-5.6-terra"), "coding command must honor Simon's selected model");
+assert(configuredCodexArgs.includes('model_reasoning_effort="low"'), "coding command must honor Simon's selected reasoning effort");
 assert(codexArgs.includes("--json"), "coding command must stream structured progress events");
 
 const editingProgress = progressFromCodexEvent({
