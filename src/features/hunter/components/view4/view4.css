@@ -305,7 +305,7 @@
 .v4-upgrade-automatic i { color: var(--app-muted); font-style: normal; }
 .v4-upgrade-automatic strong { color: var(--app-positive); font-size: 17px; }
 .v4-upgrade-automatic em { min-width: 34px; padding: 3px 6px; border-radius: 99px; background: color-mix(in srgb, var(--app-positive), transparent 87%); color: var(--app-positive); font-size: 10px; font-style: normal; text-align: center; }
-.v4-upgrade-select, .v4-upgrade-record { display: grid; gap: 7px; padding: 14px 2px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 32%); }
+.v4-upgrade-select, .v4-upgrade-record { display: grid; gap: 7px; padding: 14px 2px; }
 .v4-upgrade-select > span, .v4-upgrade-record b { color: var(--app-text); font-weight: 700; }
 .v4-upgrade-select > small, .v4-upgrade-record small { color: var(--app-faint); font: 12px/1.35 "Alegreya", serif; }
 .v4-upgrade-record { grid-template-columns: minmax(0, 1fr) minmax(160px, .7fr); align-items: center; gap: 10px; }
