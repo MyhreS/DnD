@@ -1,10 +1,15 @@
 import {
+  WORKSHOP_AGENT_HARD_TIMEOUT_MS,
+  WORKSHOP_AGENT_RESULT_GRACE_MS,
+  WORKSHOP_AGENT_STALE_PROGRESS_MS,
+  WORKSHOP_CODEX_STDIN,
   WORKSHOP_MODEL,
   WORKSHOP_MAIN_REFRESH_MS,
   WORKSHOP_MAIN_SYNC_BRIEF,
   WORKSHOP_MAX_CONCURRENT_TICKETS,
   WORKSHOP_REASONING_EFFORT,
   WORKSHOP_UI_QUALITY_BRIEF,
+  agentRunWatchdogDecision,
   deploymentContainsCommit,
   outcomeMessage,
   parseAgentResult,
@@ -70,6 +75,13 @@ assert(WORKSHOP_UI_QUALITY_BRIEF.includes("not optional polish"), "every worker 
 assert(WORKSHOP_UI_QUALITY_BRIEF.includes("instead of appending another panel"), "workers must integrate features instead of bolting on UI");
 assert(WORKSHOP_UI_QUALITY_BRIEF.includes("inspect screenshots yourself"), "workers must visually review their own UI work");
 assert(WORKSHOP_MAX_CONCURRENT_TICKETS === 3, "Workshop must run at most three ticket agents");
+assert(WORKSHOP_CODEX_STDIN === "ignore", "Workshop Codex runs must not wait for inherited stdin");
+assert(agentRunWatchdogDecision({ elapsedMs: 30_000, stalledMs: 30_000 }) === "wait", "Healthy agents must keep running");
+assert(agentRunWatchdogDecision({ elapsedMs: 30_000, stalledMs: 30_000, resultReadyForMs: WORKSHOP_AGENT_RESULT_GRACE_MS - 1 }) === "wait", "A new result gets a short exit grace period");
+assert(agentRunWatchdogDecision({ elapsedMs: WORKSHOP_AGENT_HARD_TIMEOUT_MS, stalledMs: WORKSHOP_AGENT_STALE_PROGRESS_MS, resultReadyForMs: 1 }) === "wait", "A valid result must not be discarded while its exit grace period runs");
+assert(agentRunWatchdogDecision({ elapsedMs: 30_000, stalledMs: 30_000, resultReadyForMs: WORKSHOP_AGENT_RESULT_GRACE_MS }) === "salvage", "A completed result must be salvaged when Codex stays open");
+assert(agentRunWatchdogDecision({ elapsedMs: WORKSHOP_AGENT_STALE_PROGRESS_MS, stalledMs: WORKSHOP_AGENT_STALE_PROGRESS_MS }) === "timeout", "An agent without useful progress must time out");
+assert(agentRunWatchdogDecision({ elapsedMs: WORKSHOP_AGENT_HARD_TIMEOUT_MS, stalledMs: 0 }) === "timeout", "Even noisy agents must have a hard runtime cap");
 assert(resolveWorkshopAgentConfig(null).model === "gpt-5.6-sol", "missing config must fall back to Sol");
 assert(resolveWorkshopAgentConfig({ model: "gpt-5.6-terra", reasoningEffort: "high" }).reasoningEffort === "high", "allowed config must be preserved");
 assert(resolveWorkshopAgentConfig({ model: "untrusted", reasoningEffort: "ultra" }).reasoningEffort === "xhigh", "unsupported config must fail closed to the default");

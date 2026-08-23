@@ -27,6 +27,26 @@ export const WORKSHOP_UI_QUALITY_BRIEF = [
   "For UI work, use Playwright at phone and desktop sizes, exercise the complete interaction, inspect screenshots yourself, and improve anything that looks cluttered, awkward, inconsistent, or merely bolted on.",
 ].join(" ");
 export const WORKSHOP_MAX_CONCURRENT_TICKETS = 3;
+export const WORKSHOP_AGENT_RESULT_GRACE_MS = 5_000;
+export const WORKSHOP_AGENT_STALE_PROGRESS_MS = 20 * 60_000;
+export const WORKSHOP_AGENT_HARD_TIMEOUT_MS = 60 * 60_000;
+export const WORKSHOP_CODEX_STDIN = "ignore" as const;
+
+export type AgentRunWatchdogDecision = "wait" | "salvage" | "timeout";
+
+export function agentRunWatchdogDecision({
+  elapsedMs,
+  stalledMs,
+  resultReadyForMs,
+}: {
+  elapsedMs: number;
+  stalledMs: number;
+  resultReadyForMs?: number;
+}): AgentRunWatchdogDecision {
+  if (resultReadyForMs !== undefined) return resultReadyForMs >= WORKSHOP_AGENT_RESULT_GRACE_MS ? "salvage" : "wait";
+  if (elapsedMs >= WORKSHOP_AGENT_HARD_TIMEOUT_MS || stalledMs >= WORKSHOP_AGENT_STALE_PROGRESS_MS) return "timeout";
+  return "wait";
+}
 
 export function resolveWorkshopAgentConfig(value: unknown): WorkshopAgentConfig {
   const candidate = value && typeof value === "object" ? value as Record<string, unknown> : {};
