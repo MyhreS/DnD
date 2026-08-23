@@ -283,6 +283,13 @@
 .v4-upgrade-launch.pending { border-color: color-mix(in srgb, var(--app-warm), transparent 18%) !important; background: color-mix(in srgb, var(--app-surface), var(--app-warm) 12%) !important; color: var(--app-text) !important; animation: v4-upgrade-glow 1.8s ease-in-out infinite; }
 .v4-upgrade-launch small { color: var(--app-faint); font: 12px/1.3 "Alegreya", serif; }
 
+@media (min-width: 701px) {
+  .v4-progress-page { grid-template-columns: minmax(260px, 420px) minmax(240px, 1fr); align-items: start; column-gap: clamp(24px, 5vw, 64px); }
+  .v4-level-summary { grid-column: 1 / -1; }
+  .v4-progress-page > .v4-resource { width: 100%; }
+  .v4-progress-page > .v4-upgrade-launch { align-self: center; justify-self: start; }
+}
+
 .v4-page-stack[data-panel="upgrade"] .v4-page-heading h2 { font-size: 17px; }
 .v4-page-stack[data-panel="notes"] > .v4-page-layer:first-child .v4-page-content,
 .v4-page-stack[data-panel="upgrade"] > .v4-page-layer:first-child .v4-page-content { overflow: hidden; padding-bottom: 0; }

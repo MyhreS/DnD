@@ -173,6 +173,41 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.waitForTimeout(250);
   await page.screenshot({ path: `screenshots/creation-complete-${suffix}.png`, fullPage: true });
 
+  await sheet.locator(".v4-identity-progress button").filter({ hasText: "Insight" }).click();
+  await page.getByRole("heading", { name: "Insight & level", exact: true }).waitFor();
+  for (let award = 0; award < 6; award += 1) {
+    await page.getByRole("button", { name: "Increase Insight", exact: true }).click();
+  }
+  const progressPage = page.locator(".v4-progress-page");
+  const progressLayout = await progressPage.evaluate((element) => {
+    const resource = element.querySelector(".v4-resource")?.getBoundingClientRect();
+    const upgrade = element.querySelector(".v4-upgrade-launch")?.getBoundingClientRect();
+    if (!resource || !upgrade) throw new Error("Insight controls or upgrade action are missing");
+    return {
+      resource: { left: resource.left, right: resource.right, top: resource.top, bottom: resource.bottom, width: resource.width },
+      upgrade: { left: upgrade.left, right: upgrade.right, top: upgrade.top, bottom: upgrade.bottom, width: upgrade.width },
+    };
+  });
+  if (suffix === "desktop") {
+    const resourceCenter = (progressLayout.resource.top + progressLayout.resource.bottom) / 2;
+    const upgradeCenter = (progressLayout.upgrade.top + progressLayout.upgrade.bottom) / 2;
+    const horizontalGap = progressLayout.upgrade.left - progressLayout.resource.right;
+    if (Math.abs(resourceCenter - upgradeCenter) > 3 || horizontalGap < 20 || horizontalGap > 80) {
+      throw new Error(`Desktop upgrade action is not aligned beside the Insight control: ${JSON.stringify(progressLayout)}`);
+    }
+  } else if (
+    progressLayout.upgrade.top < progressLayout.resource.bottom
+    || Math.abs(progressLayout.upgrade.left - progressLayout.resource.left) > 2
+    || Math.abs(progressLayout.upgrade.width - progressLayout.resource.width) > 2
+  ) {
+    throw new Error(`Mobile upgrade action layout changed: ${JSON.stringify(progressLayout)}`);
+  }
+  await page.screenshot({ path: `screenshots/insight-upgrade-${suffix}.png`, fullPage: true, animations: "disabled" });
+  await progressPage.locator(".v4-upgrade-launch").click();
+  await page.locator('.v4-page-stack[data-panel="upgrade"]').waitFor();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await progressPage.waitFor();
+
   if (errors.length) throw new Error(`Browser errors (${suffix}): ${errors.join(" | ")}`);
   await context.close();
 }
