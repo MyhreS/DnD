@@ -30,7 +30,7 @@ export function MainMenu() {
       <p className="eyebrow" style={{ marginTop: 22, marginBottom: 8 }}>Find your way</p>
       <div className="stack" style={{ gap: 10 }}>
         <GuideCard to="/character" title="Hunters" body="Forge and manage hunters in two focused app views — a detailed sheet and a one-page play HUD." />
-        <GuideCard to="/game" title="Game" body="See your active session, open your Hunter, follow the shared battle screen, and claim items found at the table." />
+        <GuideCard to="/game" title="Games" body="Open a current game or revisit one you played before." />
         <GuideCard to="/codex" title="Codex" body="Search the handbook, D&D rules, class boards, rites, character guidance, and the Player's Game Card in one place—with the source shown for every answer." />
         <GuideCard to="/profile" title="Profile" body="Your account and settings — tap your initial in the corner." />
       </div>

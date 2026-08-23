@@ -11,7 +11,7 @@ export function MainLayout() {
       nav={
         <>
           <NavLink to="/character">Hunters</NavLink>
-          <NavLink to="/game">Game</NavLink>
+          <NavLink to="/game">Games</NavLink>
           <NavLink to="/codex">Codex</NavLink>
         </>
       }

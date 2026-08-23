@@ -26,6 +26,7 @@ import { useCombatStore } from "@/features/play/store/combatStore";
 import type { EnemyStats, EnemyTemplate, Game, GameParticipant, HunterCard } from "@/types";
 import { EnemyEditorDialog } from "./EnemyEditorDialog";
 import { EnemyLibraryDialog } from "./EnemyLibraryDialog";
+import { GamesMenu } from "./GamesMenu";
 import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed, SessionSwitchRequests } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
 import { SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
@@ -71,7 +72,7 @@ export function GamePage() {
   const [activeSeats, setActiveSeats] = useState<Map<string, ActiveGameSeat>>(new Map());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dismissedBattleKey, setDismissedBattleKey] = useState<string | null>(null);
-  const [historyOpen, setHistoryOpen] = useState(false);
+  const [showingPrevious, setShowingPrevious] = useState(false);
   const [participants, setParticipants] = useState<GameParticipant[]>([]);
   const [previewRosters, setPreviewRosters] = useState<Record<string, GameParticipant[]>>({
     "preview-game": previewParticipants(),
@@ -113,7 +114,7 @@ export function GamePage() {
           endedAt: Date.now() - 86_400_000,
         }] : [];
         setGames(game ? [game, ...history, ...(request ? [request] : [])] : []);
-        setSelectedId(game?.id ?? null);
+        setSelectedId(null);
         setLoading(false);
       }, 0);
       return () => window.clearTimeout(timer);
@@ -123,9 +124,7 @@ export function GamePage() {
       (next) => {
         setGames(next);
         const joined = next.filter((game) => game.dmUid === user.uid || game.participantUids.includes(user.uid));
-        setSelectedId((current) => current && joined.some((game) => game.id === current)
-          ? current
-          : joined.find((game) => game.status !== "ended")?.id ?? joined[0]?.id ?? null);
+        setSelectedId((current) => current && joined.some((game) => game.id === current) ? current : null);
         setLoading(false);
         setError(null);
       },
@@ -147,7 +146,8 @@ export function GamePage() {
   const selected = games.find((game) => game.id === selectedId) ?? null;
   const pendingInvitations = games.filter((game) => Boolean(user && game.invitedUids.includes(user.uid)));
   const joinedGames = games.filter((game) => Boolean(user && (game.dmUid === user.uid || game.participantUids.includes(user.uid))));
-  const activeGame = joinedGames.find((game) => game.status !== "ended") ?? null;
+  const currentGames = joinedGames.filter((game) => game.status !== "ended");
+  const activeGame = currentGames[0] ?? null;
   const history = joinedGames.filter((game) => game.status === "ended");
   const effectiveSeats = useMemo(() => {
     if (!preview) return activeSeats;
@@ -434,7 +434,7 @@ export function GamePage() {
         return next;
       });
       setGames((current) => current.filter((game) => game.id !== selected.id));
-      setSelectedId(history[0]?.id ?? null);
+      setSelectedId(null);
       return;
     }
     await perform(() => discardGameSession(selected.id), "Could not discard the session.");
@@ -544,18 +544,6 @@ export function GamePage() {
 
   return (
     <div className="game-page">
-      {!focusedPlayerSession && <header className="game-heading">
-        <div>
-          <p className="eyebrow">Shared table</p>
-          <h1 className="page-title">Game</h1>
-        </div>
-        {!creating && !activeGame && games.length > 0 && (
-          <button className="btn btn-primary game-create-button" type="button" onClick={() => setCreating(true)}>
-            Create session
-          </button>
-        )}
-      </header>}
-
       {(error || charactersError || combatError || enemyLibrary.error) && <div className="banner-error" role="alert">{error || charactersError || combatError || enemyLibrary.error}</div>}
       {notice && <div className="game-notice" role="status">{notice}</div>}
 
@@ -577,50 +565,45 @@ export function GamePage() {
         />
       )}
 
-      {!creating && loading && <p className="muted">Loading sessions…</p>}
-
-      {!creating && !loading && games.length === 0 && (
-        <div className="game-empty">
-          <h2>No sessions yet</h2>
-          <p>Create a session to run the game, or wait for another player to add one of your Hunters.</p>
-          <button className="btn btn-primary" type="button" onClick={() => setCreating(true)}>Create session</button>
-        </div>
+      {!creating && !selected && (
+        <GamesMenu
+          currentGames={currentGames}
+          previousGames={history}
+          showingPrevious={showingPrevious}
+          loading={loading}
+          onTogglePrevious={() => {
+            setError(null);
+            setShowingPrevious((current) => !current);
+          }}
+          onOpen={(id) => {
+            setError(null);
+            setSelectedId(id);
+          }}
+          onCreate={() => {
+            if (activeGame) {
+              setError("End your current game before creating another one.");
+              return;
+            }
+            setError(null);
+            setCreating(true);
+          }}
+        />
       )}
 
-      {!creating && games.length > 0 && (
+      {!creating && selected && (
         <div className={focusedPlayerSession ? "game-layout is-player-focus" : "game-layout"}>
-          {selected && (
-            <main className="game-table" aria-label={`${selected.title} session`}>
+          <main className="game-table" aria-label={`${selected.title} session`}>
+              <button className="game-back-button" type="button" onClick={() => setSelectedId(null)}>← Games</button>
               <div className="game-session-heading game-session-heading-compact">
                 <div>
                   <p className="eyebrow">{selected.status === "active" ? "Live session" : selected.status === "ended" ? "Session history" : "Waiting room"}</p>
                   <h2>{selected.title}</h2>
                 </div>
                 <div className="game-session-top-actions">
-                  {history.length > 0 && <button
-                    className="game-history-button"
-                    type="button"
-                    aria-label={historyOpen ? "Close session history" : "View session history"}
-                    aria-expanded={historyOpen}
-                    aria-controls="game-session-history"
-                    title={historyOpen ? "Close session history" : "View session history"}
-                    onClick={() => setHistoryOpen((open) => !open)}
-                  >
-                    <HistoryIcon />
-                  </button>}
-                  {selected.combat?.active && <button className="game-text-button" type="button" onClick={() => setDismissedBattleKey(null)}>Return to battle</button>}
+                  {selected.status === "active" && selected.combat?.active && <button className="game-text-button" type="button" onClick={() => setDismissedBattleKey(null)}>Return to battle</button>}
                   {isSessionDm && selected.campaignId === null && selected.status !== "ended" && <button className="game-text-button" type="button" onClick={() => setManagingPlayers(true)}>Manage players</button>}
                 </div>
               </div>
-
-              {historyOpen && <SessionHistory
-                games={history}
-                selectedId={selectedId}
-                onSelect={(id) => {
-                  setSelectedId(id);
-                  setHistoryOpen(false);
-                }}
-              />}
 
               {isSessionDm && selected.status !== "ended" && (
                 <div className="game-primary-actions" aria-label="Session controls">
@@ -663,37 +646,13 @@ export function GamePage() {
                 />
               )}
               <SessionNotes gameId={selected.id} userId={user?.uid} userName={member?.firstName || user?.displayName || "Someone"} writable={selected.status !== "ended"} />
-            </main>
-          )}
+          </main>
         </div>
       )}
       {selected && managingPlayers && <ManagePlayersDialog game={selected} characters={otherCharacters.concat((characters ?? []).filter((card) => displayedParticipants.some((participant) => participant.characterId === card.id)))} participants={displayedParticipants} invitations={selected.inviteRoster} unavailableOwnerUids={unavailableForSelected} switchableOwnerUids={switchableForSelected} busy={busy} onAdd={addHunter} onRemove={removeHunter} onClose={() => setManagingPlayers(false)} />}
       {selected && creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
       {enemyDialogs}
       {ownSheetOpen && ownCard && <PaperSheetModal card={ownCard} onClose={() => setOwnSheetOpen(false)} />}
-    </div>
-  );
-}
-
-function HistoryIcon() {
-  return <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 12a8.5 8.5 0 1 0 2.5-6.04L3.5 8.5" /><path d="M3.5 4.5v4h4M12 7v5l3.5 2" /></svg>;
-}
-
-function SessionLink({ game, selected, onSelect }: { game: Game; selected: boolean; onSelect: () => void }) {
-  return (
-    <button type="button" className={`game-session${selected ? " is-current" : ""}${game.status === "active" ? " is-live" : ""}`} onClick={onSelect}>
-      <strong>{game.title}</strong>
-      <span>{game.status === "lobby" ? "Waiting" : game.status === "active" ? "Live" : historyDate(game)}</span>
-    </button>
-  );
-}
-
-function SessionHistory({ games, selectedId, onSelect }: { games: Game[]; selectedId: string | null; onSelect: (id: string) => void }) {
-  return (
-    <div className="game-history-list" id="game-session-history" aria-label="Session history">
-      {games.map((game) => (
-        <SessionLink key={game.id} game={game} selected={game.id === selectedId} onSelect={() => onSelect(game.id)} />
-      ))}
     </div>
   );
 }
@@ -738,7 +697,7 @@ function CreateSession({
       <div className="game-creator-heading">
         <div>
           <p className="eyebrow">New game</p>
-          <h2>Create session</h2>
+          <h2>Create game</h2>
         </div>
         <button className="game-text-button" type="button" onClick={onCancel}>Cancel</button>
       </div>
@@ -774,7 +733,7 @@ function CreateSession({
           ))}
         </div>
       )}
-      <button className="btn btn-primary" type="submit" disabled={busy || !title.trim()}>{busy ? "Creating…" : "Create session"}</button>
+      <button className="btn btn-primary" type="submit" disabled={busy || !title.trim()}>{busy ? "Creating…" : "Create game"}</button>
     </form>
   );
 }

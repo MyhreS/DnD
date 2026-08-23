@@ -1,18 +1,35 @@
 import { spawn, spawnSync } from "node:child_process";
+import { existsSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
+import { fileURLToPath } from "node:url";
 import { chromium, devices } from "playwright";
 
 const PORT = 5199;
 const BASE = `http://127.0.0.1:${PORT}`;
 const FIREBASE_ACCOUNT = process.env.FIREBASE_ACCOUNT ?? "simonmyhre1@gmail.com";
-const appsResult = spawnSync("firebase", ["apps:list", "--json", "--account", FIREBASE_ACCOUNT], { encoding: "utf8" });
-if (appsResult.status !== 0) throw new Error(`Could not read Firebase app config: ${appsResult.stderr}`);
+const firebaseExecutable = (() => {
+  if (process.platform !== "win32") return { command: "firebase", args: [] };
+  const located = spawnSync("where.exe", ["firebase.cmd"], { encoding: "utf8" });
+  const shim = located.stdout?.split(/\r?\n/).find(Boolean);
+  if (!shim) return { command: "firebase.cmd", args: [] };
+  const installDir = dirname(shim);
+  const runtime = join(installDir, "node.exe");
+  return {
+    command: existsSync(runtime) ? runtime : process.execPath,
+    args: [join(installDir, "node_modules", "firebase-tools", "lib", "bin", "firebase.js")],
+  };
+})();
+const runFirebase = (args) => spawnSync(firebaseExecutable.command, [...firebaseExecutable.args, ...args], { encoding: "utf8" });
+const appsResult = runFirebase(["apps:list", "--json", "--account", FIREBASE_ACCOUNT]);
+if (appsResult.status !== 0) throw new Error(`Could not read Firebase app config: ${appsResult.stderr || appsResult.error}`);
 const webApp = JSON.parse(appsResult.stdout).result.find((app) => app.platform === "WEB");
 if (!webApp) throw new Error("No Firebase web app found");
-const configResult = spawnSync("firebase", ["apps:sdkconfig", "WEB", webApp.appId, "--json", "--account", FIREBASE_ACCOUNT], { encoding: "utf8" });
-if (configResult.status !== 0) throw new Error(`Could not read Firebase SDK config: ${configResult.stderr}`);
+const configResult = runFirebase(["apps:sdkconfig", "WEB", webApp.appId, "--json", "--account", FIREBASE_ACCOUNT]);
+if (configResult.status !== 0) throw new Error(`Could not read Firebase SDK config: ${configResult.stderr || configResult.error}`);
 const firebase = JSON.parse(configResult.stdout).result.sdkConfig;
-const server = spawn("bunx", ["vite", "--host", "127.0.0.1", "--port", String(PORT)], {
+const viteCli = fileURLToPath(new URL("../node_modules/vite/bin/vite.js", import.meta.url));
+const server = spawn(process.execPath, [viteCli, "--host", "127.0.0.1", "--port", String(PORT)], {
   stdio: ["ignore", "pipe", "pipe"],
   env: {
     ...process.env,
@@ -72,11 +89,11 @@ try {
   await desktopRequest.getByRole("button", { name: "Decline", exact: true }).click();
   await desktopRequest.waitFor({ state: "detached" });
   await owner.goto(`${BASE}/game?preview=user.player&game=empty`, { waitUntil: "domcontentloaded" });
-  await owner.getByRole("heading", { name: "Game", exact: true }).waitFor();
+  await owner.getByRole("heading", { name: "Games", exact: true }).waitFor();
   const primaryLinks = await owner.getByRole("navigation", { name: "Primary" }).getByRole("link").allTextContents();
   const huntersIndex = primaryLinks.indexOf("Hunters");
-  if (huntersIndex < 0 || primaryLinks[huntersIndex + 1] !== "Game") {
-    throw new Error(`Game is not directly after Hunters in navigation: ${JSON.stringify(primaryLinks)}`);
+  if (huntersIndex < 0 || primaryLinks[huntersIndex + 1] !== "Games") {
+    throw new Error(`Games is not directly after Hunters in navigation: ${JSON.stringify(primaryLinks)}`);
   }
   if (primaryLinks.includes("Menu")) throw new Error(`Landing page remains in navigation: ${JSON.stringify(primaryLinks)}`);
   if (primaryLinks.includes("DM")) throw new Error(`Legacy DM page remains in navigation: ${JSON.stringify(primaryLinks)}`);
@@ -85,9 +102,16 @@ try {
   await owner.getByRole("heading", { name: /Welcome/ }).waitFor();
   await owner.screenshot({ path: "screenshots/main-menu-desktop.png", fullPage: true });
   await owner.goto(`${BASE}/game?preview=user.player&game=empty`, { waitUntil: "domcontentloaded" });
-  await owner.getByRole("heading", { name: "Game", exact: true }).waitFor();
+  await owner.getByRole("heading", { name: "Games", exact: true }).waitFor();
+  await owner.getByText("No current games.", { exact: true }).waitFor();
+  const createGameAction = owner.getByRole("button", { name: "Create game", exact: true });
+  if (await createGameAction.evaluate((element) => element.classList.contains("btn") || element.classList.contains("btn-primary"))) {
+    throw new Error("Create game should be a quiet text action, not a primary button");
+  }
+  await assertNoHorizontalOverflow(owner, "Desktop Games menu");
+  await owner.screenshot({ path: "screenshots/games-menu-empty-desktop.png", fullPage: true });
 
-  await owner.getByRole("button", { name: "Create session", exact: true }).click();
+  await createGameAction.click();
   await owner.getByLabel("Session name").fill("Night of the Pale Moon");
   const search = owner.getByLabel("Search for a player or Hunter");
   await search.fill("Eileen");
@@ -101,15 +125,23 @@ try {
   await gascoigne.waitFor();
   await gascoigne.getByText("Preview Hunter · Bloodbound · Level 3", { exact: true }).waitFor();
   await gascoigne.click();
-  await owner.getByRole("button", { name: "Create session", exact: true }).click();
+  await owner.getByRole("button", { name: "Create game", exact: true }).click();
   await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
-  await owner.getByRole("button", { name: "Sessions", exact: true }).click();
-  await owner.getByRole("navigation", { name: "Game sessions" }).getByRole("button", { name: /Night of the Pale Moon/ }).click();
-  await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
+  await owner.getByRole("button", { name: /Games$/ }).click();
+  const currentGames = owner.getByRole("navigation", { name: "Current games" });
+  const currentGameRow = currentGames.getByRole("button", { name: /Night of the Pale Moon/ });
+  await currentGameRow.waitFor();
+  const rowBorders = await currentGameRow.evaluate((element) => {
+    const style = getComputedStyle(element);
+    return [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth];
+  });
+  if (rowBorders.some((width) => width !== "0px")) throw new Error(`Games list row has a divider: ${rowBorders.join(" ")}`);
+  await owner.screenshot({ path: "screenshots/games-menu-current-desktop.png", fullPage: true });
+  await currentGameRow.click();
   if (await owner.getByText(/player ready|players ready|View party|Add players/).count()) {
     throw new Error("DM session body duplicates player management");
   }
-  if (await owner.getByRole("button", { name: "Create session", exact: true }).count()) {
+  if (await owner.getByRole("button", { name: "Create game", exact: true }).count()) {
     throw new Error("Session owner can create a second active session");
   }
 
@@ -184,7 +216,7 @@ try {
   await owner.screenshot({ path: "screenshots/enemy-library-mobile.png", fullPage: true });
   await owner.setViewportSize({ width: 1440, height: 1000 });
   await enemyLibrary.getByRole("button", { name: "Done", exact: true }).click();
-  await owner.getByRole("button", { name: "Start battle screen" }).click();
+  await owner.getByRole("button", { name: "Start battle", exact: true }).click();
   const battlePicker = owner.getByRole("dialog", { name: "Choose enemies" });
   await owner.screenshot({ path: "screenshots/start-battle-picker-desktop.png", fullPage: true });
   await owner.setViewportSize({ width: 390, height: 844 });
@@ -194,7 +226,7 @@ try {
   await battlePicker.getByRole("button", { name: "Start battle", exact: true }).click();
   await owner.getByTestId("session-battle-screen").waitFor();
   await owner.locator(".battle-name").getByText("Moon Beast", { exact: true }).waitFor();
-  await owner.getByRole("button", { name: "Session", exact: true }).click();
+  await owner.getByRole("button", { name: /Session$/ }).click();
   await owner.getByRole("button", { name: "Return to battle", exact: true }).waitFor();
   await owner.getByRole("button", { name: "Return to battle", exact: true }).click();
   await owner.getByTestId("session-battle-screen").waitFor();
@@ -205,25 +237,26 @@ try {
   owner.once("dialog", (dialog) => dialog.accept());
   await owner.getByRole("button", { name: "End session" }).click();
   await owner.getByText("Session history", { exact: true }).waitFor();
-  const historyToggle = owner.getByRole("button", { name: "View session history" });
-  if (await owner.getByText("Night of the Pale Moon", { exact: true }).count() !== 1) {
-    throw new Error("Saved sessions should be hidden until history is opened");
-  }
-  await historyToggle.click();
-  await owner.getByText("Night of the Pale Moon", { exact: true }).nth(1).waitFor();
-  await owner.getByRole("button", { name: "Close session history" }).click();
   await owner.getByText("1 player attended", { exact: true }).waitFor();
-  await owner.getByRole("button", { name: "Create session", exact: true }).waitFor();
-
-  await owner.getByRole("button", { name: "Create session", exact: true }).click();
+  await owner.getByRole("button", { name: /Games$/ }).click();
+  await owner.getByText("No current games.", { exact: true }).waitFor();
+  if (await owner.getByText("Night of the Pale Moon", { exact: true }).count()) {
+    throw new Error("Previous games should stay hidden in the current list");
+  }
+  await owner.getByRole("button", { name: "Show previous games", exact: true }).click();
+  await owner.getByRole("navigation", { name: "Previous games" }).getByRole("button", { name: /Night of the Pale Moon/ }).waitFor();
+  await owner.screenshot({ path: "screenshots/games-menu-previous-desktop.png", fullPage: true });
+  await owner.getByRole("button", { name: "Show current games", exact: true }).click();
+  await owner.getByRole("button", { name: "Create game", exact: true }).click();
   await owner.getByLabel("Session name").fill("Throwaway lobby");
-  await owner.getByRole("button", { name: "Create session", exact: true }).click();
+  await owner.getByRole("button", { name: "Create game", exact: true }).click();
   await owner.getByRole("heading", { name: "Throwaway lobby" }).waitFor();
   await owner.getByRole("button", { name: "Discard session" }).waitFor();
   owner.once("dialog", (dialog) => dialog.accept());
   await owner.getByRole("button", { name: "Discard session" }).click();
-  await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
-  await owner.getByText("1 player attended", { exact: true }).waitFor();
+  await owner.getByRole("heading", { name: "Games", exact: true }).waitFor();
+  await owner.getByRole("button", { name: "Show previous games", exact: true }).click();
+  await owner.getByText("Night of the Pale Moon", { exact: true }).waitFor();
   if (await owner.getByText("Throwaway lobby", { exact: true }).count()) {
     throw new Error("Discarded lobby was retained in session history");
   }
@@ -244,10 +277,11 @@ try {
   await player.getByRole("heading", { name: "The Ashen Cathedral", exact: true }).waitFor();
   await mobileRequest.waitFor({ state: "detached" });
   await player.goto(`${BASE}/game?preview=user.player`, { waitUntil: "domcontentloaded" });
-  await player.getByRole("heading", { name: "The Sunless Vault", exact: true }).waitFor();
-  if (await player.getByRole("button", { name: "Create session", exact: true }).count()) {
-    throw new Error("Invited player can create a second active session");
-  }
+  await player.getByRole("heading", { name: "Games", exact: true }).waitFor();
+  await player.getByRole("navigation", { name: "Current games" }).getByRole("button", { name: /The Sunless Vault/ }).waitFor();
+  await player.waitForTimeout(400);
+  await assertNoHorizontalOverflow(player, "Mobile current Games menu");
+  await player.screenshot({ path: "screenshots/games-menu-current-mobile.png", fullPage: true });
   const playerLinks = await player.getByRole("navigation", { name: "Primary" }).getByRole("link").allTextContents();
   if (playerLinks.includes("Menu")) throw new Error(`Landing page remains in mobile navigation: ${JSON.stringify(playerLinks)}`);
   if (playerLinks.includes("DM")) throw new Error(`Legacy DM page remains in player navigation: ${JSON.stringify(playerLinks)}`);
@@ -256,6 +290,8 @@ try {
   await player.getByRole("heading", { name: /Welcome/ }).waitFor();
   await player.screenshot({ path: "screenshots/main-menu-mobile.png", fullPage: true });
   await player.goto(`${BASE}/game?preview=user.player&game=history`, { waitUntil: "domcontentloaded" });
+  await player.getByRole("heading", { name: "Games", exact: true }).waitFor();
+  await player.getByRole("navigation", { name: "Current games" }).getByRole("button", { name: /The Sunless Vault/ }).click();
   await player.getByRole("heading", { name: "The Sunless Vault", exact: true }).waitFor();
   await player.getByText("Your Hunter", { exact: true }).waitFor();
   if (await player.getByText("The Old Cathedral", { exact: true }).count()) {
@@ -263,10 +299,16 @@ try {
   }
   if (await player.getByText("Cleric Beast", { exact: true }).count()) throw new Error("Normal player session page exposes the encounter roster");
   if (await player.getByText("Players", { exact: true }).count()) throw new Error("Normal player session page exposes the party roster");
-  await player.getByRole("button", { name: "View session history" }).click();
-  await player.getByText("The Old Cathedral", { exact: true }).waitFor();
+  await player.getByRole("button", { name: /Games$/ }).click();
+  await player.getByRole("button", { name: "Show previous games", exact: true }).click();
+  await player.getByRole("navigation", { name: "Previous games" }).getByRole("button", { name: /The Old Cathedral/ }).waitFor();
+  await assertNoHorizontalOverflow(player, "Mobile previous Games menu");
+  await player.screenshot({ path: "screenshots/games-menu-previous-mobile.png", fullPage: true });
   await player.getByText("The Old Cathedral", { exact: true }).click();
   await player.getByText("Session history", { exact: true }).waitFor();
+  if (await player.getByRole("button", { name: "Return to battle", exact: true }).count()) {
+    throw new Error("A previous game should not offer a return to its ended battle");
+  }
   await assertNoHorizontalOverflow(player, "Mobile Game page");
   await player.screenshot({ path: "screenshots/game-page-player-mobile.png", fullPage: true });
 
@@ -282,7 +324,7 @@ try {
   await ownerContext.close();
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Game page E2E passed: logo navigation, compact primary navigation, one active session, owner controls, saved history, lobby discard, player visibility, and responsive layout.");
+  console.log("Games page E2E passed: compact current/previous lists, quiet creation, game details, owner controls, saved history, lobby discard, player visibility, and responsive layout.");
 } finally {
   await browser.close();
   server.kill("SIGTERM");
