@@ -53,6 +53,10 @@ async function ready() {
 
 function watch(page, errors) {
   page.on("pageerror", (error) => errors.push(String(error)));
+  page.on("dialog", (dialog) => {
+    errors.push(`Unexpected browser dialog: ${dialog.message()}`);
+    void dialog.dismiss();
+  });
   page.on("console", (message) => {
     if (message.type() === "error" && !message.text().includes("Failed to load resource")) errors.push(message.text());
   });
@@ -251,12 +255,34 @@ try {
   await owner.getByRole("button", { name: "Return to battle", exact: true }).waitFor();
   await owner.getByRole("button", { name: "Return to battle", exact: true }).click();
   await owner.getByTestId("session-battle-screen").waitFor();
-  owner.once("dialog", (dialog) => dialog.accept());
   await owner.getByRole("button", { name: "End battle" }).click();
+  const endBattleDialog = owner.getByRole("alertdialog", { name: "End battle?" });
+  await endBattleDialog.getByText("Everyone will return to the session view. Initiative, conditions, enemies, and damage stay saved.", { exact: true }).waitFor();
+  if (!await endBattleDialog.getByRole("button", { name: "Keep battling" }).evaluate((element) => element === document.activeElement)) {
+    throw new Error("Battle confirmation did not focus its safe action");
+  }
+  await owner.locator(".confirm-dialog-backdrop").evaluate((element) => Promise.all(
+    element.getAnimations({ subtree: true }).map((animation) => animation.finished),
+  ));
+  await owner.screenshot({ path: "screenshots/end-battle-confirmation-desktop.png" });
+  await owner.setViewportSize({ width: 390, height: 844 });
+  await assertNoHorizontalOverflow(owner, "Mobile end-battle confirmation");
+  await owner.screenshot({ path: "screenshots/end-battle-confirmation-mobile.png" });
+  await owner.setViewportSize({ width: 1440, height: 1000 });
+  await endBattleDialog.getByRole("button", { name: "Keep battling" }).click();
+  await endBattleDialog.waitFor({ state: "detached" });
+  await owner.getByTestId("session-battle-screen").waitFor();
+  await owner.getByRole("button", { name: "End battle" }).click();
+  await owner.getByRole("alertdialog", { name: "End battle?" }).getByRole("button", { name: "End battle" }).click();
   await owner.getByTestId("session-battle-screen").waitFor({ state: "detached" });
 
-  owner.once("dialog", (dialog) => dialog.accept());
   await owner.getByRole("button", { name: "End session" }).click();
+  const endSessionDialog = owner.getByRole("alertdialog", { name: "End session?" });
+  await endSessionDialog.getByText("The party, enemies, and damage will be saved in session history.", { exact: true }).waitFor();
+  await owner.keyboard.press("Escape");
+  await endSessionDialog.waitFor({ state: "detached" });
+  await owner.getByRole("button", { name: "End session" }).click();
+  await owner.getByRole("alertdialog", { name: "End session?" }).getByRole("button", { name: "End session" }).click();
   await owner.getByText("Session history", { exact: true }).waitFor();
   await owner.getByText("1 player attended", { exact: true }).waitFor();
   await owner.getByRole("button", { name: /Games$/ }).click();
@@ -273,8 +299,10 @@ try {
   await owner.getByRole("button", { name: "Create game", exact: true }).click();
   await owner.getByRole("heading", { name: "Throwaway lobby" }).waitFor();
   await owner.getByRole("button", { name: "Discard session" }).waitFor();
-  owner.once("dialog", (dialog) => dialog.accept());
   await owner.getByRole("button", { name: "Discard session" }).click();
+  const discardSessionDialog = owner.getByRole("alertdialog", { name: "Discard session?" });
+  await discardSessionDialog.getByText("This unstarted session will be removed and will not appear in session history.", { exact: true }).waitFor();
+  await discardSessionDialog.getByRole("button", { name: "Discard session" }).click();
   await owner.getByRole("heading", { name: "Games", exact: true }).waitFor();
   await owner.getByRole("button", { name: "Show previous games", exact: true }).click();
   await owner.getByText("Night of the Pale Moon", { exact: true }).waitFor();

@@ -238,7 +238,8 @@
   .battle-live-status { max-width: 100%; text-align: left; }
   .battle-header-actions { width: 100%; }
   .battle-header-actions > * { flex: 1; text-align: center; }
-  .battle-row { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 6px 8px; padding: 10px 4px; }
+  .battle-row,
+  .battle-row.has-actions { grid-template-columns: 24px minmax(0, 1fr) auto; gap: 6px 8px; padding: 10px 4px; }
   .battle-initiative { grid-column: 2; }
   .battle-damage { grid-column: 3; grid-row: 2; }
   .battle-ac { grid-column: 3; grid-row: 1; text-align: right; }
