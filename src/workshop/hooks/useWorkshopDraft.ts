@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 const PREFIX = "dnd-workshop-draft:";
 const fileDrafts = new Map<string, File[]>();
@@ -28,11 +28,11 @@ export function useWorkshopDraft(key: string) {
 export function useWorkshopFileDraft(key: string) {
   const [files, setFilesState] = useState<File[]>(() => fileDrafts.get(key) ?? []);
 
-  function setFiles(next: File[]) {
+  const setFiles = useCallback((next: File[]) => {
     setFilesState(next);
     if (next.length) fileDrafts.set(key, next);
     else fileDrafts.delete(key);
-  }
+  }, [key]);
 
   return { files, setFiles };
 }
