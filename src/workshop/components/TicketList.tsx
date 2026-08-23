@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { TicketStatus } from "@/workshop/components/TicketStatus";
-import { WorkActivity } from "@/workshop/components/WorkActivity";
+import { TicketActivity } from "@/workshop/components/TicketActivity";
+import { useCurrentTime } from "@/workshop/hooks/useAgentOnline";
 import { STATUS_LABELS, type AgentState, type WorkshopTicket } from "@/workshop/types";
 
 function relativeTime(timestamp: WorkshopTicket["updatedAt"]): string {
@@ -14,7 +15,7 @@ function relativeTime(timestamp: WorkshopTicket["updatedAt"]): string {
 }
 
 function isUnread(ticket: WorkshopTicket, uid: string): boolean {
-  const updatedAt = ticket.updatedAt?.toMillis() ?? 0;
+  const updatedAt = ticket.lastMessageAt?.toMillis() ?? ticket.updatedAt?.toMillis() ?? 0;
   const readAt = ticket.readAtBy?.[uid]?.toMillis() ?? 0;
   return updatedAt > readAt;
 }
@@ -32,6 +33,7 @@ type TicketListProps = {
 };
 
 export function TicketList({ tickets, uid, hasMore, loadingMore, activeTicketIds, agentState, agentOnline, onLoadMore, onSelect }: TicketListProps) {
+  const now = useCurrentTime();
   const [search, setSearch] = useState("");
   const query = search.trim().toLocaleLowerCase();
   const filtered = query
@@ -66,14 +68,19 @@ export function TicketList({ tickets, uid, hasMore, loadingMore, activeTicketIds
                     <li key={ticket.id} className={unread ? "is-unread" : undefined}>
                       <button type="button" onClick={() => onSelect(ticket.id)} data-testid={`ticket-${ticket.id}`} aria-label={`${ticket.title}${unread ? ", unread" : ""}`}>
                         <span className="ticket-row-top">
-                          <TicketStatus status={ticket.status} />
-                          <span className="ticket-recency">{unread && <span className="unread-dot" aria-hidden />}<time>{relativeTime(ticket.updatedAt)}</time></span>
+                          <TicketStatus status={ticket.status} outcome={ticket.lastOutcome} />
+                          <span className="ticket-recency">{unread && <span className="unread-dot" aria-hidden />}<time>{relativeTime(ticket.lastMessageAt ?? ticket.updatedAt)}</time></span>
                         </span>
                         <strong>{ticket.title}</strong>
                         <span className="ticket-meta">{ticket.authorName}{ticket.attachmentCount ? ` · ${ticket.attachmentCount} image${ticket.attachmentCount === 1 ? "" : "s"}` : ""}</span>
-                        {activeTicketIds.includes(ticket.id) && ticket.status === "doing_now" && (
-                          <WorkActivity placement="list" state={agentState?.activeTickets?.[ticket.id] ?? agentState} online={agentOnline} />
-                        )}
+                        <TicketActivity
+                          placement="list"
+                          ticket={ticket}
+                          isWorking={activeTicketIds.includes(ticket.id)}
+                          workState={agentState?.activeTickets?.[ticket.id] ?? agentState}
+                          agentOnline={agentOnline}
+                          now={now}
+                        />
                       </button>
                     </li>
                   );

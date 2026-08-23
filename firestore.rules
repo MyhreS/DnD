@@ -134,9 +134,22 @@ service cloud.firestore {
       }
     }
 
-    match /workshopAgent/{documentId} {
+    match /workshopAgent/state {
       allow read: if isWorkshopMember();
       allow write: if false;
+    }
+
+    match /workshopAgent/config {
+      allow read: if isSuperAdmin();
+      allow write: if false;
+
+      match /history/{mutationId} {
+        allow read, write: if false;
+      }
+    }
+
+    match /workshopAgent/release {
+      allow read, write: if false;
     }
 
     match /workshopRateLimits/{uid} {

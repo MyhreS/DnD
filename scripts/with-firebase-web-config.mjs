@@ -4,18 +4,19 @@ const [command, ...args] = process.argv.slice(2);
 if (!command) throw new Error("Pass a command to run with Firebase web configuration.");
 
 function capture(tool, toolArgs) {
-  const result = spawnSync(tool, toolArgs, { encoding: "utf8" });
-  if (result.status !== 0) throw new Error(result.stderr || `${tool} failed`);
+  const result = spawnSync(tool, toolArgs, { encoding: "utf8", shell: process.platform === "win32" });
+  if (result.status !== 0) throw new Error(result.stderr || result.error?.message || `${tool} failed`);
   return result.stdout;
 }
 
 const account = "simonmyhre1@gmail.com";
 const project = "dandd-ea955";
 const common = ["--account", account, "--project", project];
-const apps = JSON.parse(capture("firebase", [...common, "apps:list", "--json"])).result;
+const firebaseTool = process.platform === "win32" ? "firebase.cmd" : "firebase";
+const apps = JSON.parse(capture(firebaseTool, [...common, "apps:list", "--json"])).result;
 const webApp = apps.find((app) => app.platform === "WEB");
 if (!webApp) throw new Error("The D&D Firebase project has no web app.");
-const firebase = JSON.parse(capture("firebase", [...common, "apps:sdkconfig", "WEB", webApp.appId, "--json"])).result.sdkConfig;
+const firebase = JSON.parse(capture(firebaseTool, [...common, "apps:sdkconfig", "WEB", webApp.appId, "--json"])).result.sdkConfig;
 
 const child = spawnSync(command, args, {
   stdio: "inherit",

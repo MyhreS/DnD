@@ -49,12 +49,12 @@ export function TicketReply({ ticketId, uid }: { ticketId: string; uid: string }
 
   return (
     <form className="reply-form" onSubmit={(event) => void submit(event)}>
-      <label htmlFor="ticket-reply">Add information</label>
+      <label htmlFor="ticket-reply">Message the agent</label>
       <textarea id="ticket-reply" value={body} onChange={(event) => {
         setBody(event.target.value);
         setSent(false);
         submissionId.current = null;
-      }} onKeyDown={submitOnEnter} onPaste={pasteImages} maxLength={8_000} placeholder="Reply to this thread…" data-testid="ticket-reply" />
+      }} onKeyDown={submitOnEnter} onPaste={pasteImages} maxLength={8_000} placeholder="Ask a question or add to the request…" data-testid="ticket-reply" />
       <div className="reply-actions">
         <AttachmentPicker files={files} disabled={busy} compact onChange={changeFiles} onError={setError} />
         <button
@@ -64,7 +64,7 @@ export function TicketReply({ ticketId, uid }: { ticketId: string; uid: string }
           aria-live="polite"
           data-testid="send-reply"
         >
-          {busy ? "Sending…" : sent ? "Sent ✓" : "Reply"}
+          {busy ? "Sending…" : sent ? "Sent ✓" : "Send"}
         </button>
       </div>
       {(!online || hasDraft || files.length > 0 || body.length > 6_500) && (

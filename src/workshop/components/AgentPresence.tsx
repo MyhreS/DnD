@@ -12,7 +12,7 @@ export function AgentPresence({ state }: { state: AgentState | null }) {
       <span aria-hidden />
       <div>
         <strong>{label}</strong>
-        {!online && <small>Ask Simon to start the Workshop agent.</small>}
+        {!online && <small>Requests stay queued and resume automatically.</small>}
       </div>
     </div>
   );

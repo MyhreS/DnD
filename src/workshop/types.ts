@@ -17,8 +17,13 @@ export type WorkshopTicket = {
   authorEmail: string;
   createdAt?: Timestamp;
   updatedAt?: Timestamp;
+  lastMessageAt?: Timestamp;
+  lastAgentReplyAt?: Timestamp;
+  retryAfter?: Timestamp;
   readAtBy?: Record<string, Timestamp>;
   revision: number;
+  lastCompletedRevision?: number;
+  lastOutcome?: "finished" | "answered" | "needs_simon" | "declined";
   attachmentCount: number;
 };
 
@@ -47,6 +52,8 @@ export type AgentWorkState = {
   lastCompletedActivity?: string;
   progressUpdatedAt?: Timestamp;
   workStartedAt?: Timestamp;
+  model?: string;
+  reasoningEffort?: string;
 };
 
 export type AgentState = AgentWorkState & {
@@ -63,6 +70,24 @@ export type AgentState = AgentWorkState & {
   watchingChanges?: boolean;
   model?: string;
   reasoningEffort?: string;
+  mainRefreshIntervalMs?: number;
+  lastMainRefreshAt?: Timestamp | null;
+};
+
+export const WORKSHOP_AGENT_MODELS = ["gpt-5.6-sol", "gpt-5.6-terra"] as const;
+export const WORKSHOP_REASONING_EFFORTS = ["low", "medium", "high", "xhigh", "max"] as const;
+export type WorkshopAgentModel = typeof WORKSHOP_AGENT_MODELS[number];
+export type WorkshopReasoningEffort = typeof WORKSHOP_REASONING_EFFORTS[number];
+export type WorkshopAgentConfig = {
+  model: WorkshopAgentModel;
+  reasoningEffort: WorkshopReasoningEffort;
+  revision?: number;
+  updatedAt?: Timestamp;
+};
+
+export const WORKSHOP_DEFAULT_AGENT_CONFIG: WorkshopAgentConfig = {
+  model: "gpt-5.6-sol",
+  reasoningEffort: "xhigh",
 };
 
 export const STATUS_LABELS: Record<WorkshopStatus, string> = {

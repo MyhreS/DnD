@@ -2,9 +2,10 @@ import { MessageAttachment } from "@/workshop/components/MessageAttachment";
 import { MessageBody } from "@/workshop/components/MessageBody";
 import { ThreadPresence } from "@/workshop/components/CollaboratorPresence";
 import { TicketReply } from "@/workshop/components/TicketReply";
+import { TicketActivity } from "@/workshop/components/TicketActivity";
 import { TicketStatus } from "@/workshop/components/TicketStatus";
-import { WorkActivity } from "@/workshop/components/WorkActivity";
 import { useConversationScroll } from "@/workshop/hooks/useConversationScroll";
+import { useCurrentTime } from "@/workshop/hooks/useAgentOnline";
 import { useDialogBehavior } from "@/workshop/hooks/useDialogBehavior";
 import { useMarkTicketRead } from "@/workshop/hooks/useMarkTicketRead";
 import { useTicketMessages } from "@/workshop/hooks/useTicketMessages";
@@ -57,6 +58,7 @@ function isRoutineActivityMessage(message: WorkshopMessage): boolean {
 }
 
 export function TicketDetail({ ticketId, initialTicket, uid, isWorking, agentState, agentOnline, people, onClose }: TicketDetailProps) {
+  const now = useCurrentTime();
   const { ticket, error: ticketError } = useWorkshopTicket(ticketId, initialTicket);
   const { messages, error, loading, hasOlder, loadingOlder, loadOlder } = useTicketMessages(ticketId);
   const dialogRef = useDialogBehavior(onClose);
@@ -75,7 +77,7 @@ export function TicketDetail({ ticketId, initialTicket, uid, isWorking, agentSta
       <article ref={dialogRef} className="ticket-detail" role="dialog" aria-modal="true" aria-labelledby="ticket-detail-title" data-testid="ticket-detail" tabIndex={-1}>
         <header>
           <button className="close-button" type="button" onClick={onClose} aria-label="Close thread">×</button>
-          {ticket && <TicketStatus status={ticket.status} />}
+          {ticket && <TicketStatus status={ticket.status} outcome={ticket.lastOutcome} />}
           <h2 id="ticket-detail-title">{ticket?.title ?? "Opening request…"}</h2>
           <p>Every reply stays in this thread.</p>
           <ThreadPresence people={people} currentUid={uid} ticketId={ticketId} />
@@ -104,7 +106,16 @@ export function TicketDetail({ ticketId, initialTicket, uid, isWorking, agentSta
           </div>
           {hasNewMessage && <button className="new-message-button" type="button" onClick={jumpToLatest}>New message ↓</button>}
         </div>
-        {isWorking && ticket?.status === "doing_now" && <WorkActivity placement="detail" state={agentState} online={agentOnline} />}
+        {ticket && (
+          <TicketActivity
+            placement="detail"
+            ticket={ticket}
+            isWorking={isWorking}
+            workState={agentState}
+            agentOnline={agentOnline}
+            now={now}
+          />
+        )}
         <TicketReply ticketId={ticketId} uid={uid} />
       </article>
     </div>

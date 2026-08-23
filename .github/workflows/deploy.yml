@@ -48,6 +48,9 @@ jobs:
       - name: Install dependencies
         run: bun install --frozen-lockfile
 
+      - name: Test Workshop manager contract
+        run: bun run test:workshop-manager
+
       # Doppler's action performs a single CLI download and can fail on a brief
       # network stall. The official shell installer is recommended for ephemeral
       # CI jobs; fetch it with retries and install into the runner temp directory.
