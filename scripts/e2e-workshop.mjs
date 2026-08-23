@@ -137,7 +137,7 @@ async function pasteImages(locator, files) {
   }, payload);
 }
 
-async function runManager(fixture) {
+async function runManager(fixture, timeoutMs = 30_000) {
   const child = spawn("bun", ["scripts/workshop-manager.ts", "--once", `--fixture=${fixture}`], {
     stdio: ["ignore", "pipe", "pipe"],
     env: { ...process.env },
@@ -145,7 +145,20 @@ async function runManager(fixture) {
   let output = "";
   child.stdout.on("data", (data) => { output += data; });
   child.stderr.on("data", (data) => { output += data; });
-  const code = await new Promise((resolve) => child.on("exit", resolve));
+  const code = await new Promise((resolve, reject) => {
+    const timeout = setTimeout(() => {
+      if (process.platform === "win32" && child.pid) {
+        spawnSync("taskkill.exe", ["/PID", String(child.pid), "/T", "/F"], { stdio: "ignore" });
+      } else {
+        child.kill("SIGKILL");
+      }
+      reject(new Error(`Fixture manager timed out after ${timeoutMs}ms: ${output}`));
+    }, timeoutMs);
+    child.on("exit", (exitCode) => {
+      clearTimeout(timeout);
+      resolve(exitCode);
+    });
+  });
   if (code !== 0) throw new Error(`Fixture manager failed (${code}): ${output}`);
 }
 
@@ -441,6 +454,42 @@ try {
   if (await creator.page.getByRole("link", { name: "Open the updated app" }).count()) throw new Error("Direct answer incorrectly exposed a production link.");
   await creator.page.getByRole("button", { name: "Close thread" }).click();
   await db.recursiveDelete(answerProbe);
+
+  const watchdogProbe = db.doc("workshopTickets/completed-agent-watchdog-probe");
+  await watchdogProbe.set({
+    title: "Completed worker watchdog",
+    status: "not_done",
+    authorUid: creatorUid,
+    authorEmail: creatorEmail,
+    authorName: "Christopher Creator",
+    createdAt: new Date(),
+    updatedAt: new Date(),
+    readAtBy: {},
+    revision: 1,
+    nextSequence: 2,
+    attachmentCount: 0,
+    needsSimonReplyReceived: false,
+    leasedBy: null,
+    leaseExpiresAt: null,
+  });
+  await watchdogProbe.collection("messages").doc("request").set({
+    kind: "request",
+    body: "Return a completed result, then simulate a worker that stays open.",
+    authorUid: creatorUid,
+    authorEmail: creatorEmail,
+    authorName: "Christopher Creator",
+    attachments: [],
+    sequence: 1,
+    createdAt: new Date(),
+  });
+  const watchdogStartedAt = Date.now();
+  await runManager("stuck_result", 30_000);
+  const watchdogData = (await watchdogProbe.get()).data();
+  if (watchdogData?.status !== "finished" || watchdogData?.lastCompletedRevision !== 1) {
+    throw new Error("The manager did not salvage the completed result from a worker that stayed open.");
+  }
+  if (Date.now() - watchdogStartedAt > 25_000) throw new Error("The completed-result watchdog took too long to recover the ticket.");
+  await db.recursiveDelete(watchdogProbe);
 
   const retryProbe = db.doc("workshopTickets/automatic-retry-probe");
   await retryProbe.set({

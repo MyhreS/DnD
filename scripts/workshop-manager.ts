@@ -13,7 +13,9 @@ import {
   WORKSHOP_MAIN_REFRESH_MS,
   WORKSHOP_MAIN_SYNC_BRIEF,
   WORKSHOP_MAX_CONCURRENT_TICKETS,
+  WORKSHOP_CODEX_STDIN,
   WORKSHOP_UI_QUALITY_BRIEF,
+  agentRunWatchdogDecision,
   deploymentContainsCommit,
   outcomeMessage,
   parseAgentResult,
@@ -83,6 +85,13 @@ class ThreadUpdatedError extends Error {
   constructor() {
     super("The Workshop thread changed while its agent was working.");
     this.name = "ThreadUpdatedError";
+  }
+}
+
+class AgentRunTimeoutError extends Error {
+  constructor(ticketId: string) {
+    super(`Coding agent timeout for Workshop ticket ${ticketId} after no useful progress.`);
+    this.name = "AgentRunTimeoutError";
   }
 }
 
@@ -233,7 +242,7 @@ async function writeAgentState(): Promise<void> {
     mainRefreshIntervalMs: WORKSHOP_MAIN_REFRESH_MS,
     lastMainRefreshAt,
     activeReleaseTicketId: activeRelease?.ticketId ?? null,
-    version: 8,
+    version: 9,
     ...legacyProgressFields(),
   });
 }
@@ -841,10 +850,98 @@ function cleanupAgentWorktree(worktree: AgentWorktree): void {
   const resolvedPath = resolve(worktree.path);
   if (!worktree.branch.startsWith("agent/workshop-")
     || !resolvedPath.startsWith(join(expectedRoot, "DnD-workshop-ticket-"))) return;
+  stopOwnedWorktreeProcesses(resolvedPath);
   git(["rebase", "--abort"], resolvedPath, true);
   git(["worktree", "remove", "--force", resolvedPath], REPO_ROOT, true);
   const stillRegistered = git(["worktree", "list", "--porcelain"], REPO_ROOT, true).includes(`worktree ${resolvedPath}`);
   if (!stillRegistered) git(["branch", "-D", worktree.branch], REPO_ROOT, true);
+}
+
+function stopOwnedWorktreeProcesses(worktreePath: string, rootPid?: number): void {
+  const expectedRoot = resolve(REPO_ROOT, "..");
+  const resolvedPath = resolve(worktreePath);
+  if (!resolvedPath.startsWith(join(expectedRoot, "DnD-workshop-ticket-"))) return;
+  if (rootPid && process.platform === "win32") {
+    spawnSync("taskkill", ["/PID", String(rootPid), "/T", "/F"], { stdio: "ignore" });
+  } else if (rootPid) {
+    spawnSync("kill", ["-TERM", String(rootPid)], { stdio: "ignore" });
+  }
+  if (process.platform === "win32") {
+    const literalPath = resolvedPath.replaceAll("'", "''");
+    const script = [
+      `$target = '${literalPath}'`,
+      "$owned = Get-CimInstance Win32_Process | Where-Object {",
+      "  $_.ProcessId -ne $PID -and $_.CommandLine -like \"*$target*\" -and",
+      "  $_.Name -in @('node.exe', 'bun.exe', 'esbuild.exe')",
+      "}",
+      "$owned | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
+    ].join("\n");
+    spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], { stdio: "ignore" });
+  }
+}
+
+type WatchedCodexProcess = {
+  pid: number;
+  exited: Promise<number>;
+};
+
+async function tryReadStructuredResult<T>(resultPath: string, parse: (raw: string) => T): Promise<T | undefined> {
+  try {
+    return parse(await readFile(resultPath, "utf8"));
+  } catch {
+    return undefined;
+  }
+}
+
+async function waitForCodexProcess<T>({
+  ticketId,
+  worktreePath,
+  resultPath,
+  proc,
+  parse,
+}: {
+  ticketId: string;
+  worktreePath: string;
+  resultPath: string;
+  proc: WatchedCodexProcess;
+  parse: (raw: string) => T;
+}): Promise<{ exitCode?: number; salvagedResult?: T }> {
+  const startedAt = Date.now();
+  let exitCode: number | undefined;
+  let resultReadyAt: number | undefined;
+  let readyResult: T | undefined;
+  const exited = proc.exited.then((code) => {
+    exitCode = code;
+  });
+  while (exitCode === undefined) {
+    await Promise.race([exited, new Promise((resolvePromise) => setTimeout(resolvePromise, 1_000))]);
+    if (exitCode !== undefined) break;
+    const parsed = await tryReadStructuredResult(resultPath, parse);
+    if (parsed !== undefined) {
+      readyResult = parsed;
+      resultReadyAt ??= Date.now();
+    }
+    const now = Date.now();
+    const progressAt = activeWork.get(ticketId)?.progressUpdatedAt.toMillis() ?? startedAt;
+    const decision = agentRunWatchdogDecision({
+      elapsedMs: now - startedAt,
+      stalledMs: now - progressAt,
+      resultReadyForMs: resultReadyAt === undefined ? undefined : now - resultReadyAt,
+    });
+    if (decision === "salvage" && readyResult !== undefined) {
+      console.warn(`Workshop ticket ${ticketId} produced a valid result but its agent did not exit; salvaging the completed work.`);
+      stopOwnedWorktreeProcesses(worktreePath, proc.pid);
+      await Promise.race([exited, new Promise((resolvePromise) => setTimeout(resolvePromise, 5_000))]);
+      return { exitCode, salvagedResult: readyResult };
+    }
+    if (decision === "timeout") {
+      console.error(`Workshop ticket ${ticketId} exceeded its agent watchdog (${Math.round((now - startedAt) / 60_000)}m elapsed, ${Math.round((now - progressAt) / 60_000)}m without progress).`);
+      stopOwnedWorktreeProcesses(worktreePath, proc.pid);
+      await Promise.race([exited, new Promise((resolvePromise) => setTimeout(resolvePromise, 5_000))]);
+      throw new AgentRunTimeoutError(ticketId);
+    }
+  }
+  return { exitCode };
 }
 
 function abandonStalePullRequest(worktree: AgentWorktree): void {
@@ -908,9 +1005,23 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
   const worktree = createAgentWorktree(ticket.id);
   try {
     await updateProgress(ticket.id, { stage: 2, activity: "Understanding the request", lastCompleted: "Prepared a safe workspace" });
+    const command = fixture === "stuck_result"
+      ? [process.execPath, "-e", [
+        `await Bun.write(${JSON.stringify(resultPath)}, ${JSON.stringify(JSON.stringify({
+          outcome: "answered",
+          summaryForCreator: "The completed result was recovered even though its worker stayed open.",
+          technicalSummary: "Watchdog fixture produced a valid result and intentionally remained alive.",
+          productionUrl: null,
+          needsSimonReason: null,
+          declineReason: null,
+        }))});`,
+        "setInterval(() => undefined, 60_000);",
+      ].join("\n")]
+      : workshopCodexArgs(schemaPath, resultPath, prompt, ticket.agentConfig);
     const proc = spawn({
-      cmd: workshopCodexArgs(schemaPath, resultPath, prompt, ticket.agentConfig),
+      cmd: command,
       cwd: worktree.path,
+      stdin: WORKSHOP_CODEX_STDIN,
       stdout: "pipe",
       stderr: "inherit",
       env: { ...process.env, DND_WORKSHOP_TICKET_ID: ticket.id },
@@ -919,11 +1030,16 @@ async function runCodingAgent(ticket: ClaimedTicket, messages: ThreadMessage[], 
       console.error("Workshop progress stream stopped:", error);
       await stateWrites;
     });
-    const exitCode = await proc.exited;
-    await progressStream;
-    if (exitCode !== 0) throw new Error(`Coding agent exited with status ${exitCode}.`);
+    let watched: Awaited<ReturnType<typeof waitForCodexProcess<AgentResult>>>;
+    try {
+      watched = await waitForCodexProcess({ ticketId: ticket.id, worktreePath: worktree.path, resultPath, proc, parse: parseAgentResult });
+    } finally {
+      stopOwnedWorktreeProcesses(worktree.path);
+      await progressStream;
+    }
+    if (watched.salvagedResult === undefined && watched.exitCode !== 0) throw new Error(`Coding agent exited with status ${watched.exitCode}.`);
     await updateProgress(ticket.id, { stage: 5, activity: "Confirming the result", lastCompleted: "Completed the coding work" });
-    const result = parseAgentResult(await readFile(resultPath, "utf8"));
+    const result = watched.salvagedResult ?? parseAgentResult(await readFile(resultPath, "utf8"));
     if (result.outcome === "needs_simon" && isTemporaryServiceWait(result.needsSimonReason)) {
       throw new Error(`Temporary service wait must be retried automatically: ${result.needsSimonReason}`);
     }
@@ -979,15 +1095,21 @@ async function runRecoveryAgent(ticket: ClaimedTicket, error: unknown, folder: s
     const proc = spawn({
       cmd: workshopCodexArgs(schemaPath, resultPath, prompt, ticket.agentConfig),
       cwd: worktree.path,
+      stdin: WORKSHOP_CODEX_STDIN,
       stdout: "pipe",
       stderr: "inherit",
       env: { ...process.env, DND_WORKSHOP_TICKET_ID: ticket.id, DND_WORKSHOP_RECOVERY: "1" },
     });
     const progressStream = readRecoveryProgress(ticket.id, proc.stdout).catch(() => undefined);
-    const exitCode = await proc.exited;
-    await progressStream;
-    if (exitCode !== 0) throw new Error(`Recovery agent exited with status ${exitCode}.`);
-    return parseRecoveryResult(await readFile(resultPath, "utf8"));
+    let watched: Awaited<ReturnType<typeof waitForCodexProcess<RecoveryResult>>>;
+    try {
+      watched = await waitForCodexProcess({ ticketId: ticket.id, worktreePath: worktree.path, resultPath, proc, parse: parseRecoveryResult });
+    } finally {
+      stopOwnedWorktreeProcesses(worktree.path);
+      await progressStream;
+    }
+    if (watched.salvagedResult === undefined && watched.exitCode !== 0) throw new Error(`Recovery agent exited with status ${watched.exitCode}.`);
+    return watched.salvagedResult ?? parseRecoveryResult(await readFile(resultPath, "utf8"));
   } finally {
     cleanupAgentWorktree(worktree);
   }
