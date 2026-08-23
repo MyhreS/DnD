@@ -13,15 +13,17 @@ Christoffer.
 
 Use this intended identity:
 
-- Verified Google email: `myhrefjell@gmail.com`
+- Verified Google email: `myhrefjeld@gmail.com`
 - Firebase Auth UID: obtain from the verified sign-in record before enabling
   access; never guess, derive, or commit a placeholder UID
 - Provider: Google
 
-Treat `myhrefjeld@gmail.com` as a different account. It appears in existing
-Workshop configuration and must not gain private-app access through that role.
-Do not authorize by name, email prefix, domain, campaign, invitation, Workshop
-membership, DM role, global administrator role, or ownership of the D&D app.
+Treat `myhrefjell@gmail.com` as a different account and reject it; it was a
+previously supplied typo. The correct account also appears in existing Workshop
+configuration, but Workshop membership must not grant private-app access by
+itself. Do not authorize by name, email prefix, domain, campaign, invitation,
+Workshop membership, DM role, global administrator role, or ownership of the
+D&D app.
 
 ## Establish the achievable privacy boundary
 
@@ -88,7 +90,7 @@ token. Bind authorization to the recorded Firebase UID and also verify:
 - the Firebase Auth user is not disabled;
 - `email_verified` is `true`;
 - the token email, after `trim().toLowerCase()`, exactly equals the protected
-  configured value `myhrefjell@gmail.com`;
+  configured value `myhrefjeld@gmail.com`;
 - the sign-in provider is Google; and
 - the UID equals the separately verified, immutable owner UID.
 
@@ -192,12 +194,12 @@ error responses generic and do not reflect private input.
 Before first release:
 
 1. Have Christoffer sign in through the intended Google flow.
-2. Verify the Firebase Auth record shows exactly `myhrefjell@gmail.com`, a
+2. Verify the Firebase Auth record shows exactly `myhrefjeld@gmail.com`, a
    verified email, Google as the provider, and an enabled account.
 3. Record the observed UID through the protected deployment/configuration path.
 4. Re-read the configured identity independently.
 5. Keep the private app disabled if the observed address differs, including if
-   it is `myhrefjeld@gmail.com`.
+   it is the rejected typo `myhrefjell@gmail.com`.
 
 Never post tokens, session cookies, resource contents, or private configuration
 into a public issue or committed file. Treat the UID as a personal identifier,
@@ -215,7 +217,7 @@ Verify all of the following:
 | --- | --- |
 | Christoffer's verified Google account and recorded UID | May access only the intended private app and data |
 | Simon's normal/super-admin Google account | No discovery, page, API, Firestore, Storage, or cached access |
-| `myhrefjeld@gmail.com` Workshop identity | No access |
+| Rejected typo `myhrefjell@gmail.com` | No access |
 | Another verified D&D user | No access |
 | Signed-out browser | No access |
 | Preview and minted test-token identities | No access |
@@ -250,6 +252,22 @@ Before merging or deploying:
    repository, project, credentials, logs, or backups.
 
 Do not release on partial evidence, client-only gating, or an untested rule.
+
+### Deploy through GitHub Actions
+
+Use a GitHub Actions production workflow so repository collaborators with write
+access can deploy without receiving Firebase or Doppler credentials. Require a
+manual `workflow_dispatch` path from `main`, use the shared non-cancelling
+`firebase-production` concurrency group, and keep secrets in protected GitHub
+configuration.
+
+The repository's current `Deploy` workflow deploys only the existing main-app
+Hosting target, Firestore and Storage rules, and Cloud Functions. When the
+private app's dedicated target and server boundary exist, update that workflow
+or add a dedicated protected workflow to build and deploy every required private
+surface. Verify an actual manual run from `main`, then repeat the production
+denial matrix. Do not claim the private app is connected to Firebase deployment
+before that target-specific run succeeds.
 
 ## Respond to a suspected leak
 
