@@ -1,4 +1,4 @@
-import { spawn } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { setTimeout as sleep } from "node:timers/promises";
 import { initializeApp as initializeAdmin } from "firebase-admin/app";
 import { getAuth as getAdminAuth } from "firebase-admin/auth";
@@ -53,6 +53,19 @@ const server = spawn("bun", ["x", "vite", "--config", "vite.workshop.config.ts",
   stdio: ["ignore", "pipe", "pipe"],
   env: { ...process.env, VITE_FIREBASE_EMULATORS: "1" },
 });
+
+async function stopServer() {
+  if (server.exitCode === null && server.signalCode === null) {
+    if (process.platform === "win32" && server.pid) {
+      spawnSync("taskkill.exe", ["/PID", String(server.pid), "/T", "/F"], { stdio: "ignore" });
+    } else {
+      server.kill("SIGTERM");
+    }
+  }
+  if (server.exitCode === null && server.signalCode === null) {
+    await new Promise((resolve) => server.once("exit", resolve));
+  }
+}
 
 async function ready() {
   for (let attempt = 0; attempt < 100; attempt += 1) {
@@ -901,7 +914,7 @@ try {
   throw error;
 } finally {
   await browser.close();
-  server.kill("SIGTERM");
+  await stopServer();
   const tickets = await db.collection("workshopTickets").get();
   const presence = await db.collection("workshopPresence").get();
   await Promise.allSettled([
