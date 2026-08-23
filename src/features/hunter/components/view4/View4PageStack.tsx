@@ -3,6 +3,7 @@ import { useOverlayFocus } from "../../hooks/useOverlayFocus";
 import { AppSectionsExpanded } from "../appsheet/appSheetShared";
 import { View4BackButton } from "./View4BackButton";
 import type { View4Panel } from "./View4CharacterSheet";
+import { View4PageLayout } from "./View4PageLayout";
 import { View4PageNavigationContext, type View4PageSpec } from "./view4PageNavigation";
 
 export function View4PageStack({
@@ -39,8 +40,11 @@ export function View4PageStack({
         goBack();
       }}
     >
-      <div key={activePage.id} className="v4-page-shell">
-        <header className="v4-identity v4-page-header">
+      <View4PageLayout
+        key={activePage.id}
+        className="v4-page-shell"
+        contentClassName="v4-page-content"
+        header={<header className="v4-identity v4-page-header">
           <div className="v4-header-tools">
             <View4BackButton onClick={goBack} />
           </div>
@@ -48,11 +52,10 @@ export function View4PageStack({
             <h2 id="view4-page-title">{activePage.title}</h2>
           </div>
           <span className="v4-page-header-balance" aria-hidden="true" />
-        </header>
-        <div className="v4-page-content">
-          <AppSectionsExpanded>{activePage.content}</AppSectionsExpanded>
-        </div>
-      </div>
+        </header>}
+      >
+        <AppSectionsExpanded>{activePage.content}</AppSectionsExpanded>
+      </View4PageLayout>
     </section>
   </View4PageNavigationContext.Provider>;
 }

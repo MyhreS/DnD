@@ -1,7 +1,8 @@
-import { useRef, useState } from "react";
+import { useState } from "react";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { useAppEditStage } from "../appsheet/appEditStageContext";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
+import { View4PageLayout } from "./View4PageLayout";
 import { View4UpgradeChoices, type UpgradeChoiceKind } from "./View4UpgradeChoices";
 import { View4UpgradeFeatPage } from "./View4UpgradeFeatPage";
 import { earnedLevel, upgradeFeatureComplete, upgradeFeatures, type UpgradeFeature } from "./upgradeModel";
@@ -16,7 +17,6 @@ function numberValue(value: unknown): number | null {
 }
 
 export function View4Upgrade({ model, onComplete }: { model: AppSheetModel; onComplete: () => void }) {
-  const flowRef = useRef<HTMLDivElement>(null);
   const [requestedStep, setRequestedStep] = useState(0);
   const stage = useAppEditStage();
   const automation = useCharacterAutomation();
@@ -83,19 +83,20 @@ export function View4Upgrade({ model, onComplete }: { model: AppSheetModel; onCo
 
   function goToStep(next: number) {
     setRequestedStep(next);
-    flowRef.current?.closest(".v4-page-content")?.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  return <div ref={flowRef} className="v4-upgrade-flow">
-    <header className="v4-upgrade-step-header"><span>Step {stepIndex + 1} of {steps.length}</span><i><b style={{ width: `${(stepIndex + 1) / steps.length * 100}%` }} /></i><h3>{step.title}</h3></header>
-    <main className="v4-upgrade-step" key={step.id}>
+  return <View4PageLayout
+    key={step.id}
+    className="v4-upgrade-flow"
+    contentClassName="v4-upgrade-step"
+    header={<header className="v4-upgrade-step-header"><span>Step {stepIndex + 1} of {steps.length}</span><i><b style={{ width: `${(stepIndex + 1) / steps.length * 100}%` }} /></i><h3>{step.title}</h3></header>}
+    footer={<footer className="v4-upgrade-actions"><button type="button" className="back" disabled={stepIndex === 0} onClick={() => goToStep(stepIndex - 1)}>Previous</button><span>{remaining > 0 ? `${remaining} choice${remaining === 1 ? "" : "s"} left` : "Ready to save"}</span>{step.kind === "review" ? <button type="button" disabled={!canSave} onClick={saveUpgrade}>Save upgrade</button> : <button type="button" onClick={() => goToStep(stepIndex + 1)}>Next</button>}</footer>}
+  >
       {step.kind === "automatic" && <AutomaticChanges changes={changes} />}
       {step.kind === "choice" && step.choice && <View4UpgradeChoices kind={step.choice} target={target} />}
       {step.kind === "feature" && step.feature && <View4UpgradeFeatPage feature={step.feature} state={state} />}
       {step.kind === "review" && <Review changes={changes} features={features.filter((feature) => !/subclass/i.test(feature.name) && !gainedSubclassKeys.has(`${feature.level}:${feature.name}`))} state={state} remaining={remaining} subclass={subclassChanged ? selectedSubclass : undefined} subclassFeatures={gainedSubclassFeatures} />}
-    </main>
-    <footer className="v4-upgrade-actions"><button type="button" className="back" disabled={stepIndex === 0} onClick={() => goToStep(stepIndex - 1)}>Previous</button><span>{remaining > 0 ? `${remaining} choice${remaining === 1 ? "" : "s"} left` : "Ready to save"}</span>{step.kind === "review" ? <button type="button" disabled={!canSave} onClick={saveUpgrade}>Save upgrade</button> : <button type="button" onClick={() => goToStep(stepIndex + 1)}>Next</button>}</footer>
-  </div>;
+  </View4PageLayout>;
 }
 
 function AutomaticChanges({ changes }: { changes: Change[] }) {
