@@ -3,7 +3,6 @@ import type { BACKGROUNDS } from "@/data/backgrounds";
 import type { getClass } from "@/data/classes";
 import type { ITEMS } from "@/data/items";
 import type { AbilityKey, CarrySignificance, ExtraSubcategory, HunterCard, LevelFeature, SheetAutomationState, SlotAssignment } from "@/types";
-import type { BuyMode } from "../../lib/abilityBuy";
 import type { automationFor } from "../../lib/characterAutomation";
 
 export interface SlotReplacement {
@@ -20,10 +19,6 @@ export interface CharacterAutomationController {
   klass: ReturnType<typeof getClass>;
   background: (typeof BACKGROUNDS)[number] | undefined;
   base: HunterCard["abilities"];
-  bonuses: Partial<Record<AbilityKey, number>>;
-  mode: BuyMode;
-  pointsLeft: number | null;
-  bonusUsed: number;
   expertiseLimit: number;
   masteryFeature: LevelFeature | undefined;
   masteryCount: number;
@@ -41,8 +36,6 @@ export interface CharacterAutomationController {
   setLevelChoice: (key: string, value: string) => void;
   setUpgradeFeat: (key: string, feat: string, bonuses: Partial<Record<AbilityKey, number>>) => void;
   setBase: (key: AbilityKey, value: number) => void;
-  setBonus: (key: AbilityKey, value: number) => void;
-  switchMode: (mode: BuyMode) => void;
   changeQty: (id: string, delta: number) => void;
   addCatalogItemToSlot: (id: string, target: SlotAssignment, replace?: SlotReplacement) => void;
   setSlotAssignment: (id: string, index: number, location: SlotAssignment | null, replace?: SlotReplacement) => void;

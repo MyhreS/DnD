@@ -33,7 +33,6 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
   const features = upgradeFeatures(klass, card.subclassId, startLevel, target);
   const needsSetup = !state.setupComplete;
   const needsSubclass = !!result.pending.subclass;
-  const backgroundRemaining = needsSetup && automation.background ? Math.max(0, 3 - automation.bonusUsed) : 0;
   const distinctClassSkills = state.classSkills.filter((skill) => !automation.background?.skills.includes(skill));
   const classRemaining = needsSetup && klass ? Math.max(0, klass.skillChoices.count - distinctClassSkills.length) : 0;
   const featRemaining = needsSetup && automation.background?.feat === "Skilled" ? Math.max(0, 3 - (card.featSkills?.length ?? 0)) : 0;
@@ -45,8 +44,6 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
     creating && !card.name.trim() ? { stepId: "name", label: "Hunter name", detail: "Give this hunter a name.", status: "Enter a name", count: 1 } : null,
     needsSetup && !card.classId ? { stepId: "class", label: "Hunter class", detail: "Choose the class that defines this hunter.", status: "Choose a class", count: 1 } : null,
     needsSetup && !card.backgroundId ? { stepId: "background", label: "Background", detail: "Choose this hunter's background.", status: "Choose a background", count: 1 } : null,
-    creating && automation.pointsLeft !== 0 ? { stepId: "abilities", label: "Ability scores", detail: "Spend the full ability-score budget.", status: automation.pointsLeft == null ? "Choose valid scores" : `${automation.pointsLeft} points left`, count: 1 } : null,
-    backgroundRemaining > 0 ? { stepId: "background-abilities", label: "Background abilities", detail: `Place ${backgroundRemaining} remaining ability point${backgroundRemaining === 1 ? "" : "s"}.`, status: `${backgroundRemaining} point${backgroundRemaining === 1 ? "" : "s"} needed`, count: backgroundRemaining } : null,
     classRemaining > 0 ? { stepId: "class-skills", label: "Class skills", detail: `Choose ${classRemaining} more trained skill${classRemaining === 1 ? "" : "s"}.`, status: `${classRemaining} skill${classRemaining === 1 ? "" : "s"} needed`, count: classRemaining } : null,
     featRemaining > 0 ? { stepId: "skilled", label: "Skilled feat", detail: `Choose ${featRemaining} more skill or tool proficienc${featRemaining === 1 ? "y" : "ies"}.`, status: `${featRemaining} choice${featRemaining === 1 ? "" : "s"} needed`, count: featRemaining } : null,
     needsSubclass ? { stepId: "subclass", label: `${klass?.name ?? "Hunter"} path`, detail: "Choose the subclass gained at this level.", status: "Choose a subclass", count: 1 } : null,
@@ -98,7 +95,6 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
   if (needsSetup) steps.push({ id: "class", title: "Choose class", kind: "choice", choice: "class" });
   if (needsSetup) steps.push({ id: "background", title: "Choose background", kind: "choice", choice: "background" });
   if (creating) steps.push({ id: "abilities", title: "Set ability scores", kind: "abilities" });
-  if (needsSetup && automation.background) steps.push({ id: "background-abilities", title: "Background abilities", kind: "choice", choice: "background-abilities" });
   if (needsSetup && klass) steps.push({ id: "class-skills", title: "Class skills", kind: "choice", choice: "class-skills" });
   if (needsSetup && automation.background?.feat === "Skilled") steps.push({ id: "skilled", title: "Skilled feat", kind: "choice", choice: "skilled" });
   if (choicePages.subclass && klass?.subclasses.length) steps.push({ id: "subclass", title: "Choose subclass", kind: "choice", choice: "subclass" });
@@ -114,7 +110,7 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
 
   function saveUpgrade() {
     if (!canSave) return;
-    const setupComplete = !!card.name.trim() && !!card.classId && !!card.backgroundId && automation.pointsLeft === 0 && remaining === 0;
+    const setupComplete = !!card.name.trim() && !!card.classId && !!card.backgroundId && remaining === 0;
     stage.apply({ lastSeenLevel: target, sheetAutomation: setupComplete ? { ...state, setupComplete: true } : state });
     onComplete();
   }

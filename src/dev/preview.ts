@@ -271,7 +271,6 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     level: 3,
     lastSeenLevel: 3,
     feats: ["Tough"],
-    abilityMode: "pointbuy",
     abilities: { str: 12, dex: 15, con: 13, int: 10, wis: 12, cha: 8 },
     baseAbilities: { str: 12, dex: 15, con: 13, int: 10, wis: 12, cha: 8 },
     skillProficiencies: ["Stealth", "Perception", "Survival"],

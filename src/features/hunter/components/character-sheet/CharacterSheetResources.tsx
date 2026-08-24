@@ -18,6 +18,15 @@ export function CharacterSheetResources({ model }: { model: AppSheetModel }) {
       <CharacterSheetResourceControl label="Hit dice spent" value={characterSheetNumber(sheetText(model.data, "hdSpent"))} max={characterSheetNumber(result.fields.hdMax)} disabled={disabled} onChange={setNumber("hdSpent")} />
       {klass?.caster && <CharacterSheetResourceControl label="Strains left" value={characterSheetNumber(sheetText(model.data, "strainCur"), strainMax)} max={strainMax} disabled={disabled} onChange={setNumber("strainCur")} />}
     </div></section>
+    <section className="character-sheet-resource-group"><h3>Character sheet values</h3><div className="character-sheet-resource-grid">
+      <div className="character-sheet-resource"><span>Sanity dice</span><strong>{String(result.fields.sanityDice ?? "—")}</strong></div>
+      {klass?.caster && <>
+        <div className="character-sheet-resource"><span>Rite performing ability</span><strong>{String(result.fields.riteAbility ?? "—")}</strong></div>
+        <div className="character-sheet-resource"><span>Rite modifier</span><strong>{String(result.fields.riteMod ?? "—")}</strong></div>
+        <div className="character-sheet-resource"><span>Rite save DC</span><strong>{String(result.fields.riteDC ?? "—")}</strong></div>
+        <div className="character-sheet-resource"><span>Rite attack bonus</span><strong>{String(result.fields.riteAttack ?? "—")}</strong></div>
+      </>}
+    </div></section>
     <section className="character-sheet-resource-group"><h3>Battle states</h3><div className="character-sheet-state-grid">
       <label><input type="checkbox" checked={card.bloodTinge === true} disabled={disabled} onChange={(event) => model.setFields({ bloodTinge: event.target.checked }, { bloodTinge: event.target.checked })} /> Blood Tinge held</label>
       {["dsS1", "dsS2", "dsS3"].map((field, index) => <label key={field}><input type="checkbox" checked={sheetBool(model.data, field)} disabled={disabled} onChange={(event) => model.setField(field, event.target.checked)} /> Death save success {index + 1}</label>)}

@@ -17,13 +17,12 @@ export interface Skill {
   description: string;
 }
 
-/** Player-facing background data reconciled from master.json. A null feat is
- * deliberate: the source scan is illegible, so the app asks instead of guessing. */
+/** Established player-facing background data. The replacement four-document
+ * source set does not redefine this catalog. */
 export interface Background {
   id: string;
   name: string;
   text: string;
-  abilityScores: AbilityKey[];
   feat: string | null;
   skills: string[];
   tool: string | null;
@@ -451,7 +450,7 @@ export interface LegacyEquipmentLine {
 /** Versioned state for the rules-driven paper sheet. Only player decisions
  * live here; every calculated field is derived again from canonical data. */
 export interface SheetAutomationState {
-  version: 1;
+  version: 2;
   classSkills: string[];
   expertiseSkills?: string[];
   weaponMasteries?: string[];
@@ -462,7 +461,6 @@ export interface SheetAutomationState {
   levelFeats?: Record<string, string>;
   /** Ability increases granted by each structured level-up feat. */
   levelAbilityBonuses?: Record<string, Partial<Record<AbilityKey, number>>>;
-  backgroundBonuses: Partial<Record<AbilityKey, number>>;
   startingKitApplied?: boolean;
   setupComplete?: boolean;
   /** Exact catalog quantities and GP granted by the currently selected class
@@ -508,15 +506,10 @@ export interface HunterCard {
   /** Feats picked at level-ups (ASI levels / Epic Boon / Fighting Style),
    * separate from the background's origin `feat`. Display strings. */
   feats?: string[];
-  /** Final ability scores after background adjustment. */
+  /** Current ability scores, including any structured level increases. */
   abilities: AbilityScores;
-  /** Pre-background base scores (bought or rolled) — kept so re-editing can
-   * split `abilities` back into base + background bonus correctly. */
+  /** Direct starting scores before structured level increases. */
   baseAbilities?: AbilityScores;
-  /** How the base scores were determined — standard 27-point buy (default) or
-   * the table's "Maduhausu" min-max buy: 57 points, scores 3–16, escalating
-   * repeat costs, no final level-1 score above 17 (background included). */
-  abilityMode?: "pointbuy" | "maduhausu";
   /** Skill proficiencies (class choices + background-granted). */
   skillProficiencies: string[];
   /** Selected Main Armor piece id, or null for unarmored. */
@@ -533,10 +526,11 @@ export interface HunterCard {
   extraArmorIds?: string[];
   /** Current hit points during play (defaults to max when unset). */
   currentHp?: number;
-  /** Current Sanity during play (defaults to max when unset). Madness is the
-   * complement: madness = maxSanity − sanity. Negative current Sanity down to
-   * -maxSanity keeps twice-Max-Sanity Madness representable. */
+  /** Current Sanity during play (defaults to max when unset). */
   sanity?: number;
+  /** Current Madness, tracked independently because the supplied hidden rules
+   * refer to it directly and do not define a Sanity-to-Madness formula. */
+  madness?: number;
   /** Transformation Level 0–10. Gains are rolled physically at the table (1d20
    * on the Transformation Table at the NEW level) and recorded by the DM — the
    * app never rolls. Short Rest −1 (+1 more on a DC 13 CON (Grit) check) and

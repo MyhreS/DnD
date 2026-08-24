@@ -39,7 +39,7 @@ export const WHISPERS = CURRENT_WHISPERS.map(({ id, name }) => ({ id, name }));
 export type DeepcallerReference = {
   id: string;
   name: string;
-  level: number;
+  level: number | null;
   kind: "Whisper" | "Rite";
   school: string;
   performing: string;
@@ -47,6 +47,10 @@ export type DeepcallerReference = {
   duration: string;
   damage: string;
   damageType: string;
+  upgrade: string;
+  special?: string;
+  section?: string;
+  sourceNote?: string;
 };
 
 const DAMAGE_PATTERN = /(\d+d\d+|\d+)\s+(Eldritch Power|Fire|Lightning|Cold|Acid|Bludgeoning|Mind)\s+damage/gi;
@@ -66,12 +70,16 @@ function toReference(entry: CurrentRite | CurrentWhisper, kind: "Whisper" | "Rit
   return {
     id: entry.id,
     name: entry.name,
-    level: entry.level,
+    level: "level" in entry ? entry.level : null,
     kind,
     school: entry.type.replace(/\s+Rite$/i, ""),
     performing: entry.performing,
     range: entry.range,
     duration: entry.duration,
+    upgrade: entry.upgrade,
+    special: entry.special,
+    section: "section" in entry ? entry.section : undefined,
+    sourceNote: "sourceNote" in entry ? entry.sourceNote : undefined,
     ...damageDetails(entry),
   };
 }
@@ -79,10 +87,42 @@ function toReference(entry: CurrentRite | CurrentWhisper, kind: "Whisper" | "Rit
 export const DEEPCALLER_WHISPERS: readonly DeepcallerReference[] = CURRENT_WHISPERS.map((entry) => toReference(entry, "Whisper"));
 export const DEEPCALLER_RITES: readonly DeepcallerReference[] = CURRENT_RITES.map((entry) => toReference(entry, "Rite"));
 
+/** Read the effective Rite level carried by a Forbidden Revelation upgrade
+ * key such as `11:Forbidden Revelation (Level 6 Rite)`. */
+export function forbiddenRevelationLevel(value: string): number | null {
+  const level = Number(value.match(/Forbidden Revelation\s*\(Level\s+(\d+)\s+Rite\)/i)?.[1]);
+  return level >= 6 && level <= 9 ? level : null;
+}
+
+/** The class rule permits either a Rite of the Revelation's own level or a
+ * Level 1-5 Rite that explicitly offers a Higher-Level Strain option. */
+export function forbiddenRevelationOptions(level: number): readonly DeepcallerReference[] {
+  if (level < 6 || level > 9) return [];
+  return DEEPCALLER_RITES.filter((rite) => rite.level === level
+    || (rite.level != null && rite.level <= 5 && rite.upgrade.trim().length > 0));
+}
+
 /** Applies the published Whisper upgrades to the table-facing damage readout. */
 export function whisperDamageAtLevel(whisper: DeepcallerReference, characterLevel: number): string {
   if (whisper.id === "eldritch-blast") return `${characterLevel >= 17 ? 4 : characterLevel >= 11 ? 3 : characterLevel >= 5 ? 2 : 1} × 1d10`;
   if (whisper.id === "eldritch-lightning" || whisper.id === "mindcrack") return `${characterLevel >= 17 ? 4 : characterLevel >= 11 ? 3 : characterLevel >= 5 ? 2 : 1}d6`;
   if (whisper.id === "eldritch-strike") return characterLevel >= 17 ? "Weapon + 3d6" : characterLevel >= 11 ? "Weapon + 2d6" : characterLevel >= 5 ? "Weapon + 1d6" : "Weapon damage";
   return whisper.damage;
+}
+
+/** Apply only the higher-Strain damage changes explicitly printed in the
+ * current Book of the Deepcaller. Non-damage upgrades remain in `upgrade` and
+ * are shown verbatim beside the compact readout. */
+export function riteDamageAtStrain(rite: DeepcallerReference, strainLevel: number): string {
+  const strain = Math.max(rite.level ?? 0, Math.floor(strainLevel));
+  switch (rite.id) {
+    case "eldritch-rebuke": return `${strain + 1}d10`;
+    case "eldritch-chain-of-bolts": return `${strain + 1}d12 initial · 1d12 ongoing`;
+    case "armor-of-the-drowned-star": return String(strain * 5);
+    case "mindgrab": return `${strain + 1}d8`;
+    case "eldritch-cacophony": return `${8 + Math.max(0, strain - 5) * 2}d6`;
+    case "arms-of-hastur": return `${strain + 1}d6`;
+    case "grasp-of-yog-sothoth": return `${strain}d6`;
+    default: return rite.damage;
+  }
 }

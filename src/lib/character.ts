@@ -1,7 +1,9 @@
-import type { AbilityScores, CustomItem, HunterCard, HunterClass } from "@/types";
+import type { AbilityScores, CustomItem, HunterCard, HunterClass, SheetAutomationState } from "@/types";
 import { abilityModifier } from "@/data/abilities";
 import { acCategory, ARMOR_BY_ID } from "@/data/armor";
+import { getClass } from "@/data/classes";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
+import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { armorFor } from "@/lib/customItems";
 
 export const DEFAULT_ABILITIES: AbilityScores = {
@@ -37,28 +39,14 @@ export function maxHp(klass: HunterClass, abilities: AbilityScores, level = 1): 
 
 /**
  * Maximum Sanity = the class base + the Wisdom modifier in the established Hunter model.
- * The Deepcaller's "Fracturing Mind" also permanently grants +1 Max Sanity per
- * level (uncapped, per master.json's Fracturing Mind).
+ * The Deepcaller's current "Fracturing Mind" progression grants +1 Max
+ * Sanity per level and explicitly caps the resulting Max Sanity at 26.
  */
 export function maxSanity(klass: HunterClass, abilities: AbilityScores, level = 1): number {
-  const classBase =
-    klass.id === "deepcaller"
-      ? klass.maxSanity + Math.max(0, Math.min(20, level) - 1)
-      : klass.maxSanity;
-  return Math.max(0, classBase + abilityModifier(abilities.wis));
-}
-
-/** Madness is the distance below maximum Sanity. Current Sanity may become
- * negative, allowing the current hidden source's twice-Max-Sanity threshold to
- * be represented without publishing what happens at that threshold. */
-export function currentMadness(maximumSanity: number, currentSanity = maximumSanity): number {
-  return Math.max(0, maximumSanity - currentSanity);
-}
-
-/** Lowest current-Sanity value needed to represent twice the maximum as
- * Madness: max - (-max) = 2 × max. */
-export function minimumTrackedSanity(maximumSanity: number): number {
-  return -Math.max(0, maximumSanity);
+  const startingMaximum = klass.maxSanity + abilityModifier(abilities.wis);
+  return Math.max(0, klass.id === "deepcaller"
+    ? Math.min(26, startingMaximum + Math.max(0, Math.min(20, level) - 1))
+    : startingMaximum);
 }
 
 /** Initiative modifier (Dexterity) in the established Hunter model. */
@@ -124,16 +112,40 @@ function dedupeExtras(ids: string[]): string[] {
   return out;
 }
 
-/** Load-time normalization for character docs — applied ONCE, at the
- * api/players.ts read boundary, so every card in the app carries the current
- * shape: the legacy `studdedAddons` count becomes per-piece `studdedAddonIds`
- * (first-N worn add-ons; same AC and weight), `extraArmorIds` is deduped to
- * one Extra per subcategory, and `equippedStorageIds` is filtered to known
- * storage items (missing on legacy docs → nothing equipped), and
- * `droppedItems` defaults to [] while shedding malformed entries. Docs are not
- * rewritten — the next save persists the new shape (plus the legacy count
- * mirror for stale clients). */
+/** Load-time normalization for character docs. It preserves final ability
+ * scores while folding the former background bonus layer into direct starting
+ * scores, upgrades automation state to v2, and makes Madness independent from
+ * Sanity. Other legacy inventory and armor normalization remains lossless. */
 export function normalizeCard(raw: HunterCard): HunterCard {
+  const legacyRaw = raw as HunterCard & Record<string, unknown>;
+  const legacyState = raw.sheetAutomation as (Record<string, unknown> & Partial<SheetAutomationState>) | undefined;
+  const levelAbilityBonuses = legacyState?.levelAbilityBonuses ?? {};
+  const hasLegacyAbilityShape = legacyRaw.abilityMode !== undefined
+    || legacyState?.version !== 2
+    || legacyState?.backgroundBonuses !== undefined;
+  const directBase = hasLegacyAbilityShape || !raw.baseAbilities
+    ? Object.fromEntries(ABILITY_KEYS.map((key) => [
+      key,
+      raw.abilities[key] - Object.values(levelAbilityBonuses).reduce((sum, entry) => sum + (entry?.[key] ?? 0), 0),
+    ])) as AbilityScores
+    : raw.baseAbilities;
+  const normalizedState: Record<string, unknown> | undefined = legacyState ? { ...legacyState, version: 2 } : undefined;
+  if (normalizedState) delete normalizedState.backgroundBonuses;
+  const klass = getClass(raw.classId);
+  const sheetSanityMax = Number.parseInt(String(raw.sheet?.sanityMax ?? ""), 10);
+  const sheetSanity = Number.parseInt(String(raw.sheet?.sanityCur ?? ""), 10);
+  // Before Madness became independent, the app displayed it as the gap from
+  // the old uncapped calculated maximum. Preserve that exact displayed value
+  // once, even though the current Deepcaller maximum now correctly caps at 26.
+  const previousMaxSanity = klass
+    ? Math.max(0, klass.maxSanity
+      + abilityModifier(raw.abilities.wis)
+      + (klass.id === "deepcaller" ? Math.max(0, Math.min(20, raw.level) - 1) : 0))
+    : Number.isFinite(sheetSanityMax) ? Math.max(0, sheetSanityMax) : Math.max(0, raw.sanity ?? 0);
+  const previousSanity = raw.sanity ?? (Number.isFinite(sheetSanity) ? sheetSanity : previousMaxSanity);
+  const madness = typeof raw.madness === "number" && Number.isFinite(raw.madness)
+    ? Math.max(0, Math.floor(raw.madness))
+    : Math.max(0, previousMaxSanity - previousSanity);
   const customItems = (Array.isArray(raw.customItems) ? raw.customItems : []).filter(
     (item): item is CustomItem => !!item
       && typeof item.id === "string"
@@ -143,8 +155,12 @@ export function normalizeCard(raw: HunterCard): HunterCard {
       && Number.isFinite(item.weightLb)
       && item.weightLb >= 0,
   );
-  return {
-    ...raw,
+  const normalized = {
+    ...legacyRaw,
+    baseAbilities: directBase,
+    sheetAutomation: normalizedState as SheetAutomationState | undefined,
+    sanity: typeof raw.sanity === "number" && Number.isFinite(raw.sanity) ? Math.max(0, raw.sanity) : raw.sanity,
+    madness,
     customItems,
     studdedAddonIds: studdedAddonIdsOf(raw),
     extraArmorIds: dedupeExtras(raw.extraArmorIds ?? []),
@@ -164,7 +180,9 @@ export function normalizeCard(raw: HunterCard): HunterCard {
         typeof d.droppedAt === "number" &&
         Number.isFinite(d.droppedAt),
     ),
-  };
+  } as HunterCard & Record<string, unknown>;
+  delete normalized.abilityMode;
+  return normalized;
 }
 
 /** Max Add-on pieces: five, or six when the Main Armor has Balanced Fit
@@ -288,7 +306,7 @@ export function emptyCard(params: {
     lastSeenLevel: 1,
     feats: [],
     abilities: { ...DEFAULT_ABILITIES },
-    abilityMode: "pointbuy",
+    baseAbilities: { ...DEFAULT_ABILITIES },
     skillProficiencies: [],
     mainArmorId: null,
     addonArmorIds: [],
@@ -296,6 +314,7 @@ export function emptyCard(params: {
     studdedAddonIds: [],
     extraArmorIds: [],
     transformationLevel: 0,
+    madness: 0,
     activeTransformations: [],
     insight: 0,
     bloodTinge: false,
@@ -320,9 +339,8 @@ export function emptySheetCard(params: {
     ...emptyCard(params),
     sheet: {},
     sheetAutomation: {
-      version: 1,
+      version: 2,
       classSkills: [],
-      backgroundBonuses: {},
       setupComplete: false,
     },
   };

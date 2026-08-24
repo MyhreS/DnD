@@ -1,4 +1,3 @@
-import { ABILITY_NAME } from "@/data/abilities";
 import { BACKGROUNDS } from "@/data/backgrounds";
 import { CLASSES } from "@/data/classes";
 import { DEEPCALLER_WHISPERS, TOOL_PROFICIENCIES } from "@/data/characterOptions";
@@ -6,10 +5,10 @@ import { ORIGIN_FEATS } from "@/data/feats";
 import { SKILLS } from "@/data/skills";
 import { ChoiceToggle } from "../appsheet/appSheetShared";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
-import { CharacterSheetBackgroundAbilities, CharacterSheetSkillChoices } from "./CharacterSheetGuidedChoices";
+import { CharacterSheetSkillChoices } from "./CharacterSheetGuidedChoices";
 import { CharacterSheetWeaponMasteryChoices } from "./CharacterSheetWeaponMasteryChoices";
 
-export type UpgradeChoiceKind = "class" | "background" | "background-abilities" | "class-skills" | "skilled" | "subclass" | "expertise" | "mastery" | "whispers";
+export type UpgradeChoiceKind = "class" | "background" | "class-skills" | "skilled" | "subclass" | "expertise" | "mastery" | "whispers";
 
 export function CharacterSheetUpgradeChoices({ kind, target }: { kind: UpgradeChoiceKind; target: number }) {
   const automation = useCharacterAutomation();
@@ -22,10 +21,8 @@ export function CharacterSheetUpgradeChoices({ kind, target }: { kind: UpgradeCh
 
   if (kind === "background") {
     const originFeat = ORIGIN_FEATS.find((feat) => feat.name === background?.feat);
-    return <div className="character-sheet-upgrade-choice-page"><label className="character-sheet-upgrade-select"><span>Background</span><select value={card.backgroundId ?? ""} onChange={(event) => automation.chooseBackground(event.target.value)}><option value="">Choose...</option>{BACKGROUNDS.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>{background && <article className="character-sheet-upgrade-detail"><p>{background.text}</p><dl><div><dt>Abilities</dt><dd>{background.abilityScores.map((key) => ABILITY_NAME[key]).join(", ")}</dd></div><div><dt>Skills</dt><dd>{background.skills.join(", ")}</dd></div><div><dt>Feat</dt><dd>{background.feat ?? "None"}</dd></div></dl>{originFeat && <p className="character-sheet-upgrade-inline-rule">{originFeat.description}</p>}</article>}</div>;
+    return <div className="character-sheet-upgrade-choice-page"><label className="character-sheet-upgrade-select"><span>Background</span><select value={card.backgroundId ?? ""} onChange={(event) => automation.chooseBackground(event.target.value)}><option value="">Choose...</option>{BACKGROUNDS.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>{background && <article className="character-sheet-upgrade-detail"><p>{background.text}</p><dl><div><dt>Skills</dt><dd>{background.skills.join(", ")}</dd></div><div><dt>Feat</dt><dd>{background.feat ?? "None"}</dd></div></dl>{originFeat && <p className="character-sheet-upgrade-inline-rule">{originFeat.description}</p>}</article>}</div>;
   }
-
-  if (kind === "background-abilities" && background) return <CharacterSheetBackgroundAbilities />;
 
   if (kind === "class-skills" && klass) return <CharacterSheetSkillChoices kind="class" intro={`Choose ${klass.skillChoices.count} trained skills for ${klass.title}.`} options={klass.skillChoices.options} selected={classSkills} limit={klass.skillChoices.count} onToggle={automation.toggleClassSkill} />;
   if (kind === "skilled") return <ChoiceList intro="Skilled grants any three skill or tool proficiencies." options={[...SKILLS.map((skill) => skill.name), ...TOOL_PROFICIENCIES]} selected={card.featSkills ?? []} limit={3} onToggle={automation.toggleFeatSkill} />;

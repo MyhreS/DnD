@@ -4,7 +4,7 @@ import { CLASSES, getClass } from "@/data/classes";
 import { ITEMS } from "@/data/items";
 import { SHEET_SKILL_FIELD, SKILLS } from "@/data/skills";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
-import type { ArmorPiece, Background, HunterCard, InventoryEntry, SheetData } from "@/types";
+import type { ArmorPiece, HunterCard, InventoryEntry, SheetData } from "@/types";
 import { automationFor, matchCatalogItem, structuredCardFromSheet } from "./characterAutomation";
 
 export interface MigrationDecision {
@@ -111,11 +111,6 @@ function armorMatch(sheet: SheetData, field: string, options: ArmorPiece[], deci
   return match.value.id;
 }
 
-function backgroundBonuses(background: Background, abilities: HunterCard["abilities"]) {
-  const ranked = [...background.abilityScores].sort((a, b) => abilities[b] - abilities[a] || background.abilityScores.indexOf(a) - background.abilityScores.indexOf(b));
-  return { [ranked[0]]: 2, [ranked[1]]: 1 };
-}
-
 function mergeInventory(existing: InventoryEntry[], migrated: InventoryEntry[]): InventoryEntry[] {
   const quantities = new Map(existing.map((entry) => [entry.itemId, entry.qty]));
   for (const entry of migrated) quantities.set(entry.itemId, Math.max(quantities.get(entry.itemId) ?? 0, entry.qty));
@@ -151,9 +146,7 @@ export function migrateLegacyCharacter(card: HunterCard, migratedAt: number): Le
 
   const level = Math.max(1, Math.min(20, numberField(sheet, "level", card.level || 1)));
   const abilities = { ...inferred.card.abilities };
-  const bonuses = backgroundBonuses(backgroundMatch.value, abilities);
   const baseAbilities = { ...abilities };
-  for (const [key, bonus] of Object.entries(bonuses)) baseAbilities[key as keyof typeof baseAbilities] = Math.max(3, abilities[key as keyof typeof abilities] - bonus);
 
   const checkedSkills = SKILLS.filter((skill) => sheet[`${SHEET_SKILL_FIELD[skill.name]}P`] === true).map((skill) => skill.name);
   const classSkills = checkedSkills.filter((skill) => classMatch.value.skillChoices.options.includes(skill)).slice(0, classMatch.value.skillChoices.count);
@@ -224,9 +217,8 @@ export function migrateLegacyCharacter(card: HunterCard, migratedAt: number): Le
     extraArmorIds: extraArmorIds.length ? extraArmorIds : (card.extraArmorIds ?? []),
     inventory: mergeInventory(card.inventory ?? [], migratedInventory.filter((entry) => !wornArmorIds.has(entry.itemId))),
     sheetAutomation: {
-      version: 1,
+      version: 2,
       classSkills,
-      backgroundBonuses: bonuses,
       startingKitApplied: true,
       setupComplete: true,
       startingKitInventory: [],

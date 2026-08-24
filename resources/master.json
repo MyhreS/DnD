@@ -1,11 +1,12 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "meta": {
     "title": "Catacombs & Starspawns source master",
     "updatedAt": "2026-08-24",
     "description": "Structured extraction of the four game-maker-maintained documents supplied on 2026-08-24.",
-    "replacementPolicy": "These four documents replace the earlier game-document library. When they define a concept already represented by the app, the current document wins and the old version must not be duplicated. Their limited scope does not by itself remove established app screens, saved-character compatibility, or game workflows; those change only when the game maker explicitly changes them.",
-    "retainedAppDataPolicy": "Hunter classes, backgrounds, feats, armor, equipment, transformation tracking, and other established app catalogs remain application data because the supplied documents refer to broader game systems without redefining them. The app must describe those catalogs honestly and must not attribute them to a removed handbook.",
+    "currentSourcePolicy": "These are the complete current game-maker documents. A fact represented here must come from one of these four files, must appear only once in its authoritative form, and must not be filled from an earlier document.",
+    "applicationBoundary": "The documents define current source content, not the app's screen design. Existing Hunter creation, the canonical character sheet, saved-character compatibility, and table workflows remain while source-backed values and calculations are corrected underneath them.",
+    "undefinedRulePolicy": "When these documents name a field or external rule without defining its calculation or contents, record that gap instead of importing or inventing an answer.",
     "documentCount": 4,
     "playerDocumentCount": 3,
     "hiddenDocumentCount": 1
@@ -57,7 +58,7 @@
       "kind": "whisper reference",
       "audience": "player",
       "authority": "current game-maker source",
-      "description": "The current two-page Hushed Whispers reference, containing six Whispers.",
+      "description": "The current two-page Whispers reference, containing six Whispers.",
       "pageCount": 2,
       "sourceFile": "resources/pdf/C&S Whispers Sheet.pdf",
       "sha256": "C210A5AA6B22D6BD0A60E59123DF285680168F5364C79EA9A0D110BA59910C43"
@@ -262,11 +263,11 @@
         "id": "call-lesser-starborn",
         "name": "Call Lesser Starborn",
         "level": 6,
+        "section": "Hidden Truths",
         "type": "Summoning Rite",
         "performing": "Action",
         "range": "90 feet",
         "duration": "Concentration, up to 20 rounds",
-        "special": "Hidden Truths. Uses the Lesser Starborn stat block.",
         "text": "You invoke a Patron from beyond the stars, tearing open a fleeting breach in reality and calling forth one of its lesser servants. A Lesser Starborn manifests in an unoccupied space you can see within range. The creature uses the Lesser Starborn stat block. The Lesser Starborn disappears when it drops to 0 Hit Points or when this Rite ends. The Lesser Starborn is friendly to you and your allies. In combat, it shares your Initiative count but takes its turn immediately after yours. The Lesser Starborn obeys your verbal commands (no Action required by you). If you issue no commands, it takes the Dodge Action and uses its movement to avoid danger. A Lesser Starborn is an unnatural creature of the outer dark. Its form varies according to the Patron that answered your call. Some resemble eyeless masses of flesh and tendrils, while others appear as twisted creatures stitched together from impossible anatomy and starlit void.",
         "upgrade": "Using Higher-Level Strain. The Lesser Starborn gains 10 Temporary Hit Points for each Strain level above 5.",
         "sourcePages": [8]
@@ -275,11 +276,11 @@
         "id": "true-seeing",
         "name": "True Seeing",
         "level": 6,
+        "section": "Hidden Truths",
         "type": "Detection Rite",
         "performing": "Action",
         "range": "Touch",
         "duration": "20 rounds",
-        "special": "Hidden Truths",
         "text": "You call upon a Patron that will show you what mortal eyes were never meant to witness. For the duration, one willing creature you touch has Truesight with a range of 120 feet. The creature also suffers 4 Madness.",
         "upgrade": "",
         "sourcePages": [9]
@@ -288,12 +289,13 @@
         "id": "plane-shift",
         "name": "Plane Shift",
         "level": 7,
+        "section": "Hidden Truths",
         "type": "Traversal Rite",
         "performing": "Action",
         "range": "Touch",
         "duration": "Instantaneous",
-        "special": "Hidden Truths",
-        "text": "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence...",
+        "text": "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence…",
+        "sourceNote": "The supplied entry ends with an ellipsis and provides no further destination or resolution procedure.",
         "upgrade": "",
         "sourcePages": [9]
       },
@@ -301,11 +303,11 @@
         "id": "mind-shatter",
         "name": "Mind Shatter",
         "level": 8,
+        "section": "Hidden Truths",
         "type": "Mind Influence Rite",
         "performing": "Action",
         "range": "150 feet",
         "duration": "Instantaneous",
-        "special": "Hidden Truths",
         "text": "You invoke a Patron of unfathomable power, suffer 3 Madness, unleashing a fragment of its eldritch knowledge into the mind of a creature you can see within range. The target must make an Intelligence saving throw. On a failed save, it takes 10d12 Mind damage. For the next 10 rounds, the target can't perform Rites, and its Intelligence, Wisdom, and Charisma modifiers become -5. On a successful save, the target takes half as much damage and suffers no additional effects.",
         "upgrade": "",
         "sourcePages": [10]
@@ -314,11 +316,11 @@
         "id": "foresight",
         "name": "Foresight",
         "level": 9,
+        "section": "Hidden Truths",
         "type": "Protection Rite",
         "performing": "Three Actions",
         "range": "Touch",
         "duration": "10 rounds",
-        "special": "Hidden Truths",
         "text": "You call upon a Patron that peers beyond the veil of time and fate. By its guidance, a willing creature you touch is granted fleeting glimpses of the immediate future, allowing it to perceive danger moments before it occurs. For the duration, the target has Advantage on all D20 Tests, and other creatures have Disadvantage on attack rolls against it. This Rite ends early if you perform it again.",
         "upgrade": "",
         "sourcePages": [10]
@@ -327,11 +329,11 @@
         "id": "call-starborn-horror",
         "name": "Call Starborn Horror",
         "level": 9,
+        "section": "Hidden Truths",
         "type": "Summoning Rite",
         "performing": "Action",
         "range": "120 feet",
         "duration": "5 rounds",
-        "special": "Hidden Truths. Uses the Starborn Horror stat block; roll on the Starborn Horror Behavior Table each of its turns.",
         "text": "You tear open reality and call forth a true Starborn Horror, a servant of the outer dark that was never meant to enter the mortal world. When the Starborn Horror manifests, each creature within a 30-foot-radius Sphere centered on a point within range must make a Wisdom saving throw. On a failed save, a creature takes 10d10 Mind damage, suffers 10 Madness, and gains the Frightened condition for the duration. On a successful save, a creature takes half as much damage and suffers 5 Madness. Each other creature that can see or hear the Starborn Horror suffers 4 Madness. You suffer 10 Madness when you perform this Rite. The Starborn Horror uses the Starborn Horror stat block. It is not friendly to you or your allies, nor is it inherently hostile to your enemies. The Horror acts according to its own unknowable will. At the start of each of its turns, roll on the Starborn Horror Behavior Table to determine which action it takes. When determining targets, use your Madness die system. The Starborn Horror disappears when the Rite ends.",
         "upgrade": "",
         "sourcePages": [11]
@@ -344,7 +346,6 @@
       {
         "id": "eldritch-blast",
         "name": "Eldritch Blast",
-        "level": 0,
         "type": "Evocation Rite",
         "performing": "Action",
         "range": "120 feet",
@@ -356,7 +357,6 @@
       {
         "id": "eldritch-strike",
         "name": "Eldritch Strike",
-        "level": 0,
         "type": "Evocation Rite",
         "performing": "Action",
         "range": "Self",
@@ -369,7 +369,6 @@
       {
         "id": "eldritch-lightning",
         "name": "Eldritch Lightning",
-        "level": 0,
         "type": "Evocation Rite",
         "performing": "Action",
         "range": "Self",
@@ -381,7 +380,6 @@
       {
         "id": "mindcrack",
         "name": "Mindcrack",
-        "level": 0,
         "type": "Mind Influence Rite",
         "performing": "Action",
         "range": "60 feet",
@@ -393,7 +391,6 @@
       {
         "id": "minor-illusion",
         "name": "Minor Illusion",
-        "level": 0,
         "type": "Illusion Rite",
         "performing": "Action",
         "range": "30 feet",
@@ -405,7 +402,6 @@
       {
         "id": "third-hand",
         "name": "Third Hand",
-        "level": 0,
         "type": "Summoning Rite",
         "performing": "Action",
         "range": "30 feet",
@@ -442,6 +438,15 @@
       { "name": "Presence", "ability": "Charisma" },
       { "name": "Persuasion", "ability": "Charisma" }
     ],
+    "sourceCoverage": {
+      "defined": "The sheet defines the fields a hunter records, including ability scores, modifiers, saving throws, skills, vitals, equipment, class features, feats, Rite values, prepared Whispers, and notes.",
+      "notDefined": [
+        "An ability-score generation method or point budget",
+        "Background-granted ability-score adjustments",
+        "The formula for an ability modifier, saving throw, skill value, Armor Class, Hit Points, Sanity, Initiative, Passive Perception, or Rite value"
+      ],
+      "appPolicy": "Keep the current character-creation and character-sheet workflow, accept ability scores directly, and never present an unspecified generation method as a current-source rule. Established calculations outside this source set must remain clearly separate from the structured source master."
+    },
     "sections": [
       {
         "id": "identity-abilities",
@@ -485,7 +490,7 @@
     "sourceId": "hidden-condition-sheet",
     "audience": "dm",
     "containsRules": true,
-    "description": "The supplied Pages document contains current hidden rules. These replace the former Insane Condition appendix; none of that former appendix's secret mechanics may be restored.",
+    "description": "The supplied Pages document contains the current hidden rules for the Second Threshold, Old One Vessel, and Lost.",
     "publicPolicy": "Do not include this source, its download, its text, its condition names, or its missing-source notes in the public Codex or other player-facing search and download surfaces.",
     "sections": [
       {
@@ -532,13 +537,13 @@
       }
     ],
     "appIntegration": {
-      "supported": "Track current Sanity, calculated Madness, and the existing Insane marker without publishing the hidden outcomes.",
-      "sanityRange": "Because current Madness is calculated as Max Sanity minus current Sanity, current Sanity must be able to fall as low as negative Max Sanity so twice-Max-Sanity Madness remains representable.",
+      "supported": "Track current Sanity, current Madness, and the existing Insane marker without publishing the hidden outcomes.",
+      "madnessTracking": "Current Madness is an explicit value in this source. The supplied documents do not define it as Max Sanity minus current Sanity, so the app must track it independently instead of inferring it or representing it through negative Sanity.",
       "notAutomated": "Do not replace a hunter with an Old One Vessel or Lost form until the referenced level-matched stat blocks are supplied. Never invent those statistics."
     },
     "hiddenConditionNames": ["Old One Vessel", "Lost"]
   },
-  "conditionsNamedByCurrentSources": ["Blinded", "Frightened", "Incapacitated", "Invisible", "Restrained"],
+  "conditionsNamedByCurrentSources": ["Blinded", "Frightened", "Incapacitated", "Insane", "Invisible", "Restrained"],
   "referencedButNotSupplied": [
     {
       "name": "Lesser Starborn stat block",
@@ -565,6 +570,22 @@
       "policy": "Do not invent or expose a substitute table."
     },
     {
+      "name": "Madness die system",
+      "referencedBy": "Call Starborn Horror",
+      "sourceId": "book-of-the-deepcaller",
+      "audience": "player",
+      "status": "not supplied",
+      "policy": "Do not invent target-selection rules for the missing system."
+    },
+    {
+      "name": "Plane Shift continuation",
+      "referencedBy": "Plane Shift",
+      "sourceId": "book-of-the-deepcaller",
+      "audience": "player",
+      "status": "not supplied",
+      "policy": "The current entry ends with an ellipsis; do not restore destination or resolution rules from another source."
+    },
+    {
       "name": "Old One Vessel level-matched stat blocks",
       "referencedBy": "The Second Threshold and Old One Vessel Rules",
       "sourceId": "hidden-condition-sheet",
@@ -586,7 +607,7 @@
       "sourceId": "hidden-condition-sheet",
       "audience": "dm",
       "status": "not supplied",
-      "policy": "Keep established transformation tracking, but do not restore the retired table or invent a replacement table."
+      "policy": "Keep transformation tracking, but do not invent results for the table that was not supplied."
     }
   ]
 }
