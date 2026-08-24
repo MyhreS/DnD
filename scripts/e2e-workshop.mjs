@@ -499,7 +499,7 @@ try {
   });
   await watchdogProbe.collection("messages").doc("request").set({
     kind: "request",
-    body: "Return a completed result, then simulate a worker that stays open.",
+    body: "Return a completed result, then simulate a worker and progress pipe that stay open.",
     authorUid: creatorUid,
     authorEmail: creatorEmail,
     authorName: "Christopher Creator",
@@ -508,10 +508,10 @@ try {
     createdAt: new Date(),
   });
   const watchdogStartedAt = Date.now();
-  await runManager("stuck_result", 30_000);
+  await runManager("stuck_stream_result", 30_000);
   const watchdogData = (await watchdogProbe.get()).data();
   if (watchdogData?.status !== "finished" || watchdogData?.lastCompletedRevision !== 1) {
-    throw new Error("The manager did not salvage the completed result from a worker that stayed open.");
+    throw new Error("The manager did not salvage the completed result from a worker whose process and progress pipe stayed open.");
   }
   if (Date.now() - watchdogStartedAt > 25_000) throw new Error("The completed-result watchdog took too long to recover the ticket.");
   await db.recursiveDelete(watchdogProbe);
