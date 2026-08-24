@@ -144,6 +144,13 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.getByRole("heading", { name: "Armor & carrying", exact: true }).waitFor();
   await page.getByText("Carried weight", { exact: true }).waitFor();
   await page.getByText("Load effect", { exact: true }).waitFor();
+  const creationEquipmentSummary = page.locator(".v4-creation-equipment .v4-equipment-summary");
+  const creationSummaryPosition = await creationEquipmentSummary.evaluate((element) => getComputedStyle(element).position);
+  if (creationSummaryPosition !== "static") {
+    throw new Error(`The character-creation equipment summary still floats while scrolling: ${creationSummaryPosition}`);
+  }
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `screenshots/creation-armor-start-${suffix}.png`, fullPage: true });
   const creationLayer = page.locator('[data-page-id="create-hunter"]');
   await creationLayer.evaluate((element) => { element.dataset.mountMark = "preserved"; });
   const mainArmor = page.locator(".v4-equip-main .v4-equipment-socket");

@@ -427,6 +427,7 @@
 
 .v4-equipment { display: grid; gap: 16px; }
 .v4-equipment-summary { position: sticky; z-index: 3; top: 0; display: grid; grid-template-columns: repeat(4, 1fr); overflow: hidden; border: 1px solid var(--app-line); border-radius: 12px; background: color-mix(in srgb, var(--app-bg), var(--app-surface) 62%); box-shadow: 0 8px 22px color-mix(in srgb, var(--app-bg), transparent 35%); }
+.v4-creation-equipment .v4-equipment-summary { position: static; z-index: auto; top: auto; box-shadow: none; }
 .v4-equipment-summary > span { display: grid; justify-items: center; gap: 2px; padding: 11px 8px; border-right: 1px solid var(--app-line); }
 .v4-equipment-summary > span:last-child { border-right: 0; }
 .v4-equipment-summary small { color: var(--app-muted); font-size: 9px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
