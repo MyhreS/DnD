@@ -39,7 +39,7 @@ export default defineConfig({
         name: "Catacombs & Starspawns",
         short_name: "C&S Hunters",
         description:
-          "Companion app for Catacombs & Starspawns — current sources, Hunter sheets, sessions and battles.",
+          "Companion app for our Catacombs & Starspawns campaign — sessions, hunter cards and the player's handbook.",
         theme_color: "#0a0a0c",
         background_color: "#0a0a0c",
         display: "standalone",
@@ -68,14 +68,16 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,svg,woff2}", "pwa-*.png", "apple-touch-icon.png", "favicon.svg"],
-        // Source PDFs are intentionally absent from globPatterns; fetch them on
-        // demand so an installed app keeps enough room for its application shell.
-        globIgnores: ["**/splash/**"],
+        // Don't precache the large handbook PDF or the iOS splash images.
+        globIgnores: ["**/splash/**", "**/handbook/**"],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/__/, /\.pdf$/],
         cleanupOutdatedCaches: true,
-        // Large PDFs are fetched fresh on demand; iOS installed apps have a
-        // small quota and must not lose the app-shell cache to source files.
+        // NOTE: we deliberately do NOT runtime-cache the ~26MB handbook PDF.
+        // iOS gives an installed PWA a small storage quota; caching a file that
+        // large evicts the app-shell precache and white-screens the app on the
+        // next launch. The PDF is fetched fresh on demand instead (see
+        // features/handbook/lib/handbookPdf.ts).
       },
       devOptions: {
         enabled: false,

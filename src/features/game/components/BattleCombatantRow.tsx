@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { CONDITIONS, conditionName } from "@/data/conditions";
+import { CONDITIONS, CONDITION_NAME } from "@/data/conditions";
 import { useCombatStore } from "@/features/play/store/combatStore";
 import type { Combatant, Game, HunterCard } from "@/types";
 import { combatVitals } from "../lib/combatPresentation";
@@ -165,9 +165,9 @@ export function BattleCombatantRow({
         {combatant.conditions.length === 0 ? <span className="battle-no-conditions">None</span> : combatant.conditions.map((conditionId) => {
           const since = combatant.conditionSince?.[conditionId];
           const rounds = since ? Math.max(1, round - since + 1) : null;
-          const label = `${conditionName(conditionId)}${rounds ? ` · ${rounds}r` : ""}`;
+          const label = `${CONDITION_NAME[conditionId] ?? conditionId}${rounds ? ` · ${rounds}r` : ""}`;
           return canManage
-            ? <button className="battle-condition" key={conditionId} type="button" aria-label={`Remove ${conditionName(conditionId)} from ${combatant.name}`} disabled={disabled} onClick={() => void toggleCondition(game.id, combatant, conditionId, round)}>{label}<span aria-hidden="true">×</span></button>
+            ? <button className="battle-condition" key={conditionId} type="button" aria-label={`Remove ${CONDITION_NAME[conditionId] ?? conditionId} from ${combatant.name}`} disabled={disabled} onClick={() => void toggleCondition(game.id, combatant, conditionId, round)}>{label}<span aria-hidden="true">×</span></button>
             : <span key={conditionId}>{label}</span>;
         })}
         {canManage && (

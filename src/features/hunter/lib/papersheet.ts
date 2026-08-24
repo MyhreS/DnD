@@ -1,3 +1,4 @@
+import { getClass } from "@/data/classes";
 import type { HunterCard, SheetData } from "@/types";
 
 /** Card fields mirrored from the free-form sheet so lists, party views and
@@ -6,29 +7,22 @@ import type { HunterCard, SheetData } from "@/types";
 export function sheetMirror(sheet: SheetData): Pick<HunterCard, "name" | "level" | "background"> {
   const name = typeof sheet.name === "string" ? sheet.name.trim() : "";
   const parsed = typeof sheet.level === "string" ? parseInt(sheet.level, 10) : NaN;
-  const level = Number.isFinite(parsed) ? Math.max(1, parsed) : 1;
+  const level = Number.isFinite(parsed) ? Math.max(1, Math.min(20, parsed)) : 1;
   const background = typeof sheet.background === "string" ? sheet.background.trim() : "";
   return { name, level, background };
 }
 
-/** The sheet's free-text class line, used verbatim in list rows. */
+/** The sheet's free-text class line, for list rows ("Stalker", "Deepcaller"…). */
 export function sheetClassName(sheet: SheetData | undefined): string {
   const v = sheet?.["class"];
   return typeof v === "string" ? v.trim() : "";
 }
 
-function displayId(value: string): string {
-  return value
-    .split(/[-_\s]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-/** A card's display class: the current sheet's free-text line, falling back to
- * an older stored `classId` without interpreting it. */
+/** A card's display class: the sheet's free-text class line, falling back to
+ * the structured `classId` for hunters that predate the sheet (legacy builder
+ * cards, test-run bots) — so list rows never show a classless hunter. */
 export function cardClassName(card: Pick<HunterCard, "sheet" | "classId">): string {
-  return sheetClassName(card.sheet) || displayId(card.classId);
+  return sheetClassName(card.sheet) || getClass(card.classId)?.name || "";
 }
 
 /** Parse an integer out of a sheet's free-text box ("22", "+2", "30 ft") —

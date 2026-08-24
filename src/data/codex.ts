@@ -35,13 +35,8 @@ export interface CurrentWhisper {
   sourcePages: number[];
 }
 
-export interface CurrentCharacterSheet {
-  sourceId: string;
-  printedPageCount: number;
-  logicalSectionCount: number;
-  abilities: string[];
-  skills: Array<{ name: string; ability: string }>;
-  sections: Array<{ id: string; title: string; sourcePages: number[]; fields: string[] }>;
+export interface CurrentRite extends CurrentWhisper {
+  tables?: CodexTable[];
 }
 
 export interface CodexEntry {
@@ -70,7 +65,7 @@ export interface CodexTopic {
 
 export const CODEX_SOURCES = generated.sources as CodexSource[];
 export const CODEX_ENTRIES = generated.entries as CodexEntry[];
-export const CURRENT_CHARACTER_SHEET = generated.characterSheet as CurrentCharacterSheet;
+export const CURRENT_RITES = generated.rites as CurrentRite[];
 export const CURRENT_WHISPERS = generated.whispers as CurrentWhisper[];
 export const CURRENT_CONDITIONS = generated.conditionsNamedByCurrentSources as string[];
 export const CODEX_SOURCE_BY_ID = new Map(CODEX_SOURCES.map((item) => [item.id, item]));

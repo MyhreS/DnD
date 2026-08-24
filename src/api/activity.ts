@@ -11,7 +11,15 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { isPreviewActive } from "@/dev/preview";
-import type { ActivityType } from "@/types";
+import { ITEM_BY_ID } from "@/data/items";
+import type { ActivityType, InventoryEntry } from "@/types";
+
+/** "2× Rope, 5 gp" — a human line for an item/coin bundle in log messages. */
+export function describeLoot(items: InventoryEntry[], coins: number): string {
+  const parts = items.map((e) => `${e.qty}× ${ITEM_BY_ID[e.itemId]?.name ?? e.itemId}`);
+  if (coins > 0) parts.push(`${coins} gp`);
+  return parts.join(", ") || "nothing";
+}
 
 // The campaign chronicle: append-only event lines, one doc per event. Members
 // read a campaign's log; a hunter's owner reads that hunter's history across

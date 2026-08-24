@@ -13,7 +13,7 @@ import { CharacterPage } from "@/features/hunter/components/CharacterPage";
 import { ProfilePage } from "@/features/profile/components/ProfilePage";
 
 // Heavy, rarely-first routes are code-split so their content data
-// (generated Codex data / live play scene) defers out of
+// (generated Codex data / creature art / play scene) defers out of
 // the first-paint bundle. Named exports are adapted to the default-export
 // shape React.lazy expects.
 const CodexPage = lazy(() =>
@@ -28,8 +28,8 @@ const GamePage = lazy(() =>
 const StatusPage = lazy(() =>
   import("@/features/status/components/StatusPage").then((m) => ({ default: m.StatusPage })),
 );
-/** Preserve old bookmarks without reviving removed source ids. Useful query
- * text is kept, while filters for replaced source sets are discarded. */
+/** Preserve useful text from old bookmarks without reviving removed source
+ * identifiers. The four current documents are the only Codex sources. */
 function LegacyCodexRedirect() {
   const { pathname, search } = useLocation();
   const previous = new URLSearchParams(search);
@@ -47,6 +47,8 @@ function LegacyCodexRedirect() {
       next.set("q", section.replaceAll("-", " "));
     } else if (tab === "rites") {
       next.set("group", "Rites");
+    } else if (tab === "classes") {
+      next.set("q", "classes");
     } else if (tab === "backgrounds" || tab === "feats" || tab === "armory") {
       next.set("q", tab === "armory" ? "equipment" : tab);
     }
@@ -59,7 +61,7 @@ function AuthedApp() {
   return (
     <Suspense fallback={<Splash />}>
       <Routes>
-        {/* Main menu: account home, hunters, current sources, profile. */}
+        {/* Main menu: account home, hunters, current sources, profile — no campaign. */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<MainMenu />} />
           <Route path="character" element={<CharacterPage />} />

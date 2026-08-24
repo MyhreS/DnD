@@ -1,89 +1,337 @@
 import { create } from "zustand";
-import { subscribeGames, setGameCombat } from "@/api/games";
-import { isPreviewActive, previewGame } from "@/dev/preview";
+import type { Game, GameParticipant, GamePhase, GameLocation, EncounterState } from "@/types";
+import {
+  subscribeGames,
+  subscribeParticipants,
+  createGame,
+  startGame,
+  setGamePhase,
+  setGameLocation,
+  setGameCombat,
+  endGame,
+  deleteGame,
+  joinGame,
+  leaveGame,
+  purgeLoot,
+  seedSandboxParticipants,
+  type CreateGameInput,
+  type JoinInput,
+} from "@/api/games";
+import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview";
+import { useAuthStore } from "@/features/auth/store/authStore";
+import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
+import { purgeArchive } from "@/api/players";
+import { logEvent } from "@/api/activity";
+import { PHASE_LABEL, LOCATION_LABEL } from "@/features/play/lib/phase";
 import { subscribeWithDeniedRetry } from "@/lib/subscribeRetry";
 import { explain } from "@/lib/errors";
-import type { EncounterState, Game } from "@/types";
 
 type Status = "idle" | "loading" | "loaded" | "error";
 
-/** The newest non-test game in the active campaign that has not ended. */
+/** The live game the party should be looking at: newest non-sandbox game in the
+ * active campaign that hasn't ended. (Sandbox/test-run games are separate.) */
 export function currentGame(games: Game[], campaignId?: string | null): Game | null {
-  return games.find((game) => (
-    !game.sandbox
-    && game.status !== "ended"
-    && (campaignId == null || game.campaignId === campaignId)
-  )) ?? null;
+  return (
+    games.find(
+      (g) =>
+        !g.sandbox &&
+        g.status !== "ended" &&
+        (campaignId == null || g.campaignId === campaignId),
+    ) ?? null
+  );
 }
 
 interface GameState {
   games: Game[];
+  participants: GameParticipant[];
   status: Status;
+  /** An action is in flight — drives button spinners / disabled states. */
+  busy: boolean;
   error: string | null;
   preview: boolean;
   _unsubGames: (() => void) | null;
-  _campaignId: string | null;
+  _unsubParts: (() => void) | null;
+  _partsGameId: string | null;
+  _gamesCampaignId: string | null;
+
   init: (campaignId: string | null) => void;
   stopSync: () => void;
+  clearError: () => void;
+
+  hostGame: (input: CreateGameInput) => Promise<string | null>;
+  begin: (gameId: string) => Promise<boolean>;
+  setPhase: (gameId: string, phase: GamePhase) => Promise<boolean>;
+  setLocation: (gameId: string, location: GameLocation) => Promise<boolean>;
   setCombat: (gameId: string, combat: EncounterState) => Promise<boolean>;
+  stop: (gameId: string, endedPhase: GamePhase, endedLocation?: GameLocation) => Promise<boolean>;
+  join: (gameId: string, p: JoinInput) => Promise<boolean>;
+  leave: (gameId: string, uid: string) => Promise<boolean>;
+  remove: (gameId: string) => Promise<boolean>;
 }
 
-/** Minimal live-game projection for the table board and initiative tracker.
- * Session creation and roster management live on the Games page. */
-export const useGameStore = create<GameState>((set, get) => ({
-  games: [],
-  status: "idle",
-  error: null,
-  preview: false,
-  _unsubGames: null,
-  _campaignId: null,
-
-  init: (campaignId) => {
-    if (get().preview) return;
-    if (isPreviewActive()) {
-      let game = previewGame();
-      if (new URLSearchParams(window.location.search).get("play") === "active") {
-        game = { ...game, status: "active", startedAt: Date.now() };
-      }
-      set({ preview: true, games: [game], status: "loaded" });
-      return;
-    }
-    if (!campaignId) {
-      get()._unsubGames?.();
-      set({ _unsubGames: null, _campaignId: null, games: [], status: "loaded" });
-      return;
-    }
-    if (campaignId === get()._campaignId && get()._unsubGames) return;
-    get()._unsubGames?.();
-    set({ status: "loading", error: null, _campaignId: campaignId });
-    const unsubscribe = subscribeWithDeniedRetry(
-      (onError) => subscribeGames(
-        campaignId,
-        (games) => set({ games, status: "loaded", error: null }),
-        onError,
-      ),
-      (error) => set({ status: "error", error: explain("Couldn't load the game", error) }),
+export const useGameStore = create<GameState>((set, get) => {
+  /** (Re)subscribe to the current game's participants when it changes. */
+  function syncParticipants(games: Game[]) {
+    const cur = currentGame(games, get()._gamesCampaignId);
+    const id = cur?.id ?? null;
+    if (id === get()._partsGameId) return;
+    get()._unsubParts?.();
+    set({ _partsGameId: id, participants: [] });
+    if (!id) return set({ _unsubParts: null });
+    const unsub = subscribeParticipants(
+      id,
+      (participants) => set({ participants, error: null }), // a fresh snapshot clears any stale error
+      (err) => set({ error: explain("Couldn't load who's in the game", err) }),
     );
-    set({ _unsubGames: unsubscribe });
-  },
+    set({ _unsubParts: unsub });
+  }
 
-  stopSync: () => {
-    get()._unsubGames?.();
-    set({ _unsubGames: null });
-  },
-
-  setCombat: async (gameId, combat) => {
-    if (get().preview) {
-      set((state) => ({ games: state.games.map((game) => game.id === gameId ? { ...game, combat } : game) }));
-      return true;
-    }
+  /** Wrap a write so every action reports busy + surfaces errors. */
+  async function run<T>(fn: () => Promise<T>, fallbackMsg: string): Promise<T | null> {
+    set({ busy: true, error: null });
     try {
-      await setGameCombat(gameId, combat);
-      return true;
-    } catch (error) {
-      console.error("Couldn't update combat.", error);
-      set({ error: explain("Couldn't update combat", error) });
-      return false;
+      const out = await fn();
+      set({ busy: false });
+      return out;
+    } catch (err) {
+      console.error(fallbackMsg, err);
+      set({ busy: false, error: explain(fallbackMsg, err) });
+      return null;
     }
-  },
-}));
+  }
+
+  function actor() {
+    const { user, member } = useAuthStore.getState();
+    return { actorUid: user?.uid ?? "", actorName: member?.firstName || user?.displayName || "Someone" };
+  }
+
+  /** Chronicle a game event (fire-and-forget). Sandbox/test games stay quiet. */
+  function logGame(gameId: string, type: "game.started" | "game.phase" | "game.location" | "game.ended" | "game.joined", message: string) {
+    const g = get().games.find((x) => x.id === gameId);
+    if (!g?.campaignId || g.sandbox) return;
+    void logEvent({ campaignId: g.campaignId, type, message, ...actor() });
+  }
+
+  return {
+    games: [],
+    participants: [],
+    status: "idle",
+    busy: false,
+    error: null,
+    preview: false,
+    _unsubGames: null,
+    _unsubParts: null,
+    _partsGameId: null,
+    _gamesCampaignId: null,
+
+    init: (campaignId) => {
+      if (get().preview) return;
+      if (isPreviewActive()) {
+        const SELF = "preview-uid"; // the preview user's uid (see dev/preview.ts)
+        const isDm = useAuthStore.getState().identity.playerType === "dm";
+        let game = previewGame();
+        let parts = previewParticipants();
+        if (isDm) {
+          // Make the preview user the DM so DM controls are visible.
+          game = { ...game, dmUid: SELF, dmName: "You (DM)" };
+          parts = [
+            { ...parts[0], uid: SELF, name: "You (DM)" },
+            { ...parts[1], uid: "preview-p1" },
+            parts[2],
+          ];
+        }
+        // Dev affordances: `?play=active|ended` and `?phase=` preview game states.
+        const params = new URLSearchParams(window.location.search);
+        const play = params.get("play");
+        if (play === "active") {
+          game = { ...game, status: "active", phase: "combat", startedAt: Date.now() };
+        } else if (play === "ended") {
+          game = {
+            ...game,
+            status: "ended",
+            endedPhase: "long_rest",
+            startedAt: Date.now() - 2 * 60 * 60 * 1000,
+            endedAt: Date.now(),
+          };
+        }
+        const ph = params.get("phase");
+        if (ph && ["exploration", "combat", "short_rest", "long_rest"].includes(ph)) {
+          game = { ...game, phase: ph as typeof game.phase };
+        }
+        set({ preview: true, games: [game], participants: parts, status: "loaded" });
+        return;
+      }
+      if (!campaignId) {
+        get()._unsubGames?.();
+        get()._unsubParts?.();
+        set({ _unsubGames: null, _unsubParts: null, _partsGameId: null, _gamesCampaignId: null, games: [], participants: [], status: "loaded" });
+        return;
+      }
+      if (campaignId === get()._gamesCampaignId && get()._unsubGames) return;
+      get()._unsubGames?.();
+      set({ status: "loading", error: null, _gamesCampaignId: campaignId });
+      const unsub = subscribeWithDeniedRetry(
+        (onError) =>
+          subscribeGames(
+            campaignId,
+            (games) => {
+              set({ games, status: "loaded", error: null });
+              syncParticipants(games);
+            },
+            onError,
+          ),
+        (err) => set({ status: "error", error: explain("Couldn't load the game", err) }),
+      );
+      set({ _unsubGames: unsub });
+    },
+
+    stopSync: () => {
+      get()._unsubGames?.();
+      get()._unsubParts?.();
+      set({ _unsubGames: null, _unsubParts: null, _partsGameId: null });
+    },
+
+    clearError: () => set({ error: null }),
+
+    // --- Actions (preview mutates local state; otherwise hits Firestore) ---
+
+    hostGame: async (input) => {
+      if (get().preview) {
+        const g = { ...previewGame(), id: "preview-game", title: input.title, dmName: input.dmName };
+        set({ games: [g] });
+        return g.id;
+      }
+      const id = await run(() => createGame(input), "Couldn't start the game.");
+      if (id && input.campaignId && !input.sandbox) {
+        void logEvent({
+          campaignId: input.campaignId,
+          type: "game.created",
+          message: `${input.dmName} opened a game lobby — «${input.title}».`,
+          ...actor(),
+        });
+      }
+      if (id) {
+        // A "Test Run" campaign fills its lobby with the bot hunters right away,
+        // so the DM can see a populated table before pressing Begin.
+        const camp = useCampaignStore.getState().active;
+        if (camp?.sandbox) {
+          try {
+            await seedSandboxParticipants(id, camp.id);
+          } catch (err) {
+            console.error("Couldn't seed test bots", err);
+          }
+        }
+      }
+      return id;
+    },
+
+    begin: async (gameId) => {
+      if (get().preview) {
+        const now = Date.now();
+        set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, status: "active", startedAt: now, clockRunning: true, clockStartedAt: now } : g)) }));
+        return true;
+      }
+      const ok = (await run(() => startGame(gameId), "Couldn't begin the game.")) !== null;
+      if (ok) {
+        const title = get().games.find((g) => g.id === gameId)?.title ?? "the game";
+        logGame(gameId, "game.started", `The hunt began — «${title}».`);
+      }
+      if (ok) {
+        // A "Test Run" campaign auto-fills with its bot hunters so the table
+        // looks populated; bots never act.
+        const camp = useCampaignStore.getState().active;
+        if (camp?.sandbox) {
+          try {
+            await seedSandboxParticipants(gameId, camp.id);
+          } catch (err) {
+            console.error("Couldn't seed test bots", err);
+          }
+        }
+      }
+      return ok;
+    },
+
+    setPhase: async (gameId, phase) => {
+      if (get().preview) {
+        set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, phase } : g)) }));
+        return true;
+      }
+      const ok = (await run(() => setGamePhase(gameId, phase), "Couldn't change the phase.")) !== null;
+      if (ok) logGame(gameId, "game.phase", `The party entered ${PHASE_LABEL[phase]}.`);
+      return ok;
+    },
+
+    setLocation: async (gameId, location) => {
+      if (get().preview) {
+        set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, location } : g)) }));
+        return true;
+      }
+      const ok =
+        (await run(() => setGameLocation(gameId, location), "Couldn't change the location.")) !== null;
+      if (ok) logGame(gameId, "game.location", `The party moved to ${LOCATION_LABEL[location]}.`);
+      return ok;
+    },
+
+    setCombat: async (gameId, combat) => {
+      if (get().preview) {
+        set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, combat } : g)) }));
+        return true;
+      }
+      return (await run(() => setGameCombat(gameId, combat), "Couldn't update combat.")) !== null;
+    },
+
+    stop: async (gameId, endedPhase, endedLocation) => {
+      if (get().preview) {
+        set((s) => ({
+          games: s.games.map((g) =>
+            g.id === gameId ? { ...g, status: "ended", endedPhase, endedLocation: endedLocation ?? null, clockRunning: false, clockStartedAt: null } : g,
+          ),
+        }));
+        return true;
+      }
+      // Log before the game flips to "ended" so the line lands while the
+      // context is still current (the write itself is fire-and-forget).
+      const title = get().games.find((g) => g.id === gameId)?.title ?? "the game";
+      // Ending a game purges archived (dead/deleted) characters so they don't
+      // pile up between sessions.
+      const ok =
+        (await run(async () => {
+          await endGame(gameId, endedPhase, endedLocation);
+          await purgeArchive();
+          await purgeLoot(gameId);
+        }, "Couldn't stop the game.")) !== null;
+      if (ok) logGame(gameId, "game.ended", `The game ended — «${title}».`);
+      return ok;
+    },
+
+    join: async (gameId, p) => {
+      if (get().preview) {
+        set((s) => ({
+          participants: s.participants.some((x) => x.uid === p.uid)
+            ? s.participants
+            : [...s.participants, { ...p, subclassId: p.subclassId ?? null, joinedAt: Date.now(), lastSeen: Date.now() }],
+        }));
+        return true;
+      }
+      const ok = (await run(() => joinGame(gameId, p), "Couldn't join the game.")) !== null;
+      if (ok) logGame(gameId, "game.joined", `${p.name} joined the game.`);
+      return ok;
+    },
+
+    leave: async (gameId, uid) => {
+      if (get().preview) {
+        set((s) => ({ participants: s.participants.filter((x) => x.uid !== uid) }));
+        return true;
+      }
+      return (await run(() => leaveGame(gameId, uid), "Couldn't leave the game.")) !== null;
+    },
+
+    remove: async (gameId) => {
+      if (get().preview) {
+        set((s) => ({ games: s.games.filter((g) => g.id !== gameId) }));
+        return true;
+      }
+      return (await run(() => deleteGame(gameId), "Couldn't remove the game.")) !== null;
+    },
+  };
+});

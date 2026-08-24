@@ -1,12 +1,18 @@
 # `resources/` — current Catacombs & Starspawns sources
 
-This folder contains the complete, current game-maker-maintained source set.
+This folder contains the complete, current game-maker-maintained document set.
 The four PDFs in [`pdf/`](pdf/) replace every older handbook, class board,
-rite sheet, game card, rules scan, character sheet, image extraction, and CSV.
+rite sheet, game card, rules scan, character-sheet document, image extraction,
+and CSV kept as a game source.
 
-There are deliberately no historical copies here. If a rule, catalog, stat
-block, table, or option is absent from the four current documents, the app must
-not recover it from an older file or invent a replacement.
+There are deliberately no historical document copies here. When a current PDF
+defines something already used by the app, its version wins and the older
+version must not remain beside it. A missing topic must not be reconstructed
+from a deleted document or presented as though it came from these four PDFs.
+
+This source-library boundary is not permission to redesign or remove existing
+app pages, Hunter creation, saved-character support, or table workflows. Those
+product features remain until the game maker explicitly changes them.
 
 ## Canonical files
 

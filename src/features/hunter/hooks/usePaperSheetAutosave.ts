@@ -34,8 +34,8 @@ export function usePaperSheetAutosave(
   card: HunterCard,
   { readOnly = false, create = false }: { readOnly?: boolean; create?: boolean } = {},
 ) {
-  // Sheet-less historical records start from a one-time copy of their stored
-  // values, without recalculating anything.
+  // Sheet-less cards (legacy builder hunters, test-run bots) start from a
+  // sheet DERIVED from their structured fields — never a blank page.
   const [local, setLocal] = useState<SheetData>(() => card.sheet ?? deriveSheetFromCard(card));
   const [workingCard, setWorkingCard] = useState<HunterCard>(card);
   const [saveMsg, setSaveMsg] = useState("");
@@ -148,8 +148,9 @@ export function usePaperSheetAutosave(
     [readOnly, persist],
   );
 
-  /** Apply several visible fields and an optional compatibility mirror in one
-   * local change and one Firestore update. */
+  /** Apply a rules decision and all fields derived from it as one local change
+   * and one Firestore update. This prevents other devices seeing a selected
+   * class before its HP, proficiencies, features, and explanations arrive. */
   const setFields = useCallback(
     (changes: SheetData, cardPatch: Partial<HunterCard> = {}) => {
       if (readOnly) return;

@@ -18,7 +18,7 @@ const db = getAdminFirestore(admin);
 const dmUid = "battle-e2e-dm";
 const playerUid = "battle-e2e-player";
 const gameId = "battle-e2e-game";
-const characterId = "battle-e2e-hunter";
+const characterId = "battle-e2e-warden";
 const enemyId = "moon-beast";
 
 async function ensureUser(uid, email, displayName) {
@@ -49,9 +49,9 @@ await db.doc(`characters/${characterId}`).set({
   ownerName: "Battle Player",
   campaignId: null,
   name: "Lady Maria",
-  classId: "",
+  classId: "warden",
   subclassId: null,
-  background: "Recorded background",
+  background: "Old Hunter",
   level: 3,
   abilities: { str: 12, dex: 16, con: 14, int: 10, wis: 14, cha: 10 },
   baseAbilities: { str: 12, dex: 16, con: 14, int: 10, wis: 14, cha: 10 },
@@ -62,7 +62,7 @@ await db.doc(`characters/${characterId}`).set({
   extraArmorIds: [],
   currentHp: 24,
   notes: "",
-  sheet: { name: "Lady Maria", class: "Custom class", level: "3", initiative: "+3", hpCur: "24", hpMax: "28", ac: "15" },
+  sheet: { name: "Lady Maria", class: "Hunter Warden", level: "3", initiative: "+3", hpCur: "24", hpMax: "28", ac: "15" },
   createdAt: Date.now(),
   updatedAt: Date.now(),
 });
@@ -71,9 +71,9 @@ const participant = {
   characterId,
   playerName: "Battle Player",
   name: "Lady Maria",
-  classId: "",
+  classId: "warden",
   subclassId: null,
-  className: "Custom class",
+  className: "Hunter Warden",
   level: 3,
   role: "player",
   joinedAt: Date.now(),
@@ -90,7 +90,9 @@ await db.doc(`games/${gameId}`).set({
   attendeeRoster: [participant],
   seatUids: [dmUid, playerUid],
   status: "active",
-  combat: { active: false, round: 0, turnId: null, timerPhase: "idle", timerEndsAt: null, pausedRemainingMs: null },
+  phase: "combat",
+  location: "wild",
+  combat: { active: false, round: 0, turnId: null, designatedWardenId: null, timerPhase: "idle", timerEndsAt: null, pausedRemainingMs: null },
   sandbox: false,
   clockRunning: true,
   clockStartedAt: Date.now(),
@@ -98,6 +100,8 @@ await db.doc(`games/${gameId}`).set({
   createdAt: Date.now(),
   startedAt: Date.now(),
   endedAt: null,
+  endedPhase: null,
+  endedLocation: null,
 });
 await db.doc(`games/${gameId}/combatants/${enemyId}`).set({
   kind: "monster",
@@ -114,6 +118,7 @@ await db.doc(`games/${gameId}/combatants/${enemyId}`).set({
   revealStats: false,
   enemyTemplateId: "moon-beast-template",
   baseStats: { name: "Moon Beast", initiative: -99, ac: 14, maxHp: 30, note: "Howls when bloodied.", revealHp: false, revealStats: false },
+  isWarden: false,
   createdAt: Date.now(),
 });
 await Promise.all([
@@ -133,6 +138,7 @@ await db.doc(`games/${gameId}/battleView/${enemyId}`).set({
   note: null,
   revealHp: false,
   revealStats: false,
+  isWarden: false,
   createdAt: Date.now(),
 });
 await Promise.all([
@@ -284,8 +290,8 @@ try {
   await playerPage.getByLabel("Moon Beast initiative 12").waitFor();
   const directInitiativeEnemy = await db.doc(`games/${gameId}/combatants/${enemyId}`).get();
   if (directInitiativeEnemy.data()?.initiative !== 12) throw new Error("Direct initiative edit did not update the battle record.");
-  await enemyControl.getByLabel("Add condition to Moon Beast").selectOption("frightened");
-  await enemyDisplay.getByText(/Frightened/).waitFor();
+  await enemyControl.getByLabel("Add condition to Moon Beast").selectOption("poisoned");
+  await enemyDisplay.getByText(/Poisoned/).waitFor();
 
   const playerEnemyText = await enemyDisplay.innerText();
   if (playerEnemyText.includes("30") || playerEnemyText.includes("14") || playerEnemyText.includes("Howls")) {
@@ -305,8 +311,8 @@ try {
   await openCombatantOptions(enemyControl, "Moon Beast", "Reset stats");
   await enemyControl.getByRole("button", { name: "Reset stats", exact: true }).click();
   await enemyControl.getByLabel("Moon Beast damage taken 0").waitFor();
-  await enemyControl.getByRole("button", { name: "Remove Frightened from Moon Beast" }).waitFor({ state: "detached" });
-  await enemyDisplay.getByText(/Frightened/).waitFor({ state: "detached" });
+  await enemyControl.getByRole("button", { name: "Remove Poisoned from Moon Beast" }).waitFor({ state: "detached" });
+  await enemyDisplay.getByText(/Poisoned/).waitFor({ state: "detached" });
   await enemyDisplay.locator(".battle-ac").getByText("14", { exact: true }).waitFor({ state: "detached" });
   const resetPlayerText = await enemyDisplay.innerText();
   if (resetPlayerText.includes("30") || resetPlayerText.includes("14")) {
@@ -404,14 +410,14 @@ try {
   await playerPage.getByRole("heading", { name: "Something was found" }).waitFor();
   await playerPage.getByText("Ashen Spear", { exact: true }).waitFor();
   await playerPage.getByRole("button", { name: "Take", exact: true }).click();
-  await playerPage.getByText("Ashen Spear was recorded on your character sheet.", { exact: true }).waitFor();
+  await playerPage.getByText("Ashen Spear was added to your Hunter.", { exact: true }).waitFor();
   await sleep(250);
   const claimedHunter = await db.doc(`characters/${characterId}`).get();
-  if (claimedHunter.data()?.sheet?.eq_0_0 !== "Ashen Spear") throw new Error("Claimed session weapon did not reach the Equipment table.");
-  if (claimedHunter.data()?.sheet?.weapon_0_0 !== "Ashen Spear" || claimedHunter.data()?.sheet?.weapon_0_2 !== "1d8 piercing") throw new Error("Claimed session weapon did not reach the Weapons table.");
+  if (!claimedHunter.data()?.customItems?.some((item) => item.name === "Ashen Spear")) throw new Error("Claimed session weapon did not reach the Hunter sheet.");
+  if (!claimedHunter.data()?.inventory?.some((item) => String(item.itemId).startsWith("session-"))) throw new Error("Claimed session weapon did not reach inventory.");
 
   await dmPage.setViewportSize({ width: 1280, height: 900 });
-  await dmPage.getByRole("button", { name: "New battle", exact: true }).click();
+  await dmPage.getByRole("button", { name: "Start new battle" }).click();
   const newBattlePicker = dmPage.getByRole("dialog", { name: "Start a new battle" });
   await newBattlePicker.getByLabel(/Grave Hound/).check();
   await newBattlePicker.getByRole("button", { name: "Start new battle", exact: true }).click();

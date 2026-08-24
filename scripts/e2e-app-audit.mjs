@@ -18,11 +18,11 @@ const firebaseExecutable = (() => {
 })();
 const runFirebase = (args) => spawnSync(firebaseExecutable.command, [...firebaseExecutable.args, ...args], { encoding: "utf8" });
 const appsResult = runFirebase(["apps:list", "--json", "--account", FIREBASE_ACCOUNT]);
-if (appsResult.status !== 0) throw new Error(`Could not read Firebase app config: ${appsResult.stderr}`);
+if (appsResult.status !== 0) throw new Error(`Could not read Firebase app config: ${appsResult.stderr || appsResult.error}`);
 const webApp = JSON.parse(appsResult.stdout).result.find((app) => app.platform === "WEB");
 if (!webApp) throw new Error("No Firebase web app found");
 const configResult = runFirebase(["apps:sdkconfig", "WEB", webApp.appId, "--json", "--account", FIREBASE_ACCOUNT]);
-if (configResult.status !== 0) throw new Error(`Could not read Firebase SDK config: ${configResult.stderr}`);
+if (configResult.status !== 0) throw new Error(`Could not read Firebase SDK config: ${configResult.stderr || configResult.error}`);
 const firebase = JSON.parse(configResult.stdout).result.sdkConfig;
 const viteCli = fileURLToPath(new URL("../node_modules/vite/bin/vite.js", import.meta.url));
 const server = spawn(process.execPath, [viteCli, "--host", "127.0.0.1", "--port", String(PORT)], {
@@ -92,15 +92,6 @@ async function auditPage(page, label, mobile) {
     };
     const clipped = [...document.querySelectorAll("body *")]
       .filter(visible)
-      .filter((element) => {
-        const rect = element.getBoundingClientRect();
-        if (rect.left >= -1 && rect.right <= viewportWidth + 1) return false;
-        for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
-          const overflowX = getComputedStyle(ancestor).overflowX;
-          if ((overflowX === "auto" || overflowX === "scroll") && ancestor.scrollWidth > ancestor.clientWidth) return false;
-        }
-        return true;
-      })
       .map((element) => {
         const rect = element.getBoundingClientRect();
         return {
@@ -111,6 +102,7 @@ async function auditPage(page, label, mobile) {
           text: (element.textContent ?? "").trim().replace(/\s+/g, " ").slice(0, 60),
         };
       })
+      .filter((item) => item.left < -1 || item.right > viewportWidth + 1)
       .slice(0, 8);
     const ids = [...document.querySelectorAll("[id]")].map((element) => element.id);
     const duplicateIds = [...new Set(ids.filter((id, index) => ids.indexOf(id) !== index))];
@@ -161,8 +153,8 @@ try {
     if (viewport.width <= 390) {
       await privatePage.goto(`${BASE}/character?preview=user.player`, { waitUntil: "domcontentloaded" });
       await privatePage.getByRole("button", { name: /Open Eileen the Crow/ }).click();
-      await privatePage.getByTestId("source-character-sheet").waitFor();
-      await auditPage(privatePage, `${viewport.name} current character sheet`, true);
+      await privatePage.getByTestId("app-character-sheet").waitFor();
+      await auditPage(privatePage, `${viewport.name} character sheet`, true);
     }
     await privateContext.close();
 

@@ -1,46 +1,93 @@
 <div align="center">
 
-# Catacombs & Starspawns
+# 🩸 Catacombs & Starspawns
 
-**A mobile-first companion for the tabletop game.**
+**A private companion app for our tabletop campaign.**
 
-[Open the app](https://dandd-ea955.web.app)
+*A Bloodborne-flavoured dark-fantasy homebrew where adventurers are **Hunters**.*
+
+[Open the app →](https://dandd-ea955.web.app)
 
 </div>
 
-## What it does
+---
 
-The app keeps the game maker's current material, Hunters, and live table tools
-in one place:
+## What this is
 
-- **Hunters** use one autosaving manual editor matching the current six-section
-  character sheet. The app records values; it does not invent class,
-  background, equipment, progression, or derived-stat rules.
-- **Games** provide session lobbies, invitations, shared notes, an enemy
-  library, initiative and combat controls, recorded vitals, and session items.
-- **Codex** searches the current Rites, Whispers, sheet fields, and source
-  notes. Every result identifies and links to its source PDF.
-- **Status** gives the table a large-screen view of recorded Hunter values and
-  the current battle.
+A mobile-first web app (installable to your iPhone home screen) that makes our
+**Catacombs & Starspawns** sessions easier to run and more fun to show up to.
+It's just for our table — sign-in is required and access is invite-only.
 
-The Codex and its four current documents are public. Google sign-in is needed
-to save Hunters or join games.
+It's deliberately small and sharp for the first run, built to grow.
 
-## Current source set
+## The goal
 
-These four PDFs replace every earlier game document and derived catalog:
+Lower the friction of playing together:
 
-1. `C&S Book of the Deepcaller.pdf`
-2. `C&S Character Sheet.pdf`
-3. `C&S Hidden Condition Sheet.pdf`
-4. `C&S Whispers Sheet.pdf`
+- Everyone knows **when** the next session is (and gets nudged to answer).
+- Everyone **builds their hunter** without wrestling a PDF — the maths is done
+  for you.
+- Everyone can **read the current game documents** on their phone.
+- The **Dungeon Master** can see who's ready and who needs a poke.
 
-Their canonical copies live in `resources/pdf/`; the structured record is
-`resources/master.json`. A build fails if a source is missing, duplicated, or
-does not match its recorded SHA-256 hash.
+## What's in the first version
 
-## Development
+| Area | What it does |
+| --- | --- |
+| **Sessions** | The next session with a live countdown + upcoming dates. RSVP (in / maybe / can't). The DM can add & edit dates. |
+| **Hunter** | Build & save your hunter card — class, point-buy abilities, skills, armor → auto-calculated AC, HP, speed, saves. |
+| **Party** | See everyone's hunters. The DM gets a roster: who's made a character, who's RSVP'd, with one-tap email reminders. |
+| **Codex** | Search the current Deepcaller book, Whispers, character sheet, and Hidden Condition handout—with provenance for every result. |
 
-The stack is React 19, TypeScript, Vite, Bun, Zustand, and Firebase Auth,
-Firestore, Functions, Storage, and Hosting. See [`CLAUDE.md`](./CLAUDE.md) for
-the repository workflow, source-update contract, checks, and release process.
+The source library is generated from `resources/master.json` and contains
+exactly the four current game-maker documents. Existing app workflows and
+saved-character support are maintained separately; replacing source documents
+does not silently redesign the Hunter or game pages.
+
+### The six hunter classes
+
+Brute · Scout · Stalker · Deepcaller · Bloodbound · Warden
+
+## Roles
+
+- **Player** — builds a hunter, RSVPs, and reads the Codex.
+- **Dungeon Master** — runs the schedule, oversees the roster, sends reminders
+  (doesn't need a character).
+- **Admin** — everything, plus manages who has access.
+
+The first session's DM is Christoffer; the campaign's admin is Simon.
+
+## How to use it
+
+1. Open **https://dandd-ea955.web.app** on your phone.
+2. **Sign in with Google** using the email you were invited with.
+3. On iPhone: tap **Share → Add to Home Screen** to install it as an app.
+4. Players: go to **Hunter** and forge your character before session 1.
+5. Everyone: **RSVP** to the next session on the Sessions screen.
+
+> Not on the list? Ask Simon to add your Google email.
+
+## Our focus
+
+- **Mobile-first & app-like.** It should feel great on a phone, offline-tolerant,
+  installable, with a proper icon and safe-area-aware layout.
+- **Atmosphere.** Dark, gothic, blood-and-brass — it should feel like the world.
+- **Low friction.** Sign in, see the date, build a hunter. No clutter.
+- **Private & safe.** Google sign-in + an allowlist; data locked down by
+  server-side rules.
+
+## What might come later
+
+Atmospheric music · automated email reminders (before sessions / for missing
+characters) · a session log & recaps · a broader admin panel · AI narration and
+voice. Possibly a native iOS shell using Apple's on-device Foundation Models.
+
+## Tech
+
+React 19 · TypeScript · Vite · Bun · Zustand · Firebase (Auth + Firestore +
+Hosting) · vite-plugin-pwa. Config/secrets via Doppler. See
+[`CLAUDE.md`](./CLAUDE.md) for developer setup, architecture and conventions.
+
+---
+
+<div align="center"><sub>Pray for blood. 🌙</sub></div>

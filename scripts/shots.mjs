@@ -3,7 +3,7 @@
 // always review the app at both sizes.
 //
 //   bun run scripts/shots.mjs                         # default routes, preview mode
-//   bun run scripts/shots.mjs /character /codex       # specific routes
+//   bun run scripts/shots.mjs /character /handbook    # specific routes
 //   BASE=https://dandd-ea955.web.app bun run scripts/shots.mjs   # against prod
 //
 // Output: screenshots/<slug>-mobile.png and -desktop.png

@@ -200,6 +200,7 @@ const output = {
   sources,
   entries,
   characterSheet: master.characterSheet,
+  rites: master.rites.entries,
   whispers: master.whispers.entries,
   conditionsNamedByCurrentSources: master.conditionsNamedByCurrentSources,
 };

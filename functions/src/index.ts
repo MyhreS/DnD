@@ -8,6 +8,7 @@ import { APP_URL, GMAIL_APP_PASSWORD, SUPER_ADMIN_EMAILS, isTestEmail } from "./
 import { sendMail, sendMany } from "./email";
 import { inviteEmail, characterReminder, rsvpReminder } from "./templates";
 
+export { settleTrade } from "./trades";
 export {
   addStandaloneGameParticipant,
   claimStandaloneGameLoot,
