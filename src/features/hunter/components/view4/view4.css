@@ -333,10 +333,42 @@
 .v4-upgrade-detail dt { color: var(--app-faint); }
 .v4-upgrade-detail dd { margin: 0; color: var(--app-text); }
 .v4-upgrade-inline-rule { padding-top: 8px; border-top: 1px solid var(--app-line); }
-.v4-upgrade-ability-picks { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
-.v4-upgrade-ability-picks label { display: grid; gap: 6px; min-width: 0; padding: 10px; border: 1px solid color-mix(in srgb, var(--app-line), transparent 25%); border-radius: 8px; }
-.v4-upgrade-ability-picks span { display: flex; justify-content: space-between; gap: 6px; color: var(--app-muted); font-size: 11px; font-weight: 700; }
-.v4-upgrade-ability-picks small { color: var(--app-positive); }
+.v4-guided-choice-intro { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; padding: 2px 2px 14px; border-bottom: 1px solid var(--app-line); }
+.v4-guided-choice-intro > span { display: grid; gap: 4px; max-width: 720px; }
+.v4-guided-choice-intro p { margin: 0; color: var(--app-text); font-weight: 600; }
+.v4-guided-choice-intro small { color: var(--app-faint); font: 12px/1.4 "Alegreya", serif; }
+.v4-guided-choice-intro > strong { flex: none; min-width: 82px; padding: 6px 9px; border: 1px solid var(--app-line); border-radius: 999px; color: var(--app-warm); font-size: 10px; letter-spacing: .06em; text-align: center; text-transform: uppercase; }
+.v4-guided-choice-intro > strong.complete { border-color: color-mix(in srgb, var(--app-positive), transparent 52%); background: color-mix(in srgb, var(--app-positive), transparent 90%); color: var(--app-positive); }
+.v4-guided-ability-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 12px; }
+.v4-guided-ability { display: grid; grid-template-rows: 1fr auto auto; gap: 11px; min-width: 0; padding: 12px; border: 1px solid color-mix(in srgb, var(--app-line), transparent 18%); border-radius: 9px; background: color-mix(in srgb, var(--app-surface), transparent 45%); transition: border-color .16s ease, background .16s ease; }
+.v4-guided-ability.selected { border-color: color-mix(in srgb, var(--app-positive), transparent 48%); background: color-mix(in srgb, var(--app-positive), transparent 93%); }
+.v4-guided-ability > header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 10px; }
+.v4-guided-ability > header > span { display: grid; gap: 3px; }
+.v4-guided-ability > header b { color: var(--app-text); font: 700 13px/1.2 "Alegreya Sans SC", sans-serif; letter-spacing: .04em; text-transform: uppercase; }
+.v4-guided-ability > header small { color: var(--app-muted); font: 12px/1.3 "Alegreya", serif; }
+.v4-guided-ability > header strong { color: var(--app-positive); font: 600 18px/1.1 "Cinzel", serif; white-space: nowrap; }
+.v4-guided-ability > header i { color: var(--app-faint); font: 11px "Alegreya", serif; }
+.v4-background-bonus-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 3px; border: 1px solid var(--app-line); border-radius: 8px; background: var(--app-input); }
+.v4-background-bonus-buttons button { min-height: 34px; padding: 4px !important; border: 0 !important; border-radius: 5px !important; background: transparent !important; color: var(--app-muted) !important; font-size: 11px !important; }
+.v4-background-bonus-buttons button[aria-pressed="true"] { background: var(--app-surface-hover) !important; color: var(--app-text) !important; box-shadow: 0 1px 8px rgba(0, 0, 0, .16); }
+.v4-guided-ability > footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--app-faint); font: 11px/1.3 "Alegreya", serif; }
+.v4-guided-ability > footer em, .v4-guided-skill-facts em { flex: none; padding: 3px 6px; border-radius: 99px; background: color-mix(in srgb, var(--app-warm), transparent 88%); color: var(--app-warm); font: 700 8px/1 "Alegreya Sans SC", sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+.v4-guided-skill-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 18px; }
+.v4-guided-skill { position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: start; gap: 10px; min-width: 0; padding: 12px 4px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 30%); cursor: pointer; transition: background .16s ease; }
+.v4-guided-skill:hover { background: color-mix(in srgb, var(--app-warm), transparent 95%); }
+.v4-guided-skill:focus-within { outline: 2px solid color-mix(in srgb, var(--app-warm), transparent 35%); outline-offset: -2px; }
+.v4-guided-skill.selected { background: color-mix(in srgb, var(--app-positive), transparent 93%); }
+.v4-guided-skill.from-background { cursor: default; }
+.v4-guided-skill > input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.v4-guided-skill-mark { width: 18px; height: 18px; margin-top: 1px; border: 1px solid var(--app-faint); border-radius: 50%; }
+.v4-guided-skill.selected .v4-guided-skill-mark { border: 5px solid var(--app-positive); background: var(--app-surface); }
+.v4-guided-skill.from-background .v4-guided-skill-mark { border-color: var(--app-warm); background: color-mix(in srgb, var(--app-warm), transparent 55%); }
+.v4-guided-skill-copy { display: grid; gap: 4px; min-width: 0; color: var(--app-muted); font: 12px/1.3 "Alegreya", serif; }
+.v4-guided-skill-title { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; }
+.v4-guided-skill-title b { color: var(--app-text); font: 700 13px/1.2 "Alegreya Sans SC", sans-serif; }
+.v4-guided-skill-title small { flex: none; color: var(--app-warm); font: 700 9px/1 "Alegreya Sans SC", sans-serif; letter-spacing: .07em; text-transform: uppercase; }
+.v4-guided-skill-facts { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 2px; }
+.v4-guided-skill-facts strong { color: var(--app-positive); font-size: 11px; }
 .v4-upgrade-feature-text { max-height: 185px; overflow-y: auto; padding-right: 5px; white-space: pre-line; }
 .v4-upgrade-feat-detail header { display: flex; justify-content: space-between; gap: 10px; }
 .v4-upgrade-feat-detail header small { text-align: right; }
@@ -602,7 +634,9 @@
   .v4-insight-progress b { font-size: 13px; }
   .v4-upgrade-launch { justify-self: stretch; min-width: 0; }
   .v4-upgrade-record { grid-template-columns: 1fr; }
-  .v4-upgrade-ability-picks { grid-template-columns: 1fr; }
+  .v4-guided-choice-intro { display: grid; gap: 10px; }
+  .v4-guided-choice-intro > strong { justify-self: start; }
+  .v4-guided-ability-list, .v4-guided-skill-list { grid-template-columns: 1fr; }
   .v4-upgrade-feat-abilities > div { grid-template-columns: repeat(2, 1fr); }
   .v4-upgrade-review-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .v4-equipment-summary { grid-template-columns: repeat(2, 1fr); }

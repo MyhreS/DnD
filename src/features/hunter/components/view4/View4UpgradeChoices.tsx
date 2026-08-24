@@ -6,6 +6,7 @@ import { ORIGIN_FEATS } from "@/data/feats";
 import { SKILLS } from "@/data/skills";
 import { ChoiceToggle } from "../appsheet/appSheetShared";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
+import { View4BackgroundAbilities, View4SkillChoices } from "./View4GuidedChoices";
 
 export type UpgradeChoiceKind = "class" | "background" | "background-abilities" | "class-skills" | "skilled" | "subclass" | "expertise" | "mastery" | "whispers";
 
@@ -24,9 +25,9 @@ export function View4UpgradeChoices({ kind, target }: { kind: UpgradeChoiceKind;
     return <div className="v4-upgrade-choice-page"><label className="v4-upgrade-select"><span>Background</span><select value={card.backgroundId ?? ""} onChange={(event) => automation.chooseBackground(event.target.value)}><option value="">Choose...</option>{BACKGROUNDS.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>{background && <article className="v4-upgrade-detail"><p>{background.text}</p><dl><div><dt>Abilities</dt><dd>{background.abilityScores.map((key) => ABILITY_NAME[key]).join(", ")}</dd></div><div><dt>Skills</dt><dd>{background.skills.join(", ")}</dd></div><div><dt>Feat</dt><dd>{background.feat ?? "None"}</dd></div></dl>{originFeat && <p className="v4-upgrade-inline-rule">{originFeat.description}</p>}</article>}</div>;
   }
 
-  if (kind === "background-abilities" && background) return <div className="v4-upgrade-choice-page"><p>Place +2 and +1 on different eligible abilities, or +1 on all three.</p><div className="v4-upgrade-ability-picks">{background.abilityScores.map((key) => <label key={key}><span>{ABILITY_NAME[key]} <small>{automation.base[key]} → {card.abilities[key]}</small></span><select aria-label={`${ABILITY_NAME[key]} background bonus`} value={automation.bonuses[key] ?? 0} onChange={(event) => automation.setBonus(key, Number(event.target.value))}><option value="0">+0</option><option value="1">+1</option><option value="2">+2</option></select></label>)}</div></div>;
+  if (kind === "background-abilities" && background) return <View4BackgroundAbilities />;
 
-  if (kind === "class-skills" && klass) return <ChoiceList intro={`Choose ${klass.skillChoices.count} trained skills for ${klass.title}.`} options={klass.skillChoices.options} selected={classSkills} limit={klass.skillChoices.count} onToggle={automation.toggleClassSkill} />;
+  if (kind === "class-skills" && klass) return <View4SkillChoices kind="class" intro={`Choose ${klass.skillChoices.count} trained skills for ${klass.title}.`} options={klass.skillChoices.options} selected={classSkills} limit={klass.skillChoices.count} onToggle={automation.toggleClassSkill} />;
   if (kind === "skilled") return <ChoiceList intro="Skilled grants any three skill or tool proficiencies." options={[...SKILLS.map((skill) => skill.name), ...TOOL_PROFICIENCIES]} selected={card.featSkills ?? []} limit={3} onToggle={automation.toggleFeatSkill} />;
 
   if (kind === "subclass" && klass) {
@@ -36,7 +37,7 @@ export function View4UpgradeChoices({ kind, target }: { kind: UpgradeChoiceKind;
     return <div className="v4-upgrade-choice-page"><label className="v4-upgrade-select"><span>{klass.name} path</span><small>Selecting a path does not save or advance this page. Review its effects below, then press Next.</small><select value={card.subclassId ?? ""} onChange={(event) => automation.chooseSubclass(event.target.value)}><option value="">Choose...</option>{klass.subclasses.map((entry) => <option key={entry.id} value={entry.id}>{entry.name}</option>)}</select></label>{selected && <article className="v4-upgrade-detail"><b>{selected.tagline}</b><p>{selected.blurb}</p><div className="v4-upgrade-subclass-features"><SubclassFeatureGroup title="You gain now" features={gainedNow} /><SubclassFeatureGroup title="Later path features" features={later} /></div></article>}</div>;
   }
 
-  if (kind === "expertise") return <ChoiceList intro={`Expertise doubles your proficiency bonus. Choose ${automation.expertiseLimit}.`} options={SKILLS.filter((skill) => card.skillProficiencies.includes(skill.name)).map((skill) => skill.name)} selected={expertise} limit={automation.expertiseLimit} onToggle={automation.toggleExpertise} meta="Double proficiency" />;
+  if (kind === "expertise") return <View4SkillChoices kind="expertise" intro={`Choose ${automation.expertiseLimit} skill${automation.expertiseLimit === 1 ? "" : "s"} for Expertise.`} options={SKILLS.filter((skill) => card.skillProficiencies.includes(skill.name)).map((skill) => skill.name)} selected={expertise} limit={automation.expertiseLimit} onToggle={automation.toggleExpertise} />;
   if (kind === "mastery") return <ChoiceList intro={`Choose ${automation.masteryCount} weapons whose mastery properties you can use.`} options={automation.masteryWeapons.map((weapon) => weapon.name)} selected={masteries} limit={automation.masteryCount} onToggle={automation.toggleMastery} meta="Weapon mastery" />;
   if (kind === "whispers") return <div className="v4-upgrade-choice-page"><p>Prepare {automation.whisperLimit} Whispers. Each effect is shown here.</p>{DEEPCALLER_WHISPERS.map((whisper) => <ChoiceToggle key={whisper.id} label={whisper.name} meta={`${whisper.performing} · ${whisper.range} · ${whisper.damage} ${whisper.damageType}`} checked={whispers.includes(whisper.id)} disabled={!whispers.includes(whisper.id) && whispers.length >= automation.whisperLimit} onChange={() => automation.toggleWhisper(whisper.id)} />)}</div>;
   return <p>No choice is required on this step through level {target}.</p>;
