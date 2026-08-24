@@ -135,6 +135,7 @@ const fixtureDelayMs = Math.max(0, Math.min(10_000, Number(process.env.WORKSHOP_
 const fixtureInterruptAfterMs = fixture
   ? Math.max(0, Math.min(30_000, Number(process.env.WORKSHOP_FIXTURE_INTERRUPT_AFTER_MS ?? 0) || 0))
   : 0;
+const fixtureDescendantPidPath = fixture ? process.env.WORKSHOP_FIXTURE_DESCENDANT_PID_PATH : undefined;
 const maxConcurrentTickets = fixture
   ? Math.max(1, Math.min(WORKSHOP_MAX_CONCURRENT_TICKETS, Number(process.env.WORKSHOP_FIXTURE_MAX_CONCURRENT ?? WORKSHOP_MAX_CONCURRENT_TICKETS) || WORKSHOP_MAX_CONCURRENT_TICKETS))
   : WORKSHOP_MAX_CONCURRENT_TICKETS;
@@ -448,7 +449,7 @@ async function writeAgentState(): Promise<void> {
     lifecycle: managerLifecycle,
     acceptingTickets: managerLifecycle === "ready" && !shuttingDown,
     checkpointRecoveryComplete: managerLifecycle === "ready" || managerLifecycle === "stopping",
-    version: 12,
+    version: 13,
     ...legacyProgressFields(),
   });
 }
@@ -1246,11 +1247,21 @@ function stopOwnedWorktreeProcesses(worktreePath: string, rootPid?: number): voi
       `$target = '${literalPath}'`,
       "$owned = Get-CimInstance Win32_Process | Where-Object {",
       "  $_.ProcessId -ne $PID -and $_.CommandLine -like \"*$target*\" -and",
-      "  $_.Name -in @('node.exe', 'bun.exe', 'esbuild.exe', 'powershell.exe', 'pwsh.exe', 'cmd.exe', 'java.exe')",
+      "  $_.Name -in @('node.exe', 'bun.exe', 'codex.exe', 'esbuild.exe', 'powershell.exe', 'pwsh.exe', 'cmd.exe', 'java.exe')",
       "}",
-      "$owned | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
+      "$owned | ForEach-Object { & taskkill.exe /PID ([string]$_.ProcessId) /T /F 2>$null | Out-Null }",
     ].join("\n");
     spawnSync("powershell.exe", ["-NoProfile", "-NonInteractive", "-Command", script], { stdio: "ignore" });
+  }
+}
+
+async function stopOwnedWorktreeProcessesForShutdown(targets: Array<{ path: string; pid: number }>): Promise<void> {
+  if (!targets.length) return;
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    for (const target of targets) {
+      stopOwnedWorktreeProcesses(target.path, attempt === 0 ? target.pid : undefined);
+    }
+    if (attempt < 7) await new Promise((resolvePromise) => setTimeout(resolvePromise, 250));
   }
 }
 
@@ -1419,6 +1430,12 @@ async function runCodingAgent(
       ].join("\n\n")
       : prompt;
     const checkpointFixtureSessionId = crypto.randomUUID();
+    const restartFixtureDescendantScript = fixtureDescendantPidPath ? [
+      "const { spawn } = require(\"node:child_process\");",
+      `const descendant = spawn(process.execPath, ["-e", "setInterval(() => undefined, 60_000);", ${JSON.stringify(worktree.path)}], { detached: true, stdio: "ignore" });`,
+      "descendant.unref();",
+      `await Bun.write(${JSON.stringify(fixtureDescendantPidPath)}, String(descendant.pid));`,
+    ].join("\n") : undefined;
     const command = fixture === "stuck_result" || fixture === "stuck_stream_result"
       ? [process.execPath, "-e", [
         `await Bun.write(${JSON.stringify(resultPath)}, ${JSON.stringify(JSON.stringify({
@@ -1433,6 +1450,10 @@ async function runCodingAgent(
       ].join("\n")]
       : fixture === "restart_checkpoint"
         ? [process.execPath, "-e", [
+          ...(restartFixtureDescendantScript ? [
+            `const launcher = Bun.spawn({ cmd: [process.execPath, "-e", ${JSON.stringify(restartFixtureDescendantScript)}], stdin: "ignore", stdout: "ignore", stderr: "ignore" });`,
+            "await launcher.exited;",
+          ] : []),
           `console.log(JSON.stringify({ type: "thread.started", thread_id: ${JSON.stringify(checkpointFixtureSessionId)} }));`,
           "setInterval(() => undefined, 60_000);",
         ].join("\n")]
@@ -1990,7 +2011,11 @@ async function stopManager(heartbeatTimer: ReturnType<typeof setInterval>): Prom
   }
   const workAtShutdown = [...activeWork.values()];
   for (const work of workAtShutdown) work.preserveForRestart = true;
-  shutdownController.abort();
+  const processesAtShutdown = workAtShutdown.flatMap((work) => (
+    work.agentProcess && work.agentProcessPath
+      ? [{ path: work.agentProcessPath, pid: work.agentProcess.pid }]
+      : []
+  ));
   await heartbeat().catch((error) => console.error("Workshop stopping heartbeat failed:", error));
   const checkpoints = await Promise.allSettled(workAtShutdown.map((work) => queueCheckpointWrite(work, true)));
   checkpoints.forEach((result, index) => {
@@ -1998,9 +2023,8 @@ async function stopManager(heartbeatTimer: ReturnType<typeof setInterval>): Prom
       console.error(`Workshop checkpoint failed for ${workAtShutdown[index]?.ticket.id}:`, result.reason);
     }
   });
-  for (const work of workAtShutdown) {
-    if (work.agentProcess && work.agentProcessPath) stopOwnedWorktreeProcesses(work.agentProcessPath, work.agentProcess.pid);
-  }
+  await stopOwnedWorktreeProcessesForShutdown(processesAtShutdown);
+  shutdownController.abort();
   await releaseOwnedReleaseLease().catch((error) => console.error("Workshop release lease cleanup failed:", error));
   await Promise.race([
     Promise.allSettled([...activeRuns.values()]),

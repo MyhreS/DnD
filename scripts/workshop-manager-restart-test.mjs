@@ -1,4 +1,7 @@
 import { spawn, spawnSync } from "node:child_process";
+import { readFile, rm } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 
@@ -9,6 +12,7 @@ const activeTicket = db.doc("workshopTickets/restart-checkpoint-test");
 const pendingTicket = db.doc("workshopTickets/restart-pending-test");
 const activeCheckpoint = db.doc("workshopAgentCheckpoints/restart-checkpoint-test");
 const pendingCheckpoint = db.doc("workshopAgentCheckpoints/restart-pending-test");
+const descendantPidPath = join(tmpdir(), `dnd-workshop-restart-descendant-${process.pid}.txt`);
 
 function startManager({ once = false, interruptAfterMs = 0 } = {}) {
   const args = ["scripts/workshop-manager.ts"];
@@ -19,6 +23,7 @@ function startManager({ once = false, interruptAfterMs = 0 } = {}) {
     env: {
       ...process.env,
       WORKSHOP_FIXTURE_MAX_CONCURRENT: "1",
+      WORKSHOP_FIXTURE_DESCENDANT_PID_PATH: descendantPidPath,
       ...(interruptAfterMs ? { WORKSHOP_FIXTURE_INTERRUPT_AFTER_MS: String(interruptAfterMs) } : {}),
     },
   });
@@ -85,6 +90,14 @@ try {
   }, "Initial durable checkpoint");
   await waitForExit(interruptedManager, "Interrupted manager");
 
+  const descendantPid = Number(await readFile(descendantPidPath, "utf8"));
+  try {
+    process.kill(descendantPid, 0);
+    throw new Error(`Graceful stop left fixture descendant ${descendantPid} running.`);
+  } catch (error) {
+    if (error?.code !== "ESRCH") throw error;
+  }
+
   const [interrupted, pending, checkpoint] = await Promise.all([
     activeTicket.get(),
     pendingTicket.get(),
@@ -133,6 +146,12 @@ try {
     });
     await new Promise((resolvePromise) => cleanupManager.once("exit", resolvePromise));
   }
+  try {
+    const descendantPid = Number(await readFile(descendantPidPath, "utf8"));
+    process.kill(descendantPid, "SIGKILL");
+  } catch {
+    // The expected path is that graceful shutdown already removed the fixture descendant.
+  }
   await Promise.allSettled([
     db.recursiveDelete(activeTicket),
     db.recursiveDelete(pendingTicket),
@@ -140,5 +159,6 @@ try {
     pendingCheckpoint.delete(),
     db.doc("workshopAgent/state").delete(),
     db.doc("workshopAgent/config").delete(),
+    rm(descendantPidPath, { force: true }),
   ]);
 }
