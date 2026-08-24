@@ -160,23 +160,25 @@ export function Bloodbound() {
 export function Warden() {
   return (
     <Frame>
-      <g className="cf-bob">
-        <path d="M84 20 L 84 132" />
-        <path d="M80 20 L 84 6 L 88 20 Z" fill={W2} />
-        <g className="cf-pennant">
-          <path d="M85 24 L 106 30 L 85 40 Z" fill={W} />
+      <g transform="translate(-5 0)">
+        <g className="cf-bob">
+          <path d="M84 20 L 84 132" />
+          <path d="M80 20 L 84 6 L 88 20 Z" fill={W2} />
+          <g className="cf-pennant">
+            <path d="M85 24 L 106 30 L 85 40 Z" fill={W} />
+          </g>
+          <path d="M51 22 C 52 12, 68 12, 69 22" fill={W} />
+          <path d="M42 23 C 51 20, 69 20, 78 23 C 69 28, 51 28, 42 23 Z" fill={W2} />
+          <path d="M54 33 Q 60 37 66 33" strokeWidth="2.2" />
+          <path d="M48 42 Q 62 38 76 42 C 78 60 79 76 78 92 Q 70 96 62 95" />
+          <path d="M76 46 C 80 51, 82 55, 83 60" />
+          <path d="M64 97 L 62 132" />
+          <path d="M76 94 L 78 130" />
+          <path d="M62 132 L 59 142 L 72 142 L 69 132" fill={W} />
+          <path d="M78 130 L 81 141 L 68 141" fill={W} />
+          <path d="M40 50 C 29 50, 24 58, 24 70 C 24 92 32 108 40 114 C 48 108 56 92 56 70 C 56 58 51 50 40 50 Z" fill={W2} />
+          <path d="M40 60 L 40 98 M 30 74 L 50 74" strokeWidth="2.2" />
         </g>
-        <path d="M51 22 C 52 12, 68 12, 69 22" fill={W} />
-        <path d="M42 23 C 51 20, 69 20, 78 23 C 69 28, 51 28, 42 23 Z" fill={W2} />
-        <path d="M54 33 Q 60 37 66 33" strokeWidth="2.2" />
-        <path d="M48 42 Q 62 38 76 42 C 78 60 79 76 78 92 Q 70 96 62 95" />
-        <path d="M76 46 C 80 51, 82 55, 83 60" />
-        <path d="M64 97 L 62 132" />
-        <path d="M76 94 L 78 130" />
-        <path d="M62 132 L 59 142 L 72 142 L 69 132" fill={W} />
-        <path d="M78 130 L 81 141 L 68 141" fill={W} />
-        <path d="M40 50 C 29 50, 24 58, 24 70 C 24 92 32 108 40 114 C 48 108 56 92 56 70 C 56 58 51 50 40 50 Z" fill={W2} />
-        <path d="M40 60 L 40 98 M 30 74 L 50 74" strokeWidth="2.2" />
       </g>
     </Frame>
   );
