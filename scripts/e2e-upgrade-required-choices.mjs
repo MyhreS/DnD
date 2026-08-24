@@ -135,12 +135,25 @@ async function completeBruteCreation(browser, viewport, suffix) {
 
   await page.getByRole("heading", { name: "Weapon mastery", exact: true }).waitFor();
   await page.getByText("3 weapons needed", { exact: true }).waitFor();
+  await page.getByText("Mastery unlocks the special effect shown for each one", { exact: false }).waitFor();
+  await page.getByText("On a miss, deal damage equal to the ability modifier", { exact: false }).waitFor();
+  await page.getByText("After a melee hit, make one extra attack", { exact: false }).waitFor();
+  await page.getByText("On a hit, the target has Disadvantage on its next attack", { exact: false }).waitFor();
+  await page.getByText("DM-set", { exact: true }).waitFor();
   if (!await next.isDisabled()) throw new Error("Weapon Mastery could be skipped with three choices missing");
+  const masteryOverflow = await page.locator(".v4-upgrade-step").evaluate((element) => element.scrollWidth > element.clientWidth);
+  if (masteryOverflow) throw new Error(`Weapon Mastery guidance overflows the ${suffix} creation page`);
   await page.waitForTimeout(250);
   await page.screenshot({ path: `screenshots/upgrade-required-choices-${suffix}.png`, fullPage: true });
+  await page.locator(".v4-upgrade-step").evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await page.screenshot({ path: `screenshots/weapon-mastery-bottom-${suffix}.png`, fullPage: true });
+  await page.locator(".v4-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
   await page.getByLabel(/^Greatsword/).check();
   await page.getByLabel(/^Greataxe/).check();
   await page.getByLabel(/^Longsword/).check();
+  await page.getByText("3 / 3 chosen", { exact: true }).waitFor();
+  if (!await page.getByLabel("Shortsword", { exact: true }).isDisabled()) throw new Error("A fourth Weapon Mastery choice remained enabled");
+  await page.screenshot({ path: `screenshots/weapon-mastery-selected-${suffix}.png`, fullPage: true });
   if (await next.isDisabled()) throw new Error("Weapon Mastery stayed blocked after three selections");
   await next.click();
 

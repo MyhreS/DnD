@@ -111,7 +111,7 @@ export function View4SkillChoices({
   </div>;
 }
 
-function ChoiceIntro({ text, help, count, complete }: { text: string; help: string; count: string; complete: boolean }) {
+export function ChoiceIntro({ text, help, count, complete }: { text: string; help: string; count: string; complete: boolean }) {
   return <header className="v4-guided-choice-intro">
     <span><p>{text}</p><small>{help}</small></span>
     <strong className={complete ? "complete" : ""}>{count}</strong>

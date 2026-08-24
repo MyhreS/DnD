@@ -7,6 +7,7 @@ import { SKILLS } from "@/data/skills";
 import { ChoiceToggle } from "../appsheet/appSheetShared";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { View4BackgroundAbilities, View4SkillChoices } from "./View4GuidedChoices";
+import { View4WeaponMasteryChoices } from "./View4WeaponMasteryChoices";
 
 export type UpgradeChoiceKind = "class" | "background" | "background-abilities" | "class-skills" | "skilled" | "subclass" | "expertise" | "mastery" | "whispers";
 
@@ -15,7 +16,6 @@ export function View4UpgradeChoices({ kind, target }: { kind: UpgradeChoiceKind;
   const { card, klass, background, state } = automation;
   const classSkills = state.classSkills ?? [];
   const expertise = state.expertiseSkills ?? [];
-  const masteries = state.weaponMasteries ?? [];
   const whispers = card.preparedWhispers ?? [];
 
   if (kind === "class") return <div className="v4-upgrade-choice-page"><label className="v4-upgrade-select"><span>Hunter class</span><select value={card.classId} onChange={(event) => automation.chooseClass(event.target.value)}><option value="">Choose...</option>{CLASSES.map((entry) => <option key={entry.id} value={entry.id}>{entry.title}</option>)}</select></label>{klass && <article className="v4-upgrade-detail"><b>{klass.tagline}</b><p>{klass.blurb}</p><small>d{klass.hitDie} hit die · {klass.primaryAbility} · {klass.maxSanity} sanity</small></article>}</div>;
@@ -38,7 +38,7 @@ export function View4UpgradeChoices({ kind, target }: { kind: UpgradeChoiceKind;
   }
 
   if (kind === "expertise") return <View4SkillChoices kind="expertise" intro={`Choose ${automation.expertiseLimit} skill${automation.expertiseLimit === 1 ? "" : "s"} for Expertise.`} options={SKILLS.filter((skill) => card.skillProficiencies.includes(skill.name)).map((skill) => skill.name)} selected={expertise} limit={automation.expertiseLimit} onToggle={automation.toggleExpertise} />;
-  if (kind === "mastery") return <ChoiceList intro={`Choose ${automation.masteryCount} weapons whose mastery properties you can use.`} options={automation.masteryWeapons.map((weapon) => weapon.name)} selected={masteries} limit={automation.masteryCount} onToggle={automation.toggleMastery} meta="Weapon mastery" />;
+  if (kind === "mastery") return <View4WeaponMasteryChoices />;
   if (kind === "whispers") return <div className="v4-upgrade-choice-page"><p>Prepare {automation.whisperLimit} Whispers. Each effect is shown here.</p>{DEEPCALLER_WHISPERS.map((whisper) => <ChoiceToggle key={whisper.id} label={whisper.name} meta={`${whisper.performing} · ${whisper.range} · ${whisper.damage} ${whisper.damageType}`} checked={whispers.includes(whisper.id)} disabled={!whispers.includes(whisper.id) && whispers.length >= automation.whisperLimit} onChange={() => automation.toggleWhisper(whisper.id)} />)}</div>;
   return <p>No choice is required on this step through level {target}.</p>;
 }
@@ -48,6 +48,6 @@ function SubclassFeatureGroup({ title, features }: { title: string; features: Ar
   return <section><h4>{title}</h4>{features.map((feature) => <span key={`${feature.level}:${feature.name}`}><small>Level {feature.level}</small><b>{feature.name}</b><p>{feature.text}</p></span>)}</section>;
 }
 
-function ChoiceList({ intro, options, selected, limit, onToggle, meta }: { intro: string; options: readonly string[]; selected: string[]; limit: number; onToggle: (value: string) => void; meta?: string }) {
-  return <div className="v4-upgrade-choice-page"><p>{intro} <b>{selected.length} / {limit}</b></p>{options.map((option) => <ChoiceToggle key={option} label={option} meta={meta} checked={selected.includes(option)} disabled={!selected.includes(option) && selected.length >= limit} onChange={() => onToggle(option)} />)}</div>;
+function ChoiceList({ intro, options, selected, limit, onToggle }: { intro: string; options: readonly string[]; selected: string[]; limit: number; onToggle: (value: string) => void }) {
+  return <div className="v4-upgrade-choice-page"><p>{intro} <b>{selected.length} / {limit}</b></p>{options.map((option) => <ChoiceToggle key={option} label={option} checked={selected.includes(option)} disabled={!selected.includes(option) && selected.length >= limit} onChange={() => onToggle(option)} />)}</div>;
 }
