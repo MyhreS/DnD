@@ -170,8 +170,34 @@ try {
     throw new Error("Session owner can create a second active session");
   }
 
+  const waitingRoom = owner.getByRole("region", { name: "Waiting room" });
+  await waitingRoom.getByRole("heading", { name: "Hunters", exact: true }).waitFor();
+  await waitingRoom.getByText("1 Hunter joined", { exact: true }).waitFor();
   const managePlayersButton = owner.getByRole("button", { name: "Manage players", exact: true });
   if (await managePlayersButton.count() !== 1) throw new Error("DM should have exactly one Manage players entry point");
+  const discardSessionButton = waitingRoom.getByRole("button", { name: "Discard session", exact: true });
+  const discardPresentation = await discardSessionButton.evaluate((button) => {
+    const box = button.getBoundingClientRect();
+    return {
+      text: button.textContent?.trim(),
+      svgCount: button.querySelectorAll("svg").length,
+      width: box.width,
+      height: box.height,
+      dangerClass: button.classList.contains("btn-danger"),
+    };
+  });
+  if (discardPresentation.text || discardPresentation.svgCount !== 1 || discardPresentation.dangerClass
+      || Math.abs(discardPresentation.width - discardPresentation.height) > 1) {
+    throw new Error(`Discard session should be a square, icon-only control: ${JSON.stringify(discardPresentation)}`);
+  }
+  if (await owner.getByRole("region", { name: "Session notes" }).count()) {
+    throw new Error("Session notes remain on the game page instead of the Hunter sheet");
+  }
+  await waitingRoom.getByRole("button", { name: "Open Gascoigne character sheet", exact: true }).click();
+  const waitingRoomSheet = owner.getByRole("dialog", { name: "Character sheet" });
+  await waitingRoomSheet.waitFor();
+  await waitingRoomSheet.getByRole("button", { name: /Back/ }).click();
+  await waitingRoomSheet.waitFor({ state: "hidden" });
   await managePlayersButton.click();
   const managePlayers = owner.getByRole("dialog", { name: "Manage players" });
   await managePlayers.getByText("Preview Hunter · Bloodbound · Level 3", { exact: true }).waitFor();
@@ -187,13 +213,8 @@ try {
     throw new Error("Session creator can add their own Hunter after session creation");
   }
   await managePlayers.getByRole("button", { name: "Done", exact: true }).click();
-
-  const desktopNotes = owner.getByRole("region", { name: "Session notes" });
-  await desktopNotes.getByRole("textbox", { name: "Add a session note" }).fill("The bell tower overlooks the eastern gate.");
-  await desktopNotes.getByRole("button", { name: "Add note", exact: true }).click();
-  await desktopNotes.getByText("The bell tower overlooks the eastern gate.", { exact: true }).waitFor();
-  await assertNoHorizontalOverflow(owner, "Desktop session notes");
-  await owner.screenshot({ path: "screenshots/session-notes-desktop.png", fullPage: true });
+  await assertNoHorizontalOverflow(owner, "Desktop waiting room");
+  await owner.screenshot({ path: "screenshots/game-waiting-room-desktop.png", fullPage: true });
 
   await owner.setViewportSize({ width: 390, height: 844 });
   await managePlayersButton.click();
@@ -201,15 +222,14 @@ try {
   await assertNoHorizontalOverflow(owner, "Mobile Manage players dialog");
   await owner.screenshot({ path: "screenshots/manage-players-mobile.png" });
   await managePlayers.getByRole("button", { name: "Done", exact: true }).click();
-  const mobileNotes = owner.getByRole("region", { name: "Session notes" });
-  await mobileNotes.getByRole("textbox", { name: "Add a session note" }).fill("Keep the lantern lit when crossing the bridge.");
-  await mobileNotes.getByRole("button", { name: "Add note", exact: true }).click();
-  await mobileNotes.getByText("Keep the lantern lit when crossing the bridge.", { exact: true }).waitFor();
-  await assertNoHorizontalOverflow(owner, "Mobile session notes");
-  await owner.screenshot({ path: "screenshots/session-notes-mobile.png", fullPage: true });
+  await assertNoHorizontalOverflow(owner, "Mobile waiting room");
+  await owner.screenshot({ path: "screenshots/game-waiting-room-mobile.png", fullPage: true });
   await owner.setViewportSize({ width: 1440, height: 1000 });
 
   await owner.getByRole("button", { name: "Start session" }).click();
+  if (await owner.getByRole("region", { name: "Session notes" }).count()) {
+    throw new Error("Session notes remain on the active game page instead of the Hunter sheet");
+  }
   if (await owner.getByTestId("session-clock").count()) throw new Error("Session timer is still visible.");
   if (await owner.getByRole("button", { name: /^(Pause|Resume)$/ }).count()) throw new Error("Session timer controls are still visible.");
   await owner.getByRole("button", { name: "Manage enemies", exact: true }).click();
@@ -298,6 +318,7 @@ try {
   await owner.getByLabel("Session name").fill("Throwaway lobby");
   await owner.getByRole("button", { name: "Create game", exact: true }).click();
   await owner.getByRole("heading", { name: "Throwaway lobby" }).waitFor();
+  await owner.getByRole("region", { name: "Waiting room" }).getByText("No Hunters have joined yet.", { exact: true }).waitFor();
   await owner.getByRole("button", { name: "Discard session" }).waitFor();
   await owner.getByRole("button", { name: "Discard session" }).click();
   const discardSessionDialog = owner.getByRole("alertdialog", { name: "Discard session?" });
@@ -343,6 +364,14 @@ try {
   await player.getByRole("navigation", { name: "Current games" }).getByRole("button", { name: /The Sunless Vault/ }).click();
   await player.getByRole("heading", { name: "The Sunless Vault", exact: true }).waitFor();
   await player.getByText("Your Hunter", { exact: true }).waitFor();
+  if (await player.getByRole("region", { name: "Session notes" }).count()) {
+    throw new Error("The player game page still duplicates notes from the Hunter sheet");
+  }
+  await player.getByRole("button", { name: "Open sheet", exact: true }).click();
+  const playerSheet = player.getByRole("dialog", { name: "Character sheet" });
+  await playerSheet.waitFor();
+  await playerSheet.getByRole("button", { name: /Back/ }).click();
+  await playerSheet.waitFor({ state: "hidden" });
   if (await player.getByText("The Old Cathedral", { exact: true }).count()) {
     throw new Error("Saved sessions should stay hidden until history is opened");
   }
