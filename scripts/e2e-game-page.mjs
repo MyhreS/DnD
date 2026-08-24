@@ -275,7 +275,8 @@ try {
   await owner.getByRole("button", { name: "Return to battle", exact: true }).waitFor();
   await owner.getByRole("button", { name: "Return to battle", exact: true }).click();
   await owner.getByTestId("session-battle-screen").waitFor();
-  await owner.getByRole("button", { name: "End battle" }).click();
+  await owner.getByLabel("Battle options").click();
+  await owner.getByRole("button", { name: "End battle", exact: true }).click();
   const endBattleDialog = owner.getByRole("alertdialog", { name: "End battle?" });
   await endBattleDialog.getByText("Everyone will return to the session view. Initiative, conditions, enemies, and damage stay saved.", { exact: true }).waitFor();
   if (!await endBattleDialog.getByRole("button", { name: "Keep battling" }).evaluate((element) => element === document.activeElement)) {
@@ -292,7 +293,8 @@ try {
   await endBattleDialog.getByRole("button", { name: "Keep battling" }).click();
   await endBattleDialog.waitFor({ state: "detached" });
   await owner.getByTestId("session-battle-screen").waitFor();
-  await owner.getByRole("button", { name: "End battle" }).click();
+  await owner.getByLabel("Battle options").click();
+  await owner.getByRole("button", { name: "End battle", exact: true }).click();
   await owner.getByRole("alertdialog", { name: "End battle?" }).getByRole("button", { name: "End battle" }).click();
   await owner.getByTestId("session-battle-screen").waitFor({ state: "detached" });
 

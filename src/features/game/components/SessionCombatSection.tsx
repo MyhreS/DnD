@@ -112,13 +112,27 @@ export function SessionCombatControls({
   const nextTurn = useCombatStore((state) => state.nextTurn);
   const combatants = useMemo(() => encounterCombatants(allCombatants, game.combat ?? emptyEncounter()), [allCombatants, game.combat]);
   const order = useMemo(() => initiativeOrder(combatants), [combatants]);
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  function runMenuAction(action: () => void) {
+    setMenuOpen(false);
+    action();
+  }
 
   return (
     <div className="game-battle-toolbar" aria-label="DM battle controls">
-      <button className="btn btn-primary" type="button" disabled={disabled || order.length === 0} onClick={() => void nextTurn(game.id, game, combatants)}>Next turn</button>
-      <button className="btn btn-ghost" type="button" disabled={disabled} onClick={onAddEnemy}>Add enemy</button>
-      {canCreateItem && <button className="btn btn-ghost" type="button" disabled={disabled} onClick={onCreateItem}>Create item</button>}
-      <button className="game-text-button game-danger-text" type="button" disabled={disabled} onClick={onEndBattle}>End battle</button>
+      <button className="battle-next-turn" type="button" disabled={disabled || order.length === 0} onClick={() => void nextTurn(game.id, game, combatants)}>
+        <span>Finish turn</span>
+        <strong>Next turn <span aria-hidden="true">→</span></strong>
+      </button>
+      <details className="battle-tools" open={menuOpen} onToggle={(event) => setMenuOpen(event.currentTarget.open)}>
+        <summary aria-label="Battle options"><span aria-hidden="true">•••</span><span>Battle options</span></summary>
+        <div className="battle-tools-menu">
+          <button type="button" aria-label="Add enemy" disabled={disabled} onClick={() => runMenuAction(onAddEnemy)}><span aria-hidden="true">＋</span><span><strong>Add enemy</strong><small>Bring another foe into combat</small></span></button>
+          {canCreateItem && <button type="button" aria-label="Create item" disabled={disabled} onClick={() => runMenuAction(onCreateItem)}><span aria-hidden="true">◇</span><span><strong>Create item</strong><small>Add loot found in this session</small></span></button>}
+          <button className="battle-end" type="button" aria-label="End battle" disabled={disabled} onClick={() => runMenuAction(onEndBattle)}><span aria-hidden="true">×</span><span><strong>End battle</strong><small>Save this encounter and leave combat</small></span></button>
+        </div>
+      </details>
     </div>
   );
 }
