@@ -12,22 +12,10 @@ import { bodySnippet, highlightSegments, normalizeText, searchEntries } from "@/
 
 const MAX_RESULTS = 100;
 const DOCUMENT_SOURCE_ORDER = [
-  "handbook",
-  "character-sheets",
-  "game-card",
-  "rules-reference-scan",
-  "ability-point-costs-v2",
-  "bloodbound",
-  "brute",
-  "deepcaller",
-  "scout",
-  "stalker",
-  "warden",
-  "rites-by-school",
-  "book-of-deepcaller",
+  "book-of-the-deepcaller",
+  "character-sheet",
+  "hidden-condition-sheet",
   "whispers",
-  "transformation-table",
-  "master-notes",
 ];
 const DOCUMENT_SOURCE_RANK = new Map(DOCUMENT_SOURCE_ORDER.map((id, index) => [id, index]));
 const DOCUMENT_SOURCES = [...CODEX_SOURCES].sort((left, right) =>
@@ -42,7 +30,7 @@ export function CodexDocumentsPage() {
       <header className="codex-heading codex-documents-heading">
         <p className="eyebrow">Documents</p>
         <h1>Source library</h1>
-        <p>Player handbooks, character sheets, class boards, rules references, and game aids. Each source remains separate so its origin is always clear.</p>
+        <p>The four current documents supplied by the game maker. They replace the previous source library in full.</p>
       </header>
       <SourceLibrary />
     </div>
@@ -97,7 +85,7 @@ export function CodexPage() {
       <header className="codex-heading">
         <p className="eyebrow">One searchable library</p>
         <h1>Codex</h1>
-        <p>Handbook, D&amp;D rules, class boards, rites, character guidance, and the Player&rsquo;s Game Card—together, with every source kept visible.</p>
+        <p>The current Rites, Whispers, character-sheet fields, and handout—searchable together, with every source kept visible.</p>
       </header>
 
       <div className="codex-search" role="search">
@@ -107,7 +95,7 @@ export function CodexPage() {
             id="codex-query"
             className="input"
             type="search"
-            placeholder="Try grapple, sanity, Hunter Rifle, or Blood Frenzy…"
+            placeholder="Try Eldritch Rebuke, Grit, or Rite Save DC…"
             value={query}
             onChange={(event) => setParam("q", event.target.value)}
             autoComplete="off"

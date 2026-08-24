@@ -32,7 +32,7 @@ export function SheetCharacterView({
           {card.name || "Unnamed hunter"}
         </div>
         <p className="faint" style={{ fontSize: "0.84rem", margin: "2px 0 0" }}>
-          {cls ? `${cls} · ` : ""}Level {card.level} · detailed sheet and play HUD
+          {cls ? `${cls} · ` : ""}Level {card.level} · current character sheet
         </p>
         <button type="button" className="btn btn-primary" style={{ marginTop: 12 }} onClick={() => setOpen(true)}>
           Open character

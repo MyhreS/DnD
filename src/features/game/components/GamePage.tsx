@@ -12,7 +12,6 @@ import {
   subscribeUserGames,
   type ActiveGameSeat,
 } from "@/api/games";
-import { getClass } from "@/data/classes";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview";
 import { useAllCharacters } from "@/features/game/hooks/useAllCharacters";
@@ -39,7 +38,7 @@ const DEFAULT_TITLE = () => `Session ${new Intl.DateTimeFormat(undefined, { date
 type GameConfirmation = "end-battle" | "finish-session" | "discard-session";
 
 function displayClass(participant: GameParticipant): string {
-  return participant.className || getClass(participant.classId)?.name || participant.classId || "Hunter";
+  return participant.className || participant.classId.split(/[-_\s]+/).filter(Boolean).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ") || "Hunter";
 }
 
 function hunterSearchText(card: HunterCard): string {
@@ -204,12 +203,6 @@ export function GamePage() {
       () => setError("Could not load the players in this session."),
     );
   }, [preview, previewRosters, selected?.campaignId, selectedId]);
-
-  useEffect(() => {
-    if (!selected?.combat?.active) {
-      setDismissedBattleKey(null);
-    }
-  }, [selected?.combat?.active]);
 
   useCombatSync(selectedId, !isSessionDm);
   const combatBusy = useCombatStore((state) => state.busy);
@@ -457,7 +450,9 @@ export function GamePage() {
 
   async function endBattle() {
     if (!selected?.combat) return;
-    await useCombatStore.getState().closeSessionEncounter(selected.id, selected.combat);
+    if (await useCombatStore.getState().closeSessionEncounter(selected.id, selected.combat)) {
+      setDismissedBattleKey(null);
+    }
   }
 
   async function confirmGameAction() {

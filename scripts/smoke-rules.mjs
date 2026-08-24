@@ -17,7 +17,8 @@ import {
 } from "firebase/firestore";
 
 const sa = process.env.AGENT_TEST_SA;
-const useEmulators = process.env.USE_FIREBASE_EMULATORS === "1";
+const useEmulators = process.env.USE_FIREBASE_EMULATORS === "1"
+  || Boolean(process.env.FIRESTORE_EMULATOR_HOST && process.env.FIREBASE_AUTH_EMULATOR_HOST);
 const cfg = {
   apiKey: process.env.VITE_FIREBASE_API_KEY || (useEmulators ? "fake-api-key" : undefined),
   authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN || (useEmulators ? "dandd-ea955.firebaseapp.com" : undefined),
@@ -109,9 +110,9 @@ await step("DM creates campaign", async () => {
 await step("DM creates own character", async () => {
   await setDoc(doc(dm.db, "characters", `smoke-${dmUid}`), {
     id: `smoke-${dmUid}`, ownerUid: dmUid, ownerEmail: "dm@x", ownerName: "Agent DM",
-    name: "DM Hunter", classId: "brute", background: "", level: 1,
-    abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
-    skillProficiencies: [], mainArmorId: null, campaignId, notes: "", createdAt: Date.now(), updatedAt: Date.now(),
+    name: "DM Hunter", classId: "", background: "", level: 1,
+    sheet: { name: "DM Hunter", class: "Example class", level: "1" },
+    campaignId, notes: "", createdAt: Date.now(), updatedAt: Date.now(),
   });
 });
 await step("Player finds campaign by code", async () => {
@@ -124,13 +125,12 @@ await step("Player joins (memberUids + member doc)", async () => {
     uid: plUid, name: "Agent Player", email: "p@x", role: "player", characterId: null, joinedAt: serverTimestamp(),
   });
 });
-await step("Player creates own character (with Transformation)", async () => {
+await step("Player creates own current-source character sheet", async () => {
   await setDoc(doc(pl.db, "characters", plCharId), {
     id: plCharId, ownerUid: plUid, ownerEmail: "p@x", ownerName: "Agent Player",
-    name: "Player Hunter", classId: "stalker", background: "", level: 1,
-    abilities: { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 },
-    skillProficiencies: [], mainArmorId: null, campaignId, notes: "",
-    transformationLevel: 2, activeTransformations: ["mutatedArm"],
+    name: "Player Hunter", classId: "", background: "", level: 1,
+    sheet: { name: "Player Hunter", class: "Example class", level: "1", transformation: "2" },
+    campaignId, notes: "",
     createdAt: Date.now(), updatedAt: Date.now(),
   });
 });
@@ -138,7 +138,7 @@ await step("Legacy campaign game fixture is seeded", async () => {
   const ref = adb.collection("games").doc();
   await ref.set({
     campaignId, sessionId: null, title: "Smoke Game", dmUid, dmName: "Agent DM",
-    participantUids: [], status: "lobby", phase: "exploration", sandbox: false, createdAt: Date.now(),
+    participantUids: [], status: "lobby", sandbox: false, createdAt: Date.now(),
   });
   gameId = ref.id;
 });
@@ -148,7 +148,7 @@ await step("Player reads the game (member)", async () => {
 });
 await step("Player joins lobby (participant doc)", async () => {
   await setDoc(doc(pl.db, "games", gameId, "participants", plUid), {
-    uid: plUid, name: "Agent Player", classId: "scout", level: 1, role: "player", joinedAt: serverTimestamp(), lastSeen: serverTimestamp(),
+    uid: plUid, name: "Agent Player", classId: "", className: "Example class", level: 1, role: "player", joinedAt: serverTimestamp(), lastSeen: serverTimestamp(),
   });
 });
 await step("DM lists participants (subscription path)", async () => {
@@ -263,7 +263,7 @@ await step("DM starts the standalone session", async () => {
   await updateDoc(doc(dm.db, "games", standaloneGameId), {
     status: "active", startedAt: serverTimestamp(), clockRunning: true, clockStartedAt: Date.now(),
     combat: {
-      active: false, round: 1, turnId: null, designatedWardenId: null,
+      active: false, round: 1, turnId: null,
       timerPhase: "idle", timerEndsAt: null, pausedRemainingMs: null,
     },
   });
@@ -274,19 +274,15 @@ await step("DM manages players during active exploration and attendance is retai
   const game = await getDoc(doc(dm.db, "games", standaloneGameId));
   if (!game.data()?.attendeeRoster?.some((entry) => entry.uid === plUid)) throw new Error("attendance-was-lost");
 });
-await step("Session notes are shared and attributed to their author", async () => {
+await step("Retired shared session notes are denied", async () => {
   const note = doc(collection(pl.db, "games", standaloneGameId, "notes"));
-  await setDoc(note, {
-    authorUid: plUid, authorName: "Agent Player", body: "The moon door is sealed.", createdAt: serverTimestamp(),
-  });
-  const visible = await getDoc(doc(dm.db, "games", standaloneGameId, "notes", note.id));
-  if (visible.data()?.body !== "The moon door is sealed." || visible.data()?.authorUid !== plUid) {
-    throw new Error("shared-note-not-visible");
-  }
-  let rewriteDenied = false;
-  try { await updateDoc(doc(dm.db, "games", standaloneGameId, "notes", note.id), { body: "Rewritten" }); }
-  catch { rewriteDenied = true; }
-  if (!rewriteDenied) throw new Error("session-note-was-rewritable");
+  let denied = false;
+  try {
+    await setDoc(note, {
+      authorUid: plUid, authorName: "Agent Player", body: "Retired note", createdAt: serverTimestamp(),
+    });
+  } catch { denied = true; }
+  if (!denied) throw new Error("retired-session-note-was-writable");
 });
 await step("DM creates a unique item and the invited Hunter claims it once", async () => {
   const created = await createStandaloneLoot({ gameId: standaloneGameId, item: {
@@ -299,8 +295,8 @@ await step("DM creates a unique item and the invited Hunter claims it once", asy
     getDoc(doc(pl.db, "characters", plCharId)),
   ]);
   if (loot.data()?.status !== "claimed") throw new Error("loot-was-not-claimed");
-  if (!hunter.data()?.customItems?.some((item) => item.name === "Smoke Blade")) throw new Error("custom-item-not-added");
-  if (!hunter.data()?.inventory?.some((item) => item.itemId === loot.data()?.item?.id)) throw new Error("claimed-item-not-in-inventory");
+  if (hunter.data()?.sheet?.eq_0_0 !== "Smoke Blade") throw new Error("claimed-item-not-in-equipment-table");
+  if (hunter.data()?.sheet?.weapon_0_0 !== "Smoke Blade" || hunter.data()?.sheet?.weapon_0_2 !== "1d8") throw new Error("claimed-item-not-in-weapons-table");
   let duplicateDenied = false;
   try { await claimStandaloneLoot({ gameId: standaloneGameId, lootId: created.data.lootId, characterId: plCharId }); }
   catch { duplicateDenied = true; }
@@ -308,7 +304,7 @@ await step("DM creates a unique item and the invited Hunter claims it once", asy
 });
 await step("DM can remove an active standalone combatant without changing the Hunter", async () => {
   await updateDoc(doc(dm.db, "games", standaloneGameId), { combat: {
-    active: true, round: 1, turnId: standaloneMonsterId, designatedWardenId: null,
+    active: true, round: 1, turnId: standaloneMonsterId,
     timerPhase: "untimed", timerEndsAt: null, pausedRemainingMs: null,
   } });
   await Promise.all([
@@ -317,7 +313,7 @@ await step("DM can remove an active standalone combatant without changing the Hu
   ]);
 });
 await step("Ending saves history and releases every seat", async () => {
-  await finishStandalone({ gameId: standaloneGameId, endedPhase: "combat", endedLocation: "wild" });
+  await finishStandalone({ gameId: standaloneGameId });
   const game = await getDoc(doc(pl.db, "games", standaloneGameId));
   if (game.data()?.status !== "ended" || !game.data()?.historySavedAt) throw new Error("history-not-saved");
   if (game.data()?.combat?.active !== false || game.data()?.combat?.timerPhase !== "idle") {
@@ -415,37 +411,17 @@ await step("Player cannot remove the monster from battle (negative)", async () =
   if (!denied) throw new Error("player deleted private monster");
 });
 
-// --- Transformation: DM-recorded; owners may only REDUCE the level / CLEAR the
-// list (rests). The NEGATIVE cases assert the owner-write constraints in the
-// DEPLOYED rules — live since the Transformation feature merged — so they
-// always run.
-await step("Player cannot raise own Transformation Level (negative)", async () => {
-  let denied = false;
-  try {
-    await updateDoc(doc(pl.db, "characters", plCharId), { transformationLevel: 3 });
-  } catch { denied = true; }
-  if (!denied) throw new Error("player could raise their own transformationLevel (DM-only)");
+// Transformation is a plain field on the supplied character sheet. The source
+// set provides no automatic ownership or rest mechanic around it.
+await step("Player edits own recorded Transformation level", async () => {
+  await updateDoc(doc(pl.db, "characters", plCharId), { "sheet.transformation": "3" });
 });
-await step("Player cannot add a Transformation result (negative)", async () => {
-  let denied = false;
-  try {
-    await updateDoc(doc(pl.db, "characters", plCharId), { activeTransformations: ["mutatedArm", "bloodFangs"] });
-  } catch { denied = true; }
-  if (!denied) throw new Error("player could add to activeTransformations (DM-only)");
+await step("DM may edit the player's recorded sheet", async () => {
+  await updateDoc(doc(dm.db, "characters", plCharId), { "sheet.transformation": "4" });
 });
-await step("Player rest-reduces own Transformation (allowed)", async () => {
-  await updateDoc(doc(pl.db, "characters", plCharId), { transformationLevel: 1, activeTransformations: [] });
-});
-await step("DM records Transformation on the player's card (allowed)", async () => {
-  await updateDoc(doc(dm.db, "characters", plCharId), {
-    transformationLevel: 4, activeTransformations: ["mutatedArm", "lost"],
-  });
-});
-await step("Player full-card save with unchanged Transformation (allowed)", async () => {
-  // Mirrors playerStore.save: a full-card setDoc-merge where the transformation
-  // fields carry the SAME values must stay writable for the owner.
+await step("Player full-card merge keeps manual sheet values writable", async () => {
   await setDoc(doc(pl.db, "characters", plCharId), {
-    notes: "smoke full save", transformationLevel: 4, activeTransformations: ["mutatedArm", "lost"],
+    notes: "smoke full save", sheet: { name: "Player Hunter", class: "Example class", level: "1", transformation: "4" },
     updatedAt: Date.now(),
   }, { merge: true });
 });

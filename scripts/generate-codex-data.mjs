@@ -1,37 +1,27 @@
-import { copyFileSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { basename } from "node:path";
+import { createHash } from "node:crypto";
+import {
+  copyFileSync,
+  mkdirSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  writeFileSync,
+} from "node:fs";
+import { basename, join } from "node:path";
 
 const MASTER_PATH = "resources/master.json";
+const PDF_ROOT = "resources/pdf";
 const OUTPUT_PATH = "src/data/codex.generated.json";
-const GAME_CARD_OUTPUT_PATH = "src/data/gameCard.generated.json";
 const PUBLIC_DOCUMENT_ROOT = "public/source-library";
-const DOWNLOAD_LABELS = new Map([
-  ["CATACOMBS & STARSPAWNS Players Handbook.pdf", "Player's Handbook"],
-  ["R1.0 Character Sheet.pdf", "Blank Character Sheet"],
-  ["R1.0 Numbered Character Sheet.pdf", "Numbered Character Creation Sheet"],
-  ["Character Sheet For Sim.pdf", "Character Sheet Field Guide"],
-  ["Player's Game Card.pdf", "Player's Game Card"],
-  ["Rules Reference Scan.pdf", "Rules Glossary"],
-  ["ability-score-point-costs-v2.pdf", "Ability Score Point Costs"],
-  ["Bloodbound.pdf", "Bloodbound Class Board"],
-  ["Brute.pdf", "Brute Class Board"],
-  ["Deepcaller.pdf", "Deepcaller Class Board"],
-  ["Scout.pdf", "Scout Class Board"],
-  ["Staker.pdf", "Stalker Class Board"],
-  ["Warden.pdf", "Warden Class Board"],
-  ["Classes Boards for send.pdf", "All Hunter Classes (combined PDF)"],
-  ["V1.0 Book of The Deepcaller.pdf", "Book of the Deepcaller"],
-  ["V1.0 Whispers.pdf", "Hushed Whispers"],
-  ["Transformation Table Final Version.pdf", "Transformation Table"],
-  ["master-content-reconciliation-notes.pdf", "Reconciliation Notes"],
-]);
 
 const master = JSON.parse(readFileSync(MASTER_PATH, "utf8"));
-const sourceById = new Map(master.index.map((source) => [source.id, source]));
-const entries = [];
+if (master.schemaVersion !== 2) throw new Error(`Unsupported master schema: ${master.schemaVersion}`);
+if (!Array.isArray(master.sources) || master.sources.length !== 4) {
+  throw new Error("The current source master must contain exactly four documents.");
+}
 
 function slug(value) {
-  return value
+  return String(value)
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
@@ -39,52 +29,71 @@ function slug(value) {
     .replace(/^-+|-+$/g, "");
 }
 
-function publicDocumentPath(sourceId, file) {
-  return `/source-library/${sourceId}/${slug(basename(file, ".pdf"))}.pdf`;
+function sha256(path) {
+  return createHash("sha256").update(readFileSync(path)).digest("hex").toUpperCase();
 }
 
-function downloadLabel(file) {
-  return DOWNLOAD_LABELS.get(basename(file)) ?? basename(file, ".pdf");
+function publicDocumentPath(source) {
+  return `/source-library/${source.id}/${slug(basename(source.sourceFile, ".pdf"))}.pdf`;
 }
 
-function paragraphs(value) {
-  if (!value) return [];
-  if (Array.isArray(value)) return value.flatMap(paragraphs);
-  return String(value)
-    .split(/\n\s*\n/)
-    .map((part) => part.trim())
-    .filter(Boolean);
+const sourceFiles = master.sources.map((source) => source.sourceFile.replaceAll("\\", "/"));
+if (new Set(sourceFiles).size !== sourceFiles.length) throw new Error("Duplicate source file in master.json.");
+if (new Set(master.sources.map((source) => source.sha256)).size !== master.sources.length) {
+  throw new Error("Duplicate document content in the current source set.");
 }
 
-function table(title, columns, rows) {
+const actualPdfFiles = readdirSync(PDF_ROOT, { withFileTypes: true }).map((entry) => {
+  if (!entry.isFile() || !entry.name.toLowerCase().endsWith(".pdf")) {
+    throw new Error(`Unexpected item in ${PDF_ROOT}: ${entry.name}`);
+  }
+  return `${PDF_ROOT}/${entry.name}`;
+}).sort();
+const expectedPdfFiles = [...sourceFiles].sort();
+if (JSON.stringify(actualPdfFiles) !== JSON.stringify(expectedPdfFiles)) {
+  throw new Error(`PDF source set differs from master.json.\nExpected: ${expectedPdfFiles.join(", ")}\nActual: ${actualPdfFiles.join(", ")}`);
+}
+
+for (const source of master.sources) {
+  const actual = sha256(source.sourceFile);
+  if (actual !== source.sha256) {
+    throw new Error(`SHA-256 mismatch for ${source.sourceFile}: expected ${source.sha256}, got ${actual}`);
+  }
+}
+
+rmSync(PUBLIC_DOCUMENT_ROOT, { recursive: true, force: true });
+
+const sources = master.sources.map((source) => {
+  const publicPath = publicDocumentPath(source);
+  const destinationDirectory = join(PUBLIC_DOCUMENT_ROOT, source.id);
+  mkdirSync(destinationDirectory, { recursive: true });
+  copyFileSync(source.sourceFile, `public${publicPath}`);
   return {
-    ...(title ? { title } : {}),
-    columns: columns.map(String),
-    rows: rows.map((row) => row.map((cell) => String(cell ?? ""))),
+    id: source.id,
+    title: source.title,
+    shortLabel: source.shortLabel,
+    kind: source.kind,
+    authority: source.authority,
+    audience: source.audience,
+    description: source.description,
+    pageCount: source.pageCount,
+    publicPath,
+    downloads: [{ label: source.shortLabel, publicPath }],
+    sourceFiles: [source.sourceFile],
+    fileLabels: [basename(source.sourceFile)],
   };
-}
+});
 
-function source(id) {
-  const value = sourceById.get(id);
-  if (!value) throw new Error(`Unknown Codex source: ${id}`);
-  return value;
-}
-
-function add({ id, term, topic = term, aliases = [], body = [], tables = [], group, sourceId, locator, sourcePages, warning }) {
-  source(sourceId);
-  const cleanBody = paragraphs(body);
-  const tableText = tables.flatMap((item) => [
-    item.title ?? "",
-    item.columns.join(" "),
-    ...item.rows.map((row) => row.join(" ")),
-  ]).filter(Boolean);
+const entries = [];
+function add({ id, term, aliases = [], paragraphs = [], tables = [], group, sourceId, locator, sourcePages, warning }) {
+  const cleanParagraphs = paragraphs.map(String).map((value) => value.trim()).filter(Boolean);
   entries.push({
     id,
-    topicKey: slug(topic),
+    topicKey: slug(term),
     term,
-    aliases: [...new Set(aliases.filter(Boolean))],
-    body: [...cleanBody, ...tableText],
-    paragraphs: cleanBody,
+    aliases: [...new Set(aliases.map(String).filter(Boolean))],
+    body: [...cleanParagraphs, ...tables.flatMap((table) => [table.title ?? "", ...table.columns, ...table.rows.flat()])].filter(Boolean),
+    paragraphs: cleanParagraphs,
     tables,
     group,
     sourceId,
@@ -94,365 +103,105 @@ function add({ id, term, topic = term, aliases = [], body = [], tables = [], gro
   });
 }
 
-function objectLines(value) {
-  return Object.entries(value ?? {}).map(([key, item]) => `${humanize(key)}: ${Array.isArray(item) ? item.join(", ") : item}`);
+function riteParagraphs(entry) {
+  return [
+    `Level ${entry.level} ${entry.type}`,
+    `Performing: ${entry.performing}`,
+    `Range: ${entry.range}`,
+    `Duration: ${entry.duration}`,
+    entry.special,
+    entry.text,
+    entry.upgrade,
+  ].filter(Boolean);
 }
 
-function humanize(value) {
-  return value.replace(/([a-z])([A-Z])/g, "$1 $2").replace(/^./, (letter) => letter.toUpperCase());
-}
-
-function normalizeTable(raw) {
-  if (Array.isArray(raw.rows) && raw.rows.every(Array.isArray)) {
-    return table(raw.title ?? raw.caption, raw.columns ?? [], raw.rows);
-  }
-  return table(raw.title ?? raw.caption, raw.columns ?? [], (raw.rows ?? []).map((row) => Object.values(row)));
-}
-
-/** Make each reference-table row discoverable by its own name as well as through
- * the parent table. This lets a search for an item such as "Longsword" open its
- * exact stats instead of requiring players to infer that it lives in Weapons. */
-function addGameCardTableRows(cardEntry, tables) {
-  for (const [tableIndex, item] of tables.entries()) {
-    for (const [rowIndex, row] of item.rows.entries()) {
-      const term = row[0]?.trim();
-      if (!term || term === "—") continue;
-      const details = item.columns
-        .map((column, columnIndex) => `${column}: ${row[columnIndex] ?? "—"}`)
-        .join(" · ");
-      add({
-        id: `game-card-${cardEntry.id}-table-${tableIndex}-row-${rowIndex}-${slug(term)}`,
-        term,
-        topic: `game-card-${cardEntry.id}-${item.title ?? tableIndex}-${term}`,
-        body: [details],
-        tables: [table(item.title, item.columns, [row])],
-        group: "Game Card",
-        sourceId: "game-card",
-        locator: `${cardEntry.category} · ${cardEntry.term}`,
-        sourcePages: cardEntry.sourcePages,
-      });
-    }
-  }
-}
-
-// Handbook chapters and their embedded tables.
-for (const chapter of master.handbook.chapters) {
-  for (const [sectionIndex, section] of chapter.sections.entries()) {
-    add({
-      id: `handbook-${chapter.number}-${sectionIndex}-${slug(section.heading)}`,
-      term: section.heading,
-      aliases: [chapter.title],
-      body: section.text,
-      tables: (section.tables ?? []).map(normalizeTable),
-      group: "Handbook",
-      sourceId: "handbook",
-      locator: `Chapter ${chapter.number} · ${chapter.title}`,
-    });
-  }
-}
-
-// Class boards: overview, progression, features, and subclasses remain distinct
-// entries so searches land on the exact rule while still carrying class context.
-for (const hunterClass of master.classes) {
-  const classSource = hunterClass.id;
-  const overviewRows = Object.entries(hunterClass.overview).map(([key, value]) => [
-    humanize(key),
-    Array.isArray(value) ? value.join(", ") : String(value),
-  ]);
-  const progressionColumns = [...new Set(hunterClass.progression.flatMap((row) => Object.keys(row)))];
+for (const rite of master.rites.entries) {
   add({
-    id: `class-${hunterClass.id}`,
-    term: hunterClass.name,
-    aliases: hunterClass.subclasses.map((item) => item.name),
-    body: [hunterClass.flavorText, hunterClass.coreTraits.map((trait) => `${trait.name}: ${trait.text}`)],
-    tables: [
-      table("Core traits", ["Trait", "Rule"], hunterClass.coreTraits.map((trait) => [trait.name, trait.text])),
-      table("Class overview", ["Field", "Value"], overviewRows),
-      table("Level progression", progressionColumns.map(humanize), hunterClass.progression.map((row) => progressionColumns.map((key) => Array.isArray(row[key]) ? row[key].join(", ") : row[key] ?? ""))),
-    ],
-    group: "Classes",
-    sourceId: classSource,
-    locator: "Core traits and progression",
-  });
-  for (const feature of hunterClass.features) {
-    add({
-      id: `class-${hunterClass.id}-feature-${feature.level}-${slug(feature.name)}`,
-      term: feature.name,
-      topic: `${hunterClass.id}-${feature.name}`,
-      aliases: [hunterClass.name],
-      body: feature.text,
-      group: "Classes",
-      sourceId: classSource,
-      locator: `${hunterClass.name} · Level ${feature.level}`,
-    });
-  }
-  for (const subclass of hunterClass.subclasses) {
-    add({
-      id: `class-${hunterClass.id}-subclass-${slug(subclass.name)}`,
-      term: subclass.name,
-      topic: `${hunterClass.id}-${subclass.name}`,
-      aliases: [hunterClass.name],
-      body: subclass.description,
-      group: "Classes",
-      sourceId: classSource,
-      locator: `${hunterClass.name} subclass`,
-    });
-    for (const feature of subclass.features) {
-      add({
-        id: `class-${hunterClass.id}-${slug(subclass.name)}-${feature.level}-${slug(feature.name)}`,
-        term: feature.name,
-        topic: `${hunterClass.id}-${subclass.name}-${feature.name}`,
-        aliases: [hunterClass.name, subclass.name],
-        body: feature.text,
-        group: "Classes",
-        sourceId: classSource,
-        locator: `${subclass.name} · Level ${feature.level}`,
-      });
-    }
-  }
-}
-
-function addRite(rite, sourceId, locatorPrefix) {
-  add({
-    id: `${sourceId}-rite-${rite.level}-${slug(rite.name)}`,
-    term: titleCase(rite.name),
-    aliases: [rite.type, rite.whisper ? "Whisper" : "Rite"],
-    body: [
-      `Performing: ${rite.performing}`,
-      `Range: ${rite.range}`,
-      `Duration: ${rite.duration}`,
-      rite.special,
-      rite.text,
-      rite.upgrade ? `Upgrade: ${rite.upgrade}` : "",
-    ],
+    id: `rite-${rite.id}`,
+    term: rite.name,
+    aliases: [rite.type, `level ${rite.level} rite`],
+    paragraphs: riteParagraphs(rite),
+    tables: rite.tables ?? [],
     group: "Rites",
-    sourceId,
-    locator: `${locatorPrefix} · ${rite.whisper ? "Whisper" : `Level ${rite.level}`}`,
+    sourceId: master.rites.sourceId,
+    locator: `Level ${rite.level} · ${rite.type}`,
+    sourcePages: rite.sourcePages,
   });
 }
 
-for (const school of master.rites.bySchool) {
-  for (const rite of school.rites) addRite({ ...rite, type: school.school }, "rites-by-school", school.school);
-}
-for (const rite of master.rites.bookOfDeepcaller.rites) addRite(rite, "book-of-deepcaller", rite.type);
-for (const whisper of master.rites.whispers.whispers) addRite({ ...whisper, whisper: true }, "whispers", whisper.type);
-
-// The scanned D&D glossary already carries exact PDF and printed-book pages.
-for (const rulesPage of master.rulesReference.pages) {
-  for (const [entryIndex, rule] of rulesPage.entries.entries()) {
-    const continuation = rule.term.match(/^\[(?:continuation|continued)[^—-]*[—-]\s*([^\]]+)\]$/i);
-    const ruleTerm = (continuation?.[1] ?? rule.term)
-      .replace(/\s*\[[^\]]+\]/g, "")
-      .replace(/\s*\((?:continued|continues)[^)]*\)/gi, "")
-      .trim();
-    add({
-      id: `dnd-rules-${rulesPage.page}-${entryIndex}-${slug(rule.term)}`,
-      term: ruleTerm.replace(/^"|"\.?$/g, ""),
-      topic: ruleTerm,
-      body: rule.text,
-      group: "D&D Rules",
-      sourceId: "rules-reference-scan",
-      locator: `Rules Glossary · book p. ${rulesPage.bookPage}`,
-      sourcePages: [rulesPage.page],
-    });
-  }
-  for (const [tableIndex, rulesTable] of (rulesPage.tables ?? []).entries()) {
-    const tableTerm = rulesTable.title.replace(/\s*\(.+$/, "").replace(/\s+under\s+.+$/i, "").trim();
-    add({
-      id: `dnd-rules-${rulesPage.page}-table-${tableIndex}-${slug(rulesTable.title)}`,
-      term: tableTerm,
-      topic: tableTerm,
-      aliases: [rulesTable.title],
-      tables: [normalizeTable(rulesTable)],
-      group: "D&D Rules",
-      sourceId: "rules-reference-scan",
-      locator: `Rules Glossary table · book p. ${rulesPage.bookPage}`,
-      sourcePages: [rulesPage.page],
-    });
-  }
-}
-
-// Player-created quick reference. The body is re-derived from paragraphs and
-// tables, so master.json never needs a second drifting copy of searchable text.
-for (const cardEntry of master.gameCard.entries) {
-  const tables = (cardEntry.tables ?? []).map(normalizeTable);
+for (const whisper of master.whispers.entries) {
   add({
-    id: `game-card-${cardEntry.id}`,
-    term: cardEntry.term,
-    aliases: cardEntry.aliases,
-    body: cardEntry.paragraphs,
-    tables,
-    group: "Game Card",
-    sourceId: "game-card",
-    locator: cardEntry.category,
-    sourcePages: cardEntry.sourcePages,
+    id: `whisper-${whisper.id}`,
+    term: whisper.name,
+    aliases: [whisper.type, "Whisper"],
+    paragraphs: riteParagraphs(whisper),
+    group: "Whispers",
+    sourceId: master.whispers.sourceId,
+    locator: whisper.type,
+    sourcePages: whisper.sourcePages,
   });
-  addGameCardTableRows(cardEntry, tables);
 }
 
-// Character sheets are searchable as field maps and creation-step guidance.
-for (const sheet of master.characterSheets.sheets) {
-  if (sheet.pages) {
-    for (const page of sheet.pages) {
-      add({
-        id: `character-sheet-${slug(sheet.name)}-page-${page.page}`,
-        term: `${sheet.name} — page ${page.page}`,
-        topic: `character-sheet-${slug(sheet.name)}-page-${page.page}`,
-        aliases: page.fields,
-        body: page.fields,
-        group: "Character Sheets",
-        sourceId: "character-sheets",
-        locator: `Page ${page.page}`,
-        sourcePages: [page.page],
-      });
-    }
-  }
-  for (const step of sheet.numberedSteps ?? []) {
-    add({
-      id: `character-sheet-${slug(sheet.name)}-step-${step.number}`,
-      term: `Character creation step ${step.number}: ${step.label}`,
-      aliases: step.fields,
-      body: step.fields,
-      group: "Character Sheets",
-      sourceId: "character-sheets",
-      locator: sheet.name,
-    });
-  }
-  for (const section of sheet.sections ?? []) {
-    add({
-      id: `character-sheet-${slug(sheet.name)}-${slug(section.heading)}`,
-      term: section.heading,
-      aliases: [sheet.name],
-      body: section.content,
-      group: "Character Sheets",
-      sourceId: "character-sheets",
-      locator: sheet.name,
-    });
-  }
-}
-add({
-  id: "character-sheet-ability-and-skills",
-  term: "Ability and Skills",
-  aliases: ["skill list", "character sheet"],
-  tables: [normalizeTable({ title: "Ability and Skills", ...master.characterSheets.abilityAndSkills })],
-  group: "Character Sheets",
-  sourceId: "character-sheets",
-  locator: "Character Sheet For Sim",
-  sourcePages: [1],
-});
-add({
-  id: "character-sheet-field-reference",
-  term: "On the Character Sheet",
-  aliases: ["sheet fields", "character sheet"],
-  tables: [normalizeTable({ title: "On the Character Sheet", ...master.characterSheets.onTheCharacterSheet })],
-  group: "Character Sheets",
-  sourceId: "character-sheets",
-  locator: "Character Sheet For Sim",
-  sourcePages: [1],
-});
-
-// Player-visible transformation rules. Secret Lost details and the Insane
-// appendix's resolution mechanics intentionally never enter the generated app.
-add({
-  id: "transformation-level-master",
-  term: "Transformation Level",
-  body: [master.transformation.description, master.transformation.recording, objectLines(master.transformation.coreTerms)],
-  group: "Appendices",
-  sourceId: "transformation-table",
-  locator: "Core rules",
-  sourcePages: [1],
-});
-for (const [key, result] of Object.entries(master.transformation.results)) {
+for (const section of master.characterSheet.sections) {
   add({
-    id: `transformation-result-${key}`,
-    term: result.name,
-    body: result.secret ? "This result is resolved by the DM." : result.text,
-    group: "Appendices",
-    sourceId: "transformation-table",
-    locator: "Transformation result",
-    sourcePages: [1],
+    id: `character-sheet-${section.id}`,
+    term: section.title,
+    aliases: section.fields,
+    paragraphs: [`Fields: ${section.fields.join(", ")}.`],
+    group: "Character Sheet",
+    sourceId: master.characterSheet.sourceId,
+    locator: section.title,
+    sourcePages: section.sourcePages,
   });
 }
-const transformationNames = Object.fromEntries(Object.entries(master.transformation.results).map(([key, result]) => [key, result.name]));
+
 add({
-  id: "transformation-table-master",
-  term: "Transformation Table",
-  body: [master.transformation.table.note, objectLines(master.transformation.reducing)],
-  tables: [table("Transformation Table", ["d20", ...Array.from({ length: 10 }, (_, index) => `Level ${index + 1}`)], master.transformation.table.rows.map((row) => [row.d20, ...row.byLevel.map((key) => transformationNames[key])]))],
-  group: "Appendices",
-  sourceId: "transformation-table",
-  locator: "Full table and reduction rules",
+  id: "character-sheet-abilities-and-skills",
+  term: "Abilities & Skills",
+  aliases: ["skill list", ...master.characterSheet.abilities, ...master.characterSheet.skills.map((skill) => skill.name)],
+  paragraphs: ["The current character sheet records a score, modifier, and saving throw for each ability, plus the listed skills."],
+  tables: [{
+    title: "Skills by ability",
+    columns: ["Ability", "Skill"],
+    rows: master.characterSheet.skills.map((skill) => [skill.ability, skill.name]),
+  }],
+  group: "Character Sheet",
+  sourceId: master.characterSheet.sourceId,
+  locator: "Identity & Abilities",
   sourcePages: [1, 2],
 });
 
 add({
-  id: "ability-point-costs-v2-master",
-  term: master.abilityPointCostsV2.title,
-  aliases: ["point buy", "ability scores"],
-  body: [master.abilityPointCostsV2.description, `Budget: ${master.abilityPointCostsV2.budget}`, master.abilityPointCostsV2.repeatRule, master.abilityPointCostsV2.maxFinalScoreNote],
-  tables: [normalizeTable(master.abilityPointCostsV2.table)],
-  group: "Character Creation",
-  sourceId: "ability-point-costs-v2",
-  locator: "Point-buy variant",
+  id: "hidden-condition-sheet",
+  term: "Hidden Condition Sheet",
+  aliases: ["hidden condition", "blank handout"],
+  paragraphs: [master.hiddenConditionSheet.description],
+  group: "Handouts",
+  sourceId: master.hiddenConditionSheet.sourceId,
+  locator: "Blank sheet",
   sourcePages: [1],
 });
 
-// Reconciliation records are first-class search results. They explain why two
-// source versions differ instead of letting the UI pretend there is one answer.
-for (const [index, conflict] of master.sourceConflicts.entries()) {
+for (const missing of master.referencedButNotSupplied) {
   add({
-    id: `source-conflict-${index}-${slug(conflict.topic)}`,
-    term: `Source conflict: ${conflict.topic}`,
-    aliases: [conflict.topic],
-    body: [conflict.note, JSON.stringify(conflict.perClass ?? conflict.handbookCh2CoreTraits ?? "")],
+    id: `not-supplied-${slug(missing.name)}`,
+    term: missing.name,
+    aliases: [missing.referencedBy],
+    paragraphs: [`Referenced by ${missing.referencedBy}, but not included in the supplied source set. ${missing.policy}`],
     group: "Source Notes",
-    sourceId: "master-notes",
-    locator: "Master content reconciliation",
-    warning: "The source documents disagree. This note records the current app choice; confirm unresolved values with the DM.",
+    sourceId: master.rites.sourceId,
+    locator: missing.referencedBy,
+    warning: "Referenced material is not supplied; the app does not invent it.",
   });
 }
 
-function titleCase(value) {
-  return String(value).toLowerCase().replace(/(^|[\s-])\w/g, (match) => match.toUpperCase());
-}
-
-// This directory is generated entirely from the canonical source list. Clear
-// only this ignored output folder so renamed or removed downloads cannot linger.
-rmSync(PUBLIC_DOCUMENT_ROOT, { recursive: true, force: true });
-
-const sources = master.index
-  .filter((item) => item.audience !== "dm")
-  .map((item) => {
-    const pdfFiles = item.sourceFiles.filter((file) => file.toLowerCase().endsWith(".pdf"));
-    const downloadRecords = pdfFiles.map((file) => ({
-      sourceFile: file,
-      label: downloadLabel(file),
-      publicPath: item.publicPath && pdfFiles.length === 1 ? item.publicPath : publicDocumentPath(item.id, file),
-    }));
-    if (downloadRecords.length === 0) throw new Error(`Player-facing Codex source has no PDF download: ${item.id}`);
-    for (const download of downloadRecords) {
-      if (download.publicPath === item.publicPath) continue;
-      mkdirSync(`${PUBLIC_DOCUMENT_ROOT}/${item.id}`, { recursive: true });
-      copyFileSync(download.sourceFile, `public${download.publicPath}`);
-    }
-    const downloads = downloadRecords.map(({ label, publicPath }) => ({ label, publicPath }));
-    return {
-      id: item.id,
-      title: item.title,
-      shortLabel: item.shortLabel,
-      kind: item.kind,
-      authority: item.authority,
-      audience: item.audience,
-      description: item.description,
-      pageCount: item.pageCount ?? 0,
-      publicPath: item.publicPath,
-      downloads,
-      sourceFiles: item.sourceFiles,
-      fileLabels: item.sourceFiles.map((file) => basename(file)),
-    };
-  });
-
-const output = { schemaVersion: 1, sources, entries };
+const output = {
+  schemaVersion: 2,
+  sources,
+  entries,
+  characterSheet: master.characterSheet,
+  whispers: master.whispers.entries,
+  conditionsNamedByCurrentSources: master.conditionsNamedByCurrentSources,
+};
 writeFileSync(OUTPUT_PATH, `${JSON.stringify(output, null, 2)}\n`);
-writeFileSync(GAME_CARD_OUTPUT_PATH, `${JSON.stringify(master.gameCard, null, 2)}\n`);
-console.log(`Generated ${OUTPUT_PATH}: ${entries.length} entries and ${sources.flatMap((item) => item.downloads).length} PDF downloads from ${sources.length} player-facing sources.`);
+console.log(`Generated ${OUTPUT_PATH}: ${entries.length} entries and exactly ${sources.length} PDF downloads.`);

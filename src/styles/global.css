@@ -39,6 +39,17 @@
   color-scheme: dark;
 }
 
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
 /* ---------- Light theme ---------- */
 :root[data-theme="light"] {
   --bg: #f3efe6;
@@ -1546,7 +1557,7 @@ button {
   }
 }
 
-/* Handbook deep-link landing: pulse the section the sheet's info dot pointed
+/* Legacy source deep-link landing: pulse the section an old link pointed
  * at, so the reader's eye finds it. Added/removed by useScrollToSection. */
 .hb-focus {
   animation: hb-focus-pulse 2.6s ease both;

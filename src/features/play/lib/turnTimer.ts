@@ -17,7 +17,6 @@ export function emptyEncounter(): EncounterState {
     encounterId: 0,
     round: 0,
     turnId: null,
-    designatedWardenId: null,
     timerPhase: "idle",
     timerEndsAt: null,
     pausedRemainingMs: null,
@@ -38,7 +37,6 @@ export function normalizeEncounterState(value: unknown): EncounterState {
       : 0,
     round: typeof raw.round === "number" && Number.isInteger(raw.round) && raw.round >= 0 ? raw.round : 0,
     turnId: typeof raw.turnId === "string" ? raw.turnId : null,
-    designatedWardenId: typeof raw.designatedWardenId === "string" ? raw.designatedWardenId : null,
     timerPhase: phase,
     timerEndsAt: typeof raw.timerEndsAt === "number" && Number.isFinite(raw.timerEndsAt) ? raw.timerEndsAt : null,
     pausedRemainingMs:

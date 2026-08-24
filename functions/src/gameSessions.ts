@@ -9,8 +9,6 @@ import { logger } from "firebase-functions/v2";
 import { HttpsError, onCall, type CallableRequest } from "firebase-functions/v2/https";
 
 const CALLABLE_OPTIONS = { region: "europe-west1", maxInstances: 5 } as const;
-const PHASES = new Set(["exploration", "combat", "short_rest", "long_rest"]);
-const LOCATIONS = new Set(["lodge", "safe", "wild"]);
 const LOOT_CATEGORIES = new Set(["Weapon", "Armor", "Gear"]);
 const CARRY_CATEGORIES = new Set(["Insignificant", "Significant", "Oversized"]);
 
@@ -54,7 +52,7 @@ function participantFrom(id: string, data: DocumentData): ParticipantSnapshot {
     classId: cleanString(data.classId, 80),
     subclassId: cleanString(data.subclassId, 80) || null,
     className: cleanString(sheet.class, 100) || null,
-    level: Math.max(1, Math.min(20, Number(data.level) || 1)),
+    level: Math.max(1, Math.floor(Number(data.level) || 1)),
     role: "player",
     joinedAt: now,
     lastSeen: now,
@@ -130,14 +128,8 @@ function sessionItem(raw: unknown, id: string): DocumentData {
   };
   const note = cleanString(input.note, 1000);
   if (note) item.note = note;
-  if (category === "Armor") {
-    const armorCategory = cleanString(input.armorCategory, 30);
-    if (!(armorCategory === "Main Armor" || armorCategory === "Add-on Armor")) {
-      throw new HttpsError("invalid-argument", "Choose a valid armor type.");
-    }
-    item.armorCategory = armorCategory;
-    item.acValue = Math.floor(finiteNumber(input.acValue, 0, 30, armorCategory === "Main Armor" ? 10 : 0));
-  }
+  const itemSlot = cleanString(input.itemSlot, 80);
+  if (itemSlot) item.itemSlot = itemSlot;
   if (category === "Weapon") {
     const attackBonus = cleanString(input.attackBonus, 80);
     const damage = cleanString(input.damage, 120);
@@ -147,6 +139,43 @@ function sessionItem(raw: unknown, id: string): DocumentData {
     if (weaponNotes) item.weaponNotes = weaponNotes;
   }
   return item;
+}
+
+function appendSessionItemToSheet(rawSheet: unknown, item: DocumentData): DocumentData {
+  const sheet = rawSheet && typeof rawSheet === "object" ? { ...rawSheet as DocumentData } : {};
+  const emptyEquipmentRow = Array.from({ length: 12 }, (_, index) => index)
+    .find((index) => !cleanString(sheet[`eq_${index}_0`], 500));
+  if (emptyEquipmentRow !== undefined) {
+    sheet[`eq_${emptyEquipmentRow}_0`] = cleanString(item.name, 100);
+    sheet[`eq_${emptyEquipmentRow}_1`] = cleanString(item.carry, 20);
+    sheet[`eq_${emptyEquipmentRow}_2`] = cleanString(item.itemSlot, 80);
+    sheet[`eq_${emptyEquipmentRow}_3`] = `${finiteNumber(item.weightLb, 0, 999, 0)} lb`;
+  }
+
+  if (item.category === "Weapon") {
+    const emptyWeaponRow = Array.from({ length: 8 }, (_, index) => index)
+      .find((index) => !cleanString(sheet[`weapon_${index}_0`], 500));
+    if (emptyWeaponRow !== undefined) {
+      sheet[`weapon_${emptyWeaponRow}_0`] = cleanString(item.name, 100);
+      sheet[`weapon_${emptyWeaponRow}_1`] = cleanString(item.attackBonus, 80);
+      sheet[`weapon_${emptyWeaponRow}_2`] = cleanString(item.damage, 120);
+      sheet[`weapon_${emptyWeaponRow}_3`] = cleanString(item.weaponNotes || item.note, 1000);
+    }
+  }
+
+  if (emptyEquipmentRow === undefined) {
+    const line = [
+      cleanString(item.name, 100),
+      cleanString(item.category, 20),
+      cleanString(item.carry, 20),
+      cleanString(item.itemSlot, 80),
+      `${finiteNumber(item.weightLb, 0, 999, 0)} lb`,
+      cleanString(item.note, 1000),
+    ].filter(Boolean).join(" · ");
+    const prior = cleanString(sheet.pageNotes, 8000);
+    sheet.pageNotes = [prior, `Found during session: ${line}`].filter(Boolean).join("\n").slice(0, 10000);
+  }
+  return sheet;
 }
 
 export const createStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (request) => {
@@ -207,13 +236,10 @@ export const createStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (reque
       attendeeRoster: activeRoster,
       seatUids: activeUids,
       status: "lobby",
-      phase: "exploration",
-      location: "wild",
       combat: {
         active: false,
         round: 0,
         turnId: null,
-        designatedWardenId: null,
         timerPhase: "idle",
         timerEndsAt: null,
         pausedRemainingMs: null,
@@ -225,8 +251,6 @@ export const createStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (reque
       createdAt: FieldValue.serverTimestamp(),
       startedAt: null,
       endedAt: null,
-      endedPhase: null,
-      endedLocation: null,
     });
     seatRefs(db, activeUids).forEach((ref, index) => tx.create(ref, {
       uid: ref.id,
@@ -470,17 +494,10 @@ export const claimStandaloneGameLoot = onCall(CALLABLE_OPTIONS, async (request) 
     const item = loot.item && typeof loot.item === "object" ? loot.item as DocumentData : null;
     if (!item?.id || !item?.name) throw new HttpsError("data-loss", "The item definition is incomplete.");
 
-    const customItems = Array.isArray(character.customItems) ? character.customItems as DocumentData[] : [];
-    const nextCustomItems = [...customItems.filter((entry) => entry.id !== item.id), item];
-    const patch: DocumentData = { customItems: nextCustomItems };
-    if (item.category !== "Armor") {
-      const inventory = Array.isArray(character.inventory) ? character.inventory as DocumentData[] : [];
-      const quantities = new Map<string, number>();
-      inventory.forEach((entry) => quantities.set(String(entry.itemId), Math.max(0, Number(entry.qty) || 0)));
-      quantities.set(String(item.id), (quantities.get(String(item.id)) ?? 0) + 1);
-      patch.inventory = [...quantities].filter(([, qty]) => qty > 0).map(([itemId, qty]) => ({ itemId, qty }));
-    }
-    tx.update(characterRef, patch);
+    tx.update(characterRef, {
+      sheet: appendSessionItemToSheet(character.sheet, item),
+      updatedAt: Date.now(),
+    });
     tx.update(lootRef, {
       status: "claimed",
       claimedAt: FieldValue.serverTimestamp(),
@@ -495,11 +512,7 @@ export const claimStandaloneGameLoot = onCall(CALLABLE_OPTIONS, async (request) 
 export const finishStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (request) => {
   const uid = requireUid(request);
   const gameId = cleanString(request.data?.gameId, 120);
-  const endedPhase = cleanString(request.data?.endedPhase, 30);
-  const endedLocation = cleanString(request.data?.endedLocation, 30);
   if (!gameId) throw new HttpsError("invalid-argument", "gameId is required.");
-  if (!PHASES.has(endedPhase)) throw new HttpsError("invalid-argument", "Invalid game phase.");
-  if (!LOCATIONS.has(endedLocation)) throw new HttpsError("invalid-argument", "Invalid game location.");
 
   const db = getFirestore();
   await db.runTransaction(async (tx) => {
@@ -523,8 +536,6 @@ export const finishStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (reque
     tx.update(gameRef, {
       status: "ended",
       endedAt: FieldValue.serverTimestamp(),
-      endedPhase,
-      endedLocation,
       clockRunning: false,
       clockStartedAt: null,
       clockElapsedMs: elapsed,

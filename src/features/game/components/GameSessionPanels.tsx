@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
 import { createPortal } from "react-dom";
 import { claimSessionLoot, createSessionLoot, subscribeSessionLoot, type SessionItemDraft } from "@/api/sessionLoot";
-import { getClass } from "@/data/classes";
 import { PaperSheetModal } from "@/features/hunter/components/papersheet/PaperSheetModal";
 import { cardClassName } from "@/features/hunter/lib/papersheet";
 import type { Combatant, Game, GameParticipant, HunterCard, SessionLoot } from "@/types";
@@ -11,7 +10,8 @@ function searchText(card: HunterCard): string {
 }
 
 function participantClassName(participant: GameParticipant, card: HunterCard | undefined): string {
-  return (card && cardClassName(card)) || participant.className || getClass(participant.classId)?.name || participant.classId || "Hunter";
+  const legacy = participant.classId.split(/[-_\s]+/).filter(Boolean).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
+  return (card && cardClassName(card)) || participant.className || legacy || "Hunter";
 }
 
 export function SessionSwitchRequests({
@@ -116,9 +116,8 @@ export function CreateItemDialog({ gameId, onClose }: { gameId: string; onClose:
   const [category, setCategory] = useState<SessionItemDraft["category"]>("Weapon");
   const [name, setName] = useState("");
   const [carry, setCarry] = useState<SessionItemDraft["carry"]>("Significant");
+  const [itemSlot, setItemSlot] = useState("");
   const [weight, setWeight] = useState("0");
-  const [armorCategory, setArmorCategory] = useState<"Main Armor" | "Add-on Armor">("Main Armor");
-  const [acValue, setAcValue] = useState("10");
   const [attackBonus, setAttackBonus] = useState("");
   const [damage, setDamage] = useState("");
   const [note, setNote] = useState("");
@@ -131,9 +130,8 @@ export function CreateItemDialog({ gameId, onClose }: { gameId: string; onClose:
     setBusy(true); setError("");
     try {
       await createSessionLoot(gameId, {
-        name: name.trim(), category, carry, weightLb: Math.max(0, Number(weight) || 0), note: note.trim() || undefined,
-        armorCategory: category === "Armor" ? armorCategory : undefined,
-        acValue: category === "Armor" ? Math.max(0, Number(acValue) || 0) : undefined,
+        name: name.trim(), category, carry, itemSlot: itemSlot.trim() || undefined,
+        weightLb: Math.max(0, Number(weight) || 0), note: note.trim() || undefined,
         attackBonus: category === "Weapon" ? attackBonus.trim() || undefined : undefined,
         damage: category === "Weapon" ? damage.trim() || undefined : undefined,
         weaponNotes: category === "Weapon" ? note.trim() || undefined : undefined,
@@ -150,9 +148,9 @@ export function CreateItemDialog({ gameId, onClose }: { gameId: string; onClose:
     <div className="game-dialog-grid">
       <label className="game-field game-dialog-wide"><span>Name</span><input className="input" value={name} maxLength={100} onChange={(event) => setName(event.target.value)} autoFocus /></label>
       <label className="game-field"><span>Type</span><select className="input" value={category} onChange={(event) => setCategory(event.target.value as SessionItemDraft["category"])}><option>Weapon</option><option>Armor</option><option>Gear</option></select></label>
-      <label className="game-field"><span>Carrying</span><select className="input" value={carry} onChange={(event) => setCarry(event.target.value as SessionItemDraft["carry"])}><option>Insignificant</option><option>Significant</option><option>Oversized</option></select></label>
+      <label className="game-field"><span>Carrying category</span><select className="input" value={carry} onChange={(event) => setCarry(event.target.value as SessionItemDraft["carry"])}><option>Insignificant</option><option>Significant</option><option>Oversized</option></select></label>
+      <label className="game-field"><span>Item slot</span><input className="input" value={itemSlot} maxLength={80} onChange={(event) => setItemSlot(event.target.value)} placeholder="Record as written" /></label>
       <label className="game-field"><span>Weight (lb)</span><input className="input" type="number" min="0" max="999" step="0.1" value={weight} onChange={(event) => setWeight(event.target.value)} /></label>
-      {category === "Armor" && <><label className="game-field"><span>Armor type</span><select className="input" value={armorCategory} onChange={(event) => setArmorCategory(event.target.value as typeof armorCategory)}><option>Main Armor</option><option>Add-on Armor</option></select></label><label className="game-field"><span>{armorCategory === "Main Armor" ? "Base AC" : "AC bonus"}</span><input className="input" type="number" min="0" max="30" value={acValue} onChange={(event) => setAcValue(event.target.value)} /></label></>}
       {category === "Weapon" && <><label className="game-field"><span>Attack bonus</span><input className="input" value={attackBonus} maxLength={80} onChange={(event) => setAttackBonus(event.target.value)} placeholder="e.g. +1" /></label><label className="game-field"><span>Damage</span><input className="input" value={damage} maxLength={120} onChange={(event) => setDamage(event.target.value)} placeholder="e.g. 1d8 piercing" /></label></>}
       <label className="game-field game-dialog-wide"><span>Notes</span><textarea className="input" value={note} maxLength={1000} onChange={(event) => setNote(event.target.value)} /></label>
     </div>
@@ -173,6 +171,6 @@ export function SessionLootFeed({ game, characterId, isDm, threats = [] }: { gam
   const showThreat = Boolean(latestThreat && shown.length === 0 && !message);
   return <section className="game-focus-panel" aria-labelledby="session-items-title"><header><div><p className="eyebrow">{showThreat ? "Encounter" : "Found during play"}</p><h3 id="session-items-title">{isDm ? "Session items" : shown.length > 0 ? "Something was found" : message ? "Item secured" : "A threat appears"}</h3></div>{isDm && <span>{available.length} available</span>}</header>
     {message && <p className="game-success" role="status">{message}</p>}
-    {shown.length === 0 ? !message && (latestThreat ? <div className="game-threat"><strong>{latestThreat.name}</strong><span>The DM has added this enemy. Details remain hidden until revealed.</span></div> : <p className="muted">No items created yet.</p>) : <div className="game-loot-list">{shown.map((entry) => <article key={entry.id}><div><strong>{entry.item.name}</strong><span>{entry.item.category} · {entry.item.carry}{entry.item.damage ? ` · ${entry.item.damage}` : ""}</span>{entry.item.note && <small>{entry.item.note}</small>}</div>{isDm ? <span>{entry.status === "claimed" ? `Taken by ${entry.claimedByName || "Hunter"}` : "Available"}</span> : <button className="btn btn-primary" type="button" disabled={!characterId || claiming === entry.id} onClick={async () => { if (!characterId) return; setClaiming(entry.id); setMessage(""); try { await claimSessionLoot(game.id, entry.id, characterId); setMessage(`${entry.item.name} was added to your Hunter.`); } catch (reason) { setMessage(reason instanceof Error ? reason.message : "The item could not be taken."); } finally { setClaiming(null); } }}>{claiming === entry.id ? "Taking…" : "Take"}</button>}</article>)}</div>}
+    {shown.length === 0 ? !message && (latestThreat ? <div className="game-threat"><strong>{latestThreat.name}</strong><span>The DM has added this enemy. Details remain hidden until revealed.</span></div> : <p className="muted">No items created yet.</p>) : <div className="game-loot-list">{shown.map((entry) => <article key={entry.id}><div><strong>{entry.item.name}</strong><span>{entry.item.category} · {entry.item.carry}{entry.item.damage ? ` · ${entry.item.damage}` : ""}</span>{entry.item.note && <small>{entry.item.note}</small>}</div>{isDm ? <span>{entry.status === "claimed" ? `Taken by ${entry.claimedByName || "Hunter"}` : "Available"}</span> : <button className="btn btn-primary" type="button" disabled={!characterId || claiming === entry.id} onClick={async () => { if (!characterId) return; setClaiming(entry.id); setMessage(""); try { await claimSessionLoot(game.id, entry.id, characterId); setMessage(`${entry.item.name} was recorded on your character sheet.`); } catch (reason) { setMessage(reason instanceof Error ? reason.message : "The item could not be taken."); } finally { setClaiming(null); } }}>{claiming === entry.id ? "Taking…" : "Take"}</button>}</article>)}</div>}
   </section>;
 }

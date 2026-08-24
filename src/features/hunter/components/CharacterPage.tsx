@@ -19,7 +19,7 @@ export function CharacterPage() {
   const status = usePlayerStore((s) => s.status);
   const error = usePlayerStore((s) => s.error);
   const archive = usePlayerStore((s) => s.archive);
-  // A local guided-creation draft. It is not written until the player finishes.
+  // A local sheet draft. It is not written until the player enters a value.
   const [sheetDraft, setSheetDraft] = useState<HunterCard | null>(null);
   // Which hunter's sheet is open (detail); null = the list. Nothing opens on
   // mount, so the page always lands on the list — never inside a hunter.
@@ -84,8 +84,8 @@ export function CharacterPage() {
         <div className="center" style={{ maxWidth: 320 }}>
           <h1 style={{ marginBottom: 6 }}>No hunter yet</h1>
           <p className="muted">
-            Build and play your hunter in the guided app character views. Your
-            choices and resources are saved automatically.
+            Fill in the current character sheet and keep it with you during the
+            game. Every entry is saved automatically.
           </p>
         </div>
         <button className="btn btn-primary" style={{ maxWidth: 280 }} onClick={startNew}>

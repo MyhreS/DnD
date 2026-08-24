@@ -96,22 +96,28 @@ export async function createCampaign(input: CreateCampaignInput): Promise<string
   return ref.id;
 }
 
-const TEST_BOTS: { classId: string; name: string }[] = [
-  { classId: "brute", name: "Bot · Brute" },
-  { classId: "scout", name: "Bot · Scout" },
-  { classId: "stalker", name: "Bot · Stalker" },
-  { classId: "deepcaller", name: "Bot · Deepcaller" },
-  { classId: "bloodbound", name: "Bot · Bloodbound" },
-];
+const TEST_BOTS = Array.from({ length: 5 }, (_, index) => ({
+  name: `Bot · Example Hunter ${index + 1}`,
+}));
 
-function buildBotCard(botUid: string, campaignId: string, classId: string, name: string): HunterCard {
+function buildBotCard(botUid: string, campaignId: string, name: string): HunterCard {
   return {
     ...emptyCard({ ownerUid: botUid, email: "", displayName: name }),
     name,
-    classId,
+    classId: "",
     level: 3,
     campaignId,
-    abilities: { str: 14, dex: 13, con: 13, int: 10, wis: 12, cha: 8 },
+    sheet: {
+      actualName: "Synthetic test player",
+      name,
+      class: "Example class",
+      background: "Example background",
+      level: "3",
+      hpCur: "20",
+      hpMax: "20",
+      ac: "12",
+      initiative: "+1",
+    },
   };
 }
 
@@ -140,7 +146,7 @@ export async function createTestCampaign(dm: { uid: string; name: string; email:
   for (let i = 0; i < TEST_BOTS.length; i++) {
     const bot = TEST_BOTS[i];
     const botUid = `bot-${campaignId}-${i + 1}`;
-    const card = buildBotCard(botUid, campaignId, bot.classId, bot.name);
+    const card = buildBotCard(botUid, campaignId, bot.name);
     // Write the member doc FIRST — the relaxed /characters create rule requires
     // an existing member doc for the owner (rules see committed state), so this
     // must precede saveCharacter(card).
