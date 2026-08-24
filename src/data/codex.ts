@@ -21,10 +21,9 @@ export interface CodexSource {
   fileLabels: string[];
 }
 
-export interface CurrentWhisper {
+interface CurrentRiteText {
   id: string;
   name: string;
-  level: number;
   type: string;
   performing: string;
   range: string;
@@ -35,7 +34,12 @@ export interface CurrentWhisper {
   sourcePages: number[];
 }
 
-export interface CurrentRite extends CurrentWhisper {
+export type CurrentWhisper = CurrentRiteText;
+
+export interface CurrentRite extends CurrentRiteText {
+  level: number;
+  section?: string;
+  sourceNote?: string;
   tables?: CodexTable[];
 }
 

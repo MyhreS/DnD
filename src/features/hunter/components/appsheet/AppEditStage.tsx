@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { HunterCard, SheetData } from "@/types";
-import { minimumTrackedSanity } from "@/lib/character";
 import { automationFor } from "../../lib/characterAutomation";
 import { levelAdjustedPool } from "../../lib/levelUpVitals";
 import type { AppSheetModel } from "./appSheetShared";
@@ -78,8 +77,7 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
   function stageSanity(sanity: number) {
     const max = optionalNumber(previewResult.fields.sanityMax);
     const upper = max ?? Number.MAX_SAFE_INTEGER;
-    const lower = max == null ? -Number.MAX_SAFE_INTEGER : minimumTrackedSanity(max);
-    setPatch((current) => keepDifferences({ ...current, sanity: Math.max(lower, Math.min(upper, sanity)) }));
+    setPatch((current) => keepDifferences({ ...current, sanity: Math.max(0, Math.min(upper, sanity)) }));
   }
 
   function stageTransformation(level: number) {
@@ -145,9 +143,10 @@ export function AppEditTray() {
     ["Maximum HP", stage.currentResult.fields.hpMax, stage.previewResult.fields.hpMax],
     ["Current sanity", stage.currentResult.fields.sanityCur, stage.previewResult.fields.sanityCur],
     ["Maximum sanity", stage.currentResult.fields.sanityMax, stage.previewResult.fields.sanityMax],
+    ["Madness", stage.savedCard.madness ?? 0, stage.previewCard.madness ?? 0],
     ["Proficiency", stage.currentResult.fields.profBonus, stage.previewResult.fields.profBonus],
     ["Transformation", stage.currentResult.fields.transformation, stage.previewResult.fields.transformation],
-  ] as Array<[string, string | boolean | undefined, string | boolean | undefined]>).filter(([, before, after]) => before !== after);
+  ] as Array<[string, unknown, unknown]>).filter(([, before, after]) => before !== after);
   const stagedLabels: Partial<Record<keyof StagedPatch, string>> = {
     inventory: "Inventory",
     slotAssignments: "Carrying",
@@ -161,8 +160,9 @@ export function AppEditTray() {
     classId: "Class",
     lastSeenLevel: "Level tracking",
     sheetAutomation: "Character setup",
+    madness: "Madness",
   };
-  const displayedPatchKeys = new Set(["level", "currentHp", "sanity", "transformationLevel"]);
+  const displayedPatchKeys = new Set(["level", "currentHp", "sanity", "madness", "transformationLevel"]);
   const otherChanges = Object.keys(stage.patch)
     .filter((key) => !displayedPatchKeys.has(key) && !stage.changedFields.includes(key))
     .map((key) => stagedLabels[key as keyof StagedPatch] ?? key.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase()));

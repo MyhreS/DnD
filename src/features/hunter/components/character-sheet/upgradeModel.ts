@@ -1,6 +1,7 @@
 import type { HunterCard, HunterClass } from "@/types";
 import { levelForInsight } from "@/lib/insight";
 import { EPIC_BOON_FEATS, FIGHTING_STYLE_FEATS, GENERAL_FEATS, type FeatOption } from "@/data/feats";
+import { forbiddenRevelationLevel, forbiddenRevelationOptions } from "@/data/characterOptions";
 import type { SheetAutomationState } from "@/types";
 
 export type UpgradeFeature = {
@@ -67,10 +68,30 @@ export function featOptionsFor(feature: UpgradeFeature): FeatOption[] {
   return [];
 }
 
+export type RecordedChoiceOption = { value: string; label: string; detail: string };
+
+export function recordedOptionsFor(feature: UpgradeFeature): RecordedChoiceOption[] {
+  const revelationLevel = forbiddenRevelationLevel(feature.name);
+  if (revelationLevel == null) return [];
+  return forbiddenRevelationOptions(revelationLevel).map((rite) => ({
+    value: rite.name,
+    label: rite.level === revelationLevel ? rite.name : `${rite.name} at Level ${revelationLevel}`,
+    detail: rite.level === revelationLevel
+      ? `Level ${revelationLevel} ${rite.school}`
+      : `Level ${rite.level} ${rite.school} using its printed Higher-Level Strain option`,
+  }));
+}
+
 export function upgradeFeatureComplete(feature: UpgradeFeature, state: SheetAutomationState): boolean {
   if (!feature.choice) return true;
   const options = featOptionsFor(feature);
-  if (options.length === 0) return !!state.levelChoices?.[feature.key]?.trim();
+  if (options.length === 0) {
+    const recorded = state.levelChoices?.[feature.key]?.trim();
+    const finiteOptions = recordedOptionsFor(feature);
+    return finiteOptions.length > 0
+      ? finiteOptions.some((option) => option.value === recorded)
+      : !!recorded;
+  }
   const selected = options.find((feat) => feat.name === state.levelFeats?.[feature.key]);
   if (!selected) return false;
   if (selected.abilityPoints === 0) return true;

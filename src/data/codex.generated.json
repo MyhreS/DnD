@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 3,
   "sources": [
     {
       "id": "book-of-the-deepcaller",
@@ -54,7 +54,7 @@
       "kind": "whisper reference",
       "authority": "current game-maker source",
       "audience": "player",
-      "description": "The current two-page Hushed Whispers reference, containing six Whispers.",
+      "description": "The current two-page Whispers reference, containing six Whispers.",
       "pageCount": 2,
       "publicPath": "/source-library/whispers/c-s-whispers-sheet.pdf",
       "downloads": [
@@ -603,23 +603,24 @@
       "term": "Call Lesser Starborn",
       "aliases": [
         "Summoning Rite",
-        "level 6 rite"
+        "level 6 rite",
+        "Hidden Truths"
       ],
       "body": [
         "Level 6 Summoning Rite",
+        "Section: Hidden Truths",
         "Performing: Action",
         "Range: 90 feet",
         "Duration: Concentration, up to 20 rounds",
-        "Hidden Truths. Uses the Lesser Starborn stat block.",
         "You invoke a Patron from beyond the stars, tearing open a fleeting breach in reality and calling forth one of its lesser servants. A Lesser Starborn manifests in an unoccupied space you can see within range. The creature uses the Lesser Starborn stat block. The Lesser Starborn disappears when it drops to 0 Hit Points or when this Rite ends. The Lesser Starborn is friendly to you and your allies. In combat, it shares your Initiative count but takes its turn immediately after yours. The Lesser Starborn obeys your verbal commands (no Action required by you). If you issue no commands, it takes the Dodge Action and uses its movement to avoid danger. A Lesser Starborn is an unnatural creature of the outer dark. Its form varies according to the Patron that answered your call. Some resemble eyeless masses of flesh and tendrils, while others appear as twisted creatures stitched together from impossible anatomy and starlit void.",
         "Using Higher-Level Strain. The Lesser Starborn gains 10 Temporary Hit Points for each Strain level above 5."
       ],
       "paragraphs": [
         "Level 6 Summoning Rite",
+        "Section: Hidden Truths",
         "Performing: Action",
         "Range: 90 feet",
         "Duration: Concentration, up to 20 rounds",
-        "Hidden Truths. Uses the Lesser Starborn stat block.",
         "You invoke a Patron from beyond the stars, tearing open a fleeting breach in reality and calling forth one of its lesser servants. A Lesser Starborn manifests in an unoccupied space you can see within range. The creature uses the Lesser Starborn stat block. The Lesser Starborn disappears when it drops to 0 Hit Points or when this Rite ends. The Lesser Starborn is friendly to you and your allies. In combat, it shares your Initiative count but takes its turn immediately after yours. The Lesser Starborn obeys your verbal commands (no Action required by you). If you issue no commands, it takes the Dodge Action and uses its movement to avoid danger. A Lesser Starborn is an unnatural creature of the outer dark. Its form varies according to the Patron that answered your call. Some resemble eyeless masses of flesh and tendrils, while others appear as twisted creatures stitched together from impossible anatomy and starlit void.",
         "Using Higher-Level Strain. The Lesser Starborn gains 10 Temporary Hit Points for each Strain level above 5."
       ],
@@ -637,22 +638,23 @@
       "term": "True Seeing",
       "aliases": [
         "Detection Rite",
-        "level 6 rite"
+        "level 6 rite",
+        "Hidden Truths"
       ],
       "body": [
         "Level 6 Detection Rite",
+        "Section: Hidden Truths",
         "Performing: Action",
         "Range: Touch",
         "Duration: 20 rounds",
-        "Hidden Truths",
         "You call upon a Patron that will show you what mortal eyes were never meant to witness. For the duration, one willing creature you touch has Truesight with a range of 120 feet. The creature also suffers 4 Madness."
       ],
       "paragraphs": [
         "Level 6 Detection Rite",
+        "Section: Hidden Truths",
         "Performing: Action",
         "Range: Touch",
         "Duration: 20 rounds",
-        "Hidden Truths",
         "You call upon a Patron that will show you what mortal eyes were never meant to witness. For the duration, one willing creature you touch has Truesight with a range of 120 feet. The creature also suffers 4 Madness."
       ],
       "tables": [],
@@ -669,23 +671,26 @@
       "term": "Plane Shift",
       "aliases": [
         "Traversal Rite",
-        "level 7 rite"
+        "level 7 rite",
+        "Hidden Truths"
       ],
       "body": [
         "Level 7 Traversal Rite",
+        "Section: Hidden Truths",
         "Performing: Action",
         "Range: Touch",
         "Duration: Instantaneous",
-        "Hidden Truths",
-        "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence..."
+        "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence…",
+        "Source note: The supplied entry ends with an ellipsis and provides no further destination or resolution procedure."
       ],
       "paragraphs": [
         "Level 7 Traversal Rite",
+        "Section: Hidden Truths",
         "Performing: Action",
         "Range: Touch",
         "Duration: Instantaneous",
-        "Hidden Truths",
-        "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence..."
+        "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence…",
+        "Source note: The supplied entry ends with an ellipsis and provides no further destination or resolution procedure."
       ],
       "tables": [],
       "group": "Rites",
@@ -701,22 +706,23 @@
       "term": "Mind Shatter",
       "aliases": [
         "Mind Influence Rite",
-        "level 8 rite"
+        "level 8 rite",
+        "Hidden Truths"
       ],
       "body": [
         "Level 8 Mind Influence Rite",
+        "Section: Hidden Truths",
         "Performing: Action",
         "Range: 150 feet",
         "Duration: Instantaneous",
-        "Hidden Truths",
         "You invoke a Patron of unfathomable power, suffer 3 Madness, unleashing a fragment of its eldritch knowledge into the mind of a creature you can see within range. The target must make an Intelligence saving throw. On a failed save, it takes 10d12 Mind damage. For the next 10 rounds, the target can't perform Rites, and its Intelligence, Wisdom, and Charisma modifiers become -5. On a successful save, the target takes half as much damage and suffers no additional effects."
       ],
       "paragraphs": [
         "Level 8 Mind Influence Rite",
+        "Section: Hidden Truths",
         "Performing: Action",
         "Range: 150 feet",
         "Duration: Instantaneous",
-        "Hidden Truths",
         "You invoke a Patron of unfathomable power, suffer 3 Madness, unleashing a fragment of its eldritch knowledge into the mind of a creature you can see within range. The target must make an Intelligence saving throw. On a failed save, it takes 10d12 Mind damage. For the next 10 rounds, the target can't perform Rites, and its Intelligence, Wisdom, and Charisma modifiers become -5. On a successful save, the target takes half as much damage and suffers no additional effects."
       ],
       "tables": [],
@@ -733,22 +739,23 @@
       "term": "Foresight",
       "aliases": [
         "Protection Rite",
-        "level 9 rite"
+        "level 9 rite",
+        "Hidden Truths"
       ],
       "body": [
         "Level 9 Protection Rite",
+        "Section: Hidden Truths",
         "Performing: Three Actions",
         "Range: Touch",
         "Duration: 10 rounds",
-        "Hidden Truths",
         "You call upon a Patron that peers beyond the veil of time and fate. By its guidance, a willing creature you touch is granted fleeting glimpses of the immediate future, allowing it to perceive danger moments before it occurs. For the duration, the target has Advantage on all D20 Tests, and other creatures have Disadvantage on attack rolls against it. This Rite ends early if you perform it again."
       ],
       "paragraphs": [
         "Level 9 Protection Rite",
+        "Section: Hidden Truths",
         "Performing: Three Actions",
         "Range: Touch",
         "Duration: 10 rounds",
-        "Hidden Truths",
         "You call upon a Patron that peers beyond the veil of time and fate. By its guidance, a willing creature you touch is granted fleeting glimpses of the immediate future, allowing it to perceive danger moments before it occurs. For the duration, the target has Advantage on all D20 Tests, and other creatures have Disadvantage on attack rolls against it. This Rite ends early if you perform it again."
       ],
       "tables": [],
@@ -765,22 +772,23 @@
       "term": "Call Starborn Horror",
       "aliases": [
         "Summoning Rite",
-        "level 9 rite"
+        "level 9 rite",
+        "Hidden Truths"
       ],
       "body": [
         "Level 9 Summoning Rite",
+        "Section: Hidden Truths",
         "Performing: Action",
         "Range: 120 feet",
         "Duration: 5 rounds",
-        "Hidden Truths. Uses the Starborn Horror stat block; roll on the Starborn Horror Behavior Table each of its turns.",
         "You tear open reality and call forth a true Starborn Horror, a servant of the outer dark that was never meant to enter the mortal world. When the Starborn Horror manifests, each creature within a 30-foot-radius Sphere centered on a point within range must make a Wisdom saving throw. On a failed save, a creature takes 10d10 Mind damage, suffers 10 Madness, and gains the Frightened condition for the duration. On a successful save, a creature takes half as much damage and suffers 5 Madness. Each other creature that can see or hear the Starborn Horror suffers 4 Madness. You suffer 10 Madness when you perform this Rite. The Starborn Horror uses the Starborn Horror stat block. It is not friendly to you or your allies, nor is it inherently hostile to your enemies. The Horror acts according to its own unknowable will. At the start of each of its turns, roll on the Starborn Horror Behavior Table to determine which action it takes. When determining targets, use your Madness die system. The Starborn Horror disappears when the Rite ends."
       ],
       "paragraphs": [
         "Level 9 Summoning Rite",
+        "Section: Hidden Truths",
         "Performing: Action",
         "Range: 120 feet",
         "Duration: 5 rounds",
-        "Hidden Truths. Uses the Starborn Horror stat block; roll on the Starborn Horror Behavior Table each of its turns.",
         "You tear open reality and call forth a true Starborn Horror, a servant of the outer dark that was never meant to enter the mortal world. When the Starborn Horror manifests, each creature within a 30-foot-radius Sphere centered on a point within range must make a Wisdom saving throw. On a failed save, a creature takes 10d10 Mind damage, suffers 10 Madness, and gains the Frightened condition for the duration. On a successful save, a creature takes half as much damage and suffers 5 Madness. Each other creature that can see or hear the Starborn Horror suffers 4 Madness. You suffer 10 Madness when you perform this Rite. The Starborn Horror uses the Starborn Horror stat block. It is not friendly to you or your allies, nor is it inherently hostile to your enemies. The Horror acts according to its own unknowable will. At the start of each of its turns, roll on the Starborn Horror Behavior Table to determine which action it takes. When determining targets, use your Madness die system. The Starborn Horror disappears when the Rite ends."
       ],
       "tables": [],
@@ -800,7 +808,7 @@
         "Whisper"
       ],
       "body": [
-        "Level 0 Evocation Rite",
+        "Whisper · Evocation Rite",
         "Performing: Action",
         "Range: 120 feet",
         "Duration: Instantaneous",
@@ -808,7 +816,7 @@
         "Whisper Upgrade. The rite creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam."
       ],
       "paragraphs": [
-        "Level 0 Evocation Rite",
+        "Whisper · Evocation Rite",
         "Performing: Action",
         "Range: 120 feet",
         "Duration: Instantaneous",
@@ -818,7 +826,7 @@
       "tables": [],
       "group": "Whispers",
       "sourceId": "whispers",
-      "locator": "Evocation Rite",
+      "locator": "Whisper · Evocation Rite",
       "sourcePages": [
         1
       ]
@@ -832,7 +840,7 @@
         "Whisper"
       ],
       "body": [
-        "Level 0 Evocation Rite",
+        "Whisper · Evocation Rite",
         "Performing: Action",
         "Range: Self",
         "Duration: Instantaneous",
@@ -841,7 +849,7 @@
         "Whisper Upgrade. Whether you deal Eldritch Power damage or the weapon's normal damage type, the attack deals extra Eldritch Power damage when you reach levels 5 (1d6), 11 (2d6), and 17 (3d6)."
       ],
       "paragraphs": [
-        "Level 0 Evocation Rite",
+        "Whisper · Evocation Rite",
         "Performing: Action",
         "Range: Self",
         "Duration: Instantaneous",
@@ -852,7 +860,7 @@
       "tables": [],
       "group": "Whispers",
       "sourceId": "whispers",
-      "locator": "Evocation Rite",
+      "locator": "Whisper · Evocation Rite",
       "sourcePages": [
         1
       ]
@@ -866,7 +874,7 @@
         "Whisper"
       ],
       "body": [
-        "Level 0 Evocation Rite",
+        "Whisper · Evocation Rite",
         "Performing: Action",
         "Range: Self",
         "Duration: Instantaneous",
@@ -874,7 +882,7 @@
         "Whisper Upgrade. The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6)."
       ],
       "paragraphs": [
-        "Level 0 Evocation Rite",
+        "Whisper · Evocation Rite",
         "Performing: Action",
         "Range: Self",
         "Duration: Instantaneous",
@@ -884,7 +892,7 @@
       "tables": [],
       "group": "Whispers",
       "sourceId": "whispers",
-      "locator": "Evocation Rite",
+      "locator": "Whisper · Evocation Rite",
       "sourcePages": [
         1
       ]
@@ -898,7 +906,7 @@
         "Whisper"
       ],
       "body": [
-        "Level 0 Mind Influence Rite",
+        "Whisper · Mind Influence Rite",
         "Performing: Action",
         "Range: 60 feet",
         "Duration: 1 round",
@@ -906,7 +914,7 @@
         "Whisper Upgrade. The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6)."
       ],
       "paragraphs": [
-        "Level 0 Mind Influence Rite",
+        "Whisper · Mind Influence Rite",
         "Performing: Action",
         "Range: 60 feet",
         "Duration: 1 round",
@@ -916,7 +924,7 @@
       "tables": [],
       "group": "Whispers",
       "sourceId": "whispers",
-      "locator": "Mind Influence Rite",
+      "locator": "Whisper · Mind Influence Rite",
       "sourcePages": [
         1
       ]
@@ -930,14 +938,14 @@
         "Whisper"
       ],
       "body": [
-        "Level 0 Illusion Rite",
+        "Whisper · Illusion Rite",
         "Performing: Action",
         "Range: 30 feet",
         "Duration: 10 rounds",
         "A patron will make a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you perform this rite again. If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your rites save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature. Sound. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a roar, a beating of a heart, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends. Image. If you create an image of an object-such as a chair, muddy footprints, or a small chest-it must be no larger than a 5-foot Cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it."
       ],
       "paragraphs": [
-        "Level 0 Illusion Rite",
+        "Whisper · Illusion Rite",
         "Performing: Action",
         "Range: 30 feet",
         "Duration: 10 rounds",
@@ -946,7 +954,7 @@
       "tables": [],
       "group": "Whispers",
       "sourceId": "whispers",
-      "locator": "Illusion Rite",
+      "locator": "Whisper · Illusion Rite",
       "sourcePages": [
         2
       ]
@@ -960,14 +968,14 @@
         "Whisper"
       ],
       "body": [
-        "Level 0 Summoning Rite",
+        "Whisper · Summoning Rite",
         "Performing: Action",
         "Range: 30 feet",
         "Duration: Concentration, 10 rounds",
         "A spectral, floating hand not from this world appears at a point you choose within range. The hand lasts for the duration. The hand vanishes if it is ever more than 30 feet away from you or if you perform this rite again. When you perform the rite, you can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial. As a Rite action on your later turns, you can control the hand thus again. As part of that action, you can move the hand up to 30 feet. The hand can't attack, or carry more than 10 pounds."
       ],
       "paragraphs": [
-        "Level 0 Summoning Rite",
+        "Whisper · Summoning Rite",
         "Performing: Action",
         "Range: 30 feet",
         "Duration: Concentration, 10 rounds",
@@ -976,7 +984,7 @@
       "tables": [],
       "group": "Whispers",
       "sourceId": "whispers",
-      "locator": "Summoning Rite",
+      "locator": "Whisper · Summoning Rite",
       "sourcePages": [
         2
       ]
@@ -1413,6 +1421,44 @@
       "sourceId": "book-of-the-deepcaller",
       "locator": "Call Starborn Horror",
       "warning": "Referenced material is not supplied; the app does not invent it."
+    },
+    {
+      "id": "not-supplied-madness-die-system",
+      "topicKey": "madness-die-system",
+      "term": "Madness die system",
+      "aliases": [
+        "Call Starborn Horror"
+      ],
+      "body": [
+        "Referenced by Call Starborn Horror, but not included in the supplied source set. Do not invent target-selection rules for the missing system."
+      ],
+      "paragraphs": [
+        "Referenced by Call Starborn Horror, but not included in the supplied source set. Do not invent target-selection rules for the missing system."
+      ],
+      "tables": [],
+      "group": "Source Notes",
+      "sourceId": "book-of-the-deepcaller",
+      "locator": "Call Starborn Horror",
+      "warning": "Referenced material is not supplied; the app does not invent it."
+    },
+    {
+      "id": "not-supplied-plane-shift-continuation",
+      "topicKey": "plane-shift-continuation",
+      "term": "Plane Shift continuation",
+      "aliases": [
+        "Plane Shift"
+      ],
+      "body": [
+        "Referenced by Plane Shift, but not included in the supplied source set. The current entry ends with an ellipsis; do not restore destination or resolution rules from another source."
+      ],
+      "paragraphs": [
+        "Referenced by Plane Shift, but not included in the supplied source set. The current entry ends with an ellipsis; do not restore destination or resolution rules from another source."
+      ],
+      "tables": [],
+      "group": "Source Notes",
+      "sourceId": "book-of-the-deepcaller",
+      "locator": "Plane Shift",
+      "warning": "Referenced material is not supplied; the app does not invent it."
     }
   ],
   "characterSheet": {
@@ -1505,6 +1551,15 @@
         "ability": "Charisma"
       }
     ],
+    "sourceCoverage": {
+      "defined": "The sheet defines the fields a hunter records, including ability scores, modifiers, saving throws, skills, vitals, equipment, class features, feats, Rite values, prepared Whispers, and notes.",
+      "notDefined": [
+        "An ability-score generation method or point budget",
+        "Background-granted ability-score adjustments",
+        "The formula for an ability modifier, saving throw, skill value, Armor Class, Hit Points, Sanity, Initiative, Passive Perception, or Rite value"
+      ],
+      "appPolicy": "Keep the current character-creation and character-sheet workflow, accept ability scores directly, and never present an unspecified generation method as a current-source rule. Established calculations outside this source set must remain clearly separate from the structured source master."
+    },
     "sections": [
       {
         "id": "identity-abilities",
@@ -1903,11 +1958,11 @@
       "id": "call-lesser-starborn",
       "name": "Call Lesser Starborn",
       "level": 6,
+      "section": "Hidden Truths",
       "type": "Summoning Rite",
       "performing": "Action",
       "range": "90 feet",
       "duration": "Concentration, up to 20 rounds",
-      "special": "Hidden Truths. Uses the Lesser Starborn stat block.",
       "text": "You invoke a Patron from beyond the stars, tearing open a fleeting breach in reality and calling forth one of its lesser servants. A Lesser Starborn manifests in an unoccupied space you can see within range. The creature uses the Lesser Starborn stat block. The Lesser Starborn disappears when it drops to 0 Hit Points or when this Rite ends. The Lesser Starborn is friendly to you and your allies. In combat, it shares your Initiative count but takes its turn immediately after yours. The Lesser Starborn obeys your verbal commands (no Action required by you). If you issue no commands, it takes the Dodge Action and uses its movement to avoid danger. A Lesser Starborn is an unnatural creature of the outer dark. Its form varies according to the Patron that answered your call. Some resemble eyeless masses of flesh and tendrils, while others appear as twisted creatures stitched together from impossible anatomy and starlit void.",
       "upgrade": "Using Higher-Level Strain. The Lesser Starborn gains 10 Temporary Hit Points for each Strain level above 5.",
       "sourcePages": [
@@ -1918,11 +1973,11 @@
       "id": "true-seeing",
       "name": "True Seeing",
       "level": 6,
+      "section": "Hidden Truths",
       "type": "Detection Rite",
       "performing": "Action",
       "range": "Touch",
       "duration": "20 rounds",
-      "special": "Hidden Truths",
       "text": "You call upon a Patron that will show you what mortal eyes were never meant to witness. For the duration, one willing creature you touch has Truesight with a range of 120 feet. The creature also suffers 4 Madness.",
       "upgrade": "",
       "sourcePages": [
@@ -1933,12 +1988,13 @@
       "id": "plane-shift",
       "name": "Plane Shift",
       "level": 7,
+      "section": "Hidden Truths",
       "type": "Traversal Rite",
       "performing": "Action",
       "range": "Touch",
       "duration": "Instantaneous",
-      "special": "Hidden Truths",
-      "text": "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence...",
+      "text": "You and up to eight willing creatures who link hands in a circle are transported to a different plane of existence…",
+      "sourceNote": "The supplied entry ends with an ellipsis and provides no further destination or resolution procedure.",
       "upgrade": "",
       "sourcePages": [
         9
@@ -1948,11 +2004,11 @@
       "id": "mind-shatter",
       "name": "Mind Shatter",
       "level": 8,
+      "section": "Hidden Truths",
       "type": "Mind Influence Rite",
       "performing": "Action",
       "range": "150 feet",
       "duration": "Instantaneous",
-      "special": "Hidden Truths",
       "text": "You invoke a Patron of unfathomable power, suffer 3 Madness, unleashing a fragment of its eldritch knowledge into the mind of a creature you can see within range. The target must make an Intelligence saving throw. On a failed save, it takes 10d12 Mind damage. For the next 10 rounds, the target can't perform Rites, and its Intelligence, Wisdom, and Charisma modifiers become -5. On a successful save, the target takes half as much damage and suffers no additional effects.",
       "upgrade": "",
       "sourcePages": [
@@ -1963,11 +2019,11 @@
       "id": "foresight",
       "name": "Foresight",
       "level": 9,
+      "section": "Hidden Truths",
       "type": "Protection Rite",
       "performing": "Three Actions",
       "range": "Touch",
       "duration": "10 rounds",
-      "special": "Hidden Truths",
       "text": "You call upon a Patron that peers beyond the veil of time and fate. By its guidance, a willing creature you touch is granted fleeting glimpses of the immediate future, allowing it to perceive danger moments before it occurs. For the duration, the target has Advantage on all D20 Tests, and other creatures have Disadvantage on attack rolls against it. This Rite ends early if you perform it again.",
       "upgrade": "",
       "sourcePages": [
@@ -1978,11 +2034,11 @@
       "id": "call-starborn-horror",
       "name": "Call Starborn Horror",
       "level": 9,
+      "section": "Hidden Truths",
       "type": "Summoning Rite",
       "performing": "Action",
       "range": "120 feet",
       "duration": "5 rounds",
-      "special": "Hidden Truths. Uses the Starborn Horror stat block; roll on the Starborn Horror Behavior Table each of its turns.",
       "text": "You tear open reality and call forth a true Starborn Horror, a servant of the outer dark that was never meant to enter the mortal world. When the Starborn Horror manifests, each creature within a 30-foot-radius Sphere centered on a point within range must make a Wisdom saving throw. On a failed save, a creature takes 10d10 Mind damage, suffers 10 Madness, and gains the Frightened condition for the duration. On a successful save, a creature takes half as much damage and suffers 5 Madness. Each other creature that can see or hear the Starborn Horror suffers 4 Madness. You suffer 10 Madness when you perform this Rite. The Starborn Horror uses the Starborn Horror stat block. It is not friendly to you or your allies, nor is it inherently hostile to your enemies. The Horror acts according to its own unknowable will. At the start of each of its turns, roll on the Starborn Horror Behavior Table to determine which action it takes. When determining targets, use your Madness die system. The Starborn Horror disappears when the Rite ends.",
       "upgrade": "",
       "sourcePages": [
@@ -1994,7 +2050,6 @@
     {
       "id": "eldritch-blast",
       "name": "Eldritch Blast",
-      "level": 0,
       "type": "Evocation Rite",
       "performing": "Action",
       "range": "120 feet",
@@ -2008,7 +2063,6 @@
     {
       "id": "eldritch-strike",
       "name": "Eldritch Strike",
-      "level": 0,
       "type": "Evocation Rite",
       "performing": "Action",
       "range": "Self",
@@ -2023,7 +2077,6 @@
     {
       "id": "eldritch-lightning",
       "name": "Eldritch Lightning",
-      "level": 0,
       "type": "Evocation Rite",
       "performing": "Action",
       "range": "Self",
@@ -2037,7 +2090,6 @@
     {
       "id": "mindcrack",
       "name": "Mindcrack",
-      "level": 0,
       "type": "Mind Influence Rite",
       "performing": "Action",
       "range": "60 feet",
@@ -2051,7 +2103,6 @@
     {
       "id": "minor-illusion",
       "name": "Minor Illusion",
-      "level": 0,
       "type": "Illusion Rite",
       "performing": "Action",
       "range": "30 feet",
@@ -2065,7 +2116,6 @@
     {
       "id": "third-hand",
       "name": "Third Hand",
-      "level": 0,
       "type": "Summoning Rite",
       "performing": "Action",
       "range": "30 feet",
@@ -2081,6 +2131,7 @@
     "Blinded",
     "Frightened",
     "Incapacitated",
+    "Insane",
     "Invisible",
     "Restrained"
   ]

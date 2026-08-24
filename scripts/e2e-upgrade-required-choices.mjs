@@ -48,7 +48,7 @@ function stopServer() {
 }
 
 async function setAbilityScore(page, ability, target) {
-  const score = page.getByLabel(`${ability} base score`, { exact: true });
+  const score = page.getByLabel(`${ability} starting score`, { exact: true });
   let current = Number(await score.textContent());
   const button = page.getByRole("button", { name: `${target < current ? "Decrease" : "Increase"} ${ability} score`, exact: true });
   while (current !== Number(target)) {
@@ -96,32 +96,18 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await next.click();
 
   await page.getByRole("heading", { name: "Set ability scores", exact: true }).waitFor();
-  if (!await next.isDisabled()) throw new Error("A new hunter could skip unspent ability points");
-  const standardMethod = page.getByRole("button", { name: "Standard 27 points", exact: true });
-  const maduhausuMethod = page.getByRole("button", { name: "Maduhausu 57 points", exact: true });
-  if (await standardMethod.getAttribute("aria-pressed") !== "true") throw new Error("Standard point buy was not selected");
+  await page.getByText("The supplied character sheet does not prescribe a score-generation method", { exact: false }).waitFor();
+  if (await page.getByText(/Standard|Maduhausu|points left/i).count()) throw new Error("A removed ability-score method is still visible");
+  if (await next.isDisabled()) throw new Error("Direct ability scores were incorrectly blocked by a removed budget");
   await page.waitForTimeout(250);
   await page.locator(".character-sheet-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
   await page.screenshot({ path: `screenshots/creation-abilities-start-${suffix}.png`, fullPage: true });
-  await maduhausuMethod.click();
-  if (await maduhausuMethod.getAttribute("aria-pressed") !== "true") throw new Error("Maduhausu point buy could not be selected");
-  await standardMethod.click();
-  for (const [ability, score] of [["Intelligence", "8"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "15"], ["Dexterity", "15"], ["Constitution", "15"]]) {
+  for (const [ability, score] of [["Intelligence", "9"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "17"], ["Dexterity", "15"], ["Constitution", "15"]]) {
     await setAbilityScore(page, ability, score);
   }
-  await page.getByText("0 points left", { exact: true }).waitFor();
-  if (await next.isDisabled()) throw new Error("The ability step stayed blocked after spending the full budget");
   await page.waitForTimeout(250);
   await page.locator(".character-sheet-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
   await page.screenshot({ path: `screenshots/creation-abilities-${suffix}.png`, fullPage: true });
-  await next.click();
-
-  await page.getByRole("heading", { name: "Background abilities", exact: true }).waitFor();
-  await page.getByRole("button", { name: "Strength background bonus +2", exact: true }).click();
-  await page.getByRole("button", { name: "Intelligence background bonus +1", exact: true }).click();
-  await page.getByText("Modifier improves from +2 to +3.", { exact: true }).waitFor();
-  await page.getByText("Class focus", { exact: true }).waitFor();
-  await page.screenshot({ path: `screenshots/background-abilities-guidance-${suffix}.png`, fullPage: true });
   await next.click();
   await page.getByRole("heading", { name: "Class skills", exact: true }).waitFor();
   await page.getByText("Climb, jump, grapple, escape physical holds, and force obstacles.", { exact: true }).waitFor();
@@ -258,6 +244,22 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.getByRole("heading", { name: "Abilities", exact: true }).waitFor();
   if (await page.getByText("Build ability scores", { exact: true }).count()) throw new Error("The creation score builder remained inside the completed character sheet");
   await page.getByRole("button", { name: "Back", exact: true }).click();
+
+  await sheet.locator(".character-sheet-vitals button").filter({ hasText: "Sanity" }).click();
+  await page.getByRole("heading", { name: "Sanity", exact: true }).waitFor();
+  await page.getByText("Tracked separately from Sanity.", { exact: true }).waitFor();
+  await page.getByRole("button", { name: "Increase Madness", exact: true }).click();
+  await page.getByTestId("appsheet-edit-stage").getByText("Madness", { exact: true }).waitFor();
+  await page.screenshot({ path: `screenshots/sanity-independent-${suffix}.png`, fullPage: true, animations: "disabled" });
+  await page.getByTestId("appsheet-edit-stage").getByRole("button", { name: "Cancel", exact: true }).click();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+
+  await sheet.getByRole("button", { name: "Resources", exact: true }).click();
+  await page.getByRole("heading", { name: "Resources", exact: true }).waitFor();
+  await page.getByText("Sanity dice", { exact: true }).waitFor();
+  await page.getByText("2d6", { exact: true }).waitFor();
+  await page.screenshot({ path: `screenshots/source-sheet-values-${suffix}.png`, fullPage: true, animations: "disabled" });
+  await page.getByRole("button", { name: "Back", exact: true }).click();
   await page.waitForTimeout(250);
   await page.screenshot({ path: `screenshots/creation-complete-${suffix}.png`, fullPage: true });
 
@@ -326,9 +328,6 @@ async function inspectExpertiseGuidance(browser, viewport, suffix) {
     await setAbilityScore(page, ability, score);
   }
   await next.click();
-  await page.getByRole("button", { name: "Dexterity background bonus +2", exact: true }).click();
-  await page.getByRole("button", { name: "Constitution background bonus +1", exact: true }).click();
-  await next.click();
 
   await page.getByRole("heading", { name: "Class skills", exact: true }).waitFor();
   if (!await page.getByLabel("Stealth", { exact: true }).isDisabled()) throw new Error("A background skill could be chosen again as a class skill");
@@ -341,7 +340,7 @@ async function inspectExpertiseGuidance(browser, viewport, suffix) {
 
   await page.getByRole("heading", { name: "Choose Expertise", exact: true }).waitFor();
   await page.getByText("Expertise adds your +2 proficiency bonus a second time.", { exact: false }).waitFor();
-  await page.getByText("+4 trained to +6 expert", { exact: true }).waitFor();
+  await page.getByText("+4 trained to +6 expert", { exact: true }).first().waitFor();
   await page.waitForTimeout(250);
   await page.screenshot({ path: `screenshots/expertise-guidance-${suffix}.png`, fullPage: true });
   await page.getByLabel("Stealth", { exact: true }).check();

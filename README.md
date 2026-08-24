@@ -35,7 +35,7 @@ Lower the friction of playing together:
 | Area | What it does |
 | --- | --- |
 | **Sessions** | The next session with a live countdown + upcoming dates. RSVP (in / maybe / can't). The DM can add & edit dates. |
-| **Hunter** | Build & save your hunter card — class, point-buy abilities, skills, armor → auto-calculated AC, HP, speed, saves. |
+| **Hunter** | Build & save your hunter card — class, direct ability scores, skills, armor → auto-calculated AC, HP, speed, saves. |
 | **Party** | See everyone's hunters. The DM gets a roster: who's made a character, who's RSVP'd, with one-tap email reminders. |
 | **Codex** | Search the current Deepcaller book, Whispers, and printable character sheet—with provenance for every result. |
 

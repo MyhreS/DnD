@@ -225,6 +225,7 @@
 .character-sheet-resource-grid { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 11px; }
 .character-sheet-resource { display: grid; gap: 7px; padding: 12px 2px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 45%); border-radius: 0; background: transparent; }
 .character-sheet-resource > span { color: var(--app-muted); font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.character-sheet-resource > strong { color: var(--app-text); font: 600 18px/1.2 "Cinzel", serif; }
 .character-sheet-resource > small { color: var(--app-faint); font: 12px/1.2 "Alegreya", serif; }
 .character-sheet-state-grid { display: grid; grid-template-columns: repeat(4, minmax(150px, 1fr)); gap: 8px; }
 .character-sheet-state-grid label { display: flex; align-items: center; gap: 8px; min-height: 42px; padding: 9px 2px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 45%); border-radius: 0; background: transparent; font-size: 13px; }
@@ -357,20 +358,7 @@
 .character-sheet-guided-choice-intro small { color: var(--app-faint); font: 12px/1.4 "Alegreya", serif; }
 .character-sheet-guided-choice-intro > strong { flex: none; min-width: 82px; padding: 6px 9px; border: 1px solid var(--app-line); border-radius: 999px; color: var(--app-warm); font-size: 10px; letter-spacing: .06em; text-align: center; text-transform: uppercase; }
 .character-sheet-guided-choice-intro > strong.complete { border-color: color-mix(in srgb, var(--app-positive), transparent 52%); background: color-mix(in srgb, var(--app-positive), transparent 90%); color: var(--app-positive); }
-.character-sheet-guided-ability-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; padding-top: 12px; }
-.character-sheet-guided-ability { display: grid; grid-template-rows: 1fr auto auto; gap: 11px; min-width: 0; padding: 12px; border: 1px solid color-mix(in srgb, var(--app-line), transparent 18%); border-radius: 9px; background: color-mix(in srgb, var(--app-surface), transparent 45%); transition: border-color .16s ease, background .16s ease; }
-.character-sheet-guided-ability.selected { border-color: color-mix(in srgb, var(--app-positive), transparent 48%); background: color-mix(in srgb, var(--app-positive), transparent 93%); }
-.character-sheet-guided-ability > header { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 10px; }
-.character-sheet-guided-ability > header > span { display: grid; gap: 3px; }
-.character-sheet-guided-ability > header b { color: var(--app-text); font: 700 13px/1.2 "Alegreya Sans SC", sans-serif; letter-spacing: .04em; text-transform: uppercase; }
-.character-sheet-guided-ability > header small { color: var(--app-muted); font: 12px/1.3 "Alegreya", serif; }
-.character-sheet-guided-ability > header strong { color: var(--app-positive); font: 600 18px/1.1 "Cinzel", serif; white-space: nowrap; }
-.character-sheet-guided-ability > header i { color: var(--app-faint); font: 11px "Alegreya", serif; }
-.character-sheet-background-bonus-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3px; padding: 3px; border: 1px solid var(--app-line); border-radius: 8px; background: var(--app-input); }
-.character-sheet-background-bonus-buttons button { min-height: 34px; padding: 4px !important; border: 0 !important; border-radius: 5px !important; background: transparent !important; color: var(--app-muted) !important; font-size: 11px !important; }
-.character-sheet-background-bonus-buttons button[aria-pressed="true"] { background: var(--app-surface-hover) !important; color: var(--app-text) !important; box-shadow: 0 1px 8px rgba(0, 0, 0, .16); }
-.character-sheet-guided-ability > footer { display: flex; align-items: center; justify-content: space-between; gap: 8px; color: var(--app-faint); font: 11px/1.3 "Alegreya", serif; }
-.character-sheet-guided-ability > footer em, .character-sheet-guided-skill-facts em { flex: none; padding: 3px 6px; border-radius: 99px; background: color-mix(in srgb, var(--app-warm), transparent 88%); color: var(--app-warm); font: 700 8px/1 "Alegreya Sans SC", sans-serif; letter-spacing: .05em; text-transform: uppercase; }
+.character-sheet-guided-skill-facts em { flex: none; padding: 3px 6px; border-radius: 99px; background: color-mix(in srgb, var(--app-warm), transparent 88%); color: var(--app-warm); font: 700 8px/1 "Alegreya Sans SC", sans-serif; letter-spacing: .05em; text-transform: uppercase; }
 .character-sheet-guided-skill-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 18px; }
 .character-sheet-guided-skill { position: relative; display: grid; grid-template-columns: 22px minmax(0, 1fr); align-items: start; gap: 10px; min-width: 0; padding: 12px 4px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 30%); cursor: pointer; transition: background .16s ease; }
 .character-sheet-guided-skill:hover { background: color-mix(in srgb, var(--app-warm), transparent 95%); }
@@ -670,7 +658,7 @@
   .character-sheet-upgrade-record { grid-template-columns: 1fr; }
   .character-sheet-guided-choice-intro { display: grid; gap: 10px; }
   .character-sheet-guided-choice-intro > strong { justify-self: start; }
-  .character-sheet-guided-ability-list, .character-sheet-guided-skill-list, .character-sheet-mastery-list { grid-template-columns: 1fr; }
+  .character-sheet-guided-skill-list, .character-sheet-mastery-list { grid-template-columns: 1fr; }
   .character-sheet-mastery-title { display: grid; gap: 2px; }
   .character-sheet-upgrade-feat-abilities > div { grid-template-columns: repeat(2, 1fr); }
   .character-sheet-upgrade-review-values { grid-template-columns: repeat(2, minmax(0, 1fr)); }

@@ -15,7 +15,7 @@ const OUTPUT_PATH = "src/data/codex.generated.json";
 const PUBLIC_DOCUMENT_ROOT = "public/source-library";
 
 const master = JSON.parse(readFileSync(MASTER_PATH, "utf8"));
-if (master.schemaVersion !== 2) throw new Error(`Unsupported master schema: ${master.schemaVersion}`);
+if (master.schemaVersion !== 3) throw new Error(`Unsupported master schema: ${master.schemaVersion}`);
 if (!Array.isArray(master.sources) || master.sources.length !== 4) {
   throw new Error("The current source master must contain exactly four documents.");
 }
@@ -108,15 +108,17 @@ function add({ id, term, aliases = [], paragraphs = [], tables = [], group, sour
   });
 }
 
-function riteParagraphs(entry) {
+function riteParagraphs(entry, kind) {
   return [
-    `Level ${entry.level} ${entry.type}`,
+    kind === "Whisper" ? `Whisper · ${entry.type}` : `Level ${entry.level} ${entry.type}`,
+    entry.section ? `Section: ${entry.section}` : "",
     `Performing: ${entry.performing}`,
     `Range: ${entry.range}`,
     `Duration: ${entry.duration}`,
     entry.special,
     entry.text,
     entry.upgrade,
+    entry.sourceNote ? `Source note: ${entry.sourceNote}` : "",
   ].filter(Boolean);
 }
 
@@ -124,8 +126,8 @@ for (const rite of master.rites.entries) {
   add({
     id: `rite-${rite.id}`,
     term: rite.name,
-    aliases: [rite.type, `level ${rite.level} rite`],
-    paragraphs: riteParagraphs(rite),
+    aliases: [rite.type, `level ${rite.level} rite`, rite.section].filter(Boolean),
+    paragraphs: riteParagraphs(rite, "Rite"),
     tables: rite.tables ?? [],
     group: "Rites",
     sourceId: master.rites.sourceId,
@@ -139,10 +141,10 @@ for (const whisper of master.whispers.entries) {
     id: `whisper-${whisper.id}`,
     term: whisper.name,
     aliases: [whisper.type, "Whisper"],
-    paragraphs: riteParagraphs(whisper),
+    paragraphs: riteParagraphs(whisper, "Whisper"),
     group: "Whispers",
     sourceId: master.whispers.sourceId,
-    locator: whisper.type,
+    locator: `Whisper · ${whisper.type}`,
     sourcePages: whisper.sourcePages,
   });
 }
@@ -190,7 +192,7 @@ for (const missing of master.referencedButNotSupplied.filter((entry) => entry.au
 }
 
 const output = {
-  schemaVersion: 2,
+  schemaVersion: 3,
   sources,
   entries,
   characterSheet: master.characterSheet,

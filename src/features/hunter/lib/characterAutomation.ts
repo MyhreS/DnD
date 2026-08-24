@@ -24,7 +24,6 @@ export interface CharacterAutomationResult {
   pending: {
     classSkills?: PendingChoice;
     background?: PendingChoice;
-    backgroundPoints?: PendingChoice;
     subclass?: PendingChoice;
     levelChoices?: PendingChoice;
     featSkills?: PendingChoice;
@@ -92,7 +91,7 @@ function unresolvedLevelChoices(card: HunterCard): string[] {
     .filter((row) => row.level <= card.level && row.level > acknowledged)
     .flatMap((row) => {
       const choices = row.features.split(",").map((entry) => entry.trim()).filter((entry) =>
-        /^(hunter .+ subclass|ability score improvement|epic boon|fighting style|expertise|weapon mastery|forbidden revelation)$/i.test(entry),
+        /^(hunter .+ subclass|ability score improvement|epic boon|fighting style|expertise|weapon mastery|forbidden revelation(?:\s*\([^)]*\))?)$/i.test(entry),
       );
       return choices.map((choice) => `Level ${row.level}: ${choice}`);
     });
@@ -146,7 +145,7 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
   put(fields, reasons, "profBonus", formatModifier(prof), `${SOURCE.creation}; level ${level}`);
   put(fields, reasons, "background", background?.name ?? card.background, background ? SOURCE.background : "Your written background");
 
-  if (!background) pending.background = { label: "Background", remaining: 1, options: BACKGROUNDS.map((entry) => entry.name), reason: "A background grants abilities, skills, a feat, tools, and equipment." };
+  if (!background) pending.background = { label: "Background", remaining: 1, options: BACKGROUNDS.map((entry) => entry.name), reason: "A background grants skills, a feat, tools, and equipment." };
   if (klass) {
     put(fields, reasons, "class", klass.name, `${SOURCE.class}: ${klass.title}`);
     const subclass = getSubclass(klass.id, card.subclassId);
@@ -195,15 +194,13 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     if (choices.length) pending.levelChoices = { label: "Level choices", remaining: choices.length, options: choices, reason: "These level features require a player decision." };
   }
 
-  const backgroundBonusUsed = Object.values(card.sheetAutomation?.backgroundBonuses ?? {}).reduce<number>((sum, value) => sum + (value ?? 0), 0);
-  if (background && backgroundBonusUsed < 3) pending.backgroundPoints = { label: "Background ability points", remaining: 3 - backgroundBonusUsed, options: background.abilityScores.map((key) => key.toUpperCase()), reason: "Use +2 and +1 on different eligible abilities, or three +1s." };
   if (background?.feat === "Skilled" && (card.featSkills?.length ?? 0) < 3) pending.featSkills = { label: "Skilled feat proficiencies", remaining: 3 - (card.featSkills?.length ?? 0), reason: "Skilled grants any combination of three skill or tool proficiencies." };
 
   for (const key of ABILITY_KEYS) {
     const score = card.abilities[key];
     const mod = abilityModifier(score);
     const saveProficient = klass?.savingThrows.includes(key) ?? false;
-    put(fields, reasons, `${key}Score`, String(score), card.baseAbilities ? "Base score + background/level increases" : "Saved ability score");
+    put(fields, reasons, `${key}Score`, String(score), card.baseAbilities ? "Starting score + structured level increases" : "Saved ability score");
     put(fields, reasons, `${key}Mod`, formatModifier(mod), `Modifier from ${score}`);
     put(fields, reasons, `${key}SaveP`, saveProficient, saveProficient ? `${klass?.title} saving throw proficiency` : "Not granted by class");
     put(fields, reasons, `${key}Save`, formatModifier(mod + (saveProficient ? prof : 0)), saveProficient ? `Ability modifier + proficiency ${formatModifier(prof)}` : "Ability modifier only");

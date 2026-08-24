@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
-import { currentMadness, emptySheetCard, minimumTrackedSanity } from "../src/lib/character";
+import { emptySheetCard, normalizeCard } from "../src/lib/character";
 import { CLASSES } from "../src/data/classes";
 import { BACKGROUNDS } from "../src/data/backgrounds";
 import { EPIC_BOON_FEATS, FIGHTING_STYLE_FEATS, GENERAL_FEATS } from "../src/data/feats";
@@ -8,7 +8,7 @@ import { ITEMS } from "../src/data/items";
 import { startingKit } from "../src/lib/startingEquipment";
 import { availableSlotAssignmentOptions, computeSlots, slotAssignmentOptions } from "../src/lib/slots";
 import { characterSheetUpdate } from "../src/features/hunter/lib/sheetPersistence";
-import { DEEPCALLER_RITES, TOOL_PROFICIENCIES, WHISPERS } from "../src/data/characterOptions";
+import { DEEPCALLER_RITES, DEEPCALLER_WHISPERS, forbiddenRevelationLevel, forbiddenRevelationOptions, riteDamageAtStrain, TOOL_PROFICIENCIES, WHISPERS } from "../src/data/characterOptions";
 import {
   automationFor,
   matchCatalogItem,
@@ -18,24 +18,22 @@ import { migrateLegacyCharacter } from "../src/features/hunter/lib/legacyMigrati
 import { levelAdjustedPool } from "../src/features/hunter/lib/levelUpVitals";
 import { levelForInsight } from "../src/lib/insight";
 import { insightAwardPatch } from "../src/features/hunter/lib/insightAward";
-import { earnedLevel, upgradeFeatureComplete, upgradeFeatures } from "../src/features/hunter/components/character-sheet/upgradeModel";
+import { earnedLevel, recordedOptionsFor, upgradeFeatureComplete, upgradeFeatures } from "../src/features/hunter/components/character-sheet/upgradeModel";
 import { sessionsForCharacter } from "../src/features/hunter/lib/characterSessions";
-import type { Game } from "../src/types";
+import type { Game, HunterCard } from "../src/types";
 
 assert.equal(levelForInsight(0), 1, "zero Insight is level one");
 assert.equal(levelForInsight(6), 2, "an Insight threshold immediately earns its level");
 assert.equal(levelForInsight(74), 5, "accumulated Insight retains all earlier levels");
 assert.equal(levelForInsight(950), 20, "the final Insight threshold earns level twenty");
-assert.equal(currentMadness(16, 16), 0, "full Sanity has no Madness");
-assert.equal(currentMadness(16, 0), 16, "zero current Sanity is one Max Sanity of Madness");
-assert.equal(currentMadness(16, minimumTrackedSanity(16)), 32, "negative current Sanity can represent twice-Max-Sanity Madness");
-
 assert.equal(levelAdjustedPool(4, 10, 16, true), 16, "a pool is restored when a level-up increases its maximum");
 assert.equal(levelAdjustedPool(4, 10, 10, true), 4, "a level-up does not restore a pool whose maximum did not increase");
 assert.equal(levelAdjustedPool(18, 20, 12, false), 12, "a level reduction clamps a pool to its new maximum");
 
 const base = emptySheetCard({ ownerUid: "test", email: "test@example.com", displayName: "Tester" });
 assert.equal(base.sheetAutomation?.setupComplete, false, "fresh sheets start in guided setup even if the name is entered first");
+assert.equal(base.sheetAutomation?.version, 2, "fresh sheets use direct-score automation state");
+assert.equal(base.madness, 0, "fresh sheets track Madness independently from Sanity");
 const attendedSession: Game = {
   id: "attended", campaignId: "campaign-a", sessionId: null, title: "Attended", dmUid: "dm", dmName: "DM",
   participantUids: [base.ownerUid], participantRoster: [{ uid: base.ownerUid, characterId: base.id, name: base.name, classId: base.classId, level: base.level, role: "player", joinedAt: 1, lastSeen: 1 }],
@@ -53,6 +51,38 @@ const warden = {
   skillProficiencies: [],
 };
 
+const normalizedLegacy = normalizeCard({
+  ...warden,
+  level: 4,
+  sanity: 10,
+  madness: undefined,
+  abilities: { ...warden.abilities, str: 14 },
+  baseAbilities: { ...warden.abilities, str: 11 },
+  abilityMode: "pointbuy",
+  sheetAutomation: {
+    version: 1,
+    classSkills: [],
+    backgroundBonuses: { str: 2 },
+    levelAbilityBonuses: { "4:ability score improvement": { str: 1 } },
+  },
+} as unknown as HunterCard);
+assert.equal(normalizedLegacy.abilities.str, 14, "legacy conversion never changes a final ability score");
+assert.equal(normalizedLegacy.baseAbilities?.str, 13, "legacy background adjustments are folded into the direct starting score");
+assert.equal(normalizedLegacy.sheetAutomation?.version, 2, "legacy automation upgrades to the current shape");
+assert.equal("backgroundBonuses" in (normalizedLegacy.sheetAutomation ?? {}), false, "legacy background adjustments are removed after folding");
+assert.equal("abilityMode" in normalizedLegacy, false, "legacy score-method metadata is removed");
+assert.equal(normalizedLegacy.madness, 6, "the previously displayed Madness value survives the independent-field migration");
+const normalizedLegacyDeepcaller = normalizeCard({
+  ...warden,
+  classId: "deepcaller",
+  level: 20,
+  sanity: 30,
+  madness: undefined,
+  abilityMode: "pointbuy",
+  sheetAutomation: { version: 1, classSkills: [], backgroundBonuses: {} },
+} as unknown as HunterCard);
+assert.equal(normalizedLegacyDeepcaller.madness, 7, "legacy Deepcaller Madness is preserved from the former uncapped display during migration");
+
 const automaticLevel = insightAwardPatch({ ...warden, insight: 5, currentHp: 4, sanity: 3 }, 1);
 assert.equal(automaticLevel.insight, 6, "Insight awards are accumulated, not spent to level");
 assert.deepEqual(automaticLevel, { insight: 6 }, "Insight unlocks an upgrade without changing the saved level or pools");
@@ -64,9 +94,22 @@ assert.ok(wardenUpgrade.some((feature) => feature.level === 3 && /Subclass/i.tes
 assert.equal(GENERAL_FEATS.length, 29, "the established app feat catalog remains complete");
 assert.equal(FIGHTING_STYLE_FEATS.length, 9, "all fighting styles are available inside upgrades");
 assert.equal(EPIC_BOON_FEATS.length, 9, "all epic boons are available inside upgrades");
+assert.deepEqual(CLASSES.find((entry) => entry.id === "scout")?.progressionColumns, ["Hunter's Mark"], "Scout progression uses the feature's canonical name");
+assert.match(CLASSES.find((entry) => entry.id === "stalker")?.progression.find((row) => row.level === 7)?.features ?? "", /Reliable Talent/, "Stalker level seven names Reliable Talent correctly");
+assert.match(CLASSES.find((entry) => entry.id === "deepcaller")?.progression.find((row) => row.level === 2)?.features ?? "", /Veiled Truth/, "Deepcaller level two matches its feature name");
+assert.match(CLASSES.find((entry) => entry.id === "deepcaller")?.progression.find((row) => row.level === 10)?.features ?? "", /Fragments of an Eldritch Mind/, "Deepcaller level ten matches its feature name");
 const abilityImprovement = upgradeFeatures(CLASSES[0], null, 3, 4).find((feature) => feature.name === "Ability Score Improvement")!;
-assert.equal(upgradeFeatureComplete(abilityImprovement, { version: 1, classSkills: [], backgroundBonuses: {}, levelFeats: { [abilityImprovement.key]: "Ability Score Improvement" }, levelAbilityBonuses: { [abilityImprovement.key]: { str: 2 } } }), true, "a fully assigned structured ASI completes its upgrade page");
-assert.equal(upgradeFeatureComplete(abilityImprovement, { version: 1, classSkills: [], backgroundBonuses: {}, levelFeats: { [abilityImprovement.key]: "Ability Score Improvement" }, levelAbilityBonuses: { [abilityImprovement.key]: { str: 1 } } }), false, "an unassigned ASI point keeps the upgrade incomplete");
+assert.equal(upgradeFeatureComplete(abilityImprovement, { version: 2, classSkills: [], levelFeats: { [abilityImprovement.key]: "Ability Score Improvement" }, levelAbilityBonuses: { [abilityImprovement.key]: { str: 2 } } }), true, "a fully assigned structured ASI completes its upgrade page");
+assert.equal(upgradeFeatureComplete(abilityImprovement, { version: 2, classSkills: [], levelFeats: { [abilityImprovement.key]: "Ability Score Improvement" }, levelAbilityBonuses: { [abilityImprovement.key]: { str: 1 } } }), false, "an unassigned ASI point keeps the upgrade incomplete");
+const forbiddenRevelation = upgradeFeatures(CLASSES.find((entry) => entry.id === "deepcaller"), null, 10, 11)
+  .find((feature) => /Forbidden Revelation/i.test(feature.name))!;
+const revelationOptions = recordedOptionsFor(forbiddenRevelation);
+assert.equal(forbiddenRevelationLevel(forbiddenRevelation.key), 6, "the level-six Revelation is read from its upgrade key");
+assert.ok(revelationOptions.some((option) => option.value === "True Seeing"), "a Revelation offers current Rites of its own level");
+assert.ok(revelationOptions.some((option) => option.value === "Eldritch Rebuke"), "a Revelation offers lower Rites with printed Higher-Level Strain rules");
+assert.ok(!revelationOptions.some((option) => option.value === "Darkness"), "a Revelation does not invent higher-level behavior for a Rite without that option");
+assert.equal(upgradeFeatureComplete(forbiddenRevelation, { version: 2, classSkills: [], levelChoices: { [forbiddenRevelation.key]: "True Seeing" } }), true, "a valid current-source Revelation completes the upgrade");
+assert.equal(upgradeFeatureComplete(forbiddenRevelation, { version: 2, classSkills: [], levelChoices: { [forbiddenRevelation.key]: "Old removed Rite" } }), false, "an unavailable Rite cannot complete a Revelation choice");
 
 const levelOne = automationFor(warden);
 assert.equal(levelOne.fields.class, "Warden");
@@ -105,7 +148,7 @@ assert.match(modifiedReadouts.reasons.ac, /custom modifier \+2/i, "the AC explan
 const skilled = automationFor({
   ...warden,
   skillProficiencies: ["Perception", "Survival"],
-  sheetAutomation: { version: 1, classSkills: ["Perception", "Survival"], backgroundBonuses: {} },
+  sheetAutomation: { version: 2, classSkills: ["Perception", "Survival"] },
 });
 assert.equal(skilled.pending.classSkills, undefined);
 assert.equal(skilled.fields.skPerceptionP, true);
@@ -128,7 +171,7 @@ assert.equal(alertWarden.fields.initiative, "+3", "Alert adds proficiency to ini
 const expertWarden = automationFor({
   ...warden,
   skillProficiencies: ["Perception", "Survival"],
-  sheetAutomation: { version: 1, classSkills: ["Perception", "Survival"], expertiseSkills: ["Perception"], backgroundBonuses: {} },
+  sheetAutomation: { version: 2, classSkills: ["Perception", "Survival"], expertiseSkills: ["Perception"] },
 });
 assert.equal(expertWarden.fields.skPerception, "+6", "Expertise applies its bonus twice");
 assert.equal(expertWarden.reasons.skPerception, "WIS modifier + Expertise", "Expertise uses its named rule in the character sheet explanation");
@@ -137,7 +180,7 @@ const completedWardenLevelTwo = automationFor({
   level: 2,
   lastSeenLevel: 2,
   skillProficiencies: ["Perception", "Survival"],
-  sheetAutomation: { version: 1, classSkills: ["Perception", "Survival"], expertiseSkills: ["Perception", "Survival"], backgroundBonuses: {} },
+  sheetAutomation: { version: 2, classSkills: ["Perception", "Survival"], expertiseSkills: ["Perception", "Survival"] },
 });
 assert.equal(completedWardenLevelTwo.pending.levelChoices, undefined, "reviewed level-two expertise no longer appears as a pending level-up choice");
 const listenerWarden = automationFor({ ...warden, backgroundId: "cultist" });
@@ -152,6 +195,7 @@ assert.equal(cappedDeepcaller.fields.strainCur, "2", "remaining Strains cannot e
 const levelThreeDeepcaller = automationFor({ ...warden, classId: "deepcaller", level: 3 });
 assert.equal(levelThreeDeepcaller.pending.subclass, undefined, "Deepcallers may continue their core path instead of becoming Zealots at level three");
 assert.match(String(levelThreeDeepcaller.fields.features1), /Opened Mind/, "a continuing Deepcaller receives their level-three core feature");
+assert.equal(automationFor({ ...warden, classId: "deepcaller", level: 20 }).fields.sanityMax, "26", "Fracturing Mind caps the resulting Max Sanity at 26");
 const zealot = automationFor({ ...warden, classId: "deepcaller", subclassId: "hunter-zealot", level: 3 });
 assert.match(String(zealot.fields.features1), /Burn the Book/, "a Deepcaller can still choose the Zealot path at level three");
 
@@ -187,6 +231,10 @@ assert.deepEqual(DEEPCALLER_RITES.map((rite) => rite.id), master.rites.entries.m
 assert.ok(DEEPCALLER_RITES.some((rite) => rite.name === "Armor of the Drowned Star"), "Deepcaller reference uses Armor of the Drowned Star");
 assert.ok(DEEPCALLER_RITES.some((rite) => rite.name === "Arms of Hastur"), "Deepcaller reference uses Arms of Hastur");
 assert.ok(DEEPCALLER_RITES.some((rite) => rite.name === "Grasp of Yog-Sothoth"), "Deepcaller reference uses the current Grasp name");
+assert.ok(DEEPCALLER_WHISPERS.every((whisper) => whisper.level === null), "Whispers are not assigned an invented level");
+assert.equal(riteDamageAtStrain(DEEPCALLER_RITES.find((rite) => rite.id === "eldritch-rebuke")!, 4), "5d10", "Rite damage follows the printed higher-Strain rule");
+assert.equal(riteDamageAtStrain(DEEPCALLER_RITES.find((rite) => rite.id === "eldritch-cacophony")!, 7), "12d6", "Rite damage scaling uses current Strain level");
+assert.ok(forbiddenRevelationOptions(9).some((rite) => rite.id === "call-starborn-horror"), "level-nine Revelations include current level-nine Rites");
 assert.ok(TOOL_PROFICIENCIES.includes("Poisoner's Kit") && TOOL_PROFICIENCIES.includes("Blood-drainer's Tools"));
 
 const equipped = automationFor({
@@ -374,14 +422,14 @@ const atomicUpdate = characterSheetUpdate(
   { class: "Warden", hpMax: "12", untouched: "old" },
   ["class", "hpMax"],
   { level: 1 },
-  { classId: "warden", sheetAutomation: { version: 1, classSkills: [], backgroundBonuses: {} } },
+  { classId: "warden", sheetAutomation: { version: 2, classSkills: [] } },
   "DELETE",
   123,
 );
 assert.deepEqual(atomicUpdate, {
   updatedAt: 123,
   classId: "warden",
-  sheetAutomation: { version: 1, classSkills: [], backgroundBonuses: {} },
+  sheetAutomation: { version: 2, classSkills: [] },
   level: 1,
   "sheet.class": "Warden",
   "sheet.hpMax": "12",

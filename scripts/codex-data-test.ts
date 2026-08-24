@@ -18,7 +18,7 @@ const expectedFiles = [
   "resources/pdf/C&S Hidden Condition Sheet.pdf",
   "resources/pdf/C&S Whispers Sheet.pdf",
 ];
-assert.equal(master.schemaVersion, 2);
+assert.equal(master.schemaVersion, 3);
 assert.equal(master.meta.documentCount, 4);
 assert.deepEqual(master.sources.map((source: { sourceFile: string }) => source.sourceFile), expectedFiles);
 assert.deepEqual(filesUnder("resources/pdf"), expectedFiles, "the canonical source directory must contain exactly four PDFs");
@@ -39,11 +39,16 @@ assert.equal(master.hiddenConditionSheet.containsRules, true);
 assert.equal(master.hiddenConditionSheet.audience, "dm");
 assert.equal(master.hiddenConditionSheet.sections.length, 4);
 assert.match(master.hiddenConditionSheet.sections[0].paragraphs[0], /twice their Max Sanity/);
-assert.equal(master.referencedButNotSupplied.length, 6);
+assert.equal(master.referencedButNotSupplied.length, 8);
+assert.equal(master.referencedButNotSupplied.filter((entry: { audience: string }) => entry.audience === "player").length, 5);
 assert.equal(master.referencedButNotSupplied.filter((entry: { audience: string }) => entry.audience === "dm").length, 3);
+assert.deepEqual(master.conditionsNamedByCurrentSources, ["Blinded", "Frightened", "Incapacitated", "Insane", "Invisible", "Restrained"]);
+assert.equal(master.rites.entries.filter((entry: { section?: string }) => entry.section === "Hidden Truths").length, 6);
+assert(master.rites.entries.find((entry: { name: string }) => entry.name === "Plane Shift")?.sourceNote.includes("ellipsis"));
+assert(master.whispers.entries.every((entry: { level?: number }) => entry.level === undefined), "Whispers must not be assigned an invented level");
 
 assert.equal(CODEX_SOURCES.length, 3);
-assert.equal(CODEX_ENTRIES.length, 37);
+assert.equal(CODEX_ENTRIES.length, 39);
 assert.equal(new Set(CODEX_ENTRIES.map((entry) => entry.id)).size, CODEX_ENTRIES.length, "Codex entry ids must be unique");
 assert.deepEqual(CODEX_SOURCES.map((source) => source.id), [
   "book-of-the-deepcaller",
@@ -58,6 +63,11 @@ for (const source of CODEX_SOURCES) {
   assert.equal(source.downloads.length, 1, `${source.id} must have one public PDF`);
   assert(existsSync(source.sourceFiles[0]), `${source.id} source is missing`);
   assert(existsSync(join("public", source.downloads[0].publicPath)), `${source.id} public PDF is missing`);
+  assert.equal(
+    createHash("sha256").update(readFileSync(source.sourceFiles[0])).digest("hex"),
+    createHash("sha256").update(readFileSync(join("public", source.downloads[0].publicPath))).digest("hex"),
+    `${source.id} public download must exactly match its canonical PDF`,
+  );
   assert(CODEX_ENTRIES.some((entry) => entry.sourceId === source.id), `${source.id} has no searchable entries`);
 }
 assert.deepEqual(filesUnder("public/source-library"), [
@@ -85,6 +95,10 @@ assert(grit?.versions.some((entry) => entry.sourceId === "character-sheet"));
 const blast = searchEntries(CODEX_TOPICS, "eldritch blast")[0];
 assert(blast?.versions[0].body.some((line) => line.includes("ranged rite attack")));
 assert(blast?.versions[0].body.some((line) => line.includes("creates two beams")));
+const whisperEntries = CODEX_ENTRIES.filter((entry) => entry.group === "Whispers");
+assert.equal(whisperEntries.length, 6);
+assert(whisperEntries.every((entry) => entry.locator?.startsWith("Whisper · ")));
+assert(whisperEntries.every((entry) => !entry.body.some((line) => /Level 0/i.test(line))), "Whispers must never be labeled Level 0");
 
 for (const removed of ["Hunter Rifle", "Blood Frenzy", "Maduhausu", "Unstable Violence", "Cracked Perception", "Second Threshold", "Old One Vessel", "Greater Dreadblood"]) {
   assert.equal(searchEntries(CODEX_TOPICS, removed).length, 0, `retired source content returned: ${removed}`);
@@ -92,7 +106,7 @@ for (const removed of ["Hunter Rifle", "Blood Frenzy", "Maduhausu", "Unstable Vi
 assert.equal(CODEX_SOURCE_BY_ID.has("hidden-condition-sheet"), false, "the hidden source must not be public");
 assert.equal(CODEX_ENTRIES.some((entry) => entry.sourceId === "hidden-condition-sheet"), false, "hidden rules must not be searchable");
 const unresolved = CODEX_ENTRIES.filter((entry) => entry.id.startsWith("not-supplied-"));
-assert.equal(unresolved.length, 3);
+assert.equal(unresolved.length, 5);
 assert(unresolved.every((entry) => entry.warning?.includes("not supplied")));
 
 function filesUnder(root: string): string[] {
