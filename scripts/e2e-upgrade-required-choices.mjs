@@ -193,6 +193,29 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.getByRole("heading", { name: "Hunter & build", exact: true }).waitFor();
   if (await page.locator(".v4-hunter-build-grid select").count()) throw new Error("Creation selectors remained inside the completed character sheet");
   await page.locator(".v4-hunter-build-grid").getByText("Hunter Brute", { exact: true }).waitFor();
+  const hunterBuildLayout = await page.locator(".v4-hunter-build").evaluate((element) => {
+    const rectOf = (target) => {
+      const rect = target.getBoundingClientRect();
+      return { left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom, width: rect.width };
+    };
+    const buildItems = [...element.querySelectorAll(".v4-hunter-build-grid > *")].map(rectOf);
+    const referencePanels = [...element.querySelectorAll(".v4-hunter-feats-tools > .appsheet-panel")].map(rectOf);
+    const dividers = [...element.querySelectorAll(".v4-hunter-build-value > strong, .v4-hunter-feats-tools > .appsheet-panel, .v4-reference-list, .v4-reference-list article")]
+      .filter((target) => {
+        const style = getComputedStyle(target);
+        return Number.parseFloat(style.borderTopWidth) > 0 || Number.parseFloat(style.borderBottomWidth) > 0;
+      }).length;
+    return { profile: rectOf(element), buildItems, referencePanels, dividers };
+  });
+  const stacked = (items) => items.every((item, index) => index === 0
+    || (Math.abs(item.left - items[0].left) <= 2 && item.top >= items[index - 1].bottom));
+  if (!stacked(hunterBuildLayout.buildItems) || !stacked(hunterBuildLayout.referencePanels)) {
+    throw new Error(`Hunter & build mixes side-by-side and stacked sections (${suffix}): ${JSON.stringify(hunterBuildLayout)}`);
+  }
+  if (suffix === "desktop" && (hunterBuildLayout.profile.width > 782 || hunterBuildLayout.dividers !== 0)) {
+    throw new Error(`Desktop Hunter & build is not a quiet single reading column: ${JSON.stringify(hunterBuildLayout)}`);
+  }
+  await page.screenshot({ path: `screenshots/hunter-build-${suffix}.png`, fullPage: true, animations: "disabled" });
   await page.getByRole("button", { name: "Back", exact: true }).click();
   await sheet.getByRole("button", { name: "Abilities", exact: true }).click();
   await page.getByRole("heading", { name: "Abilities", exact: true }).waitFor();
