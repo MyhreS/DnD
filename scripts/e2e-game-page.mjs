@@ -73,6 +73,29 @@ async function assertNoHorizontalOverflow(page, label) {
   }
 }
 
+async function assertDocumentScrolls(page, label) {
+  await page.evaluate(() => {
+    window.scrollTo(0, 0);
+    const probe = document.createElement("div");
+    probe.dataset.scrollProbe = "true";
+    probe.style.height = "1200px";
+    document.querySelector(".game-table")?.append(probe);
+  });
+  await page.mouse.wheel(0, 500);
+  await page.waitForTimeout(100);
+  const report = await page.evaluate(() => ({
+    scrollY: window.scrollY,
+    overflow: document.body.style.overflow,
+  }));
+  await page.evaluate(() => {
+    document.querySelector('[data-scroll-probe="true"]')?.remove();
+    window.scrollTo(0, 0);
+  });
+  if (report.overflow === "hidden" || report.scrollY === 0) {
+    throw new Error(`${label} did not scroll: ${JSON.stringify(report)}`);
+  }
+}
+
 const browser = await chromium.launch({ headless: true });
 const errors = [];
 try {
@@ -222,6 +245,9 @@ try {
   await assertNoHorizontalOverflow(owner, "Mobile Manage players dialog");
   await owner.screenshot({ path: "screenshots/manage-players-mobile.png" });
   await managePlayers.getByRole("button", { name: "Done", exact: true }).click();
+  if (await owner.evaluate(() => document.body.style.overflow === "hidden")) {
+    throw new Error("Closing the session roster left document scrolling locked");
+  }
   await assertNoHorizontalOverflow(owner, "Mobile waiting room");
   await owner.screenshot({ path: "screenshots/game-waiting-room-mobile.png", fullPage: true });
   await owner.setViewportSize({ width: 1440, height: 1000 });
@@ -232,6 +258,29 @@ try {
   }
   if (await owner.getByTestId("session-clock").count()) throw new Error("Session timer is still visible.");
   if (await owner.getByRole("button", { name: /^(Pause|Resume)$/ }).count()) throw new Error("Session timer controls are still visible.");
+  await owner.getByRole("heading", { name: "Ready for battle", exact: true }).waitFor();
+  const sessionOptions = owner.getByLabel("Session options", { exact: true });
+  for (const label of ["Manage players", "Create item", "Manage enemies", "End session"]) {
+    if (await owner.getByRole("button", { name: label, exact: true }).isVisible()) {
+      throw new Error(`${label} should stay hidden until Session options is opened`);
+    }
+  }
+  await assertNoHorizontalOverflow(owner, "Desktop active session");
+  await owner.screenshot({ path: "screenshots/game-active-session-desktop.png", fullPage: true });
+  await owner.setViewportSize({ width: 390, height: 844 });
+  await assertNoHorizontalOverflow(owner, "Mobile active session");
+  await assertDocumentScrolls(owner, "Mobile active session");
+  await owner.screenshot({ path: "screenshots/game-active-session-mobile.png", fullPage: true });
+  await owner.setViewportSize({ width: 1440, height: 1000 });
+  await sessionOptions.click();
+  await owner.getByRole("button", { name: "Manage players", exact: true }).waitFor();
+  await owner.getByRole("button", { name: "Create item", exact: true }).waitFor();
+  await owner.getByRole("button", { name: "End session", exact: true }).waitFor();
+  await owner.screenshot({ path: "screenshots/game-session-options-desktop.png", fullPage: true });
+  await owner.setViewportSize({ width: 390, height: 844 });
+  await assertNoHorizontalOverflow(owner, "Mobile session options");
+  await owner.screenshot({ path: "screenshots/game-session-options-mobile.png", fullPage: true });
+  await owner.setViewportSize({ width: 1440, height: 1000 });
   await owner.getByRole("button", { name: "Manage enemies", exact: true }).click();
   const enemyLibrary = owner.getByRole("dialog", { name: "Manage enemies" });
   await enemyLibrary.getByRole("button", { name: "New enemy" }).click();
@@ -298,11 +347,13 @@ try {
   await owner.getByRole("alertdialog", { name: "End battle?" }).getByRole("button", { name: "End battle" }).click();
   await owner.getByTestId("session-battle-screen").waitFor({ state: "detached" });
 
+  await sessionOptions.click();
   await owner.getByRole("button", { name: "End session" }).click();
   const endSessionDialog = owner.getByRole("alertdialog", { name: "End session?" });
   await endSessionDialog.getByText("The party, enemies, and damage will be saved in session history.", { exact: true }).waitFor();
   await owner.keyboard.press("Escape");
   await endSessionDialog.waitFor({ state: "detached" });
+  await sessionOptions.click();
   await owner.getByRole("button", { name: "End session" }).click();
   await owner.getByRole("alertdialog", { name: "End session?" }).getByRole("button", { name: "End session" }).click();
   await owner.getByText("Session history", { exact: true }).waitFor();
@@ -404,7 +455,7 @@ try {
   await ownerContext.close();
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Games page E2E passed: compact current/previous lists, quiet creation, game details, owner controls, saved history, lobby discard, player visibility, and responsive layout.");
+  console.log("Games page E2E passed: compact menus, scrollable active sessions, progressive session controls, battle flow, saved history, player visibility, and responsive layout.");
 } finally {
   await browser.close();
   server.kill("SIGTERM");

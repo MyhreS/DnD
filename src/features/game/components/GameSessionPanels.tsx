@@ -168,6 +168,7 @@ export function SessionLootFeed({ game, characterId, isDm, threats = [] }: { gam
   const available = loot.filter((entry) => entry.status === "available");
   const latestThreat = threats.filter((combatant) => combatant.kind === "monster").sort((a, b) => b.createdAt - a.createdAt)[0];
   if (!isDm && available.length === 0 && !message && !latestThreat) return null;
+  if (isDm && loot.length === 0) return null;
   const shown = isDm ? loot.slice(0, 5) : available.slice(0, 2);
   const showThreat = Boolean(latestThreat && shown.length === 0 && !message);
   return <section className="game-focus-panel" aria-labelledby="session-items-title"><header><div><p className="eyebrow">{showThreat ? "Encounter" : "Found during play"}</p><h3 id="session-items-title">{isDm ? "Session items" : shown.length > 0 ? "Something was found" : message ? "Item secured" : "A threat appears"}</h3></div>{isDm && <span>{available.length} available</span>}</header>

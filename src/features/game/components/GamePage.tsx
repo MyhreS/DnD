@@ -28,6 +28,7 @@ import type { EnemyStats, EnemyTemplate, Game, GameParticipant, HunterCard } fro
 import { EnemyEditorDialog } from "./EnemyEditorDialog";
 import { EnemyLibraryDialog } from "./EnemyLibraryDialog";
 import { GamesMenu } from "./GamesMenu";
+import { GameSessionHeader } from "./GameSessionHeader";
 import { GameWaitingRoom } from "./GameWaitingRoom";
 import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed, SessionSwitchRequests } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
@@ -639,24 +640,17 @@ export function GamePage() {
                   onDiscard={() => setConfirmation("discard-session")}
                 />
               ) : <>
-                <div className="game-session-heading game-session-heading-compact">
-                <div>
-                  <p className="eyebrow">{selected.status === "active" ? "Live session" : selected.status === "ended" ? "Session history" : "Waiting room"}</p>
-                  <h2>{selected.title}</h2>
-                </div>
-                <div className="game-session-top-actions">
-                  {selected.status === "active" && selected.combat?.active && <button className="game-text-button" type="button" onClick={() => setDismissedBattleKey(null)}>Return to battle</button>}
-                  {isSessionDm && selected.campaignId === null && selected.status !== "ended" && <button className="game-text-button" type="button" onClick={() => setManagingPlayers(true)}>Manage players</button>}
-                </div>
-                </div>
-
-              {isSessionDm && selected.status !== "ended" && (
-                <div className="game-primary-actions" aria-label="Session controls">
-                  {selected.campaignId === null && selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => setCreatingItem(true)}>Create item</button>}
-                  {selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => openEnemyLibrary()}>Manage enemies</button>}
-                  <button className="btn btn-danger" type="button" disabled={busy} onClick={() => setConfirmation("finish-session")}>End session</button>
-                </div>
-              )}
+                <GameSessionHeader
+                  game={selected}
+                  isDm={isSessionDm}
+                  disabled={busy || combatBusy}
+                  canManagePlayers={selected.campaignId === null}
+                  canCreateItem={selected.campaignId === null}
+                  onManagePlayers={() => setManagingPlayers(true)}
+                  onCreateItem={() => setCreatingItem(true)}
+                  onManageEnemies={openEnemyLibrary}
+                  onEndSession={() => setConfirmation("finish-session")}
+                />
 
               {selected.status === "ended" ? (
                 <section className="game-focus-panel"><p className="eyebrow">Saved</p><h3>{(selected.attendeeRoster ?? displayedParticipants).length} {(selected.attendeeRoster ?? displayedParticipants).length === 1 ? "player" : "players"} attended</h3><p className="muted">Run by {selected.dmName} · {historyDate(selected)}</p>{combatants.some((combatant) => combatant.kind === "monster") && <p className="game-history-enemies"><strong>Enemies:</strong> {combatants.filter((combatant) => combatant.kind === "monster").map((combatant) => combatant.name).join(", ")}</p>}</section>
@@ -681,6 +675,7 @@ export function GamePage() {
                   disabled={combatBusy || busy}
                   enemyTemplates={enemyLibrary.templates}
                   onAddEnemy={addEnemyToBattle}
+                  onReturnToBattle={() => setDismissedBattleKey(null)}
                 />
               )}
               </>}
