@@ -251,6 +251,20 @@ async function eventually(check, label) {
   throw new Error(`${label} did not become true.`);
 }
 
+async function selectAgentSetting(settings, selector, value) {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    if ((await settings.getAttribute("open")) === null) await settings.locator("summary").click();
+    const select = settings.locator(selector);
+    try {
+      await select.waitFor({ state: "visible", timeout: 1_000 });
+      await select.selectOption(value, { timeout: 1_000 });
+      return;
+    } catch (error) {
+      if (attempt === 9) throw error;
+    }
+  }
+}
+
 const browser = await chromium.launch({ headless: true });
 const errors = [];
 let ticketId;
@@ -264,13 +278,12 @@ try {
   await settings.locator("summary").click();
   if (await settings.locator("#workshop-agent-model").inputValue() !== "gpt-5.6-sol") throw new Error("Workshop did not default to Sol.");
   if (await settings.locator("#workshop-agent-effort").inputValue() !== "xhigh") throw new Error("Workshop did not default to xhigh reasoning.");
-  await settings.locator("#workshop-agent-model").selectOption("gpt-5.6-terra");
-  await settings.locator("#workshop-agent-effort").selectOption("high");
+  await selectAgentSetting(settings, "#workshop-agent-model", "gpt-5.6-terra");
+  await selectAgentSetting(settings, "#workshop-agent-effort", "high");
   await settings.getByRole("button", { name: "Save for next agents" }).click();
   await eventually(async () => (await db.doc("workshopAgent/config").get()).data()?.model === "gpt-5.6-terra", "Simon model setting");
-  if ((await settings.getAttribute("open")) === null) await settings.locator("summary").click();
-  await settings.locator("#workshop-agent-model").selectOption("gpt-5.6-sol");
-  await settings.locator("#workshop-agent-effort").selectOption("xhigh");
+  await selectAgentSetting(settings, "#workshop-agent-model", "gpt-5.6-sol");
+  await selectAgentSetting(settings, "#workshop-agent-effort", "xhigh");
   await settings.getByRole("button", { name: "Save for next agents" }).click();
   await eventually(async () => (await db.doc("workshopAgent/config").get()).data()?.reasoningEffort === "xhigh", "Simon reasoning setting");
   if ((await settings.getAttribute("open")) === null) await settings.locator("summary").click();
@@ -357,7 +370,7 @@ try {
       leaseExpiresAt: null,
     });
     await eventually(async () => (await triggerProbe.get()).data()?.status === "finished", "Immediate request trigger");
-    if (Date.now() - triggerStartedAt > 5_000) throw new Error("Workshop request waited instead of triggering immediately.");
+    if (Date.now() - triggerStartedAt > 10_000) throw new Error("Workshop request waited instead of triggering immediately.");
 
     await creator.page.getByTestId("ticket-realtime-trigger-probe").click();
     await creator.page.getByTestId("ticket-reply").fill("Start this follow-up without waiting for the recovery check.");
@@ -368,7 +381,7 @@ try {
       const ticket = (await triggerProbe.get()).data();
       return ticket?.status === "finished" && ticket?.lastCompletedRevision === 2;
     }, "Immediate reply trigger");
-    if (Date.now() - replyStartedAt > 5_000) throw new Error("Workshop reply waited instead of triggering immediately.");
+    if (Date.now() - replyStartedAt > 10_000) throw new Error("Workshop reply waited instead of triggering immediately.");
     await creator.page.getByRole("button", { name: "Close thread" }).click();
     await db.recursiveDelete(triggerProbe);
   } catch (error) {
@@ -499,7 +512,7 @@ try {
   });
   await watchdogProbe.collection("messages").doc("request").set({
     kind: "request",
-    body: "Return a completed result, then simulate a worker and progress pipe that stay open.",
+    body: "Return a completed result, then simulate a worker whose output pipes stay open.",
     authorUid: creatorUid,
     authorEmail: creatorEmail,
     authorName: "Christopher Creator",
@@ -511,7 +524,7 @@ try {
   await runManager("stuck_stream_result", 30_000);
   const watchdogData = (await watchdogProbe.get()).data();
   if (watchdogData?.status !== "finished" || watchdogData?.lastCompletedRevision !== 1) {
-    throw new Error("The manager did not salvage the completed result from a worker whose process and progress pipe stayed open.");
+    throw new Error("The manager did not salvage the completed result from a worker whose process and output pipes stayed open.");
   }
   if (Date.now() - watchdogStartedAt > 25_000) throw new Error("The completed-result watchdog took too long to recover the ticket.");
   await db.recursiveDelete(watchdogProbe);

@@ -448,7 +448,7 @@ async function writeAgentState(): Promise<void> {
     lifecycle: managerLifecycle,
     acceptingTickets: managerLifecycle === "ready" && !shuttingDown,
     checkpointRecoveryComplete: managerLifecycle === "ready" || managerLifecycle === "stopping",
-    version: 11,
+    version: 12,
     ...legacyProgressFields(),
   });
 }
@@ -596,22 +596,42 @@ async function readRecoveryProgress(ticketId: string, stream: ReadableStream<Uin
   }
 }
 
-async function settleProgressStream(
+async function readWorkerDiagnostics(ticketId: string, stream: ReadableStream<Uint8Array>, signal?: AbortSignal): Promise<void> {
+  const reader = stream.getReader();
+  const removeCancelListener = cancelProgressReader(reader, signal);
+  const decoder = new TextDecoder();
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const message = decoder.decode(value, { stream: true });
+      if (message) console.error(`Workshop worker ${ticketId}: ${message}`);
+    }
+    const tail = decoder.decode();
+    if (tail) console.error(`Workshop worker ${ticketId}: ${tail}`);
+  } finally {
+    removeCancelListener();
+    reader.releaseLock();
+  }
+}
+
+async function settleWorkerStream(
   ticketId: string,
-  progressStream: Promise<void>,
+  label: string,
+  streamTask: Promise<void>,
   controller: AbortController,
 ): Promise<void> {
   let settled = false;
-  void progressStream.finally(() => { settled = true; });
+  void streamTask.finally(() => { settled = true; });
   await Promise.race([
-    progressStream,
+    streamTask,
     new Promise((resolvePromise) => setTimeout(resolvePromise, PROGRESS_STREAM_DRAIN_MS)),
   ]);
   if (settled) return;
-  console.warn(`Workshop ticket ${ticketId} kept its progress pipe open after the worker stopped; closing the pipe and continuing.`);
+  console.warn(`Workshop ticket ${ticketId} kept its ${label} open after the worker stopped; closing the pipe and continuing.`);
   controller.abort();
   await Promise.race([
-    progressStream,
+    streamTask,
     new Promise((resolvePromise) => setTimeout(resolvePromise, PROGRESS_STREAM_CANCEL_MS)),
   ]);
 }
@@ -1424,7 +1444,7 @@ async function runCodingAgent(
       cwd: worktree.path,
       stdin: WORKSHOP_CODEX_STDIN,
       stdout: "pipe",
-      stderr: "inherit",
+      stderr: "pipe",
       env: { ...process.env, DND_WORKSHOP_TICKET_ID: ticket.id },
     });
     work.agentProcess = proc;
@@ -1437,10 +1457,19 @@ async function runCodingAgent(
         },
       })
       : proc.stdout;
+    const diagnosticOutput = fixture === "stuck_stream_result"
+      ? new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode("Fixture diagnostic pipe remains open.\n"));
+        },
+      })
+      : proc.stderr;
     const progressStream = readCodexProgress(ticket, progressOutput, progressController.signal).catch(async (error) => {
       console.error("Workshop progress stream stopped:", error);
       await stateWrites;
     });
+    const diagnosticStream = readWorkerDiagnostics(ticket.id, diagnosticOutput, progressController.signal)
+      .catch((error) => console.error("Workshop diagnostic stream stopped:", error));
     let watched: Awaited<ReturnType<typeof waitForCodexProcess<AgentResult>>>;
     try {
       watched = await waitForCodexProcess({ ticketId: ticket.id, worktreePath: worktree.path, resultPath, proc, parse: parseAgentResult });
@@ -1448,7 +1477,8 @@ async function runCodingAgent(
       work.agentProcess = undefined;
       work.agentProcessPath = undefined;
       stopOwnedWorktreeProcesses(worktree.path);
-      await settleProgressStream(ticket.id, progressStream, progressController);
+      await settleWorkerStream(ticket.id, "progress pipe", progressStream, progressController);
+      await settleWorkerStream(ticket.id, "diagnostic pipe", diagnosticStream, progressController);
     }
     throwIfManagerStopping();
     if (watched.salvagedResult === undefined && watched.exitCode !== 0) throw new Error(`Coding agent exited with status ${watched.exitCode}.`);
@@ -1510,7 +1540,7 @@ async function runRecoveryAgent(ticket: ClaimedTicket, error: unknown, folder: s
       cwd: worktree.path,
       stdin: WORKSHOP_CODEX_STDIN,
       stdout: "pipe",
-      stderr: "inherit",
+      stderr: "pipe",
       env: { ...process.env, DND_WORKSHOP_TICKET_ID: ticket.id, DND_WORKSHOP_RECOVERY: "1" },
     });
     if (work) {
@@ -1519,6 +1549,8 @@ async function runRecoveryAgent(ticket: ClaimedTicket, error: unknown, folder: s
     }
     const progressController = new AbortController();
     const progressStream = readRecoveryProgress(ticket.id, proc.stdout, progressController.signal).catch(() => undefined);
+    const diagnosticStream = readWorkerDiagnostics(ticket.id, proc.stderr, progressController.signal)
+      .catch((streamError) => console.error("Workshop recovery diagnostic stream stopped:", streamError));
     let watched: Awaited<ReturnType<typeof waitForCodexProcess<RecoveryResult>>>;
     try {
       watched = await waitForCodexProcess({ ticketId: ticket.id, worktreePath: worktree.path, resultPath, proc, parse: parseRecoveryResult });
@@ -1528,7 +1560,8 @@ async function runRecoveryAgent(ticket: ClaimedTicket, error: unknown, folder: s
         work.agentProcessPath = undefined;
       }
       stopOwnedWorktreeProcesses(worktree.path);
-      await settleProgressStream(ticket.id, progressStream, progressController);
+      await settleWorkerStream(ticket.id, "recovery progress pipe", progressStream, progressController);
+      await settleWorkerStream(ticket.id, "recovery diagnostic pipe", diagnosticStream, progressController);
     }
     if (watched.salvagedResult === undefined && watched.exitCode !== 0) throw new Error(`Recovery agent exited with status ${watched.exitCode}.`);
     return watched.salvagedResult ?? parseRecoveryResult(await readFile(resultPath, "utf8"));
