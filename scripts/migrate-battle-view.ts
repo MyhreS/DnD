@@ -24,6 +24,7 @@ function playerProjection(data: DocumentData): DocumentData {
     note: revealStats ? data.note ?? null : null,
     revealHp: data.revealHp === true,
     revealStats: data.revealStats === true,
+    isWarden: data.isWarden === true,
     createdAt: data.createdAt ?? Date.now(),
   };
 }

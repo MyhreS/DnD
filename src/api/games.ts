@@ -1,7 +1,11 @@
 import {
   collection,
   doc,
+  addDoc,
+  setDoc,
   updateDoc,
+  deleteDoc,
+  getDocs,
   onSnapshot,
   query,
   where,
@@ -14,10 +18,13 @@ import { db, functions } from "@/lib/firebase";
 import type {
   Game,
   GameParticipant,
+  GamePhase,
+  GameLocation,
   EncounterState,
   HunterCard,
+  InventoryEntry,
 } from "@/types";
-import { normalizeEncounterState } from "@/features/play/lib/turnTimer";
+import { emptyEncounter, normalizeEncounterState } from "@/features/play/lib/turnTimer";
 
 const gamesCol = collection(db, "games");
 const activeSeatsCol = collection(db, "activeGameSeats");
@@ -39,7 +46,7 @@ const removeStandaloneParticipantFn = httpsCallable<
   { ok: boolean }
 >(functions, "removeStandaloneGameParticipant");
 const finishStandaloneSessionFn = httpsCallable<
-  { gameId: string },
+  { gameId: string; endedPhase: GamePhase; endedLocation: GameLocation },
   { ok: boolean }
 >(functions, "finishStandaloneGameSession");
 const discardStandaloneSessionFn = httpsCallable<{ gameId: string }, { ok: boolean }>(
@@ -101,6 +108,8 @@ function toGame(id: string, data: Record<string, unknown>): Game {
       ? (data.attendeeRoster as Record<string, unknown>[]).map((participant) => toParticipant(participant))
       : undefined,
     status: (data.status as Game["status"]) ?? "lobby",
+    phase: (data.phase as GamePhase) ?? "exploration",
+    location: (data.location as GameLocation) ?? "wild",
     combat: normalizeEncounterState(data.combat),
     sandbox: (data.sandbox as boolean) ?? false,
     clockRunning: (data.clockRunning as boolean) ?? false,
@@ -109,6 +118,8 @@ function toGame(id: string, data: Record<string, unknown>): Game {
     createdAt: ms(data.createdAt),
     startedAt: data.startedAt ? ms(data.startedAt) : null,
     endedAt: data.endedAt ? ms(data.endedAt) : null,
+    endedPhase: (data.endedPhase as GamePhase | null) ?? null,
+    endedLocation: (data.endedLocation as GameLocation | null) ?? null,
   };
 }
 
@@ -199,6 +210,34 @@ export interface CreateGameInput {
   sandbox?: boolean;
 }
 
+export async function createGame(input: CreateGameInput): Promise<string> {
+  const ref = await addDoc(gamesCol, {
+    campaignId: input.campaignId ?? null,
+    sessionId: input.sessionId,
+    title: input.title,
+    dmUid: input.dmUid,
+    dmName: input.dmName,
+    participantUids: [],
+    participantRoster: [],
+    invitedUids: [],
+    inviteRoster: [],
+    status: "lobby",
+    phase: "exploration",
+    location: "wild",
+    combat: emptyEncounter(),
+    sandbox: input.sandbox ?? false,
+    clockRunning: false,
+    clockStartedAt: null,
+    clockElapsedMs: 0,
+    createdAt: serverTimestamp(),
+    startedAt: null,
+    endedAt: null,
+    endedPhase: null,
+    endedLocation: null,
+  });
+  return ref.id;
+}
+
 /** Atomically creates a standalone session and its selected Hunter roster. */
 export async function createGameSession(input: CreateGameInput, hunters: HunterCard[]): Promise<string> {
   if (input.campaignId !== null) throw new Error("Campaign sessions are not created from the Game page.");
@@ -246,7 +285,11 @@ export async function removeGameParticipant(game: Game, uid: string): Promise<vo
 
 export async function finishGameSession(game: Game): Promise<void> {
   try {
-    await finishStandaloneSessionFn({ gameId: game.id });
+    await finishStandaloneSessionFn({
+      gameId: game.id,
+      endedPhase: game.phase,
+      endedLocation: game.location ?? "wild",
+    });
   } catch (error) {
     throw callableError(error, "Could not end the session.");
   }
@@ -270,15 +313,142 @@ export async function startGame(gameId: string): Promise<void> {
   });
 }
 
+export async function setGamePhase(gameId: string, phase: GamePhase): Promise<void> {
+  await updateDoc(doc(gamesCol, gameId), { phase });
+}
+
+/** Set where the party is — drives rest outcomes (see GameLocation). */
+export async function setGameLocation(gameId: string, location: GameLocation): Promise<void> {
+  await updateDoc(doc(gamesCol, gameId), { location });
+}
+
 /** Set the live combat encounter state (round / whose turn / active). */
 export async function setGameCombat(gameId: string, combat: EncounterState): Promise<void> {
   await updateDoc(doc(gamesCol, gameId), { combat });
+}
+
+export async function endGame(
+  gameId: string,
+  endedPhase: GamePhase,
+  endedLocation?: GameLocation,
+  gameClock?: Game,
+): Promise<void> {
+  const elapsed = gameClock
+    ? gameClock.clockElapsedMs + (gameClock.clockRunning && gameClock.clockStartedAt ? Math.max(0, Date.now() - gameClock.clockStartedAt) : 0)
+    : undefined;
+  await updateDoc(doc(gamesCol, gameId), {
+    status: "ended",
+    endedAt: serverTimestamp(),
+    endedPhase,
+    endedLocation: endedLocation ?? null,
+    clockRunning: false,
+    clockStartedAt: null,
+    ...(elapsed === undefined ? {} : { clockElapsedMs: elapsed }),
+  });
+}
+
+/** Delete a game and all its participants (used to clean up sandbox runs). */
+export async function deleteGame(gameId: string): Promise<void> {
+  const childCollections = ["participants", "combatants", "battleView", "loot", "notes"];
+  const snapshots = await Promise.all(childCollections.map((name) => getDocs(collection(db, "games", gameId, name))));
+  await Promise.all(snapshots.flatMap((snap) => snap.docs.map((item) => deleteDoc(item.ref))));
+  await deleteDoc(doc(gamesCol, gameId));
 }
 
 // --- Participants / presence ---
 
 function participantsCol(gameId: string) {
   return collection(db, "games", gameId, "participants");
+}
+
+export interface JoinInput {
+  uid: string;
+  characterId?: string | null;
+  playerName?: string | null;
+  name: string;
+  classId: string;
+  subclassId?: string | null;
+  /** Sheet hunters: the sheet's free-text class line (classId stays ""). */
+  className?: string | null;
+  level: number;
+  role: GameParticipant["role"];
+}
+
+export async function joinGame(gameId: string, p: JoinInput): Promise<void> {
+  await setDoc(
+    doc(participantsCol(gameId), p.uid),
+    {
+      uid: p.uid,
+      characterId: p.characterId ?? null,
+      playerName: p.playerName ?? null,
+      name: p.name,
+      classId: p.classId,
+      subclassId: p.subclassId ?? null,
+      className: p.className ?? null,
+      level: p.level,
+      role: p.role,
+      joinedAt: serverTimestamp(),
+      lastSeen: serverTimestamp(),
+    },
+    { merge: true },
+  );
+}
+
+/** Seed a sandbox/"Test Run" campaign's bot hunters as participants when a game
+ * begins, so the lobby/play views look populated. Bots never act. */
+export async function seedSandboxParticipants(gameId: string, campaignId: string): Promise<void> {
+  const charsCol = collection(db, "characters");
+  const snap = await getDocs(query(charsCol, where("campaignId", "==", campaignId)));
+  await Promise.all(
+    snap.docs.map((d) => {
+      const c = d.data() as HunterCard;
+      if (!c.ownerUid?.startsWith("bot-") || !c.classId) return Promise.resolve();
+      return joinGame(gameId, {
+        uid: c.ownerUid,
+        name: c.name,
+        classId: c.classId,
+        subclassId: c.subclassId ?? null,
+        level: c.level,
+        role: "player",
+      });
+    }),
+  );
+}
+
+export async function leaveGame(gameId: string, uid: string): Promise<void> {
+  await deleteDoc(doc(participantsCol(gameId), uid));
+}
+
+// --- Dropped loot (a dead hunter's items) ---
+
+function lootCol(gameId: string) {
+  return collection(db, "games", gameId, "loot");
+}
+
+export interface LootInput {
+  fromUid: string;
+  fromName: string;
+  items: InventoryEntry[];
+  coins: number;
+  /** True when a living hunter dropped this (vs. a fallen hunter's remains). */
+  dropped?: boolean;
+}
+
+export async function createLoot(gameId: string, pile: LootInput): Promise<void> {
+  if (pile.items.length === 0 && pile.coins <= 0) return; // nothing to drop
+  await addDoc(lootCol(gameId), {
+    ...pile,
+    dropped: pile.dropped ?? false,
+    status: "unclaimed",
+    claimedByUid: null,
+    claimedByName: null,
+    createdAt: serverTimestamp(),
+  });
+}
+
+export async function purgeLoot(gameId: string): Promise<void> {
+  const snap = await getDocs(lootCol(gameId));
+  await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
 }
 
 export function subscribeParticipants(

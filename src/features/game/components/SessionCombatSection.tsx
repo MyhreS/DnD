@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { emptyEncounter } from "@/features/play/lib/turnTimer";
 import { initiativeOrder, useCombatStore } from "@/features/play/store/combatStore";
 import type { EnemyTemplate, Game, GameParticipant, HunterCard } from "@/types";
-import { encounterCombatants, hasSavedBattle, participantInitiative } from "../lib/combatPresentation";
+import { encounterCombatants, hasSavedBattle, isWarden, participantInitiative } from "../lib/combatPresentation";
 import { StartBattleDialog } from "./StartBattleDialog";
 
 export function SessionCombatSection({
@@ -41,6 +41,7 @@ export function SessionCombatSection({
         characterId: participant.characterId,
         name: participant.name,
         dexMod: participantInitiative(card),
+        isWarden: isWarden(card, participant.classId, participant.className),
       }];
     });
     const encounterId = battleMode === "new" ? encounter.encounterId + 1 : encounter.encounterId;

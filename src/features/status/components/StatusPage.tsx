@@ -6,43 +6,59 @@ import { useCombatStore } from "@/features/play/store/combatStore";
 import { usePlaySync } from "@/features/play/hooks/usePlaySync";
 import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
 import { useCombatSync } from "@/features/play/hooks/useCombatSync";
+import { PHASE_LABEL, LOCATION_LABEL } from "@/features/play/lib/phase";
 import { useWakeLock } from "@/hooks/common/useWakeLock";
 import { useFullscreen } from "@/hooks/common/useFullscreen";
+import { getClass } from "@/data/classes";
+import { maxHp, maxSanity, isSheetCard } from "@/lib/character";
 import { sheetVitals, cardClassName } from "@/features/hunter/lib/papersheet";
 import type { HunterCard } from "@/types";
 import { CombatBoard } from "./CombatBoard";
 
-/** Chrome-less table board. Character numbers come only from recorded sheet
- * fields; this projection never calculates missing rules or writes data. */
+/** Chrome-less big-screen board for a TV/laptop at the table: the current phase
+ * + location, the live initiative board during combat, and every hunter's live
+ * vitals. Read-only — a projection of the live game; it never writes. */
 export function StatusPage() {
   usePlaySync();
   useCharactersSync();
   useWakeLock();
   const { isFullscreen, toggle, supported } = useFullscreen();
-  const campaign = useCampaignStore((state) => state.active);
-  const members = useCampaignStore((state) => state.members);
-  const games = useGameStore((state) => state.games);
-  const party = useCharactersStore((state) => state.party);
+  const campaign = useCampaignStore((s) => s.active);
+  const members = useCampaignStore((s) => s.members);
+  const games = useGameStore((s) => s.games);
+  const party = useCharactersStore((s) => s.party);
+
+  // Only a started game is "in play"; a queued lobby game shouldn't read as live.
   const game = currentGame(games, campaign?.id ?? null);
   const liveGame = game && game.status === "active" ? game : null;
   useCombatSync(liveGame?.id ?? null, true);
-  const combatants = useCombatStore((state) => state.combatants);
-  const inCombat = Boolean(liveGame?.combat?.active && combatants.length > 0);
+  const combatants = useCombatStore((s) => s.combatants);
+  const inCombat = !!liveGame?.combat?.active && combatants.length > 0;
+  // A named hunter belongs on the board — sheet-made hunters have classId "".
   const hunters = members
-    .map((member) => party.find((card) => card.id === member.characterId))
-    .filter((card): card is HunterCard => Boolean(card?.name));
+    .map((m) => party.find((c) => c.id === m.characterId))
+    .filter((c): c is HunterCard => !!c && !!c.name);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg)", color: "var(--ink)", padding: "clamp(16px, 3vw, 40px)" }}>
       <div className="row between" style={{ alignItems: "flex-start", marginBottom: 24, gap: 16 }}>
         <div style={{ minWidth: 0 }}>
           <p className="eyebrow">{campaign?.name ?? "Catacombs & Starspawns"}</p>
-          <h1 style={{ margin: 0, fontSize: "clamp(2rem, 6vw, 4rem)", lineHeight: 1.05 }}>
-            {inCombat ? "Combat" : liveGame ? "Session in progress" : "Between hunts"}
+          <h1 style={{ fontSize: "clamp(2rem, 6vw, 4rem)", margin: 0, lineHeight: 1.05 }}>
+            {liveGame ? PHASE_LABEL[liveGame.phase] : "Between hunts"}
           </h1>
+          {liveGame && (
+            <span className="chip" style={{ marginTop: 10, fontSize: "1rem" }}>
+              {LOCATION_LABEL[liveGame.location ?? "wild"]}
+            </span>
+          )}
         </div>
         <div className="row" style={{ gap: 10, flex: "none" }}>
-          {supported && <button className="btn btn-ghost" style={{ width: "auto" }} onClick={toggle}>{isFullscreen ? "Exit fullscreen" : "⛶ Fullscreen"}</button>}
+          {supported && (
+            <button className="btn btn-ghost" style={{ width: "auto" }} onClick={toggle}>
+              {isFullscreen ? "Exit fullscreen" : "⛶ Fullscreen"}
+            </button>
+          )}
           <Link className="btn btn-ghost" style={{ width: "auto" }} to="/">Menu</Link>
         </div>
       </div>
@@ -53,9 +69,18 @@ export function StatusPage() {
         <p className="muted" style={{ fontSize: "1.2rem" }}>No hunters in this campaign yet.</p>
       ) : (
         <>
-          {inCombat && <p className="eyebrow" style={{ marginBottom: 12, fontSize: "1.05rem" }}>Party</p>}
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))", gap: 16, alignItems: "start" }}>
-            {hunters.map((card) => <VitalsCard key={card.id} card={card} />)}
+          {inCombat && <p className="eyebrow" style={{ fontSize: "1.05rem", marginBottom: 12 }}>Party</p>}
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fill, minmax(min(100%, 320px), 1fr))",
+              gap: 16,
+              alignItems: "start",
+            }}
+          >
+            {hunters.map((c) => (
+              <VitalsCard key={c.id} card={c} />
+            ))}
           </div>
         </>
       )}
@@ -63,48 +88,61 @@ export function StatusPage() {
   );
 }
 
-function recordedSheetInt(card: HunterCard, field: string, fallback?: number): number | null {
-  const value = card.sheet?.[field];
-  if (typeof value === "string") {
-    const parsed = Number.parseInt(value.trim(), 10);
-    if (Number.isFinite(parsed)) return parsed;
-  }
-  return typeof fallback === "number" ? fallback : null;
-}
-
 function VitalsCard({ card }: { card: HunterCard }) {
-  const vitals = sheetVitals(card.sheet);
-  const hp = vitals.hpCur ?? card.currentHp ?? null;
-  const sanity = vitals.sanityCur ?? card.sanity ?? null;
-  const fallen = hp !== null && hp <= 0;
-  const transform = recordedSheetInt(card, "transformation", card.transformationLevel);
-  const className = cardClassName(card);
+  // Sheet hunters: vitals parse from the paper sheet's free-text boxes (null
+  // when blank/unparseable — then the bar is skipped, never shown as 0/0).
+  const sheet = isSheetCard(card);
+  const v = sheetVitals(card.sheet);
+  const klass = sheet ? undefined : getClass(card.classId);
+  const hpMax = sheet ? v.hpMax : klass ? maxHp(klass, card.abilities, card.level) : 0;
+  const sanMax = sheet ? v.sanityMax : klass ? maxSanity(klass, card.abilities, card.level) : 0;
+  const hp = sheet ? v.hpCur : Math.min(hpMax ?? 0, card.currentHp ?? hpMax ?? 0);
+  const san = sheet ? v.sanityCur : Math.min(sanMax ?? 0, card.sanity ?? sanMax ?? 0);
+  const dead = card.deathPending || (hp != null && hp <= 0);
+  const transform = card.transformationLevel ?? 0;
+  const cls = cardClassName(card);
 
   return (
-    <div className="card" style={{ marginTop: 0, opacity: fallen ? .55 : 1, borderColor: fallen ? "var(--blood-bright)" : undefined }}>
+    <div className="card" style={{ marginTop: 0, opacity: dead ? 0.55 : 1, borderColor: dead ? "var(--blood-bright)" : undefined }}>
       <div className="row between" style={{ marginBottom: 10, gap: 8 }}>
         <div style={{ minWidth: 0 }}>
-          <div style={{ overflowWrap: "anywhere", fontFamily: "var(--font-display)", fontSize: "1.5rem" }}>{card.name}</div>
-          <div className="faint" style={{ fontSize: ".9rem" }}>{className ? `${className} · Lvl ${card.level}` : `Lvl ${card.level}`}{fallen ? " · fallen" : ""}</div>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: "1.5rem", minWidth: 0, overflowWrap: "anywhere" }}>
+            {card.name}
+          </div>
+          <div className="faint" style={{ fontSize: "0.9rem" }}>
+            {cls ? `${cls} · Lvl ${card.level}` : "Hunter"}
+            {dead ? " · fallen" : ""}
+          </div>
         </div>
-        {transform !== null && transform > 0 && <span className="chip" style={{ flex: "none" }}>Transform {transform}</span>}
+        {transform > 0 && <span className="chip" style={{ flex: "none" }}>Transform {transform}</span>}
       </div>
-      {hp !== null && vitals.hpMax !== null ? <Bar label="HP" value={hp} max={vitals.hpMax} color="var(--blood-bright)" /> : hp !== null ? <RecordedValue label="HP" value={hp} /> : <p className="faint" style={{ margin: "8px 0 0" }}>Vitals are blank on the character sheet.</p>}
-      {sanity !== null && vitals.sanityMax !== null ? <Bar label="Sanity" value={sanity} max={vitals.sanityMax} color="#7c5cff" /> : sanity !== null ? <RecordedValue label="Sanity" value={sanity} /> : null}
+      {hp != null && hpMax != null ? (
+        <Bar label="HP" value={hp} max={hpMax} color="var(--blood-bright)" />
+      ) : (
+        <p className="faint" style={{ margin: "8px 0 0" }}>Vitals tracked on the shared character sheet.</p>
+      )}
+      {san != null && sanMax != null && (
+        <Bar label="Sanity" value={san} max={sanMax} color="#7c5cff" sub={`Madness ${Math.max(0, sanMax - san)}`} />
+      )}
     </div>
   );
 }
 
-function Bar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
-  const percent = max > 0 ? Math.round((value / max) * 100) : 0;
+function Bar({ label, value, max, color, sub }: { label: string; value: number; max: number; color: string; sub?: string }) {
+  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
   return (
     <div style={{ marginTop: 8 }}>
-      <div className="row between" style={{ marginBottom: 4 }}><span style={{ fontWeight: 600 }}>{label}</span><span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem" }}>{value}<span className="faint" style={{ fontSize: ".85rem" }}> / {max}</span></span></div>
-      <div style={{ height: 10, overflow: "hidden", borderRadius: 6, background: "var(--bg)" }}><div style={{ width: `${Math.max(0, Math.min(100, percent))}%`, height: "100%", background: color }} /></div>
+      <div className="row between" style={{ marginBottom: 4 }}>
+        <span style={{ fontWeight: 600 }}>
+          {label} {sub && <span className="faint" style={{ fontSize: "0.85rem" }}>{sub}</span>}
+        </span>
+        <span style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem" }}>
+          {value}<span className="faint" style={{ fontSize: "0.85rem" }}> / {max}</span>
+        </span>
+      </div>
+      <div style={{ height: 10, borderRadius: 6, background: "var(--bg)", overflow: "hidden" }}>
+        <div style={{ width: `${pct}%`, height: "100%", background: color }} />
+      </div>
     </div>
   );
-}
-
-function RecordedValue({ label, value }: { label: string; value: number }) {
-  return <div className="row between" style={{ marginTop: 10 }}><span>{label}</span><strong style={{ fontFamily: "var(--font-display)", fontSize: "1.3rem" }}>{value}</strong></div>;
 }

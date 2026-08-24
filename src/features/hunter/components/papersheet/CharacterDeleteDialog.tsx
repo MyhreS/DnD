@@ -42,7 +42,7 @@ export function CharacterDeleteDialog({
       >
         <h2 id="character-delete-title">Delete character?</h2>
         <p id="character-delete-description">
-          <strong>{displayName}</strong> will disappear from your hunter list and move to the recovery archive.
+          <strong>{displayName}</strong> will disappear from your hunter list. The DM can recover the character from the archive until it is cleared.
         </p>
         <label htmlFor="character-delete-confirmation">
           Type <strong>{deletePhrase}</strong> to confirm

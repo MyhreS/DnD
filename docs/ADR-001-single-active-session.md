@@ -14,12 +14,12 @@ Functions backed by Firestore transactions. A function reserves the DM and all
 players together or changes nothing. New client-created Game documents are
 denied by Firestore rules.
 
-An ended Game document and its remaining combatants are retained as read-only
-history. Finishing releases every seat; discarding is limited to an unstarted
-lobby and removes it rather than creating history. The DM may adjust attendance
-during active exploration, but not during a live battle; `attendeeRoster` keeps
-the full session attendance record. Removing a combatant removes only that
-battle record and never deletes the underlying Hunter or enemy template.
+An ended Game document and its combatants are retained as read-only history.
+Finishing releases every seat; discarding is limited to an unstarted lobby and
+removes it rather than creating history. The roster locks when play starts so
+the saved participant list remains an accurate attendance record. Enemies can
+be removed while preparing the lobby, but not after play starts; fought enemies
+therefore remain in the saved encounter history.
 
 ## Consequences
 

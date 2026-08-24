@@ -1,7 +1,8 @@
 import type { HunterCard, SheetData } from "@/types";
 
-/** Build one Firestore update map for a group of manual sheet edits plus the
- * small card mirrors used by lists and rosters. */
+/** Build the single Firestore update map used for a rules decision and every
+ * visible sheet field derived from it. Keeping this pure makes the cross-device
+ * atomicity contract directly testable without Firebase credentials. */
 export function characterSheetUpdate(
   sheet: SheetData,
   keys: string[],

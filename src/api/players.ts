@@ -3,19 +3,24 @@ import {
   doc,
   setDoc,
   updateDoc,
+  deleteDoc,
   deleteField,
+  getDocs,
   onSnapshot,
   query,
   where,
   serverTimestamp,
+  runTransaction,
   writeBatch,
+  type Timestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { normalizeCard } from "@/lib/character";
-import { isPreviewActive, previewCard, previewPartyCards } from "@/dev/preview";
+import { isPreviewActive, previewCard, previewPartyCards, previewArchive } from "@/dev/preview";
 import { isTestEmail } from "@/config";
-import type { HunterCard, SheetData } from "@/types";
+import type { ArchivedCharacter, HunterCard, SheetData } from "@/types";
 import { characterSheetUpdate } from "@/features/hunter/lib/sheetPersistence";
+import { insightAwardPatch } from "@/features/hunter/lib/insightAward";
 
 // Characters live in /characters/{id} — a user (ownerUid) can own several.
 const charsCol = collection(db, "characters");
@@ -23,15 +28,22 @@ const archiveCol = collection(db, "archive");
 
 const realCards = (cards: HunterCard[]) => cards.filter((c) => !isTestEmail(c.ownerEmail));
 
+function ms(v: unknown): number {
+  if (typeof v === "number") return v;
+  if (v && typeof (v as Timestamp).toMillis === "function") return (v as Timestamp).toMillis();
+  return Date.now();
+}
+
 export async function saveCharacter(card: HunterCard): Promise<void> {
   await setDoc(doc(charsCol, card.id), card, { merge: true });
 }
+
 /** Merge a partial update into a character (owner edits own; DM edits any). */
 export async function patchCharacter(id: string, partial: Partial<HunterCard>): Promise<void> {
   if (isPreviewActive()) {
     // Preview mode has no Firestore session — mock-apply the patch to the
     // in-memory store (like playerStore.save / charactersStore.dmPatch do)
-    // so sheet edits respond in preview instead of erroring to the console.
+    // so Wear/Equip/− respond in preview instead of erroring to the console.
     // Dynamic import: playerStore statically imports this module.
     const { usePlayerStore } = await import("@/features/hunter/store/playerStore");
     usePlayerStore.setState((s) => ({
@@ -59,6 +71,26 @@ export async function patchCharacterSheet(
   if (isPreviewActive()) return patchCharacter(id, { ...cardPatch, ...mirror, sheet });
   const update = characterSheetUpdate(sheet, keys, mirror, cardPatch, deleteField(), Date.now());
   await updateDoc(doc(charsCol, id), update);
+}
+
+/** Atomically award Insight and immediately apply every earned level. Insight is
+ * a lifetime total, so levelling never spends or resets it. */
+export async function awardInsight(id: string, delta: number): Promise<void> {
+  if (isPreviewActive()) {
+    const { usePlayerStore } = await import("@/features/hunter/store/playerStore");
+    const card = usePlayerStore.getState().characters.find((entry) => entry.id === id);
+    if (!card) return;
+    await patchCharacter(id, insightAwardPatch(card, delta));
+    return;
+  }
+
+  const ref = doc(charsCol, id);
+  await runTransaction(db, async (transaction) => {
+    const snapshot = await transaction.get(ref);
+    if (!snapshot.exists()) throw new Error("Character no longer exists.");
+    const card = normalizeCard(snapshot.data() as HunterCard);
+    transaction.update(ref, insightAwardPatch(card, delta));
+  });
 }
 
 /** Live-subscribe to all characters a user owns. */
@@ -108,10 +140,11 @@ export function subscribeAllCharacters(
   );
 }
 
-// --- Recoverable character deletion record ---
+// --- Archive (dead/deleted, recoverable until the game ends) ---
 
 export async function archiveCharacter(
   card: HunterCard,
+  reason: ArchivedCharacter["reason"],
   gameId: string | null,
 ): Promise<void> {
   const archiveRef = doc(archiveCol);
@@ -119,10 +152,51 @@ export async function archiveCharacter(
   batch.set(archiveRef, {
     originalUid: card.ownerUid,
     gameId: gameId ?? null,
-    reason: "deleted",
+    reason,
     archivedAt: serverTimestamp(),
     card,
   });
   batch.delete(doc(charsCol, card.id));
   await batch.commit();
+}
+
+export async function recoverCharacter(a: ArchivedCharacter): Promise<void> {
+  await setDoc(doc(charsCol, a.card.id), { ...a.card, deathPending: false });
+  await deleteDoc(doc(archiveCol, a.id));
+}
+
+export async function purgeArchive(): Promise<void> {
+  const snap = await getDocs(archiveCol);
+  await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));
+}
+
+export function subscribeArchive(
+  cb: (chars: ArchivedCharacter[]) => void,
+  onError?: (err: unknown) => void,
+): () => void {
+  if (isPreviewActive()) {
+    cb(previewArchive());
+    return () => {};
+  }
+  return onSnapshot(
+    archiveCol,
+    (snap) =>
+      cb(
+        snap.docs.map((d) => {
+          const data = d.data();
+          return {
+            id: d.id,
+            originalUid: (data.originalUid as string) ?? "",
+            gameId: (data.gameId as string | null) ?? null,
+            reason: (data.reason as ArchivedCharacter["reason"]) ?? "deleted",
+            archivedAt: ms(data.archivedAt),
+            card: normalizeCard(data.card as HunterCard),
+          } satisfies ArchivedCharacter;
+        }),
+      ),
+    (err) => {
+      console.error("Archive subscription failed", err);
+      onError?.(err);
+    },
+  );
 }

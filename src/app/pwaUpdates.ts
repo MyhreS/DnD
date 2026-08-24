@@ -66,10 +66,9 @@ export function setupPwaUpdates(): void {
   // update instead of an iOS PWA's manifest start URL.
   restoreLocationAfterUpdate();
 
-  // One-off cleanup for an earlier build's retired 26MB PDF cache,
+  // One-off cleanup: an earlier build runtime-cached the 26MB handbook PDF,
   // which can exhaust the small iOS PWA storage quota and white-screen the app
   // on relaunch. We no longer cache it; drop that orphaned cache to free space.
-  // Clear the retired document cache once; current source PDFs are never cached.
   if ("caches" in window) caches.delete("handbook-pdf").catch(() => {});
   if (!("serviceWorker" in navigator)) return;
 

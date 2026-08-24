@@ -4,7 +4,7 @@
     "title": "Catacombs & Starspawns source master",
     "updatedAt": "2026-08-24",
     "description": "Structured extraction of the four game-maker-maintained documents supplied on 2026-08-24.",
-    "replacementPolicy": "These four documents completely replace every earlier game document and derived rule catalog. Material not present in these sources is not an app rule and must not be inferred from an older source.",
+    "replacementPolicy": "These four documents replace the earlier game-document library. When they define a concept already represented by the app, the current document wins and the old version must not be duplicated. Their limited scope does not by itself remove established app screens, saved-character compatibility, or game workflows; those change only when the game maker explicitly changes them.",
     "documentCount": 4
   },
   "sources": [

@@ -43,6 +43,7 @@ function playerProjection(combatant: Omit<Combatant, "id"> | Combatant): Documen
     note: revealStats ? combatant.note ?? null : null,
     revealHp: combatant.revealHp === true,
     revealStats: combatant.revealStats === true,
+    isWarden: combatant.isWarden === true,
     createdAt: combatant.createdAt || serverTimestamp(),
   };
 }
@@ -74,6 +75,7 @@ function fromDoc(id: string, data: DocumentData): Combatant {
       revealHp: data.baseStats.revealHp === true,
       revealStats: data.baseStats.revealStats === true,
     } : null,
+    isWarden: data.isWarden === true,
     createdAt: ms(data.createdAt),
   };
 }
