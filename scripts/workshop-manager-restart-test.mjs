@@ -13,8 +13,9 @@ const pendingTicket = db.doc("workshopTickets/restart-pending-test");
 const activeCheckpoint = db.doc("workshopAgentCheckpoints/restart-checkpoint-test");
 const pendingCheckpoint = db.doc("workshopAgentCheckpoints/restart-pending-test");
 const descendantPidPath = join(tmpdir(), `dnd-workshop-restart-descendant-${process.pid}.txt`);
+const stopRequestPath = join(tmpdir(), `dnd-workshop-stop-request-${process.pid}`);
 
-function startManager({ once = false, interruptAfterMs = 0 } = {}) {
+function startManager({ once = false } = {}) {
   const args = ["scripts/workshop-manager.ts"];
   if (once) args.push("--once");
   args.push("--fixture=restart_checkpoint");
@@ -24,7 +25,7 @@ function startManager({ once = false, interruptAfterMs = 0 } = {}) {
       ...process.env,
       WORKSHOP_FIXTURE_MAX_CONCURRENT: "1",
       WORKSHOP_FIXTURE_DESCENDANT_PID_PATH: descendantPidPath,
-      ...(interruptAfterMs ? { WORKSHOP_FIXTURE_INTERRUPT_AFTER_MS: String(interruptAfterMs) } : {}),
+      WORKSHOP_STOP_REQUEST_PATH: stopRequestPath,
     },
   });
   let output = "";
@@ -80,14 +81,20 @@ async function createTicket(ref, index) {
 let interruptedManager;
 let resumedManager;
 try {
+  await rm(stopRequestPath, { force: true });
   await Promise.all([createTicket(activeTicket, 0), createTicket(pendingTicket, 1)]);
-  interruptedManager = startManager({ interruptAfterMs: 2_000 });
+  interruptedManager = startManager();
   await eventually(async () => {
     const [ticket, checkpoint] = await Promise.all([activeTicket.get(), activeCheckpoint.get()]);
     return ticket.data()?.status === "doing_now"
       && checkpoint.exists
       && typeof checkpoint.data()?.sessionId === "string";
   }, "Initial durable checkpoint");
+  const stopRequest = spawnSync("bun", ["scripts/workshop-manager.ts", "--request-stop"], {
+    encoding: "utf8",
+    env: { ...process.env, WORKSHOP_STOP_REQUEST_PATH: stopRequestPath },
+  });
+  if (stopRequest.status !== 0) throw new Error(`Could not request graceful stop.\n${stopRequest.stdout}\n${stopRequest.stderr}`);
   await waitForExit(interruptedManager, "Interrupted manager");
 
   const descendantPid = Number(await readFile(descendantPidPath, "utf8"));
@@ -160,5 +167,6 @@ try {
     db.doc("workshopAgent/state").delete(),
     db.doc("workshopAgent/config").delete(),
     rm(descendantPidPath, { force: true }),
+    rm(stopRequestPath, { force: true }),
   ]);
 }
