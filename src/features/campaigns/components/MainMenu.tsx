@@ -29,9 +29,9 @@ export function MainMenu() {
 
       <p className="eyebrow" style={{ marginTop: 22, marginBottom: 8 }}>Find your way</p>
       <div className="stack" style={{ gap: 10 }}>
-        <GuideCard to="/character" title="Hunters" body="Forge and manage hunters in two focused app views — a detailed sheet and a one-page play HUD." />
+        <GuideCard to="/character" title="Hunters" body="Forge and manage hunters with guided creation and the character sheet." />
         <GuideCard to="/game" title="Games" body="Open a current game or revisit one you played before." />
-        <GuideCard to="/codex" title="Codex" body="Search the current Deepcaller book, Whispers, character sheet, and Hidden Condition handout—with the source shown for every answer." />
+        <GuideCard to="/codex" title="Codex" body="Search the current Deepcaller book, Whispers, and printable character sheet—with the source shown for every answer." />
         <GuideCard to="/profile" title="Profile" body="Your account and settings — tap your initial in the corner." />
       </div>
 

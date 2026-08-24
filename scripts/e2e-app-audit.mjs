@@ -147,6 +147,13 @@ try {
     for (const route of privateRoutes) {
       await privatePage.goto(`${BASE}${route}?preview=user.player`, { waitUntil: "domcontentloaded" });
       await privatePage.getByText(privateExpected[route], { exact: route !== "/" }).first().waitFor();
+      if (route === "/profile") {
+        await privatePage.getByText("Appearance", { exact: true }).waitFor();
+        const profileCards = await privatePage.locator(".reading > .card > .eyebrow").allTextContents();
+        if (JSON.stringify(profileCards) !== JSON.stringify(["Your name", "Appearance", "App"])) {
+          errors.push(`${viewport.name} /profile: unexpected settings cards: ${JSON.stringify(profileCards)}`);
+        }
+      }
       await privatePage.evaluate(() => document.fonts.ready);
       await auditPage(privatePage, `${viewport.name} ${route}`, viewport.width <= 390);
     }
@@ -154,6 +161,7 @@ try {
       await privatePage.goto(`${BASE}/character?preview=user.player`, { waitUntil: "domcontentloaded" });
       await privatePage.getByRole("button", { name: /Open Eileen the Crow/ }).click();
       await privatePage.getByTestId("app-character-sheet").waitFor();
+      await privatePage.getByTestId("character-sheet").waitFor();
       await auditPage(privatePage, `${viewport.name} character sheet`, true);
     }
     await privateContext.close();

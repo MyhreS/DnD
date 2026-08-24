@@ -1,5 +1,5 @@
-// Reconciled from resources/master.json, Player's Handbook chapter 3.
-// Null feats are intentional where the source scan says "not legible".
+// Established app background catalog. The current four-document source set
+// does not redefine these records; do not attribute them to those PDFs.
 import type { Background } from "@/types";
 
 export const BACKGROUNDS: Background[] = [

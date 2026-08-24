@@ -27,7 +27,7 @@ Lower the friction of playing together:
 - Everyone knows **when** the next session is (and gets nudged to answer).
 - Everyone **builds their hunter** without wrestling a PDF — the maths is done
   for you.
-- Everyone can **read the current game documents** on their phone.
+- Everyone can **read the current player documents** on their phone.
 - The **Dungeon Master** can see who's ready and who needs a poke.
 
 ## What's in the first version
@@ -37,12 +37,13 @@ Lower the friction of playing together:
 | **Sessions** | The next session with a live countdown + upcoming dates. RSVP (in / maybe / can't). The DM can add & edit dates. |
 | **Hunter** | Build & save your hunter card — class, point-buy abilities, skills, armor → auto-calculated AC, HP, speed, saves. |
 | **Party** | See everyone's hunters. The DM gets a roster: who's made a character, who's RSVP'd, with one-tap email reminders. |
-| **Codex** | Search the current Deepcaller book, Whispers, character sheet, and Hidden Condition handout—with provenance for every result. |
+| **Codex** | Search the current Deepcaller book, Whispers, and printable character sheet—with provenance for every result. |
 
-The source library is generated from `resources/master.json` and contains
-exactly the four current game-maker documents. Existing app workflows and
-saved-character support are maintained separately; replacing source documents
-does not silently redesign the Hunter or game pages.
+The source library is generated from `resources/master.json`. The master tracks
+all four current game-maker documents, while the public player library exposes
+only its three player sources. Existing app workflows and saved-character
+support are maintained separately; replacing source documents does not
+silently redesign the Hunter or game pages.
 
 ### The six hunter classes
 

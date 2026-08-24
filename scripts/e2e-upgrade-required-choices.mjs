@@ -60,7 +60,6 @@ async function setAbilityScore(page, ability, target) {
 async function completeBruteCreation(browser, viewport, suffix) {
   const context = await browser.newContext({ viewport });
   await context.addInitScript(() => {
-    localStorage.setItem("cs-character-sheet-view", "hud");
     localStorage.setItem("cs-theme", "dark");
   });
   const page = await context.newPage();
@@ -75,7 +74,7 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.getByRole("button", { name: "Create hunter", exact: true }).click();
   const next = page.getByRole("button", { name: "Next", exact: true });
   await page.getByRole("heading", { name: "Create hunter", exact: true }).waitFor();
-  if (await page.getByTestId("view4-character-sheet").count()) {
+  if (await page.getByTestId("character-sheet").count()) {
     throw new Error("A blank character sheet appeared before guided creation finished");
   }
 
@@ -88,12 +87,12 @@ async function completeBruteCreation(browser, viewport, suffix) {
 
   await page.getByRole("heading", { name: "Choose class", exact: true }).waitFor();
   if (!await next.isDisabled()) throw new Error("A new hunter could skip the required class decision");
-  await page.locator(".v4-upgrade-select select").selectOption("brute");
+  await page.locator(".character-sheet-upgrade-select select").selectOption("brute");
   if (await next.isDisabled()) throw new Error("The class step stayed blocked after selecting Hunter Brute");
   await next.click();
 
   await page.getByRole("heading", { name: "Choose background", exact: true }).waitFor();
-  await page.locator(".v4-upgrade-select select").selectOption("noble");
+  await page.locator(".character-sheet-upgrade-select select").selectOption("noble");
   await next.click();
 
   await page.getByRole("heading", { name: "Set ability scores", exact: true }).waitFor();
@@ -102,7 +101,7 @@ async function completeBruteCreation(browser, viewport, suffix) {
   const maduhausuMethod = page.getByRole("button", { name: "Maduhausu 57 points", exact: true });
   if (await standardMethod.getAttribute("aria-pressed") !== "true") throw new Error("Standard point buy was not selected");
   await page.waitForTimeout(250);
-  await page.locator(".v4-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
+  await page.locator(".character-sheet-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
   await page.screenshot({ path: `screenshots/creation-abilities-start-${suffix}.png`, fullPage: true });
   await maduhausuMethod.click();
   if (await maduhausuMethod.getAttribute("aria-pressed") !== "true") throw new Error("Maduhausu point buy could not be selected");
@@ -113,7 +112,7 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.getByText("0 points left", { exact: true }).waitFor();
   if (await next.isDisabled()) throw new Error("The ability step stayed blocked after spending the full budget");
   await page.waitForTimeout(250);
-  await page.locator(".v4-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
+  await page.locator(".character-sheet-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
   await page.screenshot({ path: `screenshots/creation-abilities-${suffix}.png`, fullPage: true });
   await next.click();
 
@@ -141,13 +140,13 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.getByText("On a hit, the target has Disadvantage on its next attack", { exact: false }).waitFor();
   await page.getByText("DM-set", { exact: true }).waitFor();
   if (!await next.isDisabled()) throw new Error("Weapon Mastery could be skipped with three choices missing");
-  const masteryOverflow = await page.locator(".v4-upgrade-step").evaluate((element) => element.scrollWidth > element.clientWidth);
+  const masteryOverflow = await page.locator(".character-sheet-upgrade-step").evaluate((element) => element.scrollWidth > element.clientWidth);
   if (masteryOverflow) throw new Error(`Weapon Mastery guidance overflows the ${suffix} creation page`);
   await page.waitForTimeout(250);
   await page.screenshot({ path: `screenshots/upgrade-required-choices-${suffix}.png`, fullPage: true });
-  await page.locator(".v4-upgrade-step").evaluate((element) => { element.scrollTop = element.scrollHeight; });
+  await page.locator(".character-sheet-upgrade-step").evaluate((element) => { element.scrollTop = element.scrollHeight; });
   await page.screenshot({ path: `screenshots/weapon-mastery-bottom-${suffix}.png`, fullPage: true });
-  await page.locator(".v4-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
+  await page.locator(".character-sheet-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
   await page.getByLabel(/^Greatsword/).check();
   await page.getByLabel(/^Greataxe/).check();
   await page.getByLabel(/^Longsword/).check();
@@ -159,14 +158,14 @@ async function completeBruteCreation(browser, viewport, suffix) {
 
   await page.getByRole("heading", { name: "Fighting Style", exact: true }).waitFor();
   if (!await next.isDisabled()) throw new Error("The level-one Fighting Style choice was not required");
-  await page.locator(".v4-upgrade-select select").selectOption({ label: "Defense" });
+  await page.locator(".character-sheet-upgrade-select select").selectOption({ label: "Defense" });
   if (await next.isDisabled()) throw new Error("Fighting Style stayed blocked after choosing Defense");
   await next.click();
 
   await page.getByRole("heading", { name: "Armor & carrying", exact: true }).waitFor();
   await page.getByText("Carried weight", { exact: true }).waitFor();
   await page.getByText("Load effect", { exact: true }).waitFor();
-  const creationEquipmentSummary = page.locator(".v4-creation-equipment .v4-equipment-summary");
+  const creationEquipmentSummary = page.locator(".character-sheet-creation-equipment .character-sheet-equipment-summary");
   const creationSummaryPosition = await creationEquipmentSummary.evaluate((element) => getComputedStyle(element).position);
   if (creationSummaryPosition !== "static") {
     throw new Error(`The character-creation equipment summary still floats while scrolling: ${creationSummaryPosition}`);
@@ -175,10 +174,10 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.screenshot({ path: `screenshots/creation-armor-start-${suffix}.png`, fullPage: true });
   const creationLayer = page.locator('[data-page-id="create-hunter"]');
   await creationLayer.evaluate((element) => { element.dataset.mountMark = "preserved"; });
-  const mainArmor = page.locator(".v4-equip-main .v4-equipment-socket");
+  const mainArmor = page.locator(".character-sheet-equip-main .character-sheet-equipment-socket");
   await mainArmor.click();
   await page.getByRole("heading", { name: "Main armor", exact: true }).waitFor();
-  if (await page.locator(".v4-page-layer").count() !== 2) throw new Error("The equipment picker did not layer over its parent page");
+  if (await page.locator(".character-sheet-page-layer").count() !== 2) throw new Error("The equipment picker did not layer over its parent page");
   if (await creationLayer.getAttribute("aria-hidden") !== "true") throw new Error("The covered parent page stayed active");
   await page.getByRole("button", { name: "Back", exact: true }).click();
   await page.locator('[data-page-id^="equipment-picker-"]').evaluate((element) => {
@@ -190,7 +189,7 @@ async function completeBruteCreation(browser, viewport, suffix) {
   if (await creationLayer.getAttribute("data-mount-mark") !== "preserved") throw new Error("Returning from a nested page remounted its parent");
 
   await mainArmor.click();
-  await page.locator(".v4-slot-option-list > button").filter({ has: page.locator("strong", { hasText: /^Hunter Leather Vest$/ }) }).click();
+  await page.locator(".character-sheet-slot-option-list > button").filter({ has: page.locator("strong", { hasText: /^Hunter Leather Vest$/ }) }).click();
   await page.locator('[data-page-id^="equipment-picker-"]').waitFor({ state: "detached" });
   await page.getByRole("heading", { name: "Armor & carrying", exact: true }).waitFor();
   await page.getByText("Hunter Leather Vest", { exact: true }).first().waitFor();
@@ -208,25 +207,25 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.waitForTimeout(250);
   await page.screenshot({ path: `screenshots/creation-review-${suffix}.png`, fullPage: true });
   await save.click();
-  const sheet = page.getByTestId("view4-character-sheet");
+  const sheet = page.getByTestId("character-sheet");
   await sheet.waitFor();
 
-  await sheet.locator(".v4-identity-profile").click();
+  await sheet.locator(".character-sheet-identity-profile").click();
   await page.getByRole("heading", { name: "Hunter & build", exact: true }).waitFor();
-  if (await page.locator(".v4-hunter-build-grid select").count()) throw new Error("Creation selectors remained inside the completed character sheet");
-  await page.locator(".v4-hunter-build-grid").getByText("Hunter Brute", { exact: true }).waitFor();
-  const hunterBuildLayout = await page.locator(".v4-hunter-build").evaluate((element) => {
+  if (await page.locator(".character-sheet-hunter-build-grid select").count()) throw new Error("Creation selectors remained inside the completed character sheet");
+  await page.locator(".character-sheet-hunter-build-grid").getByText("Hunter Brute", { exact: true }).waitFor();
+  const hunterBuildLayout = await page.locator(".character-sheet-hunter-build").evaluate((element) => {
     function rect(target) {
       const bounds = target.getBoundingClientRect();
       return { left: bounds.left, top: bounds.top, right: bounds.right, bottom: bounds.bottom, width: bounds.width };
     }
-    const name = element.querySelector(".v4-hunter-name");
-    const nameInput = element.querySelector(".v4-hunter-name input");
-    const fields = [...element.querySelectorAll(".v4-hunter-build-value")];
+    const name = element.querySelector(".character-sheet-hunter-name");
+    const nameInput = element.querySelector(".character-sheet-hunter-name input");
+    const fields = [...element.querySelectorAll(".character-sheet-hunter-build-value")];
     const fieldValues = fields.map((field) => field.querySelector("strong"));
-    const panels = [...element.querySelectorAll(".v4-hunter-feats-tools > .appsheet-panel")];
-    const referenceLists = [...element.querySelectorAll(".v4-reference-list")];
-    const articles = [...element.querySelectorAll(".v4-reference-list article")];
+    const panels = [...element.querySelectorAll(".character-sheet-hunter-feats-tools > .appsheet-panel")];
+    const referenceLists = [...element.querySelectorAll(".character-sheet-reference-list")];
+    const articles = [...element.querySelectorAll(".character-sheet-reference-list article")];
     if (!name || !nameInput || fieldValues.some((value) => !value)) throw new Error("Hunter build fields are incomplete");
     return {
       width: element.getBoundingClientRect().width,
@@ -262,15 +261,15 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.waitForTimeout(250);
   await page.screenshot({ path: `screenshots/creation-complete-${suffix}.png`, fullPage: true });
 
-  await sheet.locator(".v4-identity-progress button").filter({ hasText: "Insight" }).click();
+  await sheet.locator(".character-sheet-identity-progress button").filter({ hasText: "Insight" }).click();
   await page.getByRole("heading", { name: "Insight & level", exact: true }).waitFor();
   for (let award = 0; award < 6; award += 1) {
     await page.getByRole("button", { name: "Increase Insight", exact: true }).click();
   }
-  const progressPage = page.locator(".v4-progress-page");
+  const progressPage = page.locator(".character-sheet-progress-page");
   const progressLayout = await progressPage.evaluate((element) => {
-    const resource = element.querySelector(".v4-resource")?.getBoundingClientRect();
-    const upgrade = element.querySelector(".v4-upgrade-launch")?.getBoundingClientRect();
+    const resource = element.querySelector(".character-sheet-resource")?.getBoundingClientRect();
+    const upgrade = element.querySelector(".character-sheet-upgrade-launch")?.getBoundingClientRect();
     if (!resource || !upgrade) throw new Error("Insight controls or upgrade action are missing");
     return {
       resource: { left: resource.left, right: resource.right, top: resource.top, bottom: resource.bottom, width: resource.width },
@@ -292,8 +291,8 @@ async function completeBruteCreation(browser, viewport, suffix) {
     throw new Error(`Mobile upgrade action layout changed: ${JSON.stringify(progressLayout)}`);
   }
   await page.screenshot({ path: `screenshots/insight-upgrade-${suffix}.png`, fullPage: true, animations: "disabled" });
-  await progressPage.locator(".v4-upgrade-launch").click();
-  await page.locator('.v4-page-stack[data-panel="upgrade"]').waitFor();
+  await progressPage.locator(".character-sheet-upgrade-launch").click();
+  await page.locator('.character-sheet-page-stack[data-panel="upgrade"]').waitFor();
   await page.getByRole("button", { name: "Back", exact: true }).click();
   await progressPage.waitFor();
 
@@ -304,7 +303,6 @@ async function completeBruteCreation(browser, viewport, suffix) {
 async function inspectExpertiseGuidance(browser, viewport, suffix) {
   const context = await browser.newContext({ viewport });
   await context.addInitScript(() => {
-    localStorage.setItem("cs-character-sheet-view", "hud");
     localStorage.setItem("cs-theme", "dark");
   });
   const page = await context.newPage();
@@ -320,9 +318,9 @@ async function inspectExpertiseGuidance(browser, viewport, suffix) {
 
   await page.getByLabel("Hunter name", { exact: true }).fill(`Stalker ${suffix}`);
   await next.click();
-  await page.locator(".v4-upgrade-select select").selectOption("stalker");
+  await page.locator(".character-sheet-upgrade-select select").selectOption("stalker");
   await next.click();
-  await page.locator(".v4-upgrade-select select").selectOption("criminal");
+  await page.locator(".character-sheet-upgrade-select select").selectOption("criminal");
   await next.click();
   for (const [ability, score] of [["Intelligence", "8"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "15"], ["Dexterity", "15"], ["Constitution", "15"]]) {
     await setAbilityScore(page, ability, score);
@@ -349,7 +347,7 @@ async function inspectExpertiseGuidance(browser, viewport, suffix) {
   await page.getByLabel("Stealth", { exact: true }).check();
   await page.getByLabel("Perception", { exact: true }).check();
   if (await next.isDisabled()) throw new Error("Expertise stayed blocked after the required choices");
-  const horizontalOverflow = await page.locator(".v4-upgrade-step").evaluate((element) => element.scrollWidth > element.clientWidth);
+  const horizontalOverflow = await page.locator(".character-sheet-upgrade-step").evaluate((element) => element.scrollWidth > element.clientWidth);
   if (horizontalOverflow) throw new Error(`Expertise guidance overflows the ${suffix} creation page`);
   await page.waitForTimeout(100);
   await page.screenshot({ path: `screenshots/expertise-guidance-selected-${suffix}.png`, fullPage: true });

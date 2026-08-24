@@ -33,11 +33,11 @@ export interface CharacterAutomationResult {
 }
 
 const SOURCE = {
-  class: "Class board and Player's Handbook class progression",
-  creation: "Player's Handbook, Chapter 1: Creating a Character",
-  background: "Player's Handbook, Chapter 3: Backgrounds",
-  armor: "Player's Handbook, Chapter 1 Step 4: Armor",
-  equipment: "Player's Handbook, Chapter 5: Equipment",
+  class: "Established Hunter class catalog (outside the current four-document source set)",
+  creation: "Established Hunter character rules (outside the current four-document source set)",
+  background: "Established Hunter background catalog (outside the current four-document source set)",
+  armor: "Established Hunter armor catalog (outside the current four-document source set)",
+  equipment: "Established Hunter equipment catalog (outside the current four-document source set)",
 };
 
 function getSubclass(classId: string, subclassId: string | null | undefined) {
@@ -162,7 +162,7 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     put(fields, reasons, "sanityMax", String(sanity), `${klass.name} base Sanity + Wisdom modifier${klass.id === "deepcaller" ? " + Fracturing Mind" : ""}`);
     put(fields, reasons, "sanityCur", String(card.sanity ?? sanity), "Current Sanity, defaulting to calculated maximum");
     put(fields, reasons, "hdMax", String(level), `${klass.title}: one Hit Die per level`);
-    put(fields, reasons, "hdCur", String(level), "Starts with all Hit Dice available");
+    put(fields, reasons, "hdCur", String(Math.max(0, Math.min(level, intField(card.sheet, "hdCur", level)))), "Current available Hit Dice, defaulting to the full level allowance");
     if (klass.caster) {
       const progression = klass.progression.find((row) => row.level === level);
       const strainMax = Number(progression?.extras.Strains ?? 0);

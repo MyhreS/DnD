@@ -14,7 +14,6 @@ const MAX_RESULTS = 100;
 const DOCUMENT_SOURCE_ORDER = [
   "book-of-the-deepcaller",
   "character-sheet",
-  "hidden-condition-sheet",
   "whispers",
 ];
 const DOCUMENT_SOURCE_RANK = new Map(DOCUMENT_SOURCE_ORDER.map((id, index) => [id, index]));
@@ -30,7 +29,7 @@ export function CodexDocumentsPage() {
       <header className="codex-heading codex-documents-heading">
         <p className="eyebrow">Documents</p>
         <h1>Source library</h1>
-        <p>The four current documents supplied by the game maker. Each remains separate so its origin is always clear.</p>
+        <p>The three current player documents supplied by the game maker. Each remains separate so its origin is always clear.</p>
       </header>
       <SourceLibrary />
     </div>
@@ -85,7 +84,7 @@ export function CodexPage() {
       <header className="codex-heading">
         <p className="eyebrow">One searchable library</p>
         <h1>Codex</h1>
-        <p>Deepcaller Rites, Whispers, the current character sheet, and the Hidden Condition handout—together, with every source kept visible.</p>
+        <p>Deepcaller Rites, Whispers, and the current printable character sheet—together, with every player source kept visible.</p>
       </header>
 
       <div className="codex-search" role="search">

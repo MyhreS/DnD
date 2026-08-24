@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { HunterCard, SheetData } from "@/types";
+import { minimumTrackedSanity } from "@/lib/character";
 import { automationFor } from "../../lib/characterAutomation";
 import { levelAdjustedPool } from "../../lib/levelUpVitals";
 import type { AppSheetModel } from "./appSheetShared";
@@ -76,7 +77,9 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
 
   function stageSanity(sanity: number) {
     const max = optionalNumber(previewResult.fields.sanityMax);
-    setPatch((current) => keepDifferences({ ...current, sanity: Math.max(0, Math.min(max ?? Number.MAX_SAFE_INTEGER, sanity)) }));
+    const upper = max ?? Number.MAX_SAFE_INTEGER;
+    const lower = max == null ? -Number.MAX_SAFE_INTEGER : minimumTrackedSanity(max);
+    setPatch((current) => keepDifferences({ ...current, sanity: Math.max(lower, Math.min(upper, sanity)) }));
   }
 
   function stageTransformation(level: number) {

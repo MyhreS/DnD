@@ -29,7 +29,7 @@ const StatusPage = lazy(() =>
   import("@/features/status/components/StatusPage").then((m) => ({ default: m.StatusPage })),
 );
 /** Preserve useful text from old bookmarks without reviving removed source
- * identifiers. The four current documents are the only Codex sources. */
+ * identifiers. Only current player documents are exposed as Codex sources. */
 function LegacyCodexRedirect() {
   const { pathname, search } = useLocation();
   const previous = new URLSearchParams(search);

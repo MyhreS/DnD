@@ -84,7 +84,7 @@ export function CharacterPage() {
         <div className="center" style={{ maxWidth: 320 }}>
           <h1 style={{ marginBottom: 6 }}>No hunter yet</h1>
           <p className="muted">
-            Build and play your hunter in the guided app character views. Your
+            Build and play your hunter with guided creation and the character sheet. Your
             choices and resources are saved automatically.
           </p>
         </div>

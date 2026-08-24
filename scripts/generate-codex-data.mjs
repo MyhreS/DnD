@@ -63,7 +63,12 @@ for (const source of master.sources) {
 
 rmSync(PUBLIC_DOCUMENT_ROOT, { recursive: true, force: true });
 
-const sources = master.sources.map((source) => {
+const playerSources = master.sources.filter((source) => source.audience === "player");
+if (playerSources.length !== master.meta.playerDocumentCount) {
+  throw new Error(`Expected ${master.meta.playerDocumentCount} player documents, got ${playerSources.length}.`);
+}
+
+const sources = playerSources.map((source) => {
   const publicPath = publicDocumentPath(source);
   const destinationDirectory = join(PUBLIC_DOCUMENT_ROOT, source.id);
   mkdirSync(destinationDirectory, { recursive: true });
@@ -171,25 +176,14 @@ add({
   sourcePages: [1, 2],
 });
 
-add({
-  id: "hidden-condition-sheet",
-  term: "Hidden Condition Sheet",
-  aliases: ["hidden condition", "blank handout"],
-  paragraphs: [master.hiddenConditionSheet.description],
-  group: "Handouts",
-  sourceId: master.hiddenConditionSheet.sourceId,
-  locator: "Blank sheet",
-  sourcePages: [1],
-});
-
-for (const missing of master.referencedButNotSupplied) {
+for (const missing of master.referencedButNotSupplied.filter((entry) => entry.audience === "player")) {
   add({
     id: `not-supplied-${slug(missing.name)}`,
     term: missing.name,
     aliases: [missing.referencedBy],
     paragraphs: [`Referenced by ${missing.referencedBy}, but not included in the supplied source set. ${missing.policy}`],
     group: "Source Notes",
-    sourceId: master.rites.sourceId,
+    sourceId: missing.sourceId,
     locator: missing.referencedBy,
     warning: "Referenced material is not supplied; the app does not invent it.",
   });
@@ -205,4 +199,4 @@ const output = {
   conditionsNamedByCurrentSources: master.conditionsNamedByCurrentSources,
 };
 writeFileSync(OUTPUT_PATH, `${JSON.stringify(output, null, 2)}\n`);
-console.log(`Generated ${OUTPUT_PATH}: ${entries.length} entries and exactly ${sources.length} PDF downloads.`);
+console.log(`Generated ${OUTPUT_PATH}: ${entries.length} player entries and ${sources.length} public PDF downloads from ${master.sources.length} canonical sources.`);

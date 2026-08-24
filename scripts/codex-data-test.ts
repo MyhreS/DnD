@@ -35,19 +35,22 @@ assert.equal(master.rites.entries.length, 21);
 assert.equal(master.whispers.entries.length, 6);
 assert.equal(master.characterSheet.logicalSectionCount, 6);
 assert.equal(master.characterSheet.sections.length, 6);
-assert.equal(master.hiddenConditionSheet.containsRules, false);
-assert.equal(master.referencedButNotSupplied.length, 3);
+assert.equal(master.hiddenConditionSheet.containsRules, true);
+assert.equal(master.hiddenConditionSheet.audience, "dm");
+assert.equal(master.hiddenConditionSheet.sections.length, 4);
+assert.match(master.hiddenConditionSheet.sections[0].paragraphs[0], /twice their Max Sanity/);
+assert.equal(master.referencedButNotSupplied.length, 6);
+assert.equal(master.referencedButNotSupplied.filter((entry: { audience: string }) => entry.audience === "dm").length, 3);
 
-assert.equal(CODEX_SOURCES.length, 4);
-assert.equal(CODEX_ENTRIES.length, 38);
+assert.equal(CODEX_SOURCES.length, 3);
+assert.equal(CODEX_ENTRIES.length, 37);
 assert.equal(new Set(CODEX_ENTRIES.map((entry) => entry.id)).size, CODEX_ENTRIES.length, "Codex entry ids must be unique");
 assert.deepEqual(CODEX_SOURCES.map((source) => source.id), [
   "book-of-the-deepcaller",
   "character-sheet",
-  "hidden-condition-sheet",
   "whispers",
 ]);
-assert.equal(CODEX_SOURCES.flatMap((source) => source.downloads).length, 4);
+assert.equal(CODEX_SOURCES.flatMap((source) => source.downloads).length, 3);
 
 for (const source of CODEX_SOURCES) {
   assert.equal(source.audience, "player");
@@ -60,7 +63,6 @@ for (const source of CODEX_SOURCES) {
 assert.deepEqual(filesUnder("public/source-library"), [
   "public/source-library/book-of-the-deepcaller/c-s-book-of-the-deepcaller.pdf",
   "public/source-library/character-sheet/c-s-character-sheet.pdf",
-  "public/source-library/hidden-condition-sheet/c-s-hidden-condition-sheet.pdf",
   "public/source-library/whispers/c-s-whispers-sheet.pdf",
 ]);
 
@@ -84,11 +86,11 @@ const blast = searchEntries(CODEX_TOPICS, "eldritch blast")[0];
 assert(blast?.versions[0].body.some((line) => line.includes("ranged rite attack")));
 assert(blast?.versions[0].body.some((line) => line.includes("creates two beams")));
 
-for (const removed of ["Hunter Rifle", "Blood Frenzy", "Maduhausu", "Unstable Violence", "Cracked Perception"]) {
+for (const removed of ["Hunter Rifle", "Blood Frenzy", "Maduhausu", "Unstable Violence", "Cracked Perception", "Second Threshold", "Old One Vessel", "Greater Dreadblood"]) {
   assert.equal(searchEntries(CODEX_TOPICS, removed).length, 0, `retired source content returned: ${removed}`);
 }
-const hidden = CODEX_ENTRIES.find((entry) => entry.id === "hidden-condition-sheet");
-assert(hidden?.body.some((line) => line.includes("deliberately blank") && line.includes("must not restore")));
+assert.equal(CODEX_SOURCE_BY_ID.has("hidden-condition-sheet"), false, "the hidden source must not be public");
+assert.equal(CODEX_ENTRIES.some((entry) => entry.sourceId === "hidden-condition-sheet"), false, "hidden rules must not be searchable");
 const unresolved = CODEX_ENTRIES.filter((entry) => entry.id.startsWith("not-supplied-"));
 assert.equal(unresolved.length, 3);
 assert(unresolved.every((entry) => entry.warning?.includes("not supplied")));
@@ -103,4 +105,4 @@ function filesUnder(root: string): string[] {
   return output.sort();
 }
 
-console.log(`Current-source Codex tests passed (${CODEX_ENTRIES.length} entries, 4 unique PDFs)`);
+console.log(`Current-source Codex tests passed (${CODEX_ENTRIES.length} player entries, 4 unique canonical PDFs, 3 public)`);

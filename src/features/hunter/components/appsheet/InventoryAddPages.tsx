@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { ITEMS } from "@/data/items";
-import { useView4PageNavigation } from "../view4/view4PageNavigation";
+import { useCharacterSheetPageNavigation } from "../character-sheet/characterSheetPageNavigation";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { CatalogItemForm, UniqueItemForm, type FoundItemDraft } from "./InventoryAddForms";
 
@@ -17,11 +17,11 @@ const EMPTY_ITEM: FoundItemDraft = {
 
 function CatalogInventoryPage() {
   const automation = useCharacterAutomation();
-  const navigation = useView4PageNavigation();
+  const navigation = useCharacterSheetPageNavigation();
   const [catalogId, setCatalogId] = useState("");
   const catalog = useMemo(() => ITEMS.filter((item) => item.category !== "Armor"), []);
 
-  return <div className="appsheet-add-form v4-inventory-add-page">
+  return <div className="appsheet-add-form character-sheet-inventory-add-page">
     <CatalogItemForm
       catalog={catalog}
       catalogId={catalogId}
@@ -37,10 +37,10 @@ function CatalogInventoryPage() {
 
 function UniqueInventoryPage() {
   const automation = useCharacterAutomation();
-  const navigation = useView4PageNavigation();
+  const navigation = useCharacterSheetPageNavigation();
   const [found, setFound] = useState<FoundItemDraft>(EMPTY_ITEM);
 
-  return <div className="appsheet-add-form v4-inventory-add-page">
+  return <div className="appsheet-add-form character-sheet-inventory-add-page">
     <UniqueItemForm
       found={found}
       setFound={setFound}
@@ -54,8 +54,8 @@ function UniqueInventoryPage() {
 }
 
 export function InventoryAddPageMenu() {
-  const navigation = useView4PageNavigation();
-  return <div className="appsheet-add-choices v4-inventory-add-menu">
+  const navigation = useCharacterSheetPageNavigation();
+  return <div className="appsheet-add-choices character-sheet-inventory-add-menu">
     <button type="button" aria-label="Add from game catalogue" onClick={() => navigation.pushPage({
       id: "inventory-add-catalogue",
       title: "Game catalogue",

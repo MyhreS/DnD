@@ -60,7 +60,7 @@ export interface Subclass {
 export interface HunterClass {
   id: string;
   name: string;
-  /** e.g. "Hunter Brute" — the full title used in the handbook. */
+  /** e.g. "Hunter Brute" — the full title used by the app catalog. */
   title: string;
   tagline: string;
   blurb: string;
@@ -107,11 +107,10 @@ export type ItemCategory =
   | "Consumable"
   | "Valuable";
 
-/** Handbook carrying category (how a carried item occupies slots). */
+/** Carrying category used by the established app catalog. */
 export type CarrySignificance = "Insignificant" | "Significant" | "Oversized";
 
-/** Where an item slot sits on the body (handbook "Check Your Item Slots").
- * master.json's Bandolier "Front" renders as the sheet's "chest". */
+/** Where an item slot sits on the body. */
 export type SlotLocation = "hand" | "back" | "chest" | "hip" | "ankle";
 
 export interface Item {
@@ -127,7 +126,7 @@ export interface Item {
   slotLocation?: SlotLocation;
 }
 
-/** A named item found during play that is not part of the handbook catalog.
+/** A named item found during play that is not part of the app catalog.
  * Its mechanical facts are recorded with the character so calculations stay
  * deterministic on every device. */
 export interface CustomItem extends Item {
@@ -169,7 +168,7 @@ export type ArmorCategory =
   | "Armor Upgrade"
   | "Extra";
 
-/** Extras subcategories (handbook Armor Part 2) — a hunter may wear only ONE
+/** Extra armor subcategories — a hunter may wear only ONE
  * Extra per subcategory (one hat, one scarf, …). "Robe" covers the unique
  * Robe of the Deepcallers, wearable "as any other Armor" per Unique Items. */
 export type ExtraSubcategory = "Head Gear" | "Scarf" | "Gloves" | "Boots" | "Robe";
@@ -535,7 +534,8 @@ export interface HunterCard {
   /** Current hit points during play (defaults to max when unset). */
   currentHp?: number;
   /** Current Sanity during play (defaults to max when unset). Madness is the
-   * complement: madness = maxSanity − sanity. */
+   * complement: madness = maxSanity − sanity. Negative current Sanity down to
+   * -maxSanity keeps twice-Max-Sanity Madness representable. */
   sanity?: number;
   /** Transformation Level 0–10. Gains are rolled physically at the table (1d20
    * on the Transformation Table at the NEW level) and recorded by the DM — the
@@ -559,7 +559,7 @@ export interface HunterCard {
    * unit. Missing entries are deliberately unassigned; nothing is placed in a
    * body/storage slot until the player chooses where it goes. */
   slotAssignments?: Record<string, Array<SlotAssignment | null>>;
-  /** Unique weapons, armor, and gear found during play outside the handbook. */
+  /** Unique weapons, armor, and gear found during play outside the app catalog. */
   customItems?: CustomItem[];
   /** Recently dropped lines, recoverable for 15 minutes (see DroppedItem). */
   droppedItems?: DroppedItem[];
