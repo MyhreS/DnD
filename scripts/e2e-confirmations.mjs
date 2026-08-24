@@ -73,7 +73,6 @@ try {
     const context = await browser.newContext({ viewport });
     await context.addInitScript(() => {
       localStorage.setItem("cs-theme", "light");
-      localStorage.setItem("cs-character-sheet-view", "hud");
     });
     const page = await context.newPage();
     page.on("pageerror", (error) => errors.push(String(error)));
@@ -88,7 +87,7 @@ try {
     await page.goto(`${BASE}/character?preview=user.player`, { waitUntil: "domcontentloaded" });
     await page.getByRole("heading", { name: "Hunters", exact: true }).waitFor();
     await page.getByRole("button", { name: /Open Eileen the Crow/ }).click();
-    await page.getByTestId("view4-character-sheet").waitFor();
+    await page.getByTestId("character-sheet").waitFor();
     await page.getByRole("button", { name: /Hit points/ }).click();
     const health = page.getByRole("dialog", { name: "Health", exact: true });
     await health.getByRole("button", { name: "Decrease Hit points", exact: true }).click();

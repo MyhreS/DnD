@@ -48,29 +48,6 @@
       ]
     },
     {
-      "id": "hidden-condition-sheet",
-      "title": "C&S Hidden Condition Sheet",
-      "shortLabel": "Hidden Condition Sheet",
-      "kind": "blank handout",
-      "authority": "current game-maker source",
-      "audience": "player",
-      "description": "A blank one-page handout headed Hidden Condition Sheet. It contains no condition rules or resolution mechanics.",
-      "pageCount": 1,
-      "publicPath": "/source-library/hidden-condition-sheet/c-s-hidden-condition-sheet.pdf",
-      "downloads": [
-        {
-          "label": "Hidden Condition Sheet",
-          "publicPath": "/source-library/hidden-condition-sheet/c-s-hidden-condition-sheet.pdf"
-        }
-      ],
-      "sourceFiles": [
-        "resources/pdf/C&S Hidden Condition Sheet.pdf"
-      ],
-      "fileLabels": [
-        "C&S Hidden Condition Sheet.pdf"
-      ]
-    },
-    {
       "id": "whispers",
       "title": "C&S Whispers Sheet",
       "shortLabel": "Whispers",
@@ -1378,28 +1355,6 @@
       "sourcePages": [
         1,
         2
-      ]
-    },
-    {
-      "id": "hidden-condition-sheet",
-      "topicKey": "hidden-condition-sheet",
-      "term": "Hidden Condition Sheet",
-      "aliases": [
-        "hidden condition",
-        "blank handout"
-      ],
-      "body": [
-        "The supplied sheet is deliberately blank below its heading. The app must not restore, expose, or automate rules from the former Insane Condition document."
-      ],
-      "paragraphs": [
-        "The supplied sheet is deliberately blank below its heading. The app must not restore, expose, or automate rules from the former Insane Condition document."
-      ],
-      "tables": [],
-      "group": "Handouts",
-      "sourceId": "hidden-condition-sheet",
-      "locator": "Blank sheet",
-      "sourcePages": [
-        1
       ]
     },
     {

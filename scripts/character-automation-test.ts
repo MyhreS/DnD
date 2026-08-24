@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
-import { emptySheetCard } from "../src/lib/character";
+import { currentMadness, emptySheetCard, minimumTrackedSanity } from "../src/lib/character";
 import { CLASSES } from "../src/data/classes";
 import { BACKGROUNDS } from "../src/data/backgrounds";
 import { EPIC_BOON_FEATS, FIGHTING_STYLE_FEATS, GENERAL_FEATS } from "../src/data/feats";
@@ -18,7 +18,7 @@ import { migrateLegacyCharacter } from "../src/features/hunter/lib/legacyMigrati
 import { levelAdjustedPool } from "../src/features/hunter/lib/levelUpVitals";
 import { levelForInsight } from "../src/lib/insight";
 import { insightAwardPatch } from "../src/features/hunter/lib/insightAward";
-import { earnedLevel, upgradeFeatureComplete, upgradeFeatures } from "../src/features/hunter/components/view4/upgradeModel";
+import { earnedLevel, upgradeFeatureComplete, upgradeFeatures } from "../src/features/hunter/components/character-sheet/upgradeModel";
 import { sessionsForCharacter } from "../src/features/hunter/lib/characterSessions";
 import type { Game } from "../src/types";
 
@@ -26,6 +26,9 @@ assert.equal(levelForInsight(0), 1, "zero Insight is level one");
 assert.equal(levelForInsight(6), 2, "an Insight threshold immediately earns its level");
 assert.equal(levelForInsight(74), 5, "accumulated Insight retains all earlier levels");
 assert.equal(levelForInsight(950), 20, "the final Insight threshold earns level twenty");
+assert.equal(currentMadness(16, 16), 0, "full Sanity has no Madness");
+assert.equal(currentMadness(16, 0), 16, "zero current Sanity is one Max Sanity of Madness");
+assert.equal(currentMadness(16, minimumTrackedSanity(16)), 32, "negative current Sanity can represent twice-Max-Sanity Madness");
 
 assert.equal(levelAdjustedPool(4, 10, 16, true), 16, "a pool is restored when a level-up increases its maximum");
 assert.equal(levelAdjustedPool(4, 10, 10, true), 4, "a level-up does not restore a pool whose maximum did not increase");
@@ -58,7 +61,7 @@ assert.equal(earnedLevel({ ...warden, insight: 6 }), 2, "the upgrade model expos
 const wardenUpgrade = upgradeFeatures(CLASSES.find((entry) => entry.id === "warden"), null, 1, 3);
 assert.ok(wardenUpgrade.some((feature) => feature.level === 2 && /Expertise/i.test(feature.name)), "the upgrade preview lists level two features");
 assert.ok(wardenUpgrade.some((feature) => feature.level === 3 && /Subclass/i.test(feature.name)), "the upgrade preview lists the subclass unlock");
-assert.equal(GENERAL_FEATS.length, 29, "all general feats are parsed from the handbook");
+assert.equal(GENERAL_FEATS.length, 29, "the established app feat catalog remains complete");
 assert.equal(FIGHTING_STYLE_FEATS.length, 9, "all fighting styles are available inside upgrades");
 assert.equal(EPIC_BOON_FEATS.length, 9, "all epic boons are available inside upgrades");
 const abilityImprovement = upgradeFeatures(CLASSES[0], null, 3, 4).find((feature) => feature.name === "Ability Score Improvement")!;
@@ -82,6 +85,7 @@ assert.equal(levelOne.pending.classSkills?.remaining, 2);
 assert.match(levelOne.reasons.hpMax, /Warden.*Hit Die.*Constitution/i);
 assert.match(String(levelOne.fields.features1), /Bands Directive/i);
 assert.match(String(levelOne.fields.features1), /Tactical Command/i);
+assert.equal(automationFor({ ...warden, sheet: { hdCur: "0" } }).fields.hdCur, "0", "current Hit Dice survive recalculation");
 
 const modifiedReadouts = automationFor({
   ...warden,

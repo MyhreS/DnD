@@ -48,6 +48,19 @@ export function maxSanity(klass: HunterClass, abilities: AbilityScores, level = 
   return Math.max(0, classBase + abilityModifier(abilities.wis));
 }
 
+/** Madness is the distance below maximum Sanity. Current Sanity may become
+ * negative, allowing the current hidden source's twice-Max-Sanity threshold to
+ * be represented without publishing what happens at that threshold. */
+export function currentMadness(maximumSanity: number, currentSanity = maximumSanity): number {
+  return Math.max(0, maximumSanity - currentSanity);
+}
+
+/** Lowest current-Sanity value needed to represent twice the maximum as
+ * Madness: max - (-max) = 2 × max. */
+export function minimumTrackedSanity(maximumSanity: number): number {
+  return -Math.max(0, maximumSanity);
+}
+
 /** Initiative modifier (Dexterity) in the established Hunter model. */
 export function initiativeMod(abilities: AbilityScores): number {
   return abilityModifier(abilities.dex);

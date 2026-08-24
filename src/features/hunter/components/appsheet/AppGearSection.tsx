@@ -1,4 +1,3 @@
-import { useMemo, useState } from "react";
 import { ITEMS } from "@/data/items";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { ARMOR_BY_ID } from "@/data/armor";
@@ -8,10 +7,8 @@ import { resolveInventory } from "@/lib/inventory";
 import { availableSlotAssignmentOptions, computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
 import type { SlotAssignment } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
-import { useOptionalView4PageNavigation } from "../view4/view4PageNavigation";
-import { CarryingCustomization } from "./CarryingCustomization";
+import { useCharacterSheetPageNavigation } from "../character-sheet/characterSheetPageNavigation";
 import { InventoryAddPageMenu } from "./InventoryAddPages";
-import { CatalogItemForm, UniqueItemForm, type FoundItemDraft } from "./InventoryAddForms";
 import { AppWeaponDamageBonuses } from "./AppWeaponReference";
 import {
   AppDisclosure,
@@ -26,7 +23,6 @@ import {
 export function AppGearSection({
   model,
   defaultOpen = false,
-  quickView = false,
   hideArmor = false,
   hideGoldSummary = false,
   includeDamageBonuses = false,
@@ -34,49 +30,23 @@ export function AppGearSection({
 }: {
   model: AppSheetModel;
   defaultOpen?: boolean;
-  quickView?: boolean;
   hideArmor?: boolean;
   hideGoldSummary?: boolean;
   includeDamageBonuses?: boolean;
   manageEquipmentSeparately?: boolean;
 }) {
   const automation = useCharacterAutomation();
-  const pageNavigation = useOptionalView4PageNavigation();
+  const pageNavigation = useCharacterSheetPageNavigation();
   const { card, result } = automation;
-  const [catalogId, setCatalogId] = useState("");
-  const [showFound, setShowFound] = useState(false);
-  const [found, setFound] = useState<FoundItemDraft>({
-    name: "",
-    category: "Gear",
-    carry: "Significant",
-    weightLb: 0,
-    note: "",
-    attackBonus: "",
-    damage: "",
-    weaponNotes: "",
-  });
   const inventory = (manageEquipmentSeparately ? resolveUnassignedInventory(card) : resolveInventory(card))
     .filter(({ item }) => !hideArmor || item.category !== "Armor");
   const slots = computeSlots(card);
-  const catalog = useMemo(() => ITEMS.filter((item) => item.category !== "Armor"), []);
   const weapons = inventory.filter(({ item }) => item.category === "Weapon");
   const wornStorage = (card.equippedStorageIds ?? []).flatMap((id) => {
     const definition = STORAGE_BY_ITEM_ID[id];
     const item = ITEMS.find((entry) => entry.id === id);
     return definition && item ? [{ definition, item }] : [];
   });
-
-  function addCatalogItem() {
-    if (!catalogId) return;
-    automation.changeQty(catalogId, 1);
-    setCatalogId("");
-  }
-
-  function addUniqueItem() {
-    automation.addCustomItem(found);
-    setFound({ name: "", category: "Gear", carry: "Significant", weightLb: 0, note: "", attackBonus: "", damage: "", weaponNotes: "" });
-    setShowFound(false);
-  }
 
   return (
     <AppSection title="Gear & carrying" defaultOpen={defaultOpen}>
@@ -87,20 +57,12 @@ export function AppGearSection({
         <DerivedValue label="Unassigned" value={slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} reason="Significant and oversized items stay unassigned until you choose a carrying slot." />
       </div>
 
-      <AppPanel title="Inventory" aside={!model.readOnly && !quickView ? (
-        <button type="button" className="appsheet-inventory-add" data-testid="appsheet-inventory-add" onClick={() => pageNavigation?.pushPage({ id: "inventory-add", title: "Add to inventory", eyebrow: "Choose item source", content: <InventoryAddPageMenu /> })}>
+      <AppPanel title="Inventory" aside={!model.readOnly ? (
+        <button type="button" className="appsheet-inventory-add" data-testid="appsheet-inventory-add" onClick={() => pageNavigation.pushPage({ id: "inventory-add", title: "Add to inventory", eyebrow: "Choose item source", content: <InventoryAddPageMenu /> })}>
           <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M8 3v10M3 8h10" /></svg>
           Add
         </button>
       ) : <span className="appsheet-status-word">{inventory.length} item types</span>}>
-        {!model.readOnly && quickView && (
-          <details className="appsheet-catalog-picker" data-testid="appsheet-catalog-picker">
-            <summary>Add from rules library</summary>
-            <div className="appsheet-catalog-picker-content">
-              <CatalogItemForm catalog={catalog} catalogId={catalogId} setCatalogId={setCatalogId} onAdd={addCatalogItem} />
-            </div>
-          </details>
-        )}
         {inventory.length ? (
           <div className={`appsheet-inventory-list${manageEquipmentSeparately ? " appsheet-inventory-loose" : ""}`} data-testid="appsheet-inventory">
             {inventory.map(({ item, qty }) => {
@@ -169,16 +131,6 @@ export function AppGearSection({
         </div>
       </AppPanel>
 
-      {quickView && (
-        <AppDisclosure
-          title={quickView ? "Carrying customization" : "Carrying setup"}
-          summary={`${slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} unassigned`}
-          aside={slots.unstowed.length ? <span className="appsheet-incomplete">Check load</span> : undefined}
-        >
-          <CarryingCustomization classId={card.classId} slots={slots} showWardenReference={quickView} />
-        </AppDisclosure>
-      )}
-
       <AppDisclosure title="Weapon details" summary={`${weapons.length} carried weapon ${weapons.length === 1 ? "type" : "types"}`}>
       <AppPanel title="Carried weapons" aside={<span className="appsheet-status-word">Rules-linked</span>}>
         {weapons.length ? (
@@ -203,17 +155,6 @@ export function AppGearSection({
       {includeDamageBonuses && <AppWeaponDamageBonuses card={card} klass={automation.klass} />}
       </AppDisclosure>
 
-      {!model.readOnly && quickView && (
-        <AppDisclosure title="Record a unique item" summary="For weapons or gear found outside the game catalog">
-        <AppPanel title="Item found outside the game catalog" className="appsheet-found-panel">
-          {!showFound ? (
-            <button type="button" className="appsheet-secondary-action" onClick={() => setShowFound(true)}>Record unique weapon or gear</button>
-          ) : (
-            <UniqueItemForm found={found} setFound={setFound} onCancel={() => setShowFound(false)} onAdd={addUniqueItem} />
-          )}
-        </AppPanel>
-        </AppDisclosure>
-      )}
     </AppSection>
   );
 }

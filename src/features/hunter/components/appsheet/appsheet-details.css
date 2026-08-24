@@ -88,48 +88,6 @@
   align-items: end;
 }
 
-.appsheet-catalog-picker {
-  margin: -2px 0 14px;
-  border-top: 1px solid var(--app-line);
-}
-
-.appsheet-catalog-picker > summary {
-  display: flex;
-  align-items: center;
-  min-height: 38px;
-  color: var(--app-muted);
-  cursor: pointer;
-  font-size: 13px;
-  font-weight: 700;
-  list-style: none;
-}
-
-.appsheet-catalog-picker > summary::-webkit-details-marker {
-  display: none;
-}
-
-.appsheet-catalog-picker > summary::after {
-  width: 7px;
-  height: 7px;
-  margin-left: 9px;
-  border-right: 1px solid currentColor;
-  border-bottom: 1px solid currentColor;
-  content: "";
-  transform: rotate(45deg) translateY(-2px);
-}
-
-.appsheet-catalog-picker[open] > summary {
-  color: var(--app-text);
-}
-
-.appsheet-catalog-picker[open] > summary::after {
-  transform: rotate(225deg) translate(-2px, -2px);
-}
-
-.appsheet-catalog-picker-content {
-  padding: 2px 0 4px;
-}
-
 .appsheet-inventory-add {
   display: inline-flex;
   align-items: center;

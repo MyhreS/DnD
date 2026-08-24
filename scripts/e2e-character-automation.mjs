@@ -62,7 +62,6 @@ try {
   await ready();
   const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
   await context.addInitScript(() => {
-    localStorage.setItem("cs-character-sheet-view", "hud");
     localStorage.setItem("cs-theme", "light");
   });
   const page = await context.newPage();
@@ -100,11 +99,11 @@ try {
   await page.getByRole("heading", { name: "Eileen the Crow", exact: true }).waitFor();
   for (const section of ["Hunter", "Abilities", "Skills", "Class abilities", "Notes", "Resources"]) {
     if (await page.getByRole("button", { name: section, exact: true }).count() !== 1) {
-      throw new Error(`Restored Hunter HUD is missing its ${section} section`);
+      throw new Error(`Restored Hunter character sheet is missing its ${section} section`);
     }
   }
   if (await page.getByRole("button", { name: "Open equipment slots", exact: true }).count() !== 1) {
-    throw new Error("Restored Hunter HUD is missing equipment");
+    throw new Error("Restored Hunter character sheet is missing equipment");
   }
 
   await page.goto(`${BASE}/codex?q=Call%20Starborn%20Horror&preview=user.player`, { waitUntil: "domcontentloaded" });

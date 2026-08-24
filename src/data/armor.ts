@@ -1,6 +1,6 @@
 import type { ArmorPiece } from "@/types";
 
-// Armory — Player's Handbook, Chapter 1 (Step 4 / Armor Parts 1 & 2).
+// Established app armory catalog, outside the current four-document source set.
 // `acValue` is the numeric contribution used by the AC calculator:
 //   Main Armor  -> base AC (replaces the unarmoured 10)
 //   Add-on      -> bonus added on top

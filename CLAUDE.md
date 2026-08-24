@@ -29,8 +29,8 @@ permissions are per-campaign (see "Access model & roles").
 
 - **Sessions** — next session with a live countdown + upcoming dates. Members
   RSVP (yes/maybe/no). Staff (admin/DM) add & edit dates. Backed by Firestore.
-- **Hunter** — create and keep hunters through the established guided builder,
-  detailed app sheet, and one-page play HUD (`features/hunter`). Multiple per
+- **Hunter** — create and keep hunters through the established guided builder
+  and canonical character sheet (`features/hunter`). Multiple per
   user, autosaved in Firestore; existing structured Hunter records remain usable.
 - **Party** — gallery of everyone's hunters. Staff get a roster: who has a
   character, who's RSVP'd, with one-tap `mailto:` reminders.
@@ -127,7 +127,7 @@ campaign (see `firestore.rules`):
   exists for the legacy `/allowlist` admin tools, but isn't needed for normal use.
 
 **Two chromes** (`src/components/`): `MainLayout` (the main menu — account home,
-**Hunters** create/manage, **Handbook**, Profile; no campaign) and `CampaignLayout`
+**Hunters** create/manage, **Codex**, Profile; no campaign) and `CampaignLayout`
 (inside a campaign — **Play / Sessions / Party / Hunter** + a "Main menu" back
 link, gated on an active campaign, with a "CAMPAIGN" badge + name).
 
@@ -270,7 +270,7 @@ behaviour) can't be automated — do them by hand each meaningful change:
 
 1. Simulator Safari → open `https://dandd-ea955.web.app`.
 2. **Sign in with Google** (real account).
-3. Click through Sessions / Character / Party / Handbook.
+3. Click through Sessions / Character / Party / Codex.
 4. **Add to Home Screen**: Share → Add to Home Screen → Add.
 5. Open the **home-screen app** (standalone), sign in if asked, and click through
    again — checking the change you made, and especially standalone-only behaviour
@@ -330,16 +330,19 @@ owner-only denial matrix pass in production.
 
 `resources/pdf/` contains exactly four current game-maker documents: the Book
 of the Deepcaller, Character Sheet, Hidden Condition Sheet, and Whispers Sheet.
-`resources/master.json` is their structured searchable representation.
+`resources/master.json` is their structured representation. Three sources are
+player-facing; the Hidden Condition Sheet is GM-only.
 
 `bun run codex:generate` performs all source-library generation. It verifies
 the four filenames and SHA-256 hashes, rejects duplicate documents, clears and
-recreates the ignored `public/source-library/` downloads, and writes
-`src/data/codex.generated.json`. Never hand-edit generated Codex data.
+recreates the ignored `public/source-library/` downloads for only the three
+player sources, and writes `src/data/codex.generated.json`. It must never copy
+the Hidden Condition source or text into public output. Never hand-edit
+generated Codex data.
 
 The four PDFs replace older **game documents**, not the app's established
-screens or workflows. Do not remove or redesign Hunter creation, the detailed
-sheet, the play HUD, saved-character compatibility, game pages, or table tools
+screens or workflows. Do not remove or redesign Hunter creation, the canonical
+character sheet, saved-character compatibility, game pages, or table tools
 merely because a topic is absent from this deliberately narrow document set.
 Those product features change only when the game maker explicitly asks.
 

@@ -5,7 +5,10 @@
     "updatedAt": "2026-08-24",
     "description": "Structured extraction of the four game-maker-maintained documents supplied on 2026-08-24.",
     "replacementPolicy": "These four documents replace the earlier game-document library. When they define a concept already represented by the app, the current document wins and the old version must not be duplicated. Their limited scope does not by itself remove established app screens, saved-character compatibility, or game workflows; those change only when the game maker explicitly changes them.",
-    "documentCount": 4
+    "retainedAppDataPolicy": "Hunter classes, backgrounds, feats, armor, equipment, transformation tracking, and other established app catalogs remain application data because the supplied documents refer to broader game systems without redefining them. The app must describe those catalogs honestly and must not attribute them to a removed handbook.",
+    "documentCount": 4,
+    "playerDocumentCount": 3,
+    "hiddenDocumentCount": 1
   },
   "sources": [
     {
@@ -36,14 +39,16 @@
       "id": "hidden-condition-sheet",
       "title": "C&S Hidden Condition Sheet",
       "shortLabel": "Hidden Condition Sheet",
-      "kind": "blank handout",
-      "audience": "player",
+      "kind": "hidden condition rules",
+      "audience": "dm",
       "authority": "current game-maker source",
-      "description": "A blank one-page handout headed Hidden Condition Sheet. It contains no condition rules or resolution mechanics.",
+      "description": "A one-page hidden GM reference defining the Second Threshold, Old One Vessel rules, and Lost rules.",
       "pageCount": 1,
       "sourceFile": "resources/pdf/C&S Hidden Condition Sheet.pdf",
-      "sha256": "189D0F051C886F16A4688FD9496CE2DB59743FAFFAC3E78C7903218703495AAF",
-      "convertedFrom": "C&S Hidden Condition Sheet.pages"
+      "sha256": "EF9177B5DB3F9108D8D680741086CF7F8C045C0E8AA64F8F396FB7F7042CE061",
+      "convertedFrom": "C&S Hidden Condition Sheet.pages",
+      "sourceSha256": "7FA0445064A3DAB0FE42F7A93EDC9EE5B90EA12125260D2CFD1D7E099092FBF9",
+      "conversionNote": "Searchable PDF conversion reconstructed from the Pages document's embedded full-resolution background and native text. The previous conversion contained only the background and lost every rule paragraph."
     },
     {
       "id": "whispers",
@@ -478,28 +483,110 @@
   },
   "hiddenConditionSheet": {
     "sourceId": "hidden-condition-sheet",
-    "containsRules": false,
-    "description": "The supplied sheet is deliberately blank below its heading. The app must not restore, expose, or automate rules from the former Insane Condition document."
+    "audience": "dm",
+    "containsRules": true,
+    "description": "The supplied Pages document contains current hidden rules. These replace the former Insane Condition appendix; none of that former appendix's secret mechanics may be restored.",
+    "publicPolicy": "Do not include this source, its download, its text, its condition names, or its missing-source notes in the public Codex or other player-facing search and download surfaces.",
+    "sections": [
+      {
+        "id": "second-threshold",
+        "title": "The Second Threshold",
+        "sourcePages": [1],
+        "paragraphs": [
+          "When an Insane hunter’s current Madness equals or exceeds twice their Max Sanity, the hunter is taken by the outer dark. The GM takes control of the character, and the character is replaced by an Old One Vessel stat block appropriate to the hunter’s level. All the Old One Vessel forms are listed in the Bestiary inside The C&S app under Player Alterations.",
+          "The Vessel is hostile to all creatures, including the party. It is not the hunter. It is something using the hunter as a wound through which to enter the world.",
+          "If the Vessel is reduced to 0 Hit Points, the hunter returns with 1 Hit Point. Their current Madness becomes equal to their original Max Sanity, and their Max Sanity permanently becomes twice its original value.",
+          "If the same hunter becomes an Old One Vessel a second time, the hunter is lost forever."
+        ]
+      },
+      {
+        "id": "old-one-vessel-rules",
+        "title": "Old One Vessel Rules",
+        "sourcePages": [1],
+        "paragraphs": [
+          "When a hunter becomes an Old One Vessel, use the stat block matching the hunter’s level found in the Bestiary inside The C&S app under Player Alterations.",
+          "The Vessel replaces the hunter’s game statistics. It does not use the hunter’s weapons, armor, Rites, class features, feats, transformations, items, or proficiencies unless a rule specifically says otherwise.",
+          "The GM controls the Vessel. It is hostile to all creatures.",
+          "If the Vessel is reduced to 0 Hit Points, the hunter returns with 1 Hit Point and the Old One Vessel Condition removed.. Their current Madness becomes equal to their original Max Sanity, and their Max Sanity permanently becomes twice its original value.",
+          "If the same hunter gains the Old One Vessel Condition  a second time, that hunter will have that condition permanently, and is practically removed as a player."
+        ]
+      },
+      {
+        "id": "lost",
+        "title": "Lost",
+        "sourcePages": [1],
+        "paragraphs": [
+          "If you roll Lost on the Transformation Table, you become a Lost: Greater Dreadblood. When a hunter becomes Lost, they transform into one of the Lost Dreadblood forms listed in the Bestiary inside The C&S app under Player Alterations. The GM controls the creature."
+        ]
+      },
+      {
+        "id": "lost-rules",
+        "title": "Lost Rules",
+        "sourcePages": [1],
+        "paragraphs": [
+          "When a hunter becomes Lost, use the stat block matching the hunter’s level found in the Bestiary inside The C&S app under Player Alterations.",
+          "The Lost replaces the hunter’s game statistics. It does not use the hunter’s weapons, armor, Rites, class features, feats, transformations, items, or proficiencies unless a rule specifically says otherwise.",
+          "The GM controls the Lost. It is hostile to all creatures.",
+          "If the Lost is reduced to 0 Hit Points, the hunter returns with 1 Hit Point and the Lost Condition removed, and gains 10 + 2d4 Madness minus the players wisdom, modifier."
+        ]
+      }
+    ],
+    "appIntegration": {
+      "supported": "Track current Sanity, calculated Madness, and the existing Insane marker without publishing the hidden outcomes.",
+      "sanityRange": "Because current Madness is calculated as Max Sanity minus current Sanity, current Sanity must be able to fall as low as negative Max Sanity so twice-Max-Sanity Madness remains representable.",
+      "notAutomated": "Do not replace a hunter with an Old One Vessel or Lost form until the referenced level-matched stat blocks are supplied. Never invent those statistics."
+    },
+    "hiddenConditionNames": ["Old One Vessel", "Lost"]
   },
   "conditionsNamedByCurrentSources": ["Blinded", "Frightened", "Incapacitated", "Invisible", "Restrained"],
   "referencedButNotSupplied": [
     {
       "name": "Lesser Starborn stat block",
       "referencedBy": "Call Lesser Starborn",
+      "sourceId": "book-of-the-deepcaller",
+      "audience": "player",
       "status": "not supplied",
       "policy": "Do not invent or expose a substitute stat block."
     },
     {
       "name": "Starborn Horror stat block",
       "referencedBy": "Call Starborn Horror",
+      "sourceId": "book-of-the-deepcaller",
+      "audience": "player",
       "status": "not supplied",
       "policy": "Do not invent or expose a substitute stat block."
     },
     {
       "name": "Starborn Horror Behavior Table",
       "referencedBy": "Call Starborn Horror",
+      "sourceId": "book-of-the-deepcaller",
+      "audience": "player",
       "status": "not supplied",
       "policy": "Do not invent or expose a substitute table."
+    },
+    {
+      "name": "Old One Vessel level-matched stat blocks",
+      "referencedBy": "The Second Threshold and Old One Vessel Rules",
+      "sourceId": "hidden-condition-sheet",
+      "audience": "dm",
+      "status": "not supplied",
+      "policy": "Do not invent a Vessel form or automatically replace a hunter without the game maker's Bestiary entries."
+    },
+    {
+      "name": "Lost: Greater Dreadblood level-matched stat blocks",
+      "referencedBy": "Lost and Lost Rules",
+      "sourceId": "hidden-condition-sheet",
+      "audience": "dm",
+      "status": "not supplied",
+      "policy": "Do not invent a Lost form or automatically replace a hunter without the game maker's Bestiary entries."
+    },
+    {
+      "name": "Transformation Table",
+      "referencedBy": "Lost",
+      "sourceId": "hidden-condition-sheet",
+      "audience": "dm",
+      "status": "not supplied",
+      "policy": "Keep established transformation tracking, but do not restore the retired table or invent a replacement table."
     }
   ]
 }

@@ -10,7 +10,7 @@ import { PHASE_LABEL, LOCATION_LABEL } from "@/features/play/lib/phase";
 import { useWakeLock } from "@/hooks/common/useWakeLock";
 import { useFullscreen } from "@/hooks/common/useFullscreen";
 import { getClass } from "@/data/classes";
-import { maxHp, maxSanity, isSheetCard } from "@/lib/character";
+import { currentMadness, maxHp, maxSanity, isSheetCard } from "@/lib/character";
 import { sheetVitals, cardClassName } from "@/features/hunter/lib/papersheet";
 import type { HunterCard } from "@/types";
 import { CombatBoard } from "./CombatBoard";
@@ -122,14 +122,14 @@ function VitalsCard({ card }: { card: HunterCard }) {
         <p className="faint" style={{ margin: "8px 0 0" }}>Vitals tracked on the shared character sheet.</p>
       )}
       {san != null && sanMax != null && (
-        <Bar label="Sanity" value={san} max={sanMax} color="#7c5cff" sub={`Madness ${Math.max(0, sanMax - san)}`} />
+        <Bar label="Sanity" value={san} max={sanMax} color="#7c5cff" sub={`Madness ${currentMadness(sanMax, san)}`} />
       )}
     </div>
   );
 }
 
 function Bar({ label, value, max, color, sub }: { label: string; value: number; max: number; color: string; sub?: string }) {
-  const pct = max > 0 ? Math.round((value / max) * 100) : 0;
+  const pct = max > 0 ? Math.max(0, Math.min(100, Math.round((value / max) * 100))) : 0;
   return (
     <div style={{ marginTop: 8 }}>
       <div className="row between" style={{ marginBottom: 4 }}>

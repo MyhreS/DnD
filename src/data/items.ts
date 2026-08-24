@@ -2,20 +2,18 @@ import type { Item } from "@/types";
 import { ARMOR } from "@/data/armor";
 
 // Tradeable-item catalog for Catacombs & Starspawns.
-// Drawn from the game's own resources: every distinct item across the six
-// classes' `startingEquipment` (see src/data/classes.ts), plus common gear
-// from the Player's Handbook carrying-category table ("CHECK YOUR ITEM SLOTS")
-// in resources/extracted/text/. Carrying significance follows that table:
+// Established app catalog: every distinct item across the six classes'
+// `startingEquipment` (see src/data/classes.ts), plus common gear retained by
+// the app. The current four-document source set does not redefine this data.
+// Carrying significance follows the established catalog:
 //   Insignificant — keys, letters, maps, coins, rings, parchment, blood vials,
 //     supplies, kits, tool *sets*, ammunition.
 //   Significant   — daggers, handaxes, rope, pistols, rifles, chains, swords,
 //     scimitars, sickles, cleavers, lanterns, shovels, crowbars, tool belts,
 //     bandoliers, backpacks, hunting traps, books.
 //   Oversized     — great weapons, heavy crates, barrels, ladders, corpses.
-// Weights and carrying categories follow resources/master.json (Weapons table,
-// Hunter Gear table, Tools + Storage Items sections) — the DM's source of
-// truth; `scripts/verify-item-data.mjs` asserts the match. Weapons may always
-// be carried in Hand, even where the catalog lists a preferred slot.
+// Weapons may always be carried in Hand, even where the catalog lists a
+// preferred slot.
 // Items with no master entry (Bedroll, Rations, …) use 5e weights as a guide.
 // Hunter Rifle, Hunter Cleaver and
 // Blood-drainer's Tools are flagged unique (the resources call them "unique
