@@ -222,19 +222,20 @@ export function CharacterAutomationProvider({
   function chooseBackground(backgroundId: string) {
     const nextBackground = BACKGROUNDS.find((entry) => entry.id === backgroundId);
     const nextBonuses = backgroundId === card.backgroundId ? bonuses : ZERO_BONUS();
+    const nextClassSkills = state.classSkills.filter((skill) => !nextBackground?.skills.includes(skill));
     commit({
       backgroundId,
       background: nextBackground?.name ?? "",
       feat: nextBackground?.feat ?? null,
       featSkills: nextBackground?.feat === "Skilled" ? card.featSkills ?? [] : [],
-      skillProficiencies: [...new Set([...state.classSkills, ...(nextBackground?.skills ?? [])])],
+      skillProficiencies: [...new Set([...nextClassSkills, ...(nextBackground?.skills ?? [])])],
       abilities: finalAbilities(card, nextBonuses),
-      sheetAutomation: { ...state, backgroundBonuses: nextBonuses },
+      sheetAutomation: { ...state, classSkills: nextClassSkills, backgroundBonuses: nextBonuses },
     }, true);
   }
 
   function toggleClassSkill(skill: string) {
-    if (!klass) return;
+    if (!klass || background?.skills.includes(skill)) return;
     const classSkills = state.classSkills.includes(skill)
       ? state.classSkills.filter((entry) => entry !== skill)
       : state.classSkills.length < klass.skillChoices.count

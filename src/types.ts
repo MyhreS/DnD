@@ -14,6 +14,7 @@ export interface SkillChoice {
 export interface Skill {
   name: string;
   ability: AbilityKey;
+  description: string;
 }
 
 /** Player-facing background data reconciled from master.json. A null feat is

@@ -1,12 +1,12 @@
 import type { AbilityKey } from "@/types";
 
-export const ABILITIES: { key: AbilityKey; name: string; short: string }[] = [
-  { key: "str", name: "Strength", short: "STR" },
-  { key: "dex", name: "Dexterity", short: "DEX" },
-  { key: "con", name: "Constitution", short: "CON" },
-  { key: "int", name: "Intelligence", short: "INT" },
-  { key: "wis", name: "Wisdom", short: "WIS" },
-  { key: "cha", name: "Charisma", short: "CHA" },
+export const ABILITIES: { key: AbilityKey; name: string; short: string; description: string }[] = [
+  { key: "str", name: "Strength", short: "STR", description: "Melee power, Athletics, carrying, and raw force." },
+  { key: "dex", name: "Dexterity", short: "DEX", description: "Armor Class, initiative, agile attacks, stealth, and balance." },
+  { key: "con", name: "Constitution", short: "CON", description: "Hit Points, Grit, endurance, and resisting physical strain." },
+  { key: "int", name: "Intelligence", short: "INT", description: "Investigation, history, blood lore, religion, and eldritch knowledge." },
+  { key: "wis", name: "Wisdom", short: "WIS", description: "Perception, insight, survival, medicine, and sanity." },
+  { key: "cha", name: "Charisma", short: "CHA", description: "Persuasion, deception, intimidation, and commanding presence." },
 ];
 
 export const ABILITY_NAME: Record<AbilityKey, string> = Object.fromEntries(

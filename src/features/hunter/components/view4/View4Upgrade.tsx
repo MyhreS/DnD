@@ -34,7 +34,8 @@ export function View4Upgrade({ model, onComplete, creating = false }: { model: A
   const needsSetup = !state.setupComplete;
   const needsSubclass = !!result.pending.subclass;
   const backgroundRemaining = needsSetup && automation.background ? Math.max(0, 3 - automation.bonusUsed) : 0;
-  const classRemaining = needsSetup && klass ? Math.max(0, klass.skillChoices.count - state.classSkills.length) : 0;
+  const distinctClassSkills = state.classSkills.filter((skill) => !automation.background?.skills.includes(skill));
+  const classRemaining = needsSetup && klass ? Math.max(0, klass.skillChoices.count - distinctClassSkills.length) : 0;
   const featRemaining = needsSetup && automation.background?.feat === "Skilled" ? Math.max(0, 3 - (card.featSkills?.length ?? 0)) : 0;
   const expertiseRemaining = Math.max(0, automation.expertiseLimit - (state.expertiseSkills?.length ?? 0));
   const masteryRemaining = Math.max(0, automation.masteryCount - (state.weaponMasteries?.length ?? 0));

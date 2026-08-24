@@ -117,9 +117,18 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.screenshot({ path: `screenshots/creation-abilities-${suffix}.png`, fullPage: true });
   await next.click();
 
-  await page.getByLabel("Strength background bonus", { exact: true }).selectOption("2");
-  await page.getByLabel("Intelligence background bonus", { exact: true }).selectOption("1");
+  await page.getByRole("heading", { name: "Background abilities", exact: true }).waitFor();
+  await page.getByRole("button", { name: "Strength background bonus +2", exact: true }).click();
+  await page.getByRole("button", { name: "Intelligence background bonus +1", exact: true }).click();
+  await page.getByText("Modifier improves from +2 to +3.", { exact: true }).waitFor();
+  await page.getByText("Class focus", { exact: true }).waitFor();
+  await page.screenshot({ path: `screenshots/background-abilities-guidance-${suffix}.png`, fullPage: true });
   await next.click();
+  await page.getByRole("heading", { name: "Class skills", exact: true }).waitFor();
+  await page.getByText("Climb, jump, grapple, escape physical holds, and force obstacles.", { exact: true }).waitFor();
+  await page.getByText("+3 now; +5 trained", { exact: true }).waitFor();
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `screenshots/class-skill-guidance-${suffix}.png`, fullPage: true });
   await page.getByLabel("Athletics", { exact: true }).check();
   await page.getByLabel("Perception", { exact: true }).check();
   await next.click();
@@ -240,11 +249,69 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await context.close();
 }
 
+async function inspectExpertiseGuidance(browser, viewport, suffix) {
+  const context = await browser.newContext({ viewport });
+  await context.addInitScript(() => {
+    localStorage.setItem("cs-character-sheet-view", "hud");
+    localStorage.setItem("cs-theme", "dark");
+  });
+  const page = await context.newPage();
+  const errors = [];
+  page.on("pageerror", (error) => errors.push(String(error)));
+  page.on("console", (message) => {
+    if (message.type() === "error" && !message.text().includes("Failed to load resource")) errors.push(message.text());
+  });
+  await page.goto(`${BASE}/character?preview=user.player`, { waitUntil: "domcontentloaded" });
+  await page.getByRole("heading", { name: "Hunters", exact: true }).waitFor({ timeout: 20_000 });
+  await page.getByRole("button", { name: "Create hunter", exact: true }).click();
+  const next = page.getByRole("button", { name: "Next", exact: true });
+
+  await page.getByLabel("Hunter name", { exact: true }).fill(`Stalker ${suffix}`);
+  await next.click();
+  await page.locator(".v4-upgrade-select select").selectOption("stalker");
+  await next.click();
+  await page.locator(".v4-upgrade-select select").selectOption("criminal");
+  await next.click();
+  for (const [ability, score] of [["Intelligence", "8"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "15"], ["Dexterity", "15"], ["Constitution", "15"]]) {
+    await setAbilityScore(page, ability, score);
+  }
+  await next.click();
+  await page.getByRole("button", { name: "Dexterity background bonus +2", exact: true }).click();
+  await page.getByRole("button", { name: "Constitution background bonus +1", exact: true }).click();
+  await next.click();
+
+  await page.getByRole("heading", { name: "Class skills", exact: true }).waitFor();
+  if (!await page.getByLabel("Stealth", { exact: true }).isDisabled()) throw new Error("A background skill could be chosen again as a class skill");
+  await page.getByText("From Criminal", { exact: true }).first().waitFor();
+  await page.getByLabel("Athletics", { exact: true }).check();
+  await page.getByLabel("Perception", { exact: true }).check();
+  await page.waitForTimeout(100);
+  await page.screenshot({ path: `screenshots/class-skill-guidance-selected-${suffix}.png`, fullPage: true });
+  await next.click();
+
+  await page.getByRole("heading", { name: "Choose Expertise", exact: true }).waitFor();
+  await page.getByText("Expertise adds your +2 proficiency bonus a second time.", { exact: false }).waitFor();
+  await page.getByText("+4 trained to +6 expert", { exact: true }).waitFor();
+  await page.waitForTimeout(250);
+  await page.screenshot({ path: `screenshots/expertise-guidance-${suffix}.png`, fullPage: true });
+  await page.getByLabel("Stealth", { exact: true }).check();
+  await page.getByLabel("Perception", { exact: true }).check();
+  if (await next.isDisabled()) throw new Error("Expertise stayed blocked after the required choices");
+  const horizontalOverflow = await page.locator(".v4-upgrade-step").evaluate((element) => element.scrollWidth > element.clientWidth);
+  if (horizontalOverflow) throw new Error(`Expertise guidance overflows the ${suffix} creation page`);
+  await page.waitForTimeout(100);
+  await page.screenshot({ path: `screenshots/expertise-guidance-selected-${suffix}.png`, fullPage: true });
+  if (errors.length) throw new Error(`Browser errors (${suffix} expertise): ${errors.join(" | ")}`);
+  await context.close();
+}
+
 const browser = await chromium.launch({ headless: true });
 try {
   await ready();
   await completeBruteCreation(browser, { width: 390, height: 844 }, "mobile");
   await completeBruteCreation(browser, { width: 1440, height: 900 }, "desktop");
+  await inspectExpertiseGuidance(browser, { width: 390, height: 844 }, "mobile");
+  await inspectExpertiseGuidance(browser, { width: 1440, height: 900 }, "desktop");
   console.log("Upgrade required-choice Playwright checks passed.");
 } finally {
   await browser.close();
