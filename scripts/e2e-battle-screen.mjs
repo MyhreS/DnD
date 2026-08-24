@@ -173,7 +173,7 @@ async function verifyEnemyLibraryRules() {
 
 await verifyEnemyLibraryRules();
 
-const server = spawn("bunx", ["vite", "--host", "127.0.0.1", "--port", String(PORT)], {
+const server = spawn(process.execPath, ["node_modules/vite/bin/vite.js", "--host", "127.0.0.1", "--port", String(PORT)], {
   stdio: ["ignore", "pipe", "pipe"],
   env: {
     ...process.env,
@@ -210,6 +210,12 @@ async function noHorizontalOverflow(page, label) {
   if (width.scroll > width.client) throw new Error(`${label} overflows horizontally: ${JSON.stringify(width)}`);
 }
 
+async function openCombatantOptions(card, combatantName, visibleAction) {
+  const action = card.getByRole("button", { name: visibleAction, exact: true });
+  if (!await action.isVisible()) await card.getByLabel(`More options for ${combatantName}`).click();
+  await action.waitFor();
+}
+
 const browser = await chromium.launch({ headless: true });
 const errors = [];
 try {
@@ -219,6 +225,7 @@ try {
   watch(dmPage, errors);
   await signIn(dmPage, dmToken);
   await dmPage.goto(`${BASE}/game`, { waitUntil: "domcontentloaded" });
+  await dmPage.getByRole("button", { name: /The Ashen Hunt/ }).click();
   await dmPage.getByRole("heading", { name: "The Ashen Hunt" }).waitFor();
 
   const playerContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -226,6 +233,7 @@ try {
   watch(playerPage, errors);
   await signIn(playerPage, playerToken);
   await playerPage.goto(`${BASE}/game`, { waitUntil: "domcontentloaded" });
+  await playerPage.getByRole("button", { name: /The Ashen Hunt/ }).click();
   await playerPage.getByRole("heading", { name: "The Ashen Hunt" }).waitFor();
 
   await dmPage.getByRole("button", { name: "Start battle" }).click();
@@ -236,19 +244,22 @@ try {
     dmPage.getByTestId("session-battle-screen").waitFor(),
     playerPage.getByTestId("session-battle-screen").waitFor(),
   ]);
-  await playerPage.getByText("Round 1", { exact: true }).waitFor();
+  await playerPage.getByLabel("Round 1", { exact: true }).waitFor();
   await playerPage.locator(".battle-name").getByText("Lady Maria", { exact: true }).waitFor();
   await playerPage.locator(".battle-name").getByText("Grave Hound", { exact: true }).waitFor();
   if (await playerPage.getByTestId("battle-turn-timer").count()) throw new Error("Player can still see the turn timer.");
   if (await dmPage.getByRole("button", { name: /timer|90 seconds/i }).count()) throw new Error("DM can still see turn-timer controls.");
   if (await playerPage.getByRole("button", { name: "Next turn" }).count()) throw new Error("Player received DM battle controls.");
-  if (await playerPage.getByRole("button", { name: "End battle" }).count()) throw new Error("Player can end battle mode.");
-  if (await playerPage.getByRole("button", { name: "+ Add enemy" }).count()) throw new Error("Player can add enemies.");
+  if (await playerPage.getByLabel("Battle options").count()) throw new Error("Player can open DM battle options.");
   if (await playerPage.locator(".game-battle-toolbar").count()) throw new Error("Player can see the DM control bar.");
   if (await dmPage.getByRole("button", { name: "Manage battle" }).count()) throw new Error("Manage battle should not be needed during a battle.");
   if (await dmPage.getByRole("button", { name: /Decrease .* initiative/ }).count() < 2) throw new Error("Compact DM initiative controls are not available in the battle screen.");
   if (await dmPage.locator(".battle-name").filter({ hasText: "Lady Maria" }).count() !== 1) throw new Error("The Hunter is duplicated in the default battle view.");
-  if (await dmPage.locator(".game-battle-toolbar button").count() < 3) throw new Error("The DM battle actions are not available directly.");
+  await dmPage.getByLabel("Battle options").click();
+  if (await dmPage.locator(".battle-tools-menu button").count() < 3) throw new Error("The DM battle options are incomplete.");
+  await noHorizontalOverflow(dmPage, "Desktop battle options");
+  await dmPage.screenshot({ path: "screenshots/game-battle-options-desktop.png", fullPage: true });
+  await dmPage.getByLabel("Battle options").click();
 
   await noHorizontalOverflow(dmPage, "Initial DM battle view");
   await noHorizontalOverflow(playerPage, "Initial player battle view");
@@ -260,19 +271,18 @@ try {
 
   const enemyControl = dmPage.getByTestId(`battle-combatant-${enemyId}`);
   const enemyDisplay = playerPage.getByTestId(`battle-combatant-${enemyId}`);
+  await openCombatantOptions(enemyControl, "Moon Beast", "Remove enemy");
   await enemyControl.getByLabel("More options for Moon Beast").click();
-  await enemyControl.getByRole("button", { name: "Remove enemy", exact: true }).waitFor();
-  await enemyControl.getByLabel("More options for Moon Beast").click();
-  await enemyControl.getByLabel("More options for Moon Beast").click();
+  await openCombatantOptions(enemyControl, "Moon Beast", "Kill Moon Beast");
   await enemyControl.getByRole("button", { name: "Kill Moon Beast" }).click();
   await enemyControl.getByText("Enemy · dead", { exact: true }).waitFor();
   await enemyDisplay.getByText("Enemy · dead", { exact: true }).waitFor();
+  await openCombatantOptions(enemyControl, "Moon Beast", "Revive Moon Beast");
   await enemyControl.getByRole("button", { name: "Revive Moon Beast" }).click();
   await enemyControl.getByText("Enemy", { exact: true }).waitFor();
   await enemyDisplay.getByText("Enemy", { exact: true }).waitFor();
-  await enemyControl.getByLabel("More options for Moon Beast").click();
+  await openCombatantOptions(enemyControl, "Moon Beast", "Reset stats");
   await enemyControl.getByRole("button", { name: "Reset stats", exact: true }).click();
-  await enemyControl.getByLabel("More options for Moon Beast").click();
   await enemyControl.getByRole("button", { name: "Increase Moon Beast initiative" }).click();
   await enemyControl.getByRole("button", { name: "Decrease Moon Beast initiative" }).click();
   await enemyControl.getByLabel("Set Moon Beast initiative").fill("12");
@@ -288,17 +298,19 @@ try {
     throw new Error(`Hidden monster data leaked to the player: ${playerEnemyText}`);
   }
 
-  await enemyControl.getByLabel("More options for Moon Beast").click();
+  await openCombatantOptions(enemyControl, "Moon Beast", "Add 5 damage");
   await enemyControl.getByRole("button", { name: "Add 5 damage" }).click();
   if ((await enemyDisplay.innerText()).includes("5")) throw new Error("Player saw exact damage before the DM revealed HP.");
+  await openCombatantOptions(enemyControl, "Moon Beast", "Show HP");
   await enemyControl.getByRole("button", { name: "Show HP" }).click();
   await enemyDisplay.getByText("5", { exact: true }).waitFor();
   await enemyDisplay.getByText("damage", { exact: true }).waitFor();
+  await openCombatantOptions(enemyControl, "Moon Beast", "Show stats");
   await enemyControl.getByRole("button", { name: "Show stats" }).click();
   await enemyDisplay.locator(".battle-ac").getByText("14", { exact: true }).waitFor();
+  await openCombatantOptions(enemyControl, "Moon Beast", "Reset stats");
   await enemyControl.getByRole("button", { name: "Reset stats", exact: true }).click();
   await enemyControl.getByLabel("Moon Beast damage taken 0").waitFor();
-  await enemyControl.getByLabel("More options for Moon Beast").click();
   await enemyControl.getByRole("button", { name: "Remove Poisoned from Moon Beast" }).waitFor({ state: "detached" });
   await enemyDisplay.getByText(/Poisoned/).waitFor({ state: "detached" });
   await enemyDisplay.locator(".battle-ac").getByText("14", { exact: true }).waitFor({ state: "detached" });
@@ -307,6 +319,7 @@ try {
     throw new Error(`Reset stats did not restore the enemy visibility defaults: ${resetPlayerText}`);
   }
 
+  await dmPage.getByLabel("Battle options").click();
   await dmPage.getByRole("button", { name: "Add enemy", exact: true }).click();
   const enemyLibrary = dmPage.getByRole("dialog", { name: "Manage enemies" });
   await enemyLibrary.getByText("Moon Beast", { exact: true }).waitFor();
@@ -315,6 +328,7 @@ try {
   await dmPage.screenshot({ path: "screenshots/game-enemy-library-desktop.png", fullPage: true });
   await enemyLibrary.getByRole("button", { name: "Done", exact: true }).click();
 
+  await dmPage.getByLabel("Battle options").click();
   await dmPage.getByRole("button", { name: "Create item", exact: true }).click();
   const itemDialog = dmPage.getByRole("dialog", { name: "Create an item" });
   await itemDialog.getByLabel("Name").fill("Ashen Spear");
@@ -323,8 +337,7 @@ try {
   await itemDialog.waitFor({ state: "detached" });
 
   const hunterControl = dmPage.locator(".battle-row").filter({ hasText: "Lady Maria" });
-  await hunterControl.getByLabel("More options for Lady Maria").click();
-  await hunterControl.getByRole("button", { name: "Remove Hunter", exact: true }).waitFor();
+  await openCombatantOptions(hunterControl, "Lady Maria", "Remove Hunter");
   await hunterControl.getByLabel("More options for Lady Maria").click();
   await hunterControl.getByRole("button", { name: "Increase Lady Maria armor class" }).click();
   await hunterControl.locator(".battle-ac").getByText("16", { exact: true }).waitFor();
@@ -352,6 +365,10 @@ try {
   await dmPage.setViewportSize({ width: 390, height: 844 });
   await noHorizontalOverflow(dmPage, "Clean DM battle view mobile");
   await dmPage.screenshot({ path: "screenshots/game-battle-mode-dm-mobile.png", fullPage: true });
+  await dmPage.getByLabel("Battle options").click();
+  await noHorizontalOverflow(dmPage, "Mobile battle options");
+  await dmPage.screenshot({ path: "screenshots/game-battle-options-mobile.png", fullPage: true });
+  await dmPage.getByLabel("Battle options").click();
 
   await dmPage.getByRole("button", { name: "Next turn" }).click();
   await playerPage.locator(".battle-live-status").getByText("Grave Hound", { exact: true }).waitFor();
@@ -360,7 +377,7 @@ try {
   await noHorizontalOverflow(playerPage, "Player battle mode mobile");
   await playerPage.screenshot({ path: "screenshots/game-battle-mode-mobile.png", fullPage: true });
 
-  await enemyControl.getByLabel("More options for Moon Beast").click();
+  await openCombatantOptions(enemyControl, "Moon Beast", "Remove enemy");
   await enemyControl.getByRole("button", { name: "Remove enemy", exact: true }).click();
   await Promise.all([
     enemyControl.waitFor({ state: "detached" }),
@@ -372,7 +389,7 @@ try {
   ]);
   if (removedCombatant.exists || removedBattleView.exists) throw new Error("Removing a dead enemy left battle records behind.");
 
-  await hunterControl.getByLabel("More options for Lady Maria").click();
+  await openCombatantOptions(hunterControl, "Lady Maria", "Remove Hunter");
   await hunterControl.getByRole("button", { name: "Remove Hunter", exact: true }).click();
   await Promise.all([
     hunterControl.waitFor({ state: "detached" }),
@@ -382,8 +399,9 @@ try {
   const preservedHunter = await db.doc(`characters/${characterId}`).get();
   if (!removedHunterCombatants.empty || !preservedHunter.exists) throw new Error("Removing a Hunter should only remove them from the battle.");
 
-  dmPage.once("dialog", (dialog) => dialog.accept());
-  await dmPage.getByRole("button", { name: "End battle" }).click();
+  await dmPage.getByLabel("Battle options").click();
+  await dmPage.getByRole("button", { name: "End battle", exact: true }).click();
+  await dmPage.getByRole("alertdialog", { name: "End battle?" }).getByRole("button", { name: "End battle", exact: true }).click();
   await Promise.all([
     dmPage.getByTestId("session-battle-screen").waitFor({ state: "detached" }),
     playerPage.getByTestId("session-battle-screen").waitFor({ state: "detached" }),
