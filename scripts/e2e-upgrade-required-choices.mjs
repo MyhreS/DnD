@@ -202,6 +202,45 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.getByRole("heading", { name: "Hunter & build", exact: true }).waitFor();
   if (await page.locator(".v4-hunter-build-grid select").count()) throw new Error("Creation selectors remained inside the completed character sheet");
   await page.locator(".v4-hunter-build-grid").getByText("Hunter Brute", { exact: true }).waitFor();
+  const hunterBuildLayout = await page.locator(".v4-hunter-build").evaluate((element) => {
+    function rect(target) {
+      const bounds = target.getBoundingClientRect();
+      return { left: bounds.left, top: bounds.top, right: bounds.right, bottom: bounds.bottom, width: bounds.width };
+    }
+    const name = element.querySelector(".v4-hunter-name");
+    const nameInput = element.querySelector(".v4-hunter-name input");
+    const fields = [...element.querySelectorAll(".v4-hunter-build-value")];
+    const fieldValues = fields.map((field) => field.querySelector("strong"));
+    const panels = [...element.querySelectorAll(".v4-hunter-feats-tools > .appsheet-panel")];
+    const referenceLists = [...element.querySelectorAll(".v4-reference-list")];
+    const articles = [...element.querySelectorAll(".v4-reference-list article")];
+    if (!name || !nameInput || fieldValues.some((value) => !value)) throw new Error("Hunter build fields are incomplete");
+    return {
+      width: element.getBoundingClientRect().width,
+      sections: [name, ...fields, ...panels].map(rect),
+      dividers: [
+        getComputedStyle(nameInput).borderBottomWidth,
+        ...fieldValues.map((value) => getComputedStyle(value).borderBottomWidth),
+        ...panels.map((panel) => getComputedStyle(panel).borderBottomWidth),
+        ...referenceLists.map((list) => getComputedStyle(list).borderTopWidth),
+        ...articles.map((article) => getComputedStyle(article).borderBottomWidth),
+      ],
+    };
+  });
+  for (let index = 1; index < hunterBuildLayout.sections.length; index += 1) {
+    const previous = hunterBuildLayout.sections[index - 1];
+    const current = hunterBuildLayout.sections[index];
+    if (current.top < previous.bottom || Math.abs(current.left - previous.left) > 2 || Math.abs(current.width - previous.width) > 2) {
+      throw new Error(`${suffix} Hunter & build sections are not one ordered column: ${JSON.stringify(hunterBuildLayout.sections)}`);
+    }
+  }
+  if (suffix === "desktop") {
+    if (hunterBuildLayout.width > 700) throw new Error(`Desktop Hunter & build content is too wide: ${hunterBuildLayout.width}`);
+    if (hunterBuildLayout.dividers.some((width) => width !== "0px")) {
+      throw new Error(`Desktop Hunter & build still has content dividers: ${JSON.stringify(hunterBuildLayout.dividers)}`);
+    }
+  }
+  await page.screenshot({ path: `screenshots/hunter-build-${suffix}.png`, fullPage: true, animations: "disabled" });
   await page.getByRole("button", { name: "Back", exact: true }).click();
   await sheet.getByRole("button", { name: "Abilities", exact: true }).click();
   await page.getByRole("heading", { name: "Abilities", exact: true }).waitFor();

@@ -243,6 +243,24 @@
 .v4-reference-list h4 { margin: 0; color: var(--app-text); font: 700 15px/1.2 "Alegreya Sans SC", sans-serif; }
 .v4-reference-list small { color: var(--app-warm); font-size: 10px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
 .v4-reference-list p { margin: 0; color: var(--app-muted); font: 14px/1.4 "Alegreya", serif; white-space: pre-line; }
+
+@media (min-width: 701px) {
+  .v4-page-stack[data-panel="profile"] .v4-page-header { width: min(920px, 100%); }
+  .v4-hunter-build { width: min(680px, 100%); margin-inline: auto; gap: 34px; }
+  .v4-hunter-name { gap: 9px; }
+  .v4-hunter-name input { min-height: 0; padding: 2px !important; border: 0 !important; }
+  .v4-hunter-name input:focus { border: 0 !important; box-shadow: none; outline: 2px solid var(--app-warm); outline-offset: 6px; }
+  .v4-hunter-build-grid { grid-template-columns: 1fr; gap: 24px; }
+  .v4-hunter-build-value > strong { min-height: 0; padding: 0; border: 0; }
+  .v4-hunter-build-grid > label > small,
+  .v4-hunter-build-value > small { max-width: 36rem; }
+  .v4-hunter-feats-tools { grid-template-columns: 1fr; gap: 34px; margin-bottom: 0; }
+  .v4-hunter-feats-tools > .appsheet-panel,
+  .v4-hunter-feats-tools > .appsheet-panel:first-child { padding: 0; border-bottom: 0; }
+  .v4-reference-list { gap: 16px; border-top: 0; }
+  .v4-reference-list article { padding: 0; border-bottom: 0; }
+}
+
 .v4-derived-stat-page { display: grid; gap: 22px; width: min(780px, 100%); margin-inline: auto; }
 .v4-derived-total { display: grid; gap: 5px; padding: 4px 2px 20px; border-bottom: 1px solid var(--app-line); }
 .v4-derived-total small { color: var(--app-muted); font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; }
