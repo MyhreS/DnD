@@ -140,6 +140,9 @@ const maxConcurrentTickets = fixture
   : WORKSHOP_MAX_CONCURRENT_TICKETS;
 const CHECKPOINT_COLLECTION = "workshopAgentCheckpoints";
 const CHECKPOINT_VERSION = 1;
+const COMMAND_TIMEOUT_MS = fixture ? 30_000 : 2 * 60_000;
+const PROGRESS_STREAM_DRAIN_MS = fixture ? 250 : 2_000;
+const PROGRESS_STREAM_CANCEL_MS = fixture ? 250 : 1_000;
 
 type AgentWorktree = {
   path: string;
@@ -445,7 +448,7 @@ async function writeAgentState(): Promise<void> {
     lifecycle: managerLifecycle,
     acceptingTickets: managerLifecycle === "ready" && !shuttingDown,
     checkpointRecoveryComplete: managerLifecycle === "ready" || managerLifecycle === "stopping",
-    version: 10,
+    version: 11,
     ...legacyProgressFields(),
   });
 }
@@ -503,19 +506,46 @@ function queueProgress(ticketId: string, next: WorkshopProgress): void {
     .catch((error) => console.error("Workshop progress update failed:", error));
 }
 
-async function readCodexProgress(ticket: ClaimedTicket, stream: ReadableStream<Uint8Array>): Promise<void> {
+function cancelProgressReader(reader: ReadableStreamDefaultReader<Uint8Array>, signal?: AbortSignal): () => void {
+  if (!signal) return () => undefined;
+  const cancel = () => void reader.cancel("The Workshop worker process has stopped.").catch(() => undefined);
+  if (signal.aborted) cancel();
+  else signal.addEventListener("abort", cancel, { once: true });
+  return () => signal.removeEventListener("abort", cancel);
+}
+
+async function readCodexProgress(ticket: ClaimedTicket, stream: ReadableStream<Uint8Array>, signal?: AbortSignal): Promise<void> {
   const reader = stream.getReader();
+  const removeCancelListener = cancelProgressReader(reader, signal);
   const decoder = new TextDecoder();
   let buffer = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        try {
+          const event = JSON.parse(line) as unknown;
+          const work = activeWork.get(ticket.id);
+          const sessionId = codexSessionIdFromEvent(event);
+          if (work && sessionId && work.sessionId !== sessionId) {
+            work.sessionId = sessionId;
+            await queueCheckpointWrite(work);
+          }
+          const progress = progressFromCodexEvent(event);
+          if (progress) queueProgress(ticket.id, progress);
+        } catch {
+          // Ignore non-JSON diagnostic output; raw agent output is never shown in Workshop.
+        }
+      }
+    }
+    const tail = `${buffer}${decoder.decode()}`.trim();
+    if (tail) {
       try {
-        const event = JSON.parse(line) as unknown;
+        const event = JSON.parse(tail) as unknown;
         const work = activeWork.get(ticket.id);
         const sessionId = codexSessionIdFromEvent(event);
         if (work && sessionId && work.sessionId !== sessionId) {
@@ -525,52 +555,65 @@ async function readCodexProgress(ticket: ClaimedTicket, stream: ReadableStream<U
         const progress = progressFromCodexEvent(event);
         if (progress) queueProgress(ticket.id, progress);
       } catch {
-        // Ignore non-JSON diagnostic output; raw agent output is never shown in Workshop.
+        // A partial final diagnostic line does not affect the coding result file.
       }
     }
+    await stateWrites;
+  } finally {
+    removeCancelListener();
+    reader.releaseLock();
   }
-  const tail = `${buffer}${decoder.decode()}`.trim();
-  if (tail) {
-    try {
-      const event = JSON.parse(tail) as unknown;
-      const work = activeWork.get(ticket.id);
-      const sessionId = codexSessionIdFromEvent(event);
-      if (work && sessionId && work.sessionId !== sessionId) {
-        work.sessionId = sessionId;
-        await queueCheckpointWrite(work);
-      }
-      const progress = progressFromCodexEvent(event);
-      if (progress) queueProgress(ticket.id, progress);
-    } catch {
-      // A partial final diagnostic line does not affect the coding result file.
-    }
-  }
-  await stateWrites;
 }
 
-async function readRecoveryProgress(ticketId: string, stream: ReadableStream<Uint8Array>): Promise<void> {
+async function readRecoveryProgress(ticketId: string, stream: ReadableStream<Uint8Array>, signal?: AbortSignal): Promise<void> {
   const reader = stream.getReader();
+  const removeCancelListener = cancelProgressReader(reader, signal);
   const decoder = new TextDecoder();
   let buffer = "";
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    buffer += decoder.decode(value, { stream: true });
-    const lines = buffer.split("\n");
-    buffer = lines.pop() ?? "";
-    for (const line of lines) {
-      try {
-        const progress = progressFromCodexEvent(JSON.parse(line));
-        if (progress) queueProgress(ticketId, {
-          ...progress,
-          activity: `Recovery agent: ${progress.activity.toLowerCase()}`,
-          lastCompleted: progress.lastCompleted ? `Recovery agent ${progress.lastCompleted.toLowerCase()}` : undefined,
-        });
-      } catch {
-        // Recovery diagnostics remain private; malformed stream lines are ignored.
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n");
+      buffer = lines.pop() ?? "";
+      for (const line of lines) {
+        try {
+          const progress = progressFromCodexEvent(JSON.parse(line));
+          if (progress) queueProgress(ticketId, {
+            ...progress,
+            activity: `Recovery agent: ${progress.activity.toLowerCase()}`,
+            lastCompleted: progress.lastCompleted ? `Recovery agent ${progress.lastCompleted.toLowerCase()}` : undefined,
+          });
+        } catch {
+          // Recovery diagnostics remain private; malformed stream lines are ignored.
+        }
       }
     }
+  } finally {
+    removeCancelListener();
+    reader.releaseLock();
   }
+}
+
+async function settleProgressStream(
+  ticketId: string,
+  progressStream: Promise<void>,
+  controller: AbortController,
+): Promise<void> {
+  let settled = false;
+  void progressStream.finally(() => { settled = true; });
+  await Promise.race([
+    progressStream,
+    new Promise((resolvePromise) => setTimeout(resolvePromise, PROGRESS_STREAM_DRAIN_MS)),
+  ]);
+  if (settled) return;
+  console.warn(`Workshop ticket ${ticketId} kept its progress pipe open after the worker stopped; closing the pipe and continuing.`);
+  controller.abort();
+  await Promise.race([
+    progressStream,
+    new Promise((resolvePromise) => setTimeout(resolvePromise, PROGRESS_STREAM_CANCEL_MS)),
+  ]);
 }
 
 async function addAgentMessage(ticket: ClaimedTicket, body: string): Promise<void> {
@@ -787,15 +830,17 @@ function ticketText(ticket: ClaimedTicket, messages: ThreadMessage[]): string {
 }
 
 function git(args: string[], cwd = REPO_ROOT, allowFailure = false): string {
-  const result = spawnSync("git", args, { cwd, encoding: "utf8" });
+  const result = spawnSync("git", args, { cwd, encoding: "utf8", timeout: COMMAND_TIMEOUT_MS });
+  if (!allowFailure && result.error) throw new Error(`git ${args[0]} did not finish: ${result.error.message}`);
   if (!allowFailure && result.status !== 0) throw new Error(result.stderr || `git ${args[0]} failed`);
-  return result.stdout.trim();
+  return (result.stdout ?? "").trim();
 }
 
 function gh(args: string[], cwd = REPO_ROOT, allowFailure = false): string {
-  const result = spawnSync("gh", args, { cwd, encoding: "utf8" });
+  const result = spawnSync("gh", args, { cwd, encoding: "utf8", timeout: COMMAND_TIMEOUT_MS });
+  if (!allowFailure && result.error) throw new Error(`gh ${args[0]} did not finish: ${result.error.message}`);
   if (!allowFailure && result.status !== 0) throw new Error(result.stderr || result.stdout || `gh ${args[0]} failed`);
-  return result.stdout.trim();
+  return (result.stdout ?? "").trim();
 }
 
 function refreshOriginMain(cwd = REPO_ROOT): void {
@@ -809,7 +854,7 @@ function changedPaths(range: string, cwd: string): string[] {
 
 function integrateLatestMain(worktree: AgentWorktree): void {
   refreshOriginMain(worktree.path);
-  if (spawnSync("git", ["merge-base", "--is-ancestor", "origin/main", "HEAD"], { cwd: worktree.path }).status === 0) return;
+  if (spawnSync("git", ["merge-base", "--is-ancestor", "origin/main", "HEAD"], { cwd: worktree.path, timeout: COMMAND_TIMEOUT_MS }).status === 0) return;
 
   worktree.ticketPaths ??= changedPaths(`${worktree.baseSha}..HEAD`, worktree.path);
   const overlap = overlappingChangeScopes(
@@ -820,7 +865,7 @@ function integrateLatestMain(worktree: AgentWorktree): void {
     throw new FreshMainRequiredError(`Current main overlaps this ticket in: ${overlap.join(", ")}`);
   }
 
-  const rebase = spawnSync("git", ["rebase", "origin/main"], { cwd: worktree.path, encoding: "utf8" });
+  const rebase = spawnSync("git", ["rebase", "origin/main"], { cwd: worktree.path, encoding: "utf8", timeout: COMMAND_TIMEOUT_MS });
   if (rebase.status !== 0) {
     git(["rebase", "--abort"], worktree.path, true);
     throw new FreshMainRequiredError(rebase.stderr || rebase.stdout || "The ticket branch could not rebase onto current main.");
@@ -847,7 +892,7 @@ function pullRequestForBranch(branch: string, cwd: string): PullRequest | null {
 
 async function waitForPullRequestChecks(number: number, cwd: string): Promise<void> {
   for (let attempt = 0; attempt < 30; attempt += 1) {
-    const result = spawnSync("gh", ["pr", "checks", String(number), "--json", "name,bucket,state,link"], { cwd, encoding: "utf8" });
+    const result = spawnSync("gh", ["pr", "checks", String(number), "--json", "name,bucket,state,link"], { cwd, encoding: "utf8", timeout: COMMAND_TIMEOUT_MS });
     const output = `${result.stdout}\n${result.stderr}`;
     if (result.status === 0) {
       const checks = JSON.parse(result.stdout) as Array<{ name: string; bucket: string; state: string }>;
@@ -881,7 +926,7 @@ async function waitForWorkflow(commitSha: string, workflow: string, cwd: string)
         candidate.headSha
         && candidate.headSha !== commitSha
         && deploymentContainsCommit(commitSha, candidate.headSha, (ancestor, descendant) => (
-          spawnSync("git", ["merge-base", "--is-ancestor", ancestor, descendant], { cwd }).status === 0
+          spawnSync("git", ["merge-base", "--is-ancestor", ancestor, descendant], { cwd, timeout: COMMAND_TIMEOUT_MS }).status === 0
         ))
       ));
       if (supersedingRuns.some((candidate) => candidate.status === "completed" && candidate.conclusion === "success")) return;
@@ -1181,7 +1226,7 @@ function stopOwnedWorktreeProcesses(worktreePath: string, rootPid?: number): voi
       `$target = '${literalPath}'`,
       "$owned = Get-CimInstance Win32_Process | Where-Object {",
       "  $_.ProcessId -ne $PID -and $_.CommandLine -like \"*$target*\" -and",
-      "  $_.Name -in @('node.exe', 'bun.exe', 'esbuild.exe')",
+      "  $_.Name -in @('node.exe', 'bun.exe', 'esbuild.exe', 'powershell.exe', 'pwsh.exe', 'cmd.exe', 'java.exe')",
       "}",
       "$owned | ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }",
     ].join("\n");
@@ -1354,7 +1399,7 @@ async function runCodingAgent(
       ].join("\n\n")
       : prompt;
     const checkpointFixtureSessionId = crypto.randomUUID();
-    const command = fixture === "stuck_result"
+    const command = fixture === "stuck_result" || fixture === "stuck_stream_result"
       ? [process.execPath, "-e", [
         `await Bun.write(${JSON.stringify(resultPath)}, ${JSON.stringify(JSON.stringify({
           outcome: "answered",
@@ -1384,7 +1429,15 @@ async function runCodingAgent(
     });
     work.agentProcess = proc;
     work.agentProcessPath = worktree.path;
-    const progressStream = readCodexProgress(ticket, proc.stdout).catch(async (error) => {
+    const progressController = new AbortController();
+    const progressOutput = fixture === "stuck_stream_result"
+      ? new ReadableStream<Uint8Array>({
+        start(controller) {
+          controller.enqueue(new TextEncoder().encode(`${JSON.stringify({ type: "turn.started" })}\n`));
+        },
+      })
+      : proc.stdout;
+    const progressStream = readCodexProgress(ticket, progressOutput, progressController.signal).catch(async (error) => {
       console.error("Workshop progress stream stopped:", error);
       await stateWrites;
     });
@@ -1395,7 +1448,7 @@ async function runCodingAgent(
       work.agentProcess = undefined;
       work.agentProcessPath = undefined;
       stopOwnedWorktreeProcesses(worktree.path);
-      await progressStream;
+      await settleProgressStream(ticket.id, progressStream, progressController);
     }
     throwIfManagerStopping();
     if (watched.salvagedResult === undefined && watched.exitCode !== 0) throw new Error(`Coding agent exited with status ${watched.exitCode}.`);
@@ -1464,7 +1517,8 @@ async function runRecoveryAgent(ticket: ClaimedTicket, error: unknown, folder: s
       work.agentProcess = proc;
       work.agentProcessPath = worktree.path;
     }
-    const progressStream = readRecoveryProgress(ticket.id, proc.stdout).catch(() => undefined);
+    const progressController = new AbortController();
+    const progressStream = readRecoveryProgress(ticket.id, proc.stdout, progressController.signal).catch(() => undefined);
     let watched: Awaited<ReturnType<typeof waitForCodexProcess<RecoveryResult>>>;
     try {
       watched = await waitForCodexProcess({ ticketId: ticket.id, worktreePath: worktree.path, resultPath, proc, parse: parseRecoveryResult });
@@ -1474,7 +1528,7 @@ async function runRecoveryAgent(ticket: ClaimedTicket, error: unknown, folder: s
         work.agentProcessPath = undefined;
       }
       stopOwnedWorktreeProcesses(worktree.path);
-      await progressStream;
+      await settleProgressStream(ticket.id, progressStream, progressController);
     }
     if (watched.salvagedResult === undefined && watched.exitCode !== 0) throw new Error(`Recovery agent exited with status ${watched.exitCode}.`);
     return watched.salvagedResult ?? parseRecoveryResult(await readFile(resultPath, "utf8"));
