@@ -120,11 +120,15 @@ try {
     await page.getByRole("alertdialog", { name: "Discard changes?", exact: true })
       .getByRole("button", { name: "Discard changes", exact: true }).click();
     await page.getByRole("heading", { name: "Hunters", exact: true }).waitFor();
+    const bodyOverflow = await page.evaluate(() => document.body.style.overflow);
+    if (bodyOverflow === "hidden") {
+      throw new Error(`${viewport.name} nested character confirmation left document scrolling locked`);
+    }
     await context.close();
   }
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Custom confirmations E2E passed: no browser popup, safe focus, cancel/confirm behavior, and responsive character layout.");
+  console.log("Custom confirmations E2E passed: no browser popup, safe focus, cancel/confirm behavior, restored document scrolling, and responsive character layout.");
 } finally {
   await browser.close();
   server.kill("SIGTERM");

@@ -13,6 +13,7 @@ export function SessionCombatSection({
   disabled,
   enemyTemplates,
   onAddEnemy,
+  onReturnToBattle,
 }: {
   game: Game;
   participants: GameParticipant[];
@@ -21,6 +22,7 @@ export function SessionCombatSection({
   disabled: boolean;
   enemyTemplates: EnemyTemplate[];
   onAddEnemy: (template: EnemyTemplate, encounterId?: number) => Promise<boolean>;
+  onReturnToBattle: () => void;
 }) {
   const allCombatants = useCombatStore((state) => state.combatants);
   const startSessionEncounter = useCombatStore((state) => state.startSessionEncounter);
@@ -59,26 +61,33 @@ export function SessionCombatSection({
     || combatants.length > 0
     || enemyTemplates.some((template) => !template.archived);
   const hasPreviousBattle = hasSavedBattle(encounter);
+  const hunterCount = participants.filter((participant) => participant.characterId).length;
+  const battleCopy = encounter.active
+    ? `Round ${encounter.round} · ${order.length} combatant${order.length === 1 ? "" : "s"}`
+    : hasPreviousBattle
+      ? `${order.length} combatant${order.length === 1 ? "" : "s"} saved`
+      : `${hunterCount} Hunter${hunterCount === 1 ? "" : "s"} ready`;
 
   return (
-    <section className="game-section game-combat" aria-labelledby="combat-heading">
-      <div className="game-section-heading game-combat-heading">
-        <div>
-          <p className="eyebrow">Battle</p>
-          <h3 id="combat-heading">Initiative <span> · {order.length} combatant{order.length === 1 ? "" : "s"}</span></h3>
-        </div>
+    <section className={`game-combat-stage${encounter.active ? " is-live" : ""}`} aria-labelledby="combat-heading">
+      <div className="game-combat-mark" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="m5 4 15 15M16 4l4 4L9 19H5v-4L16 4ZM4 20l4-4" /></svg>
       </div>
-      <div className="game-combat-idle">
-        <p>{hasPreviousBattle ? "The previous battle remains saved. Resume it with the same combatants." : "Start battle to move everyone into the shared battle view. Prepared enemies are kept."}</p>
-        {isDm && (
-          hasPreviousBattle ? (
-            <div className="game-combat-actions">
-              <button className="btn btn-primary" type="button" disabled={disabled || !canStart} onClick={() => setBattleMode("resume")}>Resume battle</button>
-              <button className="btn btn-ghost" type="button" disabled={disabled} onClick={() => setBattleMode("new")}>Start new battle</button>
-            </div>
-          ) : <button className="btn btn-primary" type="button" disabled={disabled || !canStart} onClick={() => setBattleMode("start")}>Start battle</button>
+      <div className="game-combat-copy">
+        <p className="eyebrow">{encounter.active ? "Battle in progress" : hasPreviousBattle ? "Battle saved" : "Next move"}</p>
+        <h3 id="combat-heading">{encounter.active ? "Return to the fight" : hasPreviousBattle ? "Continue the encounter" : "Ready for battle"}</h3>
+        <p>{battleCopy}</p>
+      </div>
+      {isDm && <div className="game-combat-actions">
+        {encounter.active ? (
+          <button className="btn btn-primary" type="button" disabled={disabled} onClick={onReturnToBattle}>Return to battle</button>
+        ) : hasPreviousBattle ? (<>
+          <button className="btn btn-primary" type="button" disabled={disabled || !canStart} onClick={() => setBattleMode("resume")}>Resume battle</button>
+          <button className="game-text-button" type="button" disabled={disabled} onClick={() => setBattleMode("new")}>New battle</button>
+        </>) : (
+          <button className="btn btn-primary" type="button" disabled={disabled || !canStart} onClick={() => setBattleMode("start")}>Start battle</button>
         )}
-      </div>
+      </div>}
       {battleMode && (
         <StartBattleDialog
           templates={enemyTemplates}

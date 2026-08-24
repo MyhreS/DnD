@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { useBodyScrollLock } from "@/hooks/common/useBodyScrollLock";
 
 const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -6,6 +7,7 @@ const FOCUSABLE = 'a[href], button:not([disabled]), textarea:not([disabled]), in
 export function useModalDialog(onClose: () => void) {
   const dialogRef = useRef<HTMLElement>(null);
   const onCloseRef = useRef(onClose);
+  useBodyScrollLock();
 
   useEffect(() => {
     onCloseRef.current = onClose;
@@ -13,8 +15,6 @@ export function useModalDialog(onClose: () => void) {
 
   useEffect(() => {
     const previousFocus = document.activeElement instanceof HTMLElement ? document.activeElement : null;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     const initialFocus = dialogRef.current?.querySelector<HTMLElement>("[data-dialog-initial-focus]");
     (initialFocus ?? dialogRef.current)?.focus();
 
@@ -42,7 +42,6 @@ export function useModalDialog(onClose: () => void) {
     window.addEventListener("keydown", handleKeyboard);
     return () => {
       window.removeEventListener("keydown", handleKeyboard);
-      document.body.style.overflow = previousOverflow;
       previousFocus?.focus();
     };
   }, []);
