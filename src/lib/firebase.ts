@@ -42,7 +42,7 @@ export const auth = initializeAuth(app, {
 // before falling back — the classic "Firestore is slow on first open" problem.
 // Auto-detect probes once and picks the working transport immediately.
 // ignoreUndefinedProperties: partial HunterCard writes legitimately carry
-// `undefined` for "leave unset" optional fields (feat, inventory, …) — treat
+// `undefined` for "leave unset" optional fields (notes, optional rows, …) — treat
 // them as omitted instead of throwing.
 export const db = initializeFirestore(app, {
   experimentalAutoDetectLongPolling: true,

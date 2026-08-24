@@ -1,4 +1,3 @@
-import { getClass } from "@/data/classes";
 import { cardClassName } from "@/features/hunter/lib/papersheet";
 import type { Game, GameParticipant, HunterCard } from "@/types";
 
@@ -11,10 +10,10 @@ function TrashIcon() {
 }
 
 function participantClass(participant: GameParticipant, card?: HunterCard): string {
+  const legacy = participant.classId.split(/[-_\s]+/).filter(Boolean).map((part) => part.charAt(0).toUpperCase() + part.slice(1)).join(" ");
   return (card ? cardClassName(card) : "")
     || participant.className
-    || getClass(participant.classId)?.name
-    || participant.classId
+    || legacy
     || "Hunter";
 }
 

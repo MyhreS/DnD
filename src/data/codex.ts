@@ -21,6 +21,29 @@ export interface CodexSource {
   fileLabels: string[];
 }
 
+export interface CurrentWhisper {
+  id: string;
+  name: string;
+  level: number;
+  type: string;
+  performing: string;
+  range: string;
+  duration: string;
+  special?: string;
+  text: string;
+  upgrade: string;
+  sourcePages: number[];
+}
+
+export interface CurrentCharacterSheet {
+  sourceId: string;
+  printedPageCount: number;
+  logicalSectionCount: number;
+  abilities: string[];
+  skills: Array<{ name: string; ability: string }>;
+  sections: Array<{ id: string; title: string; sourcePages: number[]; fields: string[] }>;
+}
+
 export interface CodexEntry {
   id: string;
   topicKey: string;
@@ -47,6 +70,9 @@ export interface CodexTopic {
 
 export const CODEX_SOURCES = generated.sources as CodexSource[];
 export const CODEX_ENTRIES = generated.entries as CodexEntry[];
+export const CURRENT_CHARACTER_SHEET = generated.characterSheet as CurrentCharacterSheet;
+export const CURRENT_WHISPERS = generated.whispers as CurrentWhisper[];
+export const CURRENT_CONDITIONS = generated.conditionsNamedByCurrentSources as string[];
 export const CODEX_SOURCE_BY_ID = new Map(CODEX_SOURCES.map((item) => [item.id, item]));
 export const CODEX_GROUPS = [...new Set(CODEX_ENTRIES.map((item) => item.group))];
 

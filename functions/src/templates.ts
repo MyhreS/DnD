@@ -20,11 +20,11 @@ export function inviteEmail(to: string, appUrl: string, firstName?: string): Mai
   return {
     to,
     subject: "You're invited to the hunt — Catacombs & Starspawns",
-    text: `${greeting}.\n\nYou've been added to our Catacombs & Starspawns party. Open the app and sign in with this Google account to forge your hunter, see when we play, and read the handbook.\n\n${appUrl}\n\n${HOW_TO}\n\nSee you in the fog.`,
+    text: `${greeting}.\n\nYou've been added to our Catacombs & Starspawns party. Open the app and sign in with this Google account to record your hunter, see when we play, and read the current game-maker sources.\n\n${appUrl}\n\n${HOW_TO}\n\nSee you in the fog.`,
     html: renderHtml({
       heading: greeting,
       bodyHtml: `<p>You've been added to our <strong>Catacombs &amp; Starspawns</strong> party.</p>
-        <p>Sign in with <em>this</em> Google account to forge your hunter, see when we next play, and read the handbook.</p>
+        <p>Sign in with <em>this</em> Google account to record your hunter, see when we next play, and read the current game-maker sources.</p>
         <p style="color:#e9e3d5;font-size:14px;margin-top:14px"><strong>Add it to your home screen so it feels like a real app:</strong></p>
         ${stepsHtml}`,
       ctaText: "Enter the app",

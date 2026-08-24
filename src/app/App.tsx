@@ -13,7 +13,7 @@ import { CharacterPage } from "@/features/hunter/components/CharacterPage";
 import { ProfilePage } from "@/features/profile/components/ProfilePage";
 
 // Heavy, rarely-first routes are code-split so their content data
-// (generated Codex data / creature art / play scene) defers out of
+// (generated Codex data / live play scene) defers out of
 // the first-paint bundle. Named exports are adapted to the default-export
 // shape React.lazy expects.
 const CodexPage = lazy(() =>
@@ -28,9 +28,8 @@ const GamePage = lazy(() =>
 const StatusPage = lazy(() =>
   import("@/features/status/components/StatusPage").then((m) => ({ default: m.StatusPage })),
 );
-/** Preserve old bookmarks and character-sheet deep links while bringing every
- * reference into the unified Codex. The old location determines the source;
- * specific chapter/section/item links become focused searches. */
+/** Preserve old bookmarks without reviving removed source ids. Useful query
+ * text is kept, while filters for replaced source sets are discarded. */
 function LegacyCodexRedirect() {
   const { pathname, search } = useLocation();
   const previous = new URLSearchParams(search);
@@ -38,29 +37,18 @@ function LegacyCodexRedirect() {
   const previousQuery = previous.get("q");
   if (previousQuery) next.set("q", previousQuery);
 
-  if (pathname === "/rules" || pathname === "/reference") {
-    next.set("source", "rules-reference-scan");
-  } else if (pathname === "/game-card") {
-    next.set("source", "game-card");
-  } else {
+  if (pathname !== "/rules" && pathname !== "/reference" && pathname !== "/game-card") {
     const item = previous.get("item");
     const section = previous.get("section");
     const tab = previous.get("tab");
     if (item) {
       next.set("q", item.replaceAll("-", " "));
-      next.set("source", item);
     } else if (section) {
       next.set("q", section.replaceAll("-", " "));
-      next.set("source", "handbook");
-    } else if (tab === "classes") {
-      next.set("group", "Classes");
     } else if (tab === "rites") {
       next.set("group", "Rites");
     } else if (tab === "backgrounds" || tab === "feats" || tab === "armory") {
       next.set("q", tab === "armory" ? "equipment" : tab);
-      next.set("source", "handbook");
-    } else {
-      next.set("source", "handbook");
     }
   }
   return <Navigate to={{ pathname: "/codex", search: next.toString() }} replace />;
@@ -71,7 +59,7 @@ function AuthedApp() {
   return (
     <Suspense fallback={<Splash />}>
       <Routes>
-        {/* Main menu: account home, hunters, handbook, profile — no campaign. */}
+        {/* Main menu: account home, hunters, current sources, profile. */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<MainMenu />} />
           <Route path="character" element={<CharacterPage />} />

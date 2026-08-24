@@ -171,7 +171,7 @@ try {
   await search.fill("Gascoigne");
   const gascoigne = searchResults.getByRole("button", { name: /Gascoigne/ });
   await gascoigne.waitFor();
-  await gascoigne.getByText("Preview Hunter · Bloodbound · Level 3", { exact: true }).waitFor();
+  await gascoigne.getByText(/Custom class · Level 3$/).waitFor();
   await gascoigne.click();
   await owner.getByRole("button", { name: "Create game", exact: true }).click();
   await owner.getByRole("heading", { name: "Night of the Pale Moon" }).waitFor();
@@ -219,16 +219,16 @@ try {
   await waitingRoom.getByRole("button", { name: "Open Gascoigne character sheet", exact: true }).click();
   const waitingRoomSheet = owner.getByRole("dialog", { name: "Character sheet" });
   await waitingRoomSheet.waitFor();
-  await waitingRoomSheet.getByRole("button", { name: /Back/ }).click();
+  await waitingRoomSheet.getByRole("button", { name: /Hunters/ }).click();
   await waitingRoomSheet.waitFor({ state: "hidden" });
   await managePlayersButton.click();
   const managePlayers = owner.getByRole("dialog", { name: "Manage players" });
-  await managePlayers.getByText("Preview Hunter · Bloodbound · Level 3", { exact: true }).waitFor();
+  await managePlayers.getByText(/Custom class · Level 3$/).waitFor();
   await owner.screenshot({ path: "screenshots/manage-players-desktop.png" });
   await managePlayers.getByRole("button", { name: /Gascoigne/ }).click();
   const characterSheet = owner.getByRole("dialog", { name: "Character sheet" });
   await characterSheet.waitFor();
-  await characterSheet.getByRole("button", { name: /Back/ }).click();
+  await characterSheet.getByRole("button", { name: /Hunters/ }).click();
   await characterSheet.waitFor({ state: "hidden" });
 
   await managePlayers.getByPlaceholder("Search player or Hunter…").fill("Eileen");
@@ -241,7 +241,7 @@ try {
 
   await owner.setViewportSize({ width: 390, height: 844 });
   await managePlayersButton.click();
-  await managePlayers.getByText("Preview Hunter · Bloodbound · Level 3", { exact: true }).waitFor();
+  await managePlayers.getByText(/Custom class · Level 3$/).waitFor();
   await assertNoHorizontalOverflow(owner, "Mobile Manage players dialog");
   await owner.screenshot({ path: "screenshots/manage-players-mobile.png" });
   await managePlayers.getByRole("button", { name: "Done", exact: true }).click();
@@ -423,7 +423,7 @@ try {
   await player.getByRole("button", { name: "Open sheet", exact: true }).click();
   const playerSheet = player.getByRole("dialog", { name: "Character sheet" });
   await playerSheet.waitFor();
-  await playerSheet.getByRole("button", { name: /Back/ }).click();
+  await playerSheet.getByRole("button", { name: /Hunters/ }).click();
   await playerSheet.waitFor({ state: "hidden" });
   if (await player.getByText("The Old Cathedral", { exact: true }).count()) {
     throw new Error("Saved sessions should stay hidden until history is opened");

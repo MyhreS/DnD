@@ -10,11 +10,13 @@ function run(command, args, options = {}) {
 // the active Firebase project keeps local deploys reproducible when Doppler is
 // not configured, without writing credentials or a generated .env file.
 const projectArgs = ["--account", "simonmyhre1@gmail.com", "--project", "dandd-ea955"];
-const apps = JSON.parse(run("firebase", [...projectArgs, "apps:list", "--json"]).stdout).result;
+const firebaseTool = process.platform === "win32" ? "firebase.cmd" : "firebase";
+const firebaseOptions = { shell: process.platform === "win32" };
+const apps = JSON.parse(run(firebaseTool, [...projectArgs, "apps:list", "--json"], firebaseOptions).stdout).result;
 const webApp = apps.find((app) => app.platform === "WEB");
 if (!webApp) throw new Error("The active Firebase project has no web app.");
 const firebase = JSON.parse(
-  run("firebase", [...projectArgs, "apps:sdkconfig", "WEB", webApp.appId, "--json"]).stdout,
+  run(firebaseTool, [...projectArgs, "apps:sdkconfig", "WEB", webApp.appId, "--json"], firebaseOptions).stdout,
 ).result.sdkConfig;
 
 const build = spawnSync("bun", ["run", "build:ci"], {

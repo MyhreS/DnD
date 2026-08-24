@@ -4,7 +4,7 @@ import { db, functions } from "@/lib/firebase";
 import type { CustomItem, SessionLoot } from "@/types";
 
 export type SessionItemDraft = Pick<CustomItem, "name" | "category" | "carry" | "weightLb"> &
-  Partial<Pick<CustomItem, "note" | "armorCategory" | "acValue" | "attackBonus" | "damage" | "weaponNotes">>;
+  Partial<Pick<CustomItem, "note" | "itemSlot" | "attackBonus" | "damage" | "weaponNotes">>;
 
 const createLootFn = httpsCallable<{ gameId: string; item: SessionItemDraft }, { lootId: string }>(
   functions,
