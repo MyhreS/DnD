@@ -28,10 +28,10 @@ import type { EnemyStats, EnemyTemplate, Game, GameParticipant, HunterCard } fro
 import { EnemyEditorDialog } from "./EnemyEditorDialog";
 import { EnemyLibraryDialog } from "./EnemyLibraryDialog";
 import { GamesMenu } from "./GamesMenu";
+import { GameWaitingRoom } from "./GameWaitingRoom";
 import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed, SessionSwitchRequests } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
 import { SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
-import { SessionNotes } from "./SessionNotes";
 import "./game.css";
 
 const DEFAULT_TITLE = () => `Session ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())}`;
@@ -88,7 +88,7 @@ export function GamePage() {
   const [creatingItem, setCreatingItem] = useState(false);
   const [managingEnemies, setManagingEnemies] = useState(false);
   const [editingEnemy, setEditingEnemy] = useState<EnemyTemplate | "new" | null>(null);
-  const [ownSheetOpen, setOwnSheetOpen] = useState(false);
+  const [openSheet, setOpenSheet] = useState<HunterCard | null>(null);
   const [confirmation, setConfirmation] = useState<GameConfirmation | null>(null);
 
   useEffect(() => {
@@ -567,7 +567,6 @@ export function GamePage() {
           ) : null}
           disabled={combatBusy || busy}
         />
-        <SessionNotes gameId={selected.id} userId={user?.uid} userName={member?.firstName || user?.displayName || "Someone"} writable={selected.status !== "ended"} />
         {enemyDialogs}
         {creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
         {confirmationDialog}
@@ -624,10 +623,23 @@ export function GamePage() {
       )}
 
       {!creating && selected && (
-        <div className={focusedPlayerSession ? "game-layout is-player-focus" : "game-layout"}>
+        <div className={isSessionDm && selected.status === "lobby" ? "game-layout is-dm-waiting" : focusedPlayerSession ? "game-layout is-player-focus" : "game-layout"}>
           <main className="game-table" aria-label={`${selected.title} session`}>
               <button className="game-back-button" type="button" onClick={() => setSelectedId(null)}>← Games</button>
-              <div className="game-session-heading game-session-heading-compact">
+              {isSessionDm && selected.status === "lobby" ? (
+                <GameWaitingRoom
+                  game={selected}
+                  participants={displayedParticipants}
+                  invitations={selected.inviteRoster}
+                  characters={characters ?? []}
+                  busy={busy}
+                  onManagePlayers={selected.campaignId === null ? () => setManagingPlayers(true) : undefined}
+                  onOpenSheet={setOpenSheet}
+                  onStart={() => void beginSession()}
+                  onDiscard={() => setConfirmation("discard-session")}
+                />
+              ) : <>
+                <div className="game-session-heading game-session-heading-compact">
                 <div>
                   <p className="eyebrow">{selected.status === "active" ? "Live session" : selected.status === "ended" ? "Session history" : "Waiting room"}</p>
                   <h2>{selected.title}</h2>
@@ -636,20 +648,13 @@ export function GamePage() {
                   {selected.status === "active" && selected.combat?.active && <button className="game-text-button" type="button" onClick={() => setDismissedBattleKey(null)}>Return to battle</button>}
                   {isSessionDm && selected.campaignId === null && selected.status !== "ended" && <button className="game-text-button" type="button" onClick={() => setManagingPlayers(true)}>Manage players</button>}
                 </div>
-              </div>
+                </div>
 
               {isSessionDm && selected.status !== "ended" && (
                 <div className="game-primary-actions" aria-label="Session controls">
-                  {selected.status === "lobby" ? (
-                    <button className="btn btn-primary" type="button" disabled={busy} onClick={beginSession}>Start session</button>
-                  ) : null}
                   {selected.campaignId === null && selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => setCreatingItem(true)}>Create item</button>}
                   {selected.status === "active" && <button className="btn btn-ghost" type="button" onClick={() => openEnemyLibrary()}>Manage enemies</button>}
-                  {selected.status === "active" ? (
-                    <button className="btn btn-danger" type="button" disabled={busy} onClick={() => setConfirmation("finish-session")}>End session</button>
-                  ) : (
-                    <button className="btn btn-danger" type="button" disabled={busy} onClick={() => setConfirmation("discard-session")}>Discard session</button>
-                  )}
+                  <button className="btn btn-danger" type="button" disabled={busy} onClick={() => setConfirmation("finish-session")}>End session</button>
                 </div>
               )}
 
@@ -661,7 +666,7 @@ export function GamePage() {
                 </>
               ) : (
                 <>
-                  {ownCard && <section className="game-focus-panel game-own-hunter"><div><p className="eyebrow">Your Hunter</p><h3>{ownCard.name}</h3><span>{displayClass(ownParticipant!)} · Level {ownCard.level}</span></div><button className="btn btn-ghost" type="button" onClick={() => setOwnSheetOpen(true)}>Open sheet</button></section>}
+                  {ownCard && <section className="game-focus-panel game-own-hunter"><div><p className="eyebrow">Your Hunter</p><h3>{ownCard.name}</h3><span>{displayClass(ownParticipant!)} · Level {ownCard.level}</span></div><button className="btn btn-ghost" type="button" onClick={() => setOpenSheet(ownCard)}>Open sheet</button></section>}
                   {selected.campaignId === null && selected.status === "active" && !preview && <SessionLootFeed game={selected} characterId={ownParticipant?.characterId} isDm={false} threats={combatants} />}
                   {selected.status === "lobby" && <section className="game-focus-panel"><p className="eyebrow">Waiting</p><h3>{selected.dmName} is preparing the session</h3></section>}
                 </>
@@ -678,14 +683,14 @@ export function GamePage() {
                   onAddEnemy={addEnemyToBattle}
                 />
               )}
-              <SessionNotes gameId={selected.id} userId={user?.uid} userName={member?.firstName || user?.displayName || "Someone"} writable={selected.status !== "ended"} />
+              </>}
           </main>
         </div>
       )}
       {selected && managingPlayers && <ManagePlayersDialog game={selected} characters={otherCharacters.concat((characters ?? []).filter((card) => displayedParticipants.some((participant) => participant.characterId === card.id)))} participants={displayedParticipants} invitations={selected.inviteRoster} unavailableOwnerUids={unavailableForSelected} switchableOwnerUids={switchableForSelected} busy={busy} onAdd={addHunter} onRemove={removeHunter} onClose={() => setManagingPlayers(false)} />}
       {selected && creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
       {enemyDialogs}
-      {ownSheetOpen && ownCard && <PaperSheetModal card={ownCard} onClose={() => setOwnSheetOpen(false)} />}
+      {openSheet && <PaperSheetModal card={openSheet} readOnly={openSheet.ownerUid !== user?.uid} onClose={() => setOpenSheet(null)} />}
       {confirmationDialog}
     </div>
   );
