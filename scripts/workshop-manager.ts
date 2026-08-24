@@ -3,9 +3,9 @@ import { getApps, initializeApp, applicationDefault, cert, type Credential } fro
 import { FieldValue, Timestamp, getFirestore, type DocumentReference } from "firebase-admin/firestore";
 import { getStorage } from "firebase-admin/storage";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { existsSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { homedir, hostname, tmpdir } from "node:os";
-import { join, resolve } from "node:path";
+import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import {
@@ -121,6 +121,9 @@ class ManagerRestartCheckpointError extends Error {
 
 const PROJECT_ID = process.env.GCLOUD_PROJECT || process.env.FIREBASE_PROJECT_ID || "dandd-ea955";
 const WORKER_ID = `local-${process.pid}-${crypto.randomUUID().slice(0, 8)}`;
+const STOP_REQUEST_PATH = process.env.WORKSHOP_STOP_REQUEST_PATH
+  || join(process.env.LOCALAPPDATA || tmpdir(), "DnDWorkshop", "stop-request");
+const requestStop = process.argv.includes("--request-stop");
 const FALLBACK_POLL_MS = 5 * 60_000;
 const WATCH_RETRY_MS = 10_000;
 const HEARTBEAT_MS = 15_000;
@@ -144,6 +147,13 @@ const CHECKPOINT_VERSION = 1;
 const COMMAND_TIMEOUT_MS = fixture ? 30_000 : 2 * 60_000;
 const PROGRESS_STREAM_DRAIN_MS = fixture ? 250 : 2_000;
 const PROGRESS_STREAM_CANCEL_MS = fixture ? 250 : 1_000;
+
+if (requestStop) {
+  mkdirSync(dirname(STOP_REQUEST_PATH), { recursive: true });
+  writeFileSync(STOP_REQUEST_PATH, `${Date.now()}\n`, { mode: 0o600 });
+  console.log("Workshop graceful stop requested.");
+  process.exit(0);
+}
 
 type AgentWorktree = {
   path: string;
@@ -449,7 +459,7 @@ async function writeAgentState(): Promise<void> {
     lifecycle: managerLifecycle,
     acceptingTickets: managerLifecycle === "ready" && !shuttingDown,
     checkpointRecoveryComplete: managerLifecycle === "ready" || managerLifecycle === "stopping",
-    version: 13,
+    version: 14,
     ...legacyProgressFields(),
   });
 }
@@ -1878,6 +1888,7 @@ let watchRetryTimer: ReturnType<typeof setTimeout> | undefined;
 let stopTicketWatch: (() => void) | undefined;
 let stopConfigWatch: (() => void) | undefined;
 let mainRefreshTimer: ReturnType<typeof setInterval> | undefined;
+let stopRequestTimer: ReturnType<typeof setInterval> | undefined;
 
 function scheduleFallbackPoll(): void {
   clearTimeout(fallbackTimer);
@@ -2003,6 +2014,7 @@ async function stopManager(heartbeatTimer: ReturnType<typeof setInterval>): Prom
   clearTimeout(retryTimer);
   clearTimeout(watchRetryTimer);
   clearInterval(mainRefreshTimer);
+  clearInterval(stopRequestTimer);
   stopTicketWatch?.();
   stopConfigWatch?.();
   watchingChanges = false;
@@ -2034,6 +2046,12 @@ async function stopManager(heartbeatTimer: ReturnType<typeof setInterval>): Prom
   process.exit(0);
 }
 
+function consumeStopRequest(): boolean {
+  if (!existsSync(STOP_REQUEST_PATH)) return false;
+  rmSync(STOP_REQUEST_PATH, { force: true });
+  return true;
+}
+
 if (once) {
   managerLifecycle = "recovering";
   await fillAvailableSlots(false);
@@ -2045,6 +2063,7 @@ if (once) {
   }, HEARTBEAT_MS);
   process.on("SIGINT", () => void stopManager(heartbeatTimer));
   process.on("SIGTERM", () => void stopManager(heartbeatTimer));
+  if (consumeStopRequest()) await stopManager(heartbeatTimer);
   startConfigWatch();
   managerLifecycle = "recovering";
   await refreshMainAndReport();
@@ -2058,4 +2077,8 @@ if (once) {
   startTicketWatch();
   startMainRefresh();
   scheduleFallbackPoll();
+  stopRequestTimer = setInterval(() => {
+    if (consumeStopRequest()) void stopManager(heartbeatTimer);
+  }, 500);
+  if (consumeStopRequest()) await stopManager(heartbeatTimer);
 }
