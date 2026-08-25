@@ -23,6 +23,8 @@ export interface Background {
   id: string;
   name: string;
   text: string;
+  /** The three abilities eligible for this background's +2/+1 or +1/+1/+1 adjustment. */
+  abilityScores: AbilityKey[];
   feat: string | null;
   skills: string[];
   tool: string | null;
@@ -450,7 +452,8 @@ export interface LegacyEquipmentLine {
 /** Versioned state for the rules-driven paper sheet. Only player decisions
  * live here; every calculated field is derived again from canonical data. */
 export interface SheetAutomationState {
-  version: 2;
+  /** Persisted versions 1 and 2 are accepted and normalized to version 3. */
+  version: 1 | 2 | 3;
   classSkills: string[];
   expertiseSkills?: string[];
   weaponMasteries?: string[];
@@ -461,6 +464,8 @@ export interface SheetAutomationState {
   levelFeats?: Record<string, string>;
   /** Ability increases granted by each structured level-up feat. */
   levelAbilityBonuses?: Record<string, Partial<Record<AbilityKey, number>>>;
+  /** Level-one points assigned after point buy, limited to the background's three abilities. */
+  backgroundBonuses?: Partial<Record<AbilityKey, number>>;
   startingKitApplied?: boolean;
   setupComplete?: boolean;
   /** Exact catalog quantities and GP granted by the currently selected class
@@ -506,10 +511,12 @@ export interface HunterCard {
   /** Feats picked at level-ups (ASI levels / Epic Boon / Fighting Style),
    * separate from the background's origin `feat`. Display strings. */
   feats?: string[];
-  /** Current ability scores, including any structured level increases. */
+  /** Final ability scores after background adjustment and structured level increases. */
   abilities: AbilityScores;
-  /** Direct starting scores before structured level increases. */
+  /** Scores bought during creation, before background and structured level increases. */
   baseAbilities?: AbilityScores;
+  /** Standard 27-point buy or the game maker's 57-point Maduhausu method. */
+  abilityMode?: "pointbuy" | "maduhausu";
   /** Skill proficiencies (class choices + background-granted). */
   skillProficiencies: string[];
   /** Selected Main Armor piece id, or null for unarmored. */

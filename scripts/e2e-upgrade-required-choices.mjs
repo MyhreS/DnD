@@ -48,7 +48,7 @@ function stopServer() {
 }
 
 async function setAbilityScore(page, ability, target) {
-  const score = page.getByLabel(`${ability} starting score`, { exact: true });
+  const score = page.getByLabel(`${ability} base score`, { exact: true });
   let current = Number(await score.textContent());
   const button = page.getByRole("button", { name: `${target < current ? "Decrease" : "Increase"} ${ability} score`, exact: true });
   while (current !== Number(target)) {
@@ -96,18 +96,39 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await next.click();
 
   await page.getByRole("heading", { name: "Set ability scores", exact: true }).waitFor();
-  await page.getByText("The supplied character sheet does not prescribe a score-generation method", { exact: false }).waitFor();
-  if (await page.getByText(/Standard|Maduhausu|points left/i).count()) throw new Error("A removed ability-score method is still visible");
-  if (await next.isDisabled()) throw new Error("Direct ability scores were incorrectly blocked by a removed budget");
+  if (!await next.isDisabled()) throw new Error("A new hunter could skip unspent ability points");
+  const standardMethod = page.getByRole("button", { name: "Standard 27 points", exact: true });
+  const maduhausuMethod = page.getByRole("button", { name: "Maduhausu 57 points", exact: true });
+  if (await standardMethod.getAttribute("aria-pressed") !== "true") throw new Error("Standard point buy was not selected by default");
   await page.waitForTimeout(250);
   await page.locator(".character-sheet-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
   await page.screenshot({ path: `screenshots/creation-abilities-start-${suffix}.png`, fullPage: true });
-  for (const [ability, score] of [["Intelligence", "9"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "17"], ["Dexterity", "15"], ["Constitution", "15"]]) {
+  await maduhausuMethod.click();
+  if (await maduhausuMethod.getAttribute("aria-pressed") !== "true") throw new Error("Maduhausu point buy could not be selected");
+  await page.locator(".appsheet-ability-budget strong", { hasText: "15 points left" }).waitFor();
+  for (const [ability, score] of [["Wisdom", "6"], ["Charisma", "3"], ["Strength", "16"], ["Dexterity", "15"], ["Constitution", "13"], ["Intelligence", "13"]]) {
     await setAbilityScore(page, ability, score);
   }
+  await page.locator(".appsheet-ability-budget strong", { hasText: "0 points left" }).waitFor();
+  if (await next.isDisabled()) throw new Error("The ability step stayed blocked after spending the full Maduhausu budget");
+  await page.screenshot({ path: `screenshots/creation-abilities-maduhausu-${suffix}.png`, fullPage: true });
+  await standardMethod.click();
+  for (const [ability, score] of [["Intelligence", "8"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "15"], ["Dexterity", "15"], ["Constitution", "15"]]) {
+    await setAbilityScore(page, ability, score);
+  }
+  await page.locator(".appsheet-ability-budget strong", { hasText: "0 points left" }).waitFor();
+  if (await next.isDisabled()) throw new Error("The ability step stayed blocked after spending the full Standard budget");
   await page.waitForTimeout(250);
   await page.locator(".character-sheet-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
   await page.screenshot({ path: `screenshots/creation-abilities-${suffix}.png`, fullPage: true });
+  await next.click();
+  await page.getByRole("heading", { name: "Background abilities", exact: true }).waitFor();
+  if (!await next.isDisabled()) throw new Error("A new hunter could skip background ability points");
+  await page.getByRole("button", { name: "Strength background bonus +2", exact: true }).click();
+  await page.getByRole("button", { name: "Intelligence background bonus +1", exact: true }).click();
+  await page.getByText("Modifier improves from +2 to +3.", { exact: true }).waitFor();
+  await page.getByText("Class focus", { exact: true }).waitFor();
+  await page.screenshot({ path: `screenshots/background-abilities-guidance-${suffix}.png`, fullPage: true });
   await next.click();
   await page.getByRole("heading", { name: "Class skills", exact: true }).waitFor();
   await page.getByText("Climb, jump, grapple, escape physical holds, and force obstacles.", { exact: true }).waitFor();
@@ -327,6 +348,9 @@ async function inspectExpertiseGuidance(browser, viewport, suffix) {
   for (const [ability, score] of [["Intelligence", "8"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "15"], ["Dexterity", "15"], ["Constitution", "15"]]) {
     await setAbilityScore(page, ability, score);
   }
+  await next.click();
+  await page.getByRole("button", { name: "Dexterity background bonus +2", exact: true }).click();
+  await page.getByRole("button", { name: "Constitution background bonus +1", exact: true }).click();
   await next.click();
 
   await page.getByRole("heading", { name: "Class skills", exact: true }).waitFor();

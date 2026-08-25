@@ -217,8 +217,9 @@ export function migrateLegacyCharacter(card: HunterCard, migratedAt: number): Le
     extraArmorIds: extraArmorIds.length ? extraArmorIds : (card.extraArmorIds ?? []),
     inventory: mergeInventory(card.inventory ?? [], migratedInventory.filter((entry) => !wornArmorIds.has(entry.itemId))),
     sheetAutomation: {
-      version: 2,
+      version: 3,
       classSkills,
+      backgroundBonuses: {},
       startingKitApplied: true,
       setupComplete: true,
       startingKitInventory: [],

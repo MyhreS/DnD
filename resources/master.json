@@ -1,12 +1,12 @@
 {
-  "schemaVersion": 3,
+  "schemaVersion": 4,
   "meta": {
     "title": "Catacombs & Starspawns source master",
-    "updatedAt": "2026-08-24",
-    "description": "Structured extraction of the four game-maker-maintained documents supplied on 2026-08-24.",
-    "currentSourcePolicy": "These are the complete current game-maker documents. A fact represented here must come from one of these four files, must appear only once in its authoritative form, and must not be filled from an earlier document.",
+    "updatedAt": "2026-08-25",
+    "description": "Structured extraction of the four game-maker-maintained documents supplied on 2026-08-24, plus separately identified game-maker rules that remain active in the app.",
+    "currentSourcePolicy": "The four files are the complete current document set and remain the sole authority for facts attributed to those documents. Explicit game-maker rules that are still active but are not reprinted in those files live once under establishedGameRules and must never be presented as PDF-derived content.",
     "applicationBoundary": "The documents define current source content, not the app's screen design. Existing Hunter creation, the canonical character sheet, saved-character compatibility, and table workflows remain while source-backed values and calculations are corrected underneath them.",
-    "undefinedRulePolicy": "When these documents name a field or external rule without defining its calculation or contents, record that gap instead of importing or inventing an answer.",
+    "undefinedRulePolicy": "When these documents name a field or external rule without defining its calculation or contents, record that gap instead of importing or inventing an answer, unless establishedGameRules records a separate explicit game-maker direction for it.",
     "documentCount": 4,
     "playerDocumentCount": 3,
     "hiddenDocumentCount": 1
@@ -64,6 +64,85 @@
       "sha256": "C210A5AA6B22D6BD0A60E59123DF285680168F5364C79EA9A0D110BA59910C43"
     }
   ],
+  "establishedGameRules": {
+    "authority": "Explicit game-maker rules retained separately from the four-document PDF extraction",
+    "provenance": {
+      "standardPointBuy": "The game maker's Creating a Character rules, Step 3: Determine Ability Scores.",
+      "maduhausu": "Chris explicitly clarified that Maduhausu is the 57-point V2 point-buy system, not rolled statistics; the clarification and supplied cost table are preserved in repository history at cdb34e6.",
+      "restoration": "Restored by Simon's explicit direction on 2026-08-25 after the four-document refresh had incorrectly treated the documents' silence as retirement of the character-creation rule."
+    },
+    "characterCreation": {
+      "abilityScores": {
+        "methods": {
+          "standard": {
+            "id": "pointbuy",
+            "name": "Standard",
+            "budget": 27,
+            "minimumScore": 8,
+            "maximumScore": 15,
+            "costs": [
+              { "score": 8, "cost": 0 },
+              { "score": 9, "cost": 1 },
+              { "score": 10, "cost": 2 },
+              { "score": 11, "cost": 3 },
+              { "score": 12, "cost": 4 },
+              { "score": 13, "cost": 5 },
+              { "score": 14, "cost": 7 },
+              { "score": 15, "cost": 9 }
+            ]
+          },
+          "maduhausu": {
+            "id": "maduhausu",
+            "name": "Maduhausu",
+            "budget": 57,
+            "minimumScore": 3,
+            "maximumScore": 16,
+            "finalLevelOneMaximum": 17,
+            "repeatRule": "The first purchase of a score uses First Cost, the second purchase of that same score uses Second Cost, and the third and every later purchase use Third Cost +. A score of 16 cannot be bought a third time.",
+            "costs": [
+              { "score": 3, "first": 0, "second": 0, "thirdPlus": 0 },
+              { "score": 4, "first": 1, "second": 1, "thirdPlus": 1 },
+              { "score": 5, "first": 2, "second": 2, "thirdPlus": 2 },
+              { "score": 6, "first": 3, "second": 3, "thirdPlus": 3 },
+              { "score": 7, "first": 4, "second": 4, "thirdPlus": 4 },
+              { "score": 8, "first": 5, "second": 5, "thirdPlus": 5 },
+              { "score": 9, "first": 6, "second": 6, "thirdPlus": 6 },
+              { "score": 10, "first": 7, "second": 7, "thirdPlus": 7 },
+              { "score": 11, "first": 8, "second": 8, "thirdPlus": 8 },
+              { "score": 12, "first": 9, "second": 9, "thirdPlus": 9 },
+              { "score": 13, "first": 10, "second": 10, "thirdPlus": 10 },
+              { "score": 14, "first": 12, "second": 14, "thirdPlus": 17 },
+              { "score": 15, "first": 14, "second": 18, "thirdPlus": 23 },
+              { "score": 16, "first": 20, "second": 26, "thirdPlus": null }
+            ]
+          }
+        },
+        "backgroundAdjustment": {
+          "points": 3,
+          "patterns": [[2, 1], [1, 1, 1]],
+          "differentAbilities": true,
+          "standardFinalMaximum": 20,
+          "maduhausuFinalMaximum": 17,
+          "eligibleAbilitiesByBackground": {
+            "criminal": ["dex", "con", "int"],
+            "merchant": ["con", "int", "cha"],
+            "noble": ["str", "int", "cha"],
+            "drifter": ["str", "dex", "wis"],
+            "church-missionary": ["wis", "int", "cha"],
+            "cultist": ["con", "int", "wis"],
+            "street-warden": ["str", "con", "cha"],
+            "grave-tender": ["con", "wis", "int"],
+            "weaponsmith": ["str", "int", "con"],
+            "archivist": ["int", "wis", "cha"],
+            "beggar": ["dex", "con", "wis"],
+            "oiler": ["int", "wis", "con"],
+            "graverobber": ["dex", "wis", "int"],
+            "blood-collector": ["con", "int", "wis"]
+          }
+        }
+      }
+    }
+  },
   "rites": {
     "sourceId": "book-of-the-deepcaller",
     "entries": [
@@ -445,7 +524,7 @@
         "Background-granted ability-score adjustments",
         "The formula for an ability modifier, saving throw, skill value, Armor Class, Hit Points, Sanity, Initiative, Passive Perception, or Rite value"
       ],
-      "appPolicy": "Keep the current character-creation and character-sheet workflow, accept ability scores directly, and never present an unspecified generation method as a current-source rule. Established calculations outside this source set must remain clearly separate from the structured source master."
+      "appPolicy": "The printable sheet itself does not define score generation. Character creation uses the separately sourced Standard and Maduhausu rules recorded once under establishedGameRules; never attribute those rules to the character-sheet PDF."
     },
     "sections": [
       {

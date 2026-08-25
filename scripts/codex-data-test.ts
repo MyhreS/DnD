@@ -18,7 +18,7 @@ const expectedFiles = [
   "resources/pdf/C&S Hidden Condition Sheet.pdf",
   "resources/pdf/C&S Whispers Sheet.pdf",
 ];
-assert.equal(master.schemaVersion, 3);
+assert.equal(master.schemaVersion, 4);
 assert.equal(master.meta.documentCount, 4);
 assert.deepEqual(master.sources.map((source: { sourceFile: string }) => source.sourceFile), expectedFiles);
 assert.deepEqual(filesUnder("resources/pdf"), expectedFiles, "the canonical source directory must contain exactly four PDFs");
@@ -35,6 +35,9 @@ assert.equal(master.rites.entries.length, 21);
 assert.equal(master.whispers.entries.length, 6);
 assert.equal(master.characterSheet.logicalSectionCount, 6);
 assert.equal(master.characterSheet.sections.length, 6);
+assert.equal(master.establishedGameRules.characterCreation.abilityScores.methods.standard.budget, 27);
+assert.equal(master.establishedGameRules.characterCreation.abilityScores.methods.maduhausu.budget, 57);
+assert.equal(master.establishedGameRules.characterCreation.abilityScores.methods.maduhausu.finalLevelOneMaximum, 17);
 assert.equal(master.hiddenConditionSheet.containsRules, true);
 assert.equal(master.hiddenConditionSheet.audience, "dm");
 assert.equal(master.hiddenConditionSheet.sections.length, 4);
@@ -100,7 +103,7 @@ assert.equal(whisperEntries.length, 6);
 assert(whisperEntries.every((entry) => entry.locator?.startsWith("Whisper · ")));
 assert(whisperEntries.every((entry) => !entry.body.some((line) => /Level 0/i.test(line))), "Whispers must never be labeled Level 0");
 
-for (const removed of ["Hunter Rifle", "Blood Frenzy", "Maduhausu", "Unstable Violence", "Cracked Perception", "Second Threshold", "Old One Vessel", "Greater Dreadblood"]) {
+for (const removed of ["Hunter Rifle", "Blood Frenzy", "Unstable Violence", "Cracked Perception", "Second Threshold", "Old One Vessel", "Greater Dreadblood"]) {
   assert.equal(searchEntries(CODEX_TOPICS, removed).length, 0, `retired source content returned: ${removed}`);
 }
 assert.equal(CODEX_SOURCE_BY_ID.has("hidden-condition-sheet"), false, "the hidden source must not be public");
