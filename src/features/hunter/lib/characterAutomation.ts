@@ -200,7 +200,7 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     const score = card.abilities[key];
     const mod = abilityModifier(score);
     const saveProficient = klass?.savingThrows.includes(key) ?? false;
-    put(fields, reasons, `${key}Score`, String(score), card.baseAbilities ? "Starting score + structured level increases" : "Saved ability score");
+    put(fields, reasons, `${key}Score`, String(score), card.baseAbilities ? "Bought score + background adjustment + structured level increases" : "Saved ability score");
     put(fields, reasons, `${key}Mod`, formatModifier(mod), `Modifier from ${score}`);
     put(fields, reasons, `${key}SaveP`, saveProficient, saveProficient ? `${klass?.title} saving throw proficiency` : "Not granted by class");
     put(fields, reasons, `${key}Save`, formatModifier(mod + (saveProficient ? prof : 0)), saveProficient ? `Ability modifier + proficiency ${formatModifier(prof)}` : "Ability modifier only");

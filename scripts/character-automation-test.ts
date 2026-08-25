@@ -32,7 +32,9 @@ assert.equal(levelAdjustedPool(18, 20, 12, false), 12, "a level reduction clamps
 
 const base = emptySheetCard({ ownerUid: "test", email: "test@example.com", displayName: "Tester" });
 assert.equal(base.sheetAutomation?.setupComplete, false, "fresh sheets start in guided setup even if the name is entered first");
-assert.equal(base.sheetAutomation?.version, 2, "fresh sheets use direct-score automation state");
+assert.equal(base.sheetAutomation?.version, 3, "fresh sheets use point-buy automation state");
+assert.equal(base.abilityMode, "pointbuy", "fresh sheets default to Standard point buy");
+assert.deepEqual(base.sheetAutomation?.backgroundBonuses, {}, "fresh sheets start before background points are assigned");
 assert.equal(base.madness, 0, "fresh sheets track Madness independently from Sanity");
 const attendedSession: Game = {
   id: "attended", campaignId: "campaign-a", sessionId: null, title: "Attended", dmUid: "dm", dmName: "DM",
@@ -67,10 +69,10 @@ const normalizedLegacy = normalizeCard({
   },
 } as unknown as HunterCard);
 assert.equal(normalizedLegacy.abilities.str, 14, "legacy conversion never changes a final ability score");
-assert.equal(normalizedLegacy.baseAbilities?.str, 13, "legacy background adjustments are folded into the direct starting score");
-assert.equal(normalizedLegacy.sheetAutomation?.version, 2, "legacy automation upgrades to the current shape");
-assert.equal("backgroundBonuses" in (normalizedLegacy.sheetAutomation ?? {}), false, "legacy background adjustments are removed after folding");
-assert.equal("abilityMode" in normalizedLegacy, false, "legacy score-method metadata is removed");
+assert.equal(normalizedLegacy.baseAbilities?.str, 11, "legacy bought scores remain separate from later adjustments");
+assert.equal(normalizedLegacy.sheetAutomation?.version, 3, "legacy automation upgrades to the restored point-buy shape");
+assert.equal(normalizedLegacy.sheetAutomation?.backgroundBonuses?.str, 2, "legacy background adjustments remain structured");
+assert.equal(normalizedLegacy.abilityMode, "pointbuy", "legacy score-method metadata remains available");
 assert.equal(normalizedLegacy.madness, 6, "the previously displayed Madness value survives the independent-field migration");
 const normalizedLegacyDeepcaller = normalizeCard({
   ...warden,
@@ -226,6 +228,8 @@ for (const background of BACKGROUNDS) {
 }
 
 const master = JSON.parse(readFileSync(new URL("../resources/master.json", import.meta.url), "utf8"));
+assert.equal(master.establishedGameRules.characterCreation.abilityScores.methods.standard.budget, 27, "master.json retains Standard point buy");
+assert.equal(master.establishedGameRules.characterCreation.abilityScores.methods.maduhausu.budget, 57, "master.json retains Maduhausu point buy");
 assert.deepEqual(WHISPERS.map((whisper) => whisper.name), master.whispers.entries.map((whisper) => whisper.name), "Whisper dropdown matches the current source master");
 assert.deepEqual(DEEPCALLER_RITES.map((rite) => rite.id), master.rites.entries.map((rite) => rite.id), "Rite reference matches the current source master without duplicates");
 assert.ok(DEEPCALLER_RITES.some((rite) => rite.name === "Armor of the Drowned Star"), "Deepcaller reference uses Armor of the Drowned Star");

@@ -112,25 +112,27 @@ function dedupeExtras(ids: string[]): string[] {
   return out;
 }
 
-/** Load-time normalization for character docs. It preserves final ability
- * scores while folding the former background bonus layer into direct starting
- * scores, upgrades automation state to v2, and makes Madness independent from
- * Sanity. Other legacy inventory and armor normalization remains lossless. */
+/** Load-time normalization for character docs. It preserves every final score,
+ * restores the structured point-buy/background layers when they still exist,
+ * upgrades automation state to v3, and keeps the independent Madness migration
+ * lossless. Current direct-score saves remain numerically unchanged. */
 export function normalizeCard(raw: HunterCard): HunterCard {
   const legacyRaw = raw as HunterCard & Record<string, unknown>;
   const legacyState = raw.sheetAutomation as (Record<string, unknown> & Partial<SheetAutomationState>) | undefined;
   const levelAbilityBonuses = legacyState?.levelAbilityBonuses ?? {};
-  const hasLegacyAbilityShape = legacyRaw.abilityMode !== undefined
-    || legacyState?.version !== 2
-    || legacyState?.backgroundBonuses !== undefined;
-  const directBase = hasLegacyAbilityShape || !raw.baseAbilities
-    ? Object.fromEntries(ABILITY_KEYS.map((key) => [
-      key,
-      raw.abilities[key] - Object.values(levelAbilityBonuses).reduce((sum, entry) => sum + (entry?.[key] ?? 0), 0),
-    ])) as AbilityScores
-    : raw.baseAbilities;
-  const normalizedState: Record<string, unknown> | undefined = legacyState ? { ...legacyState, version: 2 } : undefined;
-  if (normalizedState) delete normalizedState.backgroundBonuses;
+  const backgroundBonuses = Object.fromEntries(ABILITY_KEYS.map((key) => {
+    const value = legacyState?.backgroundBonuses?.[key];
+    return [key, typeof value === "number" && Number.isInteger(value) && value >= 0 && value <= 2 ? value : 0];
+  })) as Partial<Record<(typeof ABILITY_KEYS)[number], number>>;
+  const baseAbilities = raw.baseAbilities ?? Object.fromEntries(ABILITY_KEYS.map((key) => [
+    key,
+    raw.abilities[key]
+      - (backgroundBonuses[key] ?? 0)
+      - Object.values(levelAbilityBonuses).reduce((sum, entry) => sum + (entry?.[key] ?? 0), 0),
+  ])) as AbilityScores;
+  const normalizedState: Record<string, unknown> | undefined = legacyState
+    ? { ...legacyState, version: 3, backgroundBonuses }
+    : undefined;
   const klass = getClass(raw.classId);
   const sheetSanityMax = Number.parseInt(String(raw.sheet?.sanityMax ?? ""), 10);
   const sheetSanity = Number.parseInt(String(raw.sheet?.sanityCur ?? ""), 10);
@@ -157,7 +159,7 @@ export function normalizeCard(raw: HunterCard): HunterCard {
   );
   const normalized = {
     ...legacyRaw,
-    baseAbilities: directBase,
+    baseAbilities,
     sheetAutomation: normalizedState as SheetAutomationState | undefined,
     sanity: typeof raw.sanity === "number" && Number.isFinite(raw.sanity) ? Math.max(0, raw.sanity) : raw.sanity,
     madness,
@@ -181,7 +183,7 @@ export function normalizeCard(raw: HunterCard): HunterCard {
         Number.isFinite(d.droppedAt),
     ),
   } as HunterCard & Record<string, unknown>;
-  delete normalized.abilityMode;
+  if (normalized.abilityMode !== "pointbuy" && normalized.abilityMode !== "maduhausu") delete normalized.abilityMode;
   return normalized;
 }
 
@@ -307,6 +309,7 @@ export function emptyCard(params: {
     feats: [],
     abilities: { ...DEFAULT_ABILITIES },
     baseAbilities: { ...DEFAULT_ABILITIES },
+    abilityMode: "pointbuy",
     skillProficiencies: [],
     mainArmorId: null,
     addonArmorIds: [],
@@ -339,8 +342,9 @@ export function emptySheetCard(params: {
     ...emptyCard(params),
     sheet: {},
     sheetAutomation: {
-      version: 2,
+      version: 3,
       classSkills: [],
+      backgroundBonuses: {},
       setupComplete: false,
     },
   };

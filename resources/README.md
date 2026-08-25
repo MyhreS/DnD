@@ -10,6 +10,12 @@ defines something already used by the app, its version wins and the older
 version must not remain beside it. A missing topic must not be reconstructed
 from a deleted document or presented as though it came from these four PDFs.
 
+`master.json.establishedGameRules` is the narrow exception for active rules
+the game maker has explicitly confirmed outside this four-document set. These
+rules are stored once, with their separate provenance, and must never be
+described as content extracted from one of the PDFs. The Standard and
+Maduhausu character-creation methods live there for this reason.
+
 This source-library boundary is not permission to redesign or remove existing
 app pages, Hunter creation, saved-character support, or table workflows. Those
 product features remain until the game maker explicitly changes them.

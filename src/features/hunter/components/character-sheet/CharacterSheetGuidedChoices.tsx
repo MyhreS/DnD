@@ -1,7 +1,58 @@
-import { ABILITY_NAME, abilityModifier, formatModifier } from "@/data/abilities";
+import { ABILITIES, ABILITY_NAME, abilityModifier, formatModifier } from "@/data/abilities";
+import { finalCreationMaximum } from "../../lib/abilityBuy";
 import { SKILL_BY_NAME } from "@/data/skills";
 import { proficiencyBonus } from "@/lib/character";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
+
+export function CharacterSheetBackgroundAbilities() {
+  const automation = useCharacterAutomation();
+  const { background, base, bonuses, bonusUsed, bonusComplete, klass, mode } = automation;
+  if (!background) return null;
+
+  return <div className="character-sheet-upgrade-choice-page">
+    <ChoiceIntro
+      text="Place +2 and +1 on different abilities, or +1 on all three. Your final scores update here as you choose."
+      help="An ability modifier changes on every even score. Class focus marks an ability your class relies on most."
+      count={`${bonusUsed} / 3 points`}
+      complete={bonusComplete}
+    />
+    <div className="character-sheet-guided-ability-list">
+      {background.abilityScores.map((key) => {
+        const ability = ABILITIES.find((entry) => entry.key === key)!;
+        const amount = bonuses[key] ?? 0;
+        const finalScore = base[key] + amount;
+        const beforeModifier = abilityModifier(base[key]);
+        const afterModifier = abilityModifier(finalScore);
+        const otherPoints = bonusUsed - amount;
+        const maximum = finalCreationMaximum(mode);
+        const classFocus = klass?.primaryAbility.split(/\W+/).includes(ability.short) ?? false;
+        const impact = amount === 0
+          ? `Currently ${formatModifier(beforeModifier)} modifier.`
+          : afterModifier > beforeModifier
+            ? `Modifier improves from ${formatModifier(beforeModifier)} to ${formatModifier(afterModifier)}.`
+            : `Score rises; modifier stays ${formatModifier(afterModifier)} until the next even score.`;
+
+        return <article key={key} className={`character-sheet-guided-ability${amount > 0 ? " selected" : ""}`}>
+          <header>
+            <span><b>{ability.name}</b><small>{ability.description}</small></span>
+            <strong>{base[key]} <i>to</i> {finalScore}</strong>
+          </header>
+          <div className="character-sheet-background-bonus-buttons" role="group" aria-label={`${ABILITY_NAME[key]} background bonus`}>
+            {[0, 1, 2].map((value) => <button
+              key={value}
+              type="button"
+              aria-label={`${ABILITY_NAME[key]} background bonus +${value}`}
+              aria-pressed={amount === value}
+              disabled={amount !== value && (otherPoints + value > 3 || base[key] + value > maximum)}
+              onClick={() => automation.setBonus(key, value)}
+            >{value === 0 ? "None" : `+${value}`}</button>)}
+          </div>
+          <footer><span>{impact}</span>{classFocus && <em>Class focus</em>}</footer>
+        </article>;
+      })}
+    </div>
+  </div>;
+}
 
 export function CharacterSheetSkillChoices({
   kind,

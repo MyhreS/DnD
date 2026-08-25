@@ -15,7 +15,7 @@ const OUTPUT_PATH = "src/data/codex.generated.json";
 const PUBLIC_DOCUMENT_ROOT = "public/source-library";
 
 const master = JSON.parse(readFileSync(MASTER_PATH, "utf8"));
-if (master.schemaVersion !== 3) throw new Error(`Unsupported master schema: ${master.schemaVersion}`);
+if (master.schemaVersion !== 4) throw new Error(`Unsupported master schema: ${master.schemaVersion}`);
 if (!Array.isArray(master.sources) || master.sources.length !== 4) {
   throw new Error("The current source master must contain exactly four documents.");
 }
@@ -192,9 +192,10 @@ for (const missing of master.referencedButNotSupplied.filter((entry) => entry.au
 }
 
 const output = {
-  schemaVersion: 3,
+  schemaVersion: 4,
   sources,
   entries,
+  establishedGameRules: master.establishedGameRules,
   characterSheet: master.characterSheet,
   rites: master.rites.entries,
   whispers: master.whispers.entries,
