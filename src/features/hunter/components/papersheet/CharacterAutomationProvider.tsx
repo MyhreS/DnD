@@ -23,7 +23,7 @@ import {
   scoreRangeFor,
   type BuyMode,
 } from "../../lib/abilityBuy";
-import { automationFor } from "../../lib/characterAutomation";
+import { automationFor, calculatedSheetFields } from "../../lib/characterAutomation";
 import { CharacterAutomationContext, type CharacterAutomationController, type SlotReplacement } from "./characterAutomationContext";
 
 type Apply = (fields: SheetData, patch: Partial<HunterCard>) => void;
@@ -126,12 +126,6 @@ function finalAbilities(
   ) as HunterCard["abilities"];
 }
 
-function automatedFields(card: HunterCard): SheetData {
-  const result = automationFor(card);
-  const overrides = new Set(card.sheetAutomation?.manualOverrides ?? []);
-  return Object.fromEntries(Object.entries(result.fields).filter(([key]) => !overrides.has(key)));
-}
-
 export function CharacterAutomationProvider({
   card,
   onApply,
@@ -205,7 +199,7 @@ export function CharacterAutomationProvider({
       patch.inventory = next.inventory;
       patch.coins = next.coins;
     }
-    onApply(automatedFields(next), patch);
+    onApply(calculatedSheetFields(next), patch);
   }
 
   function chooseClass(classId: string) {
@@ -550,7 +544,7 @@ export function CharacterAutomationProvider({
       }
     }
     onApply(
-      { ...automatedFields(next), ...weaponFields },
+      { ...calculatedSheetFields(next), ...weaponFields },
       { customItems: next.customItems, inventory: next.inventory, equippedStorageIds: next.equippedStorageIds, slotAssignments: next.slotAssignments, sheetAutomation: state },
     );
   }

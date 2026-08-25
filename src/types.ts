@@ -197,9 +197,9 @@ export interface ArmorPiece {
 export type GameStatus = "lobby" | "active" | "ended";
 /** The DM-set phase while a game is active. */
 export type GamePhase = "exploration" | "combat" | "short_rest" | "long_rest";
-/** Where the party is — orthogonal to phase, and the input that makes rests
- * rulebook-accurate: Hunters Lodge = full Long Rest (HP + Hit Dice); a Safe Zone
- * = spend Hit Dice on a Short Rest (and a half Long Rest); the Wild = neither. */
+/** Where the party is — orthogonal to phase and used by the established
+ * session-rest workflow: Hunters Lodge = full Long Rest (HP + Hit Dice); a Safe
+ * Zone = spend Hit Dice on a Short Rest (and a half Long Rest); the Wild = neither. */
 export type GameLocation = "lodge" | "safe" | "wild";
 
 export type TurnTimerPhase = "idle" | "briefing" | "running" | "paused" | "untimed" | "expired";
@@ -333,8 +333,8 @@ export interface GameParticipant {
   name: string;
   classId: string;
   subclassId?: string | null;
-  /** The paper sheet's free-text class line, snapshotted at join — sheet-made
-   * hunters have classId "" so this is their display class. */
+  /** Display class snapshotted at join. Legacy sheet-only Hunters can have an
+   * empty classId, so this remains their fallback label. */
   className?: string | null;
   level: number;
   role: PlayerType;
@@ -437,9 +437,9 @@ export interface UserProfile {
 
 export type AbilityScores = Record<AbilityKey, number>;
 
-/** Free-form values of the paper character sheet, keyed by the sheet's field
- * names (the original HTML's `data-f`). Text fields are strings; checkboxes
- * are booleans. */
+/** Saved values of the character sheet, keyed by its field names. Text fields
+ * are strings and checkboxes are booleans; rules-driven values are projected
+ * again from structured decisions whenever the sheet is applied. */
 export type SheetData = Record<string, string | boolean>;
 
 export interface LegacyEquipmentLine {
@@ -494,7 +494,7 @@ export interface HunterCard {
   subclassId?: string | null;
   /** Background display name (e.g. "Cultist"); free text on legacy cards. */
   background: string;
-  /** Structured background id (from resources/master.json), when chosen. */
+  /** Structured background id from the established app background catalog. */
   backgroundId?: string;
   /** Origin feat granted via the background; null when the background grants
    * none (an explicit null so saves CLEAR a previously stored feat). */
@@ -538,15 +538,14 @@ export interface HunterCard {
   /** Current Madness, tracked independently because the supplied hidden rules
    * refer to it directly and do not define a Sanity-to-Madness formula. */
   madness?: number;
-  /** Transformation Level 0–10. Gains are rolled physically at the table (1d20
-   * on the Transformation Table at the NEW level) and recorded by the DM — the
-   * app never rolls. Short Rest −1 (+1 more on a DC 13 CON (Grit) check) and
-   * Long Rest → 0 — every reduction also clears all active Transformations. */
+  /** Transformation Level 0–10. The supplied documents reference but do not
+   * include the Transformation Table, so the app records this value without
+   * rolling or inferring a result. Reducing it clears active Transformations. */
   transformationLevel?: number;
   /** Active Transformation result keys recorded by the DM from physical table
    * rolls (duplicates allowed). Cleared when Transformation Level is reduced. */
   activeTransformations?: string[];
-  /** Insight — the rulebook's XP currency, awarded by the DM. */
+  /** Insight — the established app progression currency, awarded by the DM. */
   insight?: number;
   /** Blood Tinge — the C&S take on heroic inspiration. */
   bloodTinge?: boolean;
@@ -573,9 +572,9 @@ export interface HunterCard {
   /** The campaign this hunter currently plays in (lets that campaign's DM
    * manage it — death/recover). Set when chosen for a campaign. */
   campaignId?: string | null;
-  /** The paper character sheet's raw field values — present only on hunters
-   * created the "character sheet way" (a free-form sheet instead of the
-   * structured builder; `name`/`level`/`background` are mirrored from it). */
+  /** The character sheet's saved field snapshot. Current Hunters also retain
+   * structured decisions so calculated values can be refreshed consistently;
+   * identity fields are mirrored for lists and campaign membership. */
   sheet?: SheetData;
   /** Structured decisions and migration metadata for automatic sheet filling. */
   sheetAutomation?: SheetAutomationState;

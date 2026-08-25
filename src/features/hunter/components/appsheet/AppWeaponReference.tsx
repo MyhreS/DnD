@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { abilityModifier } from "@/data/abilities";
 import type { HunterCard, HunterClass } from "@/types";
 import { AppPanel, AutoReason } from "./appSheetShared";
@@ -19,7 +18,7 @@ function bonusesFor(card: HunterCard, klass: HunterClass): DamageBonus[] {
     {
       label: "Ability modifier",
       value: "Add to each hit",
-      detail: `Melee weapons use Strength (${signed(abilityModifier(card.abilities.str))}); ranged weapons use Dexterity (${signed(abilityModifier(card.abilities.dex))}).`,
+      detail: `Melee weapons normally use Strength (${signed(abilityModifier(card.abilities.str))}); Finesse weapons may instead use Dexterity (${signed(abilityModifier(card.abilities.dex))}), which ranged weapons use.`,
     },
   ];
   if (klass.id === "scout") bonuses.push({ label: "Hunter's Mark", value: card.level >= 20 ? "+1d10" : "+1d6", detail: "On each hit against your marked quarry." });
@@ -51,6 +50,5 @@ export function AppWeaponDamageBonuses({ card, klass, contextLabel = "Class & fe
   return <AppPanel title="Potential damage bonuses" aside={<span className="appsheet-status-word">{contextLabel}</span>}>
     <div className="appsheet-weapon-bonuses">{bonuses.map((bonus) => <div key={bonus.label}><span><b>{bonus.label}</b><small>{bonus.detail}</small></span><strong>{bonus.value}</strong></div>)}</div>
     <AutoReason reason={reason} />
-    <Link to="/codex?group=Game%20Card&q=weapons">Open the complete weapons table in Codex</Link>
   </AppPanel>;
 }

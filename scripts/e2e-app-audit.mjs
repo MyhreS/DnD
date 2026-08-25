@@ -1,5 +1,6 @@
 import { spawn, spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
+import { mkdir } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { setTimeout as sleep } from "node:timers/promises";
 import { fileURLToPath } from "node:url";
@@ -7,6 +8,8 @@ import { chromium } from "playwright";
 
 const PORT = 5202;
 const BASE = `http://127.0.0.1:${PORT}`;
+const SCREENSHOT_DIR = process.env.E2E_SCREENSHOT_DIR;
+if (SCREENSHOT_DIR) await mkdir(SCREENSHOT_DIR, { recursive: true });
 const FIREBASE_ACCOUNT = process.env.FIREBASE_ACCOUNT ?? "simonmyhre1@gmail.com";
 const firebaseExecutable = (() => {
   if (process.platform !== "win32") return { command: "firebase", args: [] };
@@ -71,6 +74,12 @@ const publicExpected = {
   "/codex/documents": "Source library",
 };
 const errors = [];
+
+async function capture(page, name) {
+  if (!SCREENSHOT_DIR) return;
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  await page.screenshot({ path: join(SCREENSHOT_DIR, `${slug}.png`) });
+}
 
 function watch(page, label) {
   page.on("pageerror", (error) => errors.push(`${label}: page error: ${String(error)}`));
@@ -137,6 +146,59 @@ async function auditPage(page, label, mobile) {
   }
 }
 
+async function openPreviewHunter(page) {
+  await page.goto(`${BASE}/character?preview=user.player`, { waitUntil: "domcontentloaded" });
+  await page.getByRole("button", { name: /Open Eileen the Crow/ }).click();
+  await page.getByTestId("app-character-sheet").waitFor();
+  await page.getByTestId("character-sheet").waitFor();
+}
+
+async function auditCharacterPanels(page, viewport) {
+  await openPreviewHunter(page);
+  await capture(page, `${viewport.name}-character-home`);
+  const root = page.getByTestId("character-sheet");
+  const launches = [
+    { title: "Hunter & build", button: root.locator(".character-sheet-identity-profile") },
+    { title: "Abilities", button: root.getByRole("navigation", { name: "Character sheet sections" }).getByRole("button", { name: "Abilities", exact: true }) },
+    { title: "Skills", button: root.getByRole("navigation", { name: "Character sheet sections" }).getByRole("button", { name: "Skills", exact: true }) },
+    { title: "Class abilities", button: root.getByRole("navigation", { name: "Character sheet sections" }).getByRole("button", { name: "Class abilities", exact: true }) },
+    { title: "Armor Class", button: root.getByRole("region", { name: "At a glance" }).getByRole("button", { name: /AC/ }) },
+    { title: "Speed", button: root.getByRole("region", { name: "At a glance" }).getByRole("button", { name: /Speed/ }) },
+    { title: "Passive Perception", button: root.getByRole("region", { name: "At a glance" }).getByRole("button", { name: /Passive/ }) },
+    { title: "Initiative", button: root.getByRole("region", { name: "At a glance" }).getByRole("button", { name: /Initiative/ }) },
+    { title: "Inventory", button: root.getByRole("region", { name: "Current resources" }).getByRole("button", { name: /Inventory/ }) },
+    { title: "Notes", button: root.getByRole("navigation", { name: "Character sheet sections" }).getByRole("button", { name: "Notes", exact: true }) },
+    { title: "Equipment", button: root.getByRole("button", { name: "Open equipment slots", exact: true }) },
+    { title: "Health", button: root.getByRole("region", { name: "Current resources" }).getByRole("button", { name: /Hit points/ }) },
+    { title: "Sanity", button: root.getByRole("region", { name: "Current resources" }).getByRole("button", { name: /Sanity/ }) },
+    { title: "Insight & level", button: root.locator(".character-sheet-identity-progress button").first() },
+    { title: "Resources", button: root.getByRole("navigation", { name: "Character sheet sections" }).getByRole("button", { name: "Resources", exact: true }) },
+  ];
+
+  for (const launch of launches) {
+    await launch.button.click();
+    const dialog = page.locator('.character-sheet-page-stack[role="dialog"]');
+    await dialog.getByRole("heading", { name: launch.title, exact: true }).first().waitFor();
+    await page.waitForTimeout(400);
+    await auditPage(page, `${viewport.name} character/${launch.title}`, viewport.width <= 390);
+    await capture(page, `${viewport.name}-character-${launch.title}`);
+    await dialog.getByRole("button", { name: "Back", exact: true }).first().click();
+    await dialog.waitFor({ state: "detached" });
+  }
+
+  await root.locator(".character-sheet-identity-progress button").first().click();
+  const progress = page.locator('.character-sheet-page-stack[data-panel="progress"]');
+  const upgrade = progress.getByRole("button", { name: /Upgrade character/ });
+  if (await upgrade.isEnabled()) {
+    await upgrade.click();
+    const dialog = page.locator('.character-sheet-page-stack[data-panel="upgrade"]');
+    await dialog.getByRole("heading", { name: "Upgrade character", exact: true }).waitFor();
+    await page.waitForTimeout(400);
+    await auditPage(page, `${viewport.name} character/Upgrade character`, viewport.width <= 390);
+    await capture(page, `${viewport.name}-character-upgrade`);
+  }
+}
+
 await ready();
 const browser = await chromium.launch({ headless: true });
 try {
@@ -156,13 +218,14 @@ try {
       }
       await privatePage.evaluate(() => document.fonts.ready);
       await auditPage(privatePage, `${viewport.name} ${route}`, viewport.width <= 390);
+      if (viewport.name === "mobile" || viewport.name === "desktop") await capture(privatePage, `${viewport.name}-route-${route}`);
     }
     if (viewport.width <= 390) {
-      await privatePage.goto(`${BASE}/character?preview=user.player`, { waitUntil: "domcontentloaded" });
-      await privatePage.getByRole("button", { name: /Open Eileen the Crow/ }).click();
-      await privatePage.getByTestId("app-character-sheet").waitFor();
-      await privatePage.getByTestId("character-sheet").waitFor();
+      await openPreviewHunter(privatePage);
       await auditPage(privatePage, `${viewport.name} character sheet`, true);
+    }
+    if (viewport.name === "mobile" || viewport.name === "desktop") {
+      await auditCharacterPanels(privatePage, viewport);
     }
     await privateContext.close();
 
@@ -179,7 +242,7 @@ try {
   }
 
   if (errors.length > 0) throw new Error(`App audit found ${errors.length} issue(s):\n${[...new Set(errors)].join("\n")}`);
-  console.log(`App edge audit passed: ${viewports.length} viewports, ${privateRoutes.length} authenticated routes, and ${publicRoutes.length} public routes.`);
+  console.log(`App edge audit passed: ${viewports.length} viewports, ${privateRoutes.length} authenticated routes, ${publicRoutes.length} public routes, and every Hunter panel on mobile + desktop.`);
 } finally {
   await browser.close();
   server.kill("SIGTERM");

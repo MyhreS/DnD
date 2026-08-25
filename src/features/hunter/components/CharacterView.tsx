@@ -54,8 +54,7 @@ export function CharacterView({
     setDeleteError("The character could not be deleted. Nothing was removed; try again.");
   }
 
-  // Detail: a single opened hunter — the paper sheet (view/edit) auto-pops.
-  // This is the old "view a hunter" behaviour, now reached only by clicking a card.
+  // Detail: selecting one Hunter opens the canonical character sheet.
   if (openCard) {
     return (
       <div>

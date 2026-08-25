@@ -5,7 +5,7 @@ import { ITEMS } from "@/data/items";
 import { SHEET_SKILL_FIELD, SKILLS } from "@/data/skills";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 import type { ArmorPiece, HunterCard, InventoryEntry, SheetData } from "@/types";
-import { automationFor, matchCatalogItem, structuredCardFromSheet } from "./characterAutomation";
+import { automationFor, calculatedSheetFields, matchCatalogItem, structuredCardFromSheet } from "./characterAutomation";
 
 export interface MigrationDecision {
   field: string;
@@ -236,8 +236,7 @@ export function migrateLegacyCharacter(card: HunterCard, migratedAt: number): Le
     return calculated.fields[key] !== sheet[key];
   });
   converted.sheetAutomation = { ...converted.sheetAutomation!, manualOverrides };
-  const automatedFields = Object.fromEntries(Object.entries(automationFor(converted).fields).filter(([key]) => !manualOverrides.includes(key)));
-  const nextSheet = { ...sheet, ...automatedFields };
+  const nextSheet = { ...sheet, ...calculatedSheetFields(converted) };
 
   return {
     patch: {

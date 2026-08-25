@@ -47,10 +47,6 @@ function LegacyCodexRedirect() {
       next.set("q", section.replaceAll("-", " "));
     } else if (tab === "rites") {
       next.set("group", "Rites");
-    } else if (tab === "classes") {
-      next.set("q", "classes");
-    } else if (tab === "backgrounds" || tab === "feats" || tab === "armory") {
-      next.set("q", tab === "armory" ? "equipment" : tab);
     }
   }
   return <Navigate to={{ pathname: "/codex", search: next.toString() }} replace />;

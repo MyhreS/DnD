@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import type { HunterCard, SheetData } from "@/types";
-import { automationFor } from "../../lib/characterAutomation";
+import { automationFor, calculatedSheetFields } from "../../lib/characterAutomation";
 import { levelAdjustedPool } from "../../lib/levelUpVitals";
 import type { AppSheetModel } from "./appSheetShared";
 import { AppEditStageContext, hasStagedUpgrade, useAppEditStage, type AppEditStageValue, type StagedPatch } from "./appEditStageContext";
@@ -93,12 +93,17 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
     if (!hasChanges && Object.keys(finalPatch).length === 0) return;
     const nextLevel = finalPatch.level ?? model.card.level;
     if (nextLevel > model.card.level && (finalPatch.lastSeenLevel ?? 0) < nextLevel) return;
+    // Recalculate from the final structured decisions so the saved sheet
+    // snapshot cannot lag behind level, resource, equipment, or rules changes.
+    // Explicit migration overrides are filtered by calculatedSheetFields.
+    const finalCard = { ...model.card, ...finalPatch, sheet: fields };
+    const synchronizedFields = { ...fields, ...calculatedSheetFields(finalCard) };
     // `fields` starts as a snapshot so preview calculations can use a complete
     // sheet. Apply only the actual differences: notes intentionally save
     // directly, and a note typed while this review is open must never be
     // replaced with an older staged snapshot.
     const changedFieldPatch = Object.fromEntries(
-      Object.entries(fields).filter(([field, value]) => value !== model.data[field]),
+      Object.entries(synchronizedFields).filter(([field, value]) => value !== model.data[field]),
     ) as SheetData;
     model.setFields(changedFieldPatch, finalPatch);
     setPatch({});

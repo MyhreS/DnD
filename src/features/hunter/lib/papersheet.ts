@@ -1,9 +1,9 @@
 import { getClass } from "@/data/classes";
 import type { HunterCard, SheetData } from "@/types";
+import { calculatedSheetFields } from "./characterAutomation";
 
-/** Card fields mirrored from the free-form sheet so lists, party views and
- * campaign membership keep working for sheet-made hunters: the sheet is the
- * source of truth; these are denormalized copies. */
+/** Identity fields mirrored from the character sheet so lists, party views,
+ * and campaign membership can read them without opening the editor. */
 export function sheetMirror(sheet: SheetData): Pick<HunterCard, "name" | "level" | "background"> {
   const name = typeof sheet.name === "string" ? sheet.name.trim() : "";
   const parsed = typeof sheet.level === "string" ? parseInt(sheet.level, 10) : NaN;
@@ -12,17 +12,16 @@ export function sheetMirror(sheet: SheetData): Pick<HunterCard, "name" | "level"
   return { name, level, background };
 }
 
-/** The sheet's free-text class line, for list rows ("Stalker", "Deepcaller"…). */
+/** The saved class line used by legacy sheet-only Hunters. */
 export function sheetClassName(sheet: SheetData | undefined): string {
   const v = sheet?.["class"];
   return typeof v === "string" ? v.trim() : "";
 }
 
-/** A card's display class: the sheet's free-text class line, falling back to
- * the structured `classId` for hunters that predate the sheet (legacy builder
- * cards, test-run bots) — so list rows never show a classless hunter. */
+/** Prefer the current structured class; use the saved class line only as a
+ * fallback for legacy sheet-only Hunters. */
 export function cardClassName(card: Pick<HunterCard, "sheet" | "classId">): string {
-  return sheetClassName(card.sheet) || getClass(card.classId)?.name || "";
+  return getClass(card.classId)?.name || sheetClassName(card.sheet) || "";
 }
 
 /** Parse an integer out of a sheet's free-text box ("22", "+2", "30 ft") —
@@ -42,9 +41,8 @@ export interface SheetVitals {
   sanityMax: number | null;
 }
 
-/** The sheet's play-relevant numbers, parsed from its free-text boxes — the ONE
- * way play surfaces (combat tracker, DM board, status screen) read a sheet
- * hunter's vitals. null = missing/unparseable (render as "?", never 0). */
+/** Parse play-relevant numbers from a saved sheet snapshot. null means the
+ * value is missing or unparseable and should never be rendered as zero. */
 export function sheetVitals(sheet: SheetData | undefined): SheetVitals {
   return {
     hpCur: sheetInt(sheet, "hpCur"),
@@ -53,4 +51,24 @@ export function sheetVitals(sheet: SheetData | undefined): SheetVitals {
     sanityCur: sheetInt(sheet, "sanityCur"),
     sanityMax: sheetInt(sheet, "sanityMax"),
   };
+}
+
+/** Resolve the effective character-sheet data used outside the editor. Current
+ * structured Hunters are recalculated from their saved decisions every time;
+ * legacy sheet-only Hunters retain their written values. */
+export function resolvedCharacterSheet(card: HunterCard): SheetData {
+  if (!getClass(card.classId)) return card.sheet ?? {};
+  return { ...(card.sheet ?? {}), ...calculatedSheetFields(card) };
+}
+
+/** One current source of Hunter vitals for lists, game controls, battle view,
+ * and the shared status board. */
+export function characterVitals(card: HunterCard): SheetVitals {
+  return sheetVitals(resolvedCharacterSheet(card));
+}
+
+/** Parse one effective numeric sheet field, including signed values such as
+ * initiative. */
+export function characterSheetInt(card: HunterCard, key: string): number | null {
+  return sheetInt(resolvedCharacterSheet(card), key);
 }

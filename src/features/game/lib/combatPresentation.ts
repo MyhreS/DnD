@@ -1,6 +1,4 @@
-import { getClass } from "@/data/classes";
-import { armorClass, isSheetCard, maxHp } from "@/lib/character";
-import { sheetVitals } from "@/features/hunter/lib/papersheet";
+import { characterSheetInt, characterVitals } from "@/features/hunter/lib/papersheet";
 import type { Combatant, EncounterState, HunterCard } from "@/types";
 
 /** Rows from finished battles stay in the session record but never appear in
@@ -17,9 +15,9 @@ export interface CombatVitals {
   ac: number | null;
 }
 
-/** Resolve the numbers shared by the Game controls and the second-display
- * Battle Screen. Character sheets remain the source of truth for Hunters;
- * enemy rows use the values snapshotted on their combatant document. */
+/** Resolve the numbers shared by the Game controls and second-display Battle
+ * Screen. Current Hunter decisions are recalculated; enemy rows retain their
+ * encounter snapshots. */
 export function combatVitals(combatant: Combatant, characters: HunterCard[]): CombatVitals {
   if (combatant.kind === "monster") {
     const max = combatant.maxHp ?? null;
@@ -38,45 +36,22 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
   if (!card) {
     return { currentHp: null, maxHp: null, damageTaken: null, ac: combatant.ac ?? null };
   }
-  if (isSheetCard(card)) {
-    const vitals = sheetVitals(card.sheet);
-    const current = combatant.currentHp ?? vitals.hpCur;
-    return {
-      currentHp: current,
-      maxHp: vitals.hpMax,
-      damageTaken: current === null || vitals.hpMax === null
-        ? null
-        : Math.max(0, vitals.hpMax - current),
-      // An AC recorded on the combatant is the DM's encounter-only override.
-      // A missing value deliberately falls back to the Hunter sheet.
-      ac: combatant.ac ?? vitals.ac,
-    };
-  }
-
-  const klass = getClass(card.classId);
-  const maximum = klass ? maxHp(klass, card.abilities, card.level) : null;
-  const current = combatant.currentHp ?? card.currentHp ?? maximum;
+  const vitals = characterVitals(card);
+  const current = combatant.currentHp ?? vitals.hpCur;
   return {
     currentHp: current,
-    maxHp: maximum,
-    damageTaken: current === null || maximum === null ? null : Math.max(0, maximum - current),
-    ac: combatant.ac ?? armorClass(
-      card.abilities,
-      card.mainArmorId,
-      card.addonArmorIds,
-      card.studdedAddonIds,
-      card.customItems,
-    ).total,
+    maxHp: vitals.hpMax,
+    damageTaken: current === null || vitals.hpMax === null ? null : Math.max(0, vitals.hpMax - current),
+    // An AC recorded on the combatant is the DM's encounter-only override.
+    // A missing value deliberately falls back to the current Hunter sheet.
+    ac: combatant.ac ?? vitals.ac,
   };
 }
 
 export function participantInitiative(card: HunterCard | undefined): number {
   if (!card) return 0;
-  const sheetValue = card.sheet?.initiative;
-  if (typeof sheetValue === "string") {
-    const parsed = Number.parseInt(sheetValue.trim(), 10);
-    if (Number.isFinite(parsed)) return parsed;
-  }
+  const current = characterSheetInt(card, "initiative");
+  if (current !== null) return current;
   return Math.floor((card.abilities.dex - 10) / 2);
 }
 
