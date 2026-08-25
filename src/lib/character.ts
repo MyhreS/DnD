@@ -115,7 +115,7 @@ function dedupeExtras(ids: string[]): string[] {
 /** Load-time normalization for character docs. It preserves every final score,
  * restores the structured point-buy/background layers when they still exist,
  * upgrades automation state to v3, and keeps the independent Madness migration
- * lossless. Current direct-score saves remain numerically unchanged. */
+ * lossless. Existing Standard and Maduhausu saves remain numerically unchanged. */
 export function normalizeCard(raw: HunterCard): HunterCard {
   const legacyRaw = raw as HunterCard & Record<string, unknown>;
   const legacyState = raw.sheetAutomation as (Record<string, unknown> & Partial<SheetAutomationState>) | undefined;
@@ -282,12 +282,6 @@ export function wornArmorWeight(card: WornArmor): number {
   return Math.round((pieces + studs) * 10) / 10;
 }
 
-/** True when this hunter was created the "character sheet way" — a free-form
- * paper sheet (`card.sheet`) instead of the structured builder. */
-export function isSheetCard(card: Pick<HunterCard, "sheet">): boolean {
-  return !!card.sheet;
-}
-
 /** A fresh, unsaved card skeleton for a brand-new hunter. */
 export function emptyCard(params: {
   ownerUid: string;
@@ -331,8 +325,7 @@ export function emptyCard(params: {
   };
 }
 
-/** A fresh card for a hunter built the "character sheet way": the free-form
- * paper sheet (`sheet`) instead of the builder's structured fields. */
+/** A fresh card for the canonical character-sheet creation flow. */
 export function emptySheetCard(params: {
   ownerUid: string;
   email: string;

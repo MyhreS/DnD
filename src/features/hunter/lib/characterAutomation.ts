@@ -268,6 +268,17 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
   return { fields, reasons, pending };
 }
 
+/** Recalculate every rules-driven sheet field while preserving fields that a
+ * migrated Hunter explicitly keeps as a manual override. This is the single
+ * projection used whenever structured character decisions are written back to
+ * the saved character sheet snapshot. */
+export function calculatedSheetFields(card: HunterCard): SheetData {
+  const overrides = new Set(card.sheetAutomation?.manualOverrides ?? []);
+  return Object.fromEntries(
+    Object.entries(automationFor(card).fields).filter(([key]) => !overrides.has(key)),
+  );
+}
+
 export function matchCatalogItem(value: string): string | null {
   return catalogIdForName(value);
 }

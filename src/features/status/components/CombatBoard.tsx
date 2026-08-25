@@ -1,24 +1,16 @@
 import type { Combatant, Game, HunterCard } from "@/types";
-import { getClass } from "@/data/classes";
-import { maxHp, isSheetCard } from "@/lib/character";
-import { sheetVitals } from "@/features/hunter/lib/papersheet";
+import { characterVitals } from "@/features/hunter/lib/papersheet";
 import { initiativeOrder } from "@/features/play/store/combatStore";
 import { CONDITION_NAME } from "@/data/conditions";
 
-/** Resolve a combatant's HP/AC: monsters carry their own; PCs read live from
- * the HunterCard (one source of truth — sheet hunters parse off their paper
- * sheet), mirroring the in-game CombatTracker. */
+/** Resolve a combatant's HP/AC: monsters carry their own; Hunters use the same
+ * current sheet projection as the game controls, with encounter overrides. */
 function vitals(c: Combatant, party: HunterCard[]): { hp: number | null; max: number | null; ac: number | null } {
   if (c.kind === "monster") return { hp: c.currentHp ?? null, max: c.maxHp ?? null, ac: c.ac ?? null };
   const card = c.characterId ? party.find((p) => p.id === c.characterId) : undefined;
   if (!card) return { hp: null, max: null, ac: c.ac ?? null };
-  if (isSheetCard(card)) {
-    const v = sheetVitals(card.sheet);
-    return { hp: v.hpCur, max: v.hpMax, ac: v.ac };
-  }
-  const klass = getClass(card.classId);
-  const max = klass ? maxHp(klass, card.abilities, card.level) : null;
-  return { hp: card.currentHp ?? max, max, ac: c.ac ?? null };
+  const current = characterVitals(card);
+  return { hp: c.currentHp ?? current.hpCur, max: current.hpMax, ac: c.ac ?? current.ac };
 }
 
 /** Read-only initiative board for the big screen — order, whose turn, HP and

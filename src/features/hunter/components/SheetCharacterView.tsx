@@ -3,16 +3,15 @@ import { PaperSheetModal } from "./papersheet/PaperSheetModal";
 import { cardClassName } from "../lib/papersheet";
 import type { HunterCard } from "@/types";
 
-/** The view for a sheet-made hunter: a small summary card, with the editor
- * popping up on top (auto-opened when the hunter is first viewed —
- * key this component by card id). */
+/** The canonical Hunter detail view: a small summary card with the character
+ * sheet opening above it when the Hunter is selected. */
 export function SheetCharacterView({
   card,
   autoOpen = true,
   onDismiss,
 }: {
   card: HunterCard;
-  /** Pop the sheet open immediately (the "view a sheet character" behaviour). */
+  /** Open the character sheet immediately when the Hunter is selected. */
   autoOpen?: boolean;
   /** Called when the popup closes, so the caller can stop re-auto-opening. */
   onDismiss?: () => void;

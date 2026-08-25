@@ -12,7 +12,7 @@ export const PHASE_LABEL = Object.fromEntries(PHASES.map((p) => [p.id, p.label])
   string
 >;
 
-/** Where the party is — orthogonal to phase, and what makes rests rulebook-accurate. */
+/** Where the party is — orthogonal to phase and used by the established rest workflow. */
 export const LOCATIONS: { id: GameLocation; label: string; hint: string }[] = [
   { id: "wild", label: "The Wild", hint: "Out on the hunt — no Hit Dice on a Short Rest; a Long Rest restores only half HP." },
   { id: "safe", label: "Safe Zone", hint: "Safe enough to catch a breath — spend Hit Dice on a Short Rest." },

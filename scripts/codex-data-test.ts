@@ -4,6 +4,8 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { CODEX_ENTRIES, CODEX_SOURCES, CODEX_SOURCE_BY_ID, CODEX_TOPICS } from "../src/data/codex";
+import { CONDITIONS } from "../src/data/conditions";
+import { SKILLS } from "../src/data/skills";
 import { searchEntries } from "../src/lib/search";
 
 const master = JSON.parse(readFileSync("resources/master.json", "utf8"));
@@ -46,6 +48,13 @@ assert.equal(master.referencedButNotSupplied.length, 8);
 assert.equal(master.referencedButNotSupplied.filter((entry: { audience: string }) => entry.audience === "player").length, 5);
 assert.equal(master.referencedButNotSupplied.filter((entry: { audience: string }) => entry.audience === "dm").length, 3);
 assert.deepEqual(master.conditionsNamedByCurrentSources, ["Blinded", "Frightened", "Incapacitated", "Insane", "Invisible", "Restrained"]);
+assert.deepEqual(CONDITIONS.map((condition) => condition.name), master.conditionsNamedByCurrentSources, "combat selectors match the current source names exactly");
+const abilityName = { str: "Strength", dex: "Dexterity", con: "Constitution", int: "Intelligence", wis: "Wisdom", cha: "Charisma" } as const;
+assert.deepEqual(
+  SKILLS.map((skill) => ({ name: skill.name, ability: abilityName[skill.ability] })),
+  master.characterSheet.skills,
+  "all character-sheet skills and their abilities match the current source",
+);
 assert.equal(master.rites.entries.filter((entry: { section?: string }) => entry.section === "Hidden Truths").length, 6);
 assert(master.rites.entries.find((entry: { name: string }) => entry.name === "Plane Shift")?.sourceNote.includes("ellipsis"));
 assert(master.whispers.entries.every((entry: { level?: number }) => entry.level === undefined), "Whispers must not be assigned an invented level");

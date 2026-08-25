@@ -9,9 +9,7 @@ import { useCombatSync } from "@/features/play/hooks/useCombatSync";
 import { PHASE_LABEL, LOCATION_LABEL } from "@/features/play/lib/phase";
 import { useWakeLock } from "@/hooks/common/useWakeLock";
 import { useFullscreen } from "@/hooks/common/useFullscreen";
-import { getClass } from "@/data/classes";
-import { maxHp, maxSanity, isSheetCard } from "@/lib/character";
-import { sheetVitals, cardClassName } from "@/features/hunter/lib/papersheet";
+import { cardClassName, characterVitals } from "@/features/hunter/lib/papersheet";
 import type { HunterCard } from "@/types";
 import { CombatBoard } from "./CombatBoard";
 
@@ -34,7 +32,7 @@ export function StatusPage() {
   useCombatSync(liveGame?.id ?? null, true);
   const combatants = useCombatStore((s) => s.combatants);
   const inCombat = !!liveGame?.combat?.active && combatants.length > 0;
-  // A named hunter belongs on the board — sheet-made hunters have classId "".
+  // A named Hunter belongs on the board, including legacy sheet-only records.
   const hunters = members
     .map((m) => party.find((c) => c.id === m.characterId))
     .filter((c): c is HunterCard => !!c && !!c.name);
@@ -89,15 +87,13 @@ export function StatusPage() {
 }
 
 function VitalsCard({ card }: { card: HunterCard }) {
-  // Sheet hunters: vitals parse from the paper sheet's free-text boxes (null
-  // when blank/unparseable — then the bar is skipped, never shown as 0/0).
-  const sheet = isSheetCard(card);
-  const v = sheetVitals(card.sheet);
-  const klass = sheet ? undefined : getClass(card.classId);
-  const hpMax = sheet ? v.hpMax : klass ? maxHp(klass, card.abilities, card.level) : 0;
-  const sanMax = sheet ? v.sanityMax : klass ? maxSanity(klass, card.abilities, card.level) : 0;
-  const hp = sheet ? v.hpCur : Math.min(hpMax ?? 0, card.currentHp ?? hpMax ?? 0);
-  const san = sheet ? v.sanityCur : Math.min(sanMax ?? 0, card.sanity ?? sanMax ?? 0);
+  // Current Hunters recalculate here from structured decisions; legacy
+  // sheet-only records keep their written values. Missing values stay unknown.
+  const v = characterVitals(card);
+  const hpMax = v.hpMax;
+  const sanMax = v.sanityMax;
+  const hp = v.hpCur;
+  const san = v.sanityCur;
   const dead = card.deathPending || (hp != null && hp <= 0);
   const transform = card.transformationLevel ?? 0;
   const cls = cardClassName(card);

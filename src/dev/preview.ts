@@ -149,7 +149,7 @@ export function previewEnemyTemplates(): import("@/types").EnemyTemplate[] {
 }
 
 /** Sample participants so the lobby / DM board look populated in preview.
- * Gascoigne is a sheet-made hunter: classId "" + the sheet's class text. */
+ * Gascoigne is a legacy sheet-only Hunter: classId "" plus a saved class line. */
 export function previewParticipants(): import("@/types").GameParticipant[] {
   const now = Date.now();
   return [
@@ -158,9 +158,8 @@ export function previewParticipants(): import("@/types").GameParticipant[] {
   ];
 }
 
-/** Sample party cards for the DM's character board. Gascoigne is SHEET-ONLY
- * (classId "", no structured build) so play surfaces prove they read hunters
- * through the paper sheet — vitals parse from its free-text boxes. */
+/** Sample party cards for the DM's character board. Gascoigne is a legacy
+ * sheet-only record, proving that current play surfaces retain that fallback. */
 export function previewPartyCards(): import("@/types").HunterCard[] {
   const eileen = previewCard("preview-uid");
   const gascoigne: import("@/types").HunterCard = {
@@ -305,9 +304,8 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     // #136 recovery section with a live countdown.
     droppedItems: [{ itemId: "torch", qty: 1, droppedAt: now - 2 * 60_000 }],
     notes: "Hunts the beasts that were once hunters.",
-    // The paper sheet IS the character now — a filled sample so /character,
-    // party rows and the DM's play-as view render a real-looking sheet in
-    // preview. The structured fields above stay for the play-mode boards.
+    // A filled saved snapshot keeps preview mode realistic. Structured fields
+    // remain authoritative for current calculated values across play surfaces.
     sheet: {
       name: "Eileen the Crow",
       background: "Plague Doctor",

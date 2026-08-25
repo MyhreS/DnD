@@ -1,11 +1,10 @@
 import type { HunterCard } from "@/types";
 import { getClass } from "@/data/classes";
-import { armorClassFor, isSheetCard } from "@/lib/character";
 import { classArt } from "@/data/classArt";
 import { CreatureSprite } from "@/data/CreatureSprite";
 import { classCreatureId } from "@/data/creatures";
 import { ClassArt } from "./ClassArt";
-import { sheetClassName } from "../lib/papersheet";
+import { cardClassName, characterVitals } from "../lib/papersheet";
 
 /**
  * A full-width hunter card for lists (main menu "Your hunters", the in-campaign
@@ -31,11 +30,8 @@ export function HunterListCard({
 }) {
   const klass = getClass(card.classId);
   const art = classArt(card.classId);
-  const className = klass
-    ? klass.name
-    : isSheetCard(card)
-      ? sheetClassName(card.sheet) || "Legacy hunter"
-      : null;
+  const className = cardClassName(card) || null;
+  const ac = characterVitals(card).ac;
 
   return (
     <div className="card card-hover" style={{ position: "relative", padding: 0, overflow: "hidden" }}>
@@ -78,9 +74,9 @@ export function HunterListCard({
           ) : (
             <div className="faint" style={{ fontSize: "0.82rem", marginTop: 4 }}>Draft — finish the build</div>
           )}
-          {klass && (
+          {ac != null && (
             <div className="hunter-list-card-armor">
-              AC {armorClassFor(card).total}
+              AC {ac}
             </div>
           )}
         </div>
