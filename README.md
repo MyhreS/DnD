@@ -39,11 +39,11 @@ Lower the friction of playing together:
 | **Party** | See everyone's hunters. The DM gets a roster: who's made a character, who's RSVP'd, with one-tap email reminders. |
 | **Codex** | Search the current Deepcaller book, Whispers, and printable character sheet—with provenance for every result. |
 
-The source library is generated from `resources/master.json`. The master tracks
-all four current game-maker documents, while the public player library exposes
-only its three player sources. Existing app workflows and saved-character
-support are maintained separately; replacing source documents does not
-silently redesign the Hunter or game pages.
+The current game sources are the beta-release text transcriptions in
+`docs/rules/`. One of them, `hidden-condition-sheet.txt`, is GM-only and never
+goes into player-facing output. Existing app workflows and saved-character
+support are maintained separately; replacing source documents does not silently
+redesign the Hunter or game pages.
 
 ### The six hunter classes
 

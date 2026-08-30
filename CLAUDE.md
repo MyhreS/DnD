@@ -328,34 +328,46 @@ owner-only denial matrix pass in production.
 
 ## Updating game content
 
-`resources/pdf/` contains exactly four current game-maker documents: the Book
-of the Deepcaller, Character Sheet, Hidden Condition Sheet, and Whispers Sheet.
-`resources/master.json` is their structured representation. Three sources are
-player-facing; the Hidden Condition Sheet is GM-only.
+The game's sources are the **beta release** documents, kept as verbatim plain-text
+transcriptions in **`docs/rules/`**. Those `.txt` files are the authoritative
+source of truth for the game's rules — answer every rules or game-logic question
+by reading them, not from memory or from older app data:
 
-`bun run codex:generate` performs all source-library generation. It verifies
-the four filenames and SHA-256 hashes, rejects duplicate documents, clears and
-recreates the ignored `public/source-library/` downloads for only the three
-player sources, and writes `src/data/codex.generated.json`. It must never copy
-the Hidden Condition source or text into public output. Never hand-edit
-generated Codex data.
+| File | Covers |
+|---|---|
+| `core-rulebook.txt` | The 126-page Core Rulebook (Beta V3.0) — the main rules text, page boundaries marked `[page N]` |
+| `book-of-the-deepcaller.txt` | The Rites |
+| `character-sheet.txt` | The printable character sheet's fields and layout |
+| `whispers-sheet.txt` | The 6 Whisper rites |
+| `hidden-condition-sheet.txt` | **GM-ONLY** — Hidden Second Threshold, Old One Vessel, Lost |
 
-The four PDFs replace older **game documents**, not the app's established
+**`hidden-condition-sheet.txt` is GM-only and must stay that way.** Its content
+must never reach public app UI, public API responses, the Codex, or build
+output — this repository and Firebase Hosting bundles are public. Never copy
+its text into `src/`, `public/`, generated data, or player-facing docs.
+
+**State of the old generation pipeline (as of this beta swap).** The four
+source PDFs and `resources/master.json` were deleted. `package.json` still
+defines `codex:generate`, `test:codex`, `test:character-automation` and
+`test:ability-buy`, but **all four fail immediately** because they read
+`resources/master.json` / `resources/pdf/` — so `bun run check`, which starts
+with `test:codex`, also fails before reaching `tsc`/`eslint`/`knip`. Run
+`tsc -b`, `eslint .` and `knip` directly until the pipeline is rebuilt.
+`codex:generate` is no longer wired into `dev`/`build`/`build:ci`.
+`src/data/codex.generated.json` is a stale leftover of the old PDF pipeline and
+`public/source-library/` no longer exists. Do not hand-edit generated Codex
+data, and do not claim these commands work.
+
+The beta documents replace older **game documents**, not the app's established
 screens or workflows. Do not remove or redesign Hunter creation, the canonical
 character sheet, saved-character compatibility, game pages, or table tools
-merely because a topic is absent from this deliberately narrow document set.
-Those product features change only when the game maker explicitly asks.
+merely because a topic is absent from this document set. Those product features
+change only when the game maker explicitly asks.
 
-When one of the four documents defines a concept already represented by the
-app, the current document wins. Update the underlying data or logic while
-preserving the existing interaction unless a redesign was requested. Keep the
-value authored once: source-derived Rites and Whispers flow from `master.json`
-through the generator rather than being copied into another hand-maintained
-catalog. Historical PDFs, extracts, CSVs, generated game cards, and handbook
-copies must not be restored.
-
-After a source refresh, run `bun run codex:generate`, `bun run test:codex`,
-`bun run test:character-automation`, and the normal repository checks.
+When one of the documents defines a concept already represented by the app, the
+current document wins. Update the underlying data or logic while preserving the
+existing interaction unless a redesign was requested. Historical PDFs, extracts,
+CSVs, generated game cards, and handbook copies must not be restored.
 
 ## One-time manual setup (Firebase console)
 
