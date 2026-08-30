@@ -1,0 +1,296 @@
+C&S CHARACTER SHEET — full transcription
+Source: "C&S Character Sheet.pdf" (Beta Release), 11 PDF pages / 6 sheet pages.
+Printed from https://dandd-ea955.web.app/character — 22/07/2026, 10:33
+
+Notation: small red circled numerals printed beside labels are reproduced as (n).
+Blank ruled lines and empty boxes are noted as [____] / [ blank box ].
+Checkboxes are shown as [ ].
+
+[page 1]
+
+--- SHEET PAGE 1 · IDENTITY & ABILITIES ---
+
+IDENTITY
+  Your ACTUAL name            (handwritten-style red example text)
+  [____]
+  YOUR NAME
+  [____]
+  BACKGROUND (2)
+  [____]
+  CLASS (1)
+  [____]
+  SUBCLASS (1)
+
+(Centre: large stylised eye emblem containing)
+  LEVEL (1)      [____]
+  INSIGHT (3)    [____]
+
+VITALS
+  TRANSFORMATION LVL (3)
+  [____]
+
+  SANITY (3)                          [ ] INSANE
+  [____]        [____]        [____]
+  CURRENT        MAX          SANITY DICE (3)
+
+  HIT POINTS (3)
+  [____]        [____]        [____]
+  CURRENT        MAX          TEMP
+
+  HIT DICE (3)
+  [____]        [____]        [____]
+  CURRENT        SPENT        MAX
+
+  DEATH SAVES
+  O O O — SUCCESSES
+  O O O — FAILURES
+
+--- ABILITIES & SKILLS ---
+
+PROFICIENCY BONUS (2)
+  [ blank box ]
+
+STRENGTH (3)
+  [ SCORE ] [ MODIFIER ]
+  | Entry | Value | Proficiency |
+  |---|---|---|
+  | Saving Throw (3) | ____ | O |
+  | Athletics (2) | ____ | O |
+
+CONSTITUTION (3)
+  [ SCORE ] [ MODIFIER ]
+  | Entry | Value | Proficiency |
+  |---|---|---|
+  | Saving Throw (3) | ____ | O |
+  | Grit (2) | ____ | O |
+
+WISDOM (3)
+  [ SCORE ] [ MODIFIER ]
+  | Entry | Value | Proficiency |
+  |---|---|---|
+  | Saving Throw (3) | ____ | O |
+  | Animal Handling (2) | ____ | O |
+  | Insight | ____ | O |
+  | Medicine | ____ | O |
+  | Perception | ____ | O |
+  | Survival | ____ | O |
+
+INTELLIGENCE (3)
+  [ SCORE ] [ MODIFIER ]
+  | Entry | Value | Proficiency |
+  |---|---|---|
+  | Saving Throw (3) | ____ | O |
+  | Eldritch Knowledge (2) | ____ | O |
+  | Old World History | ____ | O |
+  | Investigation | ____ | O |
+  | Blood Nature | ____ | O |
+  | Religion | ____ | O |
+
+DEXTERITY (3)
+  [ SCORE ] [ MODIFIER ]
+  | Entry | Value | Proficiency |
+  |---|---|---|
+  | Saving Throw (3) | ____ | O |
+  | Acrobatics (2) | ____ | O |
+  | Sleight of Hand | ____ | O |
+  | Stealth | ____ | O |
+
+BLOOD TINGE (3)
+  (blood-drop emblem with a blank square inside)
+
+CHARISMA (3)
+  [ SCORE ] [ MODIFIER ]
+  | Entry | Value | Proficiency |
+  |---|---|---|
+  | Saving Throw (3) | ____ | O |
+  | Deception (2) | ____ | O |
+  | Intimidation | ____ | O |
+  | Presence | ____ | O |
+  | Persuasion | ____ | O |
+
+[page 2]
+
+(continuation of sheet page 1 — the skill lists above spill onto this PDF page:
+ Acrobatics (2) / Sleight of Hand / Stealth on the left,
+ Deception (2) / Intimidation / Presence / Persuasion on the right,
+ each with a value line and a proficiency circle.)
+
+  INITIATIVE (3)          SPEED (2)              PASSIVE PERCEPTION (3)
+  [ blank box ]           [ blank box ]          [ blank box ]
+                          ( SIZE : MEDIUM )
+
+  PAGE 1 · IDENTITY & ABILITIES
+
+[page 3]
+
+--- SHEET PAGE 2 · ARMOR & EQUIPMENT ---
+
+ARMOR & EQUIPMENT
+
+ARMOR CLASS (4)
+  (shield emblem — blank)
+  [ ] SHIELD ARM (4)
+
+  ARMOR CATEGORY (4)
+  [____]
+
+  WEIGHT (4)            WEIGHT CONDITION (4)
+  [____]                [____]
+
+(Worn-figure diagram with labelled boxes connected to the illustration:)
+  HEAD GEAR (4)   [ blank box ]
+  SCARF (4)       [ blank box ]
+  MAIN ARMOR (4)  [ blank box ]
+  GLOVES (4)      [ blank box ]
+  BOOTS (4)       [ blank box ]
+
+ADD-ON ARMOR (4)
+  | Slot | Studs |
+  |---|---|
+  | [____] | [ ] STUDS (4) |
+  | [____] | [ ] STUDS (4) |
+  | [____] | [ ] STUDS (4) |
+  | [____] | [ ] STUDS (4) |
+  | [____] | [ ] STUDS (4) |
+  | [____] | [ ] STUDS (4) |
+
+IMPRESSIONS (4)
+  [ blank panel ]
+
+SPECIAL (4)
+  [ blank panel ]
+
+STORAGE ITEMS (2)
+  [ blank panel ]
+
+  | Storage slot | Entry |
+  |---|---|
+  | OVERSIZED STORAGE SLOT (HAND) (2) | [ blank box ] |
+  | SIGNIFICANT STORAGE SLOT (BACK) (2) | [ blank box ] |
+  | SIGNIFICANT STORAGE SLOT (HIP) (2) | [ blank box ] |
+  | SIGNIFICANT STORAGE SLOT (CHEST) (2) | [ blank box ] |
+  | SIGNIFICANT STORAGE SLOT (ANKLE) (2) | [ blank box ] |
+
+EQUIPMENT TRAINING & PROFICIENCIES
+  ARMOR TRAINING (1)    [ ] LIGHT   [ ] MEDIUM   [ ] HEAVY
+  WEAPONS (2)           [ ] SIMPLE  [ ] MARTIAL
+
+TOOLS (2)
+  [ blank panel ]
+
+[page 4]
+
+(continuation of sheet page 2)
+
+  COINS (2)   [ blank box ]   GP
+
+  PAGE 2 · ARMOR & EQUIPMENT
+
+[page 5]
+
+--- SHEET PAGE 3 · EQUIPMENT & WEAPONS ---
+
+EQUIPMENT (ALL) (2)
+
+| ITEM | CARRYING CATEGORY | ITEM SLOT | WEIGHT |
+|---|---|---|---|
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+(19 blank rows)
+
+WEAPON DAMAGE (3)
+
+| NAME | ATTACK BONUS | DAMAGE TYPE | NOTES |
+|---|---|---|---|
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+|  |  |  |  |
+(8 blank rows)
+
+[page 6]
+
+(continuation of sheet page 3 — footer band only)
+
+  PAGE 3 · EQUIPMENT & WEAPONS
+
+[page 7]
+
+--- SHEET PAGE 4 · CLASS FEATURES & FEATS ---
+
+CLASS FEATURES (3)
+  [ blank panel — upper block ]
+  [ blank panel — lower block ]
+
+[page 8]
+
+FEATS (2)
+  [ blank panel ]
+
+  PAGE 4 · CLASS FEATURES & FEATS
+
+[page 9]
+
+--- SHEET PAGE 5 · WHISPERS & RITES ---
+
+WHISPERS AND RITES (3)
+
+  | Field | Value |
+  |---|---|
+  | RITE PERFORMING ABILITY | [____] |
+  | RITE PERFORMING MODIFIER (3) | [____] |
+  | RITE SAVE DC (3) | [____] |
+  | RITE ATTACK BONUS (3) | [____] |
+
+PREPARED WHISPERS (3)
+
+| LEVEL | NAME | PERFORMING | RANGE | DURATION | ROUNDS |
+|---|---|---|---|---|---|
+|  |  |  |  |  |  |
+|  |  |  |  |  |  |
+|  |  |  |  |  |  |
+|  |  |  |  |  |  |
+|  |  |  |  |  |  |
+|  |  |  |  |  |  |
+|  |  |  |  |  |  |
+|  |  |  |  |  |  |
+|  |  |  |  |  |  |
+(9 blank rows)
+
+  PAGE 5 · WHISPERS & RITES
+
+[page 10]
+
+--- SHEET PAGE 6 · NOTES ---
+
+NOTES
+  (approximately 25 blank ruled lines)
+
+[page 11]
+
+(continuation of sheet page 6 — footer band only)
+
+  PAGE 6 · NOTES
+
+--- END OF DOCUMENT ---
