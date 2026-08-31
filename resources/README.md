@@ -13,10 +13,11 @@ game-logic question.
 UI, public API responses, the Codex, or build output. This repo and Firebase
 Hosting bundles are public.
 
-The old `bun run codex:generate` pipeline (SHA-256 verification of four PDFs,
-the ignored `public/source-library/` downloads, `src/data/codex.generated.json`)
-no longer runs — it reads files that no longer exist. See CLAUDE.md,
-"Updating game content", for the accurate current state.
+`bun run codex:generate` now reads those `.txt` files instead of PDFs: a
+hard-coded allowlist of the **four player documents** (the GM-only sheet is
+never opened), a SHA-256 per `.txt` as the integrity gate, the ignored
+`public/source-library/` downloads, and `src/data/codex.generated.json`. Nothing
+in `resources/` feeds it. See CLAUDE.md, "Updating game content", for details.
 
 Replacing source documents is not permission to redesign or remove existing app
 pages, Hunter creation, saved-character support, or table workflows. Those

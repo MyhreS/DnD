@@ -153,7 +153,7 @@ export function previewEnemyTemplates(): import("@/types").EnemyTemplate[] {
 export function previewParticipants(): import("@/types").GameParticipant[] {
   const now = Date.now();
   return [
-    { uid: "preview-uid", characterId: "preview-uid-char", playerName: "Preview Hunter", name: "Eileen the Crow", classId: "scout", subclassId: "marksman", className: "Stalker", level: 3, role: "player", joinedAt: now, lastSeen: now },
+    { uid: "preview-uid", characterId: "preview-uid-char", playerName: "Preview Hunter", name: "Eileen the Crow", classId: "scout", subclassId: "marksman", className: "Scout", level: 3, role: "player", joinedAt: now, lastSeen: now },
     { uid: "preview-p2", characterId: "preview-p2-char", playerName: "Father Gascoigne", name: "Gascoigne", classId: "", subclassId: null, className: "Bloodbound", level: 3, role: "player", joinedAt: now, lastSeen: now },
   ];
 }
@@ -175,7 +175,7 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
     activeTransformations: [],
     sheet: {
       name: "Gascoigne",
-      background: "Cleric of the Old Ways",
+      background: "Church Missionary",
       class: "Bloodbound",
       level: "3",
       hpCur: "28",
@@ -199,7 +199,7 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
     name: "Henryk",
     classId: "stalker",
     subclassId: null,
-    background: "Old Hunter",
+    background: "Drifter",
     level: 4,
     lastSeenLevel: 4,
     feats: [],
@@ -243,8 +243,8 @@ export function previewArchive(): import("@/types").ArchivedCharacter[] {
         name: "Viktor the Lost",
         classId: "deepcaller",
         subclassId: "hunter-zealot",
-        level: 2,
-        lastSeenLevel: 2,
+        level: 3,
+        lastSeenLevel: 3,
         currentHp: 0,
         preparedWhispers: ["eldritch-blast", "mindcrack"],
       },
@@ -266,7 +266,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     name: "Eileen the Crow",
     classId: "scout",
     subclassId: "marksman",
-    background: "Plague Doctor",
+    background: "Grave Tender",
     level: 3,
     lastSeenLevel: 3,
     feats: ["Tough"],
@@ -308,15 +308,15 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     // remain authoritative for current calculated values across play surfaces.
     sheet: {
       name: "Eileen the Crow",
-      background: "Plague Doctor",
-      class: "Stalker",
+      background: "Grave Tender",
+      class: "Scout",
       subclass: "Marksman",
       level: "3",
       insight: "60",
       profBonus: "+2",
       transformation: "2",
       sanityCur: "9",
-      sanityMax: "11",
+      sanityMax: "13",
       sanityDice: "2d6",
       hpCur: "22",
       hpMax: "25",
@@ -343,7 +343,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
       skSurvival: "+3",
       skSurvivalP: true,
       initiative: "+2",
-      speed: "30 ft",
+      speed: "35 ft",
       passivePerception: "13",
       bloodTinge: true,
       ac: "14",

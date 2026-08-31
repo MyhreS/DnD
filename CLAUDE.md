@@ -66,7 +66,7 @@ src/
     rsvp.ts  trades.ts  notifications.ts  allowlist.ts (legacy)
   hooks/               Shared hooks, grouped in subfolders
     auth/useAuthInit.ts   common/useNow.ts
-  features/<feature>/  e.g. auth, sessions, hunter, party, codex, profile
+  features/<feature>/  auth, campaigns, codex, game, hunter, play, profile, status
     components/        Feature UI (each file < 200 lines — see rule)
     hooks/             Feature hooks (every useEffect lives in a hook)
     store/             Feature Zustand store
@@ -85,8 +85,9 @@ Rules:
   should read clean; side-effects are named hooks.
 - **No component file over ~200 lines.** If it grows past that, split it into
   more components/files. Only a *few* deliberate exceptions are allowed
-  (e.g. `features/hunter/components/papersheet/SheetPage1.tsx`, the densest
-  paper-sheet page).
+  (e.g. `features/game/components/GamePage.tsx` and
+  `features/hunter/components/papersheet/CharacterAutomationProvider.tsx`, the
+  two densest surfaces).
 - Imports use the `@/` alias (→ `src/`).
 
 ## Tooling / quality gates
@@ -346,17 +347,25 @@ must never reach public app UI, public API responses, the Codex, or build
 output — this repository and Firebase Hosting bundles are public. Never copy
 its text into `src/`, `public/`, generated data, or player-facing docs.
 
-**State of the old generation pipeline (as of this beta swap).** The four
-source PDFs and `resources/master.json` were deleted. `package.json` still
-defines `codex:generate`, `test:codex`, `test:character-automation` and
-`test:ability-buy`, but **all four fail immediately** because they read
-`resources/master.json` / `resources/pdf/` — so `bun run check`, which starts
-with `test:codex`, also fails before reaching `tsc`/`eslint`/`knip`. Run
-`tsc -b`, `eslint .` and `knip` directly until the pipeline is rebuilt.
-`codex:generate` is no longer wired into `dev`/`build`/`build:ci`.
-`src/data/codex.generated.json` is a stale leftover of the old PDF pipeline and
-`public/source-library/` no longer exists. Do not hand-edit generated Codex
-data, and do not claim these commands work.
+**The generation pipeline.** `bun run codex:generate`
+(`scripts/generate-codex-data.mjs`) performs all source-library generation. It
+reads the **four player documents from a hard-coded filename allowlist** —
+`core-rulebook.txt`, `book-of-the-deepcaller.txt`, `character-sheet.txt`,
+`whispers-sheet.txt` — never by globbing `docs/rules/*.txt` and filtering, so
+`hidden-condition-sheet.txt` is never opened. It records a **SHA-256 of each
+`.txt`** as the integrity gate (an edited transcription fails loudly), parses
+`[page N]` markers into `sourcePages`, clears and recreates the ignored
+`public/source-library/` downloads for only those four player sources (as
+`.txt`), and writes `src/data/codex.generated.json`. There is no
+`resources/pdf/` and no `resources/master.json` any more — both are deleted and
+must not be restored, and nothing in the pipeline verifies PDFs. `codex:generate`
+runs as a prebuild step in the `dev`, `build` and `build:ci` scripts, so the
+Codex download links are populated in every build. **Never hand-edit generated
+Codex data.**
+
+After a source refresh, run `bun run codex:generate`, `bun run test:codex`,
+`bun run test:character-automation`, `bun run test:ability-buy`, and the normal
+repository checks (`bun run check`).
 
 The beta documents replace older **game documents**, not the app's established
 screens or workflows. Do not remove or redesign Hunter creation, the canonical
