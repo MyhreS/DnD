@@ -369,7 +369,7 @@ export const CLASSES: HunterClass[] = [
     speedFt: 30,
     armorTraining: ["Light armor", "Medium armor"],
     weaponProficiencies: "Simple and Martial weapons",
-    toolProficiencies: "Blood-drainer's Tools (unique item)",
+    toolProficiencies: "Blood-drainer's Tools",
     skillChoices: { count: 2, options: ["Grit", "Blood Nature", "Athletics", "Intimidation", "Medicine", "Perception", "Survival"] },
     startingEquipment: ["Greataxe", "2 Handaxes", "Blood-drainer's Tools (unique item)", "4 Blood vials", "Tool Belt"],
     baseClass: "Barbarian",

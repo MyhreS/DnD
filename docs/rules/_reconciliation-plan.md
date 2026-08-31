@@ -1738,7 +1738,7 @@ grant and will double up the item):
 
 | Stored id | → | Rule |
 |---|---|---|
-| `lantern` | **`lantern-hooded`** | The beta has only Bullseye and Hooded; Hooded is the same 2 lb (item 43). |
+| ~~`lantern`~~ | **NO REMAP — DO NOT MIGRATE** | ⚠️ Superseded by what item 43 actually built. Batch 2.4 **reused the `lantern` id** under the new display name "Lantern, Hooded" rather than creating a `lantern-hooded` id. **No `lantern-hooded` id exists**, so remapping to it would break every stored inventory that references a lantern. Stored `lantern` entries already resolve correctly and need no migration. |
 | `book-of-eldritch-knowledge` | **`book-of-the-deepcaller`** on Deepcaller cards, else **`book`** | The beta separates the Unique Item from generic Book (item 44). |
 | `hunter-cleaver` | **`[BLOCKED-2]`** | **No remap target** — the Shortsword is a different weapon, not a rename. Options for Simon: keep as-is; convert to a `customItems` entry (`source: "found"`, name "Hunter Cleaver", `catalogBaseId: "shortsword"`); or drop. **Do not silently delete.** |
 | `bedroll` | **drop** | −7 lb (item 48). |

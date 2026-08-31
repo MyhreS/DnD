@@ -4,7 +4,8 @@ import { ITEMS } from "@/data/items";
 const BY_NAME = new Map(ITEMS.map((item) => [item.name.toLowerCase(), item.id]));
 const ALIASES: Record<string, string> = {
   "blood vial": "blood-vial", "blood vials": "blood-vial", bullet: "bullets", bullets: "bullets",
-  "book of the deepcaller": "book-of-eldritch-knowledge", "book of eldritch knowledge": "book-of-eldritch-knowledge",
+  "book of eldritch knowledge": "book-of-eldritch-knowledge",
+  "lantern": "lantern", "hooded lantern": "lantern", "bullseye lantern": "lantern-bullseye",
   "deepcallers robe": "robe", robe: "robe", "blood-drainer's tools": "blood-drainers-tools",
   "thieves' tools": "thieves-tools", "navigator's tools": "navigators-tools", "navigators tools": "navigators-tools",
   "hunting trap": "hunting-trap", "hunting traps": "hunting-trap", "tool belt": "tool-belt",

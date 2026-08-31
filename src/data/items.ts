@@ -5,20 +5,24 @@ import { ARMOR } from "@/data/armor";
 // Established app catalog: every distinct item across the six classes'
 // `startingEquipment` (see src/data/classes.ts), plus common gear retained by
 // the app. The current four-document source set does not redefine this data.
-// Carrying significance follows the established catalog:
-//   Insignificant — keys, letters, maps, coins, rings, parchment, blood vials,
-//     supplies, kits, tool *sets*, ammunition.
+// Carrying significance follows the Hunter Gear table
+// (core-rulebook.txt [page 121]) and the surrounding equipment chapter:
+//   Insignificant — keys, maps, coins, parchment, blood vials, ammunition,
+//     caltrops, flasks, vials, locks, manacles, mirrors, iron spikes.
 //   Significant   — daggers, handaxes, rope, pistols, rifles, chains, swords,
 //     scimitars, sickles, cleavers, lanterns, shovels, crowbars, tool belts,
-//     bandoliers, backpacks, hunting traps, books.
-//   Oversized     — great weapons, heavy crates, barrels, ladders, corpses.
+//     bandoliers, backpacks, hunting traps, books, and ALL Tools
+//     ([page 114] "Carrying Category. All Tools are Significant Items.").
+//   Oversized     — great weapons, barrels, chests, ladders, buckets, poles,
+//     iron pots, portable rams, corpses.
 // Weapons may always be carried in Hand, even where the catalog lists a
 // preferred slot.
-// Items with no master entry (Bedroll, Rations, …) use 5e weights as a guide.
 // The Hunter Rifle is an ordinary Martial Ranged weapon on the weapons table
-// (core-rulebook.txt [page 111]) and is not unique. Hunter Cleaver and
-// Blood-drainer's Tools are flagged unique (the resources call them "unique
-// item"). Armor is folded in from src/data/armor.ts at the bottom.
+// (core-rulebook.txt [page 111]) and is not unique. Blood-drainer's Tools are
+// listed under plain "Other Tools" ([page 115]) and are likewise not unique.
+// The Unique Items chapter ([pages 122–124]) covers the Bloodvial, Silver
+// Bullets, the Book of the Deepcaller and the Robe of the Deepcallers.
+// Armor is folded in from src/data/armor.ts at the bottom.
 
 const armorItems: Item[] = ARMOR.map((a) => ({
   id: a.id,
@@ -154,50 +158,102 @@ export const ITEMS: Item[] = [
     category: "Ammunition",
     carry: "Insignificant",
     weightLb: 0,
-    note: "A pouch of bullets for firearms. Bullets have no carried weight.",
+    note: "A pouch of bullets for firearms. Each bullet weighs about one-third of an ounce; fifty bullets weigh one pound.",
+  },
+  {
+    id: "silver-bullets",
+    name: "Silver Bullets",
+    category: "Ammunition",
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "Fired by any weapon that uses Bullets. When a Silver Bullet deals damage to a Dreadblood, add 1d6 to the damage roll.",
   },
 
-  // --- Tools (tool sets + tool belt) ---
-  {
-    id: "tool-belt",
-    name: "Tool Belt",
-    category: "Tool",
-    carry: "Significant",
-    weightLb: 3,
-    note: "Storage: uses the hip slot, gives 4 Significant slots (hip).",
-  },
+  // --- Tools (all Tools are Significant Items — core-rulebook.txt [page 114]) ---
   {
     id: "thieves-tools",
     name: "Thieves' Tools",
     category: "Tool",
-    carry: "Insignificant",
+    carry: "Significant",
     weightLb: 1,
+    note: "Dexterity. Utilize: pick a lock (DC 15), or disarm a trap (DC 15).",
   },
   {
     id: "navigators-tools",
     name: "Navigator's Tools",
     category: "Tool",
-    carry: "Insignificant",
+    carry: "Significant",
     weightLb: 2,
+    note: "Wisdom. Utilize: plot a course (DC 10), or determine position by stargazing (DC 15).",
   },
   {
     id: "blood-drainers-tools",
     name: "Blood-drainer's Tools",
     category: "Tool",
-    carry: "Insignificant",
+    carry: "Significant",
     weightLb: 2,
-    note: "The Bloodbound's signature kit.",
-    unique: true,
+    note: "Constitution. Utilize: identify the purity of blood within a Bloodvial (DC 10), or drain blood from an Incapacitated, Paralyzed, Restrained, Unconscious or newly Dead creature (DC 10/20/30 for 1/2/3 Bloodvials).",
+  },
+
+  // --- Artisan's Tools (core-rulebook.txt [page 115]) ---
+  {
+    id: "alchemists-supplies",
+    name: "Alchemist's Supplies",
+    category: "Tool",
+    carry: "Significant",
+    weightLb: 8,
+    note: "Intelligence. Utilize: identify a substance (DC 15). Craft: Acid (3 vials), Oil (1 flask).",
+  },
+  {
+    id: "carpenters-tools",
+    name: "Carpenter's Tools",
+    category: "Tool",
+    carry: "Significant",
+    weightLb: 6,
+    note: "Strength. Utilize: seal or pry open a door or container (DC 20). Craft: Club, Greatclub, Barrel, Chest, Ladder, Pole, Portable Ram, Torch.",
+  },
+  {
+    id: "cultists-tools",
+    name: "Cultist's Tools",
+    category: "Tool",
+    carry: "Significant",
+    weightLb: 8,
+    note: "Intelligence. Utilize: chisel a symbol or hole in stone (DC 10). Craft: Block and Tackle.",
+  },
+  {
+    id: "poisoners-kit",
+    name: "Poisoner's Kit",
+    category: "Tool",
+    carry: "Significant",
+    weightLb: 2,
+    note: "Intelligence. Utilize: detect a poisoned object or drink (DC 10). Craft: Basic Poison (1 vial), Antitoxin (1 vial).",
+  },
+  {
+    id: "smiths-tools",
+    name: "Smith's Tools",
+    category: "Tool",
+    carry: "Significant",
+    weightLb: 10,
+    note: "Dexterity. Craft: Hunter Rifle, Pistol, Bell, Bullseye Lantern, Hooded Lantern, Hunting Trap, Lock, Manacles, Mirror, Shovel, Signal Whistle, Tinderbox.",
   },
 
   // --- Gear ---
+  // The Toolbelt is a Storage Item ([page 122]), not a Tool.
+  {
+    id: "tool-belt",
+    name: "Tool Belt",
+    category: "Gear",
+    carry: "Significant",
+    weightLb: 3,
+    note: "Storage: uses the hip slot, gives 4 Significant slots (hip).",
+  },
   {
     id: "rope",
     name: "Rope",
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
-    note: "50 feet of hempen rope.",
+    note: "Utilize: tie a knot (DC 10 Dexterity (Sleight of Hand)). Bursting it takes a DC 20 Strength (Athletics) check. Binds a Grappled, Incapacitated or Restrained creature — Restrained until it escapes with a DC 15 Dexterity (Acrobatics) check as an action.",
   },
   {
     id: "bandolier",
@@ -239,12 +295,23 @@ export const ITEMS: Item[] = [
     weightLb: 1,
     note: "Storage: gives 1 Significant slot (ankle) — Dagger or Pistol only.",
   },
+  // Legacy id `lantern` is reused for the Hooded Lantern so stored inventories
+  // keep resolving; see the Batch 6 migration note.
   {
     id: "lantern",
-    name: "Lantern",
+    name: "Lantern, Hooded",
     category: "Gear",
     carry: "Significant",
     weightLb: 2,
+    note: "Burns Oil to cast Bright Light in a 30-foot radius and Dim Light for an additional 30 feet. Bonus Action to lower the hood to Dim Light in a 5-foot radius, or raise it again.",
+  },
+  {
+    id: "lantern-bullseye",
+    name: "Lantern, Bullseye",
+    category: "Gear",
+    carry: "Significant",
+    weightLb: 2,
+    note: "Burns Oil to cast Bright Light in a 60-foot Cone and Dim Light for an additional 60 feet.",
   },
   {
     id: "crowbar",
@@ -268,7 +335,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 10,
-    note: "10 feet of heavy chain.",
+    note: "Utilize: wrap it around a Grappled, Incapacitated or Restrained creature within 5 feet (DC 13 Strength (Athletics)). Escaping takes a DC 18 Dexterity (Acrobatics) check; bursting it a DC 20 Strength (Athletics) check.",
   },
   {
     id: "hunting-trap",
@@ -279,11 +346,20 @@ export const ITEMS: Item[] = [
   },
   {
     id: "book-of-eldritch-knowledge",
-    name: "Book of eldritch knowledge",
+    name: "Book of the Deepcaller",
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
-    note: "Forbidden passages — the Deepcaller's tome.",
+    note: "Contains fragments of eldritch knowledge. Some passages cannot even be perceived; others can shatter the mind of anyone who speaks them without understanding.",
+    unique: true,
+  },
+  {
+    id: "book",
+    name: "Book",
+    category: "Gear",
+    carry: "Significant",
+    weightLb: 5,
+    note: "Fiction or nonfiction. Consulting an accurate nonfiction Book about its topic gives a +5 bonus to Intelligence (Eldritch Knowledge, Old World History, Blood Nature, or Religion) checks about that topic.",
   },
   {
     id: "bell",
@@ -303,13 +379,6 @@ export const ITEMS: Item[] = [
     weightLb: 1,
   },
   {
-    id: "bedroll",
-    name: "Bedroll",
-    category: "Gear",
-    carry: "Significant",
-    weightLb: 7,
-  },
-  {
     id: "waterskin",
     name: "Waterskin",
     category: "Gear",
@@ -320,13 +389,6 @@ export const ITEMS: Item[] = [
   {
     id: "key",
     name: "Key",
-    category: "Gear",
-    carry: "Insignificant",
-    weightLb: 0,
-  },
-  {
-    id: "letter",
-    name: "Letter",
     category: "Gear",
     carry: "Insignificant",
     weightLb: 0,
@@ -354,31 +416,257 @@ export const ITEMS: Item[] = [
     weightLb: 1,
     note: "Burns oil to cast light in a 15 ft radius.",
   },
+
+  // --- Hunting Gear (core-rulebook.txt [pages 116–121]) ---
   {
-    id: "brewers-supplies",
-    name: "Brewer's Supplies",
-    category: "Tool",
+    id: "ball-bearings",
+    name: "Ball Bearings",
+    category: "Gear",
     carry: "Insignificant",
-    weightLb: 9,
-    note: "A missionary's cover trade — kettles, hops and bottles.",
+    weightLb: 2,
+    note: "Utilize: spill them to cover a level 10-foot-square area within 10 feet. A creature entering it must succeed on a DC 10 Dexterity save or have the Prone condition. Recovering them takes 10 minutes.",
+  },
+  {
+    id: "barrel",
+    name: "Barrel",
+    category: "Gear",
+    carry: "Oversized",
+    weightLb: 70,
+    note: "Holds up to 40 gallons of liquid or 4 cubic feet of dry goods.",
+  },
+  {
+    id: "basket",
+    name: "Basket",
+    category: "Gear",
+    carry: "Oversized",
+    weightLb: 2,
+    note: "Holds up to 40 pounds within 2 cubic feet.",
+  },
+  {
+    id: "block-and-tackle",
+    name: "Block and Tackle",
+    category: "Gear",
+    carry: "Significant",
+    weightLb: 5,
+    note: "Lets you hoist up to four times the weight you can normally lift.",
+  },
+  {
+    id: "bottle-glass",
+    name: "Bottle, Glass",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 2,
+    note: "Holds up to 1½ pints.",
+  },
+  {
+    id: "bucket",
+    name: "Bucket",
+    category: "Gear",
+    carry: "Oversized",
+    weightLb: 2,
+    note: "Holds up to half a cubic foot of contents.",
+  },
+  {
+    id: "caltrops",
+    name: "Caltrops",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 2,
+    note: "Utilize: spread them over a 5-foot-square area within 5 feet. A creature entering it must succeed on a DC 15 Dexterity save or take 1 Piercing damage and have its Speed reduced to 0 until the start of its next turn. Recovering them takes 5 actions.",
+  },
+  {
+    id: "candle",
+    name: "Candle",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "For 20 rounds, a lit Candle sheds Bright Light in a 5-foot radius and Dim Light for an additional 5 feet.",
+  },
+  {
+    id: "chest",
+    name: "Chest",
+    category: "Gear",
+    carry: "Oversized",
+    weightLb: 25,
+    note: "Holds up to 12 cubic feet of contents.",
+  },
+  {
+    id: "flask",
+    name: "Flask",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 1,
+    note: "Holds up to 1 pint.",
+  },
+  {
+    id: "grappling-hook",
+    name: "Grappling Hook",
+    category: "Gear",
+    carry: "Significant",
+    weightLb: 4,
+    note: "Utilize: throw it at a catch within 50 feet — it catches on a successful DC 13 Dexterity (Acrobatics) check. With a Rope tied to it, you can then climb it.",
+  },
+  {
+    id: "ink",
+    name: "Ink",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "A 1-ounce bottle, enough ink to write about 500 pages.",
+  },
+  {
+    id: "ink-pen",
+    name: "Ink Pen",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "Used with Ink to write or draw.",
+  },
+  {
+    id: "jug",
+    name: "Jug",
+    category: "Gear",
+    carry: "Significant",
+    weightLb: 4,
+    note: "Holds up to 1 gallon.",
+  },
+  {
+    id: "ladder",
+    name: "Ladder",
+    category: "Gear",
+    carry: "Oversized",
+    weightLb: 25,
+    note: "10 feet tall. You must climb to move up or down it.",
+  },
+  {
+    id: "lock",
+    name: "Lock",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 1,
+    note: "Comes with a key. Without the key, a creature can pick it with Thieves' Tools on a successful DC 15 Dexterity (Sleight of Hand) check.",
+  },
+  {
+    id: "mirror",
+    name: "Mirror",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 1,
+    note: "A handheld steel mirror — useful for peeking around corners and reflecting light as a signal.",
+  },
+  {
+    id: "net",
+    name: "Net",
+    category: "Gear",
+    carry: "Significant",
+    weightLb: 3,
+    note: "Replace one attack of the Attack action to throw it at a creature within 15 feet. It must succeed on a Dexterity save (DC 8 + your Dexterity modifier + Proficiency Bonus) or be Restrained; Huge or larger creatures succeed automatically. Escape with a DC 10 Strength (Athletics) check as an action.",
+  },
+  {
+    id: "paper",
+    name: "Paper",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "One sheet holds about 250 handwritten words.",
+  },
+  {
+    id: "parchment",
+    name: "Parchment",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "One sheet holds about 250 handwritten words.",
+  },
+  {
+    id: "pole",
+    name: "Pole",
+    category: "Gear",
+    carry: "Oversized",
+    weightLb: 7,
+    note: "10 feet long. Touch something up to 10 feet away, or vault with it for Advantage on a Strength (Athletics) check made as part of a High or Long Jump.",
+  },
+  {
+    id: "pot-iron",
+    name: "Pot, Iron",
+    category: "Gear",
+    carry: "Oversized",
+    weightLb: 10,
+    note: "Holds up to 1 gallon.",
+  },
+  {
+    id: "ram-portable",
+    name: "Ram, Portable",
+    category: "Gear",
+    carry: "Oversized",
+    weightLb: 35,
+    note: "Break down doors with a +4 bonus to the Strength check. One other character can help, giving you Advantage on the check.",
+  },
+  {
+    id: "signal-whistle",
+    name: "Signal Whistle",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "Blown as a Utilize action; heard up to 600 feet away.",
+  },
+  {
+    id: "spikes-iron",
+    name: "Spikes, Iron",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 5,
+    note: "A bundle of ten. Utilize: hammer one into wood or earth with a blunt object to jam a door shut, or to tie a Rope or Chain to it.",
+  },
+  {
+    id: "string",
+    name: "String",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "10 feet long. You can tie a knot in it as a Utilize action.",
+  },
+  {
+    id: "tinderbox",
+    name: "Tinderbox",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 1,
+    note: "Flint, fire steel and tinder. Lighting a Candle, Lamp, Lantern or Torch takes a Bonus Action; lighting any other fire takes 1 minute.",
+  },
+  {
+    id: "vial",
+    name: "Vial",
+    category: "Gear",
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "Holds up to 2 ounces.",
   },
 
   // --- Consumables ---
+  {
+    id: "acid",
+    name: "Acid",
+    category: "Consumable",
+    carry: "Insignificant",
+    weightLb: 1,
+    note: "Replace one attack of the Attack action to throw a vial at a creature or object within 20 feet. It must succeed on a Dexterity save (DC 8 + your Dexterity modifier + Proficiency Bonus) or take 2d6 Acid damage.",
+  },
+  {
+    id: "poison-basic",
+    name: "Poison, Basic",
+    category: "Consumable",
+    carry: "Insignificant",
+    weightLb: 0,
+    note: "Bonus Action: coat one weapon or up to three pieces of ammunition. A creature taking Piercing or Slashing damage from it takes an extra 1d4 Poison damage. Potency lasts 10 rounds or until its damage is dealt.",
+  },
   {
     id: "blood-vial",
     name: "Blood vial",
     category: "Consumable",
     carry: "Insignificant",
-    weightLb: 0,
-    note: "Restorative blood — the hunter's lifeline.",
-  },
-  {
-    id: "rations",
-    name: "Rations",
-    category: "Consumable",
-    carry: "Significant",
-    weightLb: 2,
-    note: "One day's trail rations.",
+    weightLb: 0.5,
+    note: "A small glass vial holding remnants of the Old Blood. As a Bonus Action you can drink it or administer it to a willing creature within 5 feet. Its purity (Tainted, Stirred, Concentrated or Pure Old Blood) sets the healing, Madness removed and Grit DC.",
   },
   {
     id: "antitoxin",
@@ -386,7 +674,7 @@ export const ITEMS: Item[] = [
     category: "Consumable",
     carry: "Insignificant",
     weightLb: 0,
-    note: "Advantage on saves against poison for 1 hour.",
+    note: "Bonus Action: drink a vial to gain Advantage on saving throws to avoid or end the Poisoned condition.",
   },
   {
     id: "oil",
