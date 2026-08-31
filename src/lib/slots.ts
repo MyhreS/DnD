@@ -30,7 +30,10 @@ export function slotAssignmentOptions(
   pinned?: SlotLocation,
   customItems?: CustomItem[],
 ): SlotAssignmentOption[] {
-  const body: SlotLocation[] = pinned ? [pinned] : carry === "Oversized" ? ["hand"] : ["hand", "back", "chest", "hip", "ankle"];
+  // A pinned item defaults to its pinned slot but can always be held instead.
+  const body: SlotLocation[] = pinned
+    ? (pinned === "hand" ? ["hand"] : [pinned, "hand"])
+    : carry === "Oversized" ? ["hand"] : ["hand", "back", "chest", "hip", "ankle"];
   if (carry === "Oversized") return body.map((location) => ({ value: location, label: SLOT_LOCATION_LABEL[location] }));
 
   const storage = (equippedStorageIds ?? []).flatMap((storageId) => {

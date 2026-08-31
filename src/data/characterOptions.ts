@@ -1,19 +1,18 @@
 import { CURRENT_RITES, CURRENT_WHISPERS, type CurrentRite, type CurrentWhisper } from "./codex";
 
 /** Established character-builder choices. These remain part of the Hunter
- * workflow; source-specific Deepcaller choices below come from master.json. */
+ * workflow. The tool roster is the beta's complete list of eight tools
+ * (core-rulebook.txt [page 115]); the Deepcaller choices below are projected
+ * from the generated Codex data. */
 export const TOOL_PROFICIENCIES = [
   "Alchemist's Supplies",
   "Blood-drainer's Tools",
-  "Brewer's Supplies",
   "Carpenter's Tools",
   "Cultist's Tools",
-  "Mason's Tools",
   "Navigator's Tools",
   "Poisoner's Kit",
   "Smith's Tools",
   "Thieves' Tools",
-  "Tinker's Tools",
 ] as const;
 
 export type ToolProficiency = typeof TOOL_PROFICIENCIES[number];
@@ -21,21 +20,19 @@ export type ToolProficiency = typeof TOOL_PROFICIENCIES[number];
 export const TOOL_DETAILS: Record<ToolProficiency, { ability: string; description: string }> = {
   "Alchemist's Supplies": { ability: "Intelligence", description: "Identify a substance (DC 15), or expend the supplies to craft Acid or Oil during a rest." },
   "Blood-drainer's Tools": { ability: "Constitution", description: "Identify a Bloodvial's purity (DC 10), or drain an eligible creature to obtain Bloodvials. A creature can be drained only once." },
-  "Brewer's Supplies": { ability: "Intelligence", description: "Brewing vessels and ingredients used to prepare, inspect, and work with drinks and other brewed mixtures." },
   "Carpenter's Tools": { ability: "Strength", description: "Seal or pry open a door or container (DC 20), or expend the tools to craft useful wooden equipment during a rest." },
   "Cultist's Tools": { ability: "Intelligence", description: "Chisel a symbol or hole in stone (DC 10), or expend the tools to craft a Block and Tackle during a rest." },
-  "Mason's Tools": { ability: "Strength", description: "Shape, repair, and examine stonework, including walls, structures, and worked-stone surfaces." },
   "Navigator's Tools": { ability: "Wisdom", description: "Plot a course (DC 10), or determine your position by stargazing (DC 15)." },
   "Poisoner's Kit": { ability: "Intelligence", description: "Detect a poisoned object or drink (DC 10), or expend the kit to craft Basic Poison or Antitoxin during a rest." },
   "Smith's Tools": { ability: "Dexterity", description: "Work metal and expend the tools to craft weapons, lanterns, traps, locks, and other metal equipment during a rest." },
   "Thieves' Tools": { ability: "Dexterity", description: "Pick a lock (DC 15), or disarm a trap (DC 15)." },
-  "Tinker's Tools": { ability: "Dexterity", description: "Repair, adjust, and assemble small mechanisms and other intricate pieces of equipment." },
 };
 
 export const WHISPERS = CURRENT_WHISPERS.map(({ id, name }) => ({ id, name }));
 
 /** Compact player-facing reference projected from the current Deepcaller and
- * Whispers records. The source text is authored once in resources/master.json. */
+ * Whispers records. The source text is authored once in the current source
+ * documents and reaches the app through `src/data/codex.generated.json`. */
 export type DeepcallerReference = {
   id: string;
   name: string;

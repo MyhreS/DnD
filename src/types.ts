@@ -535,20 +535,49 @@ export interface HunterCard {
   currentHp?: number;
   /** Current Sanity during play (defaults to max when unset). */
   sanity?: number;
-  /** Current Madness, tracked independently because the supplied hidden rules
-   * refer to it directly and do not define a Sanity-to-Madness formula. */
+  /** Current Madness. core-rulebook.txt [page 42] "Max Sanity and Madness":
+   * a Hunter starts with 0 Madness, and "Madness functions like damage against
+   * Max Sanity: when Madness equals or exceeds Max Sanity, you become Insane
+   * and gain the Insane Condition." Reducing it below Max Sanity ends Insane. */
   madness?: number;
-  /** Transformation Level 0–10. The supplied documents reference but do not
-   * include the Transformation Table, so the app records this value without
-   * rolling or inferring a result. Reducing it clears active Transformations. */
+  /** Transformation Level 0–10. The Transformation Table is published in full
+   * (20 rows × 10 level columns) at core-rulebook.txt [page 27]; the app still
+   * records the level rather than rolling for the table at present.
+   * Reducing it clears active Transformations ([page 26]). */
   transformationLevel?: number;
-  /** Active Transformation result keys recorded by the DM from physical table
-   * rolls (duplicates allowed). Cleared when Transformation Level is reduced. */
+  /** Active Transformation result keys recorded by the DM from table rolls
+   * (unique ids). core-rulebook.txt [page 26] "Getting same Transformations":
+   * "Active Transformations do not stack with themselves. If you roll one you
+   * already have, suffer 2 Madness, and nothing more happens."
+   * Cleared when Transformation Level is reduced. */
   activeTransformations?: string[];
   /** Insight — the established app progression currency, awarded by the DM. */
   insight?: number;
-  /** Blood Tinge — the C&S take on heroic inspiration. */
+  /** Blood Tinge. core-rulebook.txt [page 44]: "Once per round, when damage
+   * leaves you with 1–9 Hit Points, you gain Blood Tinge. You can have only one
+   * Blood Tinge at a time." It may be spent immediately after rolling a die to
+   * reroll that die; unspent Blood Tinge is lost on a Long Rest. */
   bloodTinge?: boolean;
+  /** Not Tonight! core-rulebook.txt [page 44]: "A newly created Hunter begins
+   * with Not Tonight!" — hence the default of `true`. It sets you to 1 Hit
+   * Point instead of 0 and is regained on a Long Rest if not already held.
+   * You can have only one at a time. */
+  notTonight?: boolean;
+  /** Favors held, 0–2. core-rulebook.txt [page 44]: "A Hunter can have no more
+   * than two Favors. If you would gain a Favor while you already have two, you
+   * gain nothing." Awarded only by the GM; one may be expended on death. */
+  favors?: number;
+  /** Sleepless Counters. core-rulebook.txt [page 21]: one is gained at the end
+   * of every hour spent outside a Short or Long Rest; at 24 you gain the
+   * Sleepless condition and 1d4 Madness. A Long Rest resets it to 0
+   * ([page 25]). */
+  sleeplessCounter?: number;
+  /** Exhaustion level. core-rulebook.txt [page 25], Long Rest benefits:
+   * "Reduce Exhaustion by 1." */
+  exhaustion?: number;
+  /** Rolled Insane Quirk id, from the d100 Insane Quirk Table at
+   * core-rulebook.txt [page 24]. Unset until a Quirk is rolled. */
+  insaneQuirkId?: string;
   /** Deepcaller: prepared Whispers / known rites, by rite id. */
   preparedWhispers?: string[];
   /** Gold pieces (the only currency). */

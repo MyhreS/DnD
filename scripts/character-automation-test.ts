@@ -223,7 +223,7 @@ const equippedRobe = automationFor({
   inventory: [{ itemId: "robe", qty: 1 }],
   extraArmorIds: ["robe"],
 });
-assert.equal(equippedRobe.fields.weight, "4 lb", "an equipped owned garment is not counted twice");
+assert.equal(equippedRobe.fields.weight, "2 lb", "an equipped owned garment is not counted twice [core-rulebook page 124: Robe of the Deepcallers, 2 lb.]");
 for (const background of BACKGROUNDS) {
   assert.deepEqual(startingKit(undefined, background).unmatched, [], `${background.name} background kit maps to catalog`);
 }

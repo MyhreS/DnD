@@ -15,7 +15,8 @@ import { ARMOR } from "@/data/armor";
 // Weapons may always be carried in Hand, even where the catalog lists a
 // preferred slot.
 // Items with no master entry (Bedroll, Rations, …) use 5e weights as a guide.
-// Hunter Rifle, Hunter Cleaver and
+// The Hunter Rifle is an ordinary Martial Ranged weapon on the weapons table
+// (core-rulebook.txt [page 111]) and is not unique. Hunter Cleaver and
 // Blood-drainer's Tools are flagged unique (the resources call them "unique
 // item"). Armor is folded in from src/data/armor.ts at the bottom.
 
@@ -106,8 +107,8 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 10,
-    note: "The hunter's sacred thunder.",
-    unique: true,
+    note: "The hunter's sacred thunder. Carried on the back.",
+    slotLocation: "back",
   },
   {
     id: "pistol",
@@ -116,6 +117,35 @@ export const ITEMS: Item[] = [
     carry: "Significant",
     weightLb: 3,
   },
+
+  // --- Weapons: rest of the weapons table (core-rulebook.txt [page 111]) ---
+  { id: "club", name: "Club", category: "Weapon", carry: "Significant", weightLb: 2 },
+  { id: "greatclub", name: "Greatclub", category: "Weapon", carry: "Oversized", weightLb: 10 },
+  {
+    id: "javelin",
+    name: "Javelin",
+    category: "Weapon",
+    carry: "Significant",
+    weightLb: 2,
+    note: "Carried on the back.",
+    slotLocation: "back",
+  },
+  { id: "light-hammer", name: "Light Hammer", category: "Weapon", carry: "Significant", weightLb: 2 },
+  { id: "mace", name: "Mace", category: "Weapon", carry: "Significant", weightLb: 4 },
+  { id: "spear", name: "Spear", category: "Weapon", carry: "Oversized", weightLb: 3 },
+  { id: "throwing-knife", name: "Throwing Knife", category: "Weapon", carry: "Insignificant", weightLb: 0.25 },
+  { id: "battleaxe", name: "Battleaxe", category: "Weapon", carry: "Significant", weightLb: 4 },
+  { id: "flail", name: "Flail", category: "Weapon", carry: "Significant", weightLb: 2 },
+  { id: "glaive", name: "Glaive", category: "Weapon", carry: "Oversized", weightLb: 12 },
+  { id: "halberd", name: "Halberd", category: "Weapon", carry: "Oversized", weightLb: 12 },
+  { id: "maul", name: "Maul", category: "Weapon", carry: "Oversized", weightLb: 14 },
+  { id: "morningstar", name: "Morningstar", category: "Weapon", carry: "Significant", weightLb: 4 },
+  { id: "pike", name: "Pike", category: "Weapon", carry: "Oversized", weightLb: 12 },
+  { id: "rapier", name: "Rapier", category: "Weapon", carry: "Significant", weightLb: 2 },
+  { id: "trident", name: "Trident", category: "Weapon", carry: "Oversized", weightLb: 12 },
+  { id: "warhammer", name: "Warhammer", category: "Weapon", carry: "Significant", weightLb: 5 },
+  { id: "war-pick", name: "War Pick", category: "Weapon", carry: "Significant", weightLb: 2 },
+  { id: "whip", name: "Whip", category: "Weapon", carry: "Significant", weightLb: 3 },
 
   // --- Ammunition ---
   {

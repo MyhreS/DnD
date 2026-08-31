@@ -163,6 +163,10 @@ export function normalizeCard(raw: HunterCard): HunterCard {
     sheetAutomation: normalizedState as SheetAutomationState | undefined,
     sanity: typeof raw.sanity === "number" && Number.isFinite(raw.sanity) ? Math.max(0, raw.sanity) : raw.sanity,
     madness,
+    // core-rulebook.txt [page 44]: "A Hunter can have no more than two Favors."
+    favors: typeof raw.favors === "number" && Number.isFinite(raw.favors)
+      ? Math.max(0, Math.min(2, Math.floor(raw.favors)))
+      : raw.favors,
     customItems,
     studdedAddonIds: studdedAddonIdsOf(raw),
     extraArmorIds: dedupeExtras(raw.extraArmorIds ?? []),
@@ -315,6 +319,10 @@ export function emptyCard(params: {
     activeTransformations: [],
     insight: 0,
     bloodTinge: false,
+    notTonight: true,
+    favors: 0,
+    sleeplessCounter: 0,
+    exhaustion: 0,
     preparedWhispers: [],
     coins: 0,
     customItems: [],

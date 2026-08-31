@@ -1,4 +1,4 @@
-import { WEAPON_FACTS, WEAPON_MASTERY_DESCRIPTIONS, weaponDamageLabel } from "@/data/weapons";
+import { WEAPON_FACTS, WEAPON_MASTERY_DESCRIPTIONS, weaponDamageLabel, weaponPropertyHelp } from "@/data/weapons";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { ChoiceIntro } from "./CharacterSheetGuidedChoices";
 
@@ -41,7 +41,7 @@ export function CharacterSheetWeaponMasteryChoices() {
               <small>{weaponSummary}</small>
             </span>
             <span className="character-sheet-mastery-effect"><strong>{mastery}</strong><span>{description}</span></span>
-            {facts?.properties && <small className="character-sheet-mastery-properties">{facts.properties}</small>}
+            {facts?.properties && <small className="character-sheet-mastery-properties" title={weaponPropertyHelp(facts.properties)}>{facts.properties}</small>}
           </span>
         </label>;
       })}
