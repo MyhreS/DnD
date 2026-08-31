@@ -1007,6 +1007,20 @@ fields · the guided builder's choice steps · upgrade / level-up model**
 
 ### 4.1 `src/lib/character.ts` — arithmetic fixes
 
+> 🔴 **OPEN INCONSISTENCY — DO NOT SHIP THE BRANCH WITHOUT ITEM 105.**
+> Batch 2 (item 31) already updated the *catalog text* in `src/data/armor.ts`
+> to the beta's "three studded pieces → +1 AC" and "+5 lb. each". The
+> *computation* has not moved yet, so right now the app displays the new rule
+> while still computing the old one (+1 AC at one piece, 3 lb each).
+> Item 105 below closes the AC half. The weight and copy half also needs:
+> - `src/lib/character.ts:63` and `:285` — `wornWeight` charges `* 3` lb per
+>   studded piece; must become `* 5`
+> - `src/types.ts:529-530` — doc comment still says `(≥1 → +1 AC … +3 lb each)`
+> - `features/hunter/components/character-sheet/CharacterSheetArmorRules.tsx:17`
+>   and `CharacterSheetAddonArmor.tsx:45` — user-visible "One studded Add-on
+>   grants +1 AC" and the `+3 lb` checkbox hint
+> All of these must land together with item 105.
+
 **105.** ⚠️ `armorClass()` Studs threshold —
 `const studBonus = studded >= 5 ? 2 : studded >= 1 ? 1 : 0;` becomes
 **`studded >= 5 ? 2 : studded >= 3 ? 1 : 0`**. core-rulebook.txt [page 35]:
