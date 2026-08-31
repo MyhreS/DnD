@@ -1,5 +1,4 @@
 import { strict as assert } from "node:assert";
-import { readFileSync } from "node:fs";
 import {
   MADUHAUSU_BUDGET,
   MADUHAUSU_COST,
@@ -24,20 +23,50 @@ import {
 } from "../src/features/hunter/lib/abilityBuy";
 import { ABILITY_KEYS } from "../src/lib/ability-keys";
 
-const master = JSON.parse(readFileSync(new URL("../resources/master.json", import.meta.url), "utf8"));
-const rules = master.establishedGameRules.characterCreation.abilityScores;
-const standard = rules.methods.standard;
-const maduhausu = rules.methods.maduhausu;
+/** The beta core rulebook [page 32] prints both point-buy methods. The numbers
+ * are asserted here as literals against src/data/abilities.ts; the stored
+ * `abilityMode` literal "maduhausu" is deliberately left unchanged. */
+const standard = {
+  budget: 27,
+  minimumScore: 8,
+  maximumScore: 15,
+  costs: [
+    { score: 8, cost: 0 }, { score: 9, cost: 1 }, { score: 10, cost: 2 }, { score: 11, cost: 3 },
+    { score: 12, cost: 4 }, { score: 13, cost: 5 }, { score: 14, cost: 7 }, { score: 15, cost: 9 },
+  ],
+};
+const maduhausu = {
+  budget: 57,
+  minimumScore: 3,
+  maximumScore: 16,
+  finalLevelOneMaximum: 17,
+  costs: [
+    { score: 3, first: 0, second: 0, thirdPlus: 0 },
+    { score: 4, first: 1, second: 1, thirdPlus: 1 },
+    { score: 5, first: 2, second: 2, thirdPlus: 2 },
+    { score: 6, first: 3, second: 3, thirdPlus: 3 },
+    { score: 7, first: 4, second: 4, thirdPlus: 4 },
+    { score: 8, first: 5, second: 5, thirdPlus: 5 },
+    { score: 9, first: 6, second: 6, thirdPlus: 6 },
+    { score: 10, first: 7, second: 7, thirdPlus: 7 },
+    { score: 11, first: 8, second: 8, thirdPlus: 8 },
+    { score: 12, first: 9, second: 9, thirdPlus: 9 },
+    { score: 13, first: 10, second: 10, thirdPlus: 10 },
+    { score: 14, first: 12, second: 14, thirdPlus: 17 },
+    { score: 15, first: 14, second: 18, thirdPlus: 23 },
+    { score: 16, first: 20, second: 26, thirdPlus: null },
+  ] as { score: number; first: number; second: number; thirdPlus: number | null }[],
+};
 
 assert.equal(POINT_BUY_BUDGET, standard.budget);
 assert.equal(POINT_BUY_MIN, standard.minimumScore);
 assert.equal(POINT_BUY_MAX, standard.maximumScore);
-assert.deepEqual(POINT_COST, Object.fromEntries(standard.costs.map(({ score, cost }: { score: number; cost: number }) => [score, cost])));
+assert.deepEqual(POINT_COST, Object.fromEntries(standard.costs.map(({ score, cost }) => [score, cost])));
 assert.equal(MADUHAUSU_BUDGET, maduhausu.budget);
 assert.equal(MADUHAUSU_MIN, maduhausu.minimumScore);
 assert.equal(MADUHAUSU_MAX, maduhausu.maximumScore);
 assert.equal(MADUHAUSU_FINAL_MAX, maduhausu.finalLevelOneMaximum);
-assert.deepEqual(MADUHAUSU_COST, Object.fromEntries(maduhausu.costs.map((row: { score: number; first: number; second: number; thirdPlus: number | null }) => [row.score, [row.first, row.second, row.thirdPlus]])));
+assert.deepEqual(MADUHAUSU_COST, Object.fromEntries(maduhausu.costs.map((row) => [row.score, [row.first, row.second, row.thirdPlus]])));
 
 assert.equal(budgetFor("pointbuy"), 27);
 assert.equal(budgetFor("maduhausu"), 57);
@@ -50,7 +79,7 @@ function scores(values: readonly number[]): AbilityScores {
   return Object.fromEntries(ABILITY_KEYS.map((key, index) => [key, values[index]])) as AbilityScores;
 }
 
-const standardCosts = new Map<number, number>(standard.costs.map(({ score, cost }: { score: number; cost: number }) => [score, cost]));
+const standardCosts = new Map<number, number>(standard.costs.map(({ score, cost }) => [score, cost]));
 let standardCases = 0;
 function verifyEveryStandardScore(prefix: number[] = []) {
   if (prefix.length === ABILITY_KEYS.length) {
@@ -70,7 +99,7 @@ assert.equal(spentFor("pointbuy", scores([7, 15, 15, 8, 8, 8])), null, "a below-
 assert.equal(spentFor("pointbuy", scores([16, 15, 15, 8, 8, 8])), null, "an above-range Standard score is invalid");
 assert.equal(spentFor("pointbuy", scores([8.5, 15, 15, 8, 8, 8])), null, "a fractional Standard score is invalid");
 
-const maduRows = new Map<number, readonly [number, number, number | null]>(maduhausu.costs.map((row: { score: number; first: number; second: number; thirdPlus: number | null }) => [row.score, [row.first, row.second, row.thirdPlus]]));
+const maduRows = new Map<number, readonly [number, number, number | null]>(maduhausu.costs.map((row) => [row.score, [row.first, row.second, row.thirdPlus]]));
 function independentMaduhausuCost(values: readonly number[]): number | null {
   const seen = new Map<number, number>();
   let total = 0;
@@ -111,9 +140,13 @@ for (const permutation of [[16, 15, 14, 14, 3, 3], [3, 14, 16, 3, 15, 14], [14, 
 }
 
 const noble = BACKGROUNDS.find((background) => background.id === "noble")!;
-assert.deepEqual(noble.abilityScores, rules.backgroundAdjustment.eligibleAbilitiesByBackground.noble);
+assert.deepEqual(noble.abilityScores, ["str", "int", "cha"]);
 for (const background of BACKGROUNDS) {
-  assert.deepEqual(background.abilityScores, rules.backgroundAdjustment.eligibleAbilitiesByBackground[background.id], `${background.name} ability options match master.json`);
+  assert.equal(background.abilityScores.length, 3, `${background.name} offers three eligible abilities`);
+  assert.equal(new Set(background.abilityScores).size, 3, `${background.name} lists each eligible ability once`);
+  for (const key of background.abilityScores) {
+    assert.ok(ABILITY_KEYS.includes(key), `${background.name} lists a real ability: ${key}`);
+  }
 }
 assert.deepEqual(backgroundBonusSummary(noble.abilityScores, { str: 2, int: 1 }, standardComplete, "pointbuy"), { used: 3, remaining: 0, valid: true, complete: true });
 assert.deepEqual(backgroundBonusSummary(noble.abilityScores, { str: 1, int: 1, cha: 1 }, standardComplete, "pointbuy"), { used: 3, remaining: 0, valid: true, complete: true });

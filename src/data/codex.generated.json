@@ -1,6 +1,29 @@
 {
-  "schemaVersion": 4,
+  "schemaVersion": 5,
   "sources": [
+    {
+      "id": "core-rulebook",
+      "title": "C&S Core Rulebook",
+      "shortLabel": "Core Rulebook",
+      "kind": "core rulebook",
+      "authority": "current game-maker source",
+      "audience": "player",
+      "description": "The current 126-page Core Rulebook (Beta): core mechanics, combat, conditions, equipment, rest and transformation.",
+      "pageCount": 126,
+      "publicPath": "/source-library/core-rulebook/core-rulebook.txt",
+      "downloads": [
+        {
+          "label": "Core Rulebook",
+          "publicPath": "/source-library/core-rulebook/core-rulebook.txt"
+        }
+      ],
+      "sourceFiles": [
+        "docs/rules/core-rulebook.txt"
+      ],
+      "fileLabels": [
+        "core-rulebook.txt"
+      ]
+    },
     {
       "id": "book-of-the-deepcaller",
       "title": "C&S Book of the Deepcaller",
@@ -10,18 +33,18 @@
       "audience": "player",
       "description": "The current thirteen-page Book of the Deepcaller, containing twenty-one leveled Rites.",
       "pageCount": 13,
-      "publicPath": "/source-library/book-of-the-deepcaller/c-s-book-of-the-deepcaller.pdf",
+      "publicPath": "/source-library/book-of-the-deepcaller/book-of-the-deepcaller.txt",
       "downloads": [
         {
           "label": "Deepcaller Book",
-          "publicPath": "/source-library/book-of-the-deepcaller/c-s-book-of-the-deepcaller.pdf"
+          "publicPath": "/source-library/book-of-the-deepcaller/book-of-the-deepcaller.txt"
         }
       ],
       "sourceFiles": [
-        "resources/pdf/C&S Book of the Deepcaller.pdf"
+        "docs/rules/book-of-the-deepcaller.txt"
       ],
       "fileLabels": [
-        "C&S Book of the Deepcaller.pdf"
+        "book-of-the-deepcaller.txt"
       ]
     },
     {
@@ -31,20 +54,20 @@
       "kind": "character sheet",
       "authority": "current game-maker source",
       "audience": "player",
-      "description": "The current printable character sheet: six logical sections printed across eleven PDF pages.",
+      "description": "The current printable character sheet: six logical sections printed across eleven pages.",
       "pageCount": 11,
-      "publicPath": "/source-library/character-sheet/c-s-character-sheet.pdf",
+      "publicPath": "/source-library/character-sheet/character-sheet.txt",
       "downloads": [
         {
           "label": "Character Sheet",
-          "publicPath": "/source-library/character-sheet/c-s-character-sheet.pdf"
+          "publicPath": "/source-library/character-sheet/character-sheet.txt"
         }
       ],
       "sourceFiles": [
-        "resources/pdf/C&S Character Sheet.pdf"
+        "docs/rules/character-sheet.txt"
       ],
       "fileLabels": [
-        "C&S Character Sheet.pdf"
+        "character-sheet.txt"
       ]
     },
     {
@@ -56,21 +79,27 @@
       "audience": "player",
       "description": "The current two-page Whispers reference, containing six Whispers.",
       "pageCount": 2,
-      "publicPath": "/source-library/whispers/c-s-whispers-sheet.pdf",
+      "publicPath": "/source-library/whispers/whispers.txt",
       "downloads": [
         {
           "label": "Whispers",
-          "publicPath": "/source-library/whispers/c-s-whispers-sheet.pdf"
+          "publicPath": "/source-library/whispers/whispers.txt"
         }
       ],
       "sourceFiles": [
-        "resources/pdf/C&S Whispers Sheet.pdf"
+        "docs/rules/whispers-sheet.txt"
       ],
       "fileLabels": [
-        "C&S Whispers Sheet.pdf"
+        "whispers-sheet.txt"
       ]
     }
   ],
+  "sourceHashes": {
+    "core-rulebook": "DD326C75404C5AD5C3555C76EC8B853EB6E22C84306BBF6FA7F9603397CE1D9D",
+    "book-of-the-deepcaller": "8E58F1D98BAA0740515FFC874E1293C228FB6C28F38CE2D64BBD7F8C8E71F283",
+    "character-sheet": "1C097CEC80AA49D8A4DB8DE25702E43B2DCAEA626BC1CBFE3124A021B9B99385",
+    "whispers": "8339BA383ED0E48471C79F3EC1A009E9A0B3A7EF50E641142026879F7187FE6E"
+  },
   "entries": [
     {
       "id": "rite-eldritch-rebuke",
@@ -396,18 +425,19 @@
         "Range: Self",
         "Duration: Concentration, up to 20 rounds",
         "You call upon a Patron that sees through distance, flesh, and stone. Choose one creature on the same plane of existence as you. The target must make a Wisdom saving throw, modified by how well you know the target and what physical connection you have to it. The target does not know what is watching it, only that something vast and unseen has turned its attention toward it. On a successful save, the target is not affected, and you can't perform this Rite on it again until after a Long Rest. On a failed save, the Patron opens an invisible, intangible eye within 10 feet of the target. For the duration, you can see and hear through the eye as if you were there. The eye moves with the target, remaining within 10 feet of it. If a creature can see the eye, it appears as a pale luminous orb about the size of your fist.",
-        "Save modifiers — Your Knowledge of the Target Is...",
-        "Knowledge",
-        "Save modifier",
+        "Your Knowledge of the Target Is ... — Save Modifier",
+        "Your Knowledge of the Target Is ...",
+        "Save Modifier",
         "Secondhand (heard of the target)",
         "+5",
         "Firsthand (met the target)",
         "+0",
         "Extensive (know the target well)",
         "-5",
-        "Save modifiers — You Have the Target's...",
-        "Connection",
-        "Save modifier",
+        "You Have the Target's ...",
+        "Save Modifier",
+        "---",
+        "---",
         "Picture or other likeness",
         "-2",
         "Garment or other possession",
@@ -424,10 +454,10 @@
       ],
       "tables": [
         {
-          "title": "Save modifiers — Your Knowledge of the Target Is...",
+          "title": "Your Knowledge of the Target Is ... — Save Modifier",
           "columns": [
-            "Knowledge",
-            "Save modifier"
+            "Your Knowledge of the Target Is ...",
+            "Save Modifier"
           ],
           "rows": [
             [
@@ -441,16 +471,15 @@
             [
               "Extensive (know the target well)",
               "-5"
-            ]
-          ]
-        },
-        {
-          "title": "Save modifiers — You Have the Target's...",
-          "columns": [
-            "Connection",
-            "Save modifier"
-          ],
-          "rows": [
+            ],
+            [
+              "You Have the Target's ...",
+              "Save Modifier"
+            ],
+            [
+              "---",
+              "---"
+            ],
             [
               "Picture or other likeness",
               "-2"
@@ -942,14 +971,14 @@
         "Performing: Action",
         "Range: 30 feet",
         "Duration: 10 rounds",
-        "A patron will make a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you perform this rite again. If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your rites save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature. Sound. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a roar, a beating of a heart, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends. Image. If you create an image of an object-such as a chair, muddy footprints, or a small chest-it must be no larger than a 5-foot Cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it."
+        "A patron will make a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you perform this rite again. If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your rites save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature. Sound. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a roar, a beating of a heart, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends. Image. If you create an image of an object—such as a chair, muddy footprints, or a small chest—it must be no larger than a 5-foot Cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it."
       ],
       "paragraphs": [
         "Whisper · Illusion Rite",
         "Performing: Action",
         "Range: 30 feet",
         "Duration: 10 rounds",
-        "A patron will make a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you perform this rite again. If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your rites save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature. Sound. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a roar, a beating of a heart, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends. Image. If you create an image of an object-such as a chair, muddy footprints, or a small chest-it must be no larger than a 5-foot Cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it."
+        "A patron will make a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you perform this rite again. If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your rites save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature. Sound. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a roar, a beating of a heart, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends. Image. If you create an image of an object—such as a chair, muddy footprints, or a small chest—it must be no larger than a 5-foot Cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it."
       ],
       "tables": [],
       "group": "Whispers",
@@ -994,41 +1023,34 @@
       "topicKey": "identity-abilities",
       "term": "Identity & Abilities",
       "aliases": [
-        "Your ACTUAL name",
+        "Identity",
         "Your Name",
         "Background",
         "Class",
         "Subclass",
-        "Level",
-        "Insight",
+        "Vitals",
         "Transformation Lvl",
-        "Sanity — Current",
-        "Sanity — Max",
-        "Insane",
-        "Sanity Dice",
-        "Hit Points — Current",
-        "Hit Points — Max",
-        "Hit Points — Temp",
-        "Hit Dice — Current",
-        "Hit Dice — Spent",
-        "Hit Dice — Max",
-        "Death Saves — Successes",
-        "Death Saves — Failures",
+        "Current Max Sanity Dice",
+        "Hit Points",
+        "Current Max Temp",
+        "Hit Dice",
+        "Current Spent Max",
+        "Death Saves",
         "Proficiency Bonus",
-        "Ability score",
-        "Ability modifier",
-        "Ability saving throw",
+        "Strength",
+        "Constitution",
+        "Wisdom",
+        "Intelligence",
+        "Dexterity",
         "Blood Tinge",
-        "Initiative",
-        "Speed",
-        "Size: Medium",
-        "Passive Perception"
+        "Charisma",
+        "Page 1 · Identity & Abilities"
       ],
       "body": [
-        "Fields: Your ACTUAL name, Your Name, Background, Class, Subclass, Level, Insight, Transformation Lvl, Sanity — Current, Sanity — Max, Insane, Sanity Dice, Hit Points — Current, Hit Points — Max, Hit Points — Temp, Hit Dice — Current, Hit Dice — Spent, Hit Dice — Max, Death Saves — Successes, Death Saves — Failures, Proficiency Bonus, Ability score, Ability modifier, Ability saving throw, Blood Tinge, Initiative, Speed, Size: Medium, Passive Perception."
+        "Fields: Identity, Your Name, Background, Class, Subclass, Vitals, Transformation Lvl, Current Max Sanity Dice, Hit Points, Current Max Temp, Hit Dice, Current Spent Max, Death Saves, Proficiency Bonus, Strength, Constitution, Wisdom, Intelligence, Dexterity, Blood Tinge, Charisma, Page 1 · Identity & Abilities."
       ],
       "paragraphs": [
-        "Fields: Your ACTUAL name, Your Name, Background, Class, Subclass, Level, Insight, Transformation Lvl, Sanity — Current, Sanity — Max, Insane, Sanity Dice, Hit Points — Current, Hit Points — Max, Hit Points — Temp, Hit Dice — Current, Hit Dice — Spent, Hit Dice — Max, Death Saves — Successes, Death Saves — Failures, Proficiency Bonus, Ability score, Ability modifier, Ability saving throw, Blood Tinge, Initiative, Speed, Size: Medium, Passive Perception."
+        "Fields: Identity, Your Name, Background, Class, Subclass, Vitals, Transformation Lvl, Current Max Sanity Dice, Hit Points, Current Max Temp, Hit Dice, Current Spent Max, Death Saves, Proficiency Bonus, Strength, Constitution, Wisdom, Intelligence, Dexterity, Blood Tinge, Charisma, Page 1 · Identity & Abilities."
       ],
       "tables": [],
       "group": "Character Sheet",
@@ -1044,39 +1066,22 @@
       "topicKey": "armor-equipment",
       "term": "Armor & Equipment",
       "aliases": [
+        "Armor & Equipment",
         "Armor Class",
         "Armor Category",
-        "Shield Arm",
-        "Weight",
-        "Weight Condition",
-        "Head Gear",
-        "Scarf",
-        "Gloves",
-        "Main Armor",
-        "Boots",
-        "Add-on Armor",
-        "Studs",
+        "Add-On Armor",
         "Impressions",
         "Special",
         "Storage Items",
-        "Oversized Storage Slot (Hand)",
-        "Significant Storage Slot (Back)",
-        "Significant Storage Slot (Hip)",
-        "Significant Storage Slot (Chest)",
-        "Significant Storage Slot (Ankle)",
-        "Armor Training — Light",
-        "Armor Training — Medium",
-        "Armor Training — Heavy",
-        "Weapons — Simple",
-        "Weapons — Martial",
+        "Equipment Training & Proficiencies",
         "Tools",
-        "Coins — GP"
+        "Page 2 · Armor & Equipment"
       ],
       "body": [
-        "Fields: Armor Class, Armor Category, Shield Arm, Weight, Weight Condition, Head Gear, Scarf, Gloves, Main Armor, Boots, Add-on Armor, Studs, Impressions, Special, Storage Items, Oversized Storage Slot (Hand), Significant Storage Slot (Back), Significant Storage Slot (Hip), Significant Storage Slot (Chest), Significant Storage Slot (Ankle), Armor Training — Light, Armor Training — Medium, Armor Training — Heavy, Weapons — Simple, Weapons — Martial, Tools, Coins — GP."
+        "Fields: Armor & Equipment, Armor Class, Armor Category, Add-On Armor, Impressions, Special, Storage Items, Equipment Training & Proficiencies, Tools, Page 2 · Armor & Equipment."
       ],
       "paragraphs": [
-        "Fields: Armor Class, Armor Category, Shield Arm, Weight, Weight Condition, Head Gear, Scarf, Gloves, Main Armor, Boots, Add-on Armor, Studs, Impressions, Special, Storage Items, Oversized Storage Slot (Hand), Significant Storage Slot (Back), Significant Storage Slot (Hip), Significant Storage Slot (Chest), Significant Storage Slot (Ankle), Armor Training — Light, Armor Training — Medium, Armor Training — Heavy, Weapons — Simple, Weapons — Martial, Tools, Coins — GP."
+        "Fields: Armor & Equipment, Armor Class, Armor Category, Add-On Armor, Impressions, Special, Storage Items, Equipment Training & Proficiencies, Tools, Page 2 · Armor & Equipment."
       ],
       "tables": [],
       "group": "Character Sheet",
@@ -1092,20 +1097,14 @@
       "topicKey": "equipment-weapons",
       "term": "Equipment & Weapons",
       "aliases": [
-        "Equipment — Item",
-        "Equipment — Carrying Category",
-        "Equipment — Item Slot",
-        "Equipment — Weight",
-        "Weapon — Name",
-        "Weapon — Attack Bonus",
-        "Weapon — Damage Type",
-        "Weapon — Notes"
+        "Weapon Damage",
+        "Page 3 · Equipment & Weapons"
       ],
       "body": [
-        "Fields: Equipment — Item, Equipment — Carrying Category, Equipment — Item Slot, Equipment — Weight, Weapon — Name, Weapon — Attack Bonus, Weapon — Damage Type, Weapon — Notes."
+        "Fields: Weapon Damage, Page 3 · Equipment & Weapons."
       ],
       "paragraphs": [
-        "Fields: Equipment — Item, Equipment — Carrying Category, Equipment — Item Slot, Equipment — Weight, Weapon — Name, Weapon — Attack Bonus, Weapon — Damage Type, Weapon — Notes."
+        "Fields: Weapon Damage, Page 3 · Equipment & Weapons."
       ],
       "tables": [],
       "group": "Character Sheet",
@@ -1122,13 +1121,14 @@
       "term": "Class Features & Feats",
       "aliases": [
         "Class Features",
-        "Feats"
+        "Feats",
+        "Page 4 · Class Features & Feats"
       ],
       "body": [
-        "Fields: Class Features, Feats."
+        "Fields: Class Features, Feats, Page 4 · Class Features & Feats."
       ],
       "paragraphs": [
-        "Fields: Class Features, Feats."
+        "Fields: Class Features, Feats, Page 4 · Class Features & Feats."
       ],
       "tables": [],
       "group": "Character Sheet",
@@ -1144,22 +1144,15 @@
       "topicKey": "whispers-rites",
       "term": "Whispers & Rites",
       "aliases": [
-        "Rite Performing Ability",
-        "Rite Performing Modifier",
-        "Rite Save DC",
-        "Rite Attack Bonus",
-        "Prepared Whispers — Level",
-        "Prepared Whispers — Name",
-        "Prepared Whispers — Performing",
-        "Prepared Whispers — Range",
-        "Prepared Whispers — Duration",
-        "Prepared Whispers — Rounds"
+        "Whispers and Rites",
+        "Prepared Whispers",
+        "Page 5 · Whispers & Rites"
       ],
       "body": [
-        "Fields: Rite Performing Ability, Rite Performing Modifier, Rite Save DC, Rite Attack Bonus, Prepared Whispers — Level, Prepared Whispers — Name, Prepared Whispers — Performing, Prepared Whispers — Range, Prepared Whispers — Duration, Prepared Whispers — Rounds."
+        "Fields: Whispers and Rites, Prepared Whispers, Page 5 · Whispers & Rites."
       ],
       "paragraphs": [
-        "Fields: Rite Performing Ability, Rite Performing Modifier, Rite Save DC, Rite Attack Bonus, Prepared Whispers — Level, Prepared Whispers — Name, Prepared Whispers — Performing, Prepared Whispers — Range, Prepared Whispers — Duration, Prepared Whispers — Rounds."
+        "Fields: Whispers and Rites, Prepared Whispers, Page 5 · Whispers & Rites."
       ],
       "tables": [],
       "group": "Character Sheet",
@@ -1174,13 +1167,14 @@
       "topicKey": "notes",
       "term": "Notes",
       "aliases": [
-        "Notes"
+        "Notes",
+        "Page 6 · Notes"
       ],
       "body": [
-        "Fields: Notes."
+        "Fields: Notes, Page 6 · Notes."
       ],
       "paragraphs": [
-        "Fields: Notes."
+        "Fields: Notes, Page 6 · Notes."
       ],
       "tables": [],
       "group": "Character Sheet",
@@ -1366,340 +1360,906 @@
       ]
     },
     {
-      "id": "not-supplied-lesser-starborn-stat-block",
-      "topicKey": "lesser-starborn-stat-block",
-      "term": "Lesser Starborn stat block",
+      "id": "condition-blinded",
+      "topicKey": "blinded",
+      "term": "Blinded",
       "aliases": [
-        "Call Lesser Starborn"
+        "condition",
+        "impairments"
       ],
       "body": [
-        "Referenced by Call Lesser Starborn, but not included in the supplied source set. Do not invent or expose a substitute stat block."
+        "You cannot see and automatically fail sight-based checks. Attacks against you have Advantage; your attacks have",
+        "Disadvantage."
       ],
       "paragraphs": [
-        "Referenced by Call Lesser Starborn, but not included in the supplied source set. Do not invent or expose a substitute stat block."
+        "You cannot see and automatically fail sight-based checks. Attacks against you have Advantage; your attacks have",
+        "Disadvantage."
       ],
       "tables": [],
-      "group": "Source Notes",
-      "sourceId": "book-of-the-deepcaller",
-      "locator": "Call Lesser Starborn",
-      "warning": "Referenced material is not supplied; the app does not invent it."
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · IMPAIRMENTS",
+      "sourcePages": [
+        21
+      ]
     },
     {
-      "id": "not-supplied-starborn-horror-stat-block",
-      "topicKey": "starborn-horror-stat-block",
-      "term": "Starborn Horror stat block",
+      "id": "condition-deafened",
+      "topicKey": "deafened",
+      "term": "Deafened",
       "aliases": [
-        "Call Starborn Horror"
+        "condition",
+        "impairments"
       ],
       "body": [
-        "Referenced by Call Starborn Horror, but not included in the supplied source set. Do not invent or expose a substitute stat block."
+        "You cannot hear and automatically fail checks requiring hearing."
       ],
       "paragraphs": [
-        "Referenced by Call Starborn Horror, but not included in the supplied source set. Do not invent or expose a substitute stat block."
+        "You cannot hear and automatically fail checks requiring hearing."
       ],
       "tables": [],
-      "group": "Source Notes",
-      "sourceId": "book-of-the-deepcaller",
-      "locator": "Call Starborn Horror",
-      "warning": "Referenced material is not supplied; the app does not invent it."
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · IMPAIRMENTS",
+      "sourcePages": [
+        21
+      ]
     },
     {
-      "id": "not-supplied-starborn-horror-behavior-table",
-      "topicKey": "starborn-horror-behavior-table",
-      "term": "Starborn Horror Behavior Table",
+      "id": "condition-mesmerized",
+      "topicKey": "mesmerized",
+      "term": "Mesmerized",
       "aliases": [
-        "Call Starborn Horror"
+        "condition",
+        "impairments"
       ],
       "body": [
-        "Referenced by Call Starborn Horror, but not included in the supplied source set. Do not invent or expose a substitute table."
+        "The creature that imposed this condition is your mesmerizer. You cannot attack the mesmerizer or target it with",
+        "harmful abilities or effects. The mesmerizer has Advantage on ability checks made to influence you socially."
       ],
       "paragraphs": [
-        "Referenced by Call Starborn Horror, but not included in the supplied source set. Do not invent or expose a substitute table."
+        "The creature that imposed this condition is your mesmerizer. You cannot attack the mesmerizer or target it with",
+        "harmful abilities or effects. The mesmerizer has Advantage on ability checks made to influence you socially."
       ],
       "tables": [],
-      "group": "Source Notes",
-      "sourceId": "book-of-the-deepcaller",
-      "locator": "Call Starborn Horror",
-      "warning": "Referenced material is not supplied; the app does not invent it."
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · IMPAIRMENTS",
+      "sourcePages": [
+        21
+      ]
     },
     {
-      "id": "not-supplied-madness-die-system",
-      "topicKey": "madness-die-system",
-      "term": "Madness die system",
+      "id": "condition-frightened",
+      "topicKey": "frightened",
+      "term": "Frightened",
       "aliases": [
-        "Call Starborn Horror"
+        "condition",
+        "impairments"
       ],
       "body": [
-        "Referenced by Call Starborn Horror, but not included in the supplied source set. Do not invent target-selection rules for the missing system."
+        "While the source of fear is within sight, you have Disadvantage on ability checks and attacks. You cannot willingly",
+        "move closer to the source, even when you cannot see it."
       ],
       "paragraphs": [
-        "Referenced by Call Starborn Horror, but not included in the supplied source set. Do not invent target-selection rules for the missing system."
+        "While the source of fear is within sight, you have Disadvantage on ability checks and attacks. You cannot willingly",
+        "move closer to the source, even when you cannot see it."
       ],
       "tables": [],
-      "group": "Source Notes",
-      "sourceId": "book-of-the-deepcaller",
-      "locator": "Call Starborn Horror",
-      "warning": "Referenced material is not supplied; the app does not invent it."
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · IMPAIRMENTS",
+      "sourcePages": [
+        21
+      ]
     },
     {
-      "id": "not-supplied-plane-shift-continuation",
-      "topicKey": "plane-shift-continuation",
-      "term": "Plane Shift continuation",
+      "id": "condition-incapacitated",
+      "topicKey": "incapacitated",
+      "term": "Incapacitated",
       "aliases": [
-        "Plane Shift"
+        "condition",
+        "impairments"
       ],
       "body": [
-        "Referenced by Plane Shift, but not included in the supplied source set. The current entry ends with an ellipsis; do not restore destination or resolution rules from another source."
+        "You cannot take actions, Bonus Actions, or Reactions; cannot speak; and lose Concentration. If Incapacitated when",
+        "Initiative is rolled, roll with Disadvantage."
       ],
       "paragraphs": [
-        "Referenced by Plane Shift, but not included in the supplied source set. The current entry ends with an ellipsis; do not restore destination or resolution rules from another source."
+        "You cannot take actions, Bonus Actions, or Reactions; cannot speak; and lose Concentration. If Incapacitated when",
+        "Initiative is rolled, roll with Disadvantage."
       ],
       "tables": [],
-      "group": "Source Notes",
-      "sourceId": "book-of-the-deepcaller",
-      "locator": "Plane Shift",
-      "warning": "Referenced material is not supplied; the app does not invent it."
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · IMPAIRMENTS",
+      "sourcePages": [
+        21
+      ]
+    },
+    {
+      "id": "condition-paralyzed",
+      "topicKey": "paralyzed",
+      "term": "Paralyzed",
+      "aliases": [
+        "condition",
+        "impairments"
+      ],
+      "body": [
+        "You are Incapacitated, your Speed is 0, and you automatically fail Strength and Dexterity saves. Attacks against you",
+        "have Advantage and hits from within 5 feet are Critical Hits."
+      ],
+      "paragraphs": [
+        "You are Incapacitated, your Speed is 0, and you automatically fail Strength and Dexterity saves. Attacks against you",
+        "have Advantage and hits from within 5 feet are Critical Hits."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · IMPAIRMENTS",
+      "sourcePages": [
+        21
+      ]
+    },
+    {
+      "id": "condition-restrained",
+      "topicKey": "restrained",
+      "term": "Restrained",
+      "aliases": [
+        "condition",
+        "impairments"
+      ],
+      "body": [
+        "Your Speed is 0. Attacks against you have Advantage, your attacks have Disadvantage, and you have Disadvantage",
+        "on Dexterity saves."
+      ],
+      "paragraphs": [
+        "Your Speed is 0. Attacks against you have Advantage, your attacks have Disadvantage, and you have Disadvantage",
+        "on Dexterity saves."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · IMPAIRMENTS",
+      "sourcePages": [
+        21
+      ]
+    },
+    {
+      "id": "condition-stunned",
+      "topicKey": "stunned",
+      "term": "Stunned",
+      "aliases": [
+        "condition",
+        "impairments"
+      ],
+      "body": [
+        "You are Incapacitated and automatically fail Strength and Dexterity saves. Attacks against you have Advantage."
+      ],
+      "paragraphs": [
+        "You are Incapacitated and automatically fail Strength and Dexterity saves. Attacks against you have Advantage."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · IMPAIRMENTS",
+      "sourcePages": [
+        21
+      ]
+    },
+    {
+      "id": "condition-unconscious",
+      "topicKey": "unconscious",
+      "term": "Unconscious",
+      "aliases": [
+        "condition",
+        "impairments"
+      ],
+      "body": [
+        "You are Incapacitated and Prone, have Speed 0, drop held items, and are unaware of your surroundings. You",
+        "automatically fail Strength and Dexterity saves. Attacks against you have Advantage, and hits from within 5 feet are",
+        "Critical Hits. When the condition ends, you remain Prone"
+      ],
+      "paragraphs": [
+        "You are Incapacitated and Prone, have Speed 0, drop held items, and are unaware of your surroundings. You",
+        "automatically fail Strength and Dexterity saves. Attacks against you have Advantage, and hits from within 5 feet are",
+        "Critical Hits. When the condition ends, you remain Prone"
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · IMPAIRMENTS",
+      "sourcePages": [
+        21
+      ]
+    },
+    {
+      "id": "condition-dying",
+      "topicKey": "dying",
+      "term": "Dying",
+      "aliases": [
+        "condition",
+        "hazards & afflictions"
+      ],
+      "body": [
+        "Before gaining Dying or dying from Instant Death caused by damage, resolve Not Tonight! if you have it (see Death’s",
+        "Door at the end of chapter 2). When you reach 0 Hit Points without dying instantly, you gain Dying and Unconscious.",
+        "Death Saves. At the start of each of your turns, roll 1d20. A result of 10 or higher is one success; a lower result is one",
+        "failure. Three successes make you Stable. Three failures kill you. The results need not be consecutive.",
+        "Rolling 1 or 20. A natural 1 causes two failures. A natural 20 restores 1 Hit Point, ending Dying and Unconscious.",
+        "Damage at 0 Hit Points. Taking damage causes one failure, or two if the damage is from a Critical Hit. You die if the",
+        "damage equals or exceeds your Hit Point maximum.",
+        "Stabilizing. A creature can use an action and succeed on a DC 10 Wisdom (Medicine) check to make you Stable.",
+        "Dying ends when you regain Hit Points or become Stable, and all successes and failures are removed. A Stable",
+        "creature remains Unconscious at 0 Hit Points, gains Dying again if damaged, and regains 1 Hit Point after 1d4 hours if",
+        "not healed.",
+        "Instant Death. When damage reduces you to 0 Hit Points, you die immediately if the remaining damage equals or",
+        "exceeds your Hit Point maximum."
+      ],
+      "paragraphs": [
+        "Before gaining Dying or dying from Instant Death caused by damage, resolve Not Tonight! if you have it (see Death’s",
+        "Door at the end of chapter 2). When you reach 0 Hit Points without dying instantly, you gain Dying and Unconscious.",
+        "Death Saves. At the start of each of your turns, roll 1d20. A result of 10 or higher is one success; a lower result is one",
+        "failure. Three successes make you Stable. Three failures kill you. The results need not be consecutive.",
+        "Rolling 1 or 20. A natural 1 causes two failures. A natural 20 restores 1 Hit Point, ending Dying and Unconscious.",
+        "Damage at 0 Hit Points. Taking damage causes one failure, or two if the damage is from a Critical Hit. You die if the",
+        "damage equals or exceeds your Hit Point maximum.",
+        "Stabilizing. A creature can use an action and succeed on a DC 10 Wisdom (Medicine) check to make you Stable.",
+        "Dying ends when you regain Hit Points or become Stable, and all successes and failures are removed. A Stable",
+        "creature remains Unconscious at 0 Hit Points, gains Dying again if damaged, and regains 1 Hit Point after 1d4 hours if",
+        "not healed.",
+        "Instant Death. When damage reduces you to 0 Hit Points, you die immediately if the remaining damage equals or",
+        "exceeds your Hit Point maximum."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · HAZARDS & AFFLICTIONS",
+      "sourcePages": [
+        21
+      ]
+    },
+    {
+      "id": "condition-exhaustion",
+      "topicKey": "exhaustion",
+      "term": "Exhaustion",
+      "aliases": [
+        "condition",
+        "hazards & afflictions"
+      ],
+      "body": [
+        "Each time you gain Exhaustion, its level increases by 1. Subtract twice your level from every D20 Test and reduce",
+        "every Speed by 5 feet per level. You die at level 6. A Long Rest removes 1 level; the condition ends at level 0."
+      ],
+      "paragraphs": [
+        "Each time you gain Exhaustion, its level increases by 1. Subtract twice your level from every D20 Test and reduce",
+        "every Speed by 5 feet per level. You die at level 6. A Long Rest removes 1 level; the condition ends at level 0."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · HAZARDS & AFFLICTIONS",
+      "sourcePages": [
+        21
+      ]
+    },
+    {
+      "id": "condition-poisoned",
+      "topicKey": "poisoned",
+      "term": "Poisoned",
+      "aliases": [
+        "condition",
+        "hazards & afflictions"
+      ],
+      "body": [
+        "You have Disadvantage on attack rolls and ability checks."
+      ],
+      "paragraphs": [
+        "You have Disadvantage on attack rolls and ability checks."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · HAZARDS & AFFLICTIONS",
+      "sourcePages": [
+        21
+      ]
+    },
+    {
+      "id": "condition-sleepless",
+      "topicKey": "sleepless",
+      "term": "Sleepless",
+      "aliases": [
+        "condition",
+        "hazards & afflictions"
+      ],
+      "body": [
+        "Gain 1 Sleepless Counter at the end of every hour spent outside a Short or Long Rest.",
+        "A Short Rest pauses this accumulation for itsfirst hour but removes no counters. Consecutive Short Rests count as",
+        "one Short Rest; additional hours begin adding counters again unless the rest becomes a Long Rest.",
+        "Completing a Long Rest resets your Sleepless Counters to 0.",
+        "At 24 counters, you gain the Sleepless condition and immediately suffer 1d4 Madness. Su er another 1d4 Madness",
+        "when your counter reaches 30, 36, 42, and every further multiple of 6.",
+        "Sleepless ends when your counter falls below 24. Madness already suffered remains until removed normally."
+      ],
+      "paragraphs": [
+        "Gain 1 Sleepless Counter at the end of every hour spent outside a Short or Long Rest.",
+        "A Short Rest pauses this accumulation for itsfirst hour but removes no counters. Consecutive Short Rests count as",
+        "one Short Rest; additional hours begin adding counters again unless the rest becomes a Long Rest.",
+        "Completing a Long Rest resets your Sleepless Counters to 0.",
+        "At 24 counters, you gain the Sleepless condition and immediately suffer 1d4 Madness. Su er another 1d4 Madness",
+        "when your counter reaches 30, 36, 42, and every further multiple of 6.",
+        "Sleepless ends when your counter falls below 24. Madness already suffered remains until removed normally."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · HAZARDS & AFFLICTIONS",
+      "sourcePages": [
+        21
+      ]
+    },
+    {
+      "id": "condition-suffocating",
+      "topicKey": "suffocating",
+      "term": "Suffocating",
+      "aliases": [
+        "condition",
+        "hazards & afflictions"
+      ],
+      "body": [
+        "A creature gains this condition when it is not breathing. You can hold your breath for 10 × (1 + your Constitution",
+        "modifier) rounds, to a minimum of 5 rounds. Once your breath runs out, you gain 1 Exhaustion level at the end of",
+        "each turn. When you can breathe again, remove all Exhaustion gained from suffocation."
+      ],
+      "paragraphs": [
+        "A creature gains this condition when it is not breathing. You can hold your breath for 10 × (1 + your Constitution",
+        "modifier) rounds, to a minimum of 5 rounds. Once your breath runs out, you gain 1 Exhaustion level at the end of",
+        "each turn. When you can breathe again, remove all Exhaustion gained from suffocation."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · HAZARDS & AFFLICTIONS",
+      "sourcePages": [
+        21
+      ]
+    },
+    {
+      "id": "condition-underwater",
+      "topicKey": "underwater",
+      "term": "Underwater",
+      "aliases": [
+        "condition",
+        "hazards & afflictions"
+      ],
+      "body": [
+        "Gain condition when under water. A creature without a Swim Speed has Disadvantage on underwater melee weapon",
+        "attacks unless the weapon deals Piercing damage. Ranged weapon attacks have Disadvantage within normal range",
+        "and automatically miss beyond it. Anything underwater has Resistance to Fire damage.",
+        "ff fl"
+      ],
+      "paragraphs": [
+        "Gain condition when under water. A creature without a Swim Speed has Disadvantage on underwater melee weapon",
+        "attacks unless the weapon deals Piercing damage. Ranged weapon attacks have Disadvantage within normal range",
+        "and automatically miss beyond it. Anything underwater has Resistance to Fire damage.",
+        "ff fl"
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · HAZARDS & AFFLICTIONS",
+      "sourcePages": [
+        21
+      ]
+    },
+    {
+      "id": "condition-blood-tensed",
+      "topicKey": "blood-tensed",
+      "term": "Blood-Tensed",
+      "aliases": [
+        "condition",
+        "battlefield states"
+      ],
+      "body": [
+        "Attacks against you have Advantage. Before the end of your next turn, your next melee weapon attack rolls its normal",
+        "weapon damage dice three times on a hit. Before rolling, you may choose Disadvantage to roll them four times",
+        "instead; if the attack is not actually rolled with Disadvantage, use three times. Blood-Tensed multiplies only normal",
+        "weapon dice; add modifiers and extra damage once. Critical Hit rules then apply normally. The condition ends after",
+        "the attack, hit or miss, or at the end of your next turn."
+      ],
+      "paragraphs": [
+        "Attacks against you have Advantage. Before the end of your next turn, your next melee weapon attack rolls its normal",
+        "weapon damage dice three times on a hit. Before rolling, you may choose Disadvantage to roll them four times",
+        "instead; if the attack is not actually rolled with Disadvantage, use three times. Blood-Tensed multiplies only normal",
+        "weapon dice; add modifiers and extra damage once. Critical Hit rules then apply normally. The condition ends after",
+        "the attack, hit or miss, or at the end of your next turn."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · BATTLEFIELD STATES",
+      "sourcePages": [
+        22
+      ]
+    },
+    {
+      "id": "condition-demoralized",
+      "topicKey": "demoralized",
+      "term": "Demoralized",
+      "aliases": [
+        "condition",
+        "battlefield states"
+      ],
+      "body": [
+        "You cannot take Reactions. Once before this condition ends, when you succeed on a D20 Test, the Warden who",
+        "Demoralized you may roll the Bands Directive die placed on you and subtract the result from your roll, potentially",
+        "turning the success into a failure. The die is then expended and Demoralized ends. Otherwise, the condition ends at",
+        "the end of that Warden’s next turn."
+      ],
+      "paragraphs": [
+        "You cannot take Reactions. Once before this condition ends, when you succeed on a D20 Test, the Warden who",
+        "Demoralized you may roll the Bands Directive die placed on you and subtract the result from your roll, potentially",
+        "turning the success into a failure. The die is then expended and Demoralized ends. Otherwise, the condition ends at",
+        "the end of that Warden’s next turn."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · BATTLEFIELD STATES",
+      "sourcePages": [
+        22
+      ]
+    },
+    {
+      "id": "condition-flanked",
+      "topicKey": "flanked",
+      "term": "Flanked",
+      "aliases": [
+        "condition",
+        "battlefield states"
+      ],
+      "body": [
+        "A creature is Flanked when two enemies occupy opposite sides or corners of its space, are adjacent to its perimeter,",
+        "and can make melee attacks against it. Each attacker must be no more than one size smaller than the target."
+      ],
+      "paragraphs": [
+        "A creature is Flanked when two enemies occupy opposite sides or corners of its space, are adjacent to its perimeter,",
+        "and can make melee attacks against it. Each attacker must be no more than one size smaller than the target."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · BATTLEFIELD STATES",
+      "sourcePages": [
+        22
+      ]
+    },
+    {
+      "id": "condition-grappled",
+      "topicKey": "grappled",
+      "term": "Grappled",
+      "aliases": [
+        "condition",
+        "battlefield states"
+      ],
+      "body": [
+        "Your Speed becomes 0 and cannot increase. Your attacks against creatures other than the grappler have",
+        "Disadvantage. The grappler can drag or carry you, but each foot costs 1 extra foot unless you are Tiny or at least two",
+        "sizes smaller.",
+        "Escape. Take an action and succeed on Strength (Athletics) or Dexterity (Acrobatics) contested by the grappler’s",
+        "Strength (Athletics). The condition also ends if the grappler is Incapacitated, releases you, or moves beyond its",
+        "grappling reach."
+      ],
+      "paragraphs": [
+        "Your Speed becomes 0 and cannot increase. Your attacks against creatures other than the grappler have",
+        "Disadvantage. The grappler can drag or carry you, but each foot costs 1 extra foot unless you are Tiny or at least two",
+        "sizes smaller.",
+        "Escape. Take an action and succeed on Strength (Athletics) or Dexterity (Acrobatics) contested by the grappler’s",
+        "Strength (Athletics). The condition also ends if the grappler is Incapacitated, releases you, or moves beyond its",
+        "grappling reach."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · BATTLEFIELD STATES",
+      "sourcePages": [
+        22
+      ]
+    },
+    {
+      "id": "condition-high-ground",
+      "topicKey": "high-ground",
+      "term": "High Ground",
+      "aliases": [
+        "condition",
+        "battlefield states"
+      ],
+      "body": [
+        "You have High Ground against a creature when your ring position is at least 5 feet above its position. You gain a +1",
+        "bonus on rifle attack rolls against that creature. High Ground is relative to each target and does not stack with itself."
+      ],
+      "paragraphs": [
+        "You have High Ground against a creature when your ring position is at least 5 feet above its position. You gain a +1",
+        "bonus on rifle attack rolls against that creature. High Ground is relative to each target and does not stack with itself."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · BATTLEFIELD STATES",
+      "sourcePages": [
+        22
+      ]
+    },
+    {
+      "id": "condition-invisible",
+      "topicKey": "invisible",
+      "term": "Invisible",
+      "aliases": [
+        "condition",
+        "battlefield states"
+      ],
+      "body": [
+        "Effects requiring sight cannot target you unless their source can see you. Your attacks have Advantage and attacks",
+        "against you have Disadvantage against creatures unable to see you."
+      ],
+      "paragraphs": [
+        "Effects requiring sight cannot target you unless their source can see you. Your attacks have Advantage and attacks",
+        "against you have Disadvantage against creatures unable to see you."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · BATTLEFIELD STATES",
+      "sourcePages": [
+        22
+      ]
+    },
+    {
+      "id": "condition-prone",
+      "topicKey": "prone",
+      "term": "Prone",
+      "aliases": [
+        "condition",
+        "battlefield states"
+      ],
+      "body": [
+        "You can move only by crawling or standing. Standing costs half your Speed and is impossible while your Speed is 0.",
+        "Your attacks have Disadvantage. Attacks made from within 5 feet have Advantage against you; attacks from farther",
+        "away have Disadvantage."
+      ],
+      "paragraphs": [
+        "You can move only by crawling or standing. Standing costs half your Speed and is impossible while your Speed is 0.",
+        "Your attacks have Disadvantage. Attacks made from within 5 feet have Advantage against you; attacks from farther",
+        "away have Disadvantage."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · BATTLEFIELD STATES",
+      "sourcePages": [
+        22
+      ]
+    },
+    {
+      "id": "condition-aiming-prone",
+      "topicKey": "aiming-prone",
+      "term": "Aiming Prone",
+      "aliases": [
+        "condition",
+        "battlefield states"
+      ],
+      "body": [
+        "While Prone and wielding a rifle, you may spend half your Speed to brace the weapon. Your Speed then becomes 0",
+        "until the end of the turn. Your next rifle attack that turn replaces Prone’s Disadvantage with Advantage and gains a +1",
+        "bonus. Your turn ends immediately after the attack. Aiming Prone ends if you move, stand, or stop wielding the rifle;",
+        "you remain Prone."
+      ],
+      "paragraphs": [
+        "While Prone and wielding a rifle, you may spend half your Speed to brace the weapon. Your Speed then becomes 0",
+        "until the end of the turn. Your next rifle attack that turn replaces Prone’s Disadvantage with Advantage and gains a +1",
+        "bonus. Your turn ends immediately after the attack. Aiming Prone ends if you move, stand, or stop wielding the rifle;",
+        "you remain Prone."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · BATTLEFIELD STATES",
+      "sourcePages": [
+        22
+      ]
+    },
+    {
+      "id": "condition-surrounded",
+      "topicKey": "surrounded",
+      "term": "Surrounded",
+      "aliases": [
+        "condition",
+        "battlefield states"
+      ],
+      "body": [
+        "A creature is Surrounded when at least four eligible enemies occupy four different sides of its space. For a Large or",
+        "larger creature, the attackers must stand along four different sides of its occupied area. The enemies have Advantage",
+        "on melee attacks against that creature, and it cannot take Reactions."
+      ],
+      "paragraphs": [
+        "A creature is Surrounded when at least four eligible enemies occupy four different sides of its space. For a Large or",
+        "larger creature, the attackers must stand along four different sides of its occupied area. The enemies have Advantage",
+        "on melee attacks against that creature, and it cannot take Reactions."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · BATTLEFIELD STATES",
+      "sourcePages": [
+        22
+      ]
+    },
+    {
+      "id": "condition-taunted",
+      "topicKey": "taunted",
+      "term": "Taunted",
+      "aliases": [
+        "condition",
+        "battlefield states"
+      ],
+      "body": [
+        "On your next turn, you must use available movement and make at least one attack or harmful Rite against the source",
+        "of the Taunt, if legally able. You are not required to enter an obvious hazard. If you cannot perceive or target the",
+        "source after moving, you may act normally. Taunted ends after you attack the source, at the end of your turn, or if the",
+        "source becomes Incapacitated.",
+        "fl fl fi ff ff fl"
+      ],
+      "paragraphs": [
+        "On your next turn, you must use available movement and make at least one attack or harmful Rite against the source",
+        "of the Taunt, if legally able. You are not required to enter an obvious hazard. If you cannot perceive or target the",
+        "source after moving, you may act normally. Taunted ends after you attack the source, at the end of your turn, or if the",
+        "source becomes Incapacitated.",
+        "fl fl fi ff ff fl"
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · BATTLEFIELD STATES",
+      "sourcePages": [
+        22
+      ]
+    },
+    {
+      "id": "condition-insane",
+      "topicKey": "insane",
+      "term": "Insane",
+      "aliases": [
+        "condition",
+        "special"
+      ],
+      "body": [
+        "The Special subcategory has an expanded ruleset. See the Core Rulebook, page 23."
+      ],
+      "paragraphs": [
+        "The Special subcategory has an expanded ruleset. See the Core Rulebook, page 23."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "Conditions · Special",
+      "sourcePages": [
+        23
+      ]
+    },
+    {
+      "id": "rulebook-difficulty-classes",
+      "topicKey": "difficulty-classes",
+      "term": "Difficulty Classes",
+      "aliases": [
+        "DC table",
+        "typical difficulty classes",
+        "group check"
+      ],
+      "body": [
+        "Reference rule in the C&S Core Rulebook, pages 9–10. The rulebook is the authority; the app does not restate it."
+      ],
+      "paragraphs": [
+        "Reference rule in the C&S Core Rulebook, pages 9–10. The rulebook is the authority; the app does not restate it."
+      ],
+      "tables": [],
+      "group": "Combat",
+      "sourceId": "core-rulebook",
+      "locator": "Difficulty Classes",
+      "sourcePages": [
+        9,
+        10
+      ]
+    },
+    {
+      "id": "rulebook-mounted-combat",
+      "topicKey": "mounted-combat",
+      "term": "Mounted Combat",
+      "aliases": [
+        "mount",
+        "mounted rules"
+      ],
+      "body": [
+        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+      ],
+      "paragraphs": [
+        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+      ],
+      "tables": [],
+      "group": "Combat",
+      "sourceId": "core-rulebook",
+      "locator": "Mounted Combat",
+      "sourcePages": [
+        19,
+        20
+      ]
+    },
+    {
+      "id": "rulebook-obscurement-senses",
+      "topicKey": "obscurement-senses",
+      "term": "Obscurement & Senses",
+      "aliases": [
+        "lightly obscured",
+        "heavily obscured",
+        "darkvision",
+        "blindsight",
+        "truesight"
+      ],
+      "body": [
+        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+      ],
+      "paragraphs": [
+        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+      ],
+      "tables": [],
+      "group": "Combat",
+      "sourceId": "core-rulebook",
+      "locator": "Obscurement & Senses",
+      "sourcePages": [
+        19,
+        20
+      ]
+    },
+    {
+      "id": "rulebook-difficult-shots",
+      "topicKey": "difficult-shots",
+      "term": "Difficult Shots",
+      "aliases": [
+        "cover",
+        "long range",
+        "ranged attack penalties"
+      ],
+      "body": [
+        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+      ],
+      "paragraphs": [
+        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+      ],
+      "tables": [],
+      "group": "Combat",
+      "sourceId": "core-rulebook",
+      "locator": "Difficult Shots",
+      "sourcePages": [
+        19,
+        20
+      ]
+    },
+    {
+      "id": "rulebook-damaging-objects",
+      "topicKey": "damaging-objects",
+      "term": "Damaging Objects",
+      "aliases": [
+        "object hit points",
+        "object armor class"
+      ],
+      "body": [
+        "Reference rule in the C&S Core Rulebook, page 108. The rulebook is the authority; the app does not restate it."
+      ],
+      "paragraphs": [
+        "Reference rule in the C&S Core Rulebook, page 108. The rulebook is the authority; the app does not restate it."
+      ],
+      "tables": [],
+      "group": "Equipment",
+      "sourceId": "core-rulebook",
+      "locator": "Damaging Objects",
+      "sourcePages": [
+        108
+      ]
+    },
+    {
+      "id": "rulebook-improvised-weapons",
+      "topicKey": "improvised-weapons",
+      "term": "Improvised Weapons",
+      "aliases": [
+        "improvised weapon"
+      ],
+      "body": [
+        "Reference rule in the C&S Core Rulebook, page 108. The rulebook is the authority; the app does not restate it."
+      ],
+      "paragraphs": [
+        "Reference rule in the C&S Core Rulebook, page 108. The rulebook is the authority; the app does not restate it."
+      ],
+      "tables": [],
+      "group": "Equipment",
+      "sourceId": "core-rulebook",
+      "locator": "Improvised Weapons",
+      "sourcePages": [
+        108
+      ]
+    },
+    {
+      "id": "rulebook-the-madness-die",
+      "topicKey": "the-madness-die",
+      "term": "The Madness Die",
+      "aliases": [
+        "madness die",
+        "star face",
+        "blank face",
+        "eye face",
+        "insane quirks"
+      ],
+      "body": [
+        "Reference rule in the C&S Core Rulebook, pages 3–23. The rulebook is the authority; the app does not restate it."
+      ],
+      "paragraphs": [
+        "Reference rule in the C&S Core Rulebook, pages 3–23. The rulebook is the authority; the app does not restate it."
+      ],
+      "tables": [],
+      "group": "Conditions",
+      "sourceId": "core-rulebook",
+      "locator": "The Madness Die",
+      "sourcePages": [
+        3,
+        23
+      ]
+    },
+    {
+      "id": "rulebook-unsafe-rest-checks",
+      "topicKey": "unsafe-rest-checks",
+      "term": "Unsafe Rest Checks",
+      "aliases": [
+        "guards",
+        "unsafe rest",
+        "rest guards"
+      ],
+      "body": [
+        "Reference rule in the C&S Core Rulebook, page 26. The rulebook is the authority; the app does not restate it."
+      ],
+      "paragraphs": [
+        "Reference rule in the C&S Core Rulebook, page 26. The rulebook is the authority; the app does not restate it."
+      ],
+      "tables": [],
+      "group": "Rest & Transformation",
+      "sourceId": "core-rulebook",
+      "locator": "Unsafe Rest Checks",
+      "sourcePages": [
+        26
+      ]
+    },
+    {
+      "id": "rulebook-rest-interruption",
+      "topicKey": "rest-interruption",
+      "term": "Rest Interruption",
+      "aliases": [
+        "interrupted rest",
+        "short rest",
+        "long rest"
+      ],
+      "body": [
+        "Reference rule in the C&S Core Rulebook, page 25. The rulebook is the authority; the app does not restate it."
+      ],
+      "paragraphs": [
+        "Reference rule in the C&S Core Rulebook, page 25. The rulebook is the authority; the app does not restate it."
+      ],
+      "tables": [],
+      "group": "Rest & Transformation",
+      "sourceId": "core-rulebook",
+      "locator": "Rest Interruption",
+      "sourcePages": [
+        25
+      ]
     }
   ],
-  "establishedGameRules": {
-    "authority": "Explicit game-maker rules retained separately from the four-document PDF extraction",
-    "provenance": {
-      "standardPointBuy": "The game maker's Creating a Character rules, Step 3: Determine Ability Scores.",
-      "maduhausu": "Chris explicitly clarified that Maduhausu is the 57-point V2 point-buy system, not rolled statistics; the clarification and supplied cost table are preserved in repository history at cdb34e6.",
-      "restoration": "Restored by Simon's explicit direction on 2026-08-25 after the four-document refresh had incorrectly treated the documents' silence as retirement of the character-creation rule."
-    },
-    "characterCreation": {
-      "abilityScores": {
-        "methods": {
-          "standard": {
-            "id": "pointbuy",
-            "name": "Standard",
-            "budget": 27,
-            "minimumScore": 8,
-            "maximumScore": 15,
-            "costs": [
-              {
-                "score": 8,
-                "cost": 0
-              },
-              {
-                "score": 9,
-                "cost": 1
-              },
-              {
-                "score": 10,
-                "cost": 2
-              },
-              {
-                "score": 11,
-                "cost": 3
-              },
-              {
-                "score": 12,
-                "cost": 4
-              },
-              {
-                "score": 13,
-                "cost": 5
-              },
-              {
-                "score": 14,
-                "cost": 7
-              },
-              {
-                "score": 15,
-                "cost": 9
-              }
-            ]
-          },
-          "maduhausu": {
-            "id": "maduhausu",
-            "name": "Maduhausu",
-            "budget": 57,
-            "minimumScore": 3,
-            "maximumScore": 16,
-            "finalLevelOneMaximum": 17,
-            "repeatRule": "The first purchase of a score uses First Cost, the second purchase of that same score uses Second Cost, and the third and every later purchase use Third Cost +. A score of 16 cannot be bought a third time.",
-            "costs": [
-              {
-                "score": 3,
-                "first": 0,
-                "second": 0,
-                "thirdPlus": 0
-              },
-              {
-                "score": 4,
-                "first": 1,
-                "second": 1,
-                "thirdPlus": 1
-              },
-              {
-                "score": 5,
-                "first": 2,
-                "second": 2,
-                "thirdPlus": 2
-              },
-              {
-                "score": 6,
-                "first": 3,
-                "second": 3,
-                "thirdPlus": 3
-              },
-              {
-                "score": 7,
-                "first": 4,
-                "second": 4,
-                "thirdPlus": 4
-              },
-              {
-                "score": 8,
-                "first": 5,
-                "second": 5,
-                "thirdPlus": 5
-              },
-              {
-                "score": 9,
-                "first": 6,
-                "second": 6,
-                "thirdPlus": 6
-              },
-              {
-                "score": 10,
-                "first": 7,
-                "second": 7,
-                "thirdPlus": 7
-              },
-              {
-                "score": 11,
-                "first": 8,
-                "second": 8,
-                "thirdPlus": 8
-              },
-              {
-                "score": 12,
-                "first": 9,
-                "second": 9,
-                "thirdPlus": 9
-              },
-              {
-                "score": 13,
-                "first": 10,
-                "second": 10,
-                "thirdPlus": 10
-              },
-              {
-                "score": 14,
-                "first": 12,
-                "second": 14,
-                "thirdPlus": 17
-              },
-              {
-                "score": 15,
-                "first": 14,
-                "second": 18,
-                "thirdPlus": 23
-              },
-              {
-                "score": 16,
-                "first": 20,
-                "second": 26,
-                "thirdPlus": null
-              }
-            ]
-          }
-        },
-        "backgroundAdjustment": {
-          "points": 3,
-          "patterns": [
-            [
-              2,
-              1
-            ],
-            [
-              1,
-              1,
-              1
-            ]
-          ],
-          "differentAbilities": true,
-          "standardFinalMaximum": 20,
-          "maduhausuFinalMaximum": 17,
-          "eligibleAbilitiesByBackground": {
-            "criminal": [
-              "dex",
-              "con",
-              "int"
-            ],
-            "merchant": [
-              "con",
-              "int",
-              "cha"
-            ],
-            "noble": [
-              "str",
-              "int",
-              "cha"
-            ],
-            "drifter": [
-              "str",
-              "dex",
-              "wis"
-            ],
-            "church-missionary": [
-              "wis",
-              "int",
-              "cha"
-            ],
-            "cultist": [
-              "con",
-              "int",
-              "wis"
-            ],
-            "street-warden": [
-              "str",
-              "con",
-              "cha"
-            ],
-            "grave-tender": [
-              "con",
-              "wis",
-              "int"
-            ],
-            "weaponsmith": [
-              "str",
-              "int",
-              "con"
-            ],
-            "archivist": [
-              "int",
-              "wis",
-              "cha"
-            ],
-            "beggar": [
-              "dex",
-              "con",
-              "wis"
-            ],
-            "oiler": [
-              "int",
-              "wis",
-              "con"
-            ],
-            "graverobber": [
-              "dex",
-              "wis",
-              "int"
-            ],
-            "blood-collector": [
-              "con",
-              "int",
-              "wis"
-            ]
-          }
-        }
-      }
-    }
-  },
   "characterSheet": {
     "sourceId": "character-sheet",
     "printedPageCount": 11,
@@ -1790,15 +2350,6 @@
         "ability": "Charisma"
       }
     ],
-    "sourceCoverage": {
-      "defined": "The sheet defines the fields a hunter records, including ability scores, modifiers, saving throws, skills, vitals, equipment, class features, feats, Rite values, prepared Whispers, and notes.",
-      "notDefined": [
-        "An ability-score generation method or point budget",
-        "Background-granted ability-score adjustments",
-        "The formula for an ability modifier, saving throw, skill value, Armor Class, Hit Points, Sanity, Initiative, Passive Perception, or Rite value"
-      ],
-      "appPolicy": "The printable sheet itself does not define score generation. Character creation uses the separately sourced Standard and Maduhausu rules recorded once under establishedGameRules; never attribute those rules to the character-sheet PDF."
-    },
     "sections": [
       {
         "id": "identity-abilities",
@@ -1808,35 +2359,28 @@
           2
         ],
         "fields": [
-          "Your ACTUAL name",
+          "Identity",
           "Your Name",
           "Background",
           "Class",
           "Subclass",
-          "Level",
-          "Insight",
+          "Vitals",
           "Transformation Lvl",
-          "Sanity — Current",
-          "Sanity — Max",
-          "Insane",
-          "Sanity Dice",
-          "Hit Points — Current",
-          "Hit Points — Max",
-          "Hit Points — Temp",
-          "Hit Dice — Current",
-          "Hit Dice — Spent",
-          "Hit Dice — Max",
-          "Death Saves — Successes",
-          "Death Saves — Failures",
+          "Current Max Sanity Dice",
+          "Hit Points",
+          "Current Max Temp",
+          "Hit Dice",
+          "Current Spent Max",
+          "Death Saves",
           "Proficiency Bonus",
-          "Ability score",
-          "Ability modifier",
-          "Ability saving throw",
+          "Strength",
+          "Constitution",
+          "Wisdom",
+          "Intelligence",
+          "Dexterity",
           "Blood Tinge",
-          "Initiative",
-          "Speed",
-          "Size: Medium",
-          "Passive Perception"
+          "Charisma",
+          "Page 1 · Identity & Abilities"
         ]
       },
       {
@@ -1847,33 +2391,16 @@
           4
         ],
         "fields": [
+          "Armor & Equipment",
           "Armor Class",
           "Armor Category",
-          "Shield Arm",
-          "Weight",
-          "Weight Condition",
-          "Head Gear",
-          "Scarf",
-          "Gloves",
-          "Main Armor",
-          "Boots",
-          "Add-on Armor",
-          "Studs",
+          "Add-On Armor",
           "Impressions",
           "Special",
           "Storage Items",
-          "Oversized Storage Slot (Hand)",
-          "Significant Storage Slot (Back)",
-          "Significant Storage Slot (Hip)",
-          "Significant Storage Slot (Chest)",
-          "Significant Storage Slot (Ankle)",
-          "Armor Training — Light",
-          "Armor Training — Medium",
-          "Armor Training — Heavy",
-          "Weapons — Simple",
-          "Weapons — Martial",
+          "Equipment Training & Proficiencies",
           "Tools",
-          "Coins — GP"
+          "Page 2 · Armor & Equipment"
         ]
       },
       {
@@ -1884,14 +2411,8 @@
           6
         ],
         "fields": [
-          "Equipment — Item",
-          "Equipment — Carrying Category",
-          "Equipment — Item Slot",
-          "Equipment — Weight",
-          "Weapon — Name",
-          "Weapon — Attack Bonus",
-          "Weapon — Damage Type",
-          "Weapon — Notes"
+          "Weapon Damage",
+          "Page 3 · Equipment & Weapons"
         ]
       },
       {
@@ -1903,7 +2424,8 @@
         ],
         "fields": [
           "Class Features",
-          "Feats"
+          "Feats",
+          "Page 4 · Class Features & Feats"
         ]
       },
       {
@@ -1913,16 +2435,9 @@
           9
         ],
         "fields": [
-          "Rite Performing Ability",
-          "Rite Performing Modifier",
-          "Rite Save DC",
-          "Rite Attack Bonus",
-          "Prepared Whispers — Level",
-          "Prepared Whispers — Name",
-          "Prepared Whispers — Performing",
-          "Prepared Whispers — Range",
-          "Prepared Whispers — Duration",
-          "Prepared Whispers — Rounds"
+          "Whispers and Rites",
+          "Prepared Whispers",
+          "Page 5 · Whispers & Rites"
         ]
       },
       {
@@ -1933,7 +2448,8 @@
           11
         ],
         "fields": [
-          "Notes"
+          "Notes",
+          "Page 6 · Notes"
         ]
       }
     ]
@@ -2091,10 +2607,10 @@
       "upgrade": "",
       "tables": [
         {
-          "title": "Save modifiers — Your Knowledge of the Target Is...",
+          "title": "Your Knowledge of the Target Is ... — Save Modifier",
           "columns": [
-            "Knowledge",
-            "Save modifier"
+            "Your Knowledge of the Target Is ...",
+            "Save Modifier"
           ],
           "rows": [
             [
@@ -2108,16 +2624,15 @@
             [
               "Extensive (know the target well)",
               "-5"
-            ]
-          ]
-        },
-        {
-          "title": "Save modifiers — You Have the Target's...",
-          "columns": [
-            "Connection",
-            "Save modifier"
-          ],
-          "rows": [
+            ],
+            [
+              "You Have the Target's ...",
+              "Save Modifier"
+            ],
+            [
+              "---",
+              "---"
+            ],
             [
               "Picture or other likeness",
               "-2"
@@ -2346,7 +2861,7 @@
       "performing": "Action",
       "range": "30 feet",
       "duration": "10 rounds",
-      "text": "A patron will make a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you perform this rite again. If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your rites save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature. Sound. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a roar, a beating of a heart, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends. Image. If you create an image of an object-such as a chair, muddy footprints, or a small chest-it must be no larger than a 5-foot Cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it.",
+      "text": "A patron will make a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you perform this rite again. If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your rites save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature. Sound. If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a roar, a beating of a heart, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends. Image. If you create an image of an object—such as a chair, muddy footprints, or a small chest—it must be no larger than a 5-foot Cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it.",
       "upgrade": "",
       "sourcePages": [
         2
@@ -2368,10 +2883,30 @@
   ],
   "conditionsNamedByCurrentSources": [
     "Blinded",
+    "Deafened",
+    "Mesmerized",
     "Frightened",
     "Incapacitated",
-    "Insane",
+    "Paralyzed",
+    "Restrained",
+    "Stunned",
+    "Unconscious",
+    "Dying",
+    "Exhaustion",
+    "Poisoned",
+    "Sleepless",
+    "Suffocating",
+    "Underwater",
+    "Blood-Tensed",
+    "Demoralized",
+    "Flanked",
+    "Grappled",
+    "High Ground",
     "Invisible",
-    "Restrained"
+    "Prone",
+    "Aiming Prone",
+    "Surrounded",
+    "Taunted",
+    "Insane"
   ]
 }

@@ -2,6 +2,7 @@ import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
 import { emptySheetCard, normalizeCard } from "../src/lib/character";
 import { CLASSES } from "../src/data/classes";
+import { MADUHAUSU_BUDGET, POINT_BUY_BUDGET } from "../src/data/abilities";
 import { BACKGROUNDS } from "../src/data/backgrounds";
 import { EPIC_BOON_FEATS, FIGHTING_STYLE_FEATS, GENERAL_FEATS } from "../src/data/feats";
 import { ITEMS } from "../src/data/items";
@@ -227,11 +228,25 @@ for (const background of BACKGROUNDS) {
   assert.deepEqual(startingKit(undefined, background).unmatched, [], `${background.name} background kit maps to catalog`);
 }
 
-const master = JSON.parse(readFileSync(new URL("../resources/master.json", import.meta.url), "utf8"));
-assert.equal(master.establishedGameRules.characterCreation.abilityScores.methods.standard.budget, 27, "master.json retains Standard point buy");
-assert.equal(master.establishedGameRules.characterCreation.abilityScores.methods.maduhausu.budget, 57, "master.json retains Maduhausu point buy");
-assert.deepEqual(WHISPERS.map((whisper) => whisper.name), master.whispers.entries.map((whisper) => whisper.name), "Whisper dropdown matches the current source master");
-assert.deepEqual(DEEPCALLER_RITES.map((rite) => rite.id), master.rites.entries.map((rite) => rite.id), "Rite reference matches the current source master without duplicates");
+assert.equal(POINT_BUY_BUDGET, 27, "the Standard point buy stays at 27 points [core-rulebook page 32]");
+assert.equal(MADUHAUSU_BUDGET, 57, "the alternative point buy stays at 57 points [core-rulebook page 32]");
+
+/** Guard that the Rite/Whisper catalog matches the current sources and holds no
+ * duplicates. The names come straight from the transcribed source documents. */
+const sourceNames = (path: string) => readFileSync(new URL(path, import.meta.url), "utf8")
+  .replaceAll("\r\n", "\n")
+  .split("\n")
+  .filter((line) => line.startsWith("## "))
+  .map((line) => line.slice(3).trim().toLowerCase());
+const whisperSourceNames = sourceNames("../docs/rules/whispers-sheet.txt");
+const riteSourceNames = sourceNames("../docs/rules/book-of-the-deepcaller.txt");
+assert.equal(whisperSourceNames.length, 6, "the Whispers Sheet lists six Whispers");
+assert.equal(riteSourceNames.length, 21, "the Book of the Deepcaller lists twenty-one Rites");
+assert.deepEqual(WHISPERS.map((whisper) => whisper.name.toLowerCase()), whisperSourceNames, "Whisper dropdown matches the Whispers Sheet");
+assert.deepEqual(DEEPCALLER_WHISPERS.map((whisper) => whisper.name.toLowerCase()), whisperSourceNames, "Whisper reference matches the Whispers Sheet");
+assert.deepEqual(DEEPCALLER_RITES.map((rite) => rite.name.toLowerCase()), riteSourceNames, "Rite reference matches the Book of the Deepcaller");
+assert.equal(new Set(DEEPCALLER_RITES.map((rite) => rite.id)).size, DEEPCALLER_RITES.length, "the Rite catalog has no duplicate ids");
+assert.equal(new Set(DEEPCALLER_WHISPERS.map((whisper) => whisper.id)).size, DEEPCALLER_WHISPERS.length, "the Whisper catalog has no duplicate ids");
 assert.ok(DEEPCALLER_RITES.some((rite) => rite.name === "Armor of the Drowned Star"), "Deepcaller reference uses Armor of the Drowned Star");
 assert.ok(DEEPCALLER_RITES.some((rite) => rite.name === "Arms of Hastur"), "Deepcaller reference uses Arms of Hastur");
 assert.ok(DEEPCALLER_RITES.some((rite) => rite.name === "Grasp of Yog-Sothoth"), "Deepcaller reference uses the current Grasp name");
