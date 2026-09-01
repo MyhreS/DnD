@@ -29,11 +29,37 @@ add one.
 
 ---
 
-## 🚧 BLOCKED — AWAITING SIMON
+## ✅ RESOLVED — SIMON HAS ANSWERED ALL SIX (2026-09-01)
 
-**Implement NOTHING for these four. Do not work around them, do not pick a
-default, do not "fix forward".** Every plan item that depends on one of these is
-marked `[BLOCKED-n]` and must be skipped until answered.
+**Nothing below is blocked any more.** Implement these answers exactly; do not
+re-litigate them. The original discussion is kept underneath for context, but
+these rulings override it.
+
+| # | Question | **Ruling** |
+|---|---|---|
+| **1** | Current Sanity vs Madness | **Follow the rulebook.** Stop tracking Current Sanity; Madness is the tracked pool and `Insane` stays derived (`madness >= maxSanity`). The character-sheet PDF's CURRENT box is not counter-evidence — that PDF's own header says it was *"Printed from https://dandd-ea955.web.app/character"*, so it is an app printout echoing the current bug, not an independent source. |
+| **2** | Hunter Cleaver | **REMOVE IT — the removal is deliberate on the game maker's side.** Purge it from the catalogs, the mastery lists, the Scout's kit and the dev fixture, and STRIP it from stored characters in the Batch 6 migration. Do not preserve it as a custom item. |
+| **3** | Item prices | **The GM sets prices.** Do NOT add a price/`priceGp` field and do NOT author a price list. The book's "the app is the authoritative source for prices" line is superseded by this ruling; the book's own fallback ("the GM may set a price or award equipment directly") is the normal path. Nothing to implement — close the gap as decided, not deferred. |
+| **4** | "Maduhausu" naming | **Keep the name.** It is the game maker's own name for his house rule; the book's "Alternative point buy" is just the formal write-up. Change nothing — not the single user-visible label, not the stored `abilityMode` values. |
+| **5** | Weapon property definitions on mobile | **Leave as-is.** The hover `title` on the builder's mastery picker stays; no layout change. The definitions are also reachable in the Codex now that the Core Rulebook is a source. |
+| **6** | Bloodvial purity | **ADD IT.** Model the four tiers (Tainted / Stirred / Concentrated / Pure Old Blood, core-rulebook lines ~5530-5566) with their distinct healing, Madness removal and Grit DCs. See the new section "BATCH 5.5 — Bloodvial purity" for scope. |
+
+### Consequences to propagate
+
+- **Cleaver removal** touches: `src/data/items.ts` (`hunter-cleaver` row), `src/data/weapons.ts:51`,
+  `src/features/hunter/components/papersheet/CharacterAutomationProvider.tsx:172`,
+  `src/dev/preview.ts:294` (and its `sheet.eq_1_0`), plus the Scout starting kit
+  (the beta's Scout starts with a **Shortsword**). Once the row is gone,
+  `WeaponFacts.category` can become **required** — it was made optional only to
+  avoid touching the cleaver row.
+- **Migration (Batch 6)** must strip `hunter-cleaver` from `inventory`,
+  `sheetAutomation.startingKitInventory` and `slotAssignments`, and clear it from
+  any stored weapon-mastery selection.
+- **No price work** anywhere. If any item proposes a price field, drop it.
+
+---
+
+## 🚧 Original blocked-item discussion (superseded by the table above)
 
 ### BLOCKED-1 — Current Sanity vs Madness ⚠️ HIGHEST VALUE — ANSWER FIRST
 
@@ -1681,6 +1707,62 @@ plan**, but re-run `bun run smoke` after any edit to that file per CLAUDE.md.
 
 ---
 
+# BATCH 5.5 — Bloodvial purity (NEW FEATURE — approved by Simon 2026-09-01)
+
+This is genuinely **new** functionality, not a sync. It was approved explicitly.
+Source: `core-rulebook.txt` [page 123], lines ~5525-5570. Beware: that page is
+two-column and interleaved with the Silver Bullets entry — the table below is
+the de-interleaved truth, use it rather than re-reading the raw lines.
+
+### The four purities
+
+| Purity | Healing | Madness removed | Grit DC | On failed check |
+|---|---|---|---|---|
+| **Tainted Blood** | 2d4 + 2 HP | 2 | DC 10 | +1 Transformation Level, +3 Madness |
+| **Stirred Blood** | 4d4 + 4 HP | 4 | DC 15 | +1 Transformation Level, +6 Madness |
+| **Concentrated Blood** | 8d4 + 8 HP | 8 | DC 20 | +2 Transformation Levels, +10 Madness |
+| **Pure Old Blood** | *choose one effect — see below* | *see below* | DC 25 | +6 Transformation Levels, +15 Madness |
+
+**Pure Old Blood — choose ONE:**
+1. Regain **all** Hit Points and remove **all** Madness; **or**
+2. Remove the **Dead** condition from a creature, if it has lasted no longer
+   than **1 round**, and restore that creature to **1 Hit Point**.
+
+**Flavour text** (verbatim, for the catalog `note`):
+- Tainted — *"The most common form of Bloodvial. Though its impurities dull its potency, they also make it the safest blood to consume."*
+- Stirred — *"A more refined form of blood that offers greater healing, but might further awaken something within."*
+- Concentrated — *"Highly refined blood sought after by veteran Hunters, and those desperate enough to risk its power."*
+- Pure Old Blood — *"The purest remnants of the Old Blood. Few Hunters ever see it, and fewer still survive long after drinking it."*
+
+**Sourcing note** (already transcribed at lines 5156-5162): humans normally yield
+Tainted; Beasts yield Tainted or unusable; Dreadbloods usually yield Stirred;
+[higher sources] Concentrated or Pure Old Blood; Old Ones yield Pure Old Blood.
+
+### Scope
+
+**S1.** Model purity as a field on the Bloodvial rather than four separate item
+ids — the existing `blood-vial` id must keep resolving for stored characters
+(it is already 0.5 lb per item 45). Add a purity discriminator plus a small
+`BLOODVIAL_PURITIES` table in `src/data/` carrying the six columns above.
+
+**S2.** Surface it on the existing Bloodvial inventory row and its detail view
+using the components already there. **No new page, no re-layout, no restyle** —
+the hard constraint still governs. A purity selector on the existing row, and
+the healing/Madness/DC figures rendered in the existing detail/note area.
+
+**S3.** The Grit check, Transformation Levels and Madness on failure are
+**resolved at the table by the GM** unless the app already automates comparable
+checks. Prefer *displaying* the DC and consequences over auto-rolling; do not
+invent dice-rolling UI that does not already exist. If the app has an existing
+roll affordance, reuse it — otherwise display only.
+
+**S4.** `transformationLevel` and `madness` already exist on `HunterCard`
+(the latter clarified in item 20). Reuse them; do not add parallel fields.
+
+**S5.** Existing stored Bloodvials have no purity. Default them to **Tainted**
+(the source calls it "the most common form") and note this in the Batch 6
+migration as a backfill, not a strip.
+
 # BATCH 6 — Stored-data migration
 
 Areas: **the migration script · dry-run report · safety contract**
@@ -1740,7 +1822,7 @@ grant and will double up the item):
 |---|---|---|
 | ~~`lantern`~~ | **NO REMAP — DO NOT MIGRATE** | ⚠️ Superseded by what item 43 actually built. Batch 2.4 **reused the `lantern` id** under the new display name "Lantern, Hooded" rather than creating a `lantern-hooded` id. **No `lantern-hooded` id exists**, so remapping to it would break every stored inventory that references a lantern. Stored `lantern` entries already resolve correctly and need no migration. |
 | `book-of-eldritch-knowledge` | **`book-of-the-deepcaller`** on Deepcaller cards, else **`book`** | The beta separates the Unique Item from generic Book (item 44). |
-| `hunter-cleaver` | **`[BLOCKED-2]`** | **No remap target** — the Shortsword is a different weapon, not a rename. Options for Simon: keep as-is; convert to a `customItems` entry (`source: "found"`, name "Hunter Cleaver", `catalogBaseId: "shortsword"`); or drop. **Do not silently delete.** |
+| `hunter-cleaver` | **STRIP — no remap, no preservation** | ✅ **RESOLVED 2026-09-01: Simon confirmed the removal is deliberate.** Delete the entry outright from `inventory`, `sheetAutomation.startingKitInventory`, `slotAssignments` and any `sheet.eq_*` cell. Do **not** convert it to a `customItems` entry and do **not** remap it to the Shortsword. The dry run must still report every character it touches. |
 | `bedroll` | **drop** | −7 lb (item 48). |
 | `rations` | **drop** | −2 lb each (item 48). |
 | `letter` | **drop** | 0 lb (item 48). |
