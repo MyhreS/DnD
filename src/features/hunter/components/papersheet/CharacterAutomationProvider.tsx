@@ -9,8 +9,10 @@ import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { maxAddonPieces } from "@/lib/character";
 import { armorFor } from "@/lib/customItems";
 import { startingKit } from "@/lib/startingEquipment";
+import { BLOODVIAL_ITEM_ID } from "@/data/bloodvial";
 import type {
   AbilityKey,
+  BloodvialPurity,
   CustomItem,
   HunterCard,
   InventoryEntry,
@@ -35,10 +37,18 @@ const ZERO_BONUS = (): Partial<Record<AbilityKey, number>> => Object.fromEntries
 
 function mergeInventory(base: InventoryEntry[], additions: InventoryEntry[]): InventoryEntry[] {
   const counts = new Map(base.map((entry) => [entry.itemId, entry.qty]));
-  for (const entry of additions) counts.set(entry.itemId, (counts.get(entry.itemId) ?? 0) + entry.qty);
+  // Per-line extras (such as a Bloodvial's purity) survive quantity changes.
+  const extras = new Map(base.map((entry) => [entry.itemId, entry.purity]));
+  for (const entry of additions) {
+    counts.set(entry.itemId, (counts.get(entry.itemId) ?? 0) + entry.qty);
+    if (entry.purity) extras.set(entry.itemId, entry.purity);
+  }
   return [...counts]
     .filter(([, qty]) => qty > 0)
-    .map(([itemId, qty]) => ({ itemId, qty }));
+    .map(([itemId, qty]) => {
+      const purity = extras.get(itemId);
+      return purity ? { itemId, qty, purity } : { itemId, qty };
+    });
 }
 
 function removeInventory(base: InventoryEntry[], removals: InventoryEntry[]): InventoryEntry[] {
@@ -376,6 +386,15 @@ export function CharacterAutomationProvider({
     commit({ inventory, slotAssignments });
   }
 
+  /** Bloodvial purity, core-rulebook.txt [page 123]. Stored on the existing
+   * `blood-vial` inventory line — no separate item id. */
+  function setBloodvialPurity(purity: BloodvialPurity) {
+    const inventory = (card.inventory ?? []).map((entry) => (
+      entry.itemId === BLOODVIAL_ITEM_ID ? { ...entry, purity } : entry
+    ));
+    commit({ inventory });
+  }
+
   function slotStateWithout(replace?: SlotReplacement) {
     let inventory = card.inventory ?? [];
     let equippedStorageIds = card.equippedStorageIds ?? [];
@@ -584,6 +603,7 @@ export function CharacterAutomationProvider({
     setBonus,
     switchMode,
     changeQty,
+    setBloodvialPurity,
     addCatalogItemToSlot,
     setSlotAssignment,
     toggleStorage,

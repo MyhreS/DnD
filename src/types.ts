@@ -146,10 +146,16 @@ export interface CustomItem extends Item {
   weaponNotes?: string;
 }
 
+/** Bloodvial purity, core-rulebook.txt [page 123]. A field on the single
+ * `blood-vial` catalog id rather than four items; absent means Tainted. */
+export type BloodvialPurity = "tainted" | "stirred" | "concentrated" | "pure";
+
 /** A line in a hunter's inventory: a catalog item id + how many. */
 export interface InventoryEntry {
   itemId: string;
   qty: number;
+  /** Bloodvial lines only — the purity of these vials (default Tainted). */
+  purity?: BloodvialPurity;
 }
 
 /** A recently dropped inventory line (#136) — recoverable until DROPPED_TTL_MS

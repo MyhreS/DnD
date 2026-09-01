@@ -211,6 +211,9 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
     extraArmorIds: [],
     currentHp: 21,
     sanity: 8,
+    // `sanity` stays to exercise the legacy conversion path in normalizeCard;
+    // `madness` is the value the inverted Sanity/Madness panel renders.
+    madness: 4,
     transformationLevel: 0,
     activeTransformations: [],
     insight: 32,
@@ -277,6 +280,8 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     extraArmorIds: ["tricorn"],
     currentHp: 22,
     sanity: 9,
+    // See Henryk above: the legacy `sanity` is deliberate, `madness` is shown.
+    madness: 4,
     transformationLevel: 2,
     activeTransformations: ["dreadbloodEars"],
     insight: 60,
@@ -292,7 +297,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
       { itemId: "pistol", qty: 1 },
       { itemId: "dagger", qty: 2 },
       { itemId: "bullets", qty: 1 },
-      { itemId: "blood-vial", qty: 3 },
+      { itemId: "blood-vial", qty: 3, purity: "stirred" },
       { itemId: "rope", qty: 1 },
       { itemId: "lantern", qty: 1 },
       { itemId: "tool-belt", qty: 1 },

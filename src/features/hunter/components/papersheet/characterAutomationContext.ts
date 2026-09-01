@@ -2,7 +2,7 @@ import { createContext, useContext } from "react";
 import type { BACKGROUNDS } from "@/data/backgrounds";
 import type { getClass } from "@/data/classes";
 import type { ITEMS } from "@/data/items";
-import type { AbilityKey, CarrySignificance, ExtraSubcategory, HunterCard, LevelFeature, SheetAutomationState, SlotAssignment } from "@/types";
+import type { AbilityKey, BloodvialPurity, CarrySignificance, ExtraSubcategory, HunterCard, LevelFeature, SheetAutomationState, SlotAssignment } from "@/types";
 import type { BuyMode } from "../../lib/abilityBuy";
 import type { automationFor } from "../../lib/characterAutomation";
 
@@ -45,6 +45,7 @@ export interface CharacterAutomationController {
   setBonus: (key: AbilityKey, value: number) => void;
   switchMode: (mode: BuyMode) => void;
   changeQty: (id: string, delta: number) => void;
+  setBloodvialPurity: (purity: BloodvialPurity) => void;
   addCatalogItemToSlot: (id: string, target: SlotAssignment, replace?: SlotReplacement) => void;
   setSlotAssignment: (id: string, index: number, location: SlotAssignment | null, replace?: SlotReplacement) => void;
   toggleStorage: (id: string, replace?: SlotReplacement) => void;

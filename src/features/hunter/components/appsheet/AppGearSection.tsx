@@ -1,3 +1,4 @@
+import { BLOODVIAL_ITEM_ID } from "@/data/bloodvial";
 import { ITEMS } from "@/data/items";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { ARMOR_BY_ID } from "@/data/armor";
@@ -10,6 +11,7 @@ import { weaponAttackBonus } from "@/lib/character";
 import type { SlotAssignment } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { useCharacterSheetPageNavigation } from "../character-sheet/characterSheetPageNavigation";
+import { AppBloodvialPurity } from "./AppBloodvialPurity";
 import { InventoryAddPageMenu } from "./InventoryAddPages";
 import { AppWeaponDamageBonuses } from "./AppWeaponReference";
 import {
@@ -97,6 +99,7 @@ export function AppGearSection({
                       </label>
                     ))}
                   </span>}
+                  {item.id === BLOODVIAL_ITEM_ID && <AppBloodvialPurity card={card} readOnly={model.readOnly} onChange={automation.setBloodvialPurity} />}
                 </span>
                 {armor ? (
                   <select

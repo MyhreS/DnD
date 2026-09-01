@@ -8,6 +8,7 @@ import { MADUHAUSU_BUDGET, POINT_BUY_BUDGET } from "../src/data/abilities";
 import { BACKGROUNDS } from "../src/data/backgrounds";
 import { EPIC_BOON_FEATS, FIGHTING_STYLE_FEATS, GENERAL_FEATS } from "../src/data/feats";
 import { ITEMS } from "../src/data/items";
+import { BLOODVIAL_ITEM_ID, BLOODVIAL_PURITIES, BLOODVIAL_PURITY_BY_ID, bloodvialEffectLabel, bloodvialFailureLabel, cardBloodvialPurity } from "../src/data/bloodvial";
 import { startingKit } from "../src/lib/startingEquipment";
 import { availableSlotAssignmentOptions, computeSlots, slotAssignmentOptions } from "../src/lib/slots";
 import { characterSheetUpdate } from "../src/features/hunter/lib/sheetPersistence";
@@ -618,5 +619,31 @@ assert.ok(!weaponItems.some((item) => item.id === "hunter-cleaver"), "the Hunter
 const meleeMastery = weaponItems.filter((item) => WEAPON_FACTS[item.id]!.attack === "Melee");
 assert.ok(meleeMastery.length > 20, "the Bloodbound may master any Simple or Martial melee weapon");
 assert.ok(!meleeMastery.some((item) => WEAPON_FACTS[item.id]!.attack === "Ranged"), "ranged weapons stay out of the melee mastery list");
+
+// Bloodvial purity — core-rulebook.txt [page 123]. Purity is a field on the one
+// `blood-vial` id: four ids must NOT exist, and a line without a purity is
+// Tainted (the most common form).
+assert.ok(ITEMS.some((item) => item.id === BLOODVIAL_ITEM_ID), "the single Bloodvial catalog id still resolves");
+assert.equal(ITEMS.find((item) => item.id === BLOODVIAL_ITEM_ID)!.weightLb, 0.5, "the Bloodvial weighs 0.5 lb");
+for (const id of ["blood-vial-tainted", "blood-vial-stirred", "blood-vial-concentrated", "blood-vial-pure"]) {
+  assert.ok(!ITEMS.some((item) => item.id === id), `purity is a field, not the separate item id ${id}`);
+}
+assert.deepEqual(
+  BLOODVIAL_PURITIES.map((facts) => [facts.id, facts.healing, facts.madnessRemoved, facts.gritDc, facts.transformationLevelsOnFailure, facts.madnessOnFailure]),
+  [
+    ["tainted", "2d4 + 2", 2, 10, 1, 3],
+    ["stirred", "4d4 + 4", 4, 15, 1, 6],
+    ["concentrated", "8d4 + 8", 8, 20, 2, 10],
+    ["pure", null, null, 25, 6, 15],
+  ],
+  "the four Bloodvial purities carry their source healing, Madness removal, Grit DC and failure consequences",
+);
+assert.equal(BLOODVIAL_PURITY_BY_ID.pure.choices.length, 2, "Pure Old Blood offers a choice of two effects");
+assert.match(BLOODVIAL_PURITY_BY_ID.pure.choices[1], /no longer than 1 round/, "the Pure Old Blood revival is limited to one round of death");
+assert.equal(cardBloodvialPurity({ inventory: [{ itemId: BLOODVIAL_ITEM_ID, qty: 2 }] }), "tainted", "a stored vial without a purity is Tainted");
+assert.equal(cardBloodvialPurity({ inventory: [{ itemId: BLOODVIAL_ITEM_ID, qty: 1, purity: "concentrated" }] }), "concentrated", "a stored purity is honoured");
+assert.equal(cardBloodvialPurity({ inventory: [] }), "tainted", "an empty inventory reports the default purity");
+assert.equal(bloodvialFailureLabel(BLOODVIAL_PURITY_BY_ID.concentrated), "Grit DC 20 — on a failure: +2 Transformation Levels and +10 Madness.", "the failure line displays the DC and both consequences");
+assert.equal(bloodvialEffectLabel(BLOODVIAL_PURITY_BY_ID.tainted), "Heals 2d4 + 2 HP · removes 2 Madness", "the effect line displays healing and Madness removed");
 
 console.log("Character automation tests passed.");
