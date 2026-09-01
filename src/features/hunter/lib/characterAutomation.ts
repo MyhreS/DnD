@@ -288,7 +288,7 @@ export function structuredCardFromSheet(card: HunterCard): { card: HunterCard; l
   const classId = classIdFromName(sheet.class) || card.classId;
   const background = BACKGROUNDS.find((entry) => entry.name.toLowerCase() === String(sheet.background ?? "").trim().toLowerCase());
   const abilities = { ...card.abilities };
-  for (const key of ABILITY_KEYS) abilities[key] = Math.max(3, Math.min(20, intField(sheet, `${key}Score`, abilities[key])));
+  for (const key of ABILITY_KEYS) abilities[key] = Math.max(3, Math.min(30, intField(sheet, `${key}Score`, abilities[key])));
   const quantities = new Map<string, number>();
   const legacyEquipment: LegacyEquipmentLine[] = [];
   for (let row = 0; row < 20; row += 1) {

@@ -24,9 +24,9 @@ function bonusesFor(card: HunterCard, klass: HunterClass): DamageBonus[] {
   if (klass.id === "scout") bonuses.push({ label: "Hunter's Mark", value: card.level >= 20 ? "+1d10" : "+1d6", detail: "On each hit against your marked quarry." });
   if (klass.id === "stalker") bonuses.push({ label: "Sneak Attack", value: `+${progression?.extras["Sneak Attack"] ?? "1d6"}`, detail: "Once per turn with a Finesse or Ranged weapon when its conditions are met." });
   if (klass.id === "bloodbound" && card.level >= 9) bonuses.push({ label: "Brutal Strike", value: card.level >= 17 ? "+2d10" : "+1d10", detail: "On one Strength-based hit after forgoing Reckless Attack advantage." });
-  if (card.subclassId === "berserker") bonuses.push({ label: "Frenzy", value: "+d6s", detail: "While Blood Frenzy and Reckless Attack are active, add d6s equal to your Blood Frenzy Damage bonus to your first Strength-based hit." });
+  if (card.subclassId === "path-of-the-berserker") bonuses.push({ label: "Frenzy", value: `+${progression?.extras["Blood Frenzy Damage"] ?? "2"}d6`, detail: "While Blood Frenzy and Reckless Attack are active, add d6s equal to your Blood Frenzy Damage bonus to your first Strength-based hit." });
   if (card.subclassId === "battle-master") bonuses.push({ label: "Maneuvers", value: card.level >= 18 ? "+1d12" : card.level >= 10 ? "+1d10" : "+1d8", detail: "A chosen maneuver can add a Superiority Die to a qualifying attack's damage." });
-  if (card.subclassId === "zealot") bonuses.push(
+  if (card.subclassId === "hunter-zealot") bonuses.push(
     { label: "Eldritch Armament", value: "Rite modifier", detail: "Use your Rite Performing ability for a proficient weapon's attack and damage; it may deal Eldritch Power damage." },
     { label: "Patron's Blow", value: "+1d8 / Strain level", detail: "Once per turn on a weapon hit, spend one Strain for extra Eldritch Power damage." },
   );

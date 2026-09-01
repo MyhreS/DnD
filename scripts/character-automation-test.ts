@@ -130,7 +130,7 @@ assert.equal(levelOne.fields.chaSaveP, true);
 assert.equal(levelOne.pending.classSkills?.remaining, 2);
 assert.match(levelOne.reasons.hpMax, /Warden.*Hit Die.*Constitution/i);
 assert.match(String(levelOne.fields.features1), /Bands Directive/i);
-assert.match(String(levelOne.fields.features1), /Tactical Command/i);
+assert.match(String(levelOne.fields.features1), /Demoralize/i);
 assert.equal(automationFor({ ...warden, sheet: { hdCur: "0" } }).fields.hdCur, "0", "current Hit Dice survive recalculation");
 
 const modifiedReadouts = automationFor({
