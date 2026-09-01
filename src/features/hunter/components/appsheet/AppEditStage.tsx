@@ -62,9 +62,7 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
     else if (bounded >= 3 && patch.subclassId === null) delete candidate.subclassId;
     const levelPreview = automationFor({ ...model.card, ...candidate });
     const nextHpMax = optionalNumber(levelPreview.fields.hpMax);
-    const nextSanityMax = optionalNumber(levelPreview.fields.sanityMax);
     const currentHp = model.card.currentHp ?? optionalNumber(currentResult.fields.hpCur) ?? 0;
-    const currentSanity = model.card.sanity ?? optionalNumber(currentResult.fields.sanityCur) ?? 0;
     const currentHpMax = optionalNumber(currentResult.fields.hpMax);
     // core-rulebook.txt [page 46]: a Constitution increase raises the Hit Point
     // maximum "for each level you have attained" — including one taken through
@@ -72,11 +70,12 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
     const hpShouldRefill = bounded > model.card.level
       || (nextHpMax != null && currentHpMax != null && nextHpMax > currentHpMax);
     const hp = levelAdjustedPool(currentHp, currentHpMax, nextHpMax, hpShouldRefill);
-    const sanity = levelAdjustedPool(currentSanity, optionalNumber(currentResult.fields.sanityMax), nextSanityMax, bounded > model.card.level);
     // Recalculate from the original card so returning the level to its saved
     // value does not leave an accidental heal staged.
     if (hp != null) candidate.currentHp = hp;
-    if (sanity != null) candidate.sanity = sanity;
+    // core-rulebook.txt [page 42]: Madness is the tracked pool and Current
+    // Sanity is not tracked. Levelling moves Max Sanity only — Madness is never
+    // refilled or rescaled by a level change.
     // Fracturing Mind, core-rulebook.txt [page 71]: "Every time you level up
     // suffer 2 Madness." Forward only — computed from the saved card so that
     // returning the level to its saved value clears the staged Madness again,
@@ -93,12 +92,6 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
   function stageHp(hp: number) {
     const max = optionalNumber(previewResult.fields.hpMax);
     setPatch((current) => keepDifferences({ ...current, currentHp: Math.max(0, Math.min(max ?? Number.MAX_SAFE_INTEGER, hp)) }));
-  }
-
-  function stageSanity(sanity: number) {
-    const max = optionalNumber(previewResult.fields.sanityMax);
-    const upper = max ?? Number.MAX_SAFE_INTEGER;
-    setPatch((current) => keepDifferences({ ...current, sanity: Math.max(0, Math.min(upper, sanity)) }));
   }
 
   function stageTransformation(level: number) {
@@ -142,7 +135,6 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
     changedFields,
     stageLevel,
     stageHp,
-    stageSanity,
     stageTransformation,
     stageChange,
     stageField,
@@ -167,7 +159,6 @@ export function AppEditTray() {
     ["Level", stage.currentResult.fields.level, stage.previewResult.fields.level],
     ["Current HP", stage.currentResult.fields.hpCur, stage.previewResult.fields.hpCur],
     ["Maximum HP", stage.currentResult.fields.hpMax, stage.previewResult.fields.hpMax],
-    ["Current sanity", stage.currentResult.fields.sanityCur, stage.previewResult.fields.sanityCur],
     ["Maximum sanity", stage.currentResult.fields.sanityMax, stage.previewResult.fields.sanityMax],
     ["Madness", stage.savedCard.madness ?? 0, stage.previewCard.madness ?? 0],
     ["Proficiency", stage.currentResult.fields.profBonus, stage.previewResult.fields.profBonus],
@@ -188,14 +179,13 @@ export function AppEditTray() {
     sheetAutomation: "Character setup",
     madness: "Madness",
   };
-  const displayedPatchKeys = new Set(["level", "currentHp", "sanity", "madness", "transformationLevel"]);
+  const displayedPatchKeys = new Set(["level", "currentHp", "madness", "transformationLevel"]);
   const otherChanges = Object.keys(stage.patch)
     .filter((key) => !displayedPatchKeys.has(key) && !stage.changedFields.includes(key))
     .map((key) => stagedLabels[key as keyof StagedPatch] ?? key.replace(/([A-Z])/g, " $1").replace(/^./, (letter) => letter.toUpperCase()));
   const fieldLabels: Record<string, string> = {
     strainCur: "Strains left",
     insight: "Insight",
-    insane: "Insanity",
     hpTemp: "Temporary HP",
     acModifier: "AC modifier",
     speedModifier: "Speed modifier",

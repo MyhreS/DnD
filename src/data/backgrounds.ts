@@ -1,5 +1,5 @@
-// Established app background catalog. The current four-document source set
-// does not redefine these records; do not attribute them to those PDFs.
+// Background catalog. The C&S Core Rulebook's Backgrounds chapter is the
+// authority for these records; keep them in step with it.
 import type { Background } from "@/types";
 
 export const BACKGROUNDS: Background[] = [

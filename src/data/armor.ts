@@ -1,6 +1,7 @@
 import type { ArmorPiece } from "@/types";
 
-// Established app armory catalog, outside the current four-document source set.
+// Armory catalog. The C&S Core Rulebook (Armor Part 1–2) supplies these rules;
+// where it and this catalog disagree, the Core Rulebook wins.
 // `acValue` is the numeric contribution used by the AC calculator:
 //   Main Armor  -> base AC (replaces the unarmoured 10)
 //   Add-on      -> bonus added on top

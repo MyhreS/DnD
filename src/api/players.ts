@@ -16,6 +16,7 @@ import {
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { normalizeCard } from "@/lib/character";
+import { recoveredCard } from "@/lib/recovery";
 import { isPreviewActive, previewCard, previewPartyCards, previewArchive } from "@/dev/preview";
 import { isTestEmail } from "@/config";
 import type { ArchivedCharacter, HunterCard, SheetData } from "@/types";
@@ -73,8 +74,9 @@ export async function patchCharacterSheet(
   await updateDoc(doc(charsCol, id), update);
 }
 
-/** Atomically award Insight and immediately apply every earned level. Insight is
- * a lifetime total, so levelling never spends or resets it. */
+/** Atomically award Insight. Insight is a lifetime total, so levelling never
+ * spends or resets it; this only updates the total, and the level earned by it
+ * is derived wherever the Hunter is read. */
 export async function awardInsight(id: string, delta: number): Promise<void> {
   if (isPreviewActive()) {
     const { usePlayerStore } = await import("@/features/hunter/store/playerStore");
@@ -161,7 +163,7 @@ export async function archiveCharacter(
 }
 
 export async function recoverCharacter(a: ArchivedCharacter): Promise<void> {
-  await setDoc(doc(charsCol, a.card.id), { ...a.card, deathPending: false });
+  await setDoc(doc(charsCol, a.card.id), recoveredCard(a.card));
   await deleteDoc(doc(archiveCol, a.id));
 }
 

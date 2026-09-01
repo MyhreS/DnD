@@ -22,6 +22,7 @@ export function CharacterSheetArmorRules() {
     <summary><i aria-hidden="true">i</i><span><strong>Armor rules</strong><small>Training, studs and Shield Arm</small></span></summary>
     <div className="character-sheet-armor-rule-list">
       <article><span>Armor training</span><strong>{klass?.armorTraining.join(" · ") || "Choose a class"}</strong><p>{result.reasons.armorLight || "Your class determines which armor you can use effectively."}</p></article>
+      <article><span>Weapon training</span><strong>{klass?.weaponProficiencies || "Choose a class"}</strong><p>{result.reasons.wepSimple || "Your class determines which weapons you are proficient with."}</p></article>
       <article><span>Armor Class</span><strong>{String(result.fields.ac ?? "—")} · {String(result.fields.armorCategory || "Unarmored")}</strong><p>{result.reasons.ac || "Unarmored AC starts at 10 + Dexterity. Worn armor, add-ons, and upgrades modify it."}{strengthAdvisory ? ` ${strengthAdvisory}` : ""}</p></article>
       <article><span>Equipping order</span><strong>Five layers</strong><p>1. Background Garments · 2. Main Armor over or replacing them · 3. Add-on Armor over the Main Armor · 4. Extras and class or background gear · 5. Carried items you store or hold.</p></article>
       <article><span>Add-on armor</span><strong>{addonCount}/{addonLimit} pieces worn</strong><p>Wear one Main Armor and up to five Add-on pieces. Balanced Fit grants a sixth slot.</p></article>

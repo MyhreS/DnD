@@ -30,7 +30,6 @@ export interface AppEditStageValue {
   changedFields: string[];
   stageLevel: (level: number) => void;
   stageHp: (hp: number) => void;
-  stageSanity: (sanity: number) => void;
   stageTransformation: (level: number) => void;
   stageChange: (fields: SheetData, patch: Partial<HunterCard>) => void;
   stageField: (field: string, value: string | boolean) => void;

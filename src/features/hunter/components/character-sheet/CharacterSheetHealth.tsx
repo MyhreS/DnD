@@ -18,7 +18,7 @@ export function CharacterSheetHealth({ model }: { model: AppSheetModel }) {
     <div className="character-sheet-vital-summary" data-bloodied={bloodied || undefined}><small>{bloodied ? "Current condition · Bloodied" : "Current condition"}</small><strong>{currentHp}<span> / {hpMax} HP</span></strong></div>
     <div className="character-sheet-resource-grid character-sheet-vital-controls">
       <CharacterSheetResourceControl label="Hit points" value={currentHp} max={hpMax} disabled={model.readOnly} onChange={stage.stageHp} />
-      <CharacterSheetResourceControl label="Temporary HP" value={tempHp} note="Temporary HP sits above your normal HP." disabled={model.readOnly} onChange={(value) => model.setField("hpTemp", String(value))} />
+      <CharacterSheetResourceControl label="Temporary HP" value={tempHp} note="Temporary HP sits above your normal HP. It is lost before your HP, cannot be restored, does not stack — take the higher — and ends once depleted." disabled={model.readOnly} onChange={(value) => model.setField("hpTemp", String(value))} />
     </div>
   </div>;
 }

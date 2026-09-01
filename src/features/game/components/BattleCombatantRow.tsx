@@ -46,7 +46,11 @@ export function BattleCombatantRow({
 
   async function setDamage(value: string) {
     if (vitals.maxHp === null) return;
-    const damage = Math.min(vitals.maxHp, Math.max(0, Number.parseInt(value, 10) || 0));
+    // Damage is deliberately NOT clamped to the HP maximum: Instant Death keys
+    // off the damage remaining after a Hunter drops to 0, so `currentHp` must
+    // be allowed to go negative for the DM to see it. The health bar clamps at
+    // 0% on its own.
+    const damage = Math.max(0, Number.parseInt(value, 10) || 0);
     await patch(game.id, combatant.id, {
       currentHp: vitals.maxHp - damage,
       ...(combatant.kind === "monster" ? { defeated: damage >= vitals.maxHp } : {}),
@@ -80,7 +84,7 @@ export function BattleCombatantRow({
         <span className="battle-position" aria-label={`Turn position ${position}`}>{position}</span>
         <div className="battle-name">
           <strong>{combatant.name}</strong>
-          <span>{combatant.kind === "monster" ? (dead ? "Enemy · dead" : "Enemy") : "Hunter"}</span>
+          <span>{combatant.kind === "monster" ? (dead ? "Enemy · dead" : "Enemy") : `Hunter${vitals.speed !== null ? ` · ${vitals.speed} ft speed` : ""}`}</span>
         </div>
         {active && <span className="battle-playing"><i aria-hidden="true" /> Playing</span>}
         {canManage && (
@@ -118,7 +122,7 @@ export function BattleCombatantRow({
               : <strong>Hidden</strong>}
           </div>
           {vitals.maxHp !== null
-            ? <div className="battle-health-track" role="progressbar" aria-label={`${combatant.name} health`} aria-valuemin={0} aria-valuemax={vitals.maxHp} aria-valuenow={vitals.currentHp ?? 0}><span style={{ width: `${healthPercent}%` }} /></div>
+            ? <div className="battle-health-track" role="progressbar" aria-label={`${combatant.name} health`} aria-valuemin={0} aria-valuemax={vitals.maxHp} aria-valuenow={Math.max(0, vitals.currentHp ?? 0)}><span style={{ width: `${healthPercent}%` }} /></div>
             : <div className="battle-health-track is-hidden" aria-hidden="true"><span /></div>}
           <div className="battle-damage">
             <div className="battle-damage-readout"><strong aria-label={`${combatant.name} damage taken ${vitals.damageTaken ?? "unknown"}`}>{vitals.damageTaken ?? "—"}</strong><span>damage</span></div>

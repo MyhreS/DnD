@@ -82,7 +82,21 @@ const BETA_CONDITIONS = [
   "Insane",
 ];
 assert.deepEqual(generated.conditionsNamedByCurrentSources, BETA_CONDITIONS);
-assert.deepEqual(CONDITIONS.map((condition) => condition.name), BETA_CONDITIONS, "combat selectors match the current source names exactly");
+// The combat selector offers exactly the source-named conditions, except that
+// Exhaustion — a level, not a flag (core-rulebook.txt [page 21]) — is offered as
+// its six levels, plus the table-tool markers that are deliberately NOT source
+// condition names: Concentrating ([page 16]) and the three Cover states
+// ([page 19]).
+const EXHAUSTION_LEVEL_NAMES = ["Exhaustion 1", "Exhaustion 2", "Exhaustion 3", "Exhaustion 4", "Exhaustion 5", "Exhaustion 6"];
+const TABLE_MARKERS = ["Concentrating", "Half cover (+2)", "Three-quarters cover (+5)", "Total cover"];
+assert.deepEqual(
+  CONDITIONS.map((condition) => condition.name),
+  [...BETA_CONDITIONS.filter((name) => name !== "Exhaustion"), ...EXHAUSTION_LEVEL_NAMES, ...TABLE_MARKERS],
+  "combat selectors match the current source names exactly, with levelled Exhaustion and the table-tool markers",
+);
+for (const marker of TABLE_MARKERS) {
+  assert.equal(generated.conditionsNamedByCurrentSources.includes(marker), false, `${marker} must stay out of the generated condition list`);
+}
 assert(CONDITIONS.some((condition) => condition.id === "poisoned"), "the enemy library relies on a real `poisoned` condition id");
 for (const hidden of ["Lost", "Second Threshold"]) {
   assert.equal(CONDITIONS.some((condition) => condition.name === hidden), false, `${hidden} is GM-only and must not be offered`);

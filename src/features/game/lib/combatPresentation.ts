@@ -13,6 +13,9 @@ export interface CombatVitals {
   maxHp: number | null;
   damageTaken: number | null;
   ac: number | null;
+  /** Derived Hunter movement speed in feet, so the DM can see it while
+   * adjudicating movement. Enemy rows carry no speed. */
+  speed: number | null;
 }
 
 /** Resolve the numbers shared by the Game controls and second-display Battle
@@ -27,6 +30,7 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
       maxHp: max,
       damageTaken: max === null || current === null ? null : Math.max(0, max - current),
       ac: combatant.ac ?? null,
+      speed: null,
     };
   }
 
@@ -34,7 +38,7 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
     ? characters.find((candidate) => candidate.id === combatant.characterId)
     : undefined;
   if (!card) {
-    return { currentHp: null, maxHp: null, damageTaken: null, ac: combatant.ac ?? null };
+    return { currentHp: null, maxHp: null, damageTaken: null, ac: combatant.ac ?? null, speed: null };
   }
   const vitals = characterVitals(card);
   const current = combatant.currentHp ?? vitals.hpCur;
@@ -45,6 +49,7 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
     // An AC recorded on the combatant is the DM's encounter-only override.
     // A missing value deliberately falls back to the current Hunter sheet.
     ac: combatant.ac ?? vitals.ac,
+    speed: characterSheetInt(card, "speed"),
   };
 }
 

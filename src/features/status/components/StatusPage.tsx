@@ -94,8 +94,10 @@ function VitalsCard({ card }: { card: HunterCard }) {
   const hpMax = v.hpMax;
   const sanMax = v.sanityMax;
   const hp = v.hpCur;
-  const san = v.sanityCur;
-  const dead = card.deathPending || (hp != null && hp <= 0);
+  // core-rulebook.txt [page 42]: Madness is the tracked pool; Current Sanity is
+  // not tracked. [page 23]: Insane while Madness >= Max Sanity.
+  const madness = card.madness ?? 0;
+  const dead = hp != null && hp <= 0;
   const transform = card.transformationLevel ?? 0;
   const cls = cardClassName(card);
 
@@ -118,8 +120,8 @@ function VitalsCard({ card }: { card: HunterCard }) {
       ) : (
         <p className="faint" style={{ margin: "8px 0 0" }}>Vitals tracked on the shared character sheet.</p>
       )}
-      {san != null && sanMax != null && (
-        <Bar label="Sanity" value={san} max={sanMax} color="#7c5cff" sub={`Madness ${card.madness ?? 0}`} />
+      {sanMax != null && (
+        <Bar label="Madness" value={madness} max={sanMax} color="#7c5cff" sub={madness >= sanMax ? "Insane" : undefined} />
       )}
     </div>
   );

@@ -4,7 +4,8 @@ import { BACKGROUNDS } from "@/data/backgrounds";
 import { CLASSES, getClass } from "@/data/classes";
 import { SHEET_SKILL_FIELD, SKILLS, skillAbility } from "@/data/skills";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
-import { armorClassFor, maxHp, maxSanity, proficiencyBonus, studdedAddonIdsOf } from "@/lib/character";
+import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
+import { armorClassFor, maxHp, maxSanity, proficiencyBonus, studdedAddonIdsOf, weaponAttackBonus } from "@/lib/character";
 import { armorFor } from "@/lib/customItems";
 import { carryCondition, resolveInventory, resolveStorage, totalCarriedWeight } from "@/lib/inventory";
 import { computeSlots } from "@/lib/slots";
@@ -116,6 +117,19 @@ function equipmentFields(card: HunterCard, fields: SheetData, reasons: Record<st
     put(fields, reasons, `eq_${row}_2`, line?.slot ?? "", SOURCE.equipment);
     put(fields, reasons, `eq_${row}_3`, line?.weight ?? "", SOURCE.equipment);
   }
+  // character-sheet.txt [page 5] WEAPON DAMAGE: NAME | ATTACK BONUS |
+  // DAMAGE TYPE | NOTES. One row per carried weapon type.
+  const carriedWeapons = resolveInventory(card).filter(({ item }) => item.category === "Weapon").slice(0, 8);
+  for (let row = 0; row < 8; row += 1) {
+    const line = carriedWeapons[row];
+    const custom = line && (card.customItems ?? []).find((entry) => entry.id === line.item.id);
+    const facts = line && WEAPON_FACTS[line.item.id];
+    const damageType = custom?.damage || weaponDamageLabel(facts || undefined);
+    put(fields, reasons, `wd_${row}_0`, line ? `${line.qty > 1 ? `${line.qty} × ` : ""}${line.item.name}` : "", SOURCE.equipment);
+    put(fields, reasons, `wd_${row}_1`, line ? (custom?.attackBonus || formatModifier(weaponAttackBonus(card, facts || undefined))) : "", SOURCE.equipment);
+    put(fields, reasons, `wd_${row}_2`, line ? (damageType === "—" ? "" : damageType) : "", SOURCE.equipment);
+    put(fields, reasons, `wd_${row}_3`, line ? (custom?.weaponNotes || facts?.properties || line.item.note || "") : "", SOURCE.equipment);
+  }
   const storage = resolveStorage(card);
   put(fields, reasons, "storageItems", storage.map((item) => item.name).join(", "), SOURCE.equipment);
   put(fields, reasons, "slotHand", storage.some((item) => item.id === "sack"), SOURCE.equipment);
@@ -162,7 +176,10 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     put(fields, reasons, "hpMax", String(hp), `${klass.name} Hit Die d${klass.hitDie} + Constitution modifier at each level`);
     put(fields, reasons, "hpCur", String(card.currentHp ?? hp), "Current HP, defaulting to calculated maximum");
     put(fields, reasons, "sanityMax", String(sanity), `${klass.name} base Sanity + Wisdom modifier${klass.id === "deepcaller" ? " + Fracturing Mind" : ""}`);
-    put(fields, reasons, "sanityCur", String(card.sanity ?? sanity), "Current Sanity, defaulting to calculated maximum");
+    // core-rulebook.txt [page 42]: "Start with 0 Madness and do not track
+    // Current Sanity." Madness is the tracked pool and the Insane condition is
+    // derived from it ([page 23]), so no `sanityCur` value is calculated,
+    // written, or offered as an editable field any more.
     put(fields, reasons, "hdMax", String(level), `${klass.title}: one Hit Die per level`);
     put(fields, reasons, "hdCur", String(Math.max(0, Math.min(level, intField(card.sheet, "hdCur", level)))), "Current available Hit Dice, defaulting to the full level allowance");
     if (klass.caster) {
@@ -262,7 +279,10 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     put(fields, reasons, `studs${index + 1}`, !!addons[index] && studded.has(addons[index]), SOURCE.armor);
   }
   const extras = (card.extraArmorIds ?? []).map((id) => ARMOR_BY_ID[id]).filter(Boolean);
-  for (const [field, subcategory] of [["headGear", "Head Gear"], ["scarf", "Scarf"], ["gloves", "Gloves"], ["boots", "Boots"]] as const) {
+  // The four Extra subcategories of core-rulebook.txt [page 38] plus "Robe",
+  // the slot the unique Robe of the Deepcallers occupies. Without the fifth
+  // field a worn Robe is invisible on every derived and printed sheet.
+  for (const [field, subcategory] of [["headGear", "Head Gear"], ["scarf", "Scarf"], ["gloves", "Gloves"], ["boots", "Boots"], ["robe", "Robe"]] as const) {
     put(fields, reasons, field, extras.find((piece) => piece.subcategory === subcategory)?.name ?? "", SOURCE.armor);
   }
   const special = [card.mainArmorId ? armorFor(card, card.mainArmorId)?.special : null, ...addons.map((id) => armorFor(card, id)?.special), ...extras.map((piece) => piece.special)].filter(Boolean);

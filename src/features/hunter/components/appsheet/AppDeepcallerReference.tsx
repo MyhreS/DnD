@@ -39,13 +39,18 @@ function ReferenceRow({
     </summary>
     <div>
       <dl>
+        {/* The source labels this field `Type` (e.g. "Evocation Rite"); the
+            stored value has the " Rite" suffix trimmed for the summary line. */}
+        <div><dt>Type</dt><dd>{entry.school} Rite</dd></div>
         <div><dt>Perform</dt><dd>{entry.performing}</dd></div>
         <div><dt>Range</dt><dd>{entry.range}</dd></div>
         <div><dt>Duration</dt><dd>{entry.duration}</dd></div>
         <div><dt>Damage</dt><dd>{damage}</dd></div>
         <div><dt>Damage type</dt><dd>{entry.damageType}</dd></div>
         {entry.section && <div><dt>Section</dt><dd>{entry.section}</dd></div>}
-        {entry.special && <div><dt>Special</dt><dd>{entry.special}</dd></div>}
+        {entry.special && (entry.special.startsWith("Special Requirements: ")
+          ? <div><dt>Special requirements</dt><dd>{entry.special.slice("Special Requirements: ".length)}</dd></div>
+          : <div><dt>Special</dt><dd>{entry.special}</dd></div>)}
         {entry.upgrade && <div><dt>At higher level Strain</dt><dd>{entry.upgrade}</dd></div>}
         {entry.sourceNote && <div><dt>Source note</dt><dd>{entry.sourceNote}</dd></div>}
       </dl>

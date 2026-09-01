@@ -198,8 +198,11 @@ export type GameStatus = "lobby" | "active" | "ended";
 /** The DM-set phase while a game is active. */
 export type GamePhase = "exploration" | "combat" | "short_rest" | "long_rest";
 /** Where the party is — orthogonal to phase and used by the established
- * session-rest workflow: Hunters Lodge = full Long Rest (HP + Hit Dice); a Safe
- * Zone = spend Hit Dice on a Short Rest (and a half Long Rest); the Wild = neither. */
+ * session-rest workflow. A Safe Zone is a location the GM designates; the
+ * Hunters Lodge is always one, so both grant the same rest benefits (spend Hit
+ * Point Dice on a Short Rest; a Long Rest restores all HP and all Hit Point
+ * Dice). The Wild is outside a Safe Zone: no Hit Point Dice, and a Long Rest
+ * restores only half your HP maximum. */
 export type GameLocation = "lodge" | "safe" | "wild";
 
 export type TurnTimerPhase = "idle" | "briefing" | "running" | "paused" | "untimed" | "expired";
@@ -537,7 +540,11 @@ export interface HunterCard {
   extraArmorIds?: string[];
   /** Current hit points during play (defaults to max when unset). */
   currentHp?: number;
-  /** Current Sanity during play (defaults to max when unset). */
+  /** @deprecated Current Sanity is not tracked. core-rulebook.txt [page 42]:
+   * "Start with 0 Madness and do not track Current Sanity." Nothing writes this
+   * field any more; stored values remain only until the Batch 6 migration
+   * strips them, and `normalizeCard` still reads legacy pairs once to derive
+   * Madness. Do not read it for play values. */
   sanity?: number;
   /** Current Madness. core-rulebook.txt [page 42] "Max Sanity and Madness":
    * a Hunter starts with 0 Madness, and "Madness functions like damage against
@@ -600,8 +607,6 @@ export interface HunterCard {
    * id. A worn storage item leaves `inventory` (like worn armor); its weight
    * still counts. Missing on legacy docs → nothing equipped. */
   equippedStorageIds?: string[];
-  /** Player has hit 0 HP and confirmed death; awaiting the DM to confirm. */
-  deathPending?: boolean;
   /** The campaign this hunter currently plays in (lets that campaign's DM
    * manage it — death/recover). Set when chosen for a campaign. */
   campaignId?: string | null;

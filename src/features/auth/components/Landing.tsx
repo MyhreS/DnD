@@ -19,7 +19,7 @@ export function Landing() {
         <p className="muted" style={{ maxWidth: 540, margin: "0 auto" }}>
           A companion for a Bloodborne-flavoured dark-fantasy tabletop RPG, where adventurers are
           <em> Hunters</em>. Forge a hunter, join a campaign, and play at the table — live HP &amp;
-          Sanity, inventory, trading, and a DM's command screen.
+          Madness, inventory, trading, and a DM's command screen.
         </p>
       </div>
 
@@ -41,7 +41,7 @@ export function Landing() {
 
       <div className="derived-grid">
         <Feature title="Forge a hunter" body="Guided creation and one character sheet — saved as you play." />
-        <Feature title="Play live" body="A lobby, DM phases, and live HP / Sanity / Blood Tinge." />
+        <Feature title="Play live" body="A lobby, DM phases, and live HP / Madness / Blood Tinge." />
         <Feature title="Trade & survive" body="Swap gear, claim loot from the fallen, risk permadeath." />
         <Feature title="Run a table" body="DM tools: party status, items overview, trades, full control." />
       </div>

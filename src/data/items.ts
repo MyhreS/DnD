@@ -4,7 +4,7 @@ import { ARMOR } from "@/data/armor";
 // Tradeable-item catalog for Catacombs & Starspawns.
 // Established app catalog: every distinct item across the six classes'
 // `startingEquipment` (see src/data/classes.ts), plus common gear retained by
-// the app. The current four-document source set does not redefine this data.
+// the app. The C&S Core Rulebook's equipment chapter is the authority here.
 // Carrying significance follows the Hunter Gear table
 // (core-rulebook.txt [page 121]) and the surrounding equipment chapter:
 //   Insignificant — keys, maps, coins, parchment, blood vials, ammunition,

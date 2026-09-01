@@ -542,21 +542,11 @@ export function CharacterAutomationProvider({
       ...(target ? { slotAssignments: { ...base.slotAssignments, [item.id]: [target] } } : {}),
       sheetAutomation: state,
     };
-    const weaponFields: SheetData = {};
-    if (item.category === "Weapon") {
-      const row = Array.from({ length: 8 }, (_, index) => index).find((index) => {
-        const value = card.sheet?.[`wd_${index}_0`];
-        return typeof value !== "string" || value.trim() === "";
-      });
-      if (row != null) {
-        weaponFields[`wd_${row}_0`] = item.name;
-        weaponFields[`wd_${row}_1`] = item.attackBonus ?? "";
-        weaponFields[`wd_${row}_2`] = item.damage ?? "";
-        weaponFields[`wd_${row}_3`] = item.weaponNotes ?? item.note ?? "";
-      }
-    }
+    // The WEAPON DAMAGE table is now derived for every carried weapon —
+    // catalog and custom alike — inside `characterAutomation`, so this flow no
+    // longer hand-places a row.
     onApply(
-      { ...calculatedSheetFields(next), ...weaponFields },
+      calculatedSheetFields(next),
       { customItems: next.customItems, inventory: next.inventory, equippedStorageIds: next.equippedStorageIds, slotAssignments: next.slotAssignments, sheetAutomation: state },
     );
   }

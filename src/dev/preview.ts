@@ -170,7 +170,6 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
     level: 3,
     currentHp: undefined,
     sanity: undefined,
-    deathPending: false,
     transformationLevel: 0,
     activeTransformations: [],
     sheet: {
@@ -222,7 +221,6 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
     equippedStorageIds: [],
     inventory: [{ itemId: "dagger", qty: 2 }],
     droppedItems: [],
-    deathPending: false,
     notes: "",
   };
   return [eileen, gascoigne, henryk];

@@ -5,6 +5,8 @@ import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 import { resolveUnassignedInventory } from "@/features/hunter/lib/inventoryPlacement";
 import { resolveInventory } from "@/lib/inventory";
 import { availableSlotAssignmentOptions, computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
+import { formatModifier } from "@/data/abilities";
+import { weaponAttackBonus } from "@/lib/character";
 import type { SlotAssignment } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { useCharacterSheetPageNavigation } from "../character-sheet/characterSheetPageNavigation";
@@ -135,7 +137,7 @@ export function AppGearSection({
       <AppPanel title="Carried weapons" aside={<span className="appsheet-status-word">Rules-linked</span>}>
         {weapons.length ? (
           <div className="appsheet-weapon-table">
-            <div className="heading"><span>Weapon</span><span>Damage</span><span>Properties</span><span>Mastery</span></div>
+            <div className="heading"><span>Weapon</span><span>Attack</span><span>Damage</span><span>Properties</span><span>Mastery</span></div>
             {weapons.map(({ item, qty }) => {
               const custom = (card.customItems ?? []).find((entry) => entry.id === item.id);
               const facts = WEAPON_FACTS[item.id];
@@ -150,6 +152,7 @@ export function AppGearSection({
               return (
                 <div key={item.id}>
                   <span><b>{item.name}</b>{qty > 1 ? ` ×${qty}` : ""}{heavyWarning && <small>{heavyWarning}</small>}</span>
+                  <span><small className="appsheet-weapon-label">Attack</small>{custom?.attackBonus || formatModifier(weaponAttackBonus(card, facts))}</span>
                   <span><small className="appsheet-weapon-label">Damage</small>{custom?.damage || weaponDamageLabel(facts)}</span>
                   <span><small className="appsheet-weapon-label">Properties</small>{custom?.weaponNotes || facts?.properties || item.note || "—"}</span>
                   <span><small className="appsheet-weapon-label">Mastery</small>{facts?.mastery || "—"}</span>

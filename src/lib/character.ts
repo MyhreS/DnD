@@ -379,3 +379,16 @@ export function emptySheetCard(params: {
     },
   };
 }
+
+/** Attack bonus for a carried weapon: proficiency bonus plus the ability the
+ * weapon uses. core-rulebook.txt [page 43]: melee weapons use Strength, ranged
+ * weapons use Dexterity, and a Finesse weapon may use either — the app shows
+ * the better of the two, which is always the player's choice in practice. */
+export function weaponAttackBonus(card: HunterCard, facts: { properties: string; attack: "Melee" | "Ranged" } | undefined): number {
+  const prof = proficiencyBonus(card.level || 1);
+  const str = abilityModifier(card.abilities?.str ?? 10);
+  const dex = abilityModifier(card.abilities?.dex ?? 10);
+  if (!facts) return prof + str;
+  if (/Finesse/i.test(facts.properties)) return prof + Math.max(str, dex);
+  return prof + (facts.attack === "Ranged" ? dex : str);
+}
