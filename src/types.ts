@@ -529,8 +529,9 @@ export interface HunterCard {
   /** @deprecated Legacy studded-piece COUNT — normalized into `studdedAddonIds`
    * on load and mirrored (= its length) on every save for stale clients. */
   studdedAddons?: number;
-  /** Worn Add-on piece ids carrying the Studs upgrade (≥1 → +1 AC, 5 → +2 AC;
-   * +3 lb each). Replaces the legacy `studdedAddons` count. */
+  /** Worn Add-on piece ids carrying the Studs upgrade (≥3 → +1 AC, 5 → +2 AC;
+   * +5 lb each — core-rulebook.txt [page 35]). Replaces the legacy
+   * `studdedAddons` count. */
   studdedAddonIds?: string[];
   /** Worn Extras (hats, scarves, gloves — AC 0 flavour/utility). */
   extraArmorIds?: string[];

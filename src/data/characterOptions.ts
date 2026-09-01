@@ -84,6 +84,12 @@ function toReference(entry: CurrentRite | CurrentWhisper, kind: "Whisper" | "Rit
 export const DEEPCALLER_WHISPERS: readonly DeepcallerReference[] = CURRENT_WHISPERS.map((entry) => toReference(entry, "Whisper"));
 export const DEEPCALLER_RITES: readonly DeepcallerReference[] = CURRENT_RITES.map((entry) => toReference(entry, "Rite"));
 
+/** Carved Eldritch Strike and Carved Armor of The Drowned Star — a Hunter
+ * Zealot always has both prepared and neither counts against the number of
+ * Whispers they can prepare (core-rulebook.txt [pages 76–77]). They are granted
+ * rather than stored, so no saved selection is consumed. */
+export const ALWAYS_PREPARED_ZEALOT_IDS: readonly string[] = ["eldritch-strike", "armor-of-the-drowned-star"];
+
 /** Read the effective Rite level carried by a Forbidden Revelation upgrade
  * key such as `11:Forbidden Revelation (Level 6 Rite)`. */
 export function forbiddenRevelationLevel(value: string): number | null {

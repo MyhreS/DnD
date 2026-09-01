@@ -1,4 +1,5 @@
 import {
+  ALWAYS_PREPARED_ZEALOT_IDS,
   DEEPCALLER_RITES,
   DEEPCALLER_WHISPERS,
   forbiddenRevelationLevel,
@@ -58,8 +59,15 @@ export function AppDeepcallerReference() {
   if (klass?.id !== "deepcaller") return null;
   const strainLevel = String(result.fields.strainLevel ?? "—");
   const currentStrainLevel = numberOf(strainLevel);
-  const prepared = (card.preparedWhispers ?? [])
-    .map((id) => DEEPCALLER_WHISPERS.find((entry) => entry.id === id))
+  // A Zealot's prepared list may hold Level 1 Rites as well as Whispers, and
+  // always includes the two Carved entries (core-rulebook.txt [pages 76–77]).
+  const zealot = card.subclassId === "hunter-zealot" && card.level >= 3;
+  const preparedIds = [
+    ...(zealot ? ALWAYS_PREPARED_ZEALOT_IDS : []),
+    ...(card.preparedWhispers ?? []).filter((id) => !zealot || !ALWAYS_PREPARED_ZEALOT_IDS.includes(id)),
+  ];
+  const prepared = preparedIds
+    .map((id) => DEEPCALLER_WHISPERS.find((entry) => entry.id === id) ?? DEEPCALLER_RITES.find((entry) => entry.id === id))
     .filter((entry): entry is DeepcallerReference => entry != null);
   const rites = DEEPCALLER_RITES.filter((rite) => rite.level != null && rite.level <= currentStrainLevel);
   const revelations = Object.entries(state.levelChoices ?? {}).flatMap(([key, value]) => {

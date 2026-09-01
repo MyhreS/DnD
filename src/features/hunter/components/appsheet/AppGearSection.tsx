@@ -139,9 +139,17 @@ export function AppGearSection({
             {weapons.map(({ item, qty }) => {
               const custom = (card.customItems ?? []).find((entry) => entry.id === item.id);
               const facts = WEAPON_FACTS[item.id];
+              // core-rulebook.txt [page 109] Heavy: Disadvantage on attack rolls
+              // if a Melee Heavy weapon and Strength is under 13, or a Ranged
+              // Heavy weapon and Dexterity is under 13. The app does not roll
+              // attacks, so this is advisory only.
+              const heavyWarning = facts && /Heavy/.test(facts.properties)
+                && (facts.attack === "Melee" ? card.abilities.str < 13 : card.abilities.dex < 13)
+                ? `Heavy: ${facts.attack === "Melee" ? "Strength" : "Dexterity"} under 13 — attack rolls with this weapon have Disadvantage.`
+                : "";
               return (
                 <div key={item.id}>
-                  <span><b>{item.name}</b>{qty > 1 ? ` ×${qty}` : ""}</span>
+                  <span><b>{item.name}</b>{qty > 1 ? ` ×${qty}` : ""}{heavyWarning && <small>{heavyWarning}</small>}</span>
                   <span><small className="appsheet-weapon-label">Damage</small>{custom?.damage || weaponDamageLabel(facts)}</span>
                   <span><small className="appsheet-weapon-label">Properties</small>{custom?.weaponNotes || facts?.properties || item.note || "—"}</span>
                   <span><small className="appsheet-weapon-label">Mastery</small>{facts?.mastery || "—"}</span>

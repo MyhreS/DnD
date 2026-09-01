@@ -1,5 +1,6 @@
 import { abilityModifier, formatModifier } from "@/data/abilities";
 import { armorClassFor, proficiencyBonus } from "@/lib/character";
+import { carryCondition, totalCarriedWeight } from "@/lib/inventory";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { sheetText } from "../appsheet/appSheetValues";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
@@ -25,19 +26,41 @@ export function CharacterSheetDerivedStat({ model, kind }: { model: AppSheetMode
   const modifier = numberOf(sheetText(model.data, config.field));
   const total = numberOf(result.fields[config.result]);
   const proficient = result.fields.skPerceptionP === true;
-  const hasAlert = [background?.feat, card.feat, ...(card.feats ?? [])].filter(Boolean).includes("Alert");
+  const feats = [background?.feat, card.feat, ...(card.feats ?? [])].filter(Boolean);
+  const hasAlert = feats.includes("Alert");
+  // The speed rows mirror `automationFor`, which reads the background feat plus
+  // `card.feats` only — the legacy singular `card.feat` is not part of that set.
+  const speedFeats = [background?.feat, ...(card.feats ?? [])].filter(Boolean);
   const armor = armorClassFor(card);
+  const prof = proficiencyBonus(card.level);
+  // core-rulebook.txt [page 43]: Passive Perception uses the full Wisdom
+  // (Perception) check modifier, so Expertise doubles the proficiency term.
+  const perceptionMultiplier = (card.sheetAutomation?.expertiseSkills ?? []).includes("Perception") ? 2 : proficient ? 1 : 0;
+  const condition = carryCondition(card.abilities.str, totalCarriedWeight(card));
+  const roving = klass?.id === "scout" && card.level >= 6 && armor.category !== "Heavy Armor" ? 10 : 0;
+  // core-rulebook.txt [page 40]: heavy armor states a Strength requirement with
+  // no penalty attached, so this is advisory only — nothing is blocked.
+  const strAdvisory = (armor.baseArmorAc >= 17 && card.abilities.str < 15) || (armor.baseArmorAc >= 16 && card.abilities.str < 13)
+    ? `This armor lists a Strength requirement of ${armor.baseArmorAc >= 17 ? 15 : 13}; this hunter has ${card.abilities.str}. The rules attach no penalty — your Armor Class is unchanged.`
+    : "";
   const rows = kind === "ac"
     ? [["Main armor", armor.baseAc], ["Add-on armor", armor.addonBonus], ["Studded upgrades", armor.studBonus], [armor.dexRule, armor.dexApplied], ["Custom modifier", modifier]]
     : kind === "speed"
-      ? [[`${klass?.title ?? "Class"} base speed`, (klass?.speedFt ?? total) as number], ["Custom modifier", modifier]]
+      ? [
+        [`${klass?.title ?? "Class"} base speed`, (klass?.speedFt ?? total) as number],
+        ...(roving ? [["Roving", roving] as [string, number]] : []),
+        ...(speedFeats.includes("Speedy") ? [["Speedy", 10] as [string, number]] : []),
+        ...(speedFeats.includes("Boon of Speed") ? [["Boon of Speed", 30] as [string, number]] : []),
+        [condition.label, condition.speedDelta],
+        ["Custom modifier", modifier],
+      ]
       : kind === "passive"
-        ? [["Starting value", 10], ["Wisdom modifier", abilityModifier(card.abilities.wis)], ["Perception proficiency", proficient ? proficiencyBonus(card.level) : 0], ["Custom modifier", modifier]]
-        : [["Dexterity modifier", abilityModifier(card.abilities.dex)], ["Alert proficiency bonus", hasAlert ? proficiencyBonus(card.level) : 0], ["Custom modifier", modifier]];
+        ? [["Starting value", 10], ["Wisdom modifier", abilityModifier(card.abilities.wis)], [perceptionMultiplier === 2 ? "Perception Expertise" : "Perception proficiency", prof * perceptionMultiplier], ["Custom modifier", modifier]]
+        : [["Dexterity modifier", abilityModifier(card.abilities.dex)], ["Alert proficiency bonus", hasAlert ? prof : 0], ["Custom modifier", modifier]];
 
   return <div className="character-sheet-derived-stat-page">
     <section className="character-sheet-derived-total"><small>Current {config.label}</small><strong>{kind === "initiative" ? formatModifier(total) : `${total}${config.suffix}`}</strong><p>{result.reasons[config.result]}</p></section>
-    <section className="character-sheet-derived-breakdown"><h3>How it is calculated</h3>{rows.map(([label, value]) => <div key={label}><span>{label}</span><strong>{typeof value === "number" && value > 0 ? `+${value}` : value}{kind === "speed" ? " ft" : ""}</strong></div>)}</section>
+    <section className="character-sheet-derived-breakdown"><h3>How it is calculated</h3>{rows.map(([label, value]) => <div key={label}><span>{label}</span><strong>{typeof value === "number" && value > 0 ? `+${value}` : value}{kind === "speed" ? " ft" : ""}</strong></div>)}{kind === "ac" && strAdvisory && <p>{strAdvisory}</p>}</section>
     <section className="character-sheet-derived-modifier"><h3>Add a modifier</h3><CharacterSheetResourceControl label={`${config.label} modifier`} value={modifier} min={-50} max={50} note={config.note} disabled={model.readOnly} onChange={(value) => model.setField(config.field, String(value))} /></section>
   </div>;
 }

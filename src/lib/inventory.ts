@@ -100,7 +100,7 @@ export function carryCondition(
     return {
       label: "Encumbered",
       speedDelta: -10,
-      note: "Encumbered — speed −10 ft.",
+      note: "Encumbered — speed −10 ft and disadvantage on Dexterity (Acrobatics and Stealth) checks and Dexterity saving throws.",
     };
   }
   if (weightLb <= strScore * 15) {

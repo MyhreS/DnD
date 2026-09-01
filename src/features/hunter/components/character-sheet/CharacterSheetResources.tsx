@@ -20,6 +20,8 @@ export function CharacterSheetResources({ model }: { model: AppSheetModel }) {
     </div></section>
     <section className="character-sheet-resource-group"><h3>Character sheet values</h3><div className="character-sheet-resource-grid">
       <div className="character-sheet-resource"><span>Sanity dice</span><strong>{String(result.fields.sanityDice ?? "—")}</strong></div>
+      <div className="character-sheet-resource"><span>Melee attack bonus</span><strong>{String(result.fields.meleeAttack ?? "—")}</strong></div>
+      <div className="character-sheet-resource"><span>Ranged attack bonus</span><strong>{String(result.fields.rangedAttack ?? "—")}</strong></div>
       {klass?.caster && <>
         <div className="character-sheet-resource"><span>Rite performing ability</span><strong>{String(result.fields.riteAbility ?? "—")}</strong></div>
         <div className="character-sheet-resource"><span>Rite modifier</span><strong>{String(result.fields.riteMod ?? "—")}</strong></div>

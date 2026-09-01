@@ -1,4 +1,5 @@
-import type { HunterCard, HunterClass } from "@/types";
+import type { AbilityKey, HunterCard, HunterClass } from "@/types";
+import { armorClassFor } from "@/lib/character";
 import { levelForInsight } from "@/lib/insight";
 import { EPIC_BOON_FEATS, FIGHTING_STYLE_FEATS, GENERAL_FEATS, type FeatOption } from "@/data/feats";
 import { forbiddenRevelationLevel, forbiddenRevelationOptions } from "@/data/characterOptions";
@@ -61,11 +62,51 @@ export function upgradeFeatures(klass: HunterClass | undefined, subclassId: stri
   return rows;
 }
 
-export function featOptionsFor(feature: UpgradeFeature): FeatOption[] {
-  if (/^ability score improvement/i.test(feature.name)) return GENERAL_FEATS;
-  if (/epic boon/i.test(feature.name)) return [...EPIC_BOON_FEATS, ...GENERAL_FEATS];
-  if (/fighting style/i.test(feature.name)) return FIGHTING_STYLE_FEATS;
-  return [];
+const ABILITY_BY_NAME: Record<string, AbilityKey> = {
+  strength: "str", dexterity: "dex", constitution: "con",
+  intelligence: "int", wisdom: "wis", charisma: "cha",
+};
+
+/** core-rulebook.txt [page 96]: "To take a feat, you must meet any prerequisite
+ * in its description." Only the mechanically parseable clauses are enforced —
+ * a clause this does not recognise never hides a feat. */
+function meetsPrerequisite(feat: FeatOption, card: HunterCard, klass: HunterClass | undefined): boolean {
+  for (const raw of feat.prerequisite.split(",")) {
+    const clause = raw.trim();
+    if (!clause) continue;
+    const level = clause.match(/^Level\s+(\d+)\+$/i);
+    if (level) {
+      if (earnedLevel(card) < Number(level[1])) return false;
+      continue;
+    }
+    const ability = clause.match(/^([A-Za-z]+)(?:\s+or\s+([A-Za-z]+))?\s+(\d+)\+$/i);
+    if (ability) {
+      const keys = [ability[1], ability[2]].filter(Boolean).map((name) => ABILITY_BY_NAME[name!.toLowerCase()]);
+      if (keys.length && keys.every(Boolean) && !keys.some((key) => card.abilities[key!] >= Number(ability[3]))) return false;
+      continue;
+    }
+    const armor = clause.match(/^(Light|Medium|Heavy)\s+Armor\s+Training$/i);
+    if (armor) {
+      if (!(klass?.armorTraining ?? []).some((entry) => entry.toLowerCase() === `${armor[1].toLowerCase()} armor`)) return false;
+      continue;
+    }
+    if (/^Shield Arm$/i.test(clause) && !armorClassFor(card).shieldArm) return false;
+  }
+  return true;
+}
+
+export function featOptionsFor(feature: UpgradeFeature, card?: HunterCard, klass?: HunterClass, keepName?: string): FeatOption[] {
+  const all = /^ability score improvement/i.test(feature.name)
+    ? GENERAL_FEATS
+    : /epic boon/i.test(feature.name)
+      ? [...EPIC_BOON_FEATS, ...GENERAL_FEATS]
+      : /fighting style/i.test(feature.name)
+        ? FIGHTING_STYLE_FEATS
+        : [];
+  if (!card) return all;
+  // A feat this hunter already holds always stays selectable — the DM's earlier
+  // ruling stands and is never retroactively stripped.
+  return all.filter((feat) => feat.name === keepName || meetsPrerequisite(feat, card, klass));
 }
 
 export type RecordedChoiceOption = { value: string; label: string; detail: string };

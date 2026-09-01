@@ -33,7 +33,12 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
 
   function keepDifferences(next: StagedPatch): StagedPatch {
     const filtered: StagedPatch = {};
-    for (const [key, value] of Object.entries(next) as Array<[keyof HunterCard, HunterCard[keyof HunterCard]]>) {
+    for (const [key, raw] of Object.entries(next) as Array<[keyof HunterCard, HunterCard[keyof HunterCard]]>) {
+      // core-rulebook.txt [page 26]: "Active Transformations do not stack with
+      // themselves." A repeat is never stored twice — dropping it IS the rule.
+      const value = key === "activeTransformations" && Array.isArray(raw)
+        ? (Array.from(new Set(raw as string[])) as HunterCard[keyof HunterCard])
+        : raw;
       if (JSON.stringify(value) !== JSON.stringify(model.card[key])) filtered[key] = value as never;
     }
     return filtered;
@@ -60,12 +65,28 @@ export function AppEditStage({ model, children, onPendingChange }: { model: AppS
     const nextSanityMax = optionalNumber(levelPreview.fields.sanityMax);
     const currentHp = model.card.currentHp ?? optionalNumber(currentResult.fields.hpCur) ?? 0;
     const currentSanity = model.card.sanity ?? optionalNumber(currentResult.fields.sanityCur) ?? 0;
-    const hp = levelAdjustedPool(currentHp, optionalNumber(currentResult.fields.hpMax), nextHpMax, bounded > model.card.level);
+    const currentHpMax = optionalNumber(currentResult.fields.hpMax);
+    // core-rulebook.txt [page 46]: a Constitution increase raises the Hit Point
+    // maximum "for each level you have attained" — including one taken through
+    // a feat with no level change — so refill whenever the maximum grows.
+    const hpShouldRefill = bounded > model.card.level
+      || (nextHpMax != null && currentHpMax != null && nextHpMax > currentHpMax);
+    const hp = levelAdjustedPool(currentHp, currentHpMax, nextHpMax, hpShouldRefill);
     const sanity = levelAdjustedPool(currentSanity, optionalNumber(currentResult.fields.sanityMax), nextSanityMax, bounded > model.card.level);
     // Recalculate from the original card so returning the level to its saved
     // value does not leave an accidental heal staged.
     if (hp != null) candidate.currentHp = hp;
     if (sanity != null) candidate.sanity = sanity;
+    // Fracturing Mind, core-rulebook.txt [page 71]: "Every time you level up
+    // suffer 2 Madness." Forward only — computed from the saved card so that
+    // returning the level to its saved value clears the staged Madness again,
+    // and never applied retroactively to levels already gained.
+    const levelsGained = Math.max(0, bounded - model.card.level);
+    if (model.card.classId === "deepcaller" && levelsGained > 0) {
+      candidate.madness = (model.card.madness ?? 0) + 2 * levelsGained;
+    } else if (candidate.madness != null) {
+      delete candidate.madness;
+    }
     setPatch(keepDifferences(candidate));
   }
 

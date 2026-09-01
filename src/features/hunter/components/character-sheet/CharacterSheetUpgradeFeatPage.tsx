@@ -5,7 +5,7 @@ import { featOptionsFor, recordedOptionsFor, type UpgradeFeature } from "./upgra
 
 export function CharacterSheetUpgradeFeatPage({ feature, state }: { feature: UpgradeFeature; state: SheetAutomationState }) {
   const automation = useCharacterAutomation();
-  const options = featOptionsFor(feature);
+  const options = featOptionsFor(feature, automation.card, automation.klass, state.levelFeats?.[feature.key]);
   const recordedOptions = recordedOptionsFor(feature);
   const recordedChoice = state.levelChoices?.[feature.key] ?? "";
   const recordedDetail = recordedOptions.find((option) => option.value === recordedChoice)?.detail;

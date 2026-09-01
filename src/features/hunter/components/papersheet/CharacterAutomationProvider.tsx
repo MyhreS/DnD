@@ -4,6 +4,7 @@ import { getClass } from "@/data/classes";
 import { ITEMS } from "@/data/items";
 import { SKILLS } from "@/data/skills";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
+import { WEAPON_FACTS } from "@/data/weapons";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { maxAddonPieces } from "@/lib/character";
 import { armorFor } from "@/lib/customItems";
@@ -173,24 +174,29 @@ export function CharacterAutomationProvider({
   const masteryCount = masteryFromTable || (masteryWord
     ? ({ two: 2, three: 3, four: 4, five: 5, six: 6 }[masteryWord] ?? 0)
     : 0);
-  const meleeWeaponIds = new Set([
-    "greatsword", "greataxe", "longsword", "shortsword", "scimitar",
-    "sickle", "handaxe", "dagger",
-  ]);
-  const finesseOrLightIds = new Set([
-    "shortsword", "scimitar", "sickle", "handaxe", "dagger", "pistol",
-  ]);
+  // Mastery options are derived from the weapons table rather than listed by
+  // hand. The Stalker is proficient with Simple weapons and Martial weapons
+  // with the Finesse or Light property (core-rulebook.txt [page 63]); a
+  // "Melee weapons" mastery feature covers every melee row ([page 87]).
   const masteryWeapons = ITEMS.filter((item) => {
     if (item.category !== "Weapon") return false;
-    if (klass?.id === "stalker") return finesseOrLightIds.has(item.id);
-    if (/Melee weapons/i.test(masteryFeature?.text ?? "")) return meleeWeaponIds.has(item.id);
+    const facts = WEAPON_FACTS[item.id];
+    if (!facts) return false;
+    if (klass?.id === "stalker") {
+      return facts.category === "Simple"
+        || (facts.category === "Martial" && /Finesse|Light/.test(facts.properties));
+    }
+    if (/Melee weapons/i.test(masteryFeature?.text ?? "")) return facts.attack === "Melee";
     return true;
   });
+  // Zealot Whispers — core-rulebook.txt [page 76]: one additional prepared
+  // Whisper from level 3.
   const whisperLimit = (
     klass?.caster
       ? Number(klass.progression.find((row) => row.level === card.level)?.extras["Prepared Whispers"] ?? 0)
       : 0
-  ) + (background?.feat === "Listener" ? 1 : 0);
+  ) + (background?.feat === "Listener" ? 1 : 0)
+    + (card.subclassId === "hunter-zealot" && card.level >= 3 ? 1 : 0);
 
   function commit(partial: Partial<HunterCard>, refreshKit = false) {
     if (readOnly) return;

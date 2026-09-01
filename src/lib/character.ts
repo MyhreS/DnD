@@ -28,6 +28,14 @@ function dieAverage(die: number): number {
 /**
  * Maximum HP: a full hit die + CON at level 1, then the die's average + CON for
  * each level after (minimum 1 per level).
+ *
+ * core-rulebook.txt [page 46] "Fixed Hit Points by Class" now states the
+ * per-level gain as a FIXED TABLE keyed by class rather than a die formula.
+ * `dieAverage(die) = floor(die / 2) + 1` reproduces that table exactly for all
+ * six current classes (d12 → 7, d10 → 6, d8 → 5, d6 → 4), so the values are
+ * correct today and the formula is deliberately left unchanged. A future class
+ * whose printed fixed value diverges from its die average would need the table
+ * itself — check this comment before adding one.
  */
 export function maxHp(klass: HunterClass, abilities: AbilityScores, level = 1): number {
   const con = abilityModifier(abilities.con);
@@ -49,10 +57,21 @@ export function maxSanity(klass: HunterClass, abilities: AbilityScores, level = 
     : startingMaximum);
 }
 
-/** Initiative modifier (Dexterity) in the established Hunter model. */
-export function initiativeMod(abilities: AbilityScores): number {
-  return abilityModifier(abilities.dex);
+/** core-rulebook.txt [page 29] "Bloodied": "A creature is Bloodied while its
+ * current Hit Points are equal to or less than half its Hit Point maximum,
+ * rounded down." */
+export function isBloodied(currentHp: number | null | undefined, maxHp: number | null | undefined): boolean {
+  if (typeof currentHp !== "number" || typeof maxHp !== "number") return false;
+  if (!Number.isFinite(currentHp) || !Number.isFinite(maxHp) || maxHp <= 0) return false;
+  return currentHp <= Math.floor(maxHp / 2);
 }
+
+// Initiative is derived in `characterAutomation.ts` alone. core-rulebook.txt
+// [page 15] "Initiative": combat begins with "a Dexterity check called an
+// Initiative roll", so the modifier is the Dexterity modifier from the
+// [page 32] "Ability Scores and Modifiers" table. The former `initiativeMod()`
+// helper here became dead once `deriveSheetFromCard()` started delegating to
+// that single projection.
 
 export interface ArmorClassResult {
   total: number;
@@ -60,7 +79,8 @@ export interface ArmorClassResult {
   baseAc: number;
   /** Bonus from Add-on pieces (incl. the Shield Arm pairing rule). */
   addonBonus: number;
-  /** Bonus from Studs upgrades (≥1 studded piece +1, five or more +2). */
+  /** Bonus from Studs upgrades (three or more studded pieces +1, five or
+   * more +2 — core-rulebook.txt [page 35] "Studs"). */
   studBonus: number;
   /** Base armor AC (main + add-ons + upgrades) — decides the Dex category. */
   baseArmorAc: number;
@@ -169,6 +189,12 @@ export function normalizeCard(raw: HunterCard): HunterCard {
       : raw.favors,
     customItems,
     studdedAddonIds: studdedAddonIdsOf(raw),
+    // core-rulebook.txt [page 26] "Getting same Transformations": "Active
+    // Transformations do not stack with themselves." A duplicate id is never
+    // meaningful, so collapse it on load — no data is lost.
+    ...(Array.isArray(raw.activeTransformations)
+      ? { activeTransformations: Array.from(new Set(raw.activeTransformations.filter((id): id is string => typeof id === "string" && id !== ""))) }
+      : {}),
     extraArmorIds: dedupeExtras(raw.extraArmorIds ?? []),
     equippedStorageIds: Array.from(
       new Set(
@@ -243,7 +269,9 @@ export function armorClass(
   const worn = addonArmorIds.slice(0, maxAddonPieces(mainArmorId, customItems));
   const addonBonus = addonAcBonus(worn, !!main, customItems);
   const studded = studdedAddonIds.filter((id) => worn.includes(id)).length;
-  const studBonus = studded >= 5 ? 2 : studded >= 1 ? 1 : 0;
+  // core-rulebook.txt [page 35] "Studs": at least THREE studded Add-on pieces
+  // grant +1 AC; five grant +2 AC.
+  const studBonus = studded >= 5 ? 2 : studded >= 3 ? 1 : 0;
   const baseArmorAc = baseAc + addonBonus + studBonus;
   const cat = acCategory(baseArmorAc);
   const dexApplied = cat.applyDex(dexMod);
@@ -273,8 +301,9 @@ export function armorClassFor(
   );
 }
 
-/** Weight of everything WORN (main + add-ons + extras + 3 lb per Studs
- * upgrade) — worn armor counts toward carried weight. */
+/** Weight of everything WORN (main + add-ons + extras + 5 lb per Studs
+ * upgrade, core-rulebook.txt [page 35]) — worn armor counts toward carried
+ * weight. */
 export function wornArmorWeight(card: WornArmor): number {
   const ids = [
     ...(card.mainArmorId ? [card.mainArmorId] : []),
@@ -282,7 +311,7 @@ export function wornArmorWeight(card: WornArmor): number {
     ...(card.extraArmorIds ?? []),
   ];
   const pieces = ids.reduce((sum, id) => sum + (armorFor(card, id)?.weightLb ?? 0), 0);
-  const studs = studdedAddonIdsOf(card).length * 3;
+  const studs = studdedAddonIdsOf(card).length * 5;
   return Math.round((pieces + studs) * 10) / 10;
 }
 

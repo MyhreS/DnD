@@ -1,4 +1,5 @@
 import { abilityModifier } from "@/data/abilities";
+import { WEAPON_FACTS } from "@/data/weapons";
 import type { HunterCard, HunterClass } from "@/types";
 import { AppPanel, AutoReason } from "./appSheetShared";
 
@@ -21,6 +22,23 @@ function bonusesFor(card: HunterCard, klass: HunterClass): DamageBonus[] {
       detail: `Melee weapons normally use Strength (${signed(abilityModifier(card.abilities.str))}); Finesse weapons may instead use Dexterity (${signed(abilityModifier(card.abilities.dex))}), which ranged weapons use.`,
     },
   ];
+  // Blood-Tense — core-rulebook.txt [pages 16, 22]. Available to every hunter.
+  bonuses.push({
+    label: "Blood-Tensed",
+    value: "×3 weapon dice",
+    detail: "Main Action. Your next melee hit rolls normal weapon dice three times (four with chosen Disadvantage); modifiers added once.",
+  });
+  // Light — core-rulebook.txt [page 17]: the Bonus Action attack needs a second,
+  // different Light melee weapon.
+  const lightMelee = new Set(
+    (card.inventory ?? [])
+      .map((line) => line.itemId)
+      .filter((id) => {
+        const facts = WEAPON_FACTS[id];
+        return !!facts && facts.attack === "Melee" && /\bLight\b/.test(facts.properties);
+      }),
+  );
+  if (lightMelee.size >= 2) bonuses.push({ label: "Off-hand Attack", value: "Bonus Action", detail: "Attacking with a Light weapon lets you make one extra attack with a different Light weapon as a Bonus Action. Do not add a positive ability modifier to its damage." });
   if (klass.id === "scout") bonuses.push({ label: "Hunter's Mark", value: card.level >= 20 ? "+1d10" : "+1d6", detail: "On each hit against your marked quarry." });
   if (klass.id === "stalker") bonuses.push({ label: "Sneak Attack", value: `+${progression?.extras["Sneak Attack"] ?? "1d6"}`, detail: "Once per turn with a Finesse or Ranged weapon when its conditions are met." });
   if (klass.id === "bloodbound" && card.level >= 9) bonuses.push({ label: "Brutal Strike", value: card.level >= 17 ? "+2d10" : "+1d10", detail: "On one Strength-based hit after forgoing Reckless Attack advantage." });

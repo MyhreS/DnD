@@ -1,6 +1,8 @@
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
-import { emptySheetCard, normalizeCard } from "../src/lib/character";
+import { armorClass, emptySheetCard, isBloodied, normalizeCard, wornArmorWeight } from "../src/lib/character";
+import { carryCondition } from "../src/lib/inventory";
+import { deriveSheetFromCard } from "../src/features/hunter/lib/deriveSheetFromCard";
 import { CLASSES } from "../src/data/classes";
 import { MADUHAUSU_BUDGET, POINT_BUY_BUDGET } from "../src/data/abilities";
 import { BACKGROUNDS } from "../src/data/backgrounds";
@@ -9,7 +11,8 @@ import { ITEMS } from "../src/data/items";
 import { startingKit } from "../src/lib/startingEquipment";
 import { availableSlotAssignmentOptions, computeSlots, slotAssignmentOptions } from "../src/lib/slots";
 import { characterSheetUpdate } from "../src/features/hunter/lib/sheetPersistence";
-import { DEEPCALLER_RITES, DEEPCALLER_WHISPERS, forbiddenRevelationLevel, forbiddenRevelationOptions, riteDamageAtStrain, TOOL_PROFICIENCIES, WHISPERS } from "../src/data/characterOptions";
+import { WEAPON_FACTS } from "../src/data/weapons";
+import { ALWAYS_PREPARED_ZEALOT_IDS, DEEPCALLER_RITES, DEEPCALLER_WHISPERS, forbiddenRevelationLevel, forbiddenRevelationOptions, riteDamageAtStrain, TOOL_PROFICIENCIES, WHISPERS } from "../src/data/characterOptions";
 import {
   automationFor,
   matchCatalogItem,
@@ -37,6 +40,65 @@ assert.equal(base.sheetAutomation?.version, 3, "fresh sheets use point-buy autom
 assert.equal(base.abilityMode, "pointbuy", "fresh sheets default to Standard point buy");
 assert.deepEqual(base.sheetAutomation?.backgroundBonuses, {}, "fresh sheets start before background points are assigned");
 assert.equal(base.madness, 0, "fresh sheets track Madness independently from Sanity");
+// --- core-rulebook.txt [page 35] "Studs" ---------------------------------
+// "If at least three Add-on Armor pieces are studded, you gain +1 AC. If five
+// are studded, this bonus increases to +2 AC." "Each studded piece adds 5 lb."
+const studAddons = [
+  "leather-pauldron-right",
+  "leather-pauldron-left",
+  "leather-vambrace-right",
+  "leather-vambrace-left",
+  "under-layer-leather-jerkin",
+];
+const studAbilities = { str: 10, dex: 10, con: 10, int: 10, wis: 10, cha: 10 };
+const studBonusFor = (count: number) =>
+  armorClass(studAbilities, "hunter-leather-vest", studAddons, studAddons.slice(0, count)).studBonus;
+assert.equal(studBonusFor(0), 0, "no studded add-on grants no AC");
+assert.equal(studBonusFor(1), 0, "one studded add-on is below the beta's three-piece threshold");
+assert.equal(studBonusFor(2), 0, "two studded add-ons are below the beta's three-piece threshold");
+assert.equal(studBonusFor(3), 1, "three studded add-ons grant +1 AC");
+assert.equal(studBonusFor(4), 1, "four studded add-ons still grant +1 AC");
+assert.equal(studBonusFor(5), 2, "five studded add-ons grant +2 AC");
+const studWeightCard = { ...base, mainArmorId: null, addonArmorIds: studAddons, extraArmorIds: [], customItems: [] };
+const bareAddonWeight = wornArmorWeight({ ...studWeightCard, studdedAddonIds: [] });
+assert.equal(
+  wornArmorWeight({ ...studWeightCard, studdedAddonIds: studAddons.slice(0, 3) }),
+  bareAddonWeight + 15,
+  "each studded add-on adds 5 lb of carried weight",
+);
+
+// --- core-rulebook.txt [page 29] "Bloodied" -------------------------------
+assert.equal(isBloodied(5, 10), true, "exactly half the Hit Point maximum is Bloodied");
+assert.equal(isBloodied(6, 10), false, "above half the Hit Point maximum is not Bloodied");
+assert.equal(isBloodied(5, 11), true, "half the maximum rounds down");
+assert.equal(isBloodied(6, 11), false, "one above the rounded-down half is not Bloodied");
+assert.equal(isBloodied(undefined, 10), false, "an unknown current HP is never Bloodied");
+
+// --- core-rulebook.txt [page 40] carried-weight table ----------------------
+assert.match(
+  carryCondition(10, 60).note,
+  /Dexterity \(Acrobatics and Stealth\) checks and Dexterity saving throws/,
+  "Encumbered carries the full source effect, not only the speed reduction",
+);
+assert.equal(carryCondition(10, 60).speedDelta, -10, "Encumbered still reduces speed by 10 ft");
+assert.equal(carryCondition(10, 20).speedDelta, 5, "Featherweight still increases speed by 5 ft");
+assert.equal(carryCondition(10, 120).speedDelta, -20, "Heavily Encumbered still reduces speed by 20 ft");
+
+// --- core-rulebook.txt [page 26] "Getting same Transformations" ------------
+assert.deepEqual(
+  normalizeCard({ ...base, activeTransformations: ["claws", "claws", "eyes"] }).activeTransformations,
+  ["claws", "eyes"],
+  "Active Transformations do not stack with themselves",
+);
+const withoutTransformations = { ...base };
+delete withoutTransformations.activeTransformations;
+assert.equal(
+  "activeTransformations" in normalizeCard(withoutTransformations),
+  false,
+  "normalization never invents an Active Transformations list",
+);
+
+
 const attendedSession: Game = {
   id: "attended", campaignId: "campaign-a", sessionId: null, title: "Attended", dmUid: "dm", dmName: "DM",
   participantUids: [base.ownerUid], participantRoster: [{ uid: base.ownerUid, characterId: base.id, name: base.name, classId: base.classId, level: base.level, role: "player", joinedAt: 1, lastSeen: 1 }],
@@ -121,7 +183,10 @@ assert.equal(levelOne.fields.profBonus, "+2");
 assert.equal(levelOne.fields.hpMax, "12");
 assert.equal(levelOne.fields.sanityMax, "16");
 assert.equal(levelOne.fields.sanityDice, "4d4");
-assert.equal(levelOne.fields.speed, "30 ft");
+// 30 ft base + 5 ft Featherweight: this fixture carries nothing, and
+// core-rulebook.txt [page 40] grants +5 ft at or below Strength × 2.
+assert.equal(levelOne.fields.speed, "35 ft");
+assert.match(levelOne.reasons.speed, /Featherweight/, "the speed explanation names the carrying condition");
 assert.equal(levelOne.fields.armorLight, true);
 assert.equal(levelOne.fields.armorMedium, true);
 assert.equal(levelOne.fields.armorHeavy, true);
@@ -143,7 +208,7 @@ const modifiedReadouts = automationFor({
   },
 });
 assert.equal(modifiedReadouts.fields.ac, "13", "the AC modifier augments the armor calculation");
-assert.equal(modifiedReadouts.fields.speed, "35 ft", "the speed modifier augments class speed");
+assert.equal(modifiedReadouts.fields.speed, "40 ft", "the speed modifier augments class speed on top of the carrying condition");
 assert.equal(modifiedReadouts.fields.passivePerception, "11", "the passive modifier augments passive Perception");
 assert.equal(modifiedReadouts.fields.initiative, "+4", "the initiative modifier augments Dexterity");
 assert.match(modifiedReadouts.reasons.ac, /custom modifier \+2/i, "the AC explanation names the custom modifier");
@@ -453,5 +518,105 @@ assert.deepEqual(atomicUpdate, {
   "sheet.class": "Warden",
   "sheet.hpMax": "12",
 });
+
+// The legacy paper-sheet projection must agree with the app sheet's own
+// projection — same Expertise multiplier, same custom modifiers, same feats.
+for (const sample of [base, warden]) {
+  const derived = deriveSheetFromCard(sample);
+  const calculated = automationFor(sample).fields;
+  for (const [key, value] of Object.entries(derived)) {
+    assert.equal(value, calculated[key], `deriveSheetFromCard disagrees with automationFor on ${key}`);
+  }
+}
+
+// --- Batch 4 wave B: derived speed, saves, Passive Perception, mastery -------
+
+// Roving — core-rulebook.txt [page 58]: +10 ft from Scout level 6 while not
+// wearing Heavy armor.
+const scoutSix = { ...warden, classId: "scout", level: 6 } as HunterCard;
+assert.equal(automationFor(scoutSix).fields.speed, "50 ft", "Roving adds 10 ft to an unarmored level-six Scout (35 ft base + 10 Roving + 5 Featherweight)");
+assert.match(automationFor(scoutSix).reasons.speed, /Roving/, "the speed explanation names Roving");
+assert.equal(
+  automationFor({ ...scoutSix, level: 5 } as HunterCard).fields.speed,
+  "40 ft",
+  "Roving does not apply before level six",
+);
+
+// Speedy [page 103] and Boon of Speed [page 106].
+assert.equal(automationFor({ ...warden, feats: ["Speedy"] } as HunterCard).fields.speed, "45 ft", "Speedy adds 10 ft to the Warden's 35 ft");
+assert.equal(automationFor({ ...warden, feats: ["Boon of Speed"] } as HunterCard).fields.speed, "65 ft", "Boon of Speed adds 30 ft");
+
+// Carrying condition [page 40]: the speed delta reaches the sheet.
+const encumbered = { ...warden, inventory: [{ itemId: "greatclub", qty: 12 }] } as HunterCard;
+assert.equal(String(automationFor(encumbered).fields.weightCondition), "Heavily Encumbered", "the loaded fixture is Heavily Encumbered");
+assert.equal(automationFor(encumbered).fields.speed, "10 ft", "a Heavily Encumbered hunter loses 20 ft of speed");
+
+// Slippery Mind — core-rulebook.txt [page 65].
+const stalker15 = { ...warden, classId: "stalker", level: 15 } as HunterCard;
+assert.equal(automationFor(stalker15).fields.wisSaveP, true, "Slippery Mind grants Wisdom save proficiency at level fifteen");
+assert.equal(automationFor(stalker15).fields.chaSaveP, true, "Slippery Mind grants Charisma save proficiency at level fifteen");
+assert.equal(
+  automationFor({ ...stalker15, level: 14 } as HunterCard).fields.wisSaveP,
+  false,
+  "Slippery Mind does not apply before level fifteen",
+);
+
+// Passive Perception — core-rulebook.txt [page 43] uses the full Wisdom
+// (Perception) check modifier, so Expertise doubles proficiency.
+const perceptive = {
+  ...warden,
+  skillProficiencies: ["Perception"],
+  sheetAutomation: { version: 2, classSkills: ["Perception"], expertiseSkills: ["Perception"] },
+} as HunterCard;
+assert.equal(automationFor(perceptive).fields.passivePerception, "16", "Expertise doubles proficiency in Passive Perception");
+assert.equal(
+  automationFor({ ...perceptive, sheetAutomation: { version: 2, classSkills: ["Perception"] } } as HunterCard).fields.passivePerception,
+  "14",
+  "plain Perception proficiency adds the bonus once",
+);
+
+// Baseline attack modifiers — core-rulebook.txt [page 43].
+assert.equal(levelOne.fields.meleeAttack, "+2", "melee attack is Strength modifier plus proficiency");
+assert.equal(levelOne.fields.rangedAttack, "+3", "ranged attack is Dexterity modifier plus proficiency");
+
+// Zealot prepared-Whisper limit — core-rulebook.txt [page 76].
+const zealotCard = {
+  ...warden,
+  classId: "deepcaller",
+  subclassId: "hunter-zealot",
+  level: 3,
+  preparedWhispers: [],
+} as HunterCard;
+const plainDeepcallerCard = { ...zealotCard, subclassId: null } as HunterCard;
+assert.equal(
+  (automationFor(zealotCard).pending.whispers?.remaining ?? 0) - (automationFor(plainDeepcallerCard).pending.whispers?.remaining ?? 0),
+  1,
+  "a level-three Zealot prepares one additional Whisper",
+);
+assert.deepEqual(
+  [...ALWAYS_PREPARED_ZEALOT_IDS].sort(),
+  ["armor-of-the-drowned-star", "eldritch-strike"],
+  "the two Carved entries are always prepared and never count against the limit",
+);
+assert.ok(
+  DEEPCALLER_RITES.some((rite) => rite.id === "armor-of-the-drowned-star" && rite.level === 1),
+  "Armor of The Drowned Star is a Level 1 Rite, so the Zealot option list must search Rites too",
+);
+
+// Derived weapon-mastery filters — core-rulebook.txt [pages 63, 87].
+const weaponItems = ITEMS.filter((item) => item.category === "Weapon");
+assert.deepEqual(weaponItems.filter((item) => !WEAPON_FACTS[item.id]).map((item) => item.id), [], "every catalog weapon has weapon facts");
+const stalkerMastery = weaponItems.filter((item) => {
+  const facts = WEAPON_FACTS[item.id]!;
+  return facts.category === "Simple" || (facts.category === "Martial" && /Finesse|Light/.test(facts.properties));
+}).map((item) => item.id);
+for (const id of ["club", "greatclub", "javelin", "light-hammer", "mace", "spear", "throwing-knife"]) {
+  assert.ok(stalkerMastery.includes(id), `the Stalker is proficient with the Simple weapon ${id}`);
+}
+assert.ok(!stalkerMastery.includes("pistol"), "the Pistol is Martial Ranged with neither Finesse nor Light");
+assert.ok(!weaponItems.some((item) => item.id === "hunter-cleaver"), "the Hunter Cleaver is removed from the weapon catalog");
+const meleeMastery = weaponItems.filter((item) => WEAPON_FACTS[item.id]!.attack === "Melee");
+assert.ok(meleeMastery.length > 20, "the Bloodbound may master any Simple or Martial melee weapon");
+assert.ok(!meleeMastery.some((item) => WEAPON_FACTS[item.id]!.attack === "Ranged"), "ranged weapons stay out of the melee mastery list");
 
 console.log("Character automation tests passed.");

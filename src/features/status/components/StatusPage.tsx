@@ -10,6 +10,7 @@ import { PHASE_LABEL, LOCATION_LABEL } from "@/features/play/lib/phase";
 import { useWakeLock } from "@/hooks/common/useWakeLock";
 import { useFullscreen } from "@/hooks/common/useFullscreen";
 import { cardClassName, characterVitals } from "@/features/hunter/lib/papersheet";
+import { isBloodied } from "@/lib/character";
 import type { HunterCard } from "@/types";
 import { CombatBoard } from "./CombatBoard";
 
@@ -113,7 +114,7 @@ function VitalsCard({ card }: { card: HunterCard }) {
         {transform > 0 && <span className="chip" style={{ flex: "none" }}>Transform {transform}</span>}
       </div>
       {hp != null && hpMax != null ? (
-        <Bar label="HP" value={hp} max={hpMax} color="var(--blood-bright)" />
+        <Bar label="HP" value={hp} max={hpMax} color="var(--blood-bright)" sub={isBloodied(hp, hpMax) ? "Bloodied" : undefined} />
       ) : (
         <p className="faint" style={{ margin: "8px 0 0" }}>Vitals tracked on the shared character sheet.</p>
       )}

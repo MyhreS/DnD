@@ -68,8 +68,10 @@ export function maduhausuSpent(scores: readonly number[]): number | null {
   return total;
 }
 
-/** Established app calculation. The replacement source set names Modifier
- * fields but does not define a modifier formula. */
+/** core-rulebook.txt [page 32] "DETERMINE ABILITY MODIFIERS" and its "Ability
+ * Scores and Modifiers" table (3 → −4, 4-5 → −3, 6-7 → −2, 8-9 → −1, 10-11 →
+ * +0, 12-13 → +1, 14-15 → +2, 16-17 → +3, 18-19 → +4, 20 → +5). This formula
+ * reproduces that table exactly across its whole printed range. */
 export function abilityModifier(score: number): number {
   return Math.floor((score - 10) / 2);
 }
