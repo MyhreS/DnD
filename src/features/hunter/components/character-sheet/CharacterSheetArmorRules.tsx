@@ -26,7 +26,7 @@ export function CharacterSheetArmorRules() {
       <article><span>Armor Class</span><strong>{String(result.fields.ac ?? "—")} · {String(result.fields.armorCategory || "Unarmored")}</strong><p>{result.reasons.ac || "Unarmored AC starts at 10 + Dexterity. Worn armor, add-ons, and upgrades modify it."}{strengthAdvisory ? ` ${strengthAdvisory}` : ""}</p></article>
       <article><span>Equipping order</span><strong>Five layers</strong><p>1. Background Garments · 2. Main Armor over or replacing them · 3. Add-on Armor over the Main Armor · 4. Extras and class or background gear · 5. Carried items you store or hold.</p></article>
       <article><span>Add-on armor</span><strong>{addonCount}/{addonLimit} pieces worn</strong><p>Wear one Main Armor and up to five Add-on pieces. Balanced Fit grants a sixth slot.</p></article>
-      <article><span>Studs upgrade</span><strong>{studdedCount} piece{studdedCount === 1 ? "" : "s"} upgraded</strong><p>Three studded Add-ons grant +1 AC; five grant +2 AC. Each upgraded piece adds 5 lb.</p></article>
+      <article><span>Studs upgrade</span><strong>{studdedCount} piece{studdedCount === 1 ? "" : "s"} upgraded</strong><p>Three studded Add-ons grant +1 AC; five grant +2 AC. Each upgraded piece adds 5 lb and gives Disadvantage on Dexterity (Stealth) checks to hide or move silently.</p></article>
       <article><span>Shield Arm</span><strong>{shieldArm ? "Active" : "Inactive"}</strong><p>A pauldron and vambrace worn on the same arm complete one Shield Arm and improve its combined AC.</p></article>
     </div>
     <div className="character-sheet-armor-effects">

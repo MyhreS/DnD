@@ -4,7 +4,7 @@ import { useAppEditStage } from "../appsheet/appEditStageContext";
 import { sheetText } from "../appsheet/appSheetValues";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { CharacterSheetResourceControl } from "./CharacterSheetResourceControl";
-import { characterSheetNumber } from "./characterSheetValues";
+import { characterSheetNumber, madnessPatch } from "./characterSheetValues";
 
 const SLEEPLESS_NOTE = "1 per hour outside a rest; Short Rest −6; Long Rest → 0. At 24 you gain Sleepless and 1d4 Madness, again at 30, 36, 42 and every further 6. Ends below 24.";
 const EXHAUSTION_NOTE = "Subtract twice your level from every D20 Test and reduce every Speed by 5 ft per level. You die at level 6. A Long Rest removes 1.";
@@ -33,7 +33,7 @@ export function CharacterSheetRecovery({ model }: { model: AppSheetModel }) {
       notTonight: true,
       sleeplessCounter: 0,
       exhaustion: Math.max(0, (card.exhaustion ?? 0) - 1),
-      madness: Math.max(0, (card.madness ?? 0) - Math.max(0, sanityRoll)),
+      ...madnessPatch(card, (card.madness ?? 0) - Math.max(0, sanityRoll), characterSheetNumber(result.fields.sanityMax)),
     });
     setSanityRoll(0);
   }
