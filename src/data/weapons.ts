@@ -4,9 +4,9 @@ export interface WeaponFacts {
   properties: string;
   mastery: string;
   attack: "Melee" | "Ranged";
-  /** Weapons table section — core-rulebook.txt [page 111]. Absent for the
-   * Hunter Cleaver, which the beta table does not list. */
-  category?: "Simple" | "Martial";
+  /** Weapons table section — core-rulebook.txt [page 111]. `"Unarmed"` covers
+   * the Unarmed Strike, which the rules define outside that table. */
+  category: "Simple" | "Martial" | "Unarmed";
 }
 
 export const WEAPON_FACTS: Record<string, WeaponFacts> = {
@@ -48,8 +48,7 @@ export const WEAPON_FACTS: Record<string, WeaponFacts> = {
   pistol: { damage: "1d10", damageType: "Piercing", properties: "Ammunition (30/90; Bullet)", mastery: "Vex", attack: "Ranged", category: "Martial" },
 
   // --- Not on the weapons table ---
-  "hunter-cleaver": { damage: "—", damageType: "DM-set", properties: "Unique Scout weapon; statistics set by the DM", mastery: "—", attack: "Melee" },
-  "unarmed-strike": { damage: "1 + STR mod", damageType: "Bludgeoning", properties: "Minimum 1 damage; Grapple and Shove are options of this attack", mastery: "—", attack: "Melee" },
+  "unarmed-strike": { damage: "1 + STR mod", damageType: "Bludgeoning", properties: "Minimum 1 damage; Grapple and Shove are options of this attack", mastery: "—", attack: "Melee", category: "Unarmed" },
 };
 
 export const WEAPON_MASTERY_DESCRIPTIONS: Record<string, string> = {

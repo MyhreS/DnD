@@ -150,7 +150,7 @@ export function AppGearSection({
             })}
           </div>
         ) : <p className="appsheet-empty-copy">Carried catalog weapons appear here automatically.</p>}
-        <AutoReason reason="Weapon damage, properties, and mastery come from the established Hunter catalog. The Hunter Cleaver has no recorded statistics and remains explicitly DM-set." />
+        <AutoReason reason="Weapon damage, properties, and mastery come from the C&S Core Rulebook weapons table." />
       </AppPanel>
       {includeDamageBonuses && <AppWeaponDamageBonuses card={card} klass={automation.klass} />}
       </AppDisclosure>

@@ -10,7 +10,7 @@ import { ARMOR } from "@/data/armor";
 //   Insignificant — keys, maps, coins, parchment, blood vials, ammunition,
 //     caltrops, flasks, vials, locks, manacles, mirrors, iron spikes.
 //   Significant   — daggers, handaxes, rope, pistols, rifles, chains, swords,
-//     scimitars, sickles, cleavers, lanterns, shovels, crowbars, tool belts,
+//     scimitars, sickles, lanterns, shovels, crowbars, tool belts,
 //     bandoliers, backpacks, hunting traps, books, and ALL Tools
 //     ([page 114] "Carrying Category. All Tools are Significant Items.").
 //   Oversized     — great weapons, barrels, chests, ladders, buckets, poles,
@@ -72,15 +72,6 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 3,
-  },
-  {
-    id: "hunter-cleaver",
-    name: "Hunter Cleaver",
-    category: "Weapon",
-    carry: "Significant",
-    weightLb: 4,
-    note: "A hunter's signature transforming blade.",
-    unique: true,
   },
   {
     id: "sickle",

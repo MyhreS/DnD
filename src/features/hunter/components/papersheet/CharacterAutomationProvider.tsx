@@ -48,6 +48,8 @@ function withStartingKit(card: HunterCard): HunterCard {
   const state = card.sheetAutomation;
   const withoutOld = removeInventory(card.inventory ?? [], state?.startingKitInventory ?? []);
   const oldCoins = state?.startingKitCoins ?? 0;
+  const grantedExtras = state?.startingKitExtraArmorIds ?? [];
+  const extrasWithoutOld = (card.extraArmorIds ?? []).filter((id) => !grantedExtras.includes(id));
   const kit = startingKit(getClass(card.classId), BACKGROUNDS.find((entry) => entry.id === card.backgroundId));
   // A class kit is mandatory in its own right, so grant it as soon as the
   // player chooses a class. Background equipment is folded in later when a
@@ -58,11 +60,13 @@ function withStartingKit(card: HunterCard): HunterCard {
       ...card,
       inventory: withoutOld,
       coins: Math.max(0, (card.coins ?? 0) - oldCoins),
+      extraArmorIds: extrasWithoutOld,
       sheetAutomation: {
         ...state!,
         startingKitApplied: false,
         startingKitInventory: [],
         startingKitCoins: 0,
+        startingKitExtraArmorIds: [],
       },
     };
   }
@@ -70,11 +74,13 @@ function withStartingKit(card: HunterCard): HunterCard {
     ...card,
     inventory: mergeInventory(withoutOld, kit.inventory),
     coins: Math.max(0, (card.coins ?? 0) - oldCoins) + kit.coins,
+    extraArmorIds: [...extrasWithoutOld, ...kit.extraArmorIds.filter((id) => !extrasWithoutOld.includes(id))],
     sheetAutomation: {
       ...state!,
       startingKitApplied: true,
       startingKitInventory: kit.inventory,
       startingKitCoins: kit.coins,
+      startingKitExtraArmorIds: kit.extraArmorIds,
       legacyEquipment: [
         ...(state?.legacyEquipment ?? []),
         ...kit.unmatched.map((name) => ({
@@ -169,7 +175,7 @@ export function CharacterAutomationProvider({
     : 0);
   const meleeWeaponIds = new Set([
     "greatsword", "greataxe", "longsword", "shortsword", "scimitar",
-    "hunter-cleaver", "sickle", "handaxe", "dagger",
+    "sickle", "handaxe", "dagger",
   ]);
   const finesseOrLightIds = new Set([
     "shortsword", "scimitar", "sickle", "handaxe", "dagger", "pistol",

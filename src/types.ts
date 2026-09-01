@@ -473,6 +473,9 @@ export interface SheetAutomationState {
    * preserving equipment the player added later. */
   startingKitInventory?: InventoryEntry[];
   startingKitCoins?: number;
+  /** Armor "Extra" pieces (class head gear) granted by the current kit, so a
+   * class change can withdraw exactly what it granted. */
+  startingKitExtraArmorIds?: string[];
   migratedAt?: number;
   manualOverrides?: string[];
   legacyEquipment?: LegacyEquipmentLine[];
