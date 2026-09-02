@@ -653,7 +653,7 @@ export const ITEMS: Item[] = [
   },
   {
     id: "blood-vial",
-    name: "Blood vial",
+    name: "Bloodvial",
     category: "Consumable",
     carry: "Insignificant",
     weightLb: 0.5,

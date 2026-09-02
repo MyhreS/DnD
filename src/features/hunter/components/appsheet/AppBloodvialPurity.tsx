@@ -28,7 +28,7 @@ export function AppBloodvialPurity({
       <span className="appsheet-item-assignments" data-testid="appsheet-bloodvial-purity">
         <label>Purity
           <select
-            aria-label="Blood vial purity"
+            aria-label="Bloodvial purity"
             disabled={readOnly}
             value={purity}
             onChange={(event) => onChange(event.target.value as BloodvialPurity)}

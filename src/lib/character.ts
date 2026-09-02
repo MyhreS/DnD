@@ -380,12 +380,43 @@ export function emptySheetCard(params: {
   };
 }
 
-/** Attack bonus for a carried weapon: proficiency bonus plus the ability the
- * weapon uses. core-rulebook.txt [page 43]: melee weapons use Strength, ranged
- * weapons use Dexterity, and a Finesse weapon may use either — the app shows
- * the better of the two, which is always the player's choice in practice. */
-export function weaponAttackBonus(card: HunterCard, facts: { properties: string; attack: "Melee" | "Ranged" } | undefined): number {
-  const prof = proficiencyBonus(card.level || 1);
+/** Whether a class's weapon-proficiency sentence covers a given weapon.
+ * core-rulebook.txt [page 12]: proficiency is what allows the Proficiency Bonus
+ * to be added to a weapon's attack rolls. Classes state this as prose, and the
+ * Stalker's line narrows Martial weapons to named properties
+ * ("Simple weapons and Martial weapons with the Finesse or Light property"),
+ * so the property restriction is parsed out rather than special-cased by id.
+ * Unarmed strikes are always available, so they are never gated. */
+export function isWeaponProficient(
+  proficiencies: string,
+  facts: { category?: string; properties: string },
+): boolean {
+  if (facts.category === "Simple") return /simple/i.test(proficiencies);
+  if (facts.category !== "Martial") return true;
+  if (!/martial/i.test(proficiencies)) return false;
+  const restriction = /martial weapons with the ([^.]+?) propert/i.exec(proficiencies)?.[1];
+  if (!restriction) return true;
+  return restriction
+    .split(/\s+or\s+|,\s*/)
+    .map((word) => word.trim())
+    .filter(Boolean)
+    .some((word) => new RegExp(`\\b${word}\\b`, "i").test(facts.properties));
+}
+
+/** Attack bonus for a carried weapon: the ability the weapon uses, plus the
+ * Proficiency Bonus only when the hunter is actually proficient with it.
+ * core-rulebook.txt [page 43]: melee weapons use Strength, ranged weapons use
+ * Dexterity, and a Finesse weapon may use either — the app shows the better of
+ * the two, which is always the player's choice in practice. [page 12] gates the
+ * Proficiency Bonus itself, so a Deepcaller holding a Greatsword adds only the
+ * ability modifier. */
+export function weaponAttackBonus(
+  card: HunterCard,
+  facts: { properties: string; attack: "Melee" | "Ranged"; category?: string } | undefined,
+): number {
+  const klass = getClass(card.classId);
+  const proficient = !facts || !klass || isWeaponProficient(klass.weaponProficiencies, facts);
+  const prof = proficient ? proficiencyBonus(card.level || 1) : 0;
   const str = abilityModifier(card.abilities?.str ?? 10);
   const dex = abilityModifier(card.abilities?.dex ?? 10);
   if (!facts) return prof + str;

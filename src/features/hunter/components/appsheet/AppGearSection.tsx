@@ -7,7 +7,7 @@ import { resolveUnassignedInventory } from "@/features/hunter/lib/inventoryPlace
 import { resolveInventory } from "@/lib/inventory";
 import { availableSlotAssignmentOptions, computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
 import { formatModifier } from "@/data/abilities";
-import { weaponAttackBonus } from "@/lib/character";
+import { isWeaponProficient, weaponAttackBonus } from "@/lib/character";
 import type { SlotAssignment } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { useCharacterSheetPageNavigation } from "../character-sheet/characterSheetPageNavigation";
@@ -152,9 +152,15 @@ export function AppGearSection({
                 && (facts.attack === "Melee" ? card.abilities.str < 13 : card.abilities.dex < 13)
                 ? `Heavy: ${facts.attack === "Melee" ? "Strength" : "Dexterity"} under 13 — attack rolls with this weapon have Disadvantage.`
                 : "";
+              // core-rulebook.txt [page 12]: the Proficiency Bonus applies only to
+              // weapons you are proficient with, so the Attack column omits it
+              // otherwise. Say so, or the lower number looks like a bug.
+              const proficiencyWarning = facts && automation.klass && !isWeaponProficient(automation.klass.weaponProficiencies, facts)
+                ? `Not proficient: ${automation.klass.title} covers ${automation.klass.weaponProficiencies.toLowerCase()} — attacks add no Proficiency Bonus.`
+                : "";
               return (
                 <div key={item.id}>
-                  <span><b>{item.name}</b>{qty > 1 ? ` ×${qty}` : ""}{heavyWarning && <small>{heavyWarning}</small>}</span>
+                  <span><b>{item.name}</b>{qty > 1 ? ` ×${qty}` : ""}{heavyWarning && <small>{heavyWarning}</small>}{proficiencyWarning && <small>{proficiencyWarning}</small>}</span>
                   <span><small className="appsheet-weapon-label">Attack</small>{custom?.attackBonus || formatModifier(weaponAttackBonus(card, facts))}</span>
                   <span><small className="appsheet-weapon-label">Damage</small>{custom?.damage || weaponDamageLabel(facts)}</span>
                   <span><small className="appsheet-weapon-label">Properties</small>{custom?.weaponNotes || facts?.properties || item.note || "—"}</span>

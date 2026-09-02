@@ -29,7 +29,7 @@ import { ITEM_BY_ID } from "../src/data/items";
 import { WEAPON_FACTS } from "../src/data/weapons";
 import { ALWAYS_PREPARED_ZEALOT_IDS, TOOL_PROFICIENCIES } from "../src/data/characterOptions";
 import { BLOODVIAL_ITEM_ID, DEFAULT_BLOODVIAL_PURITY } from "../src/data/bloodvial";
-import { normalizeCard } from "../src/lib/character";
+import { isWeaponProficient, normalizeCard } from "../src/lib/character";
 import { startingKit } from "../src/lib/startingEquipment";
 import { computeSlots } from "../src/lib/slots";
 import { automationFor } from "../src/features/hunter/lib/characterAutomation";
@@ -172,22 +172,6 @@ function normalizeName(value: string): string {
 /** Derive proficiency from the class's own proficiency sentence, e.g. the
  * Stalker's "Simple weapons and Martial weapons with the Finesse or Light
  * property" — a Pistol (Martial, Ammunition only) fails that test. */
-function isProficientWith(
-  proficiencies: string,
-  facts: { category?: string; properties: string },
-): boolean {
-  if (facts.category === "Simple") return /simple/i.test(proficiencies);
-  if (facts.category !== "Martial") return true;
-  if (!/martial/i.test(proficiencies)) return false;
-  const restriction = /martial weapons with the ([^.]+?) propert/i.exec(proficiencies)?.[1];
-  if (!restriction) return true;
-  return restriction
-    .split(/\s+or\s+|,\s*/)
-    .map((word) => word.trim())
-    .filter(Boolean)
-    .some((word) => new RegExp(`\\b${word}\\b`, "i").test(facts.properties));
-}
-
 const WEAPON_NAME_TO_ID = new Map(
   Object.keys(WEAPON_FACTS).map((id) => [normalizeName(ITEM_BY_ID[id]?.name ?? id), id]),
 );
@@ -312,7 +296,7 @@ export function planCharacter(id: string, data: Raw): CharacterPlan {
     const facts = WEAPON_FACTS[weaponId];
     if (facts.mastery === "—") {
       warnings.push(`Weapon mastery "${value}" has no mastery property and can never be mastered — re-pick.`);
-    } else if (klass && !isProficientWith(klass.weaponProficiencies, facts)) {
+    } else if (klass && !isWeaponProficient(klass.weaponProficiencies, facts)) {
       illegalMasteries.push(value);
       warnings.push(
         `Weapon mastery "${value}" (${facts.category} ${facts.attack}, ${facts.properties}) is outside ` +

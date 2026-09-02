@@ -85,7 +85,7 @@ export function CodexPage() {
       <header className="codex-heading">
         <p className="eyebrow">One searchable library</p>
         <h1>Codex</h1>
-        <p>Deepcaller Rites, Whispers, and the current printable character sheet—together, with every player source kept visible.</p>
+        <p>The Core Rulebook, Deepcaller Rites, Whispers, and the current printable character sheet—together, with every player source kept visible.</p>
       </header>
 
       <div className="codex-search" role="search">
