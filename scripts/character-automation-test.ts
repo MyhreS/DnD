@@ -162,8 +162,8 @@ assert.equal(FIGHTING_STYLE_FEATS.length, 9, "all fighting styles are available 
 assert.equal(EPIC_BOON_FEATS.length, 9, "all epic boons are available inside upgrades");
 assert.deepEqual(CLASSES.find((entry) => entry.id === "scout")?.progressionColumns, ["Hunter's Mark"], "Scout progression uses the feature's canonical name");
 assert.match(CLASSES.find((entry) => entry.id === "stalker")?.progression.find((row) => row.level === 7)?.features ?? "", /Reliable Talent/, "Stalker level seven names Reliable Talent correctly");
-assert.match(CLASSES.find((entry) => entry.id === "deepcaller")?.progression.find((row) => row.level === 2)?.features ?? "", /Veiled Truth/, "Deepcaller level two matches its feature name");
-assert.match(CLASSES.find((entry) => entry.id === "deepcaller")?.progression.find((row) => row.level === 10)?.features ?? "", /Fragments of an Eldritch Mind/, "Deepcaller level ten matches its feature name");
+assert.match(CLASSES.find((entry) => entry.id === "deepcaller")?.progression.find((row) => row.level === 2)?.features ?? "", /Vailed Truth/, "Deepcaller level two matches its feature name");
+assert.match(CLASSES.find((entry) => entry.id === "deepcaller")?.progression.find((row) => row.level === 10)?.features ?? "", /Fragments of a Eldritch Mind/, "Deepcaller level ten matches its feature name");
 const abilityImprovement = upgradeFeatures(CLASSES[0], null, 3, 4).find((feature) => feature.name === "Ability Score Improvement")!;
 assert.equal(upgradeFeatureComplete(abilityImprovement, { version: 2, classSkills: [], levelFeats: { [abilityImprovement.key]: "Ability Score Improvement" }, levelAbilityBonuses: { [abilityImprovement.key]: { str: 2 } } }), true, "a fully assigned structured ASI completes its upgrade page");
 assert.equal(upgradeFeatureComplete(abilityImprovement, { version: 2, classSkills: [], levelFeats: { [abilityImprovement.key]: "Ability Score Improvement" }, levelAbilityBonuses: { [abilityImprovement.key]: { str: 1 } } }), false, "an unassigned ASI point keeps the upgrade incomplete");

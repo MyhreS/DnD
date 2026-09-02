@@ -10,7 +10,7 @@ const EXTRA_ARMOR_BY_NAME = new Map(
   ARMOR.filter((piece) => piece.category === "Extra").map((piece) => [piece.name.toLowerCase(), piece.id]),
 );
 const ALIASES: Record<string, string> = {
-  "blood vial": "blood-vial", "blood vials": "blood-vial", bullet: "bullets", bullets: "bullets",
+  "blood vial": "blood-vial", "blood vials": "blood-vial", bloodvial: "blood-vial", bloodvials: "blood-vial", bullet: "bullets", bullets: "bullets",
   "book of eldritch knowledge": "book-of-eldritch-knowledge",
   "lantern": "lantern", "hooded lantern": "lantern", "bullseye lantern": "lantern-bullseye",
   "deepcallers robe": "robe", robe: "robe", "blood-drainer's tools": "blood-drainers-tools",
