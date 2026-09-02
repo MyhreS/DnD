@@ -40,6 +40,9 @@ function fixture(overrides: Raw = {}): Raw {
     abilities: { str: 12, dex: 15, con: 13, int: 10, wis: 14, cha: 8 },
     skillProficiencies: [],
     mainArmorId: null,
+    // The Scout's class head gear — present so the base fixture is already
+    // migrated for the class-head-gear group (see its own tests below).
+    extraArmorIds: ["cavalier-hat"],
     notes: "",
     updatedAt: 0,
     createdAt: 0,
@@ -268,9 +271,8 @@ function change(plan: CharacterPlan, field: string) {
   }));
   assert.ok(truncated.warnings.some((note) => note.includes("unrecoverable")));
 
-  const legacy = planCharacter("legacy", fixture({ deathPending: false }));
-  assert.ok(legacy.warnings.some((note) => note.includes("deathPending")));
-  assert.equal("deathPending" in legacy.patch, false, "deathPending is reported, not stripped");
+  const legacy = planCharacter("legacy-warn", fixture({ deathPending: false }));
+  assert.equal(legacy.patch.deathPending, DELETE, "the legacy field is stripped, not merely flagged");
 
   const staleMastery = planCharacter("mastery", fixture({
     sheetAutomation: { version: 3, classSkills: [], weaponMasteries: ["Moon Glaive"] },
@@ -285,7 +287,7 @@ function change(plan: CharacterPlan, field: string) {
   }));
   assert.ok(stalker.warnings.some((note) => note.includes('"Pistol"') && note.includes("outside")));
   assert.equal(stalker.warnings.some((note) => note.includes('"Dagger"')), false, "a Finesse/Light martial weapon is fine");
-  assert.equal(stalker.patch["sheetAutomation.weaponMasteries"], undefined, "reported, never auto-stripped");
+  assert.deepEqual(stalker.patch["sheetAutomation.weaponMasteries"], ["Dagger"], "the illegal pick is stripped, the legal one stays");
 
   // A Scout has unrestricted Martial proficiency, so the same pick is legal.
   const scout = planCharacter("scout-mastery", fixture({
@@ -353,6 +355,72 @@ function change(plan: CharacterPlan, field: string) {
   assert.ok(report.includes("NOTHING WAS WRITTEN"));
   assert.ok(report.includes("REVIEW CASES"));
   assert.ok(report.includes("Characters scanned        : 2"));
+}
+
+// --- REMAP: class head gear ------------------------------------------------
+{
+  // Missing entirely -> the class's own hat is added.
+  const missing = planCharacter("no-hat", fixture({ classId: "warden", level: 3, subclassId: null, extraArmorIds: [] }));
+  assert.ok(groups(missing).includes("remap:class-head-gear"));
+  assert.deepEqual(missing.patch.extraArmorIds, ["tricorn"], "the Warden gains a Tricorn");
+
+  // Wrong class's hat -> swapped, non-head Extras preserved in place.
+  const wrong = planCharacter("wrong-hat", fixture({
+    classId: "stalker",
+    extraArmorIds: ["cowl", "leather-boots"],
+  }));
+  assert.deepEqual(wrong.patch.extraArmorIds, ["leather-boots", "cavalier-hat"], "cowl out, cavalier-hat in");
+  assert.ok(wrong.reviews.some((note) => note.includes("cowl")), "the swap is reported for review");
+
+  // Every class maps to the hat the armor table gives it.
+  for (const [classId, hatId] of [
+    ["brute", "wide-brim-hat"],
+    ["scout", "cavalier-hat"],
+    ["stalker", "cavalier-hat"],
+    ["deepcaller", "cowl"],
+    ["bloodbound", "cowl"],
+    ["warden", "tricorn"],
+  ] as const) {
+    const plan = planCharacter(classId, fixture({ classId, subclassId: null, extraArmorIds: [] }));
+    assert.deepEqual(plan.patch.extraArmorIds, [hatId], `${classId} head gear`);
+  }
+
+  // Already correct -> no change at all.
+  const ok = planCharacter("has-hat", fixture({ classId: "brute", extraArmorIds: ["wide-brim-hat"] }));
+  assert.equal(groups(ok).includes("remap:class-head-gear"), false);
+}
+
+// --- STRIP: weapon masteries outside the class's proficiency ----------------
+{
+  // The Stalker's kit grants a Pistol but its proficiency is "Simple weapons
+  // and Martial weapons with the Finesse or Light property" — a Martial Ranged
+  // Pistol is neither, so the mastery was never legal.
+  const plan = planCharacter("illegal", fixture({
+    classId: "stalker",
+    sheetAutomation: { version: 3, classSkills: [], weaponMasteries: ["Pistol", "Scimitar"] },
+  }));
+  assert.ok(groups(plan).includes("strip:illegal-weapon-mastery"));
+  assert.deepEqual(plan.patch["sheetAutomation.weaponMasteries"], ["Scimitar"], "only the illegal pick leaves");
+  assert.ok(plan.warnings.some((note) => note.includes("Pistol") && note.includes("stripped")));
+
+  // The same pick IS legal for a class proficient in all Martial weapons.
+  const legal = planCharacter("legal", fixture({
+    classId: "scout",
+    sheetAutomation: { version: 3, classSkills: [], weaponMasteries: ["Pistol", "Shortsword"] },
+  }));
+  assert.equal(groups(legal).includes("strip:illegal-weapon-mastery"), false, "a Scout may master a Pistol");
+}
+
+// --- STRIP: the legacy deathPending field ----------------------------------
+{
+  const plan = planCharacter("legacy", fixture({ deathPending: true }));
+  assert.ok(groups(plan).includes("strip:legacy-fields"));
+  assert.equal(plan.patch.deathPending, DELETE);
+  const after = applyPatch(fixture({ deathPending: true }), plan.patch);
+  assert.equal("deathPending" in after, false, "the field is gone from the migrated document");
+
+  const absent = planCharacter("no-legacy", fixture());
+  assert.equal(groups(absent).includes("strip:legacy-fields"), false);
 }
 
 console.log("stored-character migration: all transform, validation and safety tests passed");

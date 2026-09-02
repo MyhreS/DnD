@@ -71,6 +71,10 @@ export const FEAT_SKILL_TOOL_REMAP: Record<string, string | null> = {
   "Brewer's Supplies": null,
 };
 
+/** The four "Extra: Head" pieces the armor table marks "Is given by class."
+ * (core-rulebook.txt lines 1778-1784). Each class kit grants exactly one. */
+const CLASS_HEAD_GEAR_IDS = new Set(["tricorn", "cavalier-hat", "cowl", "wide-brim-hat"]);
+
 /** The level at which a subclass becomes available (core-rulebook: level 3). */
 const SUBCLASS_LEVEL = 3;
 
@@ -91,6 +95,9 @@ export type ChangeGroup =
   | "strip:removed-items"
   | "strip:zealot-granted-whispers"
   | "strip:sheet-insane"
+  | "strip:illegal-weapon-mastery"
+  | "strip:legacy-fields"
+  | "remap:class-head-gear"
   | "remap:feat-skill-tools"
   | "backfill:bloodvial-purity"
   | "backfill:starting-kit-extra-armor"
@@ -291,6 +298,11 @@ export function planCharacter(id: string, data: Raw): CharacterPlan {
   if (nextMasteries.length !== masteries.length) {
     add("strip:hunter-cleaver", "sheetAutomation.weaponMasteries", masteries, nextMasteries);
   }
+  // The rulebook grants mastery only for "weapons of your choice with which you
+  // have proficiency" (core-rulebook.txt Weapon Mastery). Subclasses add no
+  // weapon proficiencies, so the class sentence is the whole rule. Anything
+  // outside it was never a legal pick and is stripped, each one reported.
+  const illegalMasteries: string[] = [];
   for (const value of nextMasteries) {
     const weaponId = WEAPON_NAME_TO_ID.get(normalizeName(value));
     if (!weaponId) {
@@ -301,11 +313,16 @@ export function planCharacter(id: string, data: Raw): CharacterPlan {
     if (facts.mastery === "—") {
       warnings.push(`Weapon mastery "${value}" has no mastery property and can never be mastered — re-pick.`);
     } else if (klass && !isProficientWith(klass.weaponProficiencies, facts)) {
+      illegalMasteries.push(value);
       warnings.push(
         `Weapon mastery "${value}" (${facts.category} ${facts.attack}, ${facts.properties}) is outside ` +
-        `${klass.title} proficiency ("${klass.weaponProficiencies}") — report only, the choice needs re-picking.`,
+        `${klass.title} proficiency ("${klass.weaponProficiencies}") — stripped, the player re-picks in the builder.`,
       );
     }
+  }
+  if (illegalMasteries.length) {
+    const legal = nextMasteries.filter((value) => !illegalMasteries.includes(value));
+    add("strip:illegal-weapon-mastery", "sheetAutomation.weaponMasteries", nextMasteries, legal);
   }
 
   // --- STRIP: granted Zealot Whispers stored as prepared -------------------
@@ -326,6 +343,17 @@ export function planCharacter(id: string, data: Raw): CharacterPlan {
       after: "(deleted — derived from madness >= Max Sanity)",
     });
     sheetPatch.insane = DELETE;
+  }
+
+  // --- STRIP: legacy fields with no reader left in src/ --------------------
+  if (Object.prototype.hasOwnProperty.call(data, "deathPending")) {
+    changes.push({
+      group: "strip:legacy-fields",
+      field: "deathPending",
+      before: data.deathPending,
+      after: "(deleted — no reader remains in src/)",
+    });
+    patch.deathPending = DELETE;
   }
 
   // --- REMAP: tool-name strings inside featSkills[] ------------------------
@@ -384,6 +412,26 @@ export function planCharacter(id: string, data: Raw): CharacterPlan {
       after: DEFAULT_BLOODVIAL_PURITY,
     });
     patch["sheetAutomation.startingKitInventory"] = nextStartingKit;
+  }
+
+  // --- REMAP: class head gear inside extraArmorIds -------------------------
+  // Every class kit grants exactly one Extra: Head piece and the armor table
+  // marks all four as "Is given by class." (core-rulebook.txt lines 1778-1784),
+  // so a hunter wearing another class's hat is holding a stale grant. Ensure
+  // the class's own hat is present and remove the other three. AC is unchanged
+  // (Extras are acValue 0); weight moves, and is recomputed below.
+  if (klass) {
+    const worn = asArray<string>(data.extraArmorIds).filter((value) => typeof value === "string");
+    const own = startingKit(klass, background).extraArmorIds.filter((id) => CLASS_HEAD_GEAR_IDS.has(id));
+    const foreign = worn.filter((id) => CLASS_HEAD_GEAR_IDS.has(id) && !own.includes(id));
+    const missing = own.filter((id) => !worn.includes(id));
+    if (foreign.length || missing.length) {
+      const next = [...worn.filter((id) => !foreign.includes(id)), ...missing];
+      add("remap:class-head-gear", "extraArmorIds", worn, next);
+      for (const id of foreign) {
+        reviews.push(`Head gear "${id}" belongs to another class and was replaced by ${klass.title}'s ${own.join(", ") || "(none)"}.`);
+      }
+    }
   }
 
   // --- BACKFILL: sheetAutomation.startingKitExtraArmorIds ------------------
@@ -449,9 +497,6 @@ export function planCharacter(id: string, data: Raw): CharacterPlan {
     warnings.push(
       "Level-20 Bloodbound with STR/CON exactly 20 — a pre-truncation value is unrecoverable; verify by hand.",
     );
-  }
-  if (Object.prototype.hasOwnProperty.call(data, "deathPending")) {
-    warnings.push("Legacy `deathPending` field present — nothing reads it any more (not in this migration's change set).");
   }
 
   // --- Report-only: the speed / passive-perception double-count guard ------
@@ -544,6 +589,9 @@ const GROUP_TITLES: Record<ChangeGroup, string> = {
   "strip:removed-items": "STRIP — removed item ids (bedroll / rations / letter / brewer's supplies)",
   "strip:zealot-granted-whispers": "STRIP — Zealot Whispers now granted, not stored",
   "strip:sheet-insane": "STRIP — sheet.insane (now derived)",
+  "strip:illegal-weapon-mastery": "STRIP — weapon masteries the class has no proficiency for",
+  "strip:legacy-fields": "STRIP — legacy fields nothing in the app reads any more",
+  "remap:class-head-gear": "REMAP — class head gear inside extraArmorIds",
   "remap:feat-skill-tools": "REMAP — tool names inside featSkills[]",
   "backfill:bloodvial-purity": "BACKFILL — blood-vial purity",
   "backfill:starting-kit-extra-armor": "BACKFILL — sheetAutomation.startingKitExtraArmorIds",
