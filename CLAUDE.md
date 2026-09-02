@@ -34,8 +34,11 @@ permissions are per-campaign (see "Access model & roles").
   user, autosaved in Firestore; existing structured Hunter records remain usable.
 - **Party** — gallery of everyone's hunters. Staff get a roster: who has a
   character, who's RSVP'd, with one-tap `mailto:` reminders.
-- **Codex** — a searchable view and download library for the four current
-  game-maker documents (see "Updating game content").
+- **Codex** — a searchable view and download library for the four player-facing
+  beta sources: the **Core Rulebook**, the Book of the Deepcaller, the character
+  sheet and the Whispers sheet. (The GM-only hidden-condition sheet is a fifth
+  document in `docs/rules/` and is deliberately NOT a Codex source — see
+  "Updating game content".)
 
 Installable to the iPhone home screen (standalone display, custom icon, safe-area
 aware, theme-colored).
@@ -45,7 +48,12 @@ aware, theme-colored).
 - **React 19 + TypeScript + Vite 6**, bundled/run with **Bun**.
 - **React Compiler** (auto-memoisation) enabled in `vite.config.ts`.
 - **Zustand** for state (stores live per-feature).
-- **react-router-dom** (4 tabs + a profile route).
+- **react-router-dom**. Three route trees, not a flat tab bar: a signed-out
+  `PublicLayout` (landing + Codex), the signed-in `MainLayout` (`/`, `/character`,
+  `/game`, `/codex`, `/profile`, plus legacy Codex redirects), and the
+  chrome-less full-bleed `/status` board. `MainLayout` lives in
+  `src/components/`, `PublicLayout` in `features/auth/components/`; there is no
+  `CampaignLayout`.
 - **Firebase** (web SDK): Auth (Google), Firestore, **Cloud Functions**, Hosting.
 - **vite-plugin-pwa** (Workbox) for the installable PWA.
 - **Doppler** for frontend config/secrets injection.
@@ -62,8 +70,9 @@ src/
   config.ts            Constants + role model (Identity, capabilities, names)
   types.ts             Shared domain types
   api/                 ONE FILE PER API — all Firestore/Functions access
-    users.ts  players.ts (characters)  campaigns.ts  games.ts  sessions.ts
-    rsvp.ts  trades.ts  notifications.ts  allowlist.ts (legacy)
+    users.ts  players.ts (characters)  campaigns.ts  games.ts  combat.ts
+    enemies.ts  sessionLoot.ts  sessionNotes.ts  activity.ts  workshop.ts
+    allowlist.ts (legacy)
   hooks/               Shared hooks, grouped in subfolders
     auth/useAuthInit.ts   common/useNow.ts
   features/<feature>/  auth, campaigns, codex, game, hunter, play, profile, status
@@ -103,10 +112,15 @@ bun run lint          # eslint: rules-of-hooks (error) + the React Compiler
 bun run lint:fix
 bun run deadcode      # knip — unused files/exports/deps
 bun run deadcode:fix  # knip --fix (auto-remove dead code)
-bun run check         # tsc + eslint + knip
+bun run check         # the full gate, in order: the eight unit-test suites
+                      #   (codex, ability-buy, stored-character-migration,
+                      #   character-automation, game-presentation,
+                      #   enemy-library, workshop-manager, pwa-update-policy),
+                      #   then tsc -b, then eslint, then knip. It stops at the
+                      #   first failure, so a broken test hides later gates.
 ```
 
-Keep all three green before opening a PR.
+Keep the whole `check` chain green before opening a PR.
 
 ## Access model & roles (important)
 
