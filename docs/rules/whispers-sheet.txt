@@ -1,0 +1,102 @@
+# C&S Whispers Sheet
+
+Source: "C&S Whispers Sheet.pdf" (Beta Release) — 2 pages.
+
+<!-- [page 1] -->
+
+## ELDRITCH BLAST
+Whisper
+
+| Field | Value |
+| --- | --- |
+| Type | Evocation Rite |
+| Performing | Action |
+| Range | 120 feet |
+| Duration | Instantaneous |
+
+You hurl a beam of crackling energy. Make a ranged rite attack against one creature or object in range.
+
+On a hit, the target takes 1d10 Eldritch Power damage.
+
+**Whisper Upgrade.** The rite creates two beams at level 5, three beams at level 11, and four beams at level 17. You can direct the beams at the same target or at different ones. Make a separate attack roll for each beam.
+
+## ELDRITCH STRIKE
+Whisper
+
+| Field | Value |
+| --- | --- |
+| Type | Evocation Rite |
+| Performing | Action |
+| Range | Self |
+| Duration | Instantaneous |
+| Special Requirements | A weapon with which you have proficiency |
+
+Guided by your Patron's will, you make one attack with the weapon used to perform this Rite.
+
+The attack uses your Rite Performing ability for the attack and damage rolls instead of using Strength or Dexterity. If the attack deals damage, it can be Eldritch Power damage or the weapon's normal damage type (your choice).
+
+**Whisper Upgrade.** Whether you deal Eldritch Power damage or the weapon's normal damage type, the attack deals extra Eldritch Power damage when you reach levels 5 (1d6), 11 (2d6), and 17 (3d6).
+
+## ELDRITCH LIGHTNING
+Whisper
+
+| Field | Value |
+| --- | --- |
+| Type | Evocation Rite |
+| Performing | Action |
+| Range | Self |
+| Duration | Instantaneous |
+
+You call upon a Patron, letting a fragment of its voice burst from your body as crackling lightning. Each creature in a 5-foot Emanation originating from you must succeed on a Constitution saving throw or take 1d6 Lightning damage. The Rite also makes a thunderous sound can be heard up to 100 feet away.
+
+**Whisper Upgrade.** The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6).
+
+## MINDCRACK
+Whisper
+
+| Field | Value |
+| --- | --- |
+| Type | Mind Influence Rite |
+| Performing | Action |
+| Range | 60 feet |
+| Duration | 1 round |
+
+You try to temporarily break the mind of one creature you can see within range, opening their minds to the words of your patron through whispers. The target must succeed on an Intelligence saving throw or take 1d6 Mind damage and subtract 1d4 from the next saving throw it makes before the end of your next turn.
+
+**Whisper Upgrade.** The damage increases by 1d6 when you reach levels 5 (2d6), 11 (3d6), and 17 (4d6).
+
+<!-- [page 2] -->
+
+## MINOR ILLUSION
+Whisper
+
+| Field | Value |
+| --- | --- |
+| Type | Illusion Rite |
+| Performing | Action |
+| Range | 30 feet |
+| Duration | 10 rounds |
+
+A patron will make a sound or an image of an object within range that lasts for the duration. See the descriptions below for the effects of each. The illusion ends if you perform this rite again.
+
+If a creature takes a Study action to examine the sound or image, the creature can determine that it is an illusion with a successful Intelligence (Investigation) check against your rites save DC. If a creature discerns the illusion for what it is, the illusion becomes faint to the creature.
+
+**Sound.** If you create a sound, its volume can range from a whisper to a scream. It can be your voice, someone else's voice, a roar, a beating of a heart, or any other sound you choose. The sound continues unabated throughout the duration, or you can make discrete sounds at different times before the spell ends.
+
+**Image.** If you create an image of an object—such as a chair, muddy footprints, or a small chest—it must be no larger than a 5-foot Cube. The image can't create sound, light, smell, or any other sensory effect. Physical interaction with the image reveals it to be an illusion, since things can pass through it.
+
+## THIRD HAND
+Whisper
+
+| Field | Value |
+| --- | --- |
+| Type | Summoning Rite |
+| Performing | Action |
+| Range | 30 feet |
+| Duration | Concentration, 10 rounds |
+
+A spectral, floating hand not from this world appears at a point you choose within range. The hand lasts for the duration. The hand vanishes if it is ever more than 30 feet away from you or if you perform this rite again. When you perform the rite, you can use the hand to manipulate an object, open an unlocked door or container, stow or retrieve an item from an open container, or pour the contents out of a vial.
+
+As a Rite action on your later turns, you can control the hand thus again. As part of that action, you can move the hand up to 30 feet.
+
+The hand can't attack, or carry more than 10 pounds.

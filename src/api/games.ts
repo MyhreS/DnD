@@ -446,6 +446,20 @@ export async function createLoot(gameId: string, pile: LootInput): Promise<void>
   });
 }
 
+/** Remove a fallen hunter's still-unclaimed remains. core-rulebook.txt
+ * [page 45]: a Hunter who returns brings "everything you were wearing or
+ * carrying when you died" back with them, so the pile their death dropped must
+ * not also stay on the loot feed as a duplicate. Anything a player already
+ * claimed is left alone. */
+export async function clearFallenLoot(gameId: string, fromUid: string): Promise<void> {
+  const snap = await getDocs(lootCol(gameId));
+  await Promise.all(
+    snap.docs
+      .filter((d) => d.data().fromUid === fromUid && d.data().dropped !== true && d.data().status === "unclaimed")
+      .map((d) => deleteDoc(d.ref)),
+  );
+}
+
 export async function purgeLoot(gameId: string): Promise<void> {
   const snap = await getDocs(lootCol(gameId));
   await Promise.all(snap.docs.map((d) => deleteDoc(d.ref)));

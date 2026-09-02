@@ -1,6 +1,6 @@
 import { BACKGROUNDS } from "@/data/backgrounds";
 import { CLASSES } from "@/data/classes";
-import { DEEPCALLER_WHISPERS, TOOL_PROFICIENCIES } from "@/data/characterOptions";
+import { ALWAYS_PREPARED_ZEALOT_IDS, DEEPCALLER_RITES, DEEPCALLER_WHISPERS, TOOL_PROFICIENCIES, type DeepcallerReference } from "@/data/characterOptions";
 import { ORIGIN_FEATS } from "@/data/feats";
 import { SKILLS } from "@/data/skills";
 import { ChoiceToggle } from "../appsheet/appSheetShared";
@@ -38,7 +38,28 @@ export function CharacterSheetUpgradeChoices({ kind, target }: { kind: UpgradeCh
 
   if (kind === "expertise") return <CharacterSheetSkillChoices kind="expertise" intro={`Choose ${automation.expertiseLimit} skill${automation.expertiseLimit === 1 ? "" : "s"} for Expertise.`} options={SKILLS.filter((skill) => card.skillProficiencies.includes(skill.name)).map((skill) => skill.name)} selected={expertise} limit={automation.expertiseLimit} onToggle={automation.toggleExpertise} />;
   if (kind === "mastery") return <CharacterSheetWeaponMasteryChoices />;
-  if (kind === "whispers") return <div className="character-sheet-upgrade-choice-page"><p>Prepare {automation.whisperLimit} Whispers. Each effect is shown here.</p>{DEEPCALLER_WHISPERS.map((whisper) => <ChoiceToggle key={whisper.id} label={whisper.name} meta={`${whisper.performing} · ${whisper.range} · ${whisper.damage} ${whisper.damageType}`} checked={whispers.includes(whisper.id)} disabled={!whispers.includes(whisper.id) && whispers.length >= automation.whisperLimit} onChange={() => automation.toggleWhisper(whisper.id)} />)}</div>;
+  if (kind === "whispers") {
+    // Zealot Whispers — core-rulebook.txt [pages 76–77]. A level-3+ Zealot may
+    // also prepare Level 1 Rites, and always has Eldritch Strike and Armor of
+    // The Drowned Star prepared without them counting against the limit.
+    const zealot = card.subclassId === "hunter-zealot" && card.level >= 3;
+    const options: Array<{ entry: DeepcallerReference; zealotOption: boolean }> = [
+      ...DEEPCALLER_WHISPERS.map((entry) => ({ entry, zealotOption: false })),
+      ...(zealot ? DEEPCALLER_RITES.filter((rite) => rite.level === 1).map((entry) => ({ entry, zealotOption: true })) : []),
+    ];
+    return <div className="character-sheet-upgrade-choice-page"><p>Prepare {automation.whisperLimit} Whispers. Each effect is shown here.</p>{options.map(({ entry, zealotOption }) => {
+      const granted = zealot && ALWAYS_PREPARED_ZEALOT_IDS.includes(entry.id);
+      const checked = granted || whispers.includes(entry.id);
+      return <ChoiceToggle
+        key={entry.id}
+        label={entry.name}
+        meta={`${granted ? "Always prepared · " : zealotOption ? "Zealot Whisper · " : ""}${entry.performing} · ${entry.range} · ${entry.damage} ${entry.damageType}`}
+        checked={checked}
+        disabled={granted || (!checked && whispers.length >= automation.whisperLimit)}
+        onChange={() => automation.toggleWhisper(entry.id)}
+      />;
+    })}</div>;
+  }
   return <p>No choice is required on this step through level {target}.</p>;
 }
 

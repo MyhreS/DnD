@@ -12,6 +12,7 @@ import { bodySnippet, highlightSegments, normalizeText, searchEntries } from "@/
 
 const MAX_RESULTS = 100;
 const DOCUMENT_SOURCE_ORDER = [
+  "core-rulebook",
   "book-of-the-deepcaller",
   "character-sheet",
   "whispers",
@@ -29,7 +30,7 @@ export function CodexDocumentsPage() {
       <header className="codex-heading codex-documents-heading">
         <p className="eyebrow">Documents</p>
         <h1>Source library</h1>
-        <p>The three current player documents supplied by the game maker. Each remains separate so its origin is always clear.</p>
+        <p>The four current player documents supplied by the game maker. Each remains separate so its origin is always clear.</p>
       </header>
       <SourceLibrary />
     </div>
@@ -84,7 +85,7 @@ export function CodexPage() {
       <header className="codex-heading">
         <p className="eyebrow">One searchable library</p>
         <h1>Codex</h1>
-        <p>Deepcaller Rites, Whispers, and the current printable character sheet—together, with every player source kept visible.</p>
+        <p>The Core Rulebook, Deepcaller Rites, Whispers, and the current printable character sheet—together, with every player source kept visible.</p>
       </header>
 
       <div className="codex-search" role="search">
@@ -148,7 +149,7 @@ function CodexHome({ onBrowse }: { onBrowse: (group: string) => void }) {
         ))}
         <Link className="codex-collection-item" to="/codex/documents">
           <span>Source library</span>
-          <small>{CODEX_SOURCES.length} sources · {CODEX_SOURCES.flatMap((source) => source.downloads).length} PDFs</small>
+          <small>{CODEX_SOURCES.length} sources · {CODEX_SOURCES.flatMap((source) => source.downloads).length} documents</small>
         </Link>
       </div>
     </section>
@@ -167,7 +168,7 @@ function SourceLibrary() {
               <p>{item.description}</p>
               <small>
                 {item.pageCount > 0 ? `${item.pageCount} ${item.pageCount === 1 ? "page" : "pages"}` : "Structured record"}
-                {` · ${item.downloads.length} downloadable ${item.downloads.length === 1 ? "PDF" : "PDFs"}`}
+                {` · ${item.downloads.length} downloadable ${item.downloads.length === 1 ? "document" : "documents"}`}
               </small>
             </div>
             <div className="codex-source-actions">
@@ -221,7 +222,7 @@ function CodexVersion({ entry, query }: { entry: CodexEntry; query: string }) {
           <small>{entry.locator}{pages}</small>
         </div>
         {sourcePath && (
-          <a href={`${sourcePath}${entry.sourcePages?.[0] ? `#page=${entry.sourcePages[0]}` : ""}`} target="_blank" rel="noreferrer">
+          <a href={sourcePath} target="_blank" rel="noreferrer">
             View source
           </a>
         )}

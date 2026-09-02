@@ -25,17 +25,32 @@ permissions are per-campaign (see "Access model & roles").
 > detail. Follow `AGENTS.md` and `skills/dnd-workshop-bot/SKILL.md` for the full
 > communication rule. Do not talk down to him or overexplain his own game.
 
-## What it does (v1)
+## What it does
 
-- **Sessions** — next session with a live countdown + upcoming dates. Members
-  RSVP (yes/maybe/no). Staff (admin/DM) add & edit dates. Backed by Firestore.
-- **Hunter** — create and keep hunters through the established guided builder
-  and canonical character sheet (`features/hunter`). Multiple per
-  user, autosaved in Firestore; existing structured Hunter records remain usable.
-- **Party** — gallery of everyone's hunters. Staff get a roster: who has a
-  character, who's RSVP'd, with one-tap `mailto:` reminders.
-- **Codex** — a searchable view and download library for the four current
-  game-maker documents (see "Updating game content").
+The signed-in main menu offers exactly four destinations — **Hunters**, **Games**,
+**Codex**, **Profile** (`features/campaigns/components/MainMenu.tsx`).
+
+- **Hunters** (`/character`) — create and keep hunters through the guided builder
+  and the canonical character sheet (`features/hunter`). Multiple per user,
+  autosaved to `/characters/{id}`; older structured records stay usable through
+  `legacyMigration`.
+- **Games** (`/game`) — open a live game or revisit a past one; a game's DM runs
+  combat, loot and trades. The full-bleed `/status` board is the table screen.
+- **Codex** (`/codex`, `/codex/documents`) — a searchable view and download
+  library for the four player-facing beta sources: the **Core Rulebook**, the Book
+  of the Deepcaller, the character sheet and the Whispers sheet. (The GM-only
+  hidden-condition sheet is a fifth document in `docs/rules/` and is deliberately
+  NOT a Codex source — see "Updating game content".)
+- **Profile** (`/profile`) — account and settings.
+
+> **There are no Sessions, Party or RSVP screens.** They were removed; there is no
+> `features/sessions`, `features/party` or `features/trades` directory. The
+> `/sessions`, `/rsvps` and `/trades` collections still appear in
+> `firestore.rules`, and `api/` still carries `sessionLoot.ts` / `sessionNotes.ts`
+> for in-game use, so their presence in the rules is not evidence of a UI.
+
+Installable to the iPhone home screen (standalone display, custom icon, safe-area
+aware, theme-colored).
 
 Installable to the iPhone home screen (standalone display, custom icon, safe-area
 aware, theme-colored).
@@ -45,7 +60,12 @@ aware, theme-colored).
 - **React 19 + TypeScript + Vite 6**, bundled/run with **Bun**.
 - **React Compiler** (auto-memoisation) enabled in `vite.config.ts`.
 - **Zustand** for state (stores live per-feature).
-- **react-router-dom** (4 tabs + a profile route).
+- **react-router-dom**. Three route trees, not a flat tab bar: a signed-out
+  `PublicLayout` (landing + Codex), the signed-in `MainLayout` (`/`, `/character`,
+  `/game`, `/codex`, `/profile`, plus legacy Codex redirects), and the
+  chrome-less full-bleed `/status` board. `MainLayout` lives in
+  `src/components/`, `PublicLayout` in `features/auth/components/`; there is no
+  `CampaignLayout`.
 - **Firebase** (web SDK): Auth (Google), Firestore, **Cloud Functions**, Hosting.
 - **vite-plugin-pwa** (Workbox) for the installable PWA.
 - **Doppler** for frontend config/secrets injection.
@@ -62,18 +82,21 @@ src/
   config.ts            Constants + role model (Identity, capabilities, names)
   types.ts             Shared domain types
   api/                 ONE FILE PER API — all Firestore/Functions access
-    users.ts  players.ts (characters)  campaigns.ts  games.ts  sessions.ts
-    rsvp.ts  trades.ts  notifications.ts  allowlist.ts (legacy)
+    users.ts  players.ts (characters)  campaigns.ts  games.ts  combat.ts
+    enemies.ts  sessionLoot.ts  sessionNotes.ts  activity.ts  workshop.ts
+    allowlist.ts (legacy)
   hooks/               Shared hooks, grouped in subfolders
     auth/useAuthInit.ts   common/useNow.ts
-  features/<feature>/  e.g. auth, sessions, hunter, party, codex, profile
+  features/<feature>/  auth, campaigns, codex, game, hunter, play, profile, status
     components/        Feature UI (each file < 200 lines — see rule)
     hooks/             Feature hooks (every useEffect lives in a hook)
     store/             Feature Zustand store
     lib/               Feature-local pure helpers
-  components/          Shared UI (Layout, Splash, ErrorBoundary, icons)
+  components/          Shared UI (MainLayout, Splash, ErrorBoundary, icons)
   lib/                 Pure cross-feature utils (firebase, character calc)
-  data/                App catalogs plus generated current-source Codex data
+  data/                App catalogs (classes, weapons, armor, items, feats,
+                       conditions, transformations, insaneQuirks, bloodvial…)
+                       plus the generated Codex data
   dev/                 Dev-only (preview mode)
 ```
 
@@ -84,9 +107,12 @@ Rules:
   `src/hooks/<group>/`, feature-specific in `features/<f>/hooks/`). Components
   should read clean; side-effects are named hooks.
 - **No component file over ~200 lines.** If it grows past that, split it into
-  more components/files. Only a *few* deliberate exceptions are allowed
-  (e.g. `features/hunter/components/papersheet/SheetPage1.tsx`, the densest
-  paper-sheet page).
+  more components/files. Four files currently exceed it: the two deliberate
+  exceptions `features/game/components/GamePage.tsx` (773) and
+  `features/hunter/components/papersheet/CharacterAutomationProvider.tsx` (663),
+  the two densest surfaces; plus `features/codex/components/CodexPage.tsx` (251)
+  and `features/hunter/components/appsheet/AppEditStage.tsx` (246), which have
+  drifted over and are worth splitting when next touched.
 - Imports use the `@/` alias (→ `src/`).
 
 ## Tooling / quality gates
@@ -102,57 +128,68 @@ bun run lint          # eslint: rules-of-hooks (error) + the React Compiler
 bun run lint:fix
 bun run deadcode      # knip — unused files/exports/deps
 bun run deadcode:fix  # knip --fix (auto-remove dead code)
-bun run check         # tsc + eslint + knip
+bun run check         # the full gate, in order: the eight unit-test suites
+                      #   (codex, ability-buy, stored-character-migration,
+                      #   character-automation, game-presentation,
+                      #   enemy-library, workshop-manager, pwa-update-policy),
+                      #   then tsc -b, then eslint, then knip. It stops at the
+                      #   first failure, so a broken test hides later gates.
 ```
 
-Keep all three green before opening a PR.
+Keep the whole `check` chain green before opening a PR.
+
+> **In a git worktree, knip lies unless dependencies resolve locally.** A worktree
+> without its own populated `node_modules/.bin` makes knip report `eslint` as both
+> unused *and* unlisted, plus `tsc`/`vite`/`eslint`/`knip` as "unlisted binaries" —
+> five findings that are an artifact of failed resolution, not real. Run
+> `bun install` in the worktree (or symlink the main checkout's `node_modules`)
+> before believing a knip result or claiming `check` is red.
 
 ## Access model & roles (important)
 
-**Open access, per-campaign permissions.** Anyone can sign in with a verified
-Google account — there is **no allowlist gate**. Permissions are scoped to each
-campaign (see `firestore.rules`):
+**Open access.** Anyone can sign in with a verified Google account — there is
+**no allowlist gate**.
 
 - **First login** → an **onboarding** screen captures the user's name, saved to
   `/users/{uid}` (`authStore.needsOnboarding` / `saveProfile`). Display names come
-  from this profile (synthesized into `member`); a legacy `/allowlist` entry is
-  used if present but never required.
-- **DM** = whoever **created** a campaign (`campaign.dmUid`). `useIsDM()`
-  (`features/campaigns/hooks`) gates DM controls — start/stop games, edit
-  sessions, the Party roster, invites. There is no global "staff" role anymore.
-- **Membership** is per-campaign: `/campaigns/{id}` + `/campaigns/{id}/members/{uid}`.
-  You see/read a campaign's games/sessions/trades only if you're a member
-  (`isMember`); only its DM controls it (`isCampaignDM`).
+  from this profile; a legacy `/allowlist` entry is used if present but never
+  required.
+- **DM is per-game, not per-campaign.** Whoever creates a game is its DM
+  (`game.dmUid`), and that is what gates running combat, loot and the table
+  board. `features/campaigns` survives only as a store, a sync hook and the main
+  menu — there is **no** `useIsDM()`, no campaign chrome, no invite panel and no
+  campaign routes. Do not reintroduce them on the strength of the rules file.
 - **Super-admin** bootstrap (`SUPER_ADMIN_EMAILS`, `simonmyhre1@gmail.com`) still
   exists for the legacy `/allowlist` admin tools, but isn't needed for normal use.
+- `src/config.ts` still exposes a capability map keyed on a `playerType`
+  (`manageSessions`, `email`, `oversight`, `runGame`). It backs the dev preview
+  roles; live permission decisions come from `game.dmUid`.
 
-**Two chromes** (`src/components/`): `MainLayout` (the main menu — account home,
-**Hunters** create/manage, **Codex**, Profile; no campaign) and `CampaignLayout`
-(inside a campaign — **Play / Sessions / Party / Hunter** + a "Main menu" back
-link, gated on an active campaign, with a "CAMPAIGN" badge + name).
+**Route trees** — three, not a tab bar:
+- `PublicLayout` (`features/auth/components/`) — signed-out landing plus Codex
+- `MainLayout` (`src/components/`) — `/`, `/character`, `/game`, `/codex`,
+  `/codex/documents`, `/profile`, plus redirects for the retired `/dm`,
+  `/handbook`, `/reference`, `/rules`, `/game-card`
+- the chrome-less full-bleed `/status` board
+There is **no** `CampaignLayout`.
 
-**Characters** live in the main menu (`/character`, multiple per user). You bring
-one *into* a campaign on the in-campaign **Hunter** page (`/hunter`,
-`CampaignHunterPage`): it sets `membership.characterId` + `character.campaignId`
-(so the campaign DM can manage it / handle death). No character creation
-in-campaign; if your hunter dies you bring a fresh one (level 1).
-
-- **Invites**: DM invites by **email** (`campaign.invitedEmails`) or shares the
-  **code** (`CampaignInvitePanel`, on the Party page — copy + regenerate). Invited
-  users see the campaign in the main menu and **Accept/Decline**.
 - **Dev preview**: `?preview=admin.dm` (or `user.player`, …) runs as a role
-  **without sign-in** — see `src/dev/preview.ts`. Preview seeds a sample campaign
-  (DM-aware), so campaign chrome + DM controls render. `?preview=off` clears it.
+  **without sign-in** — see `src/dev/preview.ts`. Character, Party and Play views
+  are seeded with mock hunters so the UI renders. `?preview=off` clears it. The
+  fixtures are kept accurate to the current rules on purpose: they drive every
+  screenshot run, so a stale fixture becomes a stale expectation.
 
-Firestore data (all campaign data is **member-scoped** in the rules):
+Firestore data:
 - `/users/{uid}` — `{ firstName, lastName, email }`. Owner only.
-- `/characters/{id}` — a `HunterCard` (`ownerUid`, optional `campaignId`). Any
-  signed-in user reads; owner writes; the campaign's DM may also write (death/recover).
-- `/campaigns/{id}` — `{ name, dmUid, dmName, inviteCode, memberUids[],
-  invitedEmails[] }` + `/members/{uid}` (`{ uid, name, email, role, characterId }`).
-- `/games/{id}` (+ `/participants`, `/loot`), `/sessions/{id}` (+ `/rsvps`),
-  `/trades/{id}` — all carry `campaignId` and are readable only by that campaign's
-  members; games are owned/controlled by their DM.
+- `/characters/{id}` — a `HunterCard` (`ownerUid`). Any signed-in user reads;
+  owner writes; a game's DM may also write (death/recover).
+- `/games/{id}` (+ `/participants`, `/loot`, `/combatants`, `/notes`) — owned and
+  controlled by their DM.
+- `/campaigns/{id}` (+ `/members/{uid}`), `/sessions/{id}` (+ `/rsvps`),
+  `/trades/{id}` — still described by `firestore.rules`, with **no UI** in the
+  app today.
+- `/enemies`, `/activity`, `/archive`, `/battleView`, `/workshop*` — table tools
+  and the workshop agent.
 - `/allowlist/{email}` — **legacy**, optional (super-admin only).
 
 ## Working in this repo (agent workflow)
@@ -230,7 +267,7 @@ Function (they sign in with custom tokens, run the flow, and clean up after):
 ```bash
 bun run smoke       # exercises every core rule path (campaign/character/game/
                     # join/lobby) + a negative test — fast, authoritative for rules
-bun run test:play   # Playwright: DM + player drive a live game through the real UI
+bun run e2e:game    # Playwright: DM + player drive a live game through the real UI
 ```
 Run `bun run smoke` after **any firestore.rules change** — it caught two scoping
 bugs that preview/check can't (rules only deploy on merge, so preview channels
@@ -288,6 +325,23 @@ bun run deploy       # build + firebase deploy   (run locally)
 bun run deploy:rules # firebase deploy --only firestore:rules
 ```
 
+### Stored-character data
+
+```bash
+bun run export:characters -- --out=<file.json>   # read-only backup of /characters
+bun run migrate:stored-characters                # DRY RUN — the default
+bun run migrate:stored-characters -- --apply --backup=<file.json>
+```
+
+`migrate-stored-characters.ts` reconciles saved `HunterCard` records with rule
+changes (strips, remaps, backfills, and a report of derived drift that needs no
+write). **A bare run never writes**: the apply path sits behind an explicit
+`--apply`, and `assertBackupCovers` refuses unless the given export contains a
+snapshot for every document about to be written. Take the backup outside the repo
+— this repo is public and those are real players' characters. The transforms are
+unit-tested against fixtures in `scripts/migrate-stored-characters-test.ts` and
+never touch the network.
+
 Firebase project: **`dandd-ea955`**. Simon has two Firebase/gcloud accounts;
 **this project uses `simonmyhre1@gmail.com`**. Pass `--account simonmyhre1@gmail.com`
 to firebase commands so the other project's login isn't disturbed.
@@ -328,34 +382,54 @@ owner-only denial matrix pass in production.
 
 ## Updating game content
 
-`resources/pdf/` contains exactly four current game-maker documents: the Book
-of the Deepcaller, Character Sheet, Hidden Condition Sheet, and Whispers Sheet.
-`resources/master.json` is their structured representation. Three sources are
-player-facing; the Hidden Condition Sheet is GM-only.
+The game's sources are the **beta release** documents, kept as verbatim plain-text
+transcriptions in **`docs/rules/`**. Those `.txt` files are the authoritative
+source of truth for the game's rules — answer every rules or game-logic question
+by reading them, not from memory or from older app data:
 
-`bun run codex:generate` performs all source-library generation. It verifies
-the four filenames and SHA-256 hashes, rejects duplicate documents, clears and
-recreates the ignored `public/source-library/` downloads for only the three
-player sources, and writes `src/data/codex.generated.json`. It must never copy
-the Hidden Condition source or text into public output. Never hand-edit
-generated Codex data.
+| File | Covers |
+|---|---|
+| `core-rulebook.txt` | The 126-page Core Rulebook (Beta V3.0) — the main rules text, page boundaries marked `[page N]` |
+| `book-of-the-deepcaller.txt` | The Rites |
+| `character-sheet.txt` | The printable character sheet's fields and layout |
+| `whispers-sheet.txt` | The 6 Whisper rites |
+| `hidden-condition-sheet.txt` | **GM-ONLY** — Hidden Second Threshold, Old One Vessel, Lost |
 
-The four PDFs replace older **game documents**, not the app's established
-screens or workflows. Do not remove or redesign Hunter creation, the canonical
-character sheet, saved-character compatibility, game pages, or table tools
-merely because a topic is absent from this deliberately narrow document set.
-Those product features change only when the game maker explicitly asks.
+**`hidden-condition-sheet.txt` is GM-only and must stay that way.** Its content
+must never reach public app UI, public API responses, the Codex, or build
+output — this repository and Firebase Hosting bundles are public. Never copy
+its text into `src/`, `public/`, generated data, or player-facing docs.
 
-When one of the four documents defines a concept already represented by the
-app, the current document wins. Update the underlying data or logic while
-preserving the existing interaction unless a redesign was requested. Keep the
-value authored once: source-derived Rites and Whispers flow from `master.json`
-through the generator rather than being copied into another hand-maintained
-catalog. Historical PDFs, extracts, CSVs, generated game cards, and handbook
-copies must not be restored.
+**The generation pipeline.** `bun run codex:generate`
+(`scripts/generate-codex-data.mjs`) performs all source-library generation. It
+reads the **four player documents from a hard-coded filename allowlist** —
+`core-rulebook.txt`, `book-of-the-deepcaller.txt`, `character-sheet.txt`,
+`whispers-sheet.txt` — never by globbing `docs/rules/*.txt` and filtering, so
+`hidden-condition-sheet.txt` is never opened. It records a **SHA-256 of each
+`.txt`** as the integrity gate (an edited transcription fails loudly), parses
+`[page N]` markers into `sourcePages`, clears and recreates the ignored
+`public/source-library/` downloads for only those four player sources (as
+`.txt`), and writes `src/data/codex.generated.json`. There is no
+`resources/pdf/` and no `resources/master.json` any more — both are deleted and
+must not be restored, and nothing in the pipeline verifies PDFs. `codex:generate`
+runs as a prebuild step in the `dev`, `build` and `build:ci` scripts, so the
+Codex download links are populated in every build. **Never hand-edit generated
+Codex data.**
 
 After a source refresh, run `bun run codex:generate`, `bun run test:codex`,
-`bun run test:character-automation`, and the normal repository checks.
+`bun run test:character-automation`, `bun run test:ability-buy`, and the normal
+repository checks (`bun run check`).
+
+The beta documents replace older **game documents**, not the app's established
+screens or workflows. Do not remove or redesign Hunter creation, the canonical
+character sheet, saved-character compatibility, game pages, or table tools
+merely because a topic is absent from this document set. Those product features
+change only when the game maker explicitly asks.
+
+When one of the documents defines a concept already represented by the app, the
+current document wins. Update the underlying data or logic while preserving the
+existing interaction unless a redesign was requested. Historical PDFs, extracts,
+CSVs, generated game cards, and handbook copies must not be restored.
 
 ## One-time manual setup (Firebase console)
 

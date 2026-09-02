@@ -263,7 +263,7 @@ await step("DM starts the standalone session", async () => {
   await updateDoc(doc(dm.db, "games", standaloneGameId), {
     status: "active", startedAt: serverTimestamp(), clockRunning: true, clockStartedAt: Date.now(),
     combat: {
-      active: false, round: 1, turnId: null, designatedWardenId: null,
+      active: false, round: 1, turnId: null,
       timerPhase: "idle", timerEndsAt: null, pausedRemainingMs: null,
     },
   });
@@ -308,7 +308,7 @@ await step("DM creates a unique item and the invited Hunter claims it once", asy
 });
 await step("DM can remove an active standalone combatant without changing the Hunter", async () => {
   await updateDoc(doc(dm.db, "games", standaloneGameId), { combat: {
-    active: true, round: 1, turnId: standaloneMonsterId, designatedWardenId: null,
+    active: true, round: 1, turnId: standaloneMonsterId,
     timerPhase: "untimed", timerEndsAt: null, pausedRemainingMs: null,
   } });
   await Promise.all([

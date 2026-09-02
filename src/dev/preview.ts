@@ -113,7 +113,6 @@ export function previewGame(): import("@/types").Game {
       encounterId: 0,
       round: 2,
       turnId: "prev-monster-1",
-      designatedWardenId: "prev-pc-2",
       timerPhase: "untimed",
       timerEndsAt: null,
       pausedRemainingMs: null,
@@ -135,7 +134,7 @@ export function previewCombatants(): import("@/types").Combatant[] {
   return [
     { id: "prev-monster-1", kind: "monster", name: "Cleric Beast", characterId: null, initiative: 19, ac: 14, maxHp: 80, currentHp: 52, conditions: ["poisoned"], conditionSince: { poisoned: 1 }, note: "Claws +6 to hit, 2d8+3 slashing; howl frightens on hit", createdAt: now },
     { id: "prev-pc-1", kind: "pc", name: "Eileen the Crow", characterId: "preview-uid-char", initiative: 17, ac: null, maxHp: null, currentHp: null, conditions: ["frightened"], conditionSince: { frightened: 1 }, createdAt: now },
-    { id: "prev-pc-2", kind: "pc", name: "Gascoigne", characterId: "preview-p2-char", initiative: 12, ac: null, maxHp: null, currentHp: null, conditions: ["prone"], conditionSince: { prone: 2 }, isWarden: true, createdAt: now },
+    { id: "prev-pc-2", kind: "pc", name: "Gascoigne", characterId: "preview-p2-char", initiative: 12, ac: null, maxHp: null, currentHp: null, conditions: ["prone"], conditionSince: { prone: 2 }, createdAt: now },
   ];
 }
 
@@ -153,7 +152,7 @@ export function previewEnemyTemplates(): import("@/types").EnemyTemplate[] {
 export function previewParticipants(): import("@/types").GameParticipant[] {
   const now = Date.now();
   return [
-    { uid: "preview-uid", characterId: "preview-uid-char", playerName: "Preview Hunter", name: "Eileen the Crow", classId: "scout", subclassId: "marksman", className: "Stalker", level: 3, role: "player", joinedAt: now, lastSeen: now },
+    { uid: "preview-uid", characterId: "preview-uid-char", playerName: "Preview Hunter", name: "Eileen the Crow", classId: "scout", subclassId: "marksman", className: "Scout", level: 3, role: "player", joinedAt: now, lastSeen: now },
     { uid: "preview-p2", characterId: "preview-p2-char", playerName: "Father Gascoigne", name: "Gascoigne", classId: "", subclassId: null, className: "Bloodbound", level: 3, role: "player", joinedAt: now, lastSeen: now },
   ];
 }
@@ -170,18 +169,16 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
     level: 3,
     currentHp: undefined,
     sanity: undefined,
-    deathPending: false,
     transformationLevel: 0,
     activeTransformations: [],
     sheet: {
       name: "Gascoigne",
-      background: "Cleric of the Old Ways",
+      background: "Church Missionary",
       class: "Bloodbound",
       level: "3",
       hpCur: "28",
       hpMax: "31",
       ac: "15",
-      sanityCur: "6",
       sanityMax: "10",
       initiative: "+1",
       speed: "30 ft",
@@ -199,7 +196,7 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
     name: "Henryk",
     classId: "stalker",
     subclassId: null,
-    background: "Old Hunter",
+    background: "Drifter",
     level: 4,
     lastSeenLevel: 4,
     feats: [],
@@ -210,9 +207,12 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
     addonArmorIds: [],
     studdedAddonIds: [],
     studdedAddons: 0,
-    extraArmorIds: [],
+    extraArmorIds: ["cavalier-hat"],
     currentHp: 21,
     sanity: 8,
+    // `sanity` stays to exercise the legacy conversion path in normalizeCard;
+    // `madness` is the value the inverted Sanity/Madness panel renders.
+    madness: 4,
     transformationLevel: 0,
     activeTransformations: [],
     insight: 32,
@@ -222,7 +222,6 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
     equippedStorageIds: [],
     inventory: [{ itemId: "dagger", qty: 2 }],
     droppedItems: [],
-    deathPending: false,
     notes: "",
   };
   return [eileen, gascoigne, henryk];
@@ -243,8 +242,8 @@ export function previewArchive(): import("@/types").ArchivedCharacter[] {
         name: "Viktor the Lost",
         classId: "deepcaller",
         subclassId: "hunter-zealot",
-        level: 2,
-        lastSeenLevel: 2,
+        level: 3,
+        lastSeenLevel: 3,
         currentHp: 0,
         preparedWhispers: ["eldritch-blast", "mindcrack"],
       },
@@ -266,7 +265,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     name: "Eileen the Crow",
     classId: "scout",
     subclassId: "marksman",
-    background: "Plague Doctor",
+    background: "Grave Tender",
     level: 3,
     lastSeenLevel: 3,
     feats: ["Tough"],
@@ -277,9 +276,11 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     addonArmorIds: ["leather-pauldron-right", "leather-vambrace-right"],
     studdedAddonIds: ["leather-pauldron-right"],
     studdedAddons: 1, // legacy mirror
-    extraArmorIds: ["tricorn"],
+    extraArmorIds: ["cavalier-hat"],
     currentHp: 22,
     sanity: 9,
+    // See Henryk above: the legacy `sanity` is deliberate, `madness` is shown.
+    madness: 4,
     transformationLevel: 2,
     activeTransformations: ["dreadbloodEars"],
     insight: 60,
@@ -291,11 +292,11 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     equippedStorageIds: ["bandolier"],
     inventory: [
       { itemId: "hunter-rifle", qty: 1 },
-      { itemId: "hunter-cleaver", qty: 1 },
+      { itemId: "shortsword", qty: 1 },
       { itemId: "pistol", qty: 1 },
       { itemId: "dagger", qty: 2 },
       { itemId: "bullets", qty: 1 },
-      { itemId: "blood-vial", qty: 3 },
+      { itemId: "blood-vial", qty: 3, purity: "stirred" },
       { itemId: "rope", qty: 1 },
       { itemId: "lantern", qty: 1 },
       { itemId: "tool-belt", qty: 1 },
@@ -308,15 +309,14 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     // remain authoritative for current calculated values across play surfaces.
     sheet: {
       name: "Eileen the Crow",
-      background: "Plague Doctor",
-      class: "Stalker",
+      background: "Grave Tender",
+      class: "Scout",
       subclass: "Marksman",
       level: "3",
       insight: "60",
       profBonus: "+2",
       transformation: "2",
-      sanityCur: "9",
-      sanityMax: "11",
+      sanityMax: "13",
       sanityDice: "2d6",
       hpCur: "22",
       hpMax: "25",
@@ -343,7 +343,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
       skSurvival: "+3",
       skSurvivalP: true,
       initiative: "+2",
-      speed: "30 ft",
+      speed: "35 ft",
       passivePerception: "13",
       bloodTinge: true,
       ac: "14",
@@ -366,10 +366,10 @@ export function previewCard(uid: string): import("@/types").HunterCard {
       eq_0_1: "Significant",
       eq_0_2: "Back",
       eq_0_3: "9 lb",
-      eq_1_0: "Hunter Cleaver",
+      eq_1_0: "Shortsword",
       eq_1_1: "Significant",
       eq_1_2: "Hip",
-      eq_1_3: "4 lb",
+      eq_1_3: "2 lb",
       wd_0_0: "Hunter Rifle",
       wd_0_1: "+4",
       wd_0_2: "Piercing",

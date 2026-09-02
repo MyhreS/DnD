@@ -1,12 +1,12 @@
 import { ABILITIES } from "@/data/abilities";
 import type { AbilityKey, SheetAutomationState } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
-import { featOptionsFor, recordedOptionsFor, type UpgradeFeature } from "./upgradeModel";
+import { featOptionsFor, recordedChoiceHint, recordedChoiceLabel, recordedOptionsFor, type UpgradeFeature } from "./upgradeModel";
 
 export function CharacterSheetUpgradeFeatPage({ feature, state }: { feature: UpgradeFeature; state: SheetAutomationState }) {
   const automation = useCharacterAutomation();
-  const options = featOptionsFor(feature);
-  const recordedOptions = recordedOptionsFor(feature);
+  const options = featOptionsFor(feature, automation.card, automation.klass, state.levelFeats?.[feature.key]);
+  const recordedOptions = recordedOptionsFor(feature, state);
   const recordedChoice = state.levelChoices?.[feature.key] ?? "";
   const recordedDetail = recordedOptions.find((option) => option.value === recordedChoice)?.detail;
   const selected = options.find((feat) => feat.name === state.levelFeats?.[feature.key]);
@@ -38,12 +38,12 @@ export function CharacterSheetUpgradeFeatPage({ feature, state }: { feature: Upg
         </div>}
       </article>}
     </> : recordedOptions.length > 0 ? <label className="character-sheet-upgrade-select">
-      <span>Choose Forbidden Revelation</span>
+      <span>{recordedChoiceLabel(feature)}</span>
       <select value={recordedChoice} disabled={automation.readOnly} onChange={(event) => automation.setLevelChoice(feature.key, event.target.value)}>
         <option value="">Choose...</option>
         {recordedOptions.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
-      <small>{recordedDetail ?? "Choose a Rite of this Revelation's level, or an eligible lower-level Rite performed with its printed Higher-Level Strain option."}</small>
+      <small>{recordedDetail ?? recordedChoiceHint(feature)}</small>
     </label> : feature.choice ? <label className="character-sheet-upgrade-record"><span><b>Record your choice</b><small>This rule has no finite option list in the source material.</small></span><input value={recordedChoice} disabled={automation.readOnly} placeholder="Your choice" onChange={(event) => automation.setLevelChoice(feature.key, event.target.value)} /></label> : null}
   </div>;
 }

@@ -37,7 +37,6 @@ export interface SheetVitals {
   hpCur: number | null;
   hpMax: number | null;
   ac: number | null;
-  sanityCur: number | null;
   sanityMax: number | null;
 }
 
@@ -48,7 +47,6 @@ export function sheetVitals(sheet: SheetData | undefined): SheetVitals {
     hpCur: sheetInt(sheet, "hpCur"),
     hpMax: sheetInt(sheet, "hpMax"),
     ac: sheetInt(sheet, "ac"),
-    sanityCur: sheetInt(sheet, "sanityCur"),
     sanityMax: sheetInt(sheet, "sanityMax"),
   };
 }

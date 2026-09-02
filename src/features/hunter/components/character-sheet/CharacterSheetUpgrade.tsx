@@ -61,7 +61,7 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
   const canSave = !model.readOnly && (levelChange || unacknowledged || stage.hasChanges) && remaining === 0;
   const changes = ([
     ["Level", saved.level, target, "Insight unlock"],
-    ["Maximum HP", stage.currentResult.fields.hpMax, stage.previewResult.fields.hpMax, "Class hit die + Constitution + feats"],
+    ["Maximum HP", stage.currentResult.fields.hpMax, stage.previewResult.fields.hpMax, "Fixed class value + Constitution + feats"],
     ["Maximum sanity", stage.currentResult.fields.sanityMax, stage.previewResult.fields.sanityMax, "Class progression"],
     ["Hit dice", stage.currentResult.fields.hdMax, stage.previewResult.fields.hdMax, "One die per level"],
     ["Proficiency", stage.currentResult.fields.profBonus, stage.previewResult.fields.profBonus, "Class table"],
@@ -84,7 +84,11 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
   // counted without a page of their own.
   const [showAutomatic] = useState(() => changes.length > 0);
   const choicePages = {
-    subclass: needsSubclass || subclassChanged,
+    // An optional subclass is never *pending*, so without this the opt-in page
+    // is never generated at all. core-rulebook.txt [pages 70–71] offers the
+    // Hunter Zealot Prestige Class from level 3; leaving the select on
+    // "Choose..." keeps the hunter on the base path.
+    subclass: needsSubclass || subclassChanged || (!!klass?.subclassOptional && target >= 3 && !card.subclassId),
     expertise: expertiseRemaining > 0 || features.some((feature) => /^expertise$/i.test(feature.name)),
     mastery: masteryRemaining > 0
       || features.some((feature) => /weapon mastery/i.test(feature.name))
@@ -155,11 +159,11 @@ function CreationName({ model, name }: { model: AppSheetModel; name: string }) {
 }
 
 function CreationEquipment({ model }: { model: AppSheetModel }) {
-  return <div className="character-sheet-creation-equipment"><p>Equip armor now or continue unarmored. The summary updates your Armor Class, total carried weight, and the effect that load has on this hunter.</p><CharacterSheetEquipment model={model} /></div>;
+  return <div className="character-sheet-creation-equipment"><p>Equip armor now or continue unarmored. The summary updates your Armor Class, total carried weight, and the effect that load has on this hunter. A hunter who wears no armor still wears their Background Garments — the everyday clothing of their background, and the first layer of the equipping order.</p><CharacterSheetEquipment model={model} /></div>;
 }
 
 function AutomaticChanges({ changes }: { changes: Change[] }) {
-  return <div className="character-sheet-upgrade-automatic"><p>These values update automatically when the upgrade is saved.</p>{changes.map(([label, before, after, reason]) => { const a = numberValue(before); const b = numberValue(after); return <article key={label}><span><b>{label}</b><small>{reason}</small></span><s>{String(before ?? "—")}</s><i>→</i><strong>{String(after ?? "—")}</strong>{a != null && b != null && a !== b && <em>+{b - a}</em>}</article>; })}</div>;
+  return <div className="character-sheet-upgrade-automatic"><p>These values update automatically when the upgrade is saved. At the table, you reach the new level only after a Long Rest.</p>{changes.map(([label, before, after, reason]) => { const a = numberValue(before); const b = numberValue(after); return <article key={label}><span><b>{label}</b><small>{reason}</small></span><s>{String(before ?? "—")}</s><i>→</i><strong>{String(after ?? "—")}</strong>{a != null && b != null && a !== b && <em>+{b - a}</em>}</article>; })}</div>;
 }
 
 function Review({ changes, creationValues, features, state, remaining, pendingChoices, onResolve, subclass, subclassFeatures }: { changes: Change[]; creationValues: Array<[string, unknown]>; features: UpgradeFeature[]; state: ReturnType<typeof useCharacterAutomation>["state"]; remaining: number; pendingChoices: PendingChoice[]; onResolve: (stepId: string) => void; subclass?: Subclass; subclassFeatures: LevelFeature[] }) {

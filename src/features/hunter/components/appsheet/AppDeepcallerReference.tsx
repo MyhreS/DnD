@@ -1,4 +1,5 @@
 import {
+  ALWAYS_PREPARED_ZEALOT_IDS,
   DEEPCALLER_RITES,
   DEEPCALLER_WHISPERS,
   forbiddenRevelationLevel,
@@ -38,13 +39,18 @@ function ReferenceRow({
     </summary>
     <div>
       <dl>
+        {/* The source labels this field `Type` (e.g. "Evocation Rite"); the
+            stored value has the " Rite" suffix trimmed for the summary line. */}
+        <div><dt>Type</dt><dd>{entry.school} Rite</dd></div>
         <div><dt>Perform</dt><dd>{entry.performing}</dd></div>
         <div><dt>Range</dt><dd>{entry.range}</dd></div>
         <div><dt>Duration</dt><dd>{entry.duration}</dd></div>
         <div><dt>Damage</dt><dd>{damage}</dd></div>
         <div><dt>Damage type</dt><dd>{entry.damageType}</dd></div>
         {entry.section && <div><dt>Section</dt><dd>{entry.section}</dd></div>}
-        {entry.special && <div><dt>Special</dt><dd>{entry.special}</dd></div>}
+        {entry.special && (entry.special.startsWith("Special Requirements: ")
+          ? <div><dt>Special requirements</dt><dd>{entry.special.slice("Special Requirements: ".length)}</dd></div>
+          : <div><dt>Special</dt><dd>{entry.special}</dd></div>)}
         {entry.upgrade && <div><dt>At higher level Strain</dt><dd>{entry.upgrade}</dd></div>}
         {entry.sourceNote && <div><dt>Source note</dt><dd>{entry.sourceNote}</dd></div>}
       </dl>
@@ -58,8 +64,15 @@ export function AppDeepcallerReference() {
   if (klass?.id !== "deepcaller") return null;
   const strainLevel = String(result.fields.strainLevel ?? "—");
   const currentStrainLevel = numberOf(strainLevel);
-  const prepared = (card.preparedWhispers ?? [])
-    .map((id) => DEEPCALLER_WHISPERS.find((entry) => entry.id === id))
+  // A Zealot's prepared list may hold Level 1 Rites as well as Whispers, and
+  // always includes the two Carved entries (core-rulebook.txt [pages 76–77]).
+  const zealot = card.subclassId === "hunter-zealot" && card.level >= 3;
+  const preparedIds = [
+    ...(zealot ? ALWAYS_PREPARED_ZEALOT_IDS : []),
+    ...(card.preparedWhispers ?? []).filter((id) => !zealot || !ALWAYS_PREPARED_ZEALOT_IDS.includes(id)),
+  ];
+  const prepared = preparedIds
+    .map((id) => DEEPCALLER_WHISPERS.find((entry) => entry.id === id) ?? DEEPCALLER_RITES.find((entry) => entry.id === id))
     .filter((entry): entry is DeepcallerReference => entry != null);
   const rites = DEEPCALLER_RITES.filter((rite) => rite.level != null && rite.level <= currentStrainLevel);
   const revelations = Object.entries(state.levelChoices ?? {}).flatMap(([key, value]) => {

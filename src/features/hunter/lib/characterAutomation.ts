@@ -4,7 +4,8 @@ import { BACKGROUNDS } from "@/data/backgrounds";
 import { CLASSES, getClass } from "@/data/classes";
 import { SHEET_SKILL_FIELD, SKILLS, skillAbility } from "@/data/skills";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
-import { armorClassFor, maxHp, maxSanity, proficiencyBonus, studdedAddonIdsOf } from "@/lib/character";
+import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
+import { armorClassFor, maxHp, maxSanity, proficiencyBonus, studdedAddonIdsOf, weaponAttackBonus } from "@/lib/character";
 import { armorFor } from "@/lib/customItems";
 import { carryCondition, resolveInventory, resolveStorage, totalCarriedWeight } from "@/lib/inventory";
 import { computeSlots } from "@/lib/slots";
@@ -32,11 +33,11 @@ export interface CharacterAutomationResult {
 }
 
 const SOURCE = {
-  class: "Established Hunter class catalog (outside the current four-document source set)",
-  creation: "Established Hunter character rules (outside the current four-document source set)",
-  background: "Established Hunter background catalog (outside the current four-document source set)",
-  armor: "Established Hunter armor catalog (outside the current four-document source set)",
-  equipment: "Established Hunter equipment catalog (outside the current four-document source set)",
+  class: "C&S Core Rulebook, Hunter Classes",
+  creation: "C&S Core Rulebook, Create Your Character",
+  background: "C&S Core Rulebook, Backgrounds",
+  armor: "C&S Core Rulebook, Armor Part 1–2",
+  equipment: "C&S Core Rulebook, Equipment, Weight and Item Slots",
 };
 
 function getSubclass(classId: string, subclassId: string | null | undefined) {
@@ -116,6 +117,19 @@ function equipmentFields(card: HunterCard, fields: SheetData, reasons: Record<st
     put(fields, reasons, `eq_${row}_2`, line?.slot ?? "", SOURCE.equipment);
     put(fields, reasons, `eq_${row}_3`, line?.weight ?? "", SOURCE.equipment);
   }
+  // character-sheet.txt [page 5] WEAPON DAMAGE: NAME | ATTACK BONUS |
+  // DAMAGE TYPE | NOTES. One row per carried weapon type.
+  const carriedWeapons = resolveInventory(card).filter(({ item }) => item.category === "Weapon").slice(0, 8);
+  for (let row = 0; row < 8; row += 1) {
+    const line = carriedWeapons[row];
+    const custom = line && (card.customItems ?? []).find((entry) => entry.id === line.item.id);
+    const facts = line && WEAPON_FACTS[line.item.id];
+    const damageType = custom?.damage || weaponDamageLabel(facts || undefined);
+    put(fields, reasons, `wd_${row}_0`, line ? `${line.qty > 1 ? `${line.qty} × ` : ""}${line.item.name}` : "", SOURCE.equipment);
+    put(fields, reasons, `wd_${row}_1`, line ? (custom?.attackBonus || formatModifier(weaponAttackBonus(card, facts || undefined))) : "", SOURCE.equipment);
+    put(fields, reasons, `wd_${row}_2`, line ? (damageType === "—" ? "" : damageType) : "", SOURCE.equipment);
+    put(fields, reasons, `wd_${row}_3`, line ? (custom?.weaponNotes || facts?.properties || line.item.note || "") : "", SOURCE.equipment);
+  }
   const storage = resolveStorage(card);
   put(fields, reasons, "storageItems", storage.map((item) => item.name).join(", "), SOURCE.equipment);
   put(fields, reasons, "slotHand", storage.some((item) => item.id === "sack"), SOURCE.equipment);
@@ -138,6 +152,9 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
   const initiativeModifier = intField(card.sheet, "initiativeModifier", 0);
   const passiveModifier = intField(card.sheet, "passivePerceptionModifier", 0);
   const acModifier = intField(card.sheet, "acModifier", 0);
+  const armor = armorClassFor(card);
+  const weight = totalCarriedWeight(card);
+  const condition = carryCondition(card.abilities.str, weight);
 
   put(fields, reasons, "name", card.name, "Your saved hunter name");
   put(fields, reasons, "level", String(level), "Character level");
@@ -159,7 +176,10 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     put(fields, reasons, "hpMax", String(hp), `${klass.name} Hit Die d${klass.hitDie} + Constitution modifier at each level`);
     put(fields, reasons, "hpCur", String(card.currentHp ?? hp), "Current HP, defaulting to calculated maximum");
     put(fields, reasons, "sanityMax", String(sanity), `${klass.name} base Sanity + Wisdom modifier${klass.id === "deepcaller" ? " + Fracturing Mind" : ""}`);
-    put(fields, reasons, "sanityCur", String(card.sanity ?? sanity), "Current Sanity, defaulting to calculated maximum");
+    // core-rulebook.txt [page 42]: "Start with 0 Madness and do not track
+    // Current Sanity." Madness is the tracked pool and the Insane condition is
+    // derived from it ([page 23]), so no `sanityCur` value is calculated,
+    // written, or offered as an editable field any more.
     put(fields, reasons, "hdMax", String(level), `${klass.title}: one Hit Die per level`);
     put(fields, reasons, "hdCur", String(Math.max(0, Math.min(level, intField(card.sheet, "hdCur", level)))), "Current available Hit Dice, defaulting to the full level allowance");
     if (klass.caster) {
@@ -171,12 +191,30 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
       put(fields, reasons, "strainCur", String(strainCurrent), "Current available Strains, defaulting to the full allowance");
       put(fields, reasons, "strainLevel", String(strainLevel), `${klass.title} level ${level} progression`);
     }
-    put(fields, reasons, "speed", `${klass.speedFt + speedModifier} ft`, `${klass.title} core traits${speedModifier ? ` + custom modifier ${formatModifier(speedModifier)} ft` : ""}`);
+    // core-rulebook.txt [page 58] Roving, [page 103] Speedy, [page 106] Boon of
+    // Speed, [page 40] carrying condition. `speedModifier` is kept as-is: a
+    // player who compensated by hand still owns that override.
+    const roving = klass.id === "scout" && level >= 6 && armor.category !== "Heavy Armor" ? 10 : 0;
+    const featSpeed = (featNames.has("Speedy") ? 10 : 0) + (featNames.has("Boon of Speed") ? 30 : 0);
+    const speedReasons = [
+      `${klass.title} core traits`,
+      roving ? "+10 ft from Roving while not wearing Heavy armor" : "",
+      featNames.has("Speedy") ? "+10 ft from Speedy" : "",
+      featNames.has("Boon of Speed") ? "+30 ft from Boon of Speed" : "",
+      condition.speedDelta ? `${formatModifier(condition.speedDelta)} ft from ${condition.label}` : "",
+      speedModifier ? `custom modifier ${formatModifier(speedModifier)} ft` : "",
+    ].filter(Boolean).join(" · ");
+    put(fields, reasons, "speed", `${klass.speedFt + roving + featSpeed + condition.speedDelta + speedModifier} ft`, speedReasons);
     put(fields, reasons, "armorLight", klass.armorTraining.includes("Light armor"), `${klass.title} Armor Training`);
     put(fields, reasons, "armorMedium", klass.armorTraining.includes("Medium armor"), `${klass.title} Armor Training`);
     put(fields, reasons, "armorHeavy", klass.armorTraining.includes("Heavy armor"), `${klass.title} Armor Training`);
     put(fields, reasons, "wepSimple", /simple/i.test(klass.weaponProficiencies), `${klass.title} Weapon Proficiencies`);
     put(fields, reasons, "wepMartial", /martial/i.test(klass.weaponProficiencies), `${klass.title} Weapon Proficiencies`);
+    // core-rulebook.txt [page 43]: Strength for melee weapon attacks, Dexterity
+    // for ranged. Individual weapon properties (Finesse, Thrown) can override
+    // which ability applies, so these are the baseline figures only.
+    put(fields, reasons, "meleeAttack", formatModifier(abilityModifier(card.abilities.str) + prof), "Strength modifier + proficiency; Finesse weapons may use Dexterity instead");
+    put(fields, reasons, "rangedAttack", formatModifier(abilityModifier(card.abilities.dex) + prof), "Dexterity modifier + proficiency");
     const classSkills = card.sheetAutomation?.classSkills ?? card.skillProficiencies.filter((skill) => klass.skillChoices.options.includes(skill));
     const valid = classSkills.filter((skill) => klass.skillChoices.options.includes(skill));
     if (valid.length < klass.skillChoices.count) pending.classSkills = { label: "Class skills", remaining: klass.skillChoices.count - valid.length, options: klass.skillChoices.options, reason: `${klass.title} grants ${klass.skillChoices.count} choices.` };
@@ -196,13 +234,17 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
 
   if (background?.feat === "Skilled" && (card.featSkills?.length ?? 0) < 3) pending.featSkills = { label: "Skilled feat proficiencies", remaining: 3 - (card.featSkills?.length ?? 0), reason: "Skilled grants any combination of three skill or tool proficiencies." };
 
+  // Slippery Mind — core-rulebook.txt [page 65]: the Stalker gains Wisdom and
+  // Charisma saving throw proficiency at level 15.
+  const slipperyMind = card.classId === "stalker" && level >= 15;
   for (const key of ABILITY_KEYS) {
     const score = card.abilities[key];
     const mod = abilityModifier(score);
-    const saveProficient = klass?.savingThrows.includes(key) ?? false;
+    const fromSlipperyMind = slipperyMind && (key === "wis" || key === "cha");
+    const saveProficient = (klass?.savingThrows.includes(key) ?? false) || fromSlipperyMind;
     put(fields, reasons, `${key}Score`, String(score), card.baseAbilities ? "Bought score + background adjustment + structured level increases" : "Saved ability score");
     put(fields, reasons, `${key}Mod`, formatModifier(mod), `Modifier from ${score}`);
-    put(fields, reasons, `${key}SaveP`, saveProficient, saveProficient ? `${klass?.title} saving throw proficiency` : "Not granted by class");
+    put(fields, reasons, `${key}SaveP`, saveProficient, saveProficient ? (fromSlipperyMind && !klass?.savingThrows.includes(key) ? `${klass?.title} Slippery Mind saving throw proficiency` : `${klass?.title} saving throw proficiency`) : "Not granted by class");
     put(fields, reasons, `${key}Save`, formatModifier(mod + (saveProficient ? prof : 0)), saveProficient ? `Ability modifier + proficiency ${formatModifier(prof)}` : "Ability modifier only");
   }
 
@@ -218,12 +260,14 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     put(fields, reasons, field, formatModifier(abilityModifier(card.abilities[key]) + prof * multiplier), expertise.has(skill.name) ? `${key.toUpperCase()} modifier + Expertise` : proficient ? `${key.toUpperCase()} modifier + proficiency` : `${key.toUpperCase()} modifier`);
   }
   put(fields, reasons, "initiative", formatModifier(abilityModifier(card.abilities.dex) + (featNames.has("Alert") ? prof : 0) + initiativeModifier), `${featNames.has("Alert") ? "Dexterity modifier + proficiency from Alert" : "Dexterity modifier"}${initiativeModifier ? ` + custom modifier ${formatModifier(initiativeModifier)}` : ""}`);
-  put(fields, reasons, "passivePerception", String(10 + abilityModifier(card.abilities.wis) + (allSkills.has("Perception") ? prof : 0) + passiveModifier), `10 + Wisdom modifier + Perception proficiency when selected${passiveModifier ? ` + custom modifier ${formatModifier(passiveModifier)}` : ""}`);
+  // core-rulebook.txt [page 43]: Passive Perception = 10 + the full Wisdom
+  // (Perception) check modifier, so Expertise doubles proficiency here too.
+  const perceptionMultiplier = expertise.has("Perception") ? 2 : allSkills.has("Perception") ? 1 : 0;
+  put(fields, reasons, "passivePerception", String(10 + abilityModifier(card.abilities.wis) + prof * perceptionMultiplier + passiveModifier), `10 + Wisdom modifier${perceptionMultiplier === 2 ? " + Perception Expertise" : perceptionMultiplier === 1 ? " + Perception proficiency" : ""}${passiveModifier ? ` + custom modifier ${formatModifier(passiveModifier)}` : ""}`);
   const tools = [klass?.toolProficiencies !== "—" ? klass?.toolProficiencies : null, background?.tool, ...(card.featSkills ?? []).filter((choice) => !SKILLS.some((skill) => skill.name === choice))].filter(Boolean);
-  put(fields, reasons, "tools", [...new Set(tools)].join(", "), `${SOURCE.class} and ${SOURCE.background}`);
+  put(fields, reasons, "tools", [...new Set(tools)].join(", "), `${SOURCE.class} and ${SOURCE.background}. A tool proficiency adds your Proficiency Bonus to checks with that tool; when a skill also applies, add it once and roll with Advantage.`);
   put(fields, reasons, "feats", [background?.feat, ...(card.feats ?? [])].filter(Boolean).join("\n"), `${SOURCE.background} and level-up choices`);
 
-  const armor = armorClassFor(card);
   put(fields, reasons, "ac", String(armor.total + acModifier), `${SOURCE.armor}: base ${armor.baseArmorAc} + Dexterity ${formatModifier(armor.dexApplied)}${acModifier ? ` + custom modifier ${formatModifier(acModifier)}` : ""}`);
   put(fields, reasons, "armorCategory", armor.category, `${SOURCE.armor}; category comes from base armor AC ${armor.baseArmorAc}`);
   put(fields, reasons, "shieldArm", armor.shieldArm, "Pauldron + vambrace on the same arm");
@@ -235,14 +279,15 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     put(fields, reasons, `studs${index + 1}`, !!addons[index] && studded.has(addons[index]), SOURCE.armor);
   }
   const extras = (card.extraArmorIds ?? []).map((id) => ARMOR_BY_ID[id]).filter(Boolean);
-  for (const [field, subcategory] of [["headGear", "Head Gear"], ["scarf", "Scarf"], ["gloves", "Gloves"], ["boots", "Boots"]] as const) {
+  // The four Extra subcategories of core-rulebook.txt [page 38] plus "Robe",
+  // the slot the unique Robe of the Deepcallers occupies. Without the fifth
+  // field a worn Robe is invisible on every derived and printed sheet.
+  for (const [field, subcategory] of [["headGear", "Head Gear"], ["scarf", "Scarf"], ["gloves", "Gloves"], ["boots", "Boots"], ["robe", "Robe"]] as const) {
     put(fields, reasons, field, extras.find((piece) => piece.subcategory === subcategory)?.name ?? "", SOURCE.armor);
   }
   const special = [card.mainArmorId ? armorFor(card, card.mainArmorId)?.special : null, ...addons.map((id) => armorFor(card, id)?.special), ...extras.map((piece) => piece.special)].filter(Boolean);
   put(fields, reasons, "special", [...new Set(special)].join("\n"), SOURCE.armor);
   put(fields, reasons, "impressions", extras.map((piece) => piece.impression).filter(Boolean).join("\n"), SOURCE.armor);
-  const weight = totalCarriedWeight(card);
-  const condition = carryCondition(card.abilities.str, weight);
   put(fields, reasons, "weight", `${weight} lb`, `${SOURCE.equipment}; inventory + worn armor + worn storage`);
   put(fields, reasons, "weightCondition", condition.label, `${SOURCE.creation}; compared with Strength ${card.abilities.str}`);
   equipmentFields(card, fields, reasons);
@@ -253,7 +298,11 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     put(fields, reasons, "riteMod", formatModifier(riteMod), "Intelligence modifier");
     put(fields, reasons, "riteDC", String(8 + prof + riteMod), "8 + proficiency + Intelligence modifier");
     put(fields, reasons, "riteAttack", formatModifier(prof + riteMod), "Proficiency + Intelligence modifier");
-    const allowed = Number(klass.progression.find((row) => row.level === level)?.extras["Prepared Whispers"] ?? 0) + (featNames.has("Listener") ? 1 : 0);
+    // Zealot Whispers — core-rulebook.txt [page 76]: "You prepare a number of
+    // Whispers equal to the number shown for a Hunter Deepcaller of your level,
+    // plus one additional Whisper."
+    const zealotBonus = card.subclassId === "hunter-zealot" && level >= 3 ? 1 : 0;
+    const allowed = Number(klass.progression.find((row) => row.level === level)?.extras["Prepared Whispers"] ?? 0) + (featNames.has("Listener") ? 1 : 0) + zealotBonus;
     const remaining = Math.max(0, allowed - (card.preparedWhispers?.length ?? 0));
     if (remaining) pending.whispers = { label: "Prepared Whispers", remaining, reason: `${klass.title} level ${level} allows ${allowed}.` };
   }
@@ -263,7 +312,7 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
   }
   put(fields, reasons, "coins", String(card.coins ?? 0), "Saved gold pieces");
   put(fields, reasons, "transformation", String(card.transformationLevel ?? 0), "Current Transformation Level");
-  put(fields, reasons, "bloodTinge", card.bloodTinge === true, "Current Blood Tinge state");
+  put(fields, reasons, "bloodTinge", card.bloodTinge === true, "Current Blood Tinge state. Gained once per round when damage leaves you at 1–9 HP; lost on a Long Rest.");
 
   return { fields, reasons, pending };
 }
@@ -288,7 +337,7 @@ export function structuredCardFromSheet(card: HunterCard): { card: HunterCard; l
   const classId = classIdFromName(sheet.class) || card.classId;
   const background = BACKGROUNDS.find((entry) => entry.name.toLowerCase() === String(sheet.background ?? "").trim().toLowerCase());
   const abilities = { ...card.abilities };
-  for (const key of ABILITY_KEYS) abilities[key] = Math.max(3, Math.min(20, intField(sheet, `${key}Score`, abilities[key])));
+  for (const key of ABILITY_KEYS) abilities[key] = Math.max(3, Math.min(30, intField(sheet, `${key}Score`, abilities[key])));
   const quantities = new Map<string, number>();
   const legacyEquipment: LegacyEquipmentLine[] = [];
   for (let row = 0; row < 20; row += 1) {

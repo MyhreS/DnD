@@ -42,7 +42,7 @@ export function CharacterSheetAddonArmor({ model }: { model: AppSheetModel }) {
         const selectedArmor = options.find((entry) => entry.id === selectedId);
         return <article className="character-sheet-addon-piece" key={selectedId}>
           <CharacterSheetEquipmentSocket label={`Piece ${index + 1}`} name={selectedArmor?.name ?? selectedId} detail={selectedArmor?.ac} kind="armor" disabled={model.readOnly} compact onClick={() => open(index, selectedId)} />
-          <label className="character-sheet-studs-control"><input type="checkbox" checked={studded.has(selectedId)} disabled={model.readOnly} onChange={() => automation.toggleStuds(selectedId)} /><span>Studded</span><small>+3 lb</small></label>
+          <label className="character-sheet-studs-control"><input type="checkbox" checked={studded.has(selectedId)} disabled={model.readOnly} onChange={() => automation.toggleStuds(selectedId)} /><span>Studded</span><small>+5 lb</small></label>
         </article>;
       })}
       {selected.length < limit && <div className="character-sheet-addon-add"><CharacterSheetEquipmentSocket label={`Piece ${selected.length + 1}`} disabled={model.readOnly} onClick={() => open(selected.length)} /></div>}

@@ -39,7 +39,7 @@ export default defineConfig({
         name: "Catacombs & Starspawns",
         short_name: "C&S Hunters",
         description:
-          "Companion app for our Catacombs & Starspawns campaign — sessions, hunter cards and the player's handbook.",
+          "Companion app for our Catacombs & Starspawns campaign — hunters, live play and the Codex.",
         theme_color: "#0a0a0c",
         background_color: "#0a0a0c",
         display: "standalone",

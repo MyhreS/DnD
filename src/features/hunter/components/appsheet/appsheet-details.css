@@ -256,7 +256,7 @@
 
 .appsheet-weapon-table > div {
   display: grid;
-  grid-template-columns: 1.1fr .8fr 2fr .6fr;
+  grid-template-columns: 1.1fr .5fr .8fr 2fr .6fr;
   gap: 12px;
   padding: 8px 6px;
   border-radius: 4px;
@@ -685,13 +685,18 @@
   }
 
   .appsheet-weapon-table > div:not(.heading) span:nth-child(3) {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .appsheet-weapon-table > div:not(.heading) span:nth-child(4) {
     grid-column: 1 / -1;
     grid-row: 3;
   }
 
-  .appsheet-weapon-table > div:not(.heading) span:nth-child(4) {
-    grid-column: 2;
-    grid-row: 2;
+  .appsheet-weapon-table > div:not(.heading) span:nth-child(5) {
+    grid-column: 1 / -1;
+    grid-row: 4;
   }
 
   .appsheet-feature-timeline details p {

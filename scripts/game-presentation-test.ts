@@ -73,8 +73,13 @@ const legacy: HunterCard = {
 const legacyPc = { ...pc, id: "pc-legacy", characterId: legacy.id, name: "Legacy Hunter" };
 assert.deepEqual(
   combatVitals(legacyPc, [legacy]),
-  { currentHp: 8, maxHp: 12, damageTaken: 4, ac: 15 },
+  { currentHp: 8, maxHp: 12, damageTaken: 4, ac: 15, speed: null },
   "legacy sheet-only Hunters retain their written combat values",
+);
+assert.equal(
+  combatVitals(pc, [structured]).speed,
+  Number.parseInt(String(expected.speed), 10),
+  "the battle row shows the Hunter's derived speed",
 );
 assert.equal(participantInitiative(legacy), 1, "legacy sheet-only initiative remains supported");
 

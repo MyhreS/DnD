@@ -1,0 +1,55 @@
+Source file: C&S Hidden Condition Sheet.pdf
+  (~/Library/Mobile Documents/com~apple~CloudDocs/C&S file share/Beta Release/)
+True page count (pdfinfo): 1
+Pages covered: 1 of 1 (complete)
+Extraction method: `pdftotext -layout` (PDF has a full embedded text layer);
+  the decorative title heading, which lives in the page artwork/verified
+  against a rendered page image, was added manually. No image-only pages.
+  No tables are present in this document.
+
+GM-ONLY CONTENT. This document is the Hidden Condition Sheet and is Game
+Master material. It must NEVER be exposed through any public app UI, API,
+Codex output, or public build output (see CLAUDE.md: `codex:generate` must
+never copy the Hidden Condition source or text into public output). This
+text file exists solely for internal repo/rules-reference use.
+
+================================================================================
+
+[page 1]
+
+Hidden Condition Sheet
+
+The Second Threshold. When an Insane hunter’s current Madness equals or exceeds twice their Max Sanity, the
+hunter is taken by the outer dark. The GM takes control of the character, and the character is replaced by an Old
+One Vessel stat block appropriate to the hunter’s level. All the Old One Vessel forms are listed in the Bestiary
+inside The C&S app under Player Alterations.
+The Vessel is hostile to all creatures, including the party. It is not the hunter. It is something using the hunter as a
+wound through which to enter the world.
+If the Vessel is reduced to 0 Hit Points, the hunter returns with 1 Hit Point. Their current Madness becomes equal
+to their original Max Sanity, and their Max Sanity permanently becomes twice its original value.
+If the same hunter becomes an Old One Vessel a second time, the hunter is lost forever.
+
+Old One Vessel Rules. When a hunter becomes an Old One Vessel, use the stat block matching the hunter’s level
+found in the Bestiary inside The C&S app under Player Alterations.
+The Vessel replaces the hunter’s game statistics. It does not use the hunter’s weapons, armor, Rites, class
+features, feats, transformations, items, or proficiencies unless a rule specifically says otherwise.
+The GM controls the Vessel. It is hostile to all creatures.
+If the Vessel is reduced to 0 Hit Points, the hunter returns with 1 Hit Point and the Old One Vessel Condition
+removed.. Their current Madness becomes equal to their original Max Sanity, and their Max Sanity permanently
+becomes twice its original value.
+If the same hunter gains the Old One Vessel Condition a second time, that hunter will have that condition
+permanently, and is practically removed as a player.
+
+Lost. If you roll Lost on the Transformation Table, you become a Lost: Greater Dreadblood. When a hunter
+becomes Lost, they transform into one of the Lost Dreadblood forms listed in the Bestiary inside The C&S app
+under Player Alterations. The GM controls the creature.
+
+Lost Rules. When a hunter becomes Lost, use the stat block matching the hunter’s level found in the Bestiary
+inside The C&S app under Player Alterations.
+The Lost replaces the hunter’s game statistics. It does not use the hunter’s weapons, armor, Rites, class features,
+feats, transformations, items, or proficiencies unless a rule specifically says otherwise.
+The GM controls the Lost. It is hostile to all creatures.
+If the Lost is reduced to 0 Hit Points, the hunter returns with 1 Hit Point and the Lost Condition removed, and
+gains 10 + 2d4 Madness minus the players wisdom, modifier.
+
+[end of document — page 1 of 1]

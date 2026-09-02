@@ -10,6 +10,7 @@ import { PHASE_LABEL, LOCATION_LABEL } from "@/features/play/lib/phase";
 import { useWakeLock } from "@/hooks/common/useWakeLock";
 import { useFullscreen } from "@/hooks/common/useFullscreen";
 import { cardClassName, characterVitals } from "@/features/hunter/lib/papersheet";
+import { isBloodied } from "@/lib/character";
 import type { HunterCard } from "@/types";
 import { CombatBoard } from "./CombatBoard";
 
@@ -93,8 +94,10 @@ function VitalsCard({ card }: { card: HunterCard }) {
   const hpMax = v.hpMax;
   const sanMax = v.sanityMax;
   const hp = v.hpCur;
-  const san = v.sanityCur;
-  const dead = card.deathPending || (hp != null && hp <= 0);
+  // core-rulebook.txt [page 42]: Madness is the tracked pool; Current Sanity is
+  // not tracked. [page 23]: Insane while Madness >= Max Sanity.
+  const madness = card.madness ?? 0;
+  const dead = hp != null && hp <= 0;
   const transform = card.transformationLevel ?? 0;
   const cls = cardClassName(card);
 
@@ -113,12 +116,12 @@ function VitalsCard({ card }: { card: HunterCard }) {
         {transform > 0 && <span className="chip" style={{ flex: "none" }}>Transform {transform}</span>}
       </div>
       {hp != null && hpMax != null ? (
-        <Bar label="HP" value={hp} max={hpMax} color="var(--blood-bright)" />
+        <Bar label="HP" value={hp} max={hpMax} color="var(--blood-bright)" sub={isBloodied(hp, hpMax) ? "Bloodied" : undefined} />
       ) : (
         <p className="faint" style={{ margin: "8px 0 0" }}>Vitals tracked on the shared character sheet.</p>
       )}
-      {san != null && sanMax != null && (
-        <Bar label="Sanity" value={san} max={sanMax} color="#7c5cff" sub={`Madness ${card.madness ?? 0}`} />
+      {sanMax != null && (
+        <Bar label="Madness" value={madness} max={sanMax} color="#7c5cff" sub={madness >= sanMax ? "Insane" : undefined} />
       )}
     </div>
   );

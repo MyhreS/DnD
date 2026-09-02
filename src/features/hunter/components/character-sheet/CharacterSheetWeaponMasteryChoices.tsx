@@ -1,4 +1,4 @@
-import { WEAPON_FACTS, WEAPON_MASTERY_DESCRIPTIONS, weaponDamageLabel } from "@/data/weapons";
+import { WEAPON_FACTS, WEAPON_MASTERY_DESCRIPTIONS, weaponDamageLabel, weaponPropertyHelp } from "@/data/weapons";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { ChoiceIntro } from "./CharacterSheetGuidedChoices";
 
@@ -10,7 +10,9 @@ export function CharacterSheetWeaponMasteryChoices() {
   return <div className="character-sheet-upgrade-choice-page">
     <ChoiceIntro
       text={`Choose ${automation.masteryCount} weapons. Mastery unlocks the special effect shown for each one when you attack with it.`}
-      help="This does not add the weapon to your gear. Your class lets you retrain mastery choices after a Long Rest."
+      help={`This does not add the weapon to your gear. ${automation.klass?.id === "bloodbound"
+        ? "After a Long Rest, your class lets you change one of these weapon choices."
+        : "After a Long Rest, your class lets you change the kinds of weapons you chose."}`}
       count={`${selected.length} / ${automation.masteryCount} chosen`}
       complete={complete}
     />
@@ -41,7 +43,7 @@ export function CharacterSheetWeaponMasteryChoices() {
               <small>{weaponSummary}</small>
             </span>
             <span className="character-sheet-mastery-effect"><strong>{mastery}</strong><span>{description}</span></span>
-            {facts?.properties && <small className="character-sheet-mastery-properties">{facts.properties}</small>}
+            {facts?.properties && <small className="character-sheet-mastery-properties" title={weaponPropertyHelp(facts.properties)}>{facts.properties}</small>}
           </span>
         </label>;
       })}

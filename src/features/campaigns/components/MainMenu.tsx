@@ -21,8 +21,8 @@ export function MainMenu() {
       <div className="card">
         <p className="muted" style={{ margin: 0 }}>
           <em>Catacombs &amp; Starspawns</em> is a Bloodborne-flavoured dark-fantasy homebrew
-          where the adventurers are <em>Hunters</em>. Descend into the catacombs, cling to
-          your Sanity, and hunt what crawled out of the dark — knowing full well the dark
+          where the adventurers are <em>Hunters</em>. Descend into the catacombs, hold back
+          the Madness, and hunt what crawled out of the dark — knowing full well the dark
           hunts back.
         </p>
       </div>
@@ -31,7 +31,7 @@ export function MainMenu() {
       <div className="stack" style={{ gap: 10 }}>
         <GuideCard to="/character" title="Hunters" body="Forge and manage hunters with guided creation and the character sheet." />
         <GuideCard to="/game" title="Games" body="Open a current game or revisit one you played before." />
-        <GuideCard to="/codex" title="Codex" body="Search the current Deepcaller book, Whispers, and printable character sheet—with the source shown for every answer." />
+        <GuideCard to="/codex" title="Codex" body="Search the Core Rulebook, the Book of the Deepcaller, the Whispers Sheet and the printable character sheet — with the source shown for every answer." />
         <GuideCard to="/profile" title="Profile" body="Your account and settings — tap your initial in the corner." />
       </div>
 

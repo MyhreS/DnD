@@ -8,11 +8,12 @@ import {
   patchCharacter,
   awardInsight as apiAwardInsight,
 } from "@/api/players";
-import { createLoot } from "@/api/games";
+import { clearFallenLoot, createLoot } from "@/api/games";
 import { logEvent, describeLoot } from "@/api/activity";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { explain } from "@/lib/errors";
+import { recoveredCard } from "@/lib/recovery";
 import { isPreviewActive, previewPartyCards, previewArchive } from "@/dev/preview";
 import type { ActivityType } from "@/types";
 
@@ -48,8 +49,6 @@ interface CharactersState {
 
   /** DM: confirm a pending death, or force-mark a character dead (override). */
   killCharacter: (card: HunterCard, gameId: string | null) => Promise<boolean>;
-  /** DM: deny a pending death (revive to alive). */
-  revive: (uid: string) => Promise<boolean>;
   /** DM: recover an archived character back into play. */
   recover: (a: ArchivedCharacter) => Promise<boolean>;
   /** DM: award (or subtract) Insight atomically — never loses rapid taps. The
@@ -144,23 +143,19 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
       return ok;
     },
 
-    revive: async (id) => {
-      if (get().preview) {
-        set((s) => ({ party: s.party.map((c) => (c.id === id ? { ...c, deathPending: false } : c)) }));
-        return true;
-      }
-      return (await run(() => patchCharacter(id, { deathPending: false }), "Couldn't revive the character.")) !== null;
-    },
-
     recover: async (a) => {
       if (get().preview) {
         set((s) => ({
           archive: s.archive.filter((x) => x.id !== a.id),
-          party: [...s.party, { ...a.card, deathPending: false }],
+          party: [...s.party, recoveredCard(a.card)],
         }));
         return true;
       }
-      const ok = (await run(() => recoverCharacter(a), "Couldn't recover the character.")) !== null;
+      const ok = (await run(async () => {
+        await recoverCharacter(a);
+        // Their gear returns with them, so it must leave the loot feed.
+        if (a.gameId) await clearFallenLoot(a.gameId, a.card.ownerUid);
+      }, "Couldn't recover the character.")) !== null;
       if (ok) logHunter(a.card, "hunter.recovered", `${a.card.name} was recovered from the fallen.`);
       return ok;
     },

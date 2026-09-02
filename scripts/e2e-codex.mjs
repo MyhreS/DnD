@@ -75,25 +75,26 @@ try {
   watch(desktop);
   await desktop.goto(`${BASE}/codex`, { waitUntil: "domcontentloaded" });
   await desktop.getByRole("heading", { name: "Codex", exact: true }).waitFor();
-  await desktop.getByText(/3 sources.*3 PDFs/).waitFor();
+  await desktop.getByText(/4 sources.*4 documents/).waitFor();
   await desktop.getByRole("link", { name: /Source library/ }).click();
   await desktop.waitForURL(/\/codex\/documents$/);
   await desktop.getByRole("heading", { name: "Source library", exact: true }).waitFor();
   const documents = desktop.getByTestId("codex-document");
-  if (await documents.count() !== 3) throw new Error("Player source library must contain exactly three documents");
+  if (await documents.count() !== 4) throw new Error("Player source library must contain exactly four documents");
   const titles = await documents.getByRole("heading").allTextContents();
   const expectedTitles = [
+    "C&S Core Rulebook",
     "C&S Book of the Deepcaller",
     "C&S Character Sheet",
     "C&S Whispers Sheet",
   ];
   if (JSON.stringify(titles) !== JSON.stringify(expectedTitles)) throw new Error(`Unexpected source order: ${JSON.stringify(titles)}`);
   const downloads = documents.locator("a[download]");
-  if (await downloads.count() !== 3) throw new Error("Each player document must have exactly one download");
+  if (await downloads.count() !== 4) throw new Error("Each player document must have exactly one download");
   for (const path of await downloads.evaluateAll((links) => links.map((link) => link.getAttribute("href")))) {
     const response = await desktop.request.get(new URL(path, BASE).href);
-    if (!response.ok() || !response.headers()["content-type"]?.includes("application/pdf")) {
-      throw new Error(`Broken source PDF: ${path}`);
+    if (!response.ok() || !(await response.body()).length) {
+      throw new Error(`Broken source document: ${path}`);
     }
   }
   await desktop.screenshot({ path: "screenshots/codex-documents-desktop.png", fullPage: true });
@@ -105,10 +106,6 @@ try {
   await rebuke.getByText("2d10 Fire damage", { exact: false }).waitFor();
   await search.fill("Grit");
   await desktop.getByTestId("codex-topic").filter({ hasText: "Abilities & Skills" }).first().waitFor();
-  await search.fill("Starborn Horror Behavior Table");
-  await desktop.getByText(/not supplied.*does not invent/i).waitFor();
-  await search.fill("Hunter Rifle");
-  await desktop.getByTestId("codex-empty").waitFor();
   await search.fill("Old One Vessel");
   await desktop.getByTestId("codex-empty").waitFor();
   await desktop.screenshot({ path: "screenshots/codex-search-desktop.png", fullPage: true });
@@ -118,7 +115,7 @@ try {
   watch(mobile);
   await mobile.goto(`${BASE}/codex/documents`, { waitUntil: "domcontentloaded" });
   await mobile.getByRole("heading", { name: "Source library", exact: true }).waitFor();
-  if (await mobile.getByTestId("codex-document").count() !== 3) throw new Error("Mobile player source library is incomplete");
+  if (await mobile.getByTestId("codex-document").count() !== 4) throw new Error("Mobile player source library is incomplete");
   await assertNoHorizontalOverflow(mobile, "Mobile source library");
   await mobile.screenshot({ path: "screenshots/codex-documents-mobile.png", fullPage: true });
   await mobile.goto(`${BASE}/codex`, { waitUntil: "domcontentloaded" });
@@ -132,7 +129,7 @@ try {
   await mobileContext.close();
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Current-source Codex E2E passed: three public PDFs, hidden-source exclusion, and desktop/mobile search verified.");
+  console.log("Current-source Codex E2E passed: four public documents, hidden-source exclusion, and desktop/mobile search verified.");
 } finally {
   await browser.close();
   server?.kill("SIGTERM");

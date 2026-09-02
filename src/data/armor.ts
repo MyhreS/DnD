@@ -1,6 +1,7 @@
 import type { ArmorPiece } from "@/types";
 
-// Established app armory catalog, outside the current four-document source set.
+// Armory catalog. The C&S Core Rulebook (Armor Part 1–2) supplies these rules;
+// where it and this catalog disagree, the Core Rulebook wins.
 // `acValue` is the numeric contribution used by the AC calculator:
 //   Main Armor  -> base AC (replaces the unarmoured 10)
 //   Add-on      -> bonus added on top
@@ -123,7 +124,7 @@ export const ARMOR: ArmorPiece[] = [
     acValue: 1,
     weightLb: 2,
     special:
-      "*Only grants AC while worn underneath Main Armor. Can conceal Insignificant items, making them harder to steal or strip away.",
+      "*Only grants AC while worn underneath Main Armor. Can conceal Insignificant items, making them harder to steal, find, or strip away.",
   },
 
   // --- Armor Upgrades (modify armor pieces; not Add-on pieces) ---
@@ -133,9 +134,9 @@ export const ARMOR: ArmorPiece[] = [
     category: "Armor Upgrade",
     ac: "+1 / +2 AC",
     acValue: 1,
-    weightLb: 3,
+    weightLb: 5,
     special:
-      "Added to Add-on Armor pieces (+3 lb. each). One studded piece grants +1 AC; five studded pieces grant +2 AC. While wearing studded armor you have disadvantage on Dexterity (Stealth) checks to hide or move silently.",
+      "Added to Add-on Armor pieces (+5 lb. each). If at least three Add-on Armor pieces are studded, you gain +1 AC. If five are studded, this bonus increases to +2 AC. While wearing studded armor, you have Disadvantage on Dexterity (Stealth) checks made to hide or move silently.",
   },
 
   // --- Extras (flavour / utility, AC 0; only ONE worn per subcategory) ---
@@ -147,7 +148,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations.",
+    special: "Is given by class.",
     impression: "Reads as a hard-hitting brawler.",
   },
   {
@@ -158,7 +159,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations.",
+    special: "Is given by class.",
     impression: "Reads as someone dexterous.",
   },
   {
@@ -169,7 +170,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations.",
+    special: "Is given by class.",
     impression: "Reads as someone with old knowledge.",
   },
   {
@@ -180,7 +181,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
-    special: "May hide face transformations.",
+    special: "Is given by class.",
     impression: "Reads as a skilled marksman.",
   },
   {
@@ -192,7 +193,7 @@ export const ARMOR: ArmorPiece[] = [
     acValue: 0,
     weightLb: 1,
     special:
-      "May hide face transformations, but gives little protection against smoke, ash, cold or stench.",
+      "Can conceal a minor visible mouth or neck transformation from casual observation.",
   },
   {
     id: "large-scarf",
@@ -203,7 +204,7 @@ export const ARMOR: ArmorPiece[] = [
     acValue: 0,
     weightLb: 2,
     special:
-      "May give advantage when concealing all transformations. Protects against smoke, ash or stench.",
+      "You have Advantage on checks to conceal visible mouth and neck transformations.",
   },
   {
     id: "leather-gloves",
@@ -214,7 +215,7 @@ export const ARMOR: ArmorPiece[] = [
     acValue: 0,
     weightLb: 2,
     special:
-      "Advantage against hand injury, heat, glass, bites and thorns; disadvantage on delicate hand tasks and reloading small firearms.",
+      "May give relevant advantages / disadvantages during play. The player has to themselves explain how using the gloves in a particular situation will bring some advantage to a check.",
   },
   {
     id: "leather-boots",
@@ -237,7 +238,7 @@ export const ARMOR: ArmorPiece[] = [
     subcategory: "Robe",
     ac: "0",
     acValue: 0,
-    weightLb: 4,
+    weightLb: 2,
     special:
       "If worn continuously since your previous Long Rest, add +2 to your Sanity Die roll when rolling it during a Long Rest.",
     unique: true,

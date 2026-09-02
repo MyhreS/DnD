@@ -37,7 +37,7 @@ const PANELS: Record<CharacterSheetPanel, { title: string }> = {
   notes: { title: "Notes" },
   equipment: { title: "Equipment" },
   health: { title: "Health" },
-  sanity: { title: "Sanity" },
+  sanity: { title: "Madness" },
   progress: { title: "Insight & level" },
   resources: { title: "Resources" },
   upgrade: { title: "Upgrade character" },
@@ -70,7 +70,9 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
   const hp = stage.previewCard.currentHp ?? hpMax;
   const tempHp = numberOf(sheetText(model.data, "hpTemp"));
   const sanityMax = numberOf(result.fields.sanityMax);
-  const sanity = stage.previewCard.sanity ?? sanityMax;
+  // core-rulebook.txt [page 42]: Madness is the tracked pool; Current Sanity
+  // is not tracked. The bar therefore fills with Madness against Max Sanity.
+  const madness = stage.previewCard.madness ?? 0;
   const insight = stage.previewCard.insight ?? numberOf(sheetText(model.data, "insight"));
   const displayedLevel = stage.savedCard.level;
   const earned = Math.max(stage.savedCard.level, levelForInsight(insight));
@@ -101,7 +103,7 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
     </section>
     <section className="character-sheet-vitals" aria-label="Current resources">
       <button type="button" onClick={() => onPanelChange("health")}><span><b>Hit points</b><em>{hp} / {hpMax}{tempHp > 0 && <small> +{tempHp} temp</small>}</em></span><i><span style={{ width: `${hpMax ? Math.max(0, Math.min(100, hp / hpMax * 100)) : 0}%` }} /></i></button>
-      <button type="button" onClick={() => onPanelChange("sanity")}><span><b>Sanity</b><em>{sanity} / {sanityMax}<small> · Madness {stage.previewCard.madness ?? 0}</small></em></span><i><span style={{ width: `${sanityMax ? Math.max(0, Math.min(100, sanity / sanityMax * 100)) : 0}%` }} /></i></button>
+      <button type="button" onClick={() => onPanelChange("sanity")}><span><b>Madness</b><em>{madness} / {sanityMax}<small> · Max Sanity{sanityMax > 0 && madness >= sanityMax ? " · Insane" : ""}</small></em></span><i><span style={{ width: `${sanityMax ? Math.max(0, Math.min(100, madness / sanityMax * 100)) : 0}%` }} /></i></button>
       <button className="character-sheet-inventory-shortcut" type="button" onClick={() => onPanelChange("inventory")}><CharacterSheetIcon name="inventory" /><span>Inventory</span><small>{inventoryCount} carried</small></button>
     </section>
     {panel && pageDefinition && <CharacterSheetPageStack

@@ -1,3 +1,4 @@
+import { BLOODVIAL_ITEM_ID } from "@/data/bloodvial";
 import { ITEMS } from "@/data/items";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { ARMOR_BY_ID } from "@/data/armor";
@@ -5,9 +6,12 @@ import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 import { resolveUnassignedInventory } from "@/features/hunter/lib/inventoryPlacement";
 import { resolveInventory } from "@/lib/inventory";
 import { availableSlotAssignmentOptions, computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
+import { formatModifier } from "@/data/abilities";
+import { isWeaponProficient, weaponAttackBonus } from "@/lib/character";
 import type { SlotAssignment } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { useCharacterSheetPageNavigation } from "../character-sheet/characterSheetPageNavigation";
+import { AppBloodvialPurity } from "./AppBloodvialPurity";
 import { InventoryAddPageMenu } from "./InventoryAddPages";
 import { AppWeaponDamageBonuses } from "./AppWeaponReference";
 import {
@@ -95,6 +99,7 @@ export function AppGearSection({
                       </label>
                     ))}
                   </span>}
+                  {item.id === BLOODVIAL_ITEM_ID && <AppBloodvialPurity card={card} readOnly={model.readOnly} onChange={automation.setBloodvialPurity} />}
                 </span>
                 {armor ? (
                   <select
@@ -135,13 +140,28 @@ export function AppGearSection({
       <AppPanel title="Carried weapons" aside={<span className="appsheet-status-word">Rules-linked</span>}>
         {weapons.length ? (
           <div className="appsheet-weapon-table">
-            <div className="heading"><span>Weapon</span><span>Damage</span><span>Properties</span><span>Mastery</span></div>
+            <div className="heading"><span>Weapon</span><span>Attack</span><span>Damage</span><span>Properties</span><span>Mastery</span></div>
             {weapons.map(({ item, qty }) => {
               const custom = (card.customItems ?? []).find((entry) => entry.id === item.id);
               const facts = WEAPON_FACTS[item.id];
+              // core-rulebook.txt [page 109] Heavy: Disadvantage on attack rolls
+              // if a Melee Heavy weapon and Strength is under 13, or a Ranged
+              // Heavy weapon and Dexterity is under 13. The app does not roll
+              // attacks, so this is advisory only.
+              const heavyWarning = facts && /Heavy/.test(facts.properties)
+                && (facts.attack === "Melee" ? card.abilities.str < 13 : card.abilities.dex < 13)
+                ? `Heavy: ${facts.attack === "Melee" ? "Strength" : "Dexterity"} under 13 — attack rolls with this weapon have Disadvantage.`
+                : "";
+              // core-rulebook.txt [page 12]: the Proficiency Bonus applies only to
+              // weapons you are proficient with, so the Attack column omits it
+              // otherwise. Say so, or the lower number looks like a bug.
+              const proficiencyWarning = facts && automation.klass && !isWeaponProficient(automation.klass.weaponProficiencies, facts)
+                ? `Not proficient: ${automation.klass.title} covers ${automation.klass.weaponProficiencies.toLowerCase()} — attacks add no Proficiency Bonus.`
+                : "";
               return (
                 <div key={item.id}>
-                  <span><b>{item.name}</b>{qty > 1 ? ` ×${qty}` : ""}</span>
+                  <span><b>{item.name}</b>{qty > 1 ? ` ×${qty}` : ""}{heavyWarning && <small>{heavyWarning}</small>}{proficiencyWarning && <small>{proficiencyWarning}</small>}</span>
+                  <span><small className="appsheet-weapon-label">Attack</small>{custom?.attackBonus || formatModifier(weaponAttackBonus(card, facts))}</span>
                   <span><small className="appsheet-weapon-label">Damage</small>{custom?.damage || weaponDamageLabel(facts)}</span>
                   <span><small className="appsheet-weapon-label">Properties</small>{custom?.weaponNotes || facts?.properties || item.note || "—"}</span>
                   <span><small className="appsheet-weapon-label">Mastery</small>{facts?.mastery || "—"}</span>
@@ -150,7 +170,7 @@ export function AppGearSection({
             })}
           </div>
         ) : <p className="appsheet-empty-copy">Carried catalog weapons appear here automatically.</p>}
-        <AutoReason reason="Weapon damage, properties, and mastery come from the established Hunter catalog. The Hunter Cleaver has no recorded statistics and remains explicitly DM-set." />
+        <AutoReason reason="Damage, properties and mastery come from the C&S Core Rulebook weapons table; the attack bonus is the ability modifier this weapon uses, plus your Proficiency Bonus where you are proficient with it." />
       </AppPanel>
       {includeDamageBonuses && <AppWeaponDamageBonuses card={card} klass={automation.klass} />}
       </AppDisclosure>

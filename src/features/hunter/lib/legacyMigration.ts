@@ -207,7 +207,9 @@ export function migrateLegacyCharacter(card: HunterCard, migratedAt: number): Le
     baseAbilities,
     skillProficiencies,
     currentHp: numberField(sheet, "hpCur", card.currentHp ?? numberField(sheet, "hpMax", 1)),
-    sanity: numberField(sheet, "sanityCur", card.sanity ?? numberField(sheet, "sanityMax", 0)),
+    // core-rulebook.txt [page 42]: "Start with 0 Madness and do not track
+    // Current Sanity." A migrated hunter therefore carries no Current Sanity
+    // value; `normalizeCard` already derives Madness from any legacy pair.
     coins: Math.max(card.coins ?? 0, numberField(sheet, "coins", 0) + equipmentCoins),
     transformationLevel: numberField(sheet, "transformation", card.transformationLevel ?? 0),
     bloodTinge: sheet.bloodTinge === true || card.bloodTinge === true,

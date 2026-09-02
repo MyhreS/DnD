@@ -4,12 +4,15 @@ import { getClass } from "@/data/classes";
 import { ITEMS } from "@/data/items";
 import { SKILLS } from "@/data/skills";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
+import { WEAPON_FACTS } from "@/data/weapons";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
-import { maxAddonPieces } from "@/lib/character";
+import { isWeaponProficient, maxAddonPieces } from "@/lib/character";
 import { armorFor } from "@/lib/customItems";
 import { startingKit } from "@/lib/startingEquipment";
+import { BLOODVIAL_ITEM_ID } from "@/data/bloodvial";
 import type {
   AbilityKey,
+  BloodvialPurity,
   CustomItem,
   HunterCard,
   InventoryEntry,
@@ -34,10 +37,18 @@ const ZERO_BONUS = (): Partial<Record<AbilityKey, number>> => Object.fromEntries
 
 function mergeInventory(base: InventoryEntry[], additions: InventoryEntry[]): InventoryEntry[] {
   const counts = new Map(base.map((entry) => [entry.itemId, entry.qty]));
-  for (const entry of additions) counts.set(entry.itemId, (counts.get(entry.itemId) ?? 0) + entry.qty);
+  // Per-line extras (such as a Bloodvial's purity) survive quantity changes.
+  const extras = new Map(base.map((entry) => [entry.itemId, entry.purity]));
+  for (const entry of additions) {
+    counts.set(entry.itemId, (counts.get(entry.itemId) ?? 0) + entry.qty);
+    if (entry.purity) extras.set(entry.itemId, entry.purity);
+  }
   return [...counts]
     .filter(([, qty]) => qty > 0)
-    .map(([itemId, qty]) => ({ itemId, qty }));
+    .map(([itemId, qty]) => {
+      const purity = extras.get(itemId);
+      return purity ? { itemId, qty, purity } : { itemId, qty };
+    });
 }
 
 function removeInventory(base: InventoryEntry[], removals: InventoryEntry[]): InventoryEntry[] {
@@ -48,6 +59,8 @@ function withStartingKit(card: HunterCard): HunterCard {
   const state = card.sheetAutomation;
   const withoutOld = removeInventory(card.inventory ?? [], state?.startingKitInventory ?? []);
   const oldCoins = state?.startingKitCoins ?? 0;
+  const grantedExtras = state?.startingKitExtraArmorIds ?? [];
+  const extrasWithoutOld = (card.extraArmorIds ?? []).filter((id) => !grantedExtras.includes(id));
   const kit = startingKit(getClass(card.classId), BACKGROUNDS.find((entry) => entry.id === card.backgroundId));
   // A class kit is mandatory in its own right, so grant it as soon as the
   // player chooses a class. Background equipment is folded in later when a
@@ -58,11 +71,13 @@ function withStartingKit(card: HunterCard): HunterCard {
       ...card,
       inventory: withoutOld,
       coins: Math.max(0, (card.coins ?? 0) - oldCoins),
+      extraArmorIds: extrasWithoutOld,
       sheetAutomation: {
         ...state!,
         startingKitApplied: false,
         startingKitInventory: [],
         startingKitCoins: 0,
+        startingKitExtraArmorIds: [],
       },
     };
   }
@@ -70,11 +85,13 @@ function withStartingKit(card: HunterCard): HunterCard {
     ...card,
     inventory: mergeInventory(withoutOld, kit.inventory),
     coins: Math.max(0, (card.coins ?? 0) - oldCoins) + kit.coins,
+    extraArmorIds: [...extrasWithoutOld, ...kit.extraArmorIds.filter((id) => !extrasWithoutOld.includes(id))],
     sheetAutomation: {
       ...state!,
       startingKitApplied: true,
       startingKitInventory: kit.inventory,
       startingKitCoins: kit.coins,
+      startingKitExtraArmorIds: kit.extraArmorIds,
       legacyEquipment: [
         ...(state?.legacyEquipment ?? []),
         ...kit.unmatched.map((name) => ({
@@ -167,24 +184,29 @@ export function CharacterAutomationProvider({
   const masteryCount = masteryFromTable || (masteryWord
     ? ({ two: 2, three: 3, four: 4, five: 5, six: 6 }[masteryWord] ?? 0)
     : 0);
-  const meleeWeaponIds = new Set([
-    "greatsword", "greataxe", "longsword", "shortsword", "scimitar",
-    "hunter-cleaver", "sickle", "handaxe", "dagger",
-  ]);
-  const finesseOrLightIds = new Set([
-    "shortsword", "scimitar", "sickle", "handaxe", "dagger", "pistol",
-  ]);
+  // Mastery options are derived from the weapons table rather than listed by
+  // hand, and gated on the class's own proficiency sentence — core-rulebook.txt
+  // [page 63] grants mastery over "weapons of your choice with which you have
+  // proficiency". Reading that sentence rather than keying on a class id keeps
+  // the Stalker's Finesse-or-Light carve-out and the Deepcaller's Simple-only
+  // line correct without a special case for either. A "Melee weapons" mastery
+  // feature narrows the result further ([page 87]).
   const masteryWeapons = ITEMS.filter((item) => {
     if (item.category !== "Weapon") return false;
-    if (klass?.id === "stalker") return finesseOrLightIds.has(item.id);
-    if (/Melee weapons/i.test(masteryFeature?.text ?? "")) return meleeWeaponIds.has(item.id);
+    const facts = WEAPON_FACTS[item.id];
+    if (!facts) return false;
+    if (klass && !isWeaponProficient(klass.weaponProficiencies, facts)) return false;
+    if (/Melee weapons/i.test(masteryFeature?.text ?? "")) return facts.attack === "Melee";
     return true;
   });
+  // Zealot Whispers — core-rulebook.txt [page 76]: one additional prepared
+  // Whisper from level 3.
   const whisperLimit = (
     klass?.caster
       ? Number(klass.progression.find((row) => row.level === card.level)?.extras["Prepared Whispers"] ?? 0)
       : 0
-  ) + (background?.feat === "Listener" ? 1 : 0);
+  ) + (background?.feat === "Listener" ? 1 : 0)
+    + (card.subclassId === "hunter-zealot" && card.level >= 3 ? 1 : 0);
 
   function commit(partial: Partial<HunterCard>, refreshKit = false) {
     if (readOnly) return;
@@ -364,6 +386,15 @@ export function CharacterAutomationProvider({
     commit({ inventory, slotAssignments });
   }
 
+  /** Bloodvial purity, core-rulebook.txt [page 123]. Stored on the existing
+   * `blood-vial` inventory line — no separate item id. */
+  function setBloodvialPurity(purity: BloodvialPurity) {
+    const inventory = (card.inventory ?? []).map((entry) => (
+      entry.itemId === BLOODVIAL_ITEM_ID ? { ...entry, purity } : entry
+    ));
+    commit({ inventory });
+  }
+
   function slotStateWithout(replace?: SlotReplacement) {
     let inventory = card.inventory ?? [];
     let equippedStorageIds = card.equippedStorageIds ?? [];
@@ -530,21 +561,11 @@ export function CharacterAutomationProvider({
       ...(target ? { slotAssignments: { ...base.slotAssignments, [item.id]: [target] } } : {}),
       sheetAutomation: state,
     };
-    const weaponFields: SheetData = {};
-    if (item.category === "Weapon") {
-      const row = Array.from({ length: 8 }, (_, index) => index).find((index) => {
-        const value = card.sheet?.[`wd_${index}_0`];
-        return typeof value !== "string" || value.trim() === "";
-      });
-      if (row != null) {
-        weaponFields[`wd_${row}_0`] = item.name;
-        weaponFields[`wd_${row}_1`] = item.attackBonus ?? "";
-        weaponFields[`wd_${row}_2`] = item.damage ?? "";
-        weaponFields[`wd_${row}_3`] = item.weaponNotes ?? item.note ?? "";
-      }
-    }
+    // The WEAPON DAMAGE table is now derived for every carried weapon —
+    // catalog and custom alike — inside `characterAutomation`, so this flow no
+    // longer hand-places a row.
     onApply(
-      { ...calculatedSheetFields(next), ...weaponFields },
+      calculatedSheetFields(next),
       { customItems: next.customItems, inventory: next.inventory, equippedStorageIds: next.equippedStorageIds, slotAssignments: next.slotAssignments, sheetAutomation: state },
     );
   }
@@ -582,6 +603,7 @@ export function CharacterAutomationProvider({
     setBonus,
     switchMode,
     changeQty,
+    setBloodvialPurity,
     addCatalogItemToSlot,
     setSlotAssignment,
     toggleStorage,

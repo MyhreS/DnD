@@ -146,10 +146,16 @@ export interface CustomItem extends Item {
   weaponNotes?: string;
 }
 
+/** Bloodvial purity, core-rulebook.txt [page 123]. A field on the single
+ * `blood-vial` catalog id rather than four items; absent means Tainted. */
+export type BloodvialPurity = "tainted" | "stirred" | "concentrated" | "pure";
+
 /** A line in a hunter's inventory: a catalog item id + how many. */
 export interface InventoryEntry {
   itemId: string;
   qty: number;
+  /** Bloodvial lines only — the purity of these vials (default Tainted). */
+  purity?: BloodvialPurity;
 }
 
 /** A recently dropped inventory line (#136) — recoverable until DROPPED_TTL_MS
@@ -198,8 +204,11 @@ export type GameStatus = "lobby" | "active" | "ended";
 /** The DM-set phase while a game is active. */
 export type GamePhase = "exploration" | "combat" | "short_rest" | "long_rest";
 /** Where the party is — orthogonal to phase and used by the established
- * session-rest workflow: Hunters Lodge = full Long Rest (HP + Hit Dice); a Safe
- * Zone = spend Hit Dice on a Short Rest (and a half Long Rest); the Wild = neither. */
+ * session-rest workflow. A Safe Zone is a location the GM designates; the
+ * Hunters Lodge is always one, so both grant the same rest benefits (spend Hit
+ * Point Dice on a Short Rest; a Long Rest restores all HP and all Hit Point
+ * Dice). The Wild is outside a Safe Zone: no Hit Point Dice, and a Long Rest
+ * restores only half your HP maximum. */
 export type GameLocation = "lodge" | "safe" | "wild";
 
 export type TurnTimerPhase = "idle" | "briefing" | "running" | "paused" | "untimed" | "expired";
@@ -212,8 +221,6 @@ export interface EncounterState {
   round: number;
   /** The combatant whose turn it is, or null. */
   turnId: string | null;
-  /** Exactly one Warden may receive Tactical Command for this encounter. */
-  designatedWardenId: string | null;
   timerPhase: TurnTimerPhase;
   /** Absolute client epoch so every subscribed screen renders the same clock. */
   timerEndsAt: number | null;
@@ -272,8 +279,6 @@ export interface Combatant {
   /** Reusable library source plus an immutable reset snapshot for monsters. */
   enemyTemplateId?: string | null;
   baseStats?: EnemyStats | null;
-  /** True when this PC's class is Hunter Warden. */
-  isWarden?: boolean;
   createdAt: number;
 }
 
@@ -473,6 +478,9 @@ export interface SheetAutomationState {
    * preserving equipment the player added later. */
   startingKitInventory?: InventoryEntry[];
   startingKitCoins?: number;
+  /** Armor "Extra" pieces (class head gear) granted by the current kit, so a
+   * class change can withdraw exactly what it granted. */
+  startingKitExtraArmorIds?: string[];
   migratedAt?: number;
   manualOverrides?: string[];
   legacyEquipment?: LegacyEquipmentLine[];
@@ -526,29 +534,63 @@ export interface HunterCard {
   /** @deprecated Legacy studded-piece COUNT — normalized into `studdedAddonIds`
    * on load and mirrored (= its length) on every save for stale clients. */
   studdedAddons?: number;
-  /** Worn Add-on piece ids carrying the Studs upgrade (≥1 → +1 AC, 5 → +2 AC;
-   * +3 lb each). Replaces the legacy `studdedAddons` count. */
+  /** Worn Add-on piece ids carrying the Studs upgrade (≥3 → +1 AC, 5 → +2 AC;
+   * +5 lb each — core-rulebook.txt [page 35]). Replaces the legacy
+   * `studdedAddons` count. */
   studdedAddonIds?: string[];
   /** Worn Extras (hats, scarves, gloves — AC 0 flavour/utility). */
   extraArmorIds?: string[];
   /** Current hit points during play (defaults to max when unset). */
   currentHp?: number;
-  /** Current Sanity during play (defaults to max when unset). */
+  /** @deprecated Current Sanity is not tracked. core-rulebook.txt [page 42]:
+   * "Start with 0 Madness and do not track Current Sanity." Nothing writes this
+   * field any more; stored values remain only until the Batch 6 migration
+   * strips them, and `normalizeCard` still reads legacy pairs once to derive
+   * Madness. Do not read it for play values. */
   sanity?: number;
-  /** Current Madness, tracked independently because the supplied hidden rules
-   * refer to it directly and do not define a Sanity-to-Madness formula. */
+  /** Current Madness. core-rulebook.txt [page 42] "Max Sanity and Madness":
+   * a Hunter starts with 0 Madness, and "Madness functions like damage against
+   * Max Sanity: when Madness equals or exceeds Max Sanity, you become Insane
+   * and gain the Insane Condition." Reducing it below Max Sanity ends Insane. */
   madness?: number;
-  /** Transformation Level 0–10. The supplied documents reference but do not
-   * include the Transformation Table, so the app records this value without
-   * rolling or inferring a result. Reducing it clears active Transformations. */
+  /** Transformation Level 0–10. The Transformation Table is published in full
+   * (20 rows × 10 level columns) at core-rulebook.txt [page 27]; the app still
+   * records the level rather than rolling for the table at present.
+   * Reducing it clears active Transformations ([page 26]). */
   transformationLevel?: number;
-  /** Active Transformation result keys recorded by the DM from physical table
-   * rolls (duplicates allowed). Cleared when Transformation Level is reduced. */
+  /** Active Transformation result keys recorded by the DM from table rolls
+   * (unique ids). core-rulebook.txt [page 26] "Getting same Transformations":
+   * "Active Transformations do not stack with themselves. If you roll one you
+   * already have, suffer 2 Madness, and nothing more happens."
+   * Cleared when Transformation Level is reduced. */
   activeTransformations?: string[];
   /** Insight — the established app progression currency, awarded by the DM. */
   insight?: number;
-  /** Blood Tinge — the C&S take on heroic inspiration. */
+  /** Blood Tinge. core-rulebook.txt [page 44]: "Once per round, when damage
+   * leaves you with 1–9 Hit Points, you gain Blood Tinge. You can have only one
+   * Blood Tinge at a time." It may be spent immediately after rolling a die to
+   * reroll that die; unspent Blood Tinge is lost on a Long Rest. */
   bloodTinge?: boolean;
+  /** Not Tonight! core-rulebook.txt [page 44]: "A newly created Hunter begins
+   * with Not Tonight!" — hence the default of `true`. It sets you to 1 Hit
+   * Point instead of 0 and is regained on a Long Rest if not already held.
+   * You can have only one at a time. */
+  notTonight?: boolean;
+  /** Favors held, 0–2. core-rulebook.txt [page 44]: "A Hunter can have no more
+   * than two Favors. If you would gain a Favor while you already have two, you
+   * gain nothing." Awarded only by the GM; one may be expended on death. */
+  favors?: number;
+  /** Sleepless Counters. core-rulebook.txt [page 21]: one is gained at the end
+   * of every hour spent outside a Short or Long Rest; at 24 you gain the
+   * Sleepless condition and 1d4 Madness. A Long Rest resets it to 0
+   * ([page 25]). */
+  sleeplessCounter?: number;
+  /** Exhaustion level. core-rulebook.txt [page 25], Long Rest benefits:
+   * "Reduce Exhaustion by 1." */
+  exhaustion?: number;
+  /** Rolled Insane Quirk id, from the d100 Insane Quirk Table at
+   * core-rulebook.txt [page 24]. Unset until a Quirk is rolled. */
+  insaneQuirkId?: string;
   /** Deepcaller: prepared Whispers / known rites, by rite id. */
   preparedWhispers?: string[];
   /** Gold pieces (the only currency). */
@@ -567,8 +609,6 @@ export interface HunterCard {
    * id. A worn storage item leaves `inventory` (like worn armor); its weight
    * still counts. Missing on legacy docs → nothing equipped. */
   equippedStorageIds?: string[];
-  /** Player has hit 0 HP and confirmed death; awaiting the DM to confirm. */
-  deathPending?: boolean;
   /** The campaign this hunter currently plays in (lets that campaign's DM
    * manage it — death/recover). Set when chosen for a campaign. */
   campaignId?: string | null;
