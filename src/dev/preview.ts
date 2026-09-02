@@ -207,7 +207,7 @@ export function previewPartyCards(): import("@/types").HunterCard[] {
     addonArmorIds: [],
     studdedAddonIds: [],
     studdedAddons: 0,
-    extraArmorIds: [],
+    extraArmorIds: ["cavalier-hat"],
     currentHp: 21,
     sanity: 8,
     // `sanity` stays to exercise the legacy conversion path in normalizeCard;
@@ -276,7 +276,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     addonArmorIds: ["leather-pauldron-right", "leather-vambrace-right"],
     studdedAddonIds: ["leather-pauldron-right"],
     studdedAddons: 1, // legacy mirror
-    extraArmorIds: ["tricorn"],
+    extraArmorIds: ["cavalier-hat"],
     currentHp: 22,
     sanity: 9,
     // See Henryk above: the legacy `sanity` is deliberate, `madness` is shown.

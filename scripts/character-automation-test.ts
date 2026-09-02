@@ -1,9 +1,9 @@
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
-import { armorClass, emptySheetCard, isBloodied, normalizeCard, wornArmorWeight } from "../src/lib/character";
+import { armorClass, emptySheetCard, isBloodied, isWeaponProficient, normalizeCard, weaponAttackBonus, wornArmorWeight } from "../src/lib/character";
 import { carryCondition } from "../src/lib/inventory";
 import { deriveSheetFromCard } from "../src/features/hunter/lib/deriveSheetFromCard";
-import { CLASSES } from "../src/data/classes";
+import { CLASSES, getClass } from "../src/data/classes";
 import { MADUHAUSU_BUDGET, POINT_BUY_BUDGET } from "../src/data/abilities";
 import { BACKGROUNDS } from "../src/data/backgrounds";
 import { EPIC_BOON_FEATS, FIGHTING_STYLE_FEATS, GENERAL_FEATS } from "../src/data/feats";
@@ -677,5 +677,32 @@ assert.equal(cardBloodvialPurity({ inventory: [{ itemId: BLOODVIAL_ITEM_ID, qty:
 assert.equal(cardBloodvialPurity({ inventory: [] }), "tainted", "an empty inventory reports the default purity");
 assert.equal(bloodvialFailureLabel(BLOODVIAL_PURITY_BY_ID.concentrated), "Grit DC 20 — on a failure: +2 Transformation Levels and +10 Madness.", "the failure line displays the DC and both consequences");
 assert.equal(bloodvialEffectLabel(BLOODVIAL_PURITY_BY_ID.tainted), "Heals 2d4 + 2 HP · removes 2 Madness", "the effect line displays healing and Madness removed");
+
+// core-rulebook.txt [page 12]: the Proficiency Bonus applies to a weapon's
+// attack rolls only where the hunter is proficient with it. The ATTACK column
+// is new, so nothing exercised this before.
+{
+  const scores = { str: 16, dex: 14, con: 12, int: 10, wis: 10, cha: 10 };
+  const holder = (classId: string) => ({ classId, level: 5, abilities: scores }) as never;
+  const facts = (id: string) => WEAPON_FACTS[id];
+
+  const stalker = getClass("stalker")!;
+  assert.equal(
+    stalker.weaponProficiencies,
+    "Simple weapons and Martial weapons with the Finesse or Light property",
+    "the Stalker's proficiency line is the one that needs parsing, not an id special-case",
+  );
+  assert.equal(isWeaponProficient(stalker.weaponProficiencies, facts("rapier")!), true, "a Stalker is proficient with a Finesse Martial weapon");
+  assert.equal(isWeaponProficient(stalker.weaponProficiencies, facts("greatsword")!), false, "a Stalker is not proficient with a Martial weapon lacking Finesse or Light");
+  assert.equal(isWeaponProficient(getClass("deepcaller")!.weaponProficiencies, facts("greatsword")!), false, "a Deepcaller has Simple weapons only");
+  assert.equal(isWeaponProficient(getClass("brute")!.weaponProficiencies, facts("greatsword")!), true, "a Brute has Simple and Martial weapons");
+
+  // Strength 16 is +3; the level-5 Proficiency Bonus is +3.
+  assert.equal(weaponAttackBonus(holder("brute"), facts("greatsword")), 6, "a proficient hunter adds the Proficiency Bonus");
+  assert.equal(weaponAttackBonus(holder("deepcaller"), facts("greatsword")), 3, "a non-proficient hunter adds the ability modifier alone");
+  assert.equal(weaponAttackBonus(holder("deepcaller"), facts("club")), 6, "a Deepcaller is still proficient with Simple weapons");
+  assert.equal(weaponAttackBonus(holder("stalker"), facts("rapier")), 6, "the Stalker's Finesse carve-out grants the bonus");
+  assert.equal(weaponAttackBonus(holder("stalker"), facts("greatsword")), 3, "and withholds it otherwise");
+}
 
 console.log("Character automation tests passed.");
