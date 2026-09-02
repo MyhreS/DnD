@@ -340,6 +340,57 @@ export function planCharacter(id: string, data: Raw): CharacterPlan {
     patch.deathPending = DELETE;
   }
 
+  // The denormalised copies of catalog values. Each is derived at read time
+  // now, so the stored copy is redundant at best and a future rename would
+  // leave it stale — the app keys on the feat's NAME in several places.
+  if (background && Object.prototype.hasOwnProperty.call(data, "feat")) {
+    changes.push({
+      group: "strip:legacy-fields",
+      field: "feat",
+      before: data.feat,
+      after: `(deleted — derived from backgroundId "${background.id}" as ${background.feat ?? "no feat"})`,
+    });
+    patch.feat = DELETE;
+  }
+  if (background && Object.prototype.hasOwnProperty.call(data, "background")) {
+    changes.push({
+      group: "strip:legacy-fields",
+      field: "background",
+      before: data.background,
+      after: `(deleted — derived from backgroundId as "${background.name}")`,
+    });
+    patch.background = DELETE;
+  }
+  // Superseded by `madness`, which every card now carries. `normalizeCard` only
+  // read this to perform the one-time conversion, which has already run.
+  if (typeof data.madness === "number" && Object.prototype.hasOwnProperty.call(data, "sanity")) {
+    changes.push({
+      group: "strip:legacy-fields",
+      field: "sanity",
+      before: data.sanity,
+      after: `(deleted — Madness ${data.madness} is the tracked pool; core-rulebook.txt [page 42] says not to track Current Sanity)`,
+    });
+    patch.sanity = DELETE;
+  }
+  if (Object.prototype.hasOwnProperty.call(data, "studdedAddons")) {
+    changes.push({
+      group: "strip:legacy-fields",
+      field: "studdedAddons",
+      before: data.studdedAddons,
+      after: "(deleted — studdedAddonIds is authoritative)",
+    });
+    patch.studdedAddons = DELETE;
+  }
+  if (sheet.sanityCur !== undefined) {
+    changes.push({
+      group: "strip:legacy-fields",
+      field: "sheet.sanityCur",
+      before: sheet.sanityCur,
+      after: "(deleted — Current Sanity is not tracked and nothing emits it)",
+    });
+    sheetPatch.sanityCur = DELETE;
+  }
+
   // --- REMAP: tool-name strings inside featSkills[] ------------------------
   const featSkills = asArray<string>(data.featSkills).filter((value) => typeof value === "string");
   if (featSkills.length) {

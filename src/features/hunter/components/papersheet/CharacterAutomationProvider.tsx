@@ -243,8 +243,9 @@ export function CharacterAutomationProvider({
     const nextClassSkills = state.classSkills.filter((skill) => !nextBackground?.skills.includes(skill));
     commit({
       backgroundId,
-      background: nextBackground?.name ?? "",
-      feat: nextBackground?.feat ?? null,
+      // `background` and `feat` are deliberately NOT written: both derive from
+      // `backgroundId` (see `featsOf`). The denormalised copies drifted from
+      // the catalog, and the migration strips them.
       featSkills: nextBackground?.feat === "Skilled" ? card.featSkills ?? [] : [],
       skillProficiencies: [...new Set([...nextClassSkills, ...(nextBackground?.skills ?? [])])],
       abilities: finalAbilities(card, nextBonuses),

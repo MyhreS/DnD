@@ -1,5 +1,5 @@
 import { abilityModifier, formatModifier } from "@/data/abilities";
-import { armorClassFor, proficiencyBonus } from "@/lib/character";
+import { armorClassFor, featsOf, proficiencyBonus } from "@/lib/character";
 import { carryCondition, totalCarriedWeight } from "@/lib/inventory";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { sheetText } from "../appsheet/appSheetValues";
@@ -21,16 +21,17 @@ function numberOf(value: unknown): number {
 }
 
 export function CharacterSheetDerivedStat({ model, kind }: { model: AppSheetModel; kind: CharacterSheetDerivedStatKind }) {
-  const { card, klass, background, result } = useCharacterAutomation();
+  const { card, klass, result } = useCharacterAutomation();
   const config = CONFIG[kind];
   const modifier = numberOf(sheetText(model.data, config.field));
   const total = numberOf(result.fields[config.result]);
   const proficient = result.fields.skPerceptionP === true;
-  const feats = [background?.feat, card.feat, ...(card.feats ?? [])].filter(Boolean);
+  const feats = featsOf(card);
   const hasAlert = feats.includes("Alert");
-  // The speed rows mirror `automationFor`, which reads the background feat plus
-  // `card.feats` only — the legacy singular `card.feat` is not part of that set.
-  const speedFeats = [background?.feat, ...(card.feats ?? [])].filter(Boolean);
+  // Both rows now read the same derived set as `automationFor`: the background's
+  // origin feat plus `card.feats`. They used to disagree — this row folded in the
+  // legacy singular `card.feat` and the speed row did not.
+  const speedFeats = featsOf(card);
   const armor = armorClassFor(card);
   const prof = proficiencyBonus(card.level);
   // core-rulebook.txt [page 43]: Passive Perception uses the full Wisdom
