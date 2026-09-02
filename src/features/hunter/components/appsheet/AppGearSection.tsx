@@ -170,7 +170,7 @@ export function AppGearSection({
             })}
           </div>
         ) : <p className="appsheet-empty-copy">Carried catalog weapons appear here automatically.</p>}
-        <AutoReason reason="Weapon damage, properties, and mastery come from the C&S Core Rulebook weapons table." />
+        <AutoReason reason="Damage, properties and mastery come from the C&S Core Rulebook weapons table; the attack bonus is the ability modifier this weapon uses, plus your Proficiency Bonus where you are proficient with it." />
       </AppPanel>
       {includeDamageBonuses && <AppWeaponDamageBonuses card={card} klass={automation.klass} />}
       </AppDisclosure>

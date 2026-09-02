@@ -6,7 +6,7 @@ import { SKILLS } from "@/data/skills";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 import { WEAPON_FACTS } from "@/data/weapons";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
-import { maxAddonPieces } from "@/lib/character";
+import { isWeaponProficient, maxAddonPieces } from "@/lib/character";
 import { armorFor } from "@/lib/customItems";
 import { startingKit } from "@/lib/startingEquipment";
 import { BLOODVIAL_ITEM_ID } from "@/data/bloodvial";
@@ -185,17 +185,17 @@ export function CharacterAutomationProvider({
     ? ({ two: 2, three: 3, four: 4, five: 5, six: 6 }[masteryWord] ?? 0)
     : 0);
   // Mastery options are derived from the weapons table rather than listed by
-  // hand. The Stalker is proficient with Simple weapons and Martial weapons
-  // with the Finesse or Light property (core-rulebook.txt [page 63]); a
-  // "Melee weapons" mastery feature covers every melee row ([page 87]).
+  // hand, and gated on the class's own proficiency sentence — core-rulebook.txt
+  // [page 63] grants mastery over "weapons of your choice with which you have
+  // proficiency". Reading that sentence rather than keying on a class id keeps
+  // the Stalker's Finesse-or-Light carve-out and the Deepcaller's Simple-only
+  // line correct without a special case for either. A "Melee weapons" mastery
+  // feature narrows the result further ([page 87]).
   const masteryWeapons = ITEMS.filter((item) => {
     if (item.category !== "Weapon") return false;
     const facts = WEAPON_FACTS[item.id];
     if (!facts) return false;
-    if (klass?.id === "stalker") {
-      return facts.category === "Simple"
-        || (facts.category === "Martial" && /Finesse|Light/.test(facts.properties));
-    }
+    if (klass && !isWeaponProficient(klass.weaponProficiencies, facts)) return false;
     if (/Melee weapons/i.test(masteryFeature?.text ?? "")) return facts.attack === "Melee";
     return true;
   });
