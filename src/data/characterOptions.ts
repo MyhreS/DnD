@@ -129,3 +129,35 @@ export function riteDamageAtStrain(rite: DeepcallerReference, strainLevel: numbe
     default: return rite.damage;
   }
 }
+
+/** The 14 Battle Master maneuvers, transcribed from the subclass's own
+ * "Maneuver Options" text (core-rulebook.txt [page 52]). A Battle Master
+ * learns three at Hunter Brute level 3 and two more at levels 7, 10 and 15 —
+ * nine picks in all, each recorded in its own upgrade row. */
+export const MANEUVERS: ReadonlyArray<{ name: string; text: string }> = [
+  { name: "Bait and Switch", text: "When you're within 5 feet of a creature on your turn, you can expend one Superiority Die and switch places with that creature, provided you spend at least 5 feet of movement and the creature is willing and doesn't have the Incapacitated condition. This movement doesn't provoke Opportunity Attacks. Roll the Superiority Die. Until the start of your next turn, you or the other creature (your choice) gains a bonus to AC equal to the number rolled." },
+  { name: "Disarming Attack", text: "When you hit a creature with an attack roll, you can expend one Superiority Die to attempt to disarm the target. Add the Superiority Die roll to the attack's damage roll. The target must succeed on a Strength saving throw or drop one object of your choice that it's holding, with the object landing in its space." },
+  { name: "Distracting Strike", text: "When you hit a creature with an attack roll, you can expend one Superiority Die to distract the target. Add the Superiority Die roll to the attack's damage roll. The next attack roll against the target by an attacker other than you has Advantage if the attack is made before the start of your next turn." },
+  { name: "Evasive Footwork", text: "As a Bonus Action, you can expend one Superiority Die and take the Disengage action. You also roll the die and add the number rolled to your AC until the start of your next turn." },
+  { name: "Feinting Attack", text: "As a Bonus Action, you can expend one Superiority Die to feint, choosing one creature within 5 feet of yourself as your target. You have Advantage on your next attack roll against that target this turn. If that attack hits, add the Superiority Die to the attack's damage roll." },
+  { name: "Goading Attack", text: "When you hit a creature with an attack roll, you can expend one Superiority Die to attempt to goad the target into attacking you. Add the Superiority Die to the attack's damage roll. The target must succeed on a Wisdom saving throw or have Disadvantage on attack rolls against targets other than you until the end of your next turn." },
+  { name: "Lunging Attack", text: "As a Bonus Action, you can expend one Superiority Die and take the Dash action. If you move at least 5 feet in a straight line immediately before hitting with a melee attack as part of the Attack action on this turn, you can add the Superiority Die to the attack's damage roll." },
+  { name: "Maneuvering Attack", text: "When you hit a creature with an attack roll, you can expend one Superiority Die to maneuver one of your comrades into another position. Add the Superiority Die roll to the attack's damage roll, and choose a willing creature who can see or hear you. That creature can use its Reaction to move up to half its Speed without provoking an Opportunity Attack from the target of your attack." },
+  { name: "Menacing Attack", text: "When you hit a creature with an attack roll, you can expend one Superiority Die to attempt to frighten the target. Add the Superiority Die to the attack's damage roll. The target must succeed on a Wisdom saving throw or have the Frightened condition until the end of your next turn." },
+  { name: "Precision Attack", text: "When you miss with an attack roll, you can expend one Superiority Die, roll that die, and add it to the attack roll, potentially causing the attack to hit." },
+  { name: "Pushing Attack", text: "When you hit a creature with an attack roll using a weapon or an Unarmed Strike, you can expend one Superiority Die to attempt to drive the target back. Add the Superiority Die to the attack's damage roll. If the target is Large or smaller, it must succeed on a Strength saving throw or be pushed up to 15 feet directly away from you." },
+  { name: "Riposte", text: "When a creature misses you with a melee attack roll, you can take a Reaction and expend one Superiority Die to make a melee attack roll with a weapon or an Unarmed Strike against the creature. If you hit, add the Superiority Die to the attack's damage." },
+  { name: "Sweeping Attack", text: "When you hit a creature with a melee attack roll using a weapon or an Unarmed Strike, you can expend one Superiority Die to attempt to damage another creature. Choose another creature within 5 feet of the original target and within your reach. If the original attack roll would hit the second creature, it takes damage equal to the number you roll on your Superiority Die. The damage is of the same type dealt by the original attack." },
+  { name: "Trip Attack", text: "When you hit a creature with an attack roll using a weapon or an Unarmed Strike, you can expend one Superiority Die and add the die to the attack's damage roll. If the target is Large or smaller, it must succeed on a Strength saving throw or have the Prone condition." },
+];
+
+/** How many maneuvers a Battle Master learns on reaching each level. */
+export const MANEUVER_LEVELS: ReadonlyArray<{ level: number; count: number }> = [
+  { level: 3, count: 3 },
+  { level: 7, count: 2 },
+  { level: 10, count: 2 },
+  { level: 15, count: 2 },
+];
+
+/** Upgrade-row key prefix for a maneuver slot, e.g. `7:maneuver:2`. */
+export const MANEUVER_KEY = "maneuver";

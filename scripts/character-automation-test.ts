@@ -177,6 +177,38 @@ assert.ok(!revelationOptions.some((option) => option.value === "Darkness"), "a R
 assert.equal(upgradeFeatureComplete(forbiddenRevelation, { version: 2, classSkills: [], levelChoices: { [forbiddenRevelation.key]: "True Seeing" } }), true, "a valid current-source Revelation completes the upgrade");
 assert.equal(upgradeFeatureComplete(forbiddenRevelation, { version: 2, classSkills: [], levelChoices: { [forbiddenRevelation.key]: "Old removed Rite" } }), false, "an unavailable Rite cannot complete a Revelation choice");
 
+// --- Battle Master maneuvers (core-rulebook.txt [page 52]) -------------------
+const brute = CLASSES.find((entry) => entry.id === "brute");
+const maneuverSlots = upgradeFeatures(brute, "battle-master", 0, 15).filter((feature) => /^Maneuver \d+$/.test(feature.name));
+assert.equal(maneuverSlots.length, 9, "three maneuvers at level 3 plus two each at 7, 10 and 15");
+assert.deepEqual(maneuverSlots.map((feature) => feature.level), [3, 3, 3, 7, 7, 10, 10, 15, 15]);
+assert.ok(maneuverSlots.every((feature) => feature.choice), "every maneuver slot asks for a decision");
+assert.equal(
+  upgradeFeatures(brute, "champion", 0, 15).some((feature) => /^Maneuver \d+$/.test(feature.name)),
+  false,
+  "only the Battle Master learns maneuvers",
+);
+const firstSlot = maneuverSlots[0];
+const secondSlot = maneuverSlots[1];
+assert.equal(recordedOptionsFor(firstSlot).length, 14, "all fourteen maneuvers are offered to an empty slot");
+const withRiposte = { version: 2 as const, classSkills: [], levelChoices: { [secondSlot.key]: "Riposte" } };
+assert.equal(
+  recordedOptionsFor(firstSlot, withRiposte).some((option) => option.value === "Riposte"),
+  false,
+  "a maneuver taken in another slot is not offered again",
+);
+assert.ok(
+  recordedOptionsFor(secondSlot, withRiposte).some((option) => option.value === "Riposte"),
+  "the slot's own recorded maneuver stays selectable",
+);
+assert.equal(upgradeFeatureComplete(firstSlot, withRiposte), false, "an unfilled maneuver slot blocks the upgrade");
+assert.equal(upgradeFeatureComplete(secondSlot, withRiposte), true, "a recorded maneuver completes its slot");
+assert.equal(
+  upgradeFeatureComplete(firstSlot, { version: 2, classSkills: [], levelChoices: { [firstSlot.key]: "Not a maneuver" } }),
+  false,
+  "a value outside the catalog never completes a maneuver slot",
+);
+
 const levelOne = automationFor(warden);
 assert.equal(levelOne.fields.class, "Warden");
 assert.equal(levelOne.fields.level, "1");
