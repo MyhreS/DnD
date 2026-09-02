@@ -95,7 +95,7 @@
     }
   ],
   "sourceHashes": {
-    "core-rulebook": "DD326C75404C5AD5C3555C76EC8B853EB6E22C84306BBF6FA7F9603397CE1D9D",
+    "core-rulebook": "5DA2CE6CC088A2A9EFBB97AB3A1DEB8C6A25E7DD1410DB8DA7529F750504E395",
     "book-of-the-deepcaller": "8E58F1D98BAA0740515FFC874E1293C228FB6C28F38CE2D64BBD7F8C8E71F283",
     "character-sheet": "1C097CEC80AA49D8A4DB8DE25702E43B2DCAEA626BC1CBFE3124A021B9B99385",
     "whispers": "8339BA383ED0E48471C79F3EC1A009E9A0B3A7EF50E641142026879F7187FE6E"
@@ -1678,7 +1678,7 @@
         "A Short Rest pauses this accumulation for itsfirst hour but removes no counters. Consecutive Short Rests count as",
         "one Short Rest; additional hours begin adding counters again unless the rest becomes a Long Rest.",
         "Completing a Long Rest resets your Sleepless Counters to 0.",
-        "At 24 counters, you gain the Sleepless condition and immediately suffer 1d4 Madness. Su er another 1d4 Madness",
+        "At 24 counters, you gain the Sleepless condition and immediately suffer 1d4 Madness. Suffer another 1d4 Madness",
         "when your counter reaches 30, 36, 42, and every further multiple of 6.",
         "Sleepless ends when your counter falls below 24. Madness already suffered remains until removed normally."
       ],
@@ -1687,7 +1687,7 @@
         "A Short Rest pauses this accumulation for itsfirst hour but removes no counters. Consecutive Short Rests count as",
         "one Short Rest; additional hours begin adding counters again unless the rest becomes a Long Rest.",
         "Completing a Long Rest resets your Sleepless Counters to 0.",
-        "At 24 counters, you gain the Sleepless condition and immediately suffer 1d4 Madness. Su er another 1d4 Madness",
+        "At 24 counters, you gain the Sleepless condition and immediately suffer 1d4 Madness. Suffer another 1d4 Madness",
         "when your counter reaches 30, 36, 42, and every further multiple of 6.",
         "Sleepless ends when your counter falls below 24. Madness already suffered remains until removed normally."
       ],
