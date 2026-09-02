@@ -164,7 +164,7 @@ description.
 
      for a die roll. The result creates a new         Wisdom         Awareness, judgment, and mental
      situation, returning play to the first step.                    fortitude
-                                                      Charisma       Con dence, presence, and force of
+                                                      Charisma       Confidence, presence, and force of
                                                                      personality
      An Ongoing Game
      A single Hunt may be completed in one
@@ -195,7 +195,7 @@ fi
                                                                             1. Roll 1d20. Roll a twenty-sided die.
           Score Meaning                                                     Higher results are generally better. If the roll
             1             The lowest a score can normally reach. An         has Advantage or Disadvantage, roll two
-                          e ect that reduces it to 0 explains what          d20s and use only one result, as explained
+                          effect that reduces it to 0 explains what          d20s and use only one result, as explained
                           happens.                                          later in this chapter.
            2–9            Weak capability                                   2. Add Modifiers. Add the relevant ability
           10–11 Average human capability                                    modifier. Add your Proficiency Bonus if the
@@ -220,9 +220,9 @@ fi
           subtract 10 from the ability score, divide the
           result by 2, and round down.
 
-          Ability Modi ers
+          Ability Modifiers
 
-            Score               Modi er          Score        Modi er
+            Score               Modifier          Score        Modifier
                  1                 -5            16–17           3
              2–3                   -4            18–19           4
              4–5                   -3            20–21           5
@@ -265,12 +265,12 @@ ff   fi
      Constitution Push your body beyond its normal limits                     Intelligence   See through an illusion or resist
                                                                                              impossible logic
            Intelligence          Reason, remember, investigate, or
-                                 interpret di cult information                  Wisdom       Resist fear, mental assault, or an
-                                                                                             invading in uence
+                                 interpret difficult information                  Wisdom       Resist fear, mental assault, or an
+                                                                                             invading influence
             Wisdom               Notice details, read behavior, or
                                  recognize signs of danger                     Charisma      Preserve your identity against
                                                                                              possession or spiritual alteration
-           Charisma              In uence, deceive, intimidate, or
+           Charisma              Influence, deceive, intimidate, or
                                  command attention                            Proficiency Bonus. Add your Proficiency
                                                                               Bonus if you are proficient in saving throws
      Proficiency Bonus. Add your Proficiency
@@ -290,8 +290,8 @@ ff   fi
      DC based on the difficulty of the task. If the
      total equals or exceeds the DC, the check
      succeeds.
-     Typical Di culty Classes
-                          Task Di culty                      DC
+     Typical Difficulty Classes
+                          Task Difficulty                      DC
                             Very Easy                          5
                                Easy                           10
                              Medium                           15
@@ -362,7 +362,7 @@ lost before Hit Points, cannot be restored,
      apply, add the bonus once. A feature such as                      The GM may allow another ability when
      Expertise may double it, but it still counts as                   your approach justifies it.
      one application.
-     Pro ciency Bonus                                                  Saving Throw Proficiencies
+     Proficiency Bonus                                                  Saving Throw Proficiencies
        Level         Bonus              Level        Bonus             Each class grants proficiency in certain
       Up to 4          +2               17–20          +6
                                                                        saving throws. Add your Proficiency Bonus
@@ -611,7 +611,7 @@ Climb onto a Bigger    Enter the space of a creature at least two sizes larger a
 
       Tumble           Contest Acrobatics against a hostile creature’s Acrobatics. On a success, move through its space during this turn.
 
-        Help           Give an ally Advantage on an applicable ability check that you have pro ciency in, or distract an adjacent enemy to
+        Help           Give an ally Advantage on an applicable ability check that you have proficiency in, or distract an adjacent enemy to
                        give an ally Advantage on its next attack against that enemy.
 
         Hide           While out of an enemy's sight and either heavily obscured or behind Three-Quarters or Total Cover, make a Dexterity
@@ -620,7 +620,7 @@ Climb onto a Bigger    Enter the space of a creature at least two sizes larger a
                        sound louder than a whisper, or no longer meet the requirements.
 
        Search          Make a Wisdom check using Insight, Medicine, Perception, or Survival to nd something not obvious. Searching a
-                       body may reveal di erent information or items depending on the skill used.
+                       body may reveal different information or items depending on the skill used.
 
        Study           Make an Intelligence check using Blood Nature, Eldritch Knowledge, Investigation, Old World History, or Religion to
                        interpret information.
@@ -664,10 +664,10 @@ Use a Class Feature Use a class feature that requires a Main Action.
      Bonus Actions
                                                                    weapon, opening an unlocked door, picking
      Bonus Action Summary                                          up an unattended object, or retrieving an
-       O hand       After attacking with a Light melee weapon      item from an accessible slot.
+       Offhand       After attacking with a Light melee weapon      item from an accessible slot.
        Attack       held in one hand, attack once with a           Take the Utilize Main Action when an item,
-                    di erent Light melee weapon in the other.
-                    Do not add a positive ability modi er to its   tool, or piece of equipment says it requires a
+                    different Light melee weapon in the other.
+                    Do not add a positive ability modifier to its   tool, or piece of equipment says it requires a
                     damage. Either weapon may be thrown if it      Utilize action; when the interaction requires
                     has the Thrown property.
                                                                    an ability check; when you attempt a
@@ -691,7 +691,7 @@ Use a Class Feature Use a class feature that requires a Main Action.
      start of your next turn.
 
      Reactions
-       Reaction     Trigger and E ect
+       Reaction     Trigger and Effect
       Opportunity   When a creature you can see willingly
         Attack      leaves your reach, make one melee attack
                     immediately before it leaves. Teleportation
@@ -723,7 +723,7 @@ ff
                  On your turn, you may move a distance up                             Movement 2
                  to your Speed. You may divide this                                    Movement       Rule
                  movement before, between, and after your
-                                                                                       Take Cover     Cost: 25 feet. While bene ting from cover,
+                                                                                       Take Cover     Cost: 25 feet. While benefiting from cover,
                  actions.                                                                             you can press closer against it and
                                                                                                       increase that cover by one degree: Half
             Movement                                                                                  Cover becomes Three-Quarters Cover, and
@@ -742,9 +742,9 @@ ff
                                     another creature’s space.
 
                      Climb          Moving 5 feet costs 10 feet unless you
-                                    have a Climb Speed. A di cult climb may           Size Differences
+                                    have a Climb Speed. A difficult climb may           Size Differences
                                     require a Athletics check with standard DC
-                                    compared to the di culty of the climb.            A creature’s size determines the space it
+                                    compared to the difficulty of the climb.            A creature’s size determines the space it
                      Swim           Moving 5 feet costs 10 feet unless you
                                                                                       controls during combat. Its space is not its
                                     have a Swim Speed. Rough water may
@@ -760,7 +760,7 @@ ff
                                     stand if your Speed is 0.                           Medium      5 by 5 feet        1 square
                   High Jump         After a 10-foot run, jump vertically a               Large      10 by 10 feet      2 by 2 squares
                                     number of feet equal to 3 + your Strength
-                                    modi er. A standing jump covers half that            Huge       15 by 15 feet      3 by 3 squares
+                                    modifier. A standing jump covers half that            Huge       15 by 15 feet      3 by 3 squares
                                     distance.
                                                                                       Gargantuan 20 by 20 feet or      4 by 4 squares or
                   Long Jump         After a 10-foot run, jump horizontally up to                 larger                larger
@@ -770,10 +770,10 @@ ff
                                     movement. The GM may require a DC 10
                                     Athletics check to clear a low obstacle
                                     during a Long Jump or a DC 10 Acrobatics
-                                    check to land upright in Di cult Terrain.
+                                    check to land upright in Difficult Terrain.
                                                                                       Environmental Effects
-                    Di cult         Every 5 feet costs 10 feet. Multiple sources
-                    Terrain         of Di cult Terrain do not increase this cost      Light, fog, vegetation, walls, and other
+                    Difficult         Every 5 feet costs 10 feet. Multiple sources
+                    Terrain         of Difficult Terrain do not increase this cost      Light, fog, vegetation, walls, and other
                                     further.
                                                                                       environmental features can affect sight and
                  Grapple Move Every 5 feet costs 10 feet while dragging a             provide protection.
@@ -794,18 +794,18 @@ ffi                                  fi     ffi
 
 
 [page 19]
-          Environmental E ects
+          Environmental Effects
 
-          E ects that obscure vision can prove a signi cant hindrance to most adventuring tasks.
+          Effects that obscure vision can prove a significant hindrance to most adventuring tasks.
 
           Lightly obscured                          Heavily obscured
 
-          Disadvantage on Perception.               E ectively blind.
+          Disadvantage on Perception.               Effectively blind.
 
           Dim light, patchy fog, moderate           Darkness, opaque fog, dense foliage.
           foliage.
                                                     A creature in a heavily obscured area
-          Creatures have disadvantage on            e ectively su ers from the blinded
+          Creatures have disadvantage on            effectively suffers from the blinded
           Wisdom (Perception) checks that           condition.
           rely on sight.
 
@@ -821,7 +821,7 @@ ffi                                  fi     ffi
           Gloomy days still provide bright     An area of dim light is usually a boundary          a very moonlit night), within the con nes of an unlit
           light, as do torches, lanterns, res, between a source of bright light, such as a         catacomb or a subterranean vault, or in an area of
           and other sources of illumination    torch, and surrounding darkness.                    magical darkness.
-          within a speci c radius.
+          within a specific radius.
                                                The soft light of twilight and dawn also
                                                counts as dim light. A particularly brilliant
                                                full moon might bathe the land in dim light.
@@ -835,7 +835,7 @@ ffi                                  fi     ffi
           Perceive your surroundings                A creature with Darkvision can see better in   A creature with truesight can see everything in its
           without relying on sight, within a        the dark or low light conditions, within a     true form, independent of the environment
           certain radius                            certain radius
-                                                                                                   A creature with truesight can, out to a speci c
+                                                                                                   A creature with truesight can, out to a specific
           Creatures without eyes, such as           Within a speci ed range, a creature with       range, see in normal and magical darkness, see
           oozes, and creatures with                 darkvision can see in darkness as if the       invisible creatures and objects, automatically
           echolocation or heightened                darkness were dim light, so areas of           detect visual illusions and succeed on saving
@@ -846,7 +846,7 @@ ffi                                  fi     ffi
                                                     darkness, only shades of gray.                 Furthermore, the creature can see into other
                                                                                                    planes.
 
-          Obstacles can provide cover during combat, making a target more di cult to harm.
+          Obstacles can provide cover during combat, making a target more difficult to harm.
 
           Half cover                                Three-quarters cover                           Full cover
 
@@ -923,14 +923,14 @@ another condition, apply both rows.
 [page 21]
           Conditions: IMPAIRMENTS
 
-                Condition         E ect
+                Condition         Effect
                  Blinded          You cannot see and automatically fail sight-based checks. Attacks against you have Advantage; your attacks have
                                   Disadvantage.
 
                 Deafened          You cannot hear and automatically fail checks requiring hearing.
 
                Mesmerized         The creature that imposed this condition is your mesmerizer. You cannot attack the mesmerizer or target it with
-                                  harmful abilities or e ects. The mesmerizer has Advantage on ability checks made to in uence you socially.
+                                  harmful abilities or effects. The mesmerizer has Advantage on ability checks made to influence you socially.
 
                 Frightened        While the source of fear is within sight, you have Disadvantage on ability checks and attacks. You cannot willingly
                                   move closer to the source, even when you cannot see it.
@@ -954,7 +954,7 @@ another condition, apply both rows.
 
 
           Conditions: HAZARDS & AFFLICTIONS
-                Condition         E ect
+                Condition         Effect
                   Dying           Before gaining Dying or dying from Instant Death caused by damage, resolve Not Tonight! if you have it (see Death’s
                                   Door at the end of chapter 2). When you reach 0 Hit Points without dying instantly, you gain Dying and Unconscious.
                                   Death Saves. At the start of each of your turns, roll 1d20. A result of 10 or higher is one success; a lower result is one
@@ -978,12 +978,12 @@ another condition, apply both rows.
                                   A Short Rest pauses this accumulation for its rst hour but removes no counters. Consecutive Short Rests count as
                                   one Short Rest; additional hours begin adding counters again unless the rest becomes a Long Rest.
                                   Completing a Long Rest resets your Sleepless Counters to 0.
-                                  At 24 counters, you gain the Sleepless condition and immediately su er 1d4 Madness. Su er another 1d4 Madness
+                                  At 24 counters, you gain the Sleepless condition and immediately suffer 1d4 Madness. Suffer another 1d4 Madness
                                   when your counter reaches 30, 36, 42, and every further multiple of 6.
-                                  Sleepless ends when your counter falls below 24. Madness already su ered remains until removed normally.
+                                  Sleepless ends when your counter falls below 24. Madness already suffered remains until removed normally.
 
-                Su ocating        A creature gains this condition when it is not breathing. You can hold your breath for 10 × (1 + your Constitution
-                                  modi er) rounds, to a minimum of 5 rounds. Once your breath runs out, you gain 1 Exhaustion level at the end of
+                Suffocating        A creature gains this condition when it is not breathing. You can hold your breath for 10 × (1 + your Constitution
+                                  modifier) rounds, to a minimum of 5 rounds. Once your breath runs out, you gain 1 Exhaustion level at the end of
                                   each turn. When you can breathe again, remove all Exhaustion gained from su ocation.
 
                Underwater         Gain condition when under water. A creature without a Swim Speed has Disadvantage on underwater melee weapon
@@ -1006,11 +1006,11 @@ ff                                                                              
 
 [page 22]
       Conditions: BATTLEFIELD STATES
-        Condition          E ect
+        Condition          Effect
        Blood-Tensed        Attacks against you have Advantage. Before the end of your next turn, your next melee weapon attack rolls its normal
                            weapon damage dice three times on a hit. Before rolling, you may choose Disadvantage to roll them four times
                            instead; if the attack is not actually rolled with Disadvantage, use three times. Blood-Tensed multiplies only normal
-                           weapon dice; add modi ers and extra damage once. Critical Hit rules then apply normally. The condition ends after
+                           weapon dice; add modifiers and extra damage once. Critical Hit rules then apply normally. The condition ends after
                            the attack, hit or miss, or at the end of your next turn.
 
        Demoralized         You cannot take Reactions. Once before this condition ends, when you succeed on a D20 Test, the Warden who
@@ -1029,22 +1029,22 @@ ff                                                                              
                            grappling reach.
 
        High Ground         You have High Ground against a creature when your ring position is at least 5 feet above its position. You gain a +1
-                           bonus on ri e attack rolls against that creature. High Ground is relative to each target and does not stack with itself.
+                           bonus on rifle attack rolls against that creature. High Ground is relative to each target and does not stack with itself.
 
-         Invisible         E ects requiring sight cannot target you unless their source can see you. Your attacks have Advantage and attacks
+         Invisible         Effects requiring sight cannot target you unless their source can see you. Your attacks have Advantage and attacks
                            against you have Disadvantage against creatures unable to see you.
 
           Prone            You can move only by crawling or standing. Standing costs half your Speed and is impossible while your Speed is 0.
                            Your attacks have Disadvantage. Attacks made from within 5 feet have Advantage against you; attacks from farther
                            away have Disadvantage.
 
-       Aiming Prone        While Prone and wielding a ri e, you may spend half your Speed to brace the weapon. Your Speed then becomes 0
-                           until the end of the turn. Your next ri e attack that turn replaces Prone’s Disadvantage with Advantage and gains a +1
-                           bonus. Your turn ends immediately after the attack. Aiming Prone ends if you move, stand, or stop wielding the ri e;
+       Aiming Prone        While Prone and wielding a rifle, you may spend half your Speed to brace the weapon. Your Speed then becomes 0
+                           until the end of the turn. Your next rifle attack that turn replaces Prone’s Disadvantage with Advantage and gains a +1
+                           bonus. Your turn ends immediately after the attack. Aiming Prone ends if you move, stand, or stop wielding the rifle;
                            you remain Prone.
 
-        Surrounded         A creature is Surrounded when at least four eligible enemies occupy four di erent sides of its space. For a Large or
-                           larger creature, the attackers must stand along four di erent sides of its occupied area. The enemies have Advantage
+        Surrounded         A creature is Surrounded when at least four eligible enemies occupy four different sides of its space. For a Large or
+                           larger creature, the attackers must stand along four different sides of its occupied area. The enemies have Advantage
                            on melee attacks against that creature, and it cannot take Reactions.
 
          Taunted           On your next turn, you must use available movement and make at least one attack or harmful Rite against the source
@@ -1158,8 +1158,8 @@ Insane Quirk Table
          begin any sentence addressed to you by using this full name. Otherwise, you ignore everything it
          says and, when able, respond only: “Excuse me. My name is Sir Deadly Blade of the Night.”
 
-92–95    Ruined Presence. You su er a −5 penalty to Charisma checks and Charisma saving throws.
-         This penalty does not change your Charisma modi er for class features, Rite statistics, resource
+92–95    Ruined Presence. You suffer a −5 penalty to Charisma checks and Charisma saving throws.
+         This penalty does not change your Charisma modifier for class features, Rite statistics, resource
          maximums, or other derived values.
 
 96–100 Blood Revulsion. You refuse to willingly drink or receive a Blood Vial. You resist any attempt to
@@ -1484,7 +1484,7 @@ Warden
 
 [page 31]
 Class Overview Part 2
-Class        Skill pro ciencies                           Weapon Pro ciencies Tool Pro ciencies Armor Training
+Class        Skill proficiencies                           Weapon Proficiencies Tool Proficiencies Armor Training
 Hunter       Choose 2: Acrobatics, Athletics, Grit,       Simple and Martial     __                Light armor;
 Brute        Perception, Survival or Intimidation         weapons                                  Medium armor;
                                                                                                    Heavy armor
@@ -1583,8 +1583,8 @@ Warden       Animal Handling, Survival, Presence or       weapons               
      recommended for experienced players and       each of your scores in your character
      GM’s. Here you instead have 57 points to      sheet.
      spend on your Ability Scores. The cost of
-     each score is shown in the Ability Score      Ability Scores and Modi ers
-     Point Costs V2 table and they will go up        Score         Modi er            Score      Modi er
+     each score is shown in the Ability Score      Ability Scores and Modifiers
+     Point Costs V2 table and they will go up        Score         Modifier            Score      Modifier
      one cost-column for each purchase of the
                                                           3            -4             12-13         +1
      same score. If using this version your
@@ -1624,12 +1624,12 @@ fi
           armor, rites, and more.                                          over your Background Garments
                                                                            or replaces it.
           Only One Base AC. Some rites and class          3   Add-on       Add-on Armor is worn over your
-          features give characters a different way to         Armor        Main Armor, unless a speci c
+          features give characters a different way to         Armor        Main Armor, unless a specific
                                                                            item says otherwise.
           calculate their AC. A character with
-          multiple features that give different ways      4   Extras and   Add any Extras, Class-speci c
-                                                              Speci c      Equipment, or Background-
-          to calculate AC must choose which one to            Gear         speci c Equipment.
+          multiple features that give different ways      4   Extras and   Add any Extras, Class-specific
+                                                              Specific      Equipment, or Background-
+          to calculate AC must choose which one to            Gear         specific Equipment.
           use; only one base calculation can be in
                                                           5   Carried      Decide how your weapons, tools,
           effect for a character.                             Items        supplies, and other items are
@@ -1706,7 +1706,7 @@ Armor Part 1
      Hunter Leather Coat       Main Armor     AC 11         7 lb.       Blood-Slick Coat. The rst time you are
                                                                         hit by a melee attack after rolling initiative,
                                                                         reduce the damage by an amount equal to
-                                                                        your Pro ciency Bonus.
+                                                                        your Proficiency Bonus.
      Reinforced Hunter         Main Armor     AC 12         10 lb.      Open Movement. You have advantage on
      Leather Vest                                                       Strength (Athletics) checks made to climb,
                                                                         vault, or jump while wearing this armor.
@@ -1717,7 +1717,7 @@ Armor Part 1
      Reinforced Hunter         Main Armor     AC 12         11 lb.      Blood-Slick Coat. The rst time you are
      Leather Coat                                                       hit by a melee attack after rolling initiative,
                                                                         reduce the damage by an amount equal to
-                                                                        your Pro ciency Bonus.
+                                                                        your Proficiency Bonus.
      Full Leather Cuirass      Add-on Armor   +2 AC         10 lb.      You have disadvantage on Dexterity
                                                                         (Stealth) checks made to hide or move
                                                                         silently.
@@ -1727,7 +1727,7 @@ Armor Part 1
      Leather Vambrace, Left    Add-on Armor   +0 AC         2 lb.       May give Shield Arm.
      Under Layer Leather       Add-on Armor   +1 AC*        2 lb.       *Only gives AC while wearing it
      Jerkin                                                             underneath Main Armor. Can store and
-                                                                        conceal Insigni cant items, making them
+                                                                        conceal Insignificant items, making them
                                                                         harder to steal, nd, or strip away.
      Studs                     Armor Upgrade +1 AC / +2 AC +5 lb. per   Studs can be added to Add-on Armor
                                                            studded      pieces. If at least three Add-on Armor
@@ -1812,17 +1812,17 @@ Leather Boots    Extra: Boots    0    2 lb.    Prevents barefoot penalties.
                Dexterity modifier you can add to AC.                   record your total carried weight on your
                                                                        Character Sheet.
                  Category     AC Total     Dexterity Rule
-                Unarmored     10 AC        Add your full Dexterity     Total Weight    Condition E ect
-                                           modi er.
+                Unarmored     10 AC        Add your full Dexterity     Total Weight    Condition Effect
+                                           modifier.
                                                                        No more than Featherw        Your speed increases by
                 Light Armor   11–12 AC Add your full Dexterity         Strength × 2 eight           5 ft.
-                                       modi er.                             lb.
+                                       modifier.                             lb.
                Medium Armor 13–14 AC Add your Dexterity                 More than      Encumber Your speed is reduced
-                                     modi er, up to a                  Strength × 5    ed       by 10 feet. You have
+                                     modifier, up to a                  Strength × 5    ed       by 10 feet. You have
                                      maximum of +2.                         lb.                 Disadvantage on
                                                                                                 Dexterity (Acrobatics and
                Heavy Armor    15+ AC       Do not add your Dexterity                            Stealth) checks and
-                                           modi er.                                             Dexterity saving throws.
+                                           modifier.                                             Dexterity saving throws.
                    note       (16 AC)      Requires 13 STR              More than    Heavily  Your speed is reduced
                    note       (17+ AC)     Requires 15 STR             Strength × 10 Encumber by 20 ft. You have
                                                                             lb.      ed       disadvantage on
@@ -1857,11 +1857,11 @@ Leather Boots    Extra: Boots    0    2 lb.    Prevents barefoot penalties.
                   Character Sheet.                                       Carrying      Examples
                                                                          Category
 
-               3: ADD UP YOUR CARRIED WEIGHT                            Insigni cant   Key, letter, map, coin, ring, signet,
+               3: ADD UP YOUR CARRIED WEIGHT                            Insignificant   Key, letter, map, coin, ring, signet,
                                                                             Items      parchment, blood vial, supplies, kit,
                C&S uses carried weight to determine                                    tools, set
                whether your character is moving freely,
-                                                                        Signi cant     Dagger, handaxe, rope, pistol, ri e,
+                                                                        Significant     Dagger, handaxe, rope, pistol, rifle,
                carrying a heavy load, or overburdened.                    Items        chain, longsword, lantern, shovel,
                Your total carried weight includes                                      crowbar, tool belt, bandolier
                weapons, armor, tools, adventuring gear,                 Oversized      Great weapon, heavy crate, large
@@ -1914,11 +1914,11 @@ any offered choices.                           Level 1 Hit Points by Class
 
                                                 Class                     Hit Points Maximum
 FILL IN NUMBERS
-                                                Bloodbound                12 + Con. modi er
+                                                Bloodbound                12 + Con. modifier
 Note these numbers on your character
-sheet.                                          Brute, Scout, or Warden   10 + Con. modi er
-Saving Throws. For the saving throws            Stalker                   8 + Con. modi er
-you have proficiency in, add your               Deepcaller                6 + Con. modi er
+sheet.                                          Brute, Scout, or Warden   10 + Con. modifier
+Saving Throws. For the saving throws            Stalker                   8 + Con. modifier
+you have proficiency in, add your               Deepcaller                6 + Con. modifier
 Proficiency Bonus to the appropriate
 ability modifier and note the total.
 Some players also like to note the             The character sheet includes room to note
@@ -2107,10 +2107,10 @@ death proceeds normally.
        Rest.                                        in the Fixed Hit Points by Class table.
        Character Advancement                        Fixed Hit Points by Class
                  Level             Insight           Class                     Hit Points per Level
-                  1                   0              Bloodbound                7 + Con. modi er
-                  2                   6              Brute, Scout, or Warden   6 + Con. modi er
-                  3                  15              Stalker                   5 + Con. modi er
-                  4                  30              Deepcaller                4 + Con. modi er
+                  1                   0              Bloodbound                7 + Con. modifier
+                  2                   6              Brute, Scout, or Warden   6 + Con. modifier
+                  3                  15              Stalker                   5 + Con. modifier
+                  4                  30              Deepcaller                4 + Con. modifier
                   5                  50             2: Record New Class Features. Look at
                   6                  75             your class features table in chapter 3, and
                   7                  105            note the features you gain at your new
@@ -2186,19 +2186,19 @@ Hit Point Die              D10 per Hunter Brute
 Max Sanity                 12
                                                      Hunter Brute level, you can replace the
 Sanity Die                 2d6                       feat you chose with a different Fighting
-Saving Throw Pro ciencies Strength and               Style feat.
+Saving Throw Proficiencies Strength and               Style feat.
                           Constitution
-Skill Pro ciencies         Choose 2: Acrobatics,     LEVEL 1: WEAPON MASTERY
+Skill Proficiencies         Choose 2: Acrobatics,     LEVEL 1: WEAPON MASTERY
                            Athletics, Grit,          Your training with weapons allows you to
                            Perception, Survival or
                            Intimidation
                                                      use the mastery properties of three kinds
                                                      of Simple or Martial weapons of your
-Weapon Pro ciencies        Simple and Martial
+Weapon Proficiencies        Simple and Martial
                            weapons
                                                      choice. Whenever you finish a Long Rest,
                                                      you can practice weapon drills and change
-Tool Pro ciencies          None
+Tool Proficiencies          None
                                                      one of those weapon choices.
 Armor Training             Light, Medium, and        When you reach certain Fighter levels,
                            Heavy armor
@@ -2241,7 +2241,7 @@ Features table.
 
 [page 50]
      Hunter Brute Features
-     Level Pro ciency Bonus Class Features                                 Refuse the Bleeding Weapon Mastery
+     Level Proficiency Bonus Class Features                                 Refuse the Bleeding Weapon Mastery
        1          +2         Fighting Style, Weapon Mastery                        2                 3
        2          +2         Action Surge (one use), Refuse the Bleeding           2                 3
        3          +2         Hunter Brute Subclass                                 2                 3
@@ -2468,24 +2468,24 @@ Hit Point Die              D10 per Hunter Scout
 Max Sanity                 12
                                                      You can make four marks, and you regain
 Sanity Die                 2d6                       all expended uses of this ability when you
-Saving Throw Pro ciencies Strength and Dexterity     finish a Long Rest.
-Skill Pro ciencies         Choose 3: Animal
+Saving Throw Proficiencies Strength and Dexterity     finish a Long Rest.
+Skill Proficiencies         Choose 3: Animal
                                                      The number of times you can make a mark
                            Handling, Athletics,      increases when you reach certain Hunter
                            Stealth, Survival,        Scout levels, as shown in the Hunters Mark
                            Investigation or
                            Perception
                                                      column of the Hunter Scout Features table.
-Weapon Pro ciencies        Simple and Martial
+Weapon Proficiencies        Simple and Martial
                            weapons
                                                      HUNTER'S MARK
                                                      Use: Bonus Action
-Tool Pro ciencies          None
+Tool Proficiencies          None
                                                      Range: 90 feet
 Armor Training             Light and Medium
                            armor
                                                      You mark one creature you can see within
-Starting Equipment         Hunter Ri e,              range as your quarry. Until the mark ends,
+Starting Equipment         Hunter Rifle,              range as your quarry. Until the mark ends,
                            Shortsword, Bloodvial
                            (1), Bullets (20)         you deal an extra 1d6 damage to the target
                            Toolbelt, Bandolier and   whenever you hit it with an attack roll. You
@@ -2524,7 +2524,7 @@ listed in the Hunter Scout Features table.
 [page 57]
      Hunter Scout Features
 
-       Level      Pro ciency Bonus      Class Features                                    Hunters Mark
+       Level      Proficiency Bonus      Class Features                                    Hunters Mark
         1                +2             Hunters Mark, Weapon Mastery                            4
         2                +2             Expertise, Fighting Style                               4
         3                +2             Hunter Scout Subclass                                   5
@@ -2643,7 +2643,7 @@ range of 30 feet.
 
 
           the Pact you form with it, the beast draws
-          upon your strength for better and for worse.     AC 13 plus your Wisdom modi er
+          upon your strength for better and for worse.     AC 13 plus your Wisdom modifier
           See the stat block: Hound of Tindalos. The       HP 5 plus ve times your Hunter Scout level
                                                            Speed 40 ft., Climb 40 ft.
           beast is Friendly to you and your allies and
@@ -2651,23 +2651,23 @@ range of 30 feet.
           obeys your commands. It vanishes if you
                                                            17
           die. It also vanishes if it drops to 0 Hit       Level (companion; PB equals your
-          Points or when its stated task is done.          Pro ciency Bonus). Example at Scout 5
+          Points or when its stated task is done.          Proficiency Bonus). Example at Scout 5
           Summoning the Beast. You can take an             with Wisdom +3 and PB +3: AC 16, HP 30,
           action to expend a Hunters Mark to summon        Feral Strike +6, 2d6 + 5 damage
           the beast. The Hound of Tindalos manifest
           in an unoccupied space that you can see          Traits
-          within range of 90 feet. The beast will only     Pact. Add your Pro ciency Bonus to any ability
+          within range of 90 feet. The beast will only     Pact. Add your Proficiency Bonus to any ability
                                                            check or saving throw the beast makes. If the
           show up to complete a specific task, either      beast reaches 0 Hit Points, make a DC 16
           to defeat your foes during combat or             Constitution (Grit) check. On a success, nothing
           something else. The reason for you to call       happens. On a failure, lose Hit Points equal to
           upon it must be stated beforehand.               1d10 + your Hunter Scout level + your Wisdom
-          The Beast in Combat. In combat, the beast        modi er and suffer 4 Madness.
+          The Beast in Combat. In combat, the beast        modifier and suffer 4 Madness.
           acts during your turn. It can move and use       Actions
           its Reaction on its own, but the only action     Beast’s Feral Strike. Melee Attack Roll: Bonus
-          it takes is the Dodge action to avoid danger,    equals your Wisdom modi er + your Pro ciency
+          it takes is the Dodge action to avoid danger,    equals your Wisdom modifier + your Proficiency
           unless you take a Bonus Action to command        Bonus, reach 5 ft. Hit: 2d6 + 2 + your Wisdom
-                                                           modi er Slashing damage. If the beast moved at
+                                                           modifier Slashing damage. If the beast moved at
           it to take an action in its stat block or some   least 20 feet straight toward the target before
           other action. You can also sacrifice one of      the hit, the target takes an extra 1d6 damage of
           your attacks when you take the Attack            Slashing damage, and the target has the Prone
@@ -2695,7 +2695,7 @@ fi   fi
      an attack roll and deals damage, it can        changes to Trained Hunters Rifle.
      deal your choice of either Mind,               Trained   Damage:    Properties:    Mastery:   Weight:
      Bludgeoning or Piercing damage, or its         Hunters
-                                                    Ri e
+                                                    Rifle
                                                               1d12
                                                               Piercing
                                                                          Ammunition
@@ -2805,22 +2805,22 @@ Hit Point Die              D8 per Hunter Stalker
 Max Sanity                 12
                                                      You gain Expertise in two of your skill
 Sanity Die                 1d12                      proficiencies of your choice. At Hunter
-Saving Throw Pro ciencies Dexterity and              Stalker level 6, you gain Expertise in two
+Saving Throw Proficiencies Dexterity and              Stalker level 6, you gain Expertise in two
                           Intelligence               more of your skill proficiencies of your
-Skill Pro ciencies         Choose 2: Acrobatics,     choice.
+Skill Proficiencies         Choose 2: Acrobatics,     choice.
                            Athletics, Deception,
                            Insight, Intimidation,
                            Investigation,
                                                      LEVEL 1: SNEAK ATTACK
                            Perception, Sleight of    You know how to strike subtly and exploit a
                            Hand or Stealth           foe's distraction. Once per turn, you can deal
-Weapon Pro ciencies        Simple weapons and        an extra 1d6 damage to one creature you hit
+Weapon Proficiencies        Simple weapons and        an extra 1d6 damage to one creature you hit
                            Martial weapons that      with an attack roll if you have Advantage on
                            have the Finesse or
                            Light property
                                                      the roll and the attack uses a Finesse or a
                                                      Ranged weapon. The extra damage's type is
-Tool Pro ciencies          Thieves Tools
+Tool Proficiencies          Thieves Tools
                                                      the same as the weapon's type.
 Armor Training             Light armor               You don't need Advantage on the attack roll
 Starting Equipment         Scimitar, 4 Daggers,      if at least one of your allies is within 5 feet
@@ -2860,7 +2860,7 @@ class features when you reach the specified
 [page 64]
      Hunter Stalker Features
 
-       Level      Pro ciency Bonus      Class Features                                       Sneak Attack
+       Level      Proficiency Bonus      Class Features                                       Sneak Attack
         1                +2             Expertise, Sneak Attack                                  1d6
         2                +2             Weapon Mastery, Cunning Action                           1d6
         3                +2             Hunter Stalker Subclass, Steady Aim                      2d6
@@ -3066,17 +3066,17 @@ Hit Point Die              D6 per Hunter
 Max Sanity                 16
                                                      LEVEL 1: ELDRITCH
 Sanity Die                 1d20                      COMPREHENSION
-Saving Throw Pro ciencies Intelligence and           Through occult rituals, you have expanded
+Saving Throw Proficiencies Intelligence and           Through occult rituals, you have expanded
                           Wisdom                     your mind beyond mortal limits, gaining the
-Skill Pro ciencies         Choose 2: Eldritch        ability to comprehend eldritch passages and
+Skill Proficiencies         Choose 2: Eldritch        ability to comprehend eldritch passages and
                            Knowledge, Old World      speak words no sane creature was meant to
                            History, Investigation,
                            Insight, Blood Nature,
                                                      understand. These forbidden words allow
                            Religion or Deception     you to read and perform Rites.
-Weapon Pro ciencies        Simple weapons
+Weapon Proficiencies        Simple weapons
                                                      See at the end of this class description for
-Tool Pro ciencies          None
+Tool Proficiencies          None
                                                      the rules on Rite-performing. The
 Armor Training             Light armor               information below details how you use
 Starting Equipment         Sickle, Dagger,           those rules with Hunter Deepcaller Rites,
@@ -3119,7 +3119,7 @@ following class features when you reach the          performed as a Level 3 Rite
 
 [page 70]
      Hunter Deepcaller Features
-     Level Pro ciency Bonus Class Features                                Prepared Whispers Strains   Strain Level
+     Level Proficiency Bonus Class Features                                Prepared Whispers Strains   Strain Level
        1          +2        Eldritch Comprehension, Fracturing Mind               2            2           1
        2          +2        Braced Mind, Vailed Truth                             2            2           1
        3          +2        Hunter Zealot Prestige Class (optional),              2            2           2
@@ -3293,7 +3293,7 @@ Types of Rites
                                                  A Rites's duration is the length the Rites
  Summoning Rite                                  persists after it is performed. A duration
  Detection Rite                                  typically takes one of the following forms:
- Mind In uence Rite                              Concentration. A duration that requires
+ Mind Influence Rite                              Concentration. A duration that requires
                                                  Concentration follows the Concentration
  Evocation Rite
                                                  rules. (see further down).
@@ -3567,19 +3567,19 @@ Hit Point Die             D12 per Hunter
 Max Sanity                20
                                                     You can imbue yourself with a primal power
 Sanity Die                1d20                      called Blood Frenzy, a force that grants you
-Saving Throw Pro ciencies Strength and              extraordinary might and resilience. You can
+Saving Throw Proficiencies Strength and              extraordinary might and resilience. You can
                           Constitution              enter it as a Bonus Action if you aren't
-Skill Pro ciencies        Choose 2: Grit, Blood     wearing Heavy armor.
+Skill Proficiencies        Choose 2: Grit, Blood     wearing Heavy armor.
                           Nature, Athletics,        You can enter your Blood Frenzy the
                           Intimidation, Medicine,
                           Perception or Survival
                                                     number of times shown for your Hunter
                                                     Bloodbound level in the Blood Frenzys
-Weapon Pro ciencies       Simple and Martial
+Weapon Proficiencies       Simple and Martial
                           weapons
                                                     column of the Hunter Bloodbound Features
                                                     table. You regain one expended use when
-Tool Pro ciencies         Blood-drainer’s Tools
+Tool Proficiencies         Blood-drainer’s Tools
                                                     you finish a Short Rest, and you regain all
 Armor Training            Light and Medium          expended uses when you finish a Long Rest.
                           armor
@@ -3623,7 +3623,7 @@ specified Hunter Bloodbound levels. These
 [page 81]
      Hunter Bloodbound Features
 
-      Lev   Pro ciency   Class Features                                        Blood Frenzy    Blood
+      Lev   Proficiency   Class Features                                        Blood Frenzy    Blood
        el     Bonus                                                              Damage        Frenzy
        1        +2       Blood Frenzy, Frenzied But Sane                            2             2
        2        +2       Danger Sense, Reckless Attack                              2             2
@@ -3870,8 +3870,8 @@ Hit Point Die            D10 per Hunter
 Max Sanity               14
                                                     listed in the Hunter Warden Features table.
 Sanity Die               4d4
-Saving Throw Pro ciencies Wisdom + Charizma         LEVEL 1: BANDS DIRECTIVE
-Skill Pro ciencies       Choose 2: Perception,
+Saving Throw Proficiencies Wisdom + Charizma         LEVEL 1: BANDS DIRECTIVE
+Skill Proficiencies       Choose 2: Perception,
                                                     You read the battlefield with a commander’s
                          Investigation, Animal      eye, identifying openings, weaknesses, and
                          Handling, Survival,        moments of hesitation. Through sharp
@@ -3879,16 +3879,16 @@ Skill Pro ciencies       Choose 2: Perception,
                          Persuasion
                                                     orders and tactical insight, you rally your
                                                     hunter band and guide them toward decisive
-Weapon Pro ciencies      Simple and Martial
+Weapon Proficiencies      Simple and Martial
                          weapons
                                                     action.
                                                     This command is represented by your Bands
-Tool Pro ciencies        Navigator Tools
+Tool Proficiencies        Navigator Tools
                                                     Directive die, which is a d6.
 Armor Training           Light, Medium, and         Using Bands Directive. As a Bonus Action,
                          Heavy armor
                                                     you can choose one creature other than
-Starting Equipment       Hunter Ri e,               yourself within 60 feet of you that can see
+Starting Equipment       Hunter Rifle,               yourself within 60 feet of you that can see
                          Longsword, Navigators
                          Tools, Bell, 1 Hunting     or hear you. That creature gains one of your
                          Trap, Tool Belt,           Bands Directive dice.
@@ -3925,18 +3925,18 @@ AS A LEVEL 1 CHARACTER                              Directive Die column of the 
 
 [page 88]
           Hunter Warden Features
-           Level     Pro ciency Bonus   Class Features                                      Bands Directive Die
+           Level     Proficiency Bonus   Class Features                                      Bands Directive Die
                  1         +2           Bands Directive, Sense Your Enemy, Demoralize       D6
                  2         +2           Tactical Mind, Expertise, Experience                D6
                  3         +2           Hunter Warden Subclass, Tag Team                    D6
                  4         +2           Ability Score Improvement                           D6
-                 5         +3           E ectiveness                                        D8
+                 5         +3           Effectiveness                                        D8
                  6         +3           Subclass Feature                                    D8
                  7         +3           Know Your Enemy, Counter                            D8
                  8         +3           Ability Score Improvement                           D8
                  9         +4           Indomitable (one use)                               D8
             10             +4           Weapon Mastery                                      D10
-            11             +4           Superior E ectiveness                               D10
+            11             +4           Superior Effectiveness                               D10
             12             +4           Ability Score Improvement                           D10
             13             +5           Expect Your Enemy, Indomitable (two uses)           D10
             14             +5           Subclass Feature                                    D10
@@ -4243,7 +4243,7 @@ Graverobber         The dead rarely keep hold of their valuables for long. Tombs
                     shallow graves became your livelihood.                                              Wisdom,
                                                                                                         Intelligence
 Blood Collector     You gathered blood from corpses, beasts, and hunters alike. Whether for             Constitution,
-                    medicine, pro t, or darker purposes, you learned the value hidden within veins.     Intelligence,
+                    medicine, profit, or darker purposes, you learned the value hidden within veins.     Intelligence,
                                                                                                         Wisdom
 
 
@@ -4255,7 +4255,7 @@ Blood Collector     You gathered blood from corpses, beasts, and hunters alike. 
 
 [page 95]
 Background Overview Part 2
-Background          Feat             Skill Pro ciencies   Tool Pro ciency         Equipment
+Background          Feat             Skill Proficiencies   Tool Proficiency         Equipment
 Criminal            Alert            Sleight of Hand      Thieves’ Tools          Thieves’ Tools, Crowbar
                                      and Stealth
 Merchant            Lucky            Deception and                                9 GP
@@ -4999,38 +4999,38 @@ Weapons
 
 Name             Damage           Properties                              Mastery Weight Carrying Category
 Simple Melee Weapons
-Club             1d4 Bludgeoning Light                                    Slow     2 lb.     Signi cant Item
-Dagger           1d4 Piercing     Finesse, Light, Thrown (20/60)          Nick     1 lb.     Signi cant Item
+Club             1d4 Bludgeoning Light                                    Slow     2 lb.     Significant Item
+Dagger           1d4 Piercing     Finesse, Light, Thrown (20/60)          Nick     1 lb.     Significant Item
 Greatclub        1d8 Bludgeoning Two-Handed                               Push     10 lb.    Oversized Item
-Handaxe          1d6 Slashing     Light, Thrown (20/60)                   Vex      2 lb.     Signi cant Item
-Javelin          1d6 Piercing     Thrown (30/120)                         Slow     2 lb.     Signi cant Item (back)
-Light Hammer     1d4 Bludgeoning Light, Thrown (20/60)                    Nick     2 lb.     Signi cant Item
-Mace             1d6 Bludgeoning —                                        Sap      4 lb.     Signi cant Item
-Sickle           1d4 Slashing     Light                                   Nick     2 lb.     Signi cant Item
+Handaxe          1d6 Slashing     Light, Thrown (20/60)                   Vex      2 lb.     Significant Item
+Javelin          1d6 Piercing     Thrown (30/120)                         Slow     2 lb.     Significant Item (back)
+Light Hammer     1d4 Bludgeoning Light, Thrown (20/60)                    Nick     2 lb.     Significant Item
+Mace             1d6 Bludgeoning —                                        Sap      4 lb.     Significant Item
+Sickle           1d4 Slashing     Light                                   Nick     2 lb.     Significant Item
 Spear            1d6 Piercing     Thrown (20/60), Versatile (1d8)         Sap      3 lb.     Oversized Item
 Simple Ranged Weapons
-Throwing Knife   1d4 Piercing     Finesse, Thrown (20/60)                 Vex      1/4 lb.   Insigni cant Item
+Throwing Knife   1d4 Piercing     Finesse, Thrown (20/60)                 Vex      1/4 lb.   Insignificant Item
 Martial Melee Weapons
-Battleaxe        1d8 Slashing     Versatile (1d10)                        Topple   4 lb.     Signi cant Item
-Flail            1d8 Bludgeoning —                                        Sap      2 lb.     Signi cant Item
+Battleaxe        1d8 Slashing     Versatile (1d10)                        Topple   4 lb.     Significant Item
+Flail            1d8 Bludgeoning —                                        Sap      2 lb.     Significant Item
 Glaive           1d10 Slashing    Heavy, Reach, Two-Handed                Graze    12 lb.    Oversized Item
 Greataxe         1d12 Slashing    Heavy, Two-Handed                       Cleave   14 lb.    Oversized Item
 Greatsword       2d6 Slashing     Heavy, Two-Handed                       Graze    14 lb.    Oversized Item
 Halberd          1d10 Slashing    Heavy, Reach, Two-Handed                Cleave   12 lb.    Oversized Item
-Longsword        1d8 Slashing     Versatile (1d10)                        Sap      3 lb.     Signi cant Item
+Longsword        1d8 Slashing     Versatile (1d10)                        Sap      3 lb.     Significant Item
 Maul             2d6 Bludgeoning Heavy, Two-Handed                        Topple   14 lb.    Oversized Item
-Morningstar      1d8 Piercing     —                                       Sap      4 lb.     Signi cant Item
+Morningstar      1d8 Piercing     —                                       Sap      4 lb.     Significant Item
 Pike             1d10 Piercing    Heavy, Reach, Two-Handed                Push     12 lb.    Oversized Item
-Rapier           1d8 Piercing     Finesse                                 Vex      2 lb.     Signi cant Item
-Scimitar         1d6 Slashing     Finesse, Light                          Nick     3 lb.     Signi cant Item
-Shortsword       1d6 Piercing     Finesse, Light                          Vex      2 lb.     Signi cant Item
+Rapier           1d8 Piercing     Finesse                                 Vex      2 lb.     Significant Item
+Scimitar         1d6 Slashing     Finesse, Light                          Nick     3 lb.     Significant Item
+Shortsword       1d6 Piercing     Finesse, Light                          Vex      2 lb.     Significant Item
 Trident          1d8 Piercing     Thrown (20/60), Versatile (1d10)        Topple   12 lb.    Oversized Item
-Warhammer        1d8 Bludgeoning Versatile (1d10)                         Push     5 lb.     Signi cant Item
-War Pick         1d8 Piercing     Versatile (1d10)                        Sap      2 lb.     Signi cant Item
-Whip             1d4 Slashing     Finesse, Reach                          Slow     3 lb.     Signi cant Item
+Warhammer        1d8 Bludgeoning Versatile (1d10)                         Push     5 lb.     Significant Item
+War Pick         1d8 Piercing     Versatile (1d10)                        Sap      2 lb.     Significant Item
+Whip             1d4 Slashing     Finesse, Reach                          Slow     3 lb.     Significant Item
 Martial Ranged Weapons
-Hunter Ri e      1d10 Piercing    Ammunition (100/400; Bullet), Two-Handed Slow    10 lb.    Signi cant Item (back)
-Pistol           1d10 Piercing    Ammunition (30/90; Bullet)              Vex      3 lb.     Signi cant Item
+Hunter Rifle      1d10 Piercing    Ammunition (100/400; Bullet), Two-Handed Slow    10 lb.    Significant Item (back)
+Pistol           1d10 Piercing    Ammunition (30/90; Bullet)              Vex      3 lb.     Significant Item
 
 
 
@@ -5407,38 +5407,38 @@ it as a Utilize action.
 [page 121]
           Hunter Gear
           Item               Weight   Carrying Category   Item             Weight    Carrying Category
-          Acid               1 lb.    Insigni cant Item   Parchment        —         Insigni cant Item
-          Antitoxin          —        Insigni cant Item   Poison, Basic    —         Insigni cant Item
-          Ball Bearings      2 lb.    Insigni cant Item   Pole             7 lb.     Oversized Item
+          Acid               1 lb.    Insignificant Item   Parchment        —         Insignificant Item
+          Antitoxin          —        Insignificant Item   Poison, Basic    —         Insignificant Item
+          Ball Bearings      2 lb.    Insignificant Item   Pole             7 lb.     Oversized Item
           Barrel             70 lb.   Oversized Item      Pot, Iron        10 lb.    Oversized Item
           Basket             2 lb.    Oversized Item      Ram, Portable    35 lb.    Oversized Item
-          Bell               —        Insigni cant Item   Rope             5 lb.     Signi cant Item
-          Block and Tackle   5 lb.    Signi cant Item     Shovel           5 lb.     Signi cant Item (back)
-          Book               5 lb.    Signi cant Item     Signal Whistle   —         Insigni cant Item
-          Bottle, Glass      2 lb.    Insigni cant Item   Spikes, Iron     5 lb.     Insigni cant Item
-          Bucket             2 lb.    Oversized Item      String           —         Insigni cant Item
-          Caltrops           2 lb.    Insigni cant Item   Tinderbox        1 lb.     Insigni cant Item
-          Candle             —        Insigni cant Item   Torch            1 lb.     Signi cant Item
-          Chain              10 lb.   Signi cant Item     Vial             —         Insigni cant Item
-          Chest              25 lb.   Oversized Item      Waterskin        5 lb. full Signi cant Item
-          Crowbar            5 lb.    Signi cant Item
-          Flask              1 lb.    Insigni cant Item
-          Grappling Hook     4 lb.    Signi cant Item
-          Hunting Trap       25 lb.   Signi cant Item
-          Ink                —        Insigni cant Item
-          Ink Pen            —        Insigni cant Item
-          Jug                4 lb.    Signi cant Item
+          Bell               —        Insignificant Item   Rope             5 lb.     Significant Item
+          Block and Tackle   5 lb.    Significant Item     Shovel           5 lb.     Significant Item (back)
+          Book               5 lb.    Significant Item     Signal Whistle   —         Insignificant Item
+          Bottle, Glass      2 lb.    Insignificant Item   Spikes, Iron     5 lb.     Insignificant Item
+          Bucket             2 lb.    Oversized Item      String           —         Insignificant Item
+          Caltrops           2 lb.    Insignificant Item   Tinderbox        1 lb.     Insignificant Item
+          Candle             —        Insignificant Item   Torch            1 lb.     Significant Item
+          Chain              10 lb.   Significant Item     Vial             —         Insignificant Item
+          Chest              25 lb.   Oversized Item      Waterskin        5 lb. full Significant Item
+          Crowbar            5 lb.    Significant Item
+          Flask              1 lb.    Insignificant Item
+          Grappling Hook     4 lb.    Significant Item
+          Hunting Trap       25 lb.   Significant Item
+          Ink                —        Insignificant Item
+          Ink Pen            —        Insignificant Item
+          Jug                4 lb.    Significant Item
           Ladder             25 lb.   Oversized Item
-          Lamp               1 lb.    Signi cant Item
-          Lantern, Bullseye 2 lb.     Signi cant Item
-          Lantern, Hooded    2 lb.    Signi cant Item
-          Lock               1 lb.    Insigni cant Item
-          Manacles           6 lb.    Insigni cant Item
-          Map                —        Insigni cant Item
-          Mirror             1 lb.    Insigni cant Item
-          Net                3 lb.    Signi cant Item
-          Oil                1 lb.    Insigni cant Item
-          Paper              —        Insigni cant Item
+          Lamp               1 lb.    Significant Item
+          Lantern, Bullseye 2 lb.     Significant Item
+          Lantern, Hooded    2 lb.    Significant Item
+          Lock               1 lb.    Insignificant Item
+          Manacles           6 lb.    Insignificant Item
+          Map                —        Insignificant Item
+          Mirror             1 lb.    Insignificant Item
+          Net                3 lb.    Significant Item
+          Oil                1 lb.    Insignificant Item
+          Paper              —        Insignificant Item
 
 
 
