@@ -8,7 +8,7 @@
  * "does not change your Charisma modifier for class features, Rite statistics,
  * resource maximums, or other derived values." */
 
-interface InsaneQuirk {
+export interface InsaneQuirk {
   id: string;
   /** Inclusive d100 range. */
   low: number;
@@ -17,7 +17,7 @@ interface InsaneQuirk {
   text: string;
 }
 
-const INSANE_QUIRKS: InsaneQuirk[] = [
+export const INSANE_QUIRKS: InsaneQuirk[] = [
   {
     id: "boundShadow", low: 1, high: 10, name: "Bound Shadow",
     text: "Choose the character belonging to the player seated immediately to your left when this Quirk is rolled. You must use your available movement to end each of your turns within 5 feet of that character, if possible. You cannot willingly move farther than 5 feet from them unless no legal alternative exists.",
