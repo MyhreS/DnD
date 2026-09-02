@@ -2,6 +2,7 @@ import { BACKGROUNDS } from "@/data/backgrounds";
 import { TOOL_DETAILS, TOOL_PROFICIENCIES } from "@/data/characterOptions";
 import { CLASSES } from "@/data/classes";
 import { FEATS } from "@/data/feats";
+import { featsOf } from "@/lib/character";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { AppPanel, AutoReason } from "../appsheet/appSheetShared";
 import { sheetText } from "../appsheet/appSheetValues";
@@ -11,7 +12,7 @@ export function CharacterSheetHunter({ model }: { model: AppSheetModel }) {
   const { card, klass, result } = automation;
   const name = sheetText(model.data, "name") || card.name;
   const setupComplete = automation.state.setupComplete === true;
-  const feats = [...new Set([card.feat, ...(card.feats ?? [])].filter((feat): feat is string => !!feat))];
+  const feats = featsOf(card);
   const tools = String(result.fields.tools || "").split(",").map((tool) => tool.trim().replace(/\s+\(unique item\)$/i, "")).filter(Boolean);
 
   return <div className="character-sheet-hunter-build">

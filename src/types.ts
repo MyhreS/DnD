@@ -500,12 +500,16 @@ export interface HunterCard {
   classId: string;
   /** Chosen subclass id (from the class's subclasses), or null. */
   subclassId?: string | null;
-  /** Background display name (e.g. "Cultist"); free text on legacy cards. */
-  background: string;
+  /** @deprecated Background display NAME, denormalised from the catalog. Read
+   * the name through `backgroundId` instead. It survives only as the fallback
+   * for pre-catalog cards that never had a `backgroundId`, and for legacy
+   * sheet-only imports. */
+  background?: string;
   /** Structured background id from the established app background catalog. */
   backgroundId?: string;
-  /** Origin feat granted via the background; null when the background grants
-   * none (an explicit null so saves CLEAR a previously stored feat). */
+  /** @deprecated Origin feat, denormalised from the background. Derive it with
+   * `featsOf(card)` instead, so the catalog stays the single source and a
+   * rename cannot leave stored cards behind. Nothing writes this field now. */
   feat?: string | null;
   /** The Skilled feat's three chosen proficiencies (skills and/or tools).
    * Skill picks are ALSO merged into `skillProficiencies`; tool picks live

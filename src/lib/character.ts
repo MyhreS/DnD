@@ -1,6 +1,7 @@
 import type { AbilityScores, CustomItem, HunterCard, HunterClass, SheetAutomationState } from "@/types";
 import { abilityModifier } from "@/data/abilities";
 import { acCategory, ARMOR_BY_ID } from "@/data/armor";
+import { BACKGROUNDS } from "@/data/backgrounds";
 import { getClass } from "@/data/classes";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
@@ -387,6 +388,17 @@ export function emptySheetCard(params: {
  * ("Simple weapons and Martial weapons with the Finesse or Light property"),
  * so the property restriction is parsed out rather than special-cased by id.
  * Unarmed strikes are always available, so they are never gated. */
+/** Every feat this hunter has: the origin feat its background grants, plus the
+ * feats chosen at level-up. The origin feat is DERIVED from `backgroundId`
+ * rather than read from the denormalised `card.feat`, so the catalog stays the
+ * single source and a future rename cannot leave stored cards behind. Callers
+ * used to assemble this set three different ways, and the speed rows disagreed
+ * with the rest of the sheet about whether the legacy singular counted. */
+export function featsOf(card: Pick<HunterCard, "backgroundId" | "feats">): string[] {
+  const origin = BACKGROUNDS.find((entry) => entry.id === card.backgroundId)?.feat;
+  return [...new Set([origin, ...(card.feats ?? [])].filter((feat): feat is string => !!feat))];
+}
+
 export function isWeaponProficient(
   proficiencies: string,
   facts: { category?: string; properties: string },

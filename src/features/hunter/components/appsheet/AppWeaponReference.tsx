@@ -1,5 +1,6 @@
 import { abilityModifier } from "@/data/abilities";
 import { WEAPON_FACTS } from "@/data/weapons";
+import { featsOf } from "@/lib/character";
 import type { HunterCard, HunterClass } from "@/types";
 import { AppPanel, AutoReason } from "./appSheetShared";
 
@@ -50,7 +51,7 @@ function bonusesFor(card: HunterCard, klass: HunterClass): DamageBonus[] {
   );
   if (card.subclassId === "commander" && card.level >= 6) bonuses.push({ label: "Commander's Strike", value: "+Directive die", detail: "A companion's reaction weapon hit can add your Bands Directive Die." });
   if (card.subclassId === "warbringer") bonuses.push({ label: "Combat Inspiration", value: "+Directive die", detail: "A creature with your Bands Directive Die can add it to a hit's damage." });
-  const feats = [card.feat, ...(card.feats ?? [])];
+  const feats = featsOf(card);
   if (feats.includes("Savage Attacker")) bonuses.push({ label: "Savage Attacker", value: "Reroll damage dice", detail: "Once per turn on a weapon hit, roll the weapon's damage dice twice and use either roll." });
   if (feats.includes("Great Weapon Master")) bonuses.push({ label: "Great Weapon Master", value: `+${progression?.profBonus ?? 2}`, detail: "Once per turn when a Heavy weapon hits as part of the Attack action." });
   if (feats.includes("Charger")) bonuses.push({ label: "Charger", value: "+1d8", detail: "Once per turn after moving at least 10 feet straight before a melee hit." });

@@ -160,7 +160,7 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
   put(fields, reasons, "level", String(level), "Character level");
   put(fields, reasons, "insight", String(card.insight ?? 0), "DM-awarded Insight");
   put(fields, reasons, "profBonus", formatModifier(prof), `${SOURCE.creation}; level ${level}`);
-  put(fields, reasons, "background", background?.name ?? card.background, background ? SOURCE.background : "Your written background");
+  put(fields, reasons, "background", background?.name ?? card.background ?? "", background ? SOURCE.background : "Your written background");
 
   if (!background) pending.background = { label: "Background", remaining: 1, options: BACKGROUNDS.map((entry) => entry.name), reason: "A background grants skills, a feat, tools, and equipment." };
   if (klass) {

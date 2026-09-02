@@ -34,7 +34,9 @@ function fixture(overrides: Raw = {}): Raw {
     ownerName: "Player One",
     name: "Test Hunter",
     classId: "scout",
-    background: "Cultist",
+    // No `background` or `feat`: both are derived from `backgroundId` now, and
+    // the migration strips the denormalised copies. A card written by the
+    // current code carries neither.
     backgroundId: "cultist",
     level: 3,
     abilities: { str: 12, dex: 15, con: 13, int: 10, wis: 14, cha: 8 },
@@ -421,6 +423,43 @@ function change(plan: CharacterPlan, field: string) {
 
   const absent = planCharacter("no-legacy", fixture());
   assert.equal(groups(absent).includes("strip:legacy-fields"), false);
+}
+
+// --- Legacy denormalised copies are stripped, not remapped ------------------
+{
+  const plan = planCharacter("legacy", fixture({
+    backgroundId: "street-warden",
+    background: "Street Warden",
+    feat: "Savage Attacker",
+    sanity: 20,
+    madness: 0,
+    studdedAddons: 0,
+    sheet: { sanityCur: "17" },
+  }));
+  assert.ok(groups(plan).includes("strip:legacy-fields"), "the denormalised copies are a strip, not a remap");
+  // The stored copy matches the catalog today; it is stripped because deriving
+  // from backgroundId keeps one source, not because it had drifted.
+  assert.equal(change(plan, "feat")?.before, "Savage Attacker");
+  assert.match(String(change(plan, "feat")?.after), /Savage Attacker/);
+  assert.equal(change(plan, "background")?.before, "Street Warden");
+  assert.equal(change(plan, "sanity")?.before, 20);
+  assert.equal(change(plan, "studdedAddons")?.before, 0);
+  assert.equal(change(plan, "sheet.sanityCur")?.before, "17");
+}
+
+// A card with no backgroundId keeps its written background: there is nothing to
+// derive the name from, so stripping it would lose the only copy.
+{
+  const plan = planCharacter("handwritten", fixture({ backgroundId: undefined, background: "Something homebrewed" }));
+  assert.equal(change(plan, "background"), undefined, "a background with no catalog id is preserved");
+  assert.equal(change(plan, "feat"), undefined, "and its feat with it");
+}
+
+// Madness is the precondition for dropping sanity — without it the conversion
+// has not happened yet and the legacy value is still the only record.
+{
+  const plan = planCharacter("unconverted", fixture({ sanity: 12, madness: undefined }));
+  assert.equal(change(plan, "sanity"), undefined, "sanity survives until madness exists to replace it");
 }
 
 console.log("stored-character migration: all transform, validation and safety tests passed");
