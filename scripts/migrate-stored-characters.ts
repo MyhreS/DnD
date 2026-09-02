@@ -560,7 +560,7 @@ function show(value: unknown, limit = 160): string {
   return flat.length > limit ? `${flat.slice(0, limit)}… [${flat.length} chars]` : flat;
 }
 
-export function renderReport(plans: CharacterPlan[]): string {
+export function renderReport(plans: CharacterPlan[], apply = false): string {
   const out: string[] = [];
   const line = (text = "") => out.push(text);
   const affected = plans.filter(planWrites);
@@ -649,8 +649,12 @@ export function renderReport(plans: CharacterPlan[]): string {
   line(`  Over-slotted hunters      : ${overSlotted.length}`);
   line(`  Validation flags          : ${flagged.length}`);
   line();
-  line("  NOTHING WAS WRITTEN. This is a dry run.");
-  line("  An --apply run additionally requires --backup=<export.json> covering every doc.");
+  if (apply) {
+    line("  --apply WAS PASSED. The writes listed above are about to be committed.");
+  } else {
+    line("  NOTHING WAS WRITTEN. This is a dry run.");
+    line("  An --apply run additionally requires --backup=<export.json> covering every doc.");
+  }
   return out.join("\n");
 }
 
@@ -719,7 +723,7 @@ async function main(): Promise<void> {
   const plans = snapshot.docs.map((doc) => planCharacter(doc.id, doc.data() as Raw));
 
   if (options.json) console.log(JSON.stringify(plans, (_key, value) => (value === DELETE ? "__DELETE__" : value), 2));
-  else console.log(renderReport(plans));
+  else console.log(renderReport(plans, options.apply));
 
   if (!options.apply) {
     console.log("\nDry run complete — no writes were issued. Pass --apply --backup=<file> only after Simon approves.");
