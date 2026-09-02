@@ -221,8 +221,6 @@ export interface EncounterState {
   round: number;
   /** The combatant whose turn it is, or null. */
   turnId: string | null;
-  /** Exactly one Warden may receive Tactical Command for this encounter. */
-  designatedWardenId: string | null;
   timerPhase: TurnTimerPhase;
   /** Absolute client epoch so every subscribed screen renders the same clock. */
   timerEndsAt: number | null;
@@ -281,8 +279,6 @@ export interface Combatant {
   /** Reusable library source plus an immutable reset snapshot for monsters. */
   enemyTemplateId?: string | null;
   baseStats?: EnemyStats | null;
-  /** True when this PC's class is Hunter Warden. */
-  isWarden?: boolean;
   createdAt: number;
 }
 

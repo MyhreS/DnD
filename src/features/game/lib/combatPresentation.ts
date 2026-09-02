@@ -66,10 +66,3 @@ export function participantInitiative(card: HunterCard | undefined): number {
 export function hasSavedBattle(encounter: EncounterState): boolean {
   return encounter.round > 1 || encounter.turnId !== null;
 }
-
-export function isWarden(card: HunterCard | undefined, classId: string, className?: string | null): boolean {
-  const sheetClass = typeof card?.sheet?.class === "string" ? card.sheet.class : "";
-  return card?.classId === "warden"
-    || classId === "warden"
-    || /warden/i.test(sheetClass || className || "");
-}

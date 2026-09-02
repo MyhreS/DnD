@@ -92,7 +92,7 @@ await db.doc(`games/${gameId}`).set({
   status: "active",
   phase: "combat",
   location: "wild",
-  combat: { active: false, round: 0, turnId: null, designatedWardenId: null, timerPhase: "idle", timerEndsAt: null, pausedRemainingMs: null },
+  combat: { active: false, round: 0, turnId: null, timerPhase: "idle", timerEndsAt: null, pausedRemainingMs: null },
   sandbox: false,
   clockRunning: true,
   clockStartedAt: Date.now(),
@@ -118,7 +118,6 @@ await db.doc(`games/${gameId}/combatants/${enemyId}`).set({
   revealStats: false,
   enemyTemplateId: "moon-beast-template",
   baseStats: { name: "Moon Beast", initiative: -99, ac: 14, maxHp: 30, note: "Howls when bloodied.", revealHp: false, revealStats: false },
-  isWarden: false,
   createdAt: Date.now(),
 });
 await Promise.all([
@@ -138,7 +137,6 @@ await db.doc(`games/${gameId}/battleView/${enemyId}`).set({
   note: null,
   revealHp: false,
   revealStats: false,
-  isWarden: false,
   createdAt: Date.now(),
 });
 await Promise.all([

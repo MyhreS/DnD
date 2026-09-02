@@ -113,7 +113,6 @@ export function previewGame(): import("@/types").Game {
       encounterId: 0,
       round: 2,
       turnId: "prev-monster-1",
-      designatedWardenId: "prev-pc-2",
       timerPhase: "untimed",
       timerEndsAt: null,
       pausedRemainingMs: null,
@@ -135,7 +134,7 @@ export function previewCombatants(): import("@/types").Combatant[] {
   return [
     { id: "prev-monster-1", kind: "monster", name: "Cleric Beast", characterId: null, initiative: 19, ac: 14, maxHp: 80, currentHp: 52, conditions: ["poisoned"], conditionSince: { poisoned: 1 }, note: "Claws +6 to hit, 2d8+3 slashing; howl frightens on hit", createdAt: now },
     { id: "prev-pc-1", kind: "pc", name: "Eileen the Crow", characterId: "preview-uid-char", initiative: 17, ac: null, maxHp: null, currentHp: null, conditions: ["frightened"], conditionSince: { frightened: 1 }, createdAt: now },
-    { id: "prev-pc-2", kind: "pc", name: "Gascoigne", characterId: "preview-p2-char", initiative: 12, ac: null, maxHp: null, currentHp: null, conditions: ["prone"], conditionSince: { prone: 2 }, isWarden: true, createdAt: now },
+    { id: "prev-pc-2", kind: "pc", name: "Gascoigne", characterId: "preview-p2-char", initiative: 12, ac: null, maxHp: null, currentHp: null, conditions: ["prone"], conditionSince: { prone: 2 }, createdAt: now },
   ];
 }
 

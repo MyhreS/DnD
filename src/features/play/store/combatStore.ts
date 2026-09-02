@@ -32,7 +32,6 @@ export interface PcSeed {
   characterId: string;
   name: string;
   dexMod: number;
-  isWarden: boolean;
 }
 export interface MonsterInput {
   name: string;
@@ -157,20 +156,17 @@ export const useCombatStore = create<CombatState>((set, get) => {
         maxHp: null,
         currentHp: null,
         conditions: [] as string[],
-        isWarden: p.isWarden,
       }));
       if (get().preview) {
         const local: Combatant[] = seeded.map((s) => ({ ...s, id: previewId(), createdAt: Date.now() }));
         set({ combatants: local });
         const order = initiativeOrder(local);
         const top = order[0];
-        const designatedWardenId = order.find((c) => c.isWarden)?.id ?? null;
         await setCombat(gameId, {
           active: true,
           encounterId: 0,
           round: 1,
           turnId: top?.id ?? null,
-          designatedWardenId,
           timerPhase: "idle",
           timerEndsAt: null,
           pausedRemainingMs: null,
@@ -190,13 +186,11 @@ export const useCombatStore = create<CombatState>((set, get) => {
       if (!created) return false;
       const order = initiativeOrder(created);
       const top = order[0];
-      const designatedWardenId = order.find((c) => c.isWarden)?.id ?? null;
       return setCombat(gameId, {
         active: true,
         encounterId: 0,
         round: 1,
         turnId: top?.id ?? null,
-        designatedWardenId,
         timerPhase: "idle",
         timerEndsAt: null,
         pausedRemainingMs: null,
@@ -219,7 +213,6 @@ export const useCombatStore = create<CombatState>((set, get) => {
           maxHp: null,
           currentHp: null,
           conditions: [] as string[],
-          isWarden: pc.isWarden,
         }));
       let created: Combatant[] = [];
       if (get().preview) {
@@ -238,14 +231,11 @@ export const useCombatStore = create<CombatState>((set, get) => {
       const order = initiativeOrder([...existing, ...created]);
       if (order.length === 0) return false;
       const first = order.find((combatant) => combatant.id === encounter.turnId) ?? order[0];
-      const savedWarden = order.find((combatant) => combatant.id === encounter.designatedWardenId && combatant.isWarden);
-      const designatedWardenId = savedWarden?.id ?? order.find((combatant) => combatant.isWarden)?.id ?? null;
       return setCombat(gameId, {
         active: true,
         encounterId: encounter.encounterId,
         round: Math.max(1, encounter.round),
         turnId: first.id,
-        designatedWardenId,
         timerPhase: "idle",
         timerEndsAt: null,
         pausedRemainingMs: null,
@@ -263,7 +253,6 @@ export const useCombatStore = create<CombatState>((set, get) => {
         maxHp: null,
         currentHp: null,
         conditions: [] as string[],
-        isWarden: p.isWarden,
       }));
       let created: Combatant[] = [];
       if (get().preview) {
@@ -276,13 +265,11 @@ export const useCombatStore = create<CombatState>((set, get) => {
       }
       const order = initiativeOrder([...existing, ...created]);
       if (order.length === 0) return false;
-      const designatedWardenId = order.find((combatant) => combatant.isWarden)?.id ?? null;
       return setCombat(gameId, {
         active: true,
         encounterId,
         round: 1,
         turnId: order[0].id,
-        designatedWardenId,
         timerPhase: "idle",
         timerEndsAt: null,
         pausedRemainingMs: null,
@@ -315,7 +302,6 @@ export const useCombatStore = create<CombatState>((set, get) => {
         revealStats: m.revealStats === true,
         enemyTemplateId: m.enemyTemplateId ?? null,
         baseStats,
-        isWarden: false,
       };
       if (get().preview) {
         set((s) => ({ combatants: [...s.combatants, { ...data, id: previewId(), createdAt: Date.now() }] }));
@@ -354,9 +340,6 @@ export const useCombatStore = create<CombatState>((set, get) => {
         const order = initiativeOrder(combatants);
         const idx = order.findIndex((c) => c.id === id);
         const rest = order.filter((c) => c.id !== id);
-        const designatedWardenId = game.combat.designatedWardenId === id
-          ? rest.find((combatant) => combatant.isWarden)?.id ?? null
-          : game.combat.designatedWardenId;
         let round = game.combat.round ?? 1;
         let turnId = game.combat.turnId;
         if (game.combat.turnId === id) {
@@ -375,7 +358,6 @@ export const useCombatStore = create<CombatState>((set, get) => {
           active: true,
           round,
           turnId,
-          designatedWardenId,
           timerPhase: "idle",
           timerEndsAt: null,
           pausedRemainingMs: null,
