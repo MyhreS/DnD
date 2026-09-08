@@ -304,7 +304,7 @@ function change(plan: CharacterPlan, field: string) {
   const plan = planCharacter("slots", fixture({
     inventory: Array.from({ length: 12 }, () => ({ itemId: "thieves-tools", qty: 1 })),
   }));
-  assert.ok(plan.overSlotted.length > 0, "significant tool sets with nowhere to go are reported");
+  assert.ok(plan.unassignedItems.length > 0, "Significant tool sets are listed as unassigned until the player picks a slot");
 }
 
 // --- applyPatch is a faithful in-memory projection ---------------------------
