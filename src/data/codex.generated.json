@@ -95,7 +95,7 @@
     }
   ],
   "sourceHashes": {
-    "core-rulebook": "5DA2CE6CC088A2A9EFBB97AB3A1DEB8C6A25E7DD1410DB8DA7529F750504E395",
+    "core-rulebook": "1AA5C4B08051A60D9F93E37A29063AD9D9C238E5498B2EB7C4E6BCB42346A808",
     "book-of-the-deepcaller": "8E58F1D98BAA0740515FFC874E1293C228FB6C28F38CE2D64BBD7F8C8E71F283",
     "character-sheet": "1C097CEC80AA49D8A4DB8DE25702E43B2DCAEA626BC1CBFE3124A021B9B99385",
     "whispers": "8339BA383ED0E48471C79F3EC1A009E9A0B3A7EF50E641142026879F7187FE6E"
@@ -1675,7 +1675,7 @@
       ],
       "body": [
         "Gain 1 Sleepless Counter at the end of every hour spent outside a Short or Long Rest.",
-        "A Short Rest pauses this accumulation for itsfirst hour but removes no counters. Consecutive Short Rests count as",
+        "A Short Rest pauses this accumulation for its first hour but removes no counters. Consecutive Short Rests count as",
         "one Short Rest; additional hours begin adding counters again unless the rest becomes a Long Rest.",
         "Completing a Long Rest resets your Sleepless Counters to 0.",
         "At 24 counters, you gain the Sleepless condition and immediately suffer 1d4 Madness. Suffer another 1d4 Madness",
@@ -1684,7 +1684,7 @@
       ],
       "paragraphs": [
         "Gain 1 Sleepless Counter at the end of every hour spent outside a Short or Long Rest.",
-        "A Short Rest pauses this accumulation for itsfirst hour but removes no counters. Consecutive Short Rests count as",
+        "A Short Rest pauses this accumulation for its first hour but removes no counters. Consecutive Short Rests count as",
         "one Short Rest; additional hours begin adding counters again unless the rest becomes a Long Rest.",
         "Completing a Long Rest resets your Sleepless Counters to 0.",
         "At 24 counters, you gain the Sleepless condition and immediately suffer 1d4 Madness. Suffer another 1d4 Madness",
@@ -1737,13 +1737,13 @@
         "Gain condition when under water. A creature without a Swim Speed has Disadvantage on underwater melee weapon",
         "attacks unless the weapon deals Piercing damage. Ranged weapon attacks have Disadvantage within normal range",
         "and automatically miss beyond it. Anything underwater has Resistance to Fire damage.",
-        "ff fl"
+        "21"
       ],
       "paragraphs": [
         "Gain condition when under water. A creature without a Swim Speed has Disadvantage on underwater melee weapon",
         "attacks unless the weapon deals Piercing damage. Ranged weapon attacks have Disadvantage within normal range",
         "and automatically miss beyond it. Anything underwater has Resistance to Fire damage.",
-        "ff fl"
+        "21"
       ],
       "tables": [],
       "group": "Conditions",
@@ -2008,14 +2008,14 @@
         "of the Taunt, if legally able. You are not required to enter an obvious hazard. If you cannot perceive or target the",
         "source after moving, you may act normally. Taunted ends after you attack the source, at the end of your turn, or if the",
         "source becomes Incapacitated.",
-        "fl fl fi ff ff fl"
+        "22"
       ],
       "paragraphs": [
         "On your next turn, you must use available movement and make at least one attack or harmful Rite against the source",
         "of the Taunt, if legally able. You are not required to enter an obvious hazard. If you cannot perceive or target the",
         "source after moving, you may act normally. Taunted ends after you attack the source, at the end of your turn, or if the",
         "source becomes Incapacitated.",
-        "fl fl fi ff ff fl"
+        "22"
       ],
       "tables": [],
       "group": "Conditions",
