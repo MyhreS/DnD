@@ -134,9 +134,11 @@ assert.equal(whisperEntries.length, 6);
 assert(whisperEntries.every((entry) => entry.locator?.startsWith("Whisper · ")));
 assert(whisperEntries.every((entry) => !entry.body.some((line) => /Level 0/i.test(line))), "Whispers must never be labeled Level 0");
 
-/** Content the beta genuinely retired. `Hunter Rifle` and `Cracked Perception`
- * are NOT in this list: both are current public rules again. */
-for (const removed of ["Blood Frenzy", "Unstable Violence", "Old One Vessel", "Greater Dreadblood"]) {
+/** Content the beta genuinely retired. `Hunter Rifle`, `Cracked Perception` and
+ * `Unstable Violence` are NOT in this list: all three are current public rules
+ * again — the Madness Die prose on Core Rulebook page 23 reads "This die
+ * represent your unstable violence". */
+for (const removed of ["Blood Frenzy", "Old One Vessel", "Greater Dreadblood"]) {
   assert.equal(searchEntries(CODEX_TOPICS, removed).length, 0, `retired source content returned: ${removed}`);
 }
 

@@ -45,10 +45,16 @@ export function maybePreview(): PreviewSession | null {
   const raw = readPreviewRaw();
   if (raw === null) return null;
   const identity = parseIdentity(raw);
+  // A `.dm` preview has to BE the DM of the seeded campaign and game, or every
+  // DM-gated surface stays unreachable and cannot be inspected: `previewGame()`
+  // and `previewCampaign()` both set `dmUid: "preview-dm"`, and the gates compare
+  // it against the signed-in uid. The DM holds no character, matching the seeded
+  // member row.
+  const isDm = identity.playerType === "dm";
   const user = {
-    uid: "preview-uid",
-    email: "preview@local.dev",
-    displayName: "Preview Hunter",
+    uid: isDm ? "preview-dm" : "preview-uid",
+    email: isDm ? "dm@local.dev" : "preview@local.dev",
+    displayName: isDm ? "Christoffer" : "Preview Hunter",
     photoURL: null,
   } as unknown as User;
   const member: AllowlistMember = {
@@ -106,7 +112,10 @@ export function previewGame(): import("@/types").Game {
     participantRoster: previewParticipants(),
     invitedUids: [],
     inviteRoster: [],
-    status: "lobby",
+    // "active", not "lobby": the seeded combat below is already running, and
+    // both big-screen boards are gated on a live game, so a lobby game left the
+    // combat board and the shop board impossible to inspect in preview.
+    status: "active",
     phase: "exploration",
     combat: {
       active: true,
@@ -116,6 +125,19 @@ export function previewGame(): import("@/types").Game {
       timerPhase: "untimed",
       timerEndsAt: null,
       pausedRemainingMs: null,
+    },
+    // Seeded like `combat` above, so the /status shop board can be inspected in
+    // preview. Prices are the game maker's own, from docs/rules/item-cost.txt.
+    shop: {
+      open: true,
+      name: "The Grey Market",
+      lines: [
+        { id: "line-1", itemId: "shortsword", name: "Shortsword", priceGp: 100 },
+        { id: "line-2", itemId: "lantern", name: "Lantern, Hooded", priceGp: 11 },
+        { id: "line-3", itemId: "rope", name: "Rope", priceGp: 4, note: "50 ft coil" },
+        { id: "line-4", itemId: "antitoxin", name: "Antitoxin", priceGp: 25 },
+        { id: "line-5", name: "A stranger's sealed letter", priceGp: 40, note: "No questions" },
+      ],
     },
     sandbox: false,
     clockRunning: false,

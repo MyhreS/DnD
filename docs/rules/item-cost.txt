@@ -1,0 +1,185 @@
+C&S ITEM COST — full transcription
+Source: "Item Cost.pdf" (Beta Release), 2 pages (verified with pdfinfo).
+
+Provenance: written by the game maker specifically for the app. The Core
+Rulebook states "The app is the authoritative source for prices" and ships no
+price list of its own; this document supplies those prices. It is NOT a Codex
+download source — it is a data input, and prices surface through the item
+catalogue and the shop instead.
+
+Transcribed by hand from the page images: the tables are laid out in two
+columns and the text layer interleaves them.
+
+Source typos preserved verbatim and marked [sic]: "Bulllets" (three l's), and
+Thieves' Tools weight printed as "1 b." rather than "1 lb.".
+
+Page boundaries are marked [page N].
+
+
+[page 1]
+
+--- HUNTER GEAR ---
+
+| Item              | Weight     | Carrying Category        | Cost   |
+|-------------------|------------|--------------------------|--------|
+| Acid              | 1 lb.      | Insignificant Item       | 25 GP  |
+| Antitoxin         | —          | Insignificant Item       | 25 GP  |
+| Ball Bearings     | 2 lb.      | Insignificant Item       | 5 GP   |
+| Barrel            | 70 lb.     | Oversized Item           | 10 GP  |
+| Basket            | 2 lb.      | Oversized Item           | 1 GP   |
+| Bell              | —          | Insignificant Item       | 2 GP   |
+| Block and Tackle  | 5 lb.      | Significant Item         | 12 GP  |
+| Book              | 5 lb.      | Significant Item         | Varies |
+| Bottle, Glass     | 2 lb.      | Insignificant Item       | 2 GP   |
+| Bucket            | 2 lb.      | Oversized Item           | 3 GP   |
+| Caltrops          | 2 lb.      | Insignificant Item       | 6 GP   |
+| Candle            | —          | Insignificant Item       | 1 GP   |
+| Chain             | 10 lb.     | Significant Item         | 7 GP   |
+| Chest             | 25 lb.     | Oversized Item           | 14 GP  |
+| Crowbar           | 5 lb.      | Significant Item         | 4 GP   |
+| Flask             | 1 lb.      | Insignificant Item       | 1 GP   |
+| Grappling Hook    | 4 lb.      | Significant Item         | 8 GP   |
+| Hunting Trap      | 25 lb.     | Significant Item         | 15 GP  |
+| Ink               | —          | Insignificant Item       | 10 GP  |
+| Ink Pen           | —          | Insignificant Item       | 1 GP   |
+| Jug               | 4 lb.      | Significant Item         | 1 GP   |
+| Ladder            | 25 lb.     | Oversized Item           | 13 GP  |
+| Lamp              | 1 lb.      | Significant Item         | 6 GP   |
+| Lantern, Bullseye | 2 lb.      | Significant Item         | 16 GP  |
+| Lantern, Hooded   | 2 lb.      | Significant Item         | 11 GP  |
+| Lock              | 1 lb.      | Insignificant Item       | 10 GP  |
+| Manacles          | 6 lb.      | Insignificant Item       | 10 GP  |
+| Map               | —          | Insignificant Item       | Varies |
+| Mirror            | 1 lb.      | Insignificant Item       | 5 GP   |
+| Net               | 3 lb.      | Significant Item         | 15 GP  |
+| Oil               | 1 lb.      | Insignificant Item       | 10 GP  |
+| Paper             | —          | Insignificant Item       | 1 GP   |
+| Parchment         | —          | Insignificant Item       | 1 GP   |
+| Poison, Basic     | —          | Insignificant Item       | 25 GP  |
+| Pole              | 7 lb.      | Oversized Item           | 4 GP   |
+| Pot, Iron         | 10 lb.     | Oversized Item           | 9 GP   |
+| Ram, Portable     | 35 lb.     | Oversized Item           | 12 GP  |
+| Rope              | 5 lb.      | Significant Item         | 4 GP   |
+| Shovel            | 5 lb.      | Significant Item (back)  | 8 GP   |
+| Signal Whistle    | —          | Insignificant Item       | 5 GP   |
+| Spikes, Iron      | 5 lb.      | Insignificant Item       | 4 GP   |
+| String            | —          | Insignificant Item       | 1 GP   |
+| Tinderbox         | 1 lb.      | Insignificant Item       | 2 GP   |
+| Torch             | 1 lb.      | Significant Item         | 3 GP   |
+| Vial              | —          | Insignificant Item       | 1 GP   |
+| Waterskin         | 5 lb. full | Significant Item         | 5 GP   |
+
+--- TOOLS ---
+
+| Item                  | Weight        | Carrying Category | Cost  |
+|-----------------------|---------------|-------------------|-------|
+| ALCHEMIST'S SUPPLIES  | 8 lb.         | Significant Item  | 6 GP  |
+| CARPENTER'S TOOLS     | 6 lb.         | Significant Item  | 6 GP  |
+| CULTIST'S TOOLS       | 8 lb.         | Significant Item  | 2 GP  |
+| POISONER'S KIT        | 2 lb.         | Significant Item  | 25 GP |
+| SMITH'S TOOLS         | 10 lb.        | Significant Item  | 50 GP |
+| BLOOD-DRAINER'S TOOLS | 2 lb.         | Significant Item  | 3 GP  |
+| NAVIGATOR'S TOOLS     | 2 lb.         | Significant Item  | 6 GP  |
+| THIEVES' TOOLS        | 1 b. [sic]    | Significant Item  | 6 GP  |
+
+--- STORAGE ITEMS ---
+
+| Item             | Weight | Carrying Category  | Cost  |
+|------------------|--------|--------------------|-------|
+| SACK             | 1 lb.  | Significant Item   | 5 GP  |
+| BACKPACK         | 5 lb.  | Significant Item   | 20 GP |
+| BANDOLIER        | 4 lb.  | Significant Item   | 15 GP |
+| TOOLBELT         | 3 lb.  | Significant Item   | 10 GP |
+| CARRYING HARNESS | 3 lb.  | Significant Item   | 10 GP |
+| ANKLE HOLSTER    | 1 lb.  | Insignificant Item | 20 GP |
+
+--- WEAPONS ---
+
+Simple Melee Weapons
+
+| Name         | Weight | Carrying Category       | Cost  |
+|--------------|--------|-------------------------|-------|
+| Club         | 2 lb.  | Significant Item        | 5 GP  |
+| Dagger       | 1 lb.  | Significant Item        | 5 GP  |
+| Greatclub    | 10 lb. | Oversized Item          | 15 GP |
+| Handaxe      | 2 lb.  | Significant Item        | 30 GP |
+| Javelin      | 2 lb.  | Significant Item (back) | 20 GP |
+| Light Hammer | 2 lb.  | Significant Item        | 15 GP |
+| Mace         | 4 lb.  | Significant Item        | 50 GP |
+| Sickle       | 2 lb.  | Significant Item        | 15 GP |
+| Spear        | 3 lb.  | Oversized Item          | 25 GP |
+
+Simple Ranged Weapons
+
+| Name           | Weight  | Carrying Category  | Cost |
+|----------------|---------|--------------------|------|
+| Throwing Knife | 1/4 lb. | Insignificant Item | 2 GP |
+
+Martial Melee Weapons
+
+| Name        | Weight | Carrying Category | Cost   |
+|-------------|--------|-------------------|--------|
+| Battleaxe   | 4 lb.  | Significant Item  | 250 GP |
+| Flail       | 2 lb.  | Significant Item  | 250 GP |
+| Glaive      | 12 lb. | Oversized Item    | 250 GP |
+| Greataxe    | 14 lb. | Oversized Item    | 250 GP |
+| Greatsword  | 14 lb. | Oversized Item    | 250 GP |
+| Halberd     | 12 lb. | Oversized Item    | 250 GP |
+| Longsword   | 3 lb.  | Significant Item  | 150 GP |
+| Maul        | 14 lb. | Oversized Item    | 250 GP |
+| Morningstar | 4 lb.  | Significant Item  | 200 GP |
+| Pike        | 12 lb. | Oversized Item    | 150 GP |
+| Rapier      | 2 lb.  | Significant Item  | 200 GP |
+| Scimitar    | 3 lb.  | Significant Item  | 200 GP |
+| Shortsword  | 2 lb.  | Significant Item  | 100 GP |
+| Trident     | 12 lb. | Oversized Item    | 200 GP |
+| Warhammer   | 5 lb.  | Significant Item  | 200 GP |
+| War Pick    | 2 lb.  | Significant Item  | 200 GP |
+| Whip        | 3 lb.  | Significant Item  | 75 GP  |
+
+Martial Ranged Weapons
+
+| Name         | Weight | Carrying Category       | Cost   |
+|--------------|--------|-------------------------|--------|
+| Hunter Rifle | 10 lb. | Significant Item (back) | 300 GP |
+| Pistol       | 3 lb.  | Significant Item        | 200 GP |
+
+--- ARMOR ---
+
+| Armor                            | Weight | Carrying Category | Cost   |
+|----------------------------------|--------|-------------------|--------|
+| Tricorn                          | 1 lb.  | Significant Item  | 1 GP   |
+| Cavalier Hat                     | 1 lb.  | Significant Item  | 1 GP   |
+| Cowl                             | 1 lb.  | Significant Item  | 1 GP   |
+| Wide Brim Hat                    | 1 lb.  | Significant Item  | 1 GP   |
+| Small Scarf                      | 1 lb.  | Significant Item  | 1 GP   |
+| Large Scarf                      | 2 lb.  | Significant Item  | 1 GP   |
+| Leather Gloves                   | 2 lb.  | Significant Item  | 1 GP   |
+| Leather Boots                    | 2 lb.  | Significant Item  | 1 GP   |
+| Hunter Leather Vest              | 6 lb.  | Significant Item  | 100 GP |
+| Hunter Leather Jacket            | 6 lb.  | Significant Item  | 100 GP |
+| Hunter Leather Coat              | 7 lb.  | Significant Item  | 100 GP |
+| Reinforced Hunter Leather Vest   | 10 lb. | Significant Item  | 200 GP |
+| Reinforced Hunter Leather Jacket | 10 lb. | Significant Item  | 200 GP |
+| Reinforced Hunter Leather Coat   | 11 lb. | Significant Item  | 200 GP |
+| Full Leather Cuirass             | 10 lb. | Significant Item  | 250 GP |
+
+
+[page 2]
+
+--- ARMOR (continued) ---
+
+| Armor                      | Weight | Carrying Category | Cost   |
+|----------------------------|--------|-------------------|--------|
+| Leather Pauldron, Right    | 2 lb.  | Significant Item  | 50 GP  |
+| Leather Pauldron, Left     | 2 lb.  | Significant Item  | 50 GP  |
+| Leather Vambrace, Right    | 2 lb.  | Significant Item  | 50 GP  |
+| Leather Vambrace, Left     | 2 lb.  | Significant Item  | 50 GP  |
+| Under Layer Leather Jerkin | 2 lb.  | Significant Item  | 50 GP  |
+| Studs                      | 5 lb.  | Significant Item  | 100 GP |
+
+--- BULLETS ---
+
+| Item                  | Weight | Carrying Category  | Cost |
+|-----------------------|--------|--------------------|------|
+| Bulllets (10) [sic]   | —      | Insignificant Item | 5 GP |

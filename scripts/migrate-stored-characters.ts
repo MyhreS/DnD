@@ -132,7 +132,7 @@ export interface CharacterPlan {
   /** §6.7 validation findings: inconsistent or unmigratable stored state. */
   warnings: string[];
   /** Non-empty when the recomputed slot layout no longer fits. */
-  overSlotted: string[];
+  unassignedItems: string[];
   /** Field-level patch an `--apply` run would write. Deletions are `DELETE`. */
   patch: Record<string, unknown>;
 }
@@ -540,7 +540,7 @@ export function planCharacter(id: string, data: Raw): CharacterPlan {
 
   // --- Derived recompute (reported, not written) --------------------------
   const derived: DerivedChange[] = [];
-  let overSlotted: string[] = [];
+  let unassignedItems: string[] = [];
   if (klass) {
     const migrated = normalizeCard(applyPatch(data, patch) as unknown as HunterCard);
     // The UNFILTERED projection: manual overrides are reported (§6.7 check 5)
@@ -565,7 +565,7 @@ export function planCharacter(id: string, data: Raw): CharacterPlan {
       );
     }
     const slots = computeSlots(migrated);
-    overSlotted = slots.unstowed.map((row) => `${row.name} ×${row.count}${row.clamped ? "+" : ""}`);
+    unassignedItems = slots.unstowed.map((row) => `${row.name} ×${row.count}${row.clamped ? "+" : ""}`);
   }
   for (const key of manualOverrides) {
     if (derived.some((row) => row.field === `sheet.${key}`)) {
@@ -584,7 +584,7 @@ export function planCharacter(id: string, data: Raw): CharacterPlan {
     derived,
     reviews,
     warnings,
-    overSlotted,
+    unassignedItems,
     patch,
   };
 }
@@ -693,14 +693,16 @@ export function renderReport(plans: CharacterPlan[], apply = false): string {
     for (const note of plan.reviews) line(`      ${note}`);
   }
 
-  const overSlotted = plans.filter((plan) => plan.overSlotted.length);
+  const unassignedItems = plans.filter((plan) => plan.unassignedItems.length);
   line(`\n${"=".repeat(78)}`);
-  line(`⚠️  OVER-SLOTTED HUNTERS (${overSlotted.length}) — items with nowhere to go after the`);
-  line("    tool sets became Significant. No mechanical penalty; the player re-places them.");
+  line(`UNASSIGNED CARRIED ITEMS (${unassignedItems.length} hunters)`);
+  line("    NOT a problem: the sheet already shows these as \"Unassigned\", and Significant");
+  line("    and Oversized items always sit there until the player picks a carrying slot.");
+  line("    Listed only because the tool sets became Significant, so the count went up.");
   line("=".repeat(78));
-  if (!overSlotted.length) line("  None.");
-  for (const plan of overSlotted) {
-    line(`  ${plan.name} (${plan.id}): ${plan.overSlotted.join(", ")}`);
+  if (!unassignedItems.length) line("  None.");
+  for (const plan of unassignedItems) {
+    line(`  ${plan.name} (${plan.id}): ${plan.unassignedItems.join(", ")}`);
   }
 
   const flagged = plans.filter((plan) => plan.warnings.length);
@@ -729,7 +731,7 @@ export function renderReport(plans: CharacterPlan[], apply = false): string {
   }
   line(`  Derived-only differences  : ${derivedRows.length}  (no write)`);
   line(`  speedModifier / passive review cases : ${reviewRows.length}`);
-  line(`  Over-slotted hunters      : ${overSlotted.length}`);
+  line(`  Hunters with unassigned items : ${unassignedItems.length}  (normal, not an error)`);
   line(`  Validation flags          : ${flagged.length}`);
   line();
   if (apply) {

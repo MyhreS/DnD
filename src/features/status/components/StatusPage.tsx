@@ -13,6 +13,7 @@ import { cardClassName, characterVitals } from "@/features/hunter/lib/papersheet
 import { isBloodied } from "@/lib/character";
 import type { HunterCard } from "@/types";
 import { CombatBoard } from "./CombatBoard";
+import { ShopBoard } from "./ShopBoard";
 
 /** Chrome-less big-screen board for a TV/laptop at the table: the current phase
  * + location, the live initiative board during combat, and every hunter's live
@@ -33,6 +34,7 @@ export function StatusPage() {
   useCombatSync(liveGame?.id ?? null, true);
   const combatants = useCombatStore((s) => s.combatants);
   const inCombat = !!liveGame?.combat?.active && combatants.length > 0;
+  const shop = liveGame?.shop?.open ? liveGame.shop : null;
   // A named Hunter belongs on the board, including legacy sheet-only records.
   const hunters = members
     .map((m) => party.find((c) => c.id === m.characterId))
@@ -64,11 +66,13 @@ export function StatusPage() {
 
       {inCombat && liveGame && <CombatBoard game={liveGame} combatants={combatants} party={party} />}
 
+      {shop && <ShopBoard shop={shop} />}
+
       {hunters.length === 0 ? (
         <p className="muted" style={{ fontSize: "1.2rem" }}>No hunters in this campaign yet.</p>
       ) : (
         <>
-          {inCombat && <p className="eyebrow" style={{ fontSize: "1.05rem", marginBottom: 12 }}>Party</p>}
+          {(inCombat || shop) && <p className="eyebrow" style={{ fontSize: "1.05rem", marginBottom: 12 }}>Party</p>}
           <div
             style={{
               display: "grid",

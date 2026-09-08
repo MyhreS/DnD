@@ -33,6 +33,7 @@ import { GameWaitingRoom } from "./GameWaitingRoom";
 import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed, SessionSwitchRequests } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
 import { SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
+import { SessionShopSection } from "./SessionShopSection";
 import "./game.css";
 
 const DEFAULT_TITLE = () => `Session ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())}`;
@@ -75,6 +76,7 @@ export function GamePage() {
   const [activeSeats, setActiveSeats] = useState<Map<string, ActiveGameSeat>>(new Map());
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [dismissedBattleKey, setDismissedBattleKey] = useState<string | null>(null);
+  const [lastCombatActive, setLastCombatActive] = useState(false);
   const [showingPrevious, setShowingPrevious] = useState(false);
   const [participants, setParticipants] = useState<GameParticipant[]>([]);
   const [previewRosters, setPreviewRosters] = useState<Record<string, GameParticipant[]>>({
@@ -205,11 +207,16 @@ export function GamePage() {
     );
   }, [preview, previewRosters, selected?.campaignId, selectedId]);
 
-  useEffect(() => {
-    if (!selected?.combat?.active) {
-      setDismissedBattleKey(null);
-    }
-  }, [selected?.combat?.active]);
+  const combatActive = Boolean(selected?.combat?.active);
+  // A dismissal only holds for the battle that was running when it happened.
+  // The DM can "continue" an encounter, which reuses its encounterId, so the key
+  // alone cannot tell the two runs apart — the dismissal has to clear when combat
+  // stops. Adjusting the state during render rather than in an effect is React's
+  // documented pattern for this and avoids the extra render pass.
+  if (lastCombatActive !== combatActive) {
+    setLastCombatActive(combatActive);
+    if (!combatActive) setDismissedBattleKey(null);
+  }
 
   useCombatSync(selectedId, !isSessionDm);
   const combatBusy = useCombatStore((state) => state.busy);
@@ -243,8 +250,16 @@ export function GamePage() {
       const detail = (event as CustomEvent<{ gameId: string; combat: Game["combat"] }>).detail;
       if (detail?.gameId) updatePreviewGame(detail.gameId, { combat: detail.combat });
     };
+    const updateShop = (event: Event) => {
+      const detail = (event as CustomEvent<{ gameId: string; shop: Game["shop"] }>).detail;
+      if (detail?.gameId) updatePreviewGame(detail.gameId, { shop: detail.shop });
+    };
     window.addEventListener("cs-preview-combat", updateCombat);
-    return () => window.removeEventListener("cs-preview-combat", updateCombat);
+    window.addEventListener("cs-preview-shop", updateShop);
+    return () => {
+      window.removeEventListener("cs-preview-combat", updateCombat);
+      window.removeEventListener("cs-preview-shop", updateShop);
+    };
   }, [preview]);
 
   async function createSession(title: string, hunters: HunterCard[]) {
@@ -677,6 +692,10 @@ export function GamePage() {
                   onAddEnemy={addEnemyToBattle}
                   onReturnToBattle={() => setDismissedBattleKey(null)}
                 />
+              )}
+
+              {isSessionDm && selected.status === "active" && (
+                <SessionShopSection game={selected} disabled={busy} />
               )}
               </>}
           </main>

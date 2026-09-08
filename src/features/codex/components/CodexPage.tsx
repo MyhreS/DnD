@@ -1,27 +1,16 @@
-import { Fragment, useMemo } from "react";
+import { useMemo } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import {
   CODEX_GROUPS,
   CODEX_SOURCE_BY_ID,
-  CODEX_SOURCES,
   CODEX_TOPICS,
-  type CodexEntry,
-  type CodexTopic,
 } from "@/data/codex";
-import { bodySnippet, highlightSegments, normalizeText, searchEntries } from "@/lib/search";
+import { searchEntries } from "@/lib/search";
+import { CodexHome } from "./CodexHome";
+import { CodexTopicRow } from "./CodexTopicRow";
+import { SourceLibrary } from "./CodexSourceLibrary";
 
 const MAX_RESULTS = 100;
-const DOCUMENT_SOURCE_ORDER = [
-  "core-rulebook",
-  "book-of-the-deepcaller",
-  "character-sheet",
-  "whispers",
-];
-const DOCUMENT_SOURCE_RANK = new Map(DOCUMENT_SOURCE_ORDER.map((id, index) => [id, index]));
-const DOCUMENT_SOURCES = [...CODEX_SOURCES].sort((left, right) =>
-  (DOCUMENT_SOURCE_RANK.get(left.id) ?? Number.MAX_SAFE_INTEGER)
-  - (DOCUMENT_SOURCE_RANK.get(right.id) ?? Number.MAX_SAFE_INTEGER),
-);
 
 export function CodexDocumentsPage() {
   return (
@@ -126,126 +115,5 @@ export function CodexPage() {
         </section>
       )}
     </div>
-  );
-}
-
-function CodexHome({ onBrowse }: { onBrowse: (group: string) => void }) {
-  const groupedCounts = new Map<string, number>();
-  for (const topic of CODEX_TOPICS) {
-    for (const group of topic.groups) groupedCounts.set(group, (groupedCounts.get(group) ?? 0) + 1);
-  }
-
-  return (
-    <section className="codex-browse" aria-labelledby="codex-browse-title">
-      <div className="codex-section-heading">
-        <h2 id="codex-browse-title">Browse</h2>
-      </div>
-      <div className="codex-collection-list">
-        {CODEX_GROUPS.filter((item) => item !== "Source Notes").map((item) => (
-          <button className="codex-collection-item" type="button" key={item} onClick={() => onBrowse(item)}>
-            <span>{item}</span>
-            <small>{groupedCounts.get(item) ?? 0} topics</small>
-          </button>
-        ))}
-        <Link className="codex-collection-item" to="/codex/documents">
-          <span>Source library</span>
-          <small>{CODEX_SOURCES.length} sources · {CODEX_SOURCES.flatMap((source) => source.downloads).length} documents</small>
-        </Link>
-      </div>
-    </section>
-  );
-}
-
-function SourceLibrary() {
-  return (
-    <section className="codex-sources codex-sources-page" aria-label="Source documents">
-      <div className="codex-source-list">
-        {DOCUMENT_SOURCES.map((item, index) => (
-          <article data-testid="codex-document" key={item.id}>
-            <div>
-              <span className="codex-document-index">Document {String(index + 1).padStart(2, "0")}</span>
-              <h3>{item.title}</h3>
-              <p>{item.description}</p>
-              <small>
-                {item.pageCount > 0 ? `${item.pageCount} ${item.pageCount === 1 ? "page" : "pages"}` : "Structured record"}
-                {` · ${item.downloads.length} downloadable ${item.downloads.length === 1 ? "document" : "documents"}`}
-              </small>
-            </div>
-            <div className="codex-source-actions">
-              <Link to={`/codex?source=${encodeURIComponent(item.id)}`}>Search in Codex</Link>
-              {item.downloads.map((download) => (
-                <a download href={download.publicPath} key={download.publicPath}>Download {download.label}</a>
-              ))}
-            </div>
-          </article>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-function CodexTopicRow({ topic, query }: { topic: CodexTopic; query: string }) {
-  const snippet = bodySnippet(topic, query);
-  const exact = query.trim() && normalizeText(topic.term) === normalizeText(query);
-  const labels = topic.versions.map((version) => CODEX_SOURCE_BY_ID.get(version.sourceId)?.shortLabel ?? version.sourceId);
-  const sourceCount = new Set(topic.versions.map((version) => version.sourceId)).size;
-  return (
-    <details className="codex-topic" open={exact || undefined} data-testid="codex-topic">
-      <summary>
-        <span className="codex-topic-copy">
-          <strong><Highlighted text={topic.term} query={query} /></strong>
-          <small>{[...new Set(labels)].join(" · ")}</small>
-          {snippet && <span>{snippet.before}<mark>{snippet.match}</mark>{snippet.after}</span>}
-        </span>
-        <span className="codex-version-count">{sourceCount > 1 ? `${sourceCount} sources` : topic.groups[0]}</span>
-      </summary>
-      <div className="codex-topic-body">
-        {sourceCount > 1 && (
-          <p className="codex-comparison-note">This topic appears in multiple sources. Each version is shown separately so differences remain visible.</p>
-        )}
-        {topic.versions.map((entry) => <CodexVersion key={entry.id} entry={entry} query={query} />)}
-      </div>
-    </details>
-  );
-}
-
-function CodexVersion({ entry, query }: { entry: CodexEntry; query: string }) {
-  const source = CODEX_SOURCE_BY_ID.get(entry.sourceId);
-  if (!source) return null;
-  const sourcePath = source.publicPath ?? source.downloads[0]?.publicPath;
-  const pages = entry.sourcePages?.length ? ` · PDF ${entry.sourcePages.length === 1 ? "p." : "pp."} ${entry.sourcePages.join("–")}` : "";
-  return (
-    <section className="codex-version" aria-label={`${source.shortLabel}: ${entry.locator}`}>
-      <header>
-        <div>
-          <p>{source.shortLabel}</p>
-          <small>{entry.locator}{pages}</small>
-        </div>
-        {sourcePath && (
-          <a href={sourcePath} target="_blank" rel="noreferrer">
-            View source
-          </a>
-        )}
-      </header>
-      {entry.warning && <p className="codex-warning">{entry.warning}</p>}
-      {entry.paragraphs.map((paragraph, index) => <p key={index}><Highlighted text={paragraph} query={query} /></p>)}
-      {entry.tables.map((item, tableIndex) => (
-        <div className="codex-table-wrap" key={`${item.title ?? "table"}-${tableIndex}`}>
-          <table className="codex-table">
-            {item.title && <caption>{item.title}</caption>}
-            <thead><tr>{item.columns.map((column) => <th key={column} scope="col"><Highlighted text={column} query={query} /></th>)}</tr></thead>
-            <tbody>{item.rows.map((row, rowIndex) => <tr key={rowIndex}>{row.map((cell, cellIndex) => <td key={cellIndex}><Highlighted text={cell} query={query} /></td>)}</tr>)}</tbody>
-          </table>
-        </div>
-      ))}
-      <footer>Source file: {source.fileLabels.join(" · ")}</footer>
-    </section>
-  );
-}
-
-function Highlighted({ text, query }: { text: string; query: string }) {
-  if (!query.trim()) return text;
-  return highlightSegments(text, query).map((segment, index) =>
-    segment.hit ? <mark key={index}>{segment.text}</mark> : <Fragment key={index}>{segment.text}</Fragment>,
   );
 }

@@ -16,6 +16,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "AC 11",
     acValue: 11,
     weightLb: 6,
+    priceGp: 100,
     special:
       "Open Movement. Advantage on Strength (Athletics) checks to climb, vault or jump while worn.",
   },
@@ -26,6 +27,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "AC 11",
     acValue: 11,
     weightLb: 6,
+    priceGp: 100,
     special:
       "Balanced Fit. You may wear one Add-on Armour piece without it counting toward your maximum.",
   },
@@ -36,6 +38,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "AC 11",
     acValue: 11,
     weightLb: 7,
+    priceGp: 100,
     special:
       "Blood-Slick Coat. The first time you're hit by a melee attack after rolling initiative, reduce the damage by your Proficiency Bonus.",
   },
@@ -46,6 +49,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "AC 12",
     acValue: 12,
     weightLb: 10,
+    priceGp: 200,
     special:
       "Open Movement. Advantage on Strength (Athletics) checks to climb, vault or jump while worn.",
   },
@@ -56,6 +60,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "AC 12",
     acValue: 12,
     weightLb: 10,
+    priceGp: 200,
     special:
       "Balanced Fit. You may wear one Add-on Armour piece without it counting toward your maximum.",
   },
@@ -66,6 +71,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "AC 12",
     acValue: 12,
     weightLb: 11,
+    priceGp: 200,
     special:
       "Blood-Slick Coat. The first time you're hit by a melee attack after rolling initiative, reduce the damage by your Proficiency Bonus.",
   },
@@ -78,6 +84,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "+2 AC",
     acValue: 2,
     weightLb: 10,
+    priceGp: 250,
     special: "Disadvantage on Dexterity (Stealth) checks to hide or move silently.",
   },
   {
@@ -87,6 +94,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "+1 AC",
     acValue: 1,
     weightLb: 2,
+    priceGp: 50,
     special: "May give Shield Arm.",
   },
   {
@@ -96,6 +104,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "+1 AC",
     acValue: 1,
     weightLb: 2,
+    priceGp: 50,
     special: "May give Shield Arm.",
   },
   {
@@ -105,6 +114,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "+0 AC",
     acValue: 0,
     weightLb: 2,
+    priceGp: 50,
     special: "May give Shield Arm.",
   },
   {
@@ -114,6 +124,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "+0 AC",
     acValue: 0,
     weightLb: 2,
+    priceGp: 50,
     special: "May give Shield Arm.",
   },
   {
@@ -123,6 +134,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "+1 AC*",
     acValue: 1,
     weightLb: 2,
+    priceGp: 50,
     special:
       "*Only grants AC while worn underneath Main Armor. Can conceal Insignificant items, making them harder to steal, find, or strip away.",
   },
@@ -135,6 +147,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "+1 / +2 AC",
     acValue: 1,
     weightLb: 5,
+    priceGp: 100,
     special:
       "Added to Add-on Armor pieces (+5 lb. each). If at least three Add-on Armor pieces are studded, you gain +1 AC. If five are studded, this bonus increases to +2 AC. While wearing studded armor, you have Disadvantage on Dexterity (Stealth) checks made to hide or move silently.",
   },
@@ -148,6 +161,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
+    priceGp: 1,
     special: "Is given by class.",
     impression: "Reads as a hard-hitting brawler.",
   },
@@ -159,6 +173,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
+    priceGp: 1,
     special: "Is given by class.",
     impression: "Reads as someone dexterous.",
   },
@@ -170,6 +185,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
+    priceGp: 1,
     special: "Is given by class.",
     impression: "Reads as someone with old knowledge.",
   },
@@ -181,6 +197,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
+    priceGp: 1,
     special: "Is given by class.",
     impression: "Reads as a skilled marksman.",
   },
@@ -192,6 +209,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 1,
+    priceGp: 1,
     special:
       "Can conceal a minor visible mouth or neck transformation from casual observation.",
   },
@@ -203,6 +221,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 2,
+    priceGp: 1,
     special:
       "You have Advantage on checks to conceal visible mouth and neck transformations.",
   },
@@ -214,6 +233,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 2,
+    priceGp: 1,
     special:
       "May give relevant advantages / disadvantages during play. The player has to themselves explain how using the gloves in a particular situation will bring some advantage to a check.",
   },
@@ -225,6 +245,7 @@ export const ARMOR: ArmorPiece[] = [
     ac: "0",
     acValue: 0,
     weightLb: 2,
+    priceGp: 1,
     special: "Prevents barefoot penalties.",
   },
   // The Robe of the Deepcallers is a UNIQUE item that "is also under the

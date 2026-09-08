@@ -25,6 +25,7 @@ import type {
   InventoryEntry,
 } from "@/types";
 import { emptyEncounter, normalizeEncounterState } from "@/features/play/lib/turnTimer";
+import { normalizeShopState } from "@/features/play/lib/shop";
 
 const gamesCol = collection(db, "games");
 const activeSeatsCol = collection(db, "activeGameSeats");
@@ -111,6 +112,7 @@ function toGame(id: string, data: Record<string, unknown>): Game {
     phase: (data.phase as GamePhase) ?? "exploration",
     location: (data.location as GameLocation) ?? "wild",
     combat: normalizeEncounterState(data.combat),
+    shop: normalizeShopState(data.shop),
     sandbox: (data.sandbox as boolean) ?? false,
     clockRunning: (data.clockRunning as boolean) ?? false,
     clockStartedAt: data.clockStartedAt ? ms(data.clockStartedAt) : null,
