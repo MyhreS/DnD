@@ -1,5 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import type { CarrySignificance, Item } from "@/types";
+import { itemPriceLabel } from "@/data/items";
 import { AppSelect, DecisionField } from "./appSheetShared";
 
 export interface FoundItemDraft {
@@ -31,7 +32,7 @@ export function CatalogItemForm({
         {["Weapon", "Ammunition", "Tool", "Gear", "Consumable", "Valuable"].map((category) => (
           <optgroup key={category} label={category}>
             {catalog.filter((item) => item.category === category).map((item) => (
-              <option key={item.id} value={item.id}>{item.name} · {item.carry} · {item.weightLb} lb</option>
+              <option key={item.id} value={item.id}>{item.name} · {item.carry} · {item.weightLb} lb{item.priceGp === undefined ? "" : ` · ${itemPriceLabel(item.priceGp)}`}</option>
             ))}
           </optgroup>
         ))}

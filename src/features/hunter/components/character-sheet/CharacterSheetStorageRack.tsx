@@ -1,4 +1,4 @@
-import { ITEM_BY_ID } from "@/data/items";
+import { ITEM_BY_ID, itemPriceLabel } from "@/data/items";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 import type { SlotAssignment } from "@/types";
 import { useCharacterAutomation, type SlotReplacement } from "../papersheet/characterAutomationContext";
@@ -51,7 +51,7 @@ export function CharacterSheetStorageRack({ storageId, units, readOnly }: { stor
       catalogue: catalogue.map((item) => ({
         id: item.id,
         name: item.name,
-        detail: `${item.category} · ${item.weightLb} lb`,
+        detail: `${item.category} · ${item.weightLb} lb${item.priceGp === undefined ? "" : ` · ${itemPriceLabel(item.priceGp)}`}`,
         kind: item.category === "Weapon" ? "weapon" : "gear",
         onChoose: () => automation.addCatalogItemToSlot(item.id, target, replace),
       })),

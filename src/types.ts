@@ -120,6 +120,9 @@ export interface Item {
   category: ItemCategory;
   carry: CarrySignificance;
   weightLb: number;
+  /** Price in gold pieces, from the game maker's Item Cost list. "varies" for
+   * items printed as "Varies" (Book, Map). Absent when the list prices it not. */
+  priceGp?: number | "varies";
   note?: string;
   /** Unique/named item from the resources (e.g. Hunter Rifle). */
   unique?: boolean;
@@ -189,6 +192,8 @@ export interface ArmorPiece {
   /** Numeric AC contribution for Main Armor (base) or Add-on (bonus). */
   acValue: number;
   weightLb: number;
+  /** Price in gold pieces, from the game maker's Item Cost list. */
+  priceGp?: number | "varies";
   special: string;
   /** Extras only: the one-per-subcategory slot this piece occupies. */
   subcategory?: ExtraSubcategory;

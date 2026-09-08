@@ -30,6 +30,7 @@ const armorItems: Item[] = ARMOR.map((a) => ({
   category: "Armor" as const,
   carry: "Significant" as const,
   weightLb: a.weightLb,
+  ...(a.priceGp !== undefined ? { priceGp: a.priceGp } : {}),
   note: a.special,
   ...(a.unique ? { unique: true } : {}),
 }));
@@ -42,6 +43,7 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Oversized",
     weightLb: 14,
+    priceGp: 250,
     note: "A great weapon — too large to tuck away.",
   },
   {
@@ -50,6 +52,7 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Oversized",
     weightLb: 14,
+    priceGp: 250,
     note: "A great weapon — too large to tuck away.",
   },
   {
@@ -58,6 +61,7 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 3,
+    priceGp: 150,
   },
   {
     id: "shortsword",
@@ -65,6 +69,7 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 2,
+    priceGp: 100,
   },
   {
     id: "scimitar",
@@ -72,6 +77,7 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 3,
+    priceGp: 200,
   },
   {
     id: "sickle",
@@ -79,6 +85,7 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 2,
+    priceGp: 15,
   },
   {
     id: "handaxe",
@@ -86,6 +93,7 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 2,
+    priceGp: 30,
   },
   {
     id: "dagger",
@@ -93,6 +101,7 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 1,
+    priceGp: 5,
   },
 
   // --- Weapons: firearms ---
@@ -102,6 +111,7 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 10,
+    priceGp: 300,
     note: "The hunter's sacred thunder. Carried on the back.",
     slotLocation: "back",
   },
@@ -111,36 +121,38 @@ export const ITEMS: Item[] = [
     category: "Weapon",
     carry: "Significant",
     weightLb: 3,
+    priceGp: 200,
   },
 
   // --- Weapons: rest of the weapons table (core-rulebook.txt [page 111]) ---
-  { id: "club", name: "Club", category: "Weapon", carry: "Significant", weightLb: 2 },
-  { id: "greatclub", name: "Greatclub", category: "Weapon", carry: "Oversized", weightLb: 10 },
+  { id: "club", name: "Club", category: "Weapon", carry: "Significant", weightLb: 2, priceGp: 5 },
+  { id: "greatclub", name: "Greatclub", category: "Weapon", carry: "Oversized", weightLb: 10, priceGp: 15 },
   {
     id: "javelin",
     name: "Javelin",
     category: "Weapon",
     carry: "Significant",
     weightLb: 2,
+    priceGp: 20,
     note: "Carried on the back.",
     slotLocation: "back",
   },
-  { id: "light-hammer", name: "Light Hammer", category: "Weapon", carry: "Significant", weightLb: 2 },
-  { id: "mace", name: "Mace", category: "Weapon", carry: "Significant", weightLb: 4 },
-  { id: "spear", name: "Spear", category: "Weapon", carry: "Oversized", weightLb: 3 },
-  { id: "throwing-knife", name: "Throwing Knife", category: "Weapon", carry: "Insignificant", weightLb: 0.25 },
-  { id: "battleaxe", name: "Battleaxe", category: "Weapon", carry: "Significant", weightLb: 4 },
-  { id: "flail", name: "Flail", category: "Weapon", carry: "Significant", weightLb: 2 },
-  { id: "glaive", name: "Glaive", category: "Weapon", carry: "Oversized", weightLb: 12 },
-  { id: "halberd", name: "Halberd", category: "Weapon", carry: "Oversized", weightLb: 12 },
-  { id: "maul", name: "Maul", category: "Weapon", carry: "Oversized", weightLb: 14 },
-  { id: "morningstar", name: "Morningstar", category: "Weapon", carry: "Significant", weightLb: 4 },
-  { id: "pike", name: "Pike", category: "Weapon", carry: "Oversized", weightLb: 12 },
-  { id: "rapier", name: "Rapier", category: "Weapon", carry: "Significant", weightLb: 2 },
-  { id: "trident", name: "Trident", category: "Weapon", carry: "Oversized", weightLb: 12 },
-  { id: "warhammer", name: "Warhammer", category: "Weapon", carry: "Significant", weightLb: 5 },
-  { id: "war-pick", name: "War Pick", category: "Weapon", carry: "Significant", weightLb: 2 },
-  { id: "whip", name: "Whip", category: "Weapon", carry: "Significant", weightLb: 3 },
+  { id: "light-hammer", name: "Light Hammer", category: "Weapon", carry: "Significant", weightLb: 2, priceGp: 15 },
+  { id: "mace", name: "Mace", category: "Weapon", carry: "Significant", weightLb: 4, priceGp: 50 },
+  { id: "spear", name: "Spear", category: "Weapon", carry: "Oversized", weightLb: 3, priceGp: 25 },
+  { id: "throwing-knife", name: "Throwing Knife", category: "Weapon", carry: "Insignificant", weightLb: 0.25, priceGp: 2 },
+  { id: "battleaxe", name: "Battleaxe", category: "Weapon", carry: "Significant", weightLb: 4, priceGp: 250 },
+  { id: "flail", name: "Flail", category: "Weapon", carry: "Significant", weightLb: 2, priceGp: 250 },
+  { id: "glaive", name: "Glaive", category: "Weapon", carry: "Oversized", weightLb: 12, priceGp: 250 },
+  { id: "halberd", name: "Halberd", category: "Weapon", carry: "Oversized", weightLb: 12, priceGp: 250 },
+  { id: "maul", name: "Maul", category: "Weapon", carry: "Oversized", weightLb: 14, priceGp: 250 },
+  { id: "morningstar", name: "Morningstar", category: "Weapon", carry: "Significant", weightLb: 4, priceGp: 200 },
+  { id: "pike", name: "Pike", category: "Weapon", carry: "Oversized", weightLb: 12, priceGp: 150 },
+  { id: "rapier", name: "Rapier", category: "Weapon", carry: "Significant", weightLb: 2, priceGp: 200 },
+  { id: "trident", name: "Trident", category: "Weapon", carry: "Oversized", weightLb: 12, priceGp: 200 },
+  { id: "warhammer", name: "Warhammer", category: "Weapon", carry: "Significant", weightLb: 5, priceGp: 200 },
+  { id: "war-pick", name: "War Pick", category: "Weapon", carry: "Significant", weightLb: 2, priceGp: 200 },
+  { id: "whip", name: "Whip", category: "Weapon", carry: "Significant", weightLb: 3, priceGp: 75 },
 
   // --- Ammunition ---
   {
@@ -149,6 +161,7 @@ export const ITEMS: Item[] = [
     category: "Ammunition",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 0.5,
     note: "A pouch of bullets for firearms. Each bullet weighs about one-third of an ounce; fifty bullets weigh one pound.",
   },
   {
@@ -167,6 +180,7 @@ export const ITEMS: Item[] = [
     category: "Tool",
     carry: "Significant",
     weightLb: 1,
+    priceGp: 6,
     note: "Dexterity. Utilize: pick a lock (DC 15), or disarm a trap (DC 15).",
   },
   {
@@ -175,6 +189,7 @@ export const ITEMS: Item[] = [
     category: "Tool",
     carry: "Significant",
     weightLb: 2,
+    priceGp: 6,
     note: "Wisdom. Utilize: plot a course (DC 10), or determine position by stargazing (DC 15).",
   },
   {
@@ -183,6 +198,7 @@ export const ITEMS: Item[] = [
     category: "Tool",
     carry: "Significant",
     weightLb: 2,
+    priceGp: 3,
     note: "Constitution. Utilize: identify the purity of blood within a Bloodvial (DC 10), or drain blood from an Incapacitated, Paralyzed, Restrained, Unconscious or newly Dead creature (DC 10/20/30 for 1/2/3 Bloodvials).",
   },
 
@@ -193,6 +209,7 @@ export const ITEMS: Item[] = [
     category: "Tool",
     carry: "Significant",
     weightLb: 8,
+    priceGp: 6,
     note: "Intelligence. Utilize: identify a substance (DC 15). Craft: Acid (3 vials), Oil (1 flask).",
   },
   {
@@ -201,6 +218,7 @@ export const ITEMS: Item[] = [
     category: "Tool",
     carry: "Significant",
     weightLb: 6,
+    priceGp: 6,
     note: "Strength. Utilize: seal or pry open a door or container (DC 20). Craft: Club, Greatclub, Barrel, Chest, Ladder, Pole, Portable Ram, Torch.",
   },
   {
@@ -209,6 +227,7 @@ export const ITEMS: Item[] = [
     category: "Tool",
     carry: "Significant",
     weightLb: 8,
+    priceGp: 2,
     note: "Intelligence. Utilize: chisel a symbol or hole in stone (DC 10). Craft: Block and Tackle.",
   },
   {
@@ -217,6 +236,7 @@ export const ITEMS: Item[] = [
     category: "Tool",
     carry: "Significant",
     weightLb: 2,
+    priceGp: 25,
     note: "Intelligence. Utilize: detect a poisoned object or drink (DC 10). Craft: Basic Poison (1 vial), Antitoxin (1 vial).",
   },
   {
@@ -225,6 +245,7 @@ export const ITEMS: Item[] = [
     category: "Tool",
     carry: "Significant",
     weightLb: 10,
+    priceGp: 50,
     note: "Dexterity. Craft: Hunter Rifle, Pistol, Bell, Bullseye Lantern, Hooded Lantern, Hunting Trap, Lock, Manacles, Mirror, Shovel, Signal Whistle, Tinderbox.",
   },
 
@@ -236,6 +257,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 3,
+    priceGp: 10,
     note: "Storage: uses the hip slot, gives 4 Significant slots (hip).",
   },
   {
@@ -244,6 +266,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
+    priceGp: 4,
     note: "Utilize: tie a knot (DC 10 Dexterity (Sleight of Hand)). Bursting it takes a DC 20 Strength (Athletics) check. Binds a Grappled, Incapacitated or Restrained creature — Restrained until it escapes with a DC 15 Dexterity (Acrobatics) check as an action.",
   },
   {
@@ -252,6 +275,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 4,
+    priceGp: 15,
     note: "Storage: uses the front slot, gives 4 Significant slots (front).",
   },
   {
@@ -260,6 +284,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
+    priceGp: 20,
     note: "Storage: uses the back slot, gives 7 Significant slots (back).",
   },
   {
@@ -268,6 +293,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 1,
+    priceGp: 5,
     note: "Storage: carried in hand (Oversized), gives 15 Significant slots (hand).",
   },
   {
@@ -276,6 +302,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 3,
+    priceGp: 10,
     note: "Storage: uses the back slot, gives 2 Significant slots (back).",
   },
   {
@@ -284,6 +311,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 1,
+    priceGp: 20,
     note: "Storage: gives 1 Significant slot (ankle) — Dagger or Pistol only.",
   },
   // Legacy id `lantern` is reused for the Hooded Lantern so stored inventories
@@ -294,6 +322,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 2,
+    priceGp: 11,
     note: "Burns Oil to cast Bright Light in a 30-foot radius and Dim Light for an additional 30 feet. Bonus Action to lower the hood to Dim Light in a 5-foot radius, or raise it again.",
   },
   {
@@ -302,6 +331,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 2,
+    priceGp: 16,
     note: "Burns Oil to cast Bright Light in a 60-foot Cone and Dim Light for an additional 60 feet.",
   },
   {
@@ -310,6 +340,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
+    priceGp: 4,
   },
   {
     id: "shovel",
@@ -317,6 +348,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
+    priceGp: 8,
     note: "Carried on the back.",
     slotLocation: "back",
   },
@@ -326,6 +358,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 10,
+    priceGp: 7,
     note: "Utilize: wrap it around a Grappled, Incapacitated or Restrained creature within 5 feet (DC 13 Strength (Athletics)). Escaping takes a DC 18 Dexterity (Acrobatics) check; bursting it a DC 20 Strength (Athletics) check.",
   },
   {
@@ -334,6 +367,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 25,
+    priceGp: 15,
   },
   {
     id: "book-of-eldritch-knowledge",
@@ -350,6 +384,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
+    priceGp: "varies",
     note: "Fiction or nonfiction. Consulting an accurate nonfiction Book about its topic gives a +5 bonus to Intelligence (Eldritch Knowledge, Old World History, Blood Nature, or Religion) checks about that topic.",
   },
   {
@@ -358,6 +393,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 2,
     note: "Rung as a Utilize action; heard up to 60 feet away.",
   },
   // `robe` (the Robe of the Deepcallers) now lives in src/data/armor.ts and is
@@ -368,6 +404,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 1,
+    priceGp: 3,
   },
   {
     id: "waterskin",
@@ -375,6 +412,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
+    priceGp: 5,
     note: "Holds 4 pints; weight when full.",
   },
   {
@@ -390,6 +428,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: "varies",
   },
   {
     id: "manacles",
@@ -397,6 +436,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 6,
+    priceGp: 10,
     note: "Iron restraints for a Small or Medium creature.",
   },
   {
@@ -405,6 +445,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 1,
+    priceGp: 6,
     note: "Burns oil to cast light in a 15 ft radius.",
   },
 
@@ -415,6 +456,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 2,
+    priceGp: 5,
     note: "Utilize: spill them to cover a level 10-foot-square area within 10 feet. A creature entering it must succeed on a DC 10 Dexterity save or have the Prone condition. Recovering them takes 10 minutes.",
   },
   {
@@ -423,6 +465,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Oversized",
     weightLb: 70,
+    priceGp: 10,
     note: "Holds up to 40 gallons of liquid or 4 cubic feet of dry goods.",
   },
   {
@@ -431,6 +474,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Oversized",
     weightLb: 2,
+    priceGp: 1,
     note: "Holds up to 40 pounds within 2 cubic feet.",
   },
   {
@@ -439,6 +483,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 5,
+    priceGp: 12,
     note: "Lets you hoist up to four times the weight you can normally lift.",
   },
   {
@@ -447,6 +492,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 2,
+    priceGp: 2,
     note: "Holds up to 1½ pints.",
   },
   {
@@ -455,6 +501,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Oversized",
     weightLb: 2,
+    priceGp: 3,
     note: "Holds up to half a cubic foot of contents.",
   },
   {
@@ -463,6 +510,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 2,
+    priceGp: 6,
     note: "Utilize: spread them over a 5-foot-square area within 5 feet. A creature entering it must succeed on a DC 15 Dexterity save or take 1 Piercing damage and have its Speed reduced to 0 until the start of its next turn. Recovering them takes 5 actions.",
   },
   {
@@ -471,6 +519,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 1,
     note: "For 20 rounds, a lit Candle sheds Bright Light in a 5-foot radius and Dim Light for an additional 5 feet.",
   },
   {
@@ -479,6 +528,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Oversized",
     weightLb: 25,
+    priceGp: 14,
     note: "Holds up to 12 cubic feet of contents.",
   },
   {
@@ -487,6 +537,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 1,
+    priceGp: 1,
     note: "Holds up to 1 pint.",
   },
   {
@@ -495,6 +546,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 4,
+    priceGp: 8,
     note: "Utilize: throw it at a catch within 50 feet — it catches on a successful DC 13 Dexterity (Acrobatics) check. With a Rope tied to it, you can then climb it.",
   },
   {
@@ -503,6 +555,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 10,
     note: "A 1-ounce bottle, enough ink to write about 500 pages.",
   },
   {
@@ -511,6 +564,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 1,
     note: "Used with Ink to write or draw.",
   },
   {
@@ -519,6 +573,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 4,
+    priceGp: 1,
     note: "Holds up to 1 gallon.",
   },
   {
@@ -527,6 +582,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Oversized",
     weightLb: 25,
+    priceGp: 13,
     note: "10 feet tall. You must climb to move up or down it.",
   },
   {
@@ -535,6 +591,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 1,
+    priceGp: 10,
     note: "Comes with a key. Without the key, a creature can pick it with Thieves' Tools on a successful DC 15 Dexterity (Sleight of Hand) check.",
   },
   {
@@ -543,6 +600,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 1,
+    priceGp: 5,
     note: "A handheld steel mirror — useful for peeking around corners and reflecting light as a signal.",
   },
   {
@@ -551,6 +609,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Significant",
     weightLb: 3,
+    priceGp: 15,
     note: "Replace one attack of the Attack action to throw it at a creature within 15 feet. It must succeed on a Dexterity save (DC 8 + your Dexterity modifier + Proficiency Bonus) or be Restrained; Huge or larger creatures succeed automatically. Escape with a DC 10 Strength (Athletics) check as an action.",
   },
   {
@@ -559,6 +618,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 1,
     note: "One sheet holds about 250 handwritten words.",
   },
   {
@@ -567,6 +627,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 1,
     note: "One sheet holds about 250 handwritten words.",
   },
   {
@@ -575,6 +636,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Oversized",
     weightLb: 7,
+    priceGp: 4,
     note: "10 feet long. Touch something up to 10 feet away, or vault with it for Advantage on a Strength (Athletics) check made as part of a High or Long Jump.",
   },
   {
@@ -583,6 +645,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Oversized",
     weightLb: 10,
+    priceGp: 9,
     note: "Holds up to 1 gallon.",
   },
   {
@@ -591,6 +654,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Oversized",
     weightLb: 35,
+    priceGp: 12,
     note: "Break down doors with a +4 bonus to the Strength check. One other character can help, giving you Advantage on the check.",
   },
   {
@@ -599,6 +663,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 5,
     note: "Blown as a Utilize action; heard up to 600 feet away.",
   },
   {
@@ -607,6 +672,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 5,
+    priceGp: 4,
     note: "A bundle of ten. Utilize: hammer one into wood or earth with a blunt object to jam a door shut, or to tie a Rope or Chain to it.",
   },
   {
@@ -615,6 +681,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 1,
     note: "10 feet long. You can tie a knot in it as a Utilize action.",
   },
   {
@@ -623,6 +690,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 1,
+    priceGp: 2,
     note: "Flint, fire steel and tinder. Lighting a Candle, Lamp, Lantern or Torch takes a Bonus Action; lighting any other fire takes 1 minute.",
   },
   {
@@ -631,6 +699,7 @@ export const ITEMS: Item[] = [
     category: "Gear",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 1,
     note: "Holds up to 2 ounces.",
   },
 
@@ -641,6 +710,7 @@ export const ITEMS: Item[] = [
     category: "Consumable",
     carry: "Insignificant",
     weightLb: 1,
+    priceGp: 25,
     note: "Replace one attack of the Attack action to throw a vial at a creature or object within 20 feet. It must succeed on a Dexterity save (DC 8 + your Dexterity modifier + Proficiency Bonus) or take 2d6 Acid damage.",
   },
   {
@@ -649,6 +719,7 @@ export const ITEMS: Item[] = [
     category: "Consumable",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 25,
     note: "Bonus Action: coat one weapon or up to three pieces of ammunition. A creature taking Piercing or Slashing damage from it takes an extra 1d4 Poison damage. Potency lasts 10 rounds or until its damage is dealt.",
   },
   {
@@ -665,6 +736,7 @@ export const ITEMS: Item[] = [
     category: "Consumable",
     carry: "Insignificant",
     weightLb: 0,
+    priceGp: 25,
     note: "Bonus Action: drink a vial to gain Advantage on saving throws to avoid or end the Poisoned condition.",
   },
   {
@@ -673,6 +745,7 @@ export const ITEMS: Item[] = [
     category: "Consumable",
     carry: "Insignificant",
     weightLb: 1,
+    priceGp: 10,
     note: "A flask of oil — fuel for a lamp, or stranger uses.",
   },
 
@@ -683,3 +756,10 @@ export const ITEMS: Item[] = [
 export const ITEM_BY_ID: Record<string, Item> = Object.fromEntries(
   ITEMS.map((i) => [i.id, i]),
 );
+
+/** Short price label for catalog rows, e.g. "5 GP" / "Varies". Empty when the
+ * game maker's Item Cost list gives no price for the item. */
+export function itemPriceLabel(price: Item["priceGp"]): string {
+  if (price === undefined) return "";
+  return price === "varies" ? "Varies" : `${price} GP`;
+}

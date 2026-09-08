@@ -1,4 +1,4 @@
-import { ITEM_BY_ID } from "@/data/items";
+import { ITEM_BY_ID, itemPriceLabel } from "@/data/items";
 import { STORAGE_DEFS } from "@/data/storage";
 import type { SlotLocation } from "@/types";
 import { useCharacterAutomation, type SlotReplacement } from "../papersheet/characterAutomationContext";
@@ -100,7 +100,7 @@ export function CharacterSheetCarryPoint({ location, units, readOnly }: { locati
         ...catalogue.map((item) => ({
           id: item.id,
           name: item.name,
-          detail: `${item.category} · ${item.carry} · ${item.weightLb} lb`,
+          detail: `${item.category} · ${item.carry} · ${item.weightLb} lb${item.priceGp === undefined ? "" : ` · ${itemPriceLabel(item.priceGp)}`}`,
           kind: item.category === "Weapon" ? "weapon" as const : "gear" as const,
           onChoose: () => automation.addCatalogItemToSlot(item.id, location, replace),
         })),
