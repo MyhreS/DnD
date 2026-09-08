@@ -33,6 +33,7 @@ import { GameWaitingRoom } from "./GameWaitingRoom";
 import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed, SessionSwitchRequests } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
 import { SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
+import { SessionShopSection } from "./SessionShopSection";
 import "./game.css";
 
 const DEFAULT_TITLE = () => `Session ${new Intl.DateTimeFormat(undefined, { dateStyle: "medium" }).format(new Date())}`;
@@ -249,8 +250,16 @@ export function GamePage() {
       const detail = (event as CustomEvent<{ gameId: string; combat: Game["combat"] }>).detail;
       if (detail?.gameId) updatePreviewGame(detail.gameId, { combat: detail.combat });
     };
+    const updateShop = (event: Event) => {
+      const detail = (event as CustomEvent<{ gameId: string; shop: Game["shop"] }>).detail;
+      if (detail?.gameId) updatePreviewGame(detail.gameId, { shop: detail.shop });
+    };
     window.addEventListener("cs-preview-combat", updateCombat);
-    return () => window.removeEventListener("cs-preview-combat", updateCombat);
+    window.addEventListener("cs-preview-shop", updateShop);
+    return () => {
+      window.removeEventListener("cs-preview-combat", updateCombat);
+      window.removeEventListener("cs-preview-shop", updateShop);
+    };
   }, [preview]);
 
   async function createSession(title: string, hunters: HunterCard[]) {
@@ -683,6 +692,10 @@ export function GamePage() {
                   onAddEnemy={addEnemyToBattle}
                   onReturnToBattle={() => setDismissedBattleKey(null)}
                 />
+              )}
+
+              {isSessionDm && selected.status === "active" && (
+                <SessionShopSection game={selected} disabled={busy} />
               )}
               </>}
           </main>

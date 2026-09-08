@@ -625,3 +625,37 @@ button.game-player-open:hover strong { color: var(--gold); }
   .games-menu-heading { display: grid; gap: 4px; }
   .games-menu-actions { justify-content: flex-end; }
 }
+
+/* --- Session shop (DM controls; the big-screen board lives in ShopBoard) --- */
+.game-shop-stage.is-open { border-color: color-mix(in srgb, var(--gold) 55%, var(--border)); background: linear-gradient(120deg, rgba(201, 164, 90, 0.10), transparent 42%), color-mix(in srgb, var(--bg-elev) 96%, transparent); }
+.game-shop-dialog > .eyebrow { margin: 18px 0 8px; }
+.game-shop-dialog > .shop-section-gap { margin-top: 22px; }
+.shop-stock-list { border-top: 1px solid var(--border-strong); }
+.shop-stock-row { display: grid; gap: 8px; padding: 13px 2px; border-bottom: 1px solid var(--border); }
+.shop-stock-name strong { display: block; font-family: var(--font-display); font-size: 1rem; }
+.shop-stock-name small { display: block; margin-top: 2px; color: var(--ink-faint); font-size: 0.76rem; }
+.shop-stock-fields { display: flex; align-items: end; gap: 10px; }
+.shop-stock-fields label { display: grid; gap: 4px; color: var(--ink-dim); font-size: 0.76rem; }
+.shop-stock-fields label:first-child { width: 92px; flex: none; }
+.shop-stock-fields label:nth-child(2) { flex: 1; min-width: 0; }
+.shop-stock-fields .input { margin: 0; }
+.shop-stock-fields .game-text-button { flex: none; padding-bottom: 9px; }
+.shop-custom-row { display: flex; gap: 10px; }
+.shop-custom-row .input { margin: 0; }
+.shop-custom-row .input:first-child { flex: 1; min-width: 0; }
+.shop-custom-row .input:nth-child(2) { width: 84px; flex: none; }
+.shop-custom-row .btn { width: auto; flex: none; }
+.shop-catalog { max-height: 300px; margin-top: 12px; }
+.shop-catalog-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; width: 100%; padding: 12px 4px; border: 0; border-bottom: 1px solid var(--border); background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.shop-catalog-row:hover:not(:disabled) { background: rgba(201, 164, 90, 0.07); }
+.shop-catalog-row:disabled { opacity: 0.45; cursor: default; }
+.shop-catalog-row strong { display: block; font-size: 0.92rem; }
+.shop-catalog-row small { display: block; margin-top: 2px; color: var(--ink-faint); font-size: 0.76rem; }
+.shop-catalog-row > span:last-child { flex: none; font-size: 1.05rem; }
+
+@media (max-width: 640px) {
+  .shop-stock-fields { flex-wrap: wrap; }
+  .shop-stock-fields label:nth-child(2) { flex-basis: 100%; order: 3; }
+  .shop-custom-row { flex-wrap: wrap; }
+  .shop-custom-row .input:first-child { flex-basis: 100%; }
+}

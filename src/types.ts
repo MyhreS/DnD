@@ -232,6 +232,29 @@ export interface EncounterState {
   pausedRemainingMs: number | null;
 }
 
+/** One line of stock in the DM's session shop. A catalog line keeps `itemId`
+ * so the board can show the catalog's weight/carry; a custom line has none. */
+export interface ShopLine {
+  id: string;
+  /** Catalog item id (see src/data/items.ts), when stocked from the catalogue. */
+  itemId?: string;
+  /** Display name — the catalog name, or the DM's custom name. */
+  name: string;
+  /** The DM's asking price in gold pieces; defaults to the catalog price. */
+  priceGp: number;
+  /** Optional DM note shown on the board, e.g. "last one". */
+  note?: string;
+}
+
+/** The session shop, stored on the Game doc. Open shops render on the big
+ * screen (see ShopBoard) exactly the way combat does. */
+export interface ShopState {
+  open: boolean;
+  /** The DM may title the shop, e.g. "The Grey Market". */
+  name?: string;
+  lines: ShopLine[];
+}
+
 /** Reusable DM-owned enemy stats. A copy is stored on each spawned combatant so
  * reset always restores the values used when that enemy entered the battle. */
 export interface EnemyStats {
@@ -315,6 +338,8 @@ export interface Game {
   phase: GamePhase;
   /** Live combat encounter state (initiative round + whose turn). */
   combat?: EncounterState;
+  /** The session shop the DM stocks and opens for the table. */
+  shop?: ShopState;
   /** Current location/safety (drives rest math). Defaults to "wild". */
   location?: GameLocation;
   /** Test-run game — hidden from real views and auto-cleaned. */
