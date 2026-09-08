@@ -103,32 +103,58 @@ through a typo.
 
 ---
 
-## 4. Still open (nothing urgent)
+## 4. Follow-up work, already done on this branch
 
-- **All 9 hunters are over-slotted.** Tools became Significant Items (p114), so
-  everyone is over capacity. No mechanical penalty — items sit in unassigned
-  inventory until players re-place them. Left alone deliberately; say the word
-  if you want them auto-assigned.
-- **Six Codex reference topics are pointers, not prose** (the DC table, mounted
-  rules, obscurement, difficult shots, the Madness Die, rest interruption). The
-  rulebook is two-column and interleaves line by line, so no parser can re-flow
-  that prose faithfully. Needs a hand transcription pass if you want full text.
-- **The death / Favor flow is unreachable.** `charactersStore.killCharacter` has
-  no call sites — the DM death-confirmation surface it hangs off doesn't exist.
-  Adding one is new UI, so I left it.
-- **Two components are over the ~200-line cap**: `CodexPage.tsx` (251) and
-  `AppEditStage.tsx` (246). `GamePage.tsx` (773) and
-  `CharacterAutomationProvider.tsx` (664) are the documented exceptions.
-- **One pre-existing eslint warning** (`set-state-in-effect`, `GamePage.tsx:210`).
+Four commits on `claude/beta-followup`, all gates green:
+
+- **eslint is completely clean now** — zero warnings for the first time. The one
+  remaining `set-state-in-effect` was a real sync-in-effect; the reset it does is
+  genuinely needed (continuing an encounter reuses its `encounterId`), so it moved
+  into render, which is React's documented pattern.
+- **The nine pointer-only Codex entries now have real prose** — Difficulty
+  Classes, Mounted Combat, Obscurement & Senses, Difficult Shots, Damaging
+  Objects, Improvised Weapons, The Madness Die, Unsafe Rest Checks, Rest
+  Interruption, including five proper tables. Hand-transcribed and de-interleaved
+  from the two-column source. Nothing stayed a pointer.
+- **The two oversized components are split.** `CodexPage.tsx` 251 → 119 (+4 small
+  files); `AppEditStage.tsx` 246 → 9, with its state machine moved into
+  `hooks/useAppEditStageValue.ts` per the every-useEffect-in-a-hook rule. Verified
+  by byte-comparing before/after screenshots at both viewports — pixel-identical.
+  Only the two documented exceptions (`GamePage.tsx`, `CharacterAutomationProvider.tsx`)
+  are now over the cap.
+- **A misleading report was corrected.** The migration called hunters with
+  unstowed items "OVER-SLOTTED" with a warning sign, which read as breakage. It
+  is not: the sheet already labels these "Unassigned", and Significant/Oversized
+  items always sit there until the player picks a slot. Only the count went up.
+
+## 5. Genuinely still open — needs a decision from you
+
+**The death / Favor flow is unreachable.** `charactersStore.killCharacter` has no
+call sites, because the DM death-confirmation surface it hangs off does not
+exist. Building one is new UI and needs your call on where it lives, so it was
+left alone.
+
+There is a real bug inside it for whenever it does get wired up: it
+unconditionally drops the dead hunter's gear as claimable loot, which
+contradicts the Favor rule on p44–45 — if the player expends a Favor, *"your
+body and everything you were wearing or carrying disappear from the world"* and
+returns with them after the Band's next Long Rest. So the loot drop must become
+conditional on the Favor not being spent.
 
 ---
 
-## 5. Gotchas worth knowing
+## 6. Gotchas worth knowing
 
 - **knip lies inside a git worktree.** A worktree without its own populated
   `node_modules/.bin` makes knip report five phantom findings (`eslint` unused +
   four "unlisted binaries"). They vanish with `bun install` in the worktree. This
   cost time twice; it's now documented in CLAUDE.md.
+- **Doppler auth is path-scoped, and sibling worktrees do not inherit it.** The
+  working token is scoped to exactly `/Users/simonmyhre/workdir/gitdir/DnD`, so a
+  worktree at `../DnD-something` cannot see the `dnd` project and `bun run dev`,
+  `codex:generate` and the migration all fail with "Could not find requested
+  project". Worktrees created *inside* `DnD/.claude/worktrees/` inherit it and
+  just work. Either put worktrees there, or run `doppler login` for the new path.
 - **The migration is dry-run by default.** `bun run migrate:stored-characters`
   never writes. Writing needs `--apply` **and** `--backup=<file>` covering every
   document, and `bun run export:characters -- --out=<file>` makes that backup.
@@ -140,7 +166,7 @@ through a typo.
 
 ---
 
-## 6. Where to continue
+## 7. Where to continue
 
 A worktree is ready and branched from `origin/main`:
 
@@ -148,8 +174,10 @@ A worktree is ready and branched from `origin/main`:
 /Users/simonmyhre/workdir/gitdir/DnD-beta-followup   branch: claude/beta-followup
 ```
 
-It is at `1bd34aa` (PR #436) with all five source transcriptions in place. Run
-`bun install` in it before trusting `bun run check` — see the knip gotcha above.
+It carries the four follow-up commits above on top of `1bd34aa` (PR #436), with
+all five source transcriptions in place. Run `bun install` in it before trusting
+`bun run check` — see the knip gotcha below — and note the Doppler path-scoping
+gotcha, which affects this directory specifically.
 
 Point the next agent at that directory. Everything it needs is on the branch;
 nothing depends on the old `cs-beta-release-integration` worktree, which has
@@ -157,7 +185,7 @@ been deleted (its three branches survive on the remote for history:
 `claude/cs-beta-release-integration-be1e76`, `claude/legacy-field-derivation`,
 `claude/repair-rulebook-ligatures`).
 
-## 7. Backups
+## 8. Backups
 
 Kept outside the repo in `~/dnd-backups/` — this repo is public and these are
 real characters:
