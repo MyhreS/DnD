@@ -4,7 +4,8 @@ import { CharacterAutomationProvider } from "../papersheet/CharacterAutomationPr
 import { CharacterSheetHome, type CharacterSheetPanel } from "../character-sheet/CharacterSheetHome";
 import { CharacterSheetCreationSheet } from "../character-sheet/CharacterSheetCreationSheet";
 import type { AppSheetModel } from "./appSheetShared";
-import { AppEditStage, AppEditTray } from "./AppEditStage";
+import { AppEditStage } from "./AppEditStage";
+import { AppEditTray } from "./AppEditTray";
 import { useAppEditStage } from "./appEditStageContext";
 import "./appsheet.css";
 import "./appsheet-details.css";
