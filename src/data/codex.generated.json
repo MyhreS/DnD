@@ -2057,12 +2057,65 @@
         "group check"
       ],
       "body": [
-        "Reference rule in the C&S Core Rulebook, pages 9–10. The rulebook is the authority; the app does not restate it."
+        "Difficulty Class. The GM sets the check's DC based on the difficulty of the task. If the total equals or exceeds the DC, the check succeeds.",
+        "For saving throws, the effect causing the saving throw usually states its DC. If it does not, the GM sets the DC. A Rite's save DC is calculated using the Rite performer's relevant ability and Proficiency Bonus.",
+        "Group Checks. When the band attempts a task together, the GM may call for a group ability check. Every participating Hunter makes the same check against the same DC. If at least half the group succeeds, rounded up, the entire group succeeds. Otherwise, the group fails. Use a group check only when successful Hunters can help cover those who fail.",
+        "Typical Difficulty Classes",
+        "Task Difficulty",
+        "DC",
+        "Very Easy",
+        "5",
+        "Easy",
+        "10",
+        "Medium",
+        "15",
+        "Hard",
+        "20",
+        "Very Hard",
+        "25",
+        "Nearly Impossible",
+        "30"
       ],
       "paragraphs": [
-        "Reference rule in the C&S Core Rulebook, pages 9–10. The rulebook is the authority; the app does not restate it."
+        "Difficulty Class. The GM sets the check's DC based on the difficulty of the task. If the total equals or exceeds the DC, the check succeeds.",
+        "For saving throws, the effect causing the saving throw usually states its DC. If it does not, the GM sets the DC. A Rite's save DC is calculated using the Rite performer's relevant ability and Proficiency Bonus.",
+        "Group Checks. When the band attempts a task together, the GM may call for a group ability check. Every participating Hunter makes the same check against the same DC. If at least half the group succeeds, rounded up, the entire group succeeds. Otherwise, the group fails. Use a group check only when successful Hunters can help cover those who fail."
       ],
-      "tables": [],
+      "tables": [
+        {
+          "title": "Typical Difficulty Classes",
+          "columns": [
+            "Task Difficulty",
+            "DC"
+          ],
+          "rows": [
+            [
+              "Very Easy",
+              "5"
+            ],
+            [
+              "Easy",
+              "10"
+            ],
+            [
+              "Medium",
+              "15"
+            ],
+            [
+              "Hard",
+              "20"
+            ],
+            [
+              "Very Hard",
+              "25"
+            ],
+            [
+              "Nearly Impossible",
+              "30"
+            ]
+          ]
+        }
+      ],
       "group": "Combat",
       "sourceId": "core-rulebook",
       "locator": "Difficulty Classes",
@@ -2080,10 +2133,18 @@
         "mounted rules"
       ],
       "body": [
-        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+        "Mount / Dismount. Mounting or dismounting costs half your speed. You may mount a willing creature within 5 feet that is at least one size larger than you and has suitable anatomy. You cannot mount or dismount while your Speed is 0 or when you lack enough movement.",
+        "Mounted Rules. A trained mount shares your Initiative and moves as you direct during your turn. It uses its own Speed and can take only Dash, Disengage, or Dodge. Its action does not replace yours. You cannot use your own movement while mounted except to dismount. You occupy the mount's space for determining your reach, range, and position. Attacks can target either you or the mount, and area effects can affect both.",
+        "Independent Mount: An untrained or unwillingly independent mount keeps its Initiative and chooses its own movement and actions.",
+        "Opportunity Attacks: When the mount provokes an Opportunity Attack while carrying you, the attacker may target either you or the mount.",
+        "Falling Off: If you or the mount are knocked Prone, or the mount is moved against its will, make a DC 10 Dexterity saving throw. On a failure, you fall into an unoccupied space within 5 feet of the mount and become Prone."
       ],
       "paragraphs": [
-        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+        "Mount / Dismount. Mounting or dismounting costs half your speed. You may mount a willing creature within 5 feet that is at least one size larger than you and has suitable anatomy. You cannot mount or dismount while your Speed is 0 or when you lack enough movement.",
+        "Mounted Rules. A trained mount shares your Initiative and moves as you direct during your turn. It uses its own Speed and can take only Dash, Disengage, or Dodge. Its action does not replace yours. You cannot use your own movement while mounted except to dismount. You occupy the mount's space for determining your reach, range, and position. Attacks can target either you or the mount, and area effects can affect both.",
+        "Independent Mount: An untrained or unwillingly independent mount keeps its Initiative and chooses its own movement and actions.",
+        "Opportunity Attacks: When the mount provokes an Opportunity Attack while carrying you, the attacker may target either you or the mount.",
+        "Falling Off: If you or the mount are knocked Prone, or the mount is moved against its will, make a DC 10 Dexterity saving throw. On a failure, you fall into an unoccupied space within 5 feet of the mount and become Prone."
       ],
       "tables": [],
       "group": "Combat",
@@ -2106,10 +2167,30 @@
         "truesight"
       ],
       "body": [
-        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+        "Effects that obscure vision can prove a significant hindrance to most adventuring tasks.",
+        "Lightly obscured — Disadvantage on Perception. Dim light, patchy fog, moderate foliage. Creatures have disadvantage on Wisdom (Perception) checks that rely on sight.",
+        "Heavily obscured — Effectively blind. Darkness, opaque fog, dense foliage. A creature in a heavily obscured area effectively suffers from the blinded condition.",
+        "The presence or absence of light in an environment creates three categories of illumination.",
+        "Bright light — Normal vision. Bright light lets most creatures see normally. Gloomy days still provide bright light, as do torches, lanterns, fires, and other sources of illumination within a specific radius.",
+        "Dim light — Lightly obscured. Dim light, also called shadows. Creates a lightly obscured area. An area of dim light is usually a boundary between a source of bright light, such as a torch, and surrounding darkness. The soft light of twilight and dawn also counts as dim light. A particularly brilliant full moon might bathe the land in dim light.",
+        "Darkness — Heavily obscured. Creates a heavily obscured area. Characters face darkness outdoors at night (unless a very moonlit night), within the confines of an unlit catacomb or a subterranean vault, or in an area of magical darkness.",
+        "Some creatures have extraordinary senses that allow them to perceive their environment.",
+        "Blindsight — Perceive without sight. Perceive your surroundings without relying on sight, within a certain radius. Creatures without eyes, such as oozes, and creatures with echolocation or heightened senses, such as bats and true dragons, have this sense.",
+        "Darkvision — Limited vision in darkness. A creature with Darkvision can see better in the dark or low light conditions, within a certain radius. Within a specified range, a creature with darkvision can see in darkness as if the darkness were dim light, so areas of darkness are only lightly obscured as far as that creature is concerned. However, the creature can't discern color in darkness, only shades of gray.",
+        "Truesight — See in darkness. And see the truth of the world. A creature with truesight can see everything in its true form, independent of the environment. A creature with truesight can, out to a specific range, see in normal and magical darkness, see invisible creatures and objects, automatically detect visual illusions and succeed on saving throws against them, and perceives the original form of a shape-changer or a creature that is transformed by magic. Furthermore, the creature can see into other planes."
       ],
       "paragraphs": [
-        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+        "Effects that obscure vision can prove a significant hindrance to most adventuring tasks.",
+        "Lightly obscured — Disadvantage on Perception. Dim light, patchy fog, moderate foliage. Creatures have disadvantage on Wisdom (Perception) checks that rely on sight.",
+        "Heavily obscured — Effectively blind. Darkness, opaque fog, dense foliage. A creature in a heavily obscured area effectively suffers from the blinded condition.",
+        "The presence or absence of light in an environment creates three categories of illumination.",
+        "Bright light — Normal vision. Bright light lets most creatures see normally. Gloomy days still provide bright light, as do torches, lanterns, fires, and other sources of illumination within a specific radius.",
+        "Dim light — Lightly obscured. Dim light, also called shadows. Creates a lightly obscured area. An area of dim light is usually a boundary between a source of bright light, such as a torch, and surrounding darkness. The soft light of twilight and dawn also counts as dim light. A particularly brilliant full moon might bathe the land in dim light.",
+        "Darkness — Heavily obscured. Creates a heavily obscured area. Characters face darkness outdoors at night (unless a very moonlit night), within the confines of an unlit catacomb or a subterranean vault, or in an area of magical darkness.",
+        "Some creatures have extraordinary senses that allow them to perceive their environment.",
+        "Blindsight — Perceive without sight. Perceive your surroundings without relying on sight, within a certain radius. Creatures without eyes, such as oozes, and creatures with echolocation or heightened senses, such as bats and true dragons, have this sense.",
+        "Darkvision — Limited vision in darkness. A creature with Darkvision can see better in the dark or low light conditions, within a certain radius. Within a specified range, a creature with darkvision can see in darkness as if the darkness were dim light, so areas of darkness are only lightly obscured as far as that creature is concerned. However, the creature can't discern color in darkness, only shades of gray.",
+        "Truesight — See in darkness. And see the truth of the world. A creature with truesight can see everything in its true form, independent of the environment. A creature with truesight can, out to a specific range, see in normal and magical darkness, see invisible creatures and objects, automatically detect visual illusions and succeed on saving throws against them, and perceives the original form of a shape-changer or a creature that is transformed by magic. Furthermore, the creature can see into other planes."
       ],
       "tables": [],
       "group": "Combat",
@@ -2130,12 +2211,57 @@
         "ranged attack penalties"
       ],
       "body": [
-        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+        "Obstacles can provide cover during combat, making a target more difficult to harm.",
+        "Half cover — AC and DEX Save Bonus + 2.",
+        "Three-quarters cover — AC and DEX Save Bonus + 5.",
+        "Full cover — In Total cover the target can't be targeted directly, but might still be affected by AoE rites etc.",
+        "Ranged Attack Rules for Difficult Shots: Trace a straight line from the center of the attacker's space through the center of the target's space and extend it 5 feet beyond the target.",
+        "A creature between the attacker and target grants the target Half Cover. A creature sharing the target's space, Grappling it, or Grappled by it grants Three-Quarters Cover.",
+        "If an attack misses only because of cover granted by a creature, compare the same attack total against that creature's AC. On a hit, that creature is hit instead. If several creatures are in the line of fire, use the one closest to the attacker.",
+        "A creature in the first space directly behind the target does not grant cover. However, if the attack misses the target by 1 or 2 and would hit that creature's AC, it hits that creature instead. A merely adjacent creature is not at risk unless the line crosses its space.",
+        "Cover",
+        "Cover",
+        "Effect",
+        "Half cover",
+        "AC and DEX Save Bonus + 2",
+        "Three-quarters cover",
+        "AC and DEX Save Bonus + 5",
+        "Full cover",
+        "Cannot be targeted directly, but might still be affected by AoE rites etc."
       ],
       "paragraphs": [
-        "Reference rule in the C&S Core Rulebook, pages 19–20. The rulebook is the authority; the app does not restate it."
+        "Obstacles can provide cover during combat, making a target more difficult to harm.",
+        "Half cover — AC and DEX Save Bonus + 2.",
+        "Three-quarters cover — AC and DEX Save Bonus + 5.",
+        "Full cover — In Total cover the target can't be targeted directly, but might still be affected by AoE rites etc.",
+        "Ranged Attack Rules for Difficult Shots: Trace a straight line from the center of the attacker's space through the center of the target's space and extend it 5 feet beyond the target.",
+        "A creature between the attacker and target grants the target Half Cover. A creature sharing the target's space, Grappling it, or Grappled by it grants Three-Quarters Cover.",
+        "If an attack misses only because of cover granted by a creature, compare the same attack total against that creature's AC. On a hit, that creature is hit instead. If several creatures are in the line of fire, use the one closest to the attacker.",
+        "A creature in the first space directly behind the target does not grant cover. However, if the attack misses the target by 1 or 2 and would hit that creature's AC, it hits that creature instead. A merely adjacent creature is not at risk unless the line crosses its space."
       ],
-      "tables": [],
+      "tables": [
+        {
+          "title": "Cover",
+          "columns": [
+            "Cover",
+            "Effect"
+          ],
+          "rows": [
+            [
+              "Half cover",
+              "AC and DEX Save Bonus + 2"
+            ],
+            [
+              "Three-quarters cover",
+              "AC and DEX Save Bonus + 5"
+            ],
+            [
+              "Full cover",
+              "Cannot be targeted directly, but might still be affected by AoE rites etc."
+            ]
+          ]
+        }
+      ],
       "group": "Combat",
       "sourceId": "core-rulebook",
       "locator": "Difficult Shots",
@@ -2153,12 +2279,55 @@
         "object armor class"
       ],
       "body": [
-        "Reference rule in the C&S Core Rulebook, page 108. The rulebook is the authority; the app does not restate it."
+        "An object can be targeted by an attack unless the GM determines that the attack could not reasonably damage it. When an object does not have listed statistics, the GM may use the following guidelines:",
+        "Fragile Object: AC 10; 5 Hit Points. Sturdy Object: AC 15; 15 Hit Points. Reinforced Object: AC 20; 30 Hit Points.",
+        "Objects are normally Immune to Poison and Mind damage. The GM may grant an object Resistance or Immunity to any damage type that could not reasonably damage its material. An object is broken or destroyed when reduced to 0 Hit Points. A specific object's statistics override these general rules.",
+        "Object statistics",
+        "Object",
+        "Armor Class",
+        "Hit Points",
+        "Fragile Object",
+        "10",
+        "5",
+        "Sturdy Object",
+        "15",
+        "15",
+        "Reinforced Object",
+        "20",
+        "30"
       ],
       "paragraphs": [
-        "Reference rule in the C&S Core Rulebook, page 108. The rulebook is the authority; the app does not restate it."
+        "An object can be targeted by an attack unless the GM determines that the attack could not reasonably damage it. When an object does not have listed statistics, the GM may use the following guidelines:",
+        "Fragile Object: AC 10; 5 Hit Points. Sturdy Object: AC 15; 15 Hit Points. Reinforced Object: AC 20; 30 Hit Points.",
+        "Objects are normally Immune to Poison and Mind damage. The GM may grant an object Resistance or Immunity to any damage type that could not reasonably damage its material. An object is broken or destroyed when reduced to 0 Hit Points. A specific object's statistics override these general rules."
       ],
-      "tables": [],
+      "tables": [
+        {
+          "title": "Object statistics",
+          "columns": [
+            "Object",
+            "Armor Class",
+            "Hit Points"
+          ],
+          "rows": [
+            [
+              "Fragile Object",
+              "10",
+              "5"
+            ],
+            [
+              "Sturdy Object",
+              "15",
+              "15"
+            ],
+            [
+              "Reinforced Object",
+              "20",
+              "30"
+            ]
+          ]
+        }
+      ],
       "group": "Equipment",
       "sourceId": "core-rulebook",
       "locator": "Damaging Objects",
@@ -2174,10 +2343,18 @@
         "improvised weapon"
       ],
       "body": [
-        "Reference rule in the C&S Core Rulebook, page 108. The rulebook is the authority; the app does not restate it."
+        "If you use an object—such as a table leg, frying pan, or bottle—as a makeshift weapon, see the rules below. Also see those rules if you wield a weapon in an unusual way, such as using a Ranged weapon to make a melee attack.",
+        "An improvised weapon is an object that was not designed to be used as a weapon, or a normal weapon used in an unintended manner.",
+        "A melee improvised weapon deals 1d4 Bludgeoning, Piercing, or Slashing damage, as determined by the GM, and uses Strength for its attack and damage rolls.",
+        "A thrown improvised weapon has a normal range of 20 feet and a long range of 60 feet. It deals 1d4 damage of a type determined by the GM and uses Dexterity for its attack and damage rolls.",
+        "Add your Proficiency Bonus if you are proficient with improvised weapons. At the GM's discretion, an object that closely resembles an existing weapon may instead use that weapon's statistics and proficiency."
       ],
       "paragraphs": [
-        "Reference rule in the C&S Core Rulebook, page 108. The rulebook is the authority; the app does not restate it."
+        "If you use an object—such as a table leg, frying pan, or bottle—as a makeshift weapon, see the rules below. Also see those rules if you wield a weapon in an unusual way, such as using a Ranged weapon to make a melee attack.",
+        "An improvised weapon is an object that was not designed to be used as a weapon, or a normal weapon used in an unintended manner.",
+        "A melee improvised weapon deals 1d4 Bludgeoning, Piercing, or Slashing damage, as determined by the GM, and uses Strength for its attack and damage rolls.",
+        "A thrown improvised weapon has a normal range of 20 feet and a long range of 60 feet. It deals 1d4 damage of a type determined by the GM and uses Dexterity for its attack and damage rolls.",
+        "Add your Proficiency Bonus if you are proficient with improvised weapons. At the GM's discretion, an object that closely resembles an existing weapon may instead use that weapon's statistics and proficiency."
       ],
       "tables": [],
       "group": "Equipment",
@@ -2199,12 +2376,65 @@
         "insane quirks"
       ],
       "body": [
-        "Reference rule in the C&S Core Rulebook, pages 3–23. The rulebook is the authority; the app does not restate it."
+        "C&S uses a special Madness Die while a creature is Insane. It is an eight-sided die with three blank faces, three star faces, and two eye faces. If the custom Madness Die is unavailable, use a normal d8: 1-3 = Blank, 4-6 = Star, and 7-8 = Eye.",
+        "Insane Condition. When your Madness equals or exceeds your Max Sanity, you gain the Insane condition. The Insane condition ends immediately when your current Madness is reduced below your Max Sanity.",
+        "When you gain the Insane condition, roll a d100 and consult the Insane Quirks table. You retain the rolled Insane Quirk until the Insane condition ends.",
+        "While Insane, you also have a Madness Die. This die represent your unstable violence and has the following consequences; Once per turn, when you take the Attack action or perform a harmful Rite, choose your target or area as normal. Before resolving the attack or Rite, roll the Madness Die.",
+        "Star. Resolve the attack or Rite normally.",
+        "Blank. The attack or Rite turns against your nearest ally instead. If more than one ally is equally near, you choose which one is targeted. If no ally is within range, you must spend available movement to bring an ally within range or reach, if possible. If no ally can be targeted after this movement, the attack or Rite turns inward and targets you instead.",
+        "Eye. For one moment, you understand what you are about to do. You may either end your turn immediately with no effect, or roll the Madness Die again. If the second roll is another Eye, the vision breaks you: roll your Sanity Die, suffer that much Mind damage, and gain 1 Madness.",
+        "Cracked Perception. While Insane, you have Advantage on Wisdom (Perception) checks and Intelligence (Eldritch Knowledge) checks made to notice unnatural things, hidden entities, dream-architecture, impossible movement, or occult distortions.",
+        "Madness Die faces",
+        "Face",
+        "d8",
+        "Result",
+        "Blank",
+        "1-3",
+        "The attack or Rite turns against your nearest ally instead.",
+        "Star",
+        "4-6",
+        "Resolve the attack or Rite normally.",
+        "Eye",
+        "7-8",
+        "End your turn with no effect, or roll again; a second Eye costs your Sanity Die in Mind damage and 1 Madness."
       ],
       "paragraphs": [
-        "Reference rule in the C&S Core Rulebook, pages 3–23. The rulebook is the authority; the app does not restate it."
+        "C&S uses a special Madness Die while a creature is Insane. It is an eight-sided die with three blank faces, three star faces, and two eye faces. If the custom Madness Die is unavailable, use a normal d8: 1-3 = Blank, 4-6 = Star, and 7-8 = Eye.",
+        "Insane Condition. When your Madness equals or exceeds your Max Sanity, you gain the Insane condition. The Insane condition ends immediately when your current Madness is reduced below your Max Sanity.",
+        "When you gain the Insane condition, roll a d100 and consult the Insane Quirks table. You retain the rolled Insane Quirk until the Insane condition ends.",
+        "While Insane, you also have a Madness Die. This die represent your unstable violence and has the following consequences; Once per turn, when you take the Attack action or perform a harmful Rite, choose your target or area as normal. Before resolving the attack or Rite, roll the Madness Die.",
+        "Star. Resolve the attack or Rite normally.",
+        "Blank. The attack or Rite turns against your nearest ally instead. If more than one ally is equally near, you choose which one is targeted. If no ally is within range, you must spend available movement to bring an ally within range or reach, if possible. If no ally can be targeted after this movement, the attack or Rite turns inward and targets you instead.",
+        "Eye. For one moment, you understand what you are about to do. You may either end your turn immediately with no effect, or roll the Madness Die again. If the second roll is another Eye, the vision breaks you: roll your Sanity Die, suffer that much Mind damage, and gain 1 Madness.",
+        "Cracked Perception. While Insane, you have Advantage on Wisdom (Perception) checks and Intelligence (Eldritch Knowledge) checks made to notice unnatural things, hidden entities, dream-architecture, impossible movement, or occult distortions."
       ],
-      "tables": [],
+      "tables": [
+        {
+          "title": "Madness Die faces",
+          "columns": [
+            "Face",
+            "d8",
+            "Result"
+          ],
+          "rows": [
+            [
+              "Blank",
+              "1-3",
+              "The attack or Rite turns against your nearest ally instead."
+            ],
+            [
+              "Star",
+              "4-6",
+              "Resolve the attack or Rite normally."
+            ],
+            [
+              "Eye",
+              "7-8",
+              "End your turn with no effect, or roll again; a second Eye costs your Sanity Die in Mind damage and 1 Madness."
+            ]
+          ]
+        }
+      ],
       "group": "Conditions",
       "sourceId": "core-rulebook",
       "locator": "The Madness Die",
@@ -2223,12 +2453,53 @@
         "rest guards"
       ],
       "body": [
-        "Reference rule in the C&S Core Rulebook, page 26. The rulebook is the authority; the app does not restate it."
+        "Guarding an Unsafe Rest. Before resting outside a Safe Zone, choose any number of characters to act as Guards. A Guard remains awake for the entire rest and gains none of its benefits. Their Sleepless Counters continue to increase normally.",
+        "The GM rolls once on the Unsafe Rest Check table. If the result is within the listed range, the rest is interrupted. The interruption might be an attack, patrol, flood, collapsing shelter, eldritch disturbance, or another danger appropriate to the location. The GM has to decide before the rest what occurs on a interrupted rest.",
+        "Guards make any checks required to detect the approaching danger. Characters surprised by an interruption roll Initiative with Disadvantage.",
+        "Unsafe Rest Checks",
+        "Guards",
+        "Rest Is Interrupted On…",
+        "0",
+        "1-10",
+        "1",
+        "1-6",
+        "2",
+        "1-3",
+        "3 or more",
+        "1"
       ],
       "paragraphs": [
-        "Reference rule in the C&S Core Rulebook, page 26. The rulebook is the authority; the app does not restate it."
+        "Guarding an Unsafe Rest. Before resting outside a Safe Zone, choose any number of characters to act as Guards. A Guard remains awake for the entire rest and gains none of its benefits. Their Sleepless Counters continue to increase normally.",
+        "The GM rolls once on the Unsafe Rest Check table. If the result is within the listed range, the rest is interrupted. The interruption might be an attack, patrol, flood, collapsing shelter, eldritch disturbance, or another danger appropriate to the location. The GM has to decide before the rest what occurs on a interrupted rest.",
+        "Guards make any checks required to detect the approaching danger. Characters surprised by an interruption roll Initiative with Disadvantage."
       ],
-      "tables": [],
+      "tables": [
+        {
+          "title": "Unsafe Rest Checks",
+          "columns": [
+            "Guards",
+            "Rest Is Interrupted On…"
+          ],
+          "rows": [
+            [
+              "0",
+              "1-10"
+            ],
+            [
+              "1",
+              "1-6"
+            ],
+            [
+              "2",
+              "1-3"
+            ],
+            [
+              "3 or more",
+              "1"
+            ]
+          ]
+        }
+      ],
       "group": "Rest & Transformation",
       "sourceId": "core-rulebook",
       "locator": "Unsafe Rest Checks",
@@ -2246,10 +2517,12 @@
         "long rest"
       ],
       "body": [
-        "Reference rule in the C&S Core Rulebook, page 25. The rulebook is the authority; the app does not restate it."
+        "Interruption: A Short Rest is interrupted if you roll Initiative, take damage, perform a Rite other than a Whisper, or undertake strenuous activity. An interrupted Short Rest grants no benefits.",
+        "Interruption: A Long Rest is interrupted if you roll Initiative, take damage, perform a Rite other than a Whisper, or spend 1 hour walking or performing strenuous activity. If at least 1 hour passed before the interruption, you gain the benefits of an unsafe Short Rest. You may resume the Long Rest after the interruption, but its required duration increases by 1 hour for each interruption."
       ],
       "paragraphs": [
-        "Reference rule in the C&S Core Rulebook, page 25. The rulebook is the authority; the app does not restate it."
+        "Interruption: A Short Rest is interrupted if you roll Initiative, take damage, perform a Rite other than a Whisper, or undertake strenuous activity. An interrupted Short Rest grants no benefits.",
+        "Interruption: A Long Rest is interrupted if you roll Initiative, take damage, perform a Rite other than a Whisper, or spend 1 hour walking or performing strenuous activity. If at least 1 hour passed before the interruption, you gain the benefits of an unsafe Short Rest. You may resume the Long Rest after the interruption, but its required duration increases by 1 hour for each interruption."
       ],
       "tables": [],
       "group": "Rest & Transformation",
