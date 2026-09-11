@@ -411,6 +411,11 @@ export interface ArchivedCharacter {
   reason: "dead" | "deleted";
   archivedAt: number;
   card: HunterCard;
+  /** True when the Hunter expended a Favor as they died — their body and gear
+   * vanished (no loot drop) and they return after the Band's next Long Rest.
+   * core-rulebook.txt [page 44]. The DM un-archives them when that rest
+   * completes. */
+  favorSpent?: boolean;
 }
 
 // --- Campaigns (a "server"/party you create or join) ---

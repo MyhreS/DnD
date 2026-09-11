@@ -14,6 +14,7 @@ import { useAuthStore } from "@/features/auth/store/authStore";
 import { useCampaignStore } from "@/features/campaigns/store/campaignStore";
 import { explain } from "@/lib/errors";
 import { recoveredCard } from "@/lib/recovery";
+import { resolveDeath } from "@/lib/death";
 import { isPreviewActive, previewPartyCards, previewArchive } from "@/dev/preview";
 import type { ActivityType } from "@/types";
 
@@ -47,8 +48,10 @@ interface CharactersState {
   sync: () => void;
   stop: () => void;
 
-  /** DM: confirm a pending death, or force-mark a character dead (override). */
-  killCharacter: (card: HunterCard, gameId: string | null) => Promise<boolean>;
+  /** DM: mark a hunter dead. `spendFavor` is the player's at-the-moment-of-death
+   * decision (core-rulebook.txt [page 44]); spending one takes their body and
+   * gear out of the world, so nothing drops. */
+  killCharacter: (card: HunterCard, gameId: string | null, spendFavor?: boolean) => Promise<boolean>;
   /** DM: recover an archived character back into play. */
   recover: (a: ArchivedCharacter) => Promise<boolean>;
   /** DM: award (or subtract) Insight atomically — never loses rapid taps. The
@@ -115,12 +118,13 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
       set({ _unsubParty: null, _unsubArchive: null });
     },
 
-    killCharacter: async (card, gameId) => {
+    killCharacter: async (card, gameId, spendFavor = false) => {
+      const outcome = resolveDeath(card, spendFavor);
       if (get().preview) {
         set((s) => ({
           party: s.party.filter((c) => c.id !== card.id),
           archive: [
-            { id: `arch-${card.id}`, originalUid: card.ownerUid, gameId, reason: "dead", archivedAt: Date.now(), card },
+            { id: `arch-${card.id}`, originalUid: card.ownerUid, gameId, reason: "dead", archivedAt: Date.now(), favorSpent: outcome.favorSpent, card: outcome.card },
             ...s.archive,
           ],
         }));
@@ -128,9 +132,10 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
       }
       const ok =
         (await run(async () => {
-          await archiveCharacter(card, "dead", gameId);
-          // A dead hunter drops their gear as claimable loot.
-          if (gameId) {
+          await archiveCharacter(outcome.card, "dead", gameId, outcome.favorSpent);
+          // A dead hunter drops their gear as claimable loot — unless a Favor was
+          // expended, which takes body and gear out of the world entirely.
+          if (gameId && outcome.dropsLoot) {
             await createLoot(gameId, {
               fromUid: card.ownerUid,
               fromName: card.name,
@@ -139,7 +144,11 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
             });
           }
         }, "Couldn't archive the character.")) !== null;
-      if (ok) logHunter(card, "hunter.died", `${card.name} fell — the DM confirmed their death.`);
+      if (ok) {
+        logHunter(card, "hunter.died", outcome.favorSpent
+          ? `${card.name} died and expended a Favor — they return after the Band's next Long Rest.`
+          : `${card.name} fell — the DM confirmed their death.`);
+      }
       return ok;
     },
 

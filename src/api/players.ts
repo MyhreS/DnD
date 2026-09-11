@@ -148,6 +148,7 @@ export async function archiveCharacter(
   card: HunterCard,
   reason: ArchivedCharacter["reason"],
   gameId: string | null,
+  favorSpent = false,
 ): Promise<void> {
   const archiveRef = doc(archiveCol);
   const batch = writeBatch(db);
@@ -156,6 +157,7 @@ export async function archiveCharacter(
     gameId: gameId ?? null,
     reason,
     archivedAt: serverTimestamp(),
+    favorSpent,
     card,
   });
   batch.delete(doc(charsCol, card.id));
@@ -192,6 +194,7 @@ export function subscribeArchive(
             gameId: (data.gameId as string | null) ?? null,
             reason: (data.reason as ArchivedCharacter["reason"]) ?? "deleted",
             archivedAt: ms(data.archivedAt),
+            favorSpent: data.favorSpent === true,
             card: normalizeCard(data.card as HunterCard),
           } satisfies ArchivedCharacter;
         }),

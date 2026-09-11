@@ -1,8 +1,9 @@
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import { CONDITIONS, CONDITION_NAME } from "@/data/conditions";
 import { useCombatStore } from "@/features/play/store/combatStore";
 import type { Combatant, Game, HunterCard } from "@/types";
 import { combatVitals } from "../lib/combatPresentation";
+import { BattleRowMenu } from "./BattleRowMenu";
 
 export function BattleCombatantRow({
   combatant,
@@ -26,8 +27,6 @@ export function BattleCombatantRow({
   encounterCombatants: Combatant[];
 }) {
   const patch = useCombatStore((state) => state.patch);
-  const remove = useCombatStore((state) => state.remove);
-  const resetMonster = useCombatStore((state) => state.resetMonster);
   const toggleCondition = useCombatStore((state) => state.toggleCondition);
   const vitals = combatVitals(combatant, characters);
   const healthPercent = vitals.maxHp && vitals.currentHp !== null
@@ -37,12 +36,9 @@ export function BattleCombatantRow({
     () => CONDITIONS.filter((condition) => !combatant.conditions.includes(condition.id)),
     [combatant.conditions],
   );
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  function runMenuAction(action: () => void | Promise<unknown>) {
-    setMenuOpen(false);
-    void action();
-  }
+  const hunterCard = combatant.kind === "pc" && combatant.characterId
+    ? characters.find((candidate) => candidate.id === combatant.characterId)
+    : undefined;
 
   async function setDamage(value: string) {
     if (vitals.maxHp === null) return;
@@ -72,7 +68,10 @@ export function BattleCombatantRow({
     if (ac !== current) void patch(game.id, combatant.id, { ac });
   }
 
-  const dead = combatant.kind === "monster" && (combatant.defeated === true || (vitals.currentHp !== null && vitals.currentHp <= 0));
+  // A Hunter is only ever dead because the DM said so (Not Tonight! means 0 HP
+  // is not death); an enemy is dead at 0 HP too.
+  const dead = combatant.defeated === true
+    || (combatant.kind === "monster" && vitals.currentHp !== null && vitals.currentHp <= 0);
 
   return (
     <article
@@ -84,32 +83,20 @@ export function BattleCombatantRow({
         <span className="battle-position" aria-label={`Turn position ${position}`}>{position}</span>
         <div className="battle-name">
           <strong>{combatant.name}</strong>
-          <span>{combatant.kind === "monster" ? (dead ? "Enemy · dead" : "Enemy") : `Hunter${vitals.speed !== null ? ` · ${vitals.speed} ft speed` : ""}`}</span>
+          <span>{combatant.kind === "monster" ? (dead ? "Enemy · dead" : "Enemy") : (dead ? "Hunter · fallen" : `Hunter${vitals.speed !== null ? ` · ${vitals.speed} ft speed` : ""}`)}</span>
         </div>
         {active && <span className="battle-playing"><i aria-hidden="true" /> Playing</span>}
         {canManage && (
-          <div className="battle-row-actions">
-            <details className="battle-more" open={menuOpen} onToggle={(event) => setMenuOpen(event.currentTarget.open)}>
-              <summary aria-label={`More options for ${combatant.name}`}>•••</summary>
-              <div className="battle-more-menu">
-                {combatant.kind === "monster" && <>
-                  {vitals.maxHp !== null && <button
-                    className="battle-death-toggle"
-                    type="button"
-                    aria-label={dead ? `Revive ${combatant.name}` : `Kill ${combatant.name}`}
-                    aria-pressed={dead}
-                    disabled={disabled}
-                    onClick={() => runMenuAction(() => patch(game.id, combatant.id, { currentHp: dead ? 1 : 0, defeated: !dead }))}
-                  >{dead ? "Revive" : "Kill enemy"}</button>}
-                  <button type="button" disabled={disabled || dead} onClick={() => runMenuAction(() => setDamage(String((vitals.damageTaken ?? 0) + 5)))}>Add 5 damage</button>
-                  <button type="button" aria-pressed={combatant.revealHp === true} disabled={disabled} onClick={() => runMenuAction(() => patch(game.id, combatant.id, { revealHp: combatant.revealHp !== true }))}>{combatant.revealHp === true ? "Hide HP" : "Show HP"}</button>
-                  <button type="button" aria-pressed={combatant.revealStats === true} disabled={disabled} onClick={() => runMenuAction(() => patch(game.id, combatant.id, { revealStats: combatant.revealStats !== true }))}>{combatant.revealStats === true ? "Hide stats" : "Show stats"}</button>
-                  <button type="button" disabled={disabled} onClick={() => runMenuAction(() => resetMonster(game.id, combatant.id))}>Reset stats</button>
-                </>}
-                <button className="battle-remove" type="button" disabled={disabled} onClick={() => runMenuAction(() => remove(game.id, combatant.id, game, encounterCombatants))}>Remove {combatant.kind === "monster" ? "enemy" : "Hunter"}</button>
-              </div>
-            </details>
-          </div>
+          <BattleRowMenu
+            combatant={combatant}
+            game={game}
+            vitals={vitals}
+            hunterCard={hunterCard}
+            dead={dead}
+            disabled={disabled}
+            encounterCombatants={encounterCombatants}
+            onAddDamage={(amount) => void setDamage(String((vitals.damageTaken ?? 0) + amount))}
+          />
         )}
       </header>
 

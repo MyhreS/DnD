@@ -466,3 +466,27 @@
 @media (prefers-reduced-motion: reduce) {
   .battle-screen * { scroll-behavior: auto !important; transition: none !important; }
 }
+
+/* --- The fallen (death / Favor) --- */
+.battle-fallen { margin-top: clamp(22px, 3vw, 34px); }
+.battle-fallen-list { display: grid; gap: 10px; }
+.battle-fallen-row { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg-elev); }
+.battle-fallen-row.is-pending { border-color: var(--gold); }
+.battle-fallen-name { flex: 1; min-width: 0; }
+.battle-fallen-name strong { display: block; font-family: var(--font-display); font-size: 1.05rem; }
+.battle-fallen-name small { display: block; margin-top: 3px; color: var(--ink-faint); font-size: 0.74rem; line-height: 1.35; }
+.battle-fallen-tag { flex: none; padding: 4px 9px; border: 1px solid var(--gold); border-radius: 999px; color: var(--gold); font-size: 0.62rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+.battle-fallen-row .btn { flex: none; width: auto; }
+
+/* --- Death / Favor prompt --- */
+.battle-death-choices { display: grid; gap: 10px; margin-top: 14px; }
+.battle-death-choice { display: block; padding: 13px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--bg); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.battle-death-choice.is-chosen { border-color: var(--gold); background: var(--bg-elev); }
+.battle-death-choice strong { display: block; font-family: var(--font-display); font-size: 1.02rem; }
+.battle-death-choice small { display: block; margin-top: 5px; color: var(--ink-dim); font-size: 0.78rem; line-height: 1.45; }
+.battle-death-dialog .game-dialog-note { margin-top: 16px; }
+
+@media (max-width: 640px) {
+  .battle-fallen-row { flex-wrap: wrap; }
+  .battle-fallen-row .btn { width: 100%; }
+}

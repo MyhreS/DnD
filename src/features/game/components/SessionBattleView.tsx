@@ -1,8 +1,10 @@
 import { useMemo, type ReactNode } from "react";
 import { initiativeOrder, useCombatStore } from "@/features/play/store/combatStore";
 import { useWakeLock } from "@/hooks/common/useWakeLock";
+import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
 import type { Game, HunterCard } from "@/types";
 import { BattleCombatantRow } from "./BattleCombatantRow";
+import { BattleFallenRoster } from "./BattleFallenRoster";
 import { encounterCombatants } from "../lib/combatPresentation";
 import "./battle-screen.css";
 
@@ -22,6 +24,8 @@ export function SessionBattleView({
   onBack: () => void;
 }) {
   useWakeLock();
+  // The fallen roster reads the shared archive subscription.
+  useCharactersSync();
   const allCombatants = useCombatStore((state) => state.combatants);
   const encounter = game.combat!;
   const combatants = useMemo(() => encounterCombatants(allCombatants, encounter), [allCombatants, encounter]);
@@ -91,6 +95,7 @@ export function SessionBattleView({
         </div>
       )}
 
+      <BattleFallenRoster gameId={game.id} isDm={isDm} disabled={disabled} />
     </main>
   );
 }

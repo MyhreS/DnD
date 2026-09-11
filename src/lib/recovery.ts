@@ -7,9 +7,12 @@ import { INSIGHT_BY_LEVEL } from "./insight";
  * the Character Advancement table." The Level itself is untouched — "You never
  * lose a Level from expending a Favor."
  *
+ * The rule only ever *loses* Insight, so a card already sitting below its
+ * level's minimum (a DM grant, a legacy record) is never topped up.
+ *
  * Forward only: already-recovered records carry no marker and are not
  * retro-fixed. */
 export function recoveredCard(card: HunterCard): HunterCard {
   const level = Math.max(1, Math.min(INSIGHT_BY_LEVEL.length - 1, card.level));
-  return { ...card, insight: INSIGHT_BY_LEVEL[level] };
+  return { ...card, insight: Math.min(card.insight ?? 0, INSIGHT_BY_LEVEL[level]) };
 }

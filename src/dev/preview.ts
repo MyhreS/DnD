@@ -307,6 +307,8 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     activeTransformations: ["dreadbloodEars"],
     insight: 60,
     bloodTinge: true,
+    // One Favor, so the death prompt's Favor choice is exercised in preview.
+    favors: 1,
     preparedWhispers: [],
     coins: 25,
     // Bandolier WORN (chest slots), tool belt still in the pack — so preview
