@@ -98,20 +98,20 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.getByRole("heading", { name: "Set ability scores", exact: true }).waitFor();
   if (!await next.isDisabled()) throw new Error("A new hunter could skip unspent ability points");
   const standardMethod = page.getByRole("button", { name: "Standard 27 points", exact: true });
-  const maduhausuMethod = page.getByRole("button", { name: "Maduhausu 57 points", exact: true });
+  const alternativeMethod = page.getByRole("button", { name: "Alternative point buy 57 points", exact: true });
   if (await standardMethod.getAttribute("aria-pressed") !== "true") throw new Error("Standard point buy was not selected by default");
   await page.waitForTimeout(250);
   await page.locator(".character-sheet-upgrade-step").evaluate((element) => { element.scrollTop = 0; });
   await page.screenshot({ path: `screenshots/creation-abilities-start-${suffix}.png`, fullPage: true });
-  await maduhausuMethod.click();
-  if (await maduhausuMethod.getAttribute("aria-pressed") !== "true") throw new Error("Maduhausu point buy could not be selected");
+  await alternativeMethod.click();
+  if (await alternativeMethod.getAttribute("aria-pressed") !== "true") throw new Error("Alternative point buy could not be selected");
   await page.locator(".appsheet-ability-budget strong", { hasText: "15 points left" }).waitFor();
   for (const [ability, score] of [["Wisdom", "6"], ["Charisma", "3"], ["Strength", "16"], ["Dexterity", "15"], ["Constitution", "13"], ["Intelligence", "13"]]) {
     await setAbilityScore(page, ability, score);
   }
   await page.locator(".appsheet-ability-budget strong", { hasText: "0 points left" }).waitFor();
-  if (await next.isDisabled()) throw new Error("The ability step stayed blocked after spending the full Maduhausu budget");
-  await page.screenshot({ path: `screenshots/creation-abilities-maduhausu-${suffix}.png`, fullPage: true });
+  if (await next.isDisabled()) throw new Error("The ability step stayed blocked after spending the full Alternative point buy budget");
+  await page.screenshot({ path: `screenshots/creation-abilities-alternative-${suffix}.png`, fullPage: true });
   await standardMethod.click();
   for (const [ability, score] of [["Intelligence", "8"], ["Wisdom", "8"], ["Charisma", "8"], ["Strength", "15"], ["Dexterity", "15"], ["Constitution", "15"]]) {
     await setAbilityScore(page, ability, score);

@@ -9,6 +9,7 @@
  */
 
 import { strict as assert } from "node:assert";
+import { normalizeCard } from "../src/lib/character";
 import { mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
@@ -460,6 +461,24 @@ function change(plan: CharacterPlan, field: string) {
 {
   const plan = planCharacter("unconverted", fixture({ sanity: 12, madness: undefined }));
   assert.equal(change(plan, "sanity"), undefined, "sanity survives until madness exists to replace it");
+}
+
+
+// --- The ability-buy mode's old name -----------------------------------------
+{
+  const plan = planCharacter("legacy-mode", fixture({ abilityMode: "maduhausu" }));
+  assert.ok(groups(plan).includes("remap:ability-mode"), "a stored maduhausu is remapped, not dropped");
+  assert.equal(change(plan, "abilityMode")?.after, "alternative");
+}
+{
+  // normalizeCard converts on read, so an unmigrated card keeps its mode rather
+  // than silently losing which method built its scores.
+  const converted = normalizeCard({ ...fixture({ abilityMode: "maduhausu" }), abilities: { str: 12, dex: 15, con: 13, int: 10, wis: 14, cha: 8 } } as never);
+  assert.equal(converted.abilityMode, "alternative", "reading an unmigrated card converts the legacy mode");
+}
+{
+  const plan = planCharacter("current-mode", fixture({ abilityMode: "alternative" }));
+  assert.equal(change(plan, "abilityMode"), undefined, "a card already on the new name is untouched");
 }
 
 console.log("stored-character migration: all transform, validation and safety tests passed");

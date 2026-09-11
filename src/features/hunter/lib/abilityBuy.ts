@@ -1,18 +1,18 @@
 import {
-  MADUHAUSU_BUDGET,
-  MADUHAUSU_FINAL_MAX,
-  MADUHAUSU_MAX,
-  MADUHAUSU_MIN,
+  ALTERNATIVE_BUDGET,
+  ALTERNATIVE_FINAL_MAX,
+  ALTERNATIVE_MAX,
+  ALTERNATIVE_MIN,
   POINT_BUY_BUDGET,
   POINT_BUY_MAX,
   POINT_BUY_MIN,
   POINT_COST,
-  maduhausuSpent,
+  alternativeSpent,
 } from "@/data/abilities";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 import type { AbilityKey } from "@/types";
 
-export type BuyMode = "pointbuy" | "maduhausu";
+export type BuyMode = "pointbuy" | "alternative";
 export type AbilityScores = Record<AbilityKey, number>;
 
 export interface AbilityBuySummary {
@@ -30,23 +30,23 @@ export interface BackgroundBonusSummary {
   complete: boolean;
 }
 
-export const budgetFor = (mode: BuyMode) => mode === "maduhausu" ? MADUHAUSU_BUDGET : POINT_BUY_BUDGET;
+export const budgetFor = (mode: BuyMode) => mode === "alternative" ? ALTERNATIVE_BUDGET : POINT_BUY_BUDGET;
 
 export function scoreRangeFor(mode: BuyMode): { minimum: number; maximum: number } {
-  return mode === "maduhausu"
-    ? { minimum: MADUHAUSU_MIN, maximum: MADUHAUSU_MAX }
+  return mode === "alternative"
+    ? { minimum: ALTERNATIVE_MIN, maximum: ALTERNATIVE_MAX }
     : { minimum: POINT_BUY_MIN, maximum: POINT_BUY_MAX };
 }
 
 export function finalCreationMaximum(mode: BuyMode): number {
-  return mode === "maduhausu" ? MADUHAUSU_FINAL_MAX : 20;
+  return mode === "alternative" ? ALTERNATIVE_FINAL_MAX : 20;
 }
 
 /** Calculate the full six-score purchase. Invalid or out-of-range scores never
  * become zero-cost purchases; they make the result invalid. */
 export function spentFor(mode: BuyMode, scores: AbilityScores): number | null {
   const values = ABILITY_KEYS.map((key) => scores[key]);
-  if (mode === "maduhausu") return maduhausuSpent(values);
+  if (mode === "alternative") return alternativeSpent(values);
   let total = 0;
   for (const score of values) {
     if (!Number.isInteger(score) || !Object.prototype.hasOwnProperty.call(POINT_COST, score)) return null;

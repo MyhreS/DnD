@@ -29,13 +29,13 @@ export const POINT_COST: Readonly<Record<number, number>> = {
   15: 9,
 };
 
-/** Maduhausu character creation: 57 points and escalating costs when the same
+/** Alternative point buy: 57 points and escalating costs when the same
  * score is bought repeatedly. The third entry is also used for later repeats. */
-export const MADUHAUSU_BUDGET = 57;
-export const MADUHAUSU_MIN = 3;
-export const MADUHAUSU_MAX = 16;
-export const MADUHAUSU_FINAL_MAX = 17;
-export const MADUHAUSU_COST: Readonly<Record<number, readonly [number, number, number | null]>> = {
+export const ALTERNATIVE_BUDGET = 57;
+export const ALTERNATIVE_MIN = 3;
+export const ALTERNATIVE_MAX = 16;
+export const ALTERNATIVE_FINAL_MAX = 17;
+export const ALTERNATIVE_COST: Readonly<Record<number, readonly [number, number, number | null]>> = {
   3: [0, 0, 0],
   4: [1, 1, 1],
   5: [2, 2, 2],
@@ -52,13 +52,13 @@ export const MADUHAUSU_COST: Readonly<Record<number, readonly [number, number, n
   16: [20, 26, null],
 };
 
-/** Total Maduhausu cost, or null when any score or repeated purchase is illegal. */
-export function maduhausuSpent(scores: readonly number[]): number | null {
+/** Total alternative point-buy cost, or null when any score or repeated purchase is illegal. */
+export function alternativeSpent(scores: readonly number[]): number | null {
   const timesBought: Record<number, number> = {};
   let total = 0;
   for (const score of scores) {
     if (!Number.isInteger(score)) return null;
-    const costs = MADUHAUSU_COST[score];
+    const costs = ALTERNATIVE_COST[score];
     if (!costs) return null;
     const nth = (timesBought[score] = (timesBought[score] ?? 0) + 1);
     const cost = costs[Math.min(nth, 3) - 1];

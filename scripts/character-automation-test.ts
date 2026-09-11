@@ -4,7 +4,7 @@ import { armorClass, emptySheetCard, isBloodied, isWeaponProficient, normalizeCa
 import { carryCondition } from "../src/lib/inventory";
 import { deriveSheetFromCard } from "../src/features/hunter/lib/deriveSheetFromCard";
 import { CLASSES, getClass } from "../src/data/classes";
-import { MADUHAUSU_BUDGET, POINT_BUY_BUDGET } from "../src/data/abilities";
+import { ALTERNATIVE_BUDGET, POINT_BUY_BUDGET } from "../src/data/abilities";
 import { BACKGROUNDS } from "../src/data/backgrounds";
 import { EPIC_BOON_FEATS, FIGHTING_STYLE_FEATS, GENERAL_FEATS } from "../src/data/feats";
 import { ITEMS } from "../src/data/items";
@@ -327,7 +327,7 @@ for (const background of BACKGROUNDS) {
 }
 
 assert.equal(POINT_BUY_BUDGET, 27, "the Standard point buy stays at 27 points [core-rulebook page 32]");
-assert.equal(MADUHAUSU_BUDGET, 57, "the alternative point buy stays at 57 points [core-rulebook page 32]");
+assert.equal(ALTERNATIVE_BUDGET, 57, "the alternative point buy stays at 57 points [core-rulebook page 32]");
 
 /** Guard that the Rite/Whisper catalog matches the current sources and holds no
  * duplicates. The names come straight from the transcribed source documents. */

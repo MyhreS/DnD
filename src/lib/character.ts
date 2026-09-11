@@ -136,7 +136,7 @@ function dedupeExtras(ids: string[]): string[] {
 /** Load-time normalization for character docs. It preserves every final score,
  * restores the structured point-buy/background layers when they still exist,
  * upgrades automation state to v3, and keeps the independent Madness migration
- * lossless. Existing Standard and Maduhausu saves remain numerically unchanged. */
+ * lossless. Existing Standard and Alternative saves remain numerically unchanged. */
 export function normalizeCard(raw: HunterCard): HunterCard {
   const legacyRaw = raw as HunterCard & Record<string, unknown>;
   const legacyState = raw.sheetAutomation as (Record<string, unknown> & Partial<SheetAutomationState>) | undefined;
@@ -214,7 +214,11 @@ export function normalizeCard(raw: HunterCard): HunterCard {
         Number.isFinite(d.droppedAt),
     ),
   } as HunterCard & Record<string, unknown>;
-  if (normalized.abilityMode !== "pointbuy" && normalized.abilityMode !== "maduhausu") delete normalized.abilityMode;
+  // "maduhausu" was this mode's name before the rulebook settled on "Alternative
+  // point buy". Convert rather than drop: without this the stored value fails the
+  // check below and the hunter silently loses which method built their scores.
+  if ((normalized.abilityMode as string) === "maduhausu") normalized.abilityMode = "alternative";
+  if (normalized.abilityMode !== "pointbuy" && normalized.abilityMode !== "alternative") delete normalized.abilityMode;
   return normalized;
 }
 

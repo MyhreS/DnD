@@ -1,15 +1,15 @@
 import { strict as assert } from "node:assert";
 import {
-  MADUHAUSU_BUDGET,
-  MADUHAUSU_COST,
-  MADUHAUSU_FINAL_MAX,
-  MADUHAUSU_MAX,
-  MADUHAUSU_MIN,
+  ALTERNATIVE_BUDGET,
+  ALTERNATIVE_COST,
+  ALTERNATIVE_FINAL_MAX,
+  ALTERNATIVE_MAX,
+  ALTERNATIVE_MIN,
   POINT_BUY_BUDGET,
   POINT_BUY_MAX,
   POINT_BUY_MIN,
   POINT_COST,
-  maduhausuSpent,
+  alternativeSpent,
 } from "../src/data/abilities";
 import { BACKGROUNDS } from "../src/data/backgrounds";
 import {
@@ -25,7 +25,7 @@ import { ABILITY_KEYS } from "../src/lib/ability-keys";
 
 /** The beta core rulebook [page 32] prints both point-buy methods. The numbers
  * are asserted here as literals against src/data/abilities.ts; the stored
- * `abilityMode` literal "maduhausu" is deliberately left unchanged. */
+ * `abilityMode` literal "alternative" is deliberately left unchanged. */
 const standard = {
   budget: 27,
   minimumScore: 8,
@@ -35,7 +35,7 @@ const standard = {
     { score: 12, cost: 4 }, { score: 13, cost: 5 }, { score: 14, cost: 7 }, { score: 15, cost: 9 },
   ],
 };
-const maduhausu = {
+const alternative = {
   budget: 57,
   minimumScore: 3,
   maximumScore: 16,
@@ -62,18 +62,18 @@ assert.equal(POINT_BUY_BUDGET, standard.budget);
 assert.equal(POINT_BUY_MIN, standard.minimumScore);
 assert.equal(POINT_BUY_MAX, standard.maximumScore);
 assert.deepEqual(POINT_COST, Object.fromEntries(standard.costs.map(({ score, cost }) => [score, cost])));
-assert.equal(MADUHAUSU_BUDGET, maduhausu.budget);
-assert.equal(MADUHAUSU_MIN, maduhausu.minimumScore);
-assert.equal(MADUHAUSU_MAX, maduhausu.maximumScore);
-assert.equal(MADUHAUSU_FINAL_MAX, maduhausu.finalLevelOneMaximum);
-assert.deepEqual(MADUHAUSU_COST, Object.fromEntries(maduhausu.costs.map((row) => [row.score, [row.first, row.second, row.thirdPlus]])));
+assert.equal(ALTERNATIVE_BUDGET, alternative.budget);
+assert.equal(ALTERNATIVE_MIN, alternative.minimumScore);
+assert.equal(ALTERNATIVE_MAX, alternative.maximumScore);
+assert.equal(ALTERNATIVE_FINAL_MAX, alternative.finalLevelOneMaximum);
+assert.deepEqual(ALTERNATIVE_COST, Object.fromEntries(alternative.costs.map((row) => [row.score, [row.first, row.second, row.thirdPlus]])));
 
 assert.equal(budgetFor("pointbuy"), 27);
-assert.equal(budgetFor("maduhausu"), 57);
+assert.equal(budgetFor("alternative"), 57);
 assert.deepEqual(scoreRangeFor("pointbuy"), { minimum: 8, maximum: 15 });
-assert.deepEqual(scoreRangeFor("maduhausu"), { minimum: 3, maximum: 16 });
+assert.deepEqual(scoreRangeFor("alternative"), { minimum: 3, maximum: 16 });
 assert.equal(finalCreationMaximum("pointbuy"), 20);
-assert.equal(finalCreationMaximum("maduhausu"), 17);
+assert.equal(finalCreationMaximum("alternative"), 17);
 
 function scores(values: readonly number[]): AbilityScores {
   return Object.fromEntries(ABILITY_KEYS.map((key, index) => [key, values[index]])) as AbilityScores;
@@ -99,12 +99,12 @@ assert.equal(spentFor("pointbuy", scores([7, 15, 15, 8, 8, 8])), null, "a below-
 assert.equal(spentFor("pointbuy", scores([16, 15, 15, 8, 8, 8])), null, "an above-range Standard score is invalid");
 assert.equal(spentFor("pointbuy", scores([8.5, 15, 15, 8, 8, 8])), null, "a fractional Standard score is invalid");
 
-const maduRows = new Map<number, readonly [number, number, number | null]>(maduhausu.costs.map((row) => [row.score, [row.first, row.second, row.thirdPlus]]));
-function independentMaduhausuCost(values: readonly number[]): number | null {
+const alternativeRows = new Map<number, readonly [number, number, number | null]>(alternative.costs.map((row) => [row.score, [row.first, row.second, row.thirdPlus]]));
+function independentAlternativeCost(values: readonly number[]): number | null {
   const seen = new Map<number, number>();
   let total = 0;
   for (const score of values) {
-    const row = maduRows.get(score);
+    const row = alternativeRows.get(score);
     if (!row || !Number.isInteger(score)) return null;
     const occurrence = (seen.get(score) ?? 0) + 1;
     seen.set(score, occurrence);
@@ -115,28 +115,28 @@ function independentMaduhausuCost(values: readonly number[]): number | null {
   return total;
 }
 
-let maduhausuCases = 0;
-function verifyEveryMaduhausuMultiset(prefix: number[] = [], minimum = MADUHAUSU_MIN) {
+let alternativeCases = 0;
+function verifyEveryAlternativeMultiset(prefix: number[] = [], minimum = ALTERNATIVE_MIN) {
   if (prefix.length === ABILITY_KEYS.length) {
-    const expected = independentMaduhausuCost(prefix);
-    assert.equal(maduhausuSpent(prefix), expected, `Maduhausu cost mismatch for ${prefix.join("/")}`);
-    assert.equal(spentFor("maduhausu", scores(prefix)), expected, `Maduhausu six-score mismatch for ${prefix.join("/")}`);
-    maduhausuCases += 1;
+    const expected = independentAlternativeCost(prefix);
+    assert.equal(alternativeSpent(prefix), expected, `Alternative point buy cost mismatch for ${prefix.join("/")}`);
+    assert.equal(spentFor("alternative", scores(prefix)), expected, `Alternative point buy six-score mismatch for ${prefix.join("/")}`);
+    alternativeCases += 1;
     return;
   }
-  for (let score = minimum; score <= MADUHAUSU_MAX; score += 1) verifyEveryMaduhausuMultiset([...prefix, score], score);
+  for (let score = minimum; score <= ALTERNATIVE_MAX; score += 1) verifyEveryAlternativeMultiset([...prefix, score], score);
 }
-verifyEveryMaduhausuMultiset();
-assert.equal(maduhausuCases, 27_132, "every Maduhausu six-score multiset was checked");
+verifyEveryAlternativeMultiset();
+assert.equal(alternativeCases, 27_132, "every Alternative point buy six-score multiset was checked");
 
-const maduhausuComplete = scores([16, 15, 13, 13, 6, 3]);
-assert.deepEqual(abilityBuySummary("maduhausu", maduhausuComplete), { budget: 57, spent: 57, pointsLeft: 0, valid: true, complete: true });
-assert.equal(maduhausuSpent([16, 16, 16]), null, "a third score of 16 is too expensive");
-assert.equal(maduhausuSpent([2]), null, "a below-range Maduhausu score is invalid");
-assert.equal(maduhausuSpent([17]), null, "an above-range Maduhausu score is invalid");
-assert.equal(maduhausuSpent([10.5]), null, "a fractional Maduhausu score is invalid");
+const alternativeComplete = scores([16, 15, 13, 13, 6, 3]);
+assert.deepEqual(abilityBuySummary("alternative", alternativeComplete), { budget: 57, spent: 57, pointsLeft: 0, valid: true, complete: true });
+assert.equal(alternativeSpent([16, 16, 16]), null, "a third score of 16 is too expensive");
+assert.equal(alternativeSpent([2]), null, "a below-range Alternative point buy score is invalid");
+assert.equal(alternativeSpent([17]), null, "an above-range Alternative point buy score is invalid");
+assert.equal(alternativeSpent([10.5]), null, "a fractional Alternative point buy score is invalid");
 for (const permutation of [[16, 15, 14, 14, 3, 3], [3, 14, 16, 3, 15, 14], [14, 3, 15, 16, 14, 3]]) {
-  assert.equal(maduhausuSpent(permutation), 60, `repeat costs are independent of ability order: ${permutation.join("/")}`);
+  assert.equal(alternativeSpent(permutation), 60, `repeat costs are independent of ability order: ${permutation.join("/")}`);
 }
 
 const noble = BACKGROUNDS.find((background) => background.id === "noble")!;
@@ -154,7 +154,7 @@ assert.deepEqual(backgroundBonusSummary(noble.abilityScores, { str: 2 }, standar
 assert.equal(backgroundBonusSummary(noble.abilityScores, { str: 2, int: 2 }, standardComplete, "pointbuy").valid, false, "backgrounds cannot spend four points");
 assert.equal(backgroundBonusSummary(noble.abilityScores, { dex: 1 }, standardComplete, "pointbuy").valid, false, "backgrounds cannot improve an ineligible ability");
 assert.equal(backgroundBonusSummary(noble.abilityScores, { str: 3 }, standardComplete, "pointbuy").valid, false, "one background ability cannot receive +3");
-assert.equal(backgroundBonusSummary(noble.abilityScores, { str: 2, int: 1 }, maduhausuComplete, "maduhausu").valid, false, "Maduhausu background points cannot raise 16 above the level-one cap of 17");
-assert.equal(backgroundBonusSummary(noble.abilityScores, { str: 1, int: 2 }, maduhausuComplete, "maduhausu").complete, true, "a legal Maduhausu +1/+2 split completes background allocation");
+assert.equal(backgroundBonusSummary(noble.abilityScores, { str: 2, int: 1 }, alternativeComplete, "alternative").valid, false, "Alternative point buy background points cannot raise 16 above the level-one cap of 17");
+assert.equal(backgroundBonusSummary(noble.abilityScores, { str: 1, int: 2 }, alternativeComplete, "alternative").complete, true, "a legal Alternative point buy +1/+2 split completes background allocation");
 
-console.log(`Ability-buy tests passed (${standardCases} Standard purchases and ${maduhausuCases} Maduhausu multisets checked).`);
+console.log(`Ability-buy tests passed (${standardCases} Standard purchases and ${alternativeCases} Alternative point buy multisets checked).`);
