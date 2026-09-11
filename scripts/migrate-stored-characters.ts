@@ -99,6 +99,7 @@ export type ChangeGroup =
   | "strip:legacy-fields"
   | "remap:class-head-gear"
   | "remap:feat-skill-tools"
+  | "remap:ability-mode"
   | "backfill:bloodvial-purity"
   | "backfill:starting-kit-extra-armor"
   | "backfill:card-defaults";
@@ -391,6 +392,20 @@ export function planCharacter(id: string, data: Raw): CharacterPlan {
     sheetPatch.sanityCur = DELETE;
   }
 
+  // --- REMAP: the ability-buy mode's old name ------------------------------
+  // The rulebook settled on "Alternative point buy"; the app called it
+  // "maduhausu". normalizeCard converts on read so nothing breaks unmigrated,
+  // but the stored value should say what the book says.
+  if (data.abilityMode === "maduhausu") {
+    changes.push({
+      group: "remap:ability-mode",
+      field: "abilityMode",
+      before: "maduhausu",
+      after: "alternative",
+    });
+    patch.abilityMode = "alternative";
+  }
+
   // --- REMAP: tool-name strings inside featSkills[] ------------------------
   const featSkills = asArray<string>(data.featSkills).filter((value) => typeof value === "string");
   if (featSkills.length) {
@@ -628,6 +643,7 @@ const GROUP_TITLES: Record<ChangeGroup, string> = {
   "strip:legacy-fields": "STRIP — legacy fields nothing in the app reads any more",
   "remap:class-head-gear": "REMAP — class head gear inside extraArmorIds",
   "remap:feat-skill-tools": "REMAP — tool names inside featSkills[]",
+  "remap:ability-mode": "REMAP — abilityMode \"maduhausu\" to the book's \"alternative\"",
   "backfill:bloodvial-purity": "BACKFILL — blood-vial purity",
   "backfill:starting-kit-extra-armor": "BACKFILL — sheetAutomation.startingKitExtraArmorIds",
   "backfill:card-defaults": "BACKFILL — new optional HunterCard fields",

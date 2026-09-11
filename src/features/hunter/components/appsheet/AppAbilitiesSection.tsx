@@ -49,9 +49,9 @@ export function AppAbilitiesSection({ model, view = "all", creation = false }: {
         <AppPanel title="Choose your scores">
           <p className="appsheet-ability-intro">Set each base score with + or −. Higher scores use more points.{creation && " You will add your background bonuses next."}</p>
           <div className="appsheet-ability-method" role="group" aria-label="Ability method">
-            {(["pointbuy", "maduhausu"] as BuyMode[]).map((mode) => (
+            {(["pointbuy", "alternative"] as BuyMode[]).map((mode) => (
               <button key={mode} type="button" aria-pressed={automation.mode === mode} disabled={model.readOnly} onClick={() => automation.switchMode(mode)}>
-                <span>{mode === "pointbuy" ? "Standard" : "Maduhausu"}</span>
+                <span>{mode === "pointbuy" ? "Standard" : "Alternative point buy"}</span>
                 <small>{budgetFor(mode)} points</small>
               </button>
             ))}

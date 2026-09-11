@@ -557,8 +557,8 @@ export interface HunterCard {
   abilities: AbilityScores;
   /** Scores bought during creation, before background and structured level increases. */
   baseAbilities?: AbilityScores;
-  /** Standard 27-point buy or the game maker's 57-point Maduhausu method. */
-  abilityMode?: "pointbuy" | "maduhausu";
+  /** Standard 27-point buy or the 57-point Alternative point buy. */
+  abilityMode?: "pointbuy" | "alternative";
   /** Skill proficiencies (class choices + background-granted). */
   skillProficiencies: string[];
   /** Selected Main Armor piece id, or null for unarmored. */
