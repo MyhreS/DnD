@@ -51,7 +51,11 @@
     <!-- iOS standalone / add-to-home-screen -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- "black", not "black-translucent": with a translucent status bar the page
+         runs underneath it, and iOS 26+ lays a frosted scroll-edge band over that
+         top strip, blurring the app header. An opaque bar keeps the page below it;
+         env(safe-area-inset-top) is then 0 and the existing paddings adapt. -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black" />
     <meta name="apple-mobile-web-app-title" content="C&S Hunters" />
     <meta name="format-detection" content="telephone=no" />
 
