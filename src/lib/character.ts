@@ -27,8 +27,10 @@ function dieAverage(die: number): number {
 }
 
 /**
- * Maximum HP: a full hit die + CON at level 1, then the die's average + CON for
- * each level after (minimum 1 per level).
+ * Maximum HP: a full hit die + CON at level 1, then the class's fixed value
+ * for each level after, plus the Constitution modifier only when it is
+ * positive. Game maker ruling (2026-10-16) on [page 46]'s "N + Con. modifier":
+ * a negative modifier never lowers a level-up's gain.
  *
  * core-rulebook.txt [page 46] "Fixed Hit Points by Class" now states the
  * per-level gain as a FIXED TABLE keyed by class rather than a die formula.
@@ -42,7 +44,7 @@ export function maxHp(klass: HunterClass, abilities: AbilityScores, level = 1): 
   const con = abilityModifier(abilities.con);
   const lvl = Math.max(1, level);
   let hp = Math.max(1, klass.hitDie + con);
-  for (let l = 2; l <= lvl; l++) hp += Math.max(1, dieAverage(klass.hitDie) + con);
+  for (let l = 2; l <= lvl; l++) hp += dieAverage(klass.hitDie) + Math.max(0, con);
   return hp;
 }
 

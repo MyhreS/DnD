@@ -1,6 +1,6 @@
 import { strict as assert } from "node:assert";
 import { readFileSync } from "node:fs";
-import { armorClass, emptySheetCard, isBloodied, isWeaponProficient, normalizeCard, weaponAttackBonus, wornArmorWeight } from "../src/lib/character";
+import { armorClass, emptySheetCard, maxHp, isBloodied, isWeaponProficient, normalizeCard, weaponAttackBonus, wornArmorWeight } from "../src/lib/character";
 import { carryCondition } from "../src/lib/inventory";
 import { deriveSheetFromCard } from "../src/features/hunter/lib/deriveSheetFromCard";
 import { CLASSES, getClass } from "../src/data/classes";
@@ -717,6 +717,15 @@ assert.equal(bloodvialEffectLabel(BLOODVIAL_PURITY_BY_ID.tainted), "Heals 2d4 + 
   assert.equal(wardenAt(11).fields.bandsMax, "8", "Superior Effectiveness raises them to Wisdom modifier x 4");
   assert.equal(automationFor({ ...base, classId: "brute", level: 2, lastSeenLevel: 2, abilities: warden.abilities, skillProficiencies: [] }).fields.passivePerception, "12", "Experience is Warden-only");
   assert.equal(getClass("warden")?.toolProficiencies, "Navigator's Tools", "the Warden tool matches the rulebook and item catalog");
+}
+
+// HP per level ([page 46]): the class's fixed value + the Constitution
+// modifier only when positive (game maker ruling, 2026-10-16).
+{
+  const deepcaller = getClass("deepcaller")!;
+  const frail = { str: 10, dex: 10, con: 3, int: 15, wis: 10, cha: 10 };
+  assert.equal(maxHp(deepcaller, frail, 2) - maxHp(deepcaller, frail, 1), 4, "a negative Constitution modifier never lowers a level-up");
+  assert.equal(maxHp(deepcaller, { ...frail, con: 14 }, 2) - maxHp(deepcaller, { ...frail, con: 14 }, 1), 6, "a positive Constitution modifier is added");
 }
 
 console.log("Character automation tests passed.");
