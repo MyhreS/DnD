@@ -1,4 +1,6 @@
 import { ABILITIES } from "@/data/abilities";
+import { FEAT_SKILL_PICKS, featPickKey } from "@/data/feats";
+import { SHEET_SKILL_FIELD, SKILLS } from "@/data/skills";
 import type { AbilityKey, SheetAutomationState } from "@/types";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { featOptionsFor, recordedChoiceHint, recordedChoiceLabel, recordedOptionsFor, type UpgradeFeature } from "./upgradeModel";
@@ -28,6 +30,15 @@ export function CharacterSheetUpgradeFeatPage({ feature, state }: { feature: Upg
       {selected && <article className="character-sheet-upgrade-feat-detail">
         <header><b>{selected.name}</b><small>{selected.category}{selected.prerequisite && ` · ${selected.prerequisite}`}</small></header>
         <p>{selected.description}</p>
+        {(FEAT_SKILL_PICKS[selected.name] ?? []).map((pick) => {
+          const key = featPickKey(feature.key, pick.slot);
+          const choices = pick.options === "any"
+            ? SKILLS.map((skill) => skill.name)
+            : pick.options === "proficient"
+              ? SKILLS.map((skill) => skill.name).filter((name) => automation.result.fields[`${SHEET_SKILL_FIELD[name]}P`] === true || name === state.levelChoices?.[featPickKey(feature.key, "skill")])
+              : pick.options;
+          return <label key={pick.slot} className="character-sheet-upgrade-select"><span>{pick.label}</span><select value={state.levelChoices?.[key] ?? ""} disabled={automation.readOnly} onChange={(event) => automation.setLevelChoice(key, event.target.value)}><option value="">Choose...</option>{choices.map((name) => <option key={name} value={name}>{name}</option>)}</select></label>;
+        })}
         {selected.abilityPoints > 0 && <div className="character-sheet-upgrade-feat-abilities">
           <span>Place {selected.abilityPoints} point{selected.abilityPoints === 1 ? "" : "s"} <small>{used} / {selected.abilityPoints}</small></span>
           <div>{ABILITIES.filter((ability) => selected.abilityOptions.includes(ability.key)).map((ability) => {

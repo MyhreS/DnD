@@ -56,6 +56,9 @@ export interface Subclass {
   tagline: string;
   blurb: string;
   features: LevelFeature[];
+  /** A prestige path that REPLACES the class progression from level 3: the
+   * hunter then gains only this path's features (Hunter Zealot, [page 75]). */
+  replacesProgression?: boolean;
 }
 
 export interface HunterClass {

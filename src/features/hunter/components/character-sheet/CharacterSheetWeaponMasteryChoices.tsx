@@ -10,7 +10,7 @@ export function CharacterSheetWeaponMasteryChoices() {
   return <div className="character-sheet-upgrade-choice-page">
     <ChoiceIntro
       text={`Choose ${automation.masteryCount} weapons. Mastery unlocks the special effect shown for each one when you attack with it.`}
-      help={`This does not add the weapon to your gear. ${automation.klass?.id === "bloodbound"
+      help={`This does not add the weapon to your gear. ${(automation.klass?.id === "bloodbound" || automation.klass?.id === "warden")
         ? "After a Long Rest, your class lets you change one of these weapon choices."
         : "After a Long Rest, your class lets you change the kinds of weapons you chose."}`}
       count={`${selected.length} / ${automation.masteryCount} chosen`}

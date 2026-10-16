@@ -64,6 +64,9 @@ function ReferenceRow({
 export function AppDeepcallerReference({ swap }: { swap?: ReactNode }) {
   const { card, klass, result, state, whisperLimit } = useCharacterAutomation();
   const deepcaller = klass?.id === "deepcaller";
+  // A Zealot "can no longer perform Rites of Level 2 or higher" ([page 75]):
+  // their Level 1 Rites are prepared as Zealot Whispers instead.
+  const showRites = deepcaller && !(card.subclassId === "hunter-zealot" && card.level >= 3);
   if (!deepcaller && whisperLimit === 0) return null;
   const strainLevel = String(result.fields.strainLevel ?? "—");
   const currentStrainLevel = numberOf(strainLevel);
@@ -94,10 +97,10 @@ export function AppDeepcallerReference({ swap }: { swap?: ReactNode }) {
         : <p className="appsheet-empty-copy">Choose prepared Whispers below.</p>}
     </AppPanel>
     {swap}
-    {deepcaller && <AppPanel title={`Rites available with level ${strainLevel} Strains`}>
+    {showRites && <AppPanel title={`Rites available with level ${strainLevel} Strains`}>
       <div className="appsheet-rite-reference-list">{rites.map((entry) => <ReferenceRow key={entry.id} entry={entry} characterLevel={card.level} strainLevel={currentStrainLevel} />)}</div>
     </AppPanel>}
-    {revelations.length > 0 && <AppPanel title="Forbidden Revelations" aside={<span className="appsheet-status-word">Once each / Long Rest</span>}>
+    {showRites && revelations.length > 0 && <AppPanel title="Forbidden Revelations" aside={<span className="appsheet-status-word">Once each / Long Rest</span>}>
       <div className="appsheet-rite-reference-list">{revelations.map(({ entry, level }) => <ReferenceRow key={`${level}:${entry.id}`} entry={entry} characterLevel={card.level} strainLevel={level} effectiveRiteLevel={level} />)}</div>
     </AppPanel>}
   </div>;

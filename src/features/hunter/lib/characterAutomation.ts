@@ -1,11 +1,12 @@
 import { abilityModifier, formatModifier } from "@/data/abilities";
 import { ARMOR_BY_ID } from "@/data/armor";
 import { BACKGROUNDS } from "@/data/backgrounds";
-import { CLASSES, getClass } from "@/data/classes";
+import { CLASSES, getClass, isZealot, levelFeatureDetails, levelFeatureNames } from "@/data/classes";
 import { SHEET_SKILL_FIELD, SKILLS, skillAbility } from "@/data/skills";
+import { FEAT_SKILL_PICKS, featPickKey } from "@/data/feats";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
-import { armorClassFor, maxHp, maxSanity, proficiencyBonus, studdedAddonIdsOf, weaponAttackBonus } from "@/lib/character";
+import { armorClassFor, maxHp, maxSanity, proficiencyBonus, studdedAddonIdsOf, weaponAttackBonus, withClassAbilityBonuses } from "@/lib/character";
 import { armorFor } from "@/lib/customItems";
 import { carryCondition, resolveInventory, resolveStorage, totalCarriedWeight } from "@/lib/inventory";
 import { computeSlots } from "@/lib/slots";
@@ -70,15 +71,12 @@ function featureText(card: HunterCard): string {
   const rows: string[] = [];
   for (let current = 1; current <= level; current += 1) {
     const progression = klass.progression.find((row) => row.level === current);
-    const names = progression?.features && progression.features !== "—" ? progression.features : "";
+    const names = levelFeatureNames(klass, subclass, current).join(", ");
     const extras = progression && current === level
       ? Object.entries(progression.extras).map(([name, value]) => `${name}: ${value}`).join(" · ")
       : "";
     if (names || extras) rows.push(`Level ${current}: ${[names, extras].filter(Boolean).join(" · ")}`);
-    const detail = [
-      ...(klass.features ?? []).filter((feature) => feature.level === current),
-      ...(subclass?.features ?? []).filter((feature) => feature.level === current),
-    ];
+    const detail = levelFeatureDetails(klass, subclass, current);
     for (const feature of detail) rows.push(`${feature.name} — ${feature.text}`);
   }
   return rows.join("\n\n");
@@ -88,10 +86,11 @@ function unresolvedLevelChoices(card: HunterCard): string[] {
   const klass = getClass(card.classId);
   if (!klass) return [];
   const acknowledged = card.lastSeenLevel ?? 0;
+  const subclass = getSubclass(klass.id, card.subclassId);
   return klass.progression
     .filter((row) => row.level <= card.level && row.level > acknowledged)
     .flatMap((row) => {
-      const choices = row.features.split(",").map((entry) => entry.trim()).filter((entry) =>
+      const choices = levelFeatureNames(klass, subclass, row.level).filter((entry) =>
         /^(hunter .+ subclass|ability score improvement|epic boon|fighting style|expertise|weapon mastery|forbidden revelation(?:\s*\([^)]*\))?)$/i.test(entry),
       );
       return choices.map((choice) => `Level ${row.level}: ${choice}`);
@@ -139,7 +138,56 @@ function equipmentFields(card: HunterCard, fields: SheetData, reasons: Record<st
   put(fields, reasons, "slotAnkle", storage.some((item) => item.id === "ankle-holster"), SOURCE.equipment);
 }
 
-export function automationFor(card: HunterCard): CharacterAutomationResult {
+export interface ClassResource {
+  /** Sheet field prefix: `${key}Max` / `${key}Cur`. */
+  key: string;
+  label: string;
+  max: number;
+  /** How the uses come back, shown under the counter. */
+  note: string;
+  reason: string;
+}
+
+/** Per-rest class resources tracked on the sheet; Finish a Long Rest refills
+ * every one of them. */
+export function classResources(card: HunterCard): ClassResource[] {
+  const klass = getClass(card.classId);
+  if (!klass) return [];
+  const level = Math.max(1, Math.min(20, card.level || 1));
+  const row = klass.progression.find((entry) => entry.level === level);
+  const wis = abilityModifier(card.abilities.wis);
+  const resources: ClassResource[] = [];
+  // Warden Bands Directive [page 89]: Wisdom modifier x 2 (min 1); x 3 from
+  // level 5 (Effectiveness), x 4 from level 11 (Superior Effectiveness, [page 90]).
+  if (klass.id === "warden") {
+    const factor = level >= 11 ? 4 : level >= 5 ? 3 : 2;
+    resources.push({ key: "bands", label: "Bands Directive uses", max: Math.max(1, wis * factor), reason: `Wisdom modifier x ${factor} (minimum 1)`, note: `Wisdom modifier × ${factor}. All regained on a Long Rest${level >= 5 ? " or Short Rest" : ""}.` });
+  }
+  // Bloodbound Blood Frenzy [page 80]: uses from the class table.
+  if (klass.id === "bloodbound") {
+    const max = Number(row?.extras["Blood Frenzy"] ?? 0);
+    if (max > 0) resources.push({ key: "frenzy", label: "Blood Frenzy uses", max, reason: `${klass.title} level ${level} table`, note: "One regained on a Short Rest, all on a Long Rest." });
+  }
+  // Brute Refuse the Bleeding [page 50]: uses from the class table.
+  if (klass.id === "brute") {
+    const max = Number(row?.extras["Refuse the Bleeding"] ?? 0);
+    if (level >= 2 && max > 0) resources.push({ key: "refuse", label: "Refuse the Bleeding uses", max, reason: `${klass.title} level ${level} table`, note: "Reduce damage by 1d10 + Brute level. One regained on a Short Rest, all on a Long Rest." });
+    // Battle Master Superiority Dice [page 52]: 4 d8s, 5 at level 7, 6 at 15;
+    // d10 at level 10, d12 at 18.
+    if (card.subclassId === "battle-master" && level >= 3) {
+      const die = level >= 18 ? "d12" : level >= 10 ? "d10" : "d8";
+      resources.push({ key: "superiority", label: `Superiority Dice (${die})`, max: level >= 15 ? 6 : level >= 7 ? 5 : 4, reason: "Battle Master Combat Superiority", note: "All regained on a Short or Long Rest." });
+    }
+  }
+  // Scout Tireless [page 58]: Wisdom modifier uses (minimum 1) from level 10.
+  if (klass.id === "scout" && level >= 10) {
+    resources.push({ key: "tireless", label: "Tireless uses", max: Math.max(1, wis), reason: "Wisdom modifier (minimum 1)", note: "Temporary HP 1d8 + Wisdom modifier. All regained on a Long Rest." });
+  }
+  return resources;
+}
+
+export function automationFor(storedCard: HunterCard): CharacterAutomationResult {
+  const card = withClassAbilityBonuses(storedCard);
   const fields: SheetData = {};
   const reasons: Record<string, string> = {};
   const pending: CharacterAutomationResult["pending"] = {};
@@ -148,6 +196,10 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
   const prof = proficiencyBonus(level);
   const background = BACKGROUNDS.find((entry) => entry.id === card.backgroundId);
   const featNames = new Set([background?.feat, ...(card.feats ?? [])].filter(Boolean));
+  // Resilient [page 101]: saving throw proficiency in the ability its +1 went to.
+  const resilientSaves = new Set(Object.entries(card.sheetAutomation?.levelFeats ?? {})
+    .filter(([, feat]) => feat === "Resilient")
+    .flatMap(([key]) => Object.entries(card.sheetAutomation?.levelAbilityBonuses?.[key] ?? {}).filter(([, points]) => (points ?? 0) > 0).map(([ability]) => ability)));
   const speedModifier = intField(card.sheet, "speedModifier", 0);
   const initiativeModifier = intField(card.sheet, "initiativeModifier", 0);
   const passiveModifier = intField(card.sheet, "passivePerceptionModifier", 0);
@@ -172,7 +224,7 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     const hp = maxHp(klass, card.abilities, level)
       + (featNames.has("Tough") ? level * 2 : 0)
       + (featNames.has("Boon of Fortitude") ? 40 : 0);
-    const sanity = maxSanity(klass, card.abilities, level);
+    const sanity = maxSanity(klass, card.abilities, level, card.subclassId);
     put(fields, reasons, "hpMax", String(hp), `${klass.name} Hit Die d${klass.hitDie} + Constitution modifier at each level`);
     put(fields, reasons, "hpCur", String(card.currentHp ?? hp), "Current HP, defaulting to calculated maximum");
     put(fields, reasons, "sanityMax", String(sanity), `${klass.name} base Sanity + Wisdom modifier${klass.id === "deepcaller" ? " + Fracturing Mind" : ""}`);
@@ -191,14 +243,9 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
       put(fields, reasons, "strainCur", String(strainCurrent), "Current available Strains, defaulting to the full allowance");
       put(fields, reasons, "strainLevel", String(strainLevel), `${klass.title} level ${level} progression`);
     }
-    // core-rulebook.txt [page 89] Bands Directive: uses = Wisdom modifier x 2
-    // (minimum 1); Effectiveness makes it x 3 at level 5 and Superior
-    // Effectiveness x 4 at level 11 ([pages 89–90]).
-    if (klass.id === "warden") {
-      const factor = level >= 11 ? 4 : level >= 5 ? 3 : 2;
-      const bandsMax = Math.max(1, abilityModifier(card.abilities.wis) * factor);
-      put(fields, reasons, "bandsMax", String(bandsMax), `Wisdom modifier x ${factor} (minimum 1)`);
-      put(fields, reasons, "bandsCur", String(Math.max(0, Math.min(bandsMax, intField(card.sheet, "bandsCur", bandsMax)))), "Bands Directive uses left, defaulting to the full allowance");
+    for (const resource of classResources(card)) {
+      put(fields, reasons, `${resource.key}Max`, String(resource.max), resource.reason);
+      put(fields, reasons, `${resource.key}Cur`, String(Math.max(0, Math.min(resource.max, intField(card.sheet, `${resource.key}Cur`, resource.max)))), `${resource.label} left, defaulting to the full allowance`);
     }
     // core-rulebook.txt [page 58] Roving, [page 103] Speedy, [page 106] Boon of
     // Speed, [page 40] carrying condition. `speedModifier` is kept as-is: a
@@ -214,11 +261,15 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
       speedModifier ? `custom modifier ${formatModifier(speedModifier)} ft` : "",
     ].filter(Boolean).join(" · ");
     put(fields, reasons, "speed", `${klass.speedFt + roving + featSpeed + condition.speedDelta + speedModifier} ft`, speedReasons);
+    // Moderately Armored / Heavily Armored grant Medium / Heavy armor training
+    // ([pages 99–100]).
     put(fields, reasons, "armorLight", klass.armorTraining.includes("Light armor"), `${klass.title} Armor Training`);
-    put(fields, reasons, "armorMedium", klass.armorTraining.includes("Medium armor"), `${klass.title} Armor Training`);
-    put(fields, reasons, "armorHeavy", klass.armorTraining.includes("Heavy armor"), `${klass.title} Armor Training`);
+    put(fields, reasons, "armorMedium", klass.armorTraining.includes("Medium armor") || featNames.has("Moderately Armored"), featNames.has("Moderately Armored") ? "Moderately Armored feat" : `${klass.title} Armor Training`);
+    put(fields, reasons, "armorHeavy", klass.armorTraining.includes("Heavy armor") || featNames.has("Heavily Armored"), featNames.has("Heavily Armored") ? "Heavily Armored feat" : `${klass.title} Armor Training`);
     put(fields, reasons, "wepSimple", /simple/i.test(klass.weaponProficiencies), `${klass.title} Weapon Proficiencies`);
-    put(fields, reasons, "wepMartial", /martial/i.test(klass.weaponProficiencies), `${klass.title} Weapon Proficiencies`);
+    const zealotTraining = isZealot(card);
+    // Martial Weapon Training [page 100] grants Martial weapons.
+    put(fields, reasons, "wepMartial", zealotTraining || featNames.has("Martial Weapon Training") || /martial/i.test(klass.weaponProficiencies), zealotTraining ? "Hunter Zealot: Zealot Training" : featNames.has("Martial Weapon Training") ? "Martial Weapon Training feat" : `${klass.title} Weapon Proficiencies`);
     // core-rulebook.txt [page 43]: Strength for melee weapon attacks, Dexterity
     // for ranged. Individual weapon properties (Finesse, Thrown) can override
     // which ability applies, so these are the baseline figures only.
@@ -250,7 +301,7 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
     const score = card.abilities[key];
     const mod = abilityModifier(score);
     const fromSlipperyMind = slipperyMind && (key === "wis" || key === "cha");
-    const saveProficient = (klass?.savingThrows.includes(key) ?? false) || fromSlipperyMind;
+    const saveProficient = (klass?.savingThrows.includes(key) ?? false) || fromSlipperyMind || resilientSaves.has(key);
     put(fields, reasons, `${key}Score`, String(score), card.baseAbilities ? "Bought score + background adjustment + structured level increases" : "Saved ability score");
     put(fields, reasons, `${key}Mod`, formatModifier(mod), `Modifier from ${score}`);
     put(fields, reasons, `${key}SaveP`, saveProficient, saveProficient ? (fromSlipperyMind && !klass?.savingThrows.includes(key) ? `${klass?.title} Slippery Mind saving throw proficiency` : `${klass?.title} saving throw proficiency`) : "Not granted by class");
@@ -258,8 +309,30 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
   }
 
   const backgroundSkills = background?.skills ?? [];
-  const allSkills = new Set([...card.skillProficiencies, ...backgroundSkills, ...(card.featSkills ?? []).filter((choice) => SKILLS.some((skill) => skill.name === choice))]);
+  // Boon of Skill [page 105]: proficiency in all skills.
+  const allSkills = new Set([
+    ...card.skillProficiencies,
+    ...backgroundSkills,
+    ...(card.featSkills ?? []).filter((choice) => SKILLS.some((skill) => skill.name === choice)),
+    ...(featNames.has("Boon of Skill") ? SKILLS.map((skill) => skill.name) : []),
+  ]);
   const expertise = new Set(card.sheetAutomation?.expertiseSkills ?? []);
+  // Skill picks made inside feats (Skill Expert, Keen Mind, Observant, Boon of
+  // Skill — [pages 100, 102, 105]).
+  // Battle Master Student of War [page 52]: one more Brute skill.
+  for (const [key, skill] of Object.entries(card.sheetAutomation?.levelChoices ?? {})) {
+    if (/^7:Student of War$/.test(key) && SHEET_SKILL_FIELD[skill]) allSkills.add(skill);
+  }
+  const proficientBeforeFeats = new Set(allSkills);
+  for (const [key, feat] of Object.entries(card.sheetAutomation?.levelFeats ?? {})) {
+    for (const pick of FEAT_SKILL_PICKS[feat] ?? []) {
+      const skill = card.sheetAutomation?.levelChoices?.[featPickKey(key, pick.slot)];
+      if (!skill || !SHEET_SKILL_FIELD[skill]) continue;
+      if (pick.slot === "expertise") expertise.add(skill);
+      else if (feat !== "Skill Expert" && proficientBeforeFeats.has(skill)) expertise.add(skill);
+      else allSkills.add(skill);
+    }
+  }
   // core-rulebook.txt [page 89] Warden Experience (level 2): add half the
   // Proficiency Bonus (round down) to checks with a skill you lack.
   const experience = klass?.id === "warden" && level >= 2 ? Math.floor(prof / 2) : 0;

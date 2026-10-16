@@ -2,7 +2,7 @@ import type { AbilityScores, CustomItem, HunterCard, HunterClass, SheetAutomatio
 import { abilityModifier } from "@/data/abilities";
 import { acCategory, ARMOR_BY_ID } from "@/data/armor";
 import { BACKGROUNDS } from "@/data/backgrounds";
-import { getClass } from "@/data/classes";
+import { getClass, isZealot } from "@/data/classes";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
 import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { armorFor } from "@/lib/customItems";
@@ -51,10 +51,14 @@ export function maxHp(klass: HunterClass, abilities: AbilityScores, level = 1): 
  * The Deepcaller's current "Fracturing Mind" progression grants +1 Max
  * Sanity per level and explicitly caps the resulting Max Sanity at 26.
  */
-export function maxSanity(klass: HunterClass, abilities: AbilityScores, level = 1): number {
+export function maxSanity(klass: HunterClass, abilities: AbilityScores, level = 1, subclassId?: string | null): number {
   const startingMaximum = klass.maxSanity + abilityModifier(abilities.wis);
+  // A Hunter Zealot "gain[s] no further features from the Hunter Deepcaller
+  // class" ([page 75]), so Fracturing Mind stops growing once the path is
+  // entered at level 3.
+  const fracturingLevel = isZealot({ classId: klass.id, subclassId, level }) ? 3 : Math.min(20, level);
   return Math.max(0, klass.id === "deepcaller"
-    ? Math.min(26, startingMaximum + Math.max(0, Math.min(20, level) - 1))
+    ? Math.min(26, startingMaximum + Math.max(0, fracturingLevel - 1))
     : startingMaximum);
 }
 
@@ -265,6 +269,7 @@ export function armorClass(
   addonArmorIds: string[] = [],
   studdedAddonIds: string[] = [],
   customItems: CustomItem[] = [],
+  feats: readonly string[] = [],
 ): ArmorClassResult {
   const dexMod = abilityModifier(abilities.dex);
   const main = mainArmorId ? armorFor({ customItems }, mainArmorId) : undefined;
@@ -279,9 +284,15 @@ export function armorClass(
   const studBonus = studded >= 5 ? 2 : studded >= 3 ? 1 : 0;
   const baseArmorAc = baseAc + addonBonus + studBonus;
   const cat = acCategory(baseArmorAc);
-  const dexApplied = cat.applyDex(dexMod);
+  // Medium Armor Master [page 100]: in Medium armor with Dexterity 16+, add 3
+  // rather than 2.
+  const dexApplied = cat.label === "Medium Armor" && feats.includes("Medium Armor Master") && abilities.dex >= 16
+    ? Math.min(dexMod, 3)
+    : cat.applyDex(dexMod);
+  // Defense [page 103]: +1 AC while wearing Light, Medium, or Heavy armor.
+  const defense = main && feats.includes("Defense") ? 1 : 0;
   return {
-    total: baseArmorAc + dexApplied,
+    total: baseArmorAc + dexApplied + defense,
     baseAc,
     addonBonus,
     studBonus,
@@ -295,7 +306,7 @@ export function armorClass(
 
 /** AC for a card's full worn set. */
 export function armorClassFor(
-  card: Pick<HunterCard, "abilities"> & WornArmor,
+  card: Pick<HunterCard, "abilities"> & WornArmor & Partial<Pick<HunterCard, "feats" | "backgroundId">>,
 ): ArmorClassResult {
   return armorClass(
     card.abilities,
@@ -303,7 +314,23 @@ export function armorClassFor(
     card.addonArmorIds ?? [],
     studdedAddonIdsOf(card),
     card.customItems ?? [],
+    featsOf({ backgroundId: card.backgroundId, feats: card.feats ?? [] }),
   );
+}
+
+/** Class features that raise ability scores outright, applied on read so
+ * every Hunter gets them without re-saving. Bloodbound Primal Champion
+ * (level 20, [page 83]): Strength and Constitution +4, to a maximum of 25. */
+export function withClassAbilityBonuses<T extends Pick<HunterCard, "classId" | "level" | "abilities">>(card: T): T {
+  if (card.classId !== "bloodbound" || (card.level ?? 0) < 20) return card;
+  return {
+    ...card,
+    abilities: {
+      ...card.abilities,
+      str: Math.max(card.abilities.str, Math.min(25, card.abilities.str + 4)),
+      con: Math.max(card.abilities.con, Math.min(25, card.abilities.con + 4)),
+    },
+  };
 }
 
 /** Weight of everything WORN (main + add-ons + extras + 5 lb per Studs
@@ -430,12 +457,18 @@ export function weaponAttackBonus(
   card: HunterCard,
   facts: { properties: string; attack: "Melee" | "Ranged"; category?: string } | undefined,
 ): number {
+  card = withClassAbilityBonuses(card);
   const klass = getClass(card.classId);
-  const proficient = !facts || !klass || isWeaponProficient(klass.weaponProficiencies, facts);
+  const zealot = isZealot(card);
+  // Zealot Training grants martial weapons; Eldritch Armament lets a proficient
+  // weapon use the Rite Performing ability, Intelligence ([page 76]).
+  const martialFeat = featsOf({ backgroundId: card.backgroundId, feats: card.feats ?? [] }).includes("Martial Weapon Training");
+  const proficient = !facts || !klass || isWeaponProficient(zealot || martialFeat ? `${klass.weaponProficiencies}, Martial weapons` : klass.weaponProficiencies, facts);
   const prof = proficient ? proficiencyBonus(card.level || 1) : 0;
   const str = abilityModifier(card.abilities?.str ?? 10);
   const dex = abilityModifier(card.abilities?.dex ?? 10);
-  if (!facts) return prof + str;
-  if (/Finesse/i.test(facts.properties)) return prof + Math.max(str, dex);
-  return prof + (facts.attack === "Ranged" ? dex : str);
+  const rite = zealot && proficient ? abilityModifier(card.abilities?.int ?? 10) : Number.NEGATIVE_INFINITY;
+  if (!facts) return prof + Math.max(str, rite);
+  if (/Finesse/i.test(facts.properties)) return prof + Math.max(str, dex, rite);
+  return prof + Math.max(facts.attack === "Ranged" ? dex : str, rite);
 }

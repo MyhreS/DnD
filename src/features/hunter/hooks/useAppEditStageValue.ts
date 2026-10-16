@@ -83,7 +83,10 @@ export function useAppEditStageValue(
     // suffer 2 Madness." Forward only — computed from the saved card so that
     // returning the level to its saved value clears the staged Madness again,
     // and never applied retroactively to levels already gained.
-    const levelsGained = Math.max(0, bounded - model.card.level);
+    // A Hunter Zealot keeps no Deepcaller features past level 3 ([page 75]),
+    // so only Deepcaller levels up to 3 cost Madness for a Zealot.
+    const fracturingCap = model.card.subclassId === "hunter-zealot" ? Math.min(bounded, 3) : bounded;
+    const levelsGained = Math.max(0, fracturingCap - model.card.level);
     if (model.card.classId === "deepcaller" && levelsGained > 0) {
       candidate.madness = (model.card.madness ?? 0) + 2 * levelsGained;
     } else if (candidate.madness != null) {
