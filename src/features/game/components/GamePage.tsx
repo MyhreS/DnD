@@ -33,6 +33,7 @@ import { GameWaitingRoom } from "./GameWaitingRoom";
 import { CreateItemDialog, ManagePlayersDialog, SessionLootFeed, SessionSwitchRequests } from "./GameSessionPanels";
 import { SessionBattleView } from "./SessionBattleView";
 import { SessionCombatControls, SessionCombatSection } from "./SessionCombatSection";
+import { PlayerShopPanel } from "./PlayerShopPanel";
 import { SessionShopSection } from "./SessionShopSection";
 import "./game.css";
 
@@ -681,6 +682,7 @@ export function GamePage() {
               ) : (
                 <>
                   {ownCard && <section className="game-focus-panel game-own-hunter"><div><p className="eyebrow">Your Hunter</p><h3>{ownCard.name}</h3><span>{displayClass(ownParticipant!)} · Level {ownCard.level}</span></div><button className="btn btn-ghost" type="button" onClick={() => setOpenSheet(ownCard)}>Open sheet</button></section>}
+                  {selected.status === "active" && <PlayerShopPanel game={selected} characterId={ownParticipant?.characterId} coins={ownCard?.coins ?? 0} live={!preview} />}
                   {selected.campaignId === null && selected.status === "active" && !preview && <SessionLootFeed game={selected} characterId={ownParticipant?.characterId} isDm={false} threats={combatants} />}
                   {selected.status === "lobby" && <section className="game-focus-panel"><p className="eyebrow">Waiting</p><h3>{selected.dmName} is preparing the session</h3></section>}
                 </>
@@ -700,7 +702,7 @@ export function GamePage() {
               )}
 
               {isSessionDm && selected.status === "active" && (
-                <SessionShopSection game={selected} disabled={busy} />
+                <SessionShopSection game={selected} disabled={busy} live={!preview} />
               )}
               </>}
           </main>

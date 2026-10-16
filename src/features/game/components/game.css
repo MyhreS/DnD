@@ -598,3 +598,35 @@ button.game-player-open:hover strong { color: var(--gold); }
   .shop-custom-row { flex-wrap: wrap; }
   .shop-custom-row .input:first-child { flex-basis: 100%; }
 }
+
+/* --- Player view of the DM's shop --- */
+.player-shop header { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.player-shop-purse { flex: none; padding: 8px 14px; border: 1px solid var(--gold-dim); border-radius: 999px; color: var(--gold); font: 700 1rem/1 var(--font-display); }
+.player-shop-new { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; margin: 14px 0 0; padding: 12px 14px; border: 2px solid var(--gold); border-radius: 14px; background: color-mix(in srgb, var(--gold) 14%, transparent); animation: player-shop-glow 2s ease-in-out infinite; }
+.player-shop-new span { color: var(--gold); font-size: 1.3rem; }
+.player-shop-new p { margin: 0; font-size: 0.95rem; }
+.player-shop-new button { min-height: 44px; padding: 0 16px; border: 0; border-radius: 10px; background: var(--gold); color: #12100c; font: 700 0.875rem/1 var(--font-body); cursor: pointer; }
+.player-shop-message { margin: 12px 0 0; color: var(--ink-dim); font-size: 0.95rem; }
+.player-shop-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; margin-top: 16px; }
+.player-shop-item { position: relative; display: grid; gap: 10px; padding: 16px; border: 1px solid var(--border-strong); border-radius: 16px; background: linear-gradient(180deg, var(--bg-elev-2), var(--bg-elev)); }
+.player-shop-item.is-new { border-color: var(--gold); box-shadow: 0 0 22px color-mix(in srgb, var(--gold) 22%, transparent); }
+.player-shop-item strong { display: block; font: 600 1.1rem/1.2 var(--font-display); }
+.player-shop-item small { display: block; margin-top: 4px; color: var(--ink-faint); font-size: 0.85rem; }
+.player-shop-item em { display: block; margin-top: 4px; color: var(--ink-dim); font-size: 0.875rem; }
+.player-shop-price { color: var(--gold); font: 700 1.4rem/1 var(--font-display); }
+.player-shop-badge { position: absolute; top: -10px; right: 12px; padding: 4px 10px; border-radius: 999px; background: var(--gold); color: #12100c; font: 800 0.75rem/1 var(--font-body); letter-spacing: 0.1em; text-transform: uppercase; }
+.player-shop-status { font-size: 0.875rem; font-weight: 700; }
+.player-shop-status.is-approved { color: var(--ok); }
+.player-shop-status.is-declined { color: var(--blood-bright); }
+.player-shop-item .btn { width: 100%; min-height: 44px; }
+@keyframes player-shop-glow { 50% { box-shadow: 0 0 0 5px color-mix(in srgb, var(--gold) 18%, transparent); } }
+
+/* --- DM: purchase requests --- */
+.shop-requests-slot { grid-column: 1 / -1; }
+.shop-requests { display: grid; gap: 10px; margin-top: 4px; padding: 14px; border: 2px solid var(--gold); border-radius: 14px; background: color-mix(in srgb, var(--gold) 10%, transparent); }
+.shop-requests-title { display: flex; align-items: center; gap: 10px; margin: 0; font-weight: 700; }
+.shop-requests-title span { display: grid; width: 28px; height: 28px; place-items: center; border-radius: 50%; background: var(--gold); color: #12100c; }
+.shop-requests article { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
+.shop-requests article > div { display: flex; gap: 8px; }
+.shop-requests .btn { width: auto; min-height: 44px; }
+@media (prefers-reduced-motion: reduce) { .player-shop-new { animation: none; } }

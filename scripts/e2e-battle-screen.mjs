@@ -498,6 +498,44 @@ try {
   if (!claimedHunter.data()?.customItems?.some((item) => item.name === "Ashen Spear")) throw new Error("Claimed session weapon did not reach the Hunter sheet.");
   if (!claimedHunter.data()?.inventory?.some((item) => String(item.itemId).startsWith("session-"))) throw new Error("Claimed session weapon did not reach inventory.");
 
+  // --- Shop: the player sees it, asks to buy, the DM approves or declines ---
+  await db.doc(`characters/${characterId}`).update({ coins: 20 });
+  await db.doc(`games/${gameId}`).update({ shop: { open: true, name: "The Grey Market", lines: [
+    { id: "line-lantern", itemId: "lantern", name: "Lantern, Hooded", priceGp: 11 },
+  ] } });
+  const playerShop = playerPage.locator(".player-shop");
+  await playerShop.getByText("The Grey Market", { exact: true }).waitFor();
+  await playerShop.getByText("20 GP", { exact: true }).waitFor();
+  await playerShop.getByRole("button", { name: "Ask to buy" }).click();
+  await playerShop.getByRole("button", { name: /Waiting for/ }).waitFor();
+  const dmRequests = dmPage.locator(".shop-requests");
+  await dmRequests.getByText(/wants/).waitFor();
+  await dmRequests.getByRole("button", { name: "Approve", exact: true }).click();
+  await playerShop.getByText(/Bought ✓/).waitFor();
+  await playerShop.getByText("9 GP", { exact: true }).waitFor();
+  const boughtHunter = (await db.doc(`characters/${characterId}`).get()).data();
+  if (boughtHunter?.coins !== 9 || !boughtHunter?.inventory?.some((entry) => entry.itemId === "lantern")) throw new Error("An approved purchase must take the gold and give the item.");
+  // The DM adds an item: the player is told it is new.
+  await db.doc(`games/${gameId}`).update({ "shop.lines": [
+    { id: "line-lantern", itemId: "lantern", name: "Lantern, Hooded", priceGp: 11 },
+    { id: "line-letter", name: "A stranger's sealed letter", priceGp: 5, note: "No questions" },
+  ] });
+  await playerShop.locator(".player-shop-new").getByText(/A stranger's sealed letter/).waitFor();
+  await playerShop.locator(".player-shop-item.is-new").filter({ hasText: "sealed letter" }).getByText("New", { exact: true }).waitFor();
+  await noHorizontalOverflow(playerPage, "Player shop");
+  await playerPage.screenshot({ path: "screenshots/game-player-shop.png", fullPage: true });
+  await playerShop.getByRole("button", { name: "Got it" }).click();
+  await playerShop.locator(".player-shop-new").waitFor({ state: "detached" });
+  // A declined request changes nothing.
+  await playerShop.locator(".player-shop-item").filter({ hasText: "sealed letter" }).getByRole("button", { name: "Ask to buy" }).click();
+  await dmRequests.getByText(/sealed letter/).waitFor();
+  await dmPage.screenshot({ path: "screenshots/game-shop-requests-dm.png", fullPage: true });
+  await dmRequests.getByRole("button", { name: "Decline", exact: true }).click();
+  await playerShop.getByText(/said no/).waitFor();
+  if ((await db.doc(`characters/${characterId}`).get()).data()?.coins !== 9) throw new Error("A declined purchase must not take gold.");
+  await db.doc(`games/${gameId}`).update({ "shop.open": false });
+  await playerShop.waitFor({ state: "detached" });
+
   await dmPage.setViewportSize({ width: 1280, height: 900 });
   await dmPage.getByRole("button", { name: "New battle", exact: true }).click();
   const newBattlePicker = dmPage.getByRole("dialog", { name: "Start a new battle" });

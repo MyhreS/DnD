@@ -610,3 +610,100 @@ export const setGameHunterHp = onCall(CALLABLE_OPTIONS, async (request) => {
   });
   return { ok: true, currentHp };
 });
+
+/** A player asks to buy one line from the session shop. The request waits for
+ * the DM — nothing changes hands until the DM approves it. */
+export const requestShopPurchase = onCall(CALLABLE_OPTIONS, async (request) => {
+  const uid = requireUid(request);
+  const gameId = cleanString(request.data?.gameId, 120);
+  const lineId = cleanString(request.data?.lineId, 120);
+  const characterId = cleanString(request.data?.characterId, 120);
+  if (!gameId || !lineId || !characterId) throw new HttpsError("invalid-argument", "gameId, lineId and characterId are required.");
+  const db = getFirestore();
+  const gameRef = db.doc(`games/${gameId}`);
+  const characterRef = db.doc(`characters/${characterId}`);
+  const requestRef = gameRef.collection("shopRequests").doc();
+  await db.runTransaction(async (tx) => {
+    const [gameSnapshot, characterSnapshot] = await Promise.all([tx.get(gameRef), tx.get(characterRef)]);
+    if (!gameSnapshot.exists) throw new HttpsError("not-found", "Session not found.");
+    if (!characterSnapshot.exists) throw new HttpsError("not-found", "Your Hunter no longer exists.");
+    const game = gameSnapshot.data()!;
+    const character = characterSnapshot.data()!;
+    if (game.status !== "active") throw new HttpsError("failed-precondition", "The shop is only open during an active session.");
+    if (!game.shop?.open) throw new HttpsError("failed-precondition", "The shop is closed.");
+    const roster = Array.isArray(game.participantRoster) ? game.participantRoster as ParticipantSnapshot[] : [];
+    if (!roster.some((participant) => participant.uid === uid && participant.characterId === characterId)) {
+      throw new HttpsError("permission-denied", "That Hunter is not your character in this session.");
+    }
+    if (character.ownerUid !== uid) throw new HttpsError("permission-denied", "You do not own that Hunter.");
+    const lines = Array.isArray(game.shop.lines) ? game.shop.lines as DocumentData[] : [];
+    const line = lines.find((entry) => entry.id === lineId);
+    if (!line) throw new HttpsError("not-found", "That item is no longer for sale.");
+    const priceGp = Math.max(0, Math.round(Number(line.priceGp) || 0));
+    if ((Number(character.coins) || 0) < priceGp) throw new HttpsError("failed-precondition", `You need ${priceGp} GP for that.`);
+    tx.create(requestRef, {
+      uid,
+      characterId,
+      characterName: cleanString(character.name, 100) || "Hunter",
+      lineId,
+      lineName: cleanString(line.name, 100) || "Item",
+      itemId: typeof line.itemId === "string" ? line.itemId : null,
+      note: typeof line.note === "string" ? cleanString(line.note, 300) : null,
+      priceGp,
+      status: "pending",
+      createdAt: FieldValue.serverTimestamp(),
+      resolvedAt: null,
+    });
+  });
+  return { requestId: requestRef.id };
+});
+
+/** The DM approves or declines a purchase request. Approving takes the price
+ * from the Hunter's gold and puts the item in their inventory, atomically. */
+export const resolveShopPurchase = onCall(CALLABLE_OPTIONS, async (request) => {
+  const uid = requireUid(request);
+  const gameId = cleanString(request.data?.gameId, 120);
+  const requestId = cleanString(request.data?.requestId, 120);
+  const approve = request.data?.approve === true;
+  if (!gameId || !requestId) throw new HttpsError("invalid-argument", "gameId and requestId are required.");
+  const db = getFirestore();
+  const gameRef = db.doc(`games/${gameId}`);
+  const requestRef = gameRef.collection("shopRequests").doc(requestId);
+  await db.runTransaction(async (tx) => {
+    const [gameSnapshot, requestSnapshot] = await Promise.all([tx.get(gameRef), tx.get(requestRef)]);
+    if (!gameSnapshot.exists || !requestSnapshot.exists) throw new HttpsError("not-found", "That request is gone.");
+    const game = gameSnapshot.data()!;
+    const purchase = requestSnapshot.data()!;
+    if (game.dmUid !== uid) throw new HttpsError("permission-denied", "Only the session DM can approve purchases.");
+    if (purchase.status !== "pending") throw new HttpsError("failed-precondition", "That request was already answered.");
+    if (!approve) {
+      tx.update(requestRef, { status: "declined", resolvedAt: FieldValue.serverTimestamp() });
+      return;
+    }
+    const characterRef = db.doc(`characters/${String(purchase.characterId)}`);
+    const characterSnapshot = await tx.get(characterRef);
+    if (!characterSnapshot.exists) throw new HttpsError("not-found", "That Hunter no longer exists.");
+    const character = characterSnapshot.data()!;
+    const priceGp = Math.max(0, Number(purchase.priceGp) || 0);
+    const coins = Number(character.coins) || 0;
+    if (coins < priceGp) throw new HttpsError("failed-precondition", `${character.name ?? "The Hunter"} only has ${coins} GP.`);
+    const inventory = Array.isArray(character.inventory) ? character.inventory as DocumentData[] : [];
+    const quantities = new Map<string, number>();
+    inventory.forEach((entry) => quantities.set(String(entry.itemId), Math.max(0, Number(entry.qty) || 0)));
+    const patch: DocumentData = { coins: coins - priceGp };
+    if (purchase.itemId) {
+      quantities.set(String(purchase.itemId), (quantities.get(String(purchase.itemId)) ?? 0) + 1);
+    } else {
+      // A custom shop line becomes the Hunter's own item.
+      const item: DocumentData = { id: `shop-${requestId}`, name: purchase.lineName, category: "Gear", carry: "Insignificant", weightLb: 0, source: "found", unique: true };
+      if (purchase.note) item.note = purchase.note;
+      const customItems = Array.isArray(character.customItems) ? character.customItems as DocumentData[] : [];
+      patch.customItems = [...customItems, item];
+      quantities.set(item.id, 1);
+    }
+    patch.inventory = [...quantities].filter(([, qty]) => qty > 0).map(([itemId, qty]) => ({ itemId, qty }));
+    tx.update(characterRef, patch);
+    tx.update(requestRef, { status: "approved", resolvedAt: FieldValue.serverTimestamp() });
+  });
+  return { ok: true };
+});
