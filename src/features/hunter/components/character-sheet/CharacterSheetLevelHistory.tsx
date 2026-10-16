@@ -7,8 +7,7 @@ export function CharacterSheetLevelHistory() {
   const stage = useAppEditStage();
   const entries = levelHistory(stage.savedCard);
   if (entries.length === 0) return null;
-  return <section className="character-sheet-level-history" aria-labelledby="level-history-title">
-    <h3 id="level-history-title">Level history</h3>
+  return <section className="character-sheet-level-history" aria-label="Level history">
     {entries.map((entry, index) => <details key={entry.level} className="character-sheet-level-entry" open={index === 0}>
       <summary>
         <span className="character-sheet-level-badge">{entry.level}</span>

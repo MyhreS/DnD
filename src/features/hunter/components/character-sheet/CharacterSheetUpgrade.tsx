@@ -7,7 +7,9 @@ import { CharacterSheetEquipment } from "./CharacterSheetEquipment";
 import { CharacterSheetPageLayout } from "./CharacterSheetPageLayout";
 import { CharacterSheetUpgradeChoices, type UpgradeChoiceKind } from "./CharacterSheetUpgradeChoices";
 import { CharacterSheetUpgradeFeatPage } from "./CharacterSheetUpgradeFeatPage";
-import { earnedLevel, upgradeFeatureComplete, upgradeFeatures, type UpgradeFeature } from "./upgradeModel";
+import type { UpgradeSummary } from "./CharacterSheetUpgradeCelebration";
+import { CharacterSheetUpgradeTodo, type UpgradeTodo } from "./CharacterSheetUpgradeTodo";
+import { earnedLevel, featureTodos, upgradeFeatureComplete, upgradeFeatures, type UpgradeFeature } from "./upgradeModel";
 import type { LevelFeature, Subclass } from "@/types";
 
 type Step = { id: string; title: string; kind: "automatic" | "name" | "abilities" | "choice" | "equipment" | "feature" | "review"; choice?: UpgradeChoiceKind; feature?: UpgradeFeature };
@@ -19,7 +21,7 @@ function numberValue(value: unknown): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-export function CharacterSheetUpgrade({ model, onComplete, creating = false }: { model: AppSheetModel; onComplete: () => void; creating?: boolean }) {
+export function CharacterSheetUpgrade({ model, onComplete, creating = false }: { model: AppSheetModel; onComplete: (summary: UpgradeSummary) => void; creating?: boolean }) {
   const [requestedStep, setRequestedStep] = useState(0);
   const stage = useAppEditStage();
   const automation = useCharacterAutomation();
@@ -83,7 +85,7 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
   // choice pages are derived live so newly unlocked decisions can never remain
   // counted without a page of their own.
   const [showAutomatic] = useState(() => changes.length > 0);
-  const choicePages = {
+  const liveChoicePages = {
     // An optional subclass is never *pending*, so without this the opt-in page
     // is never generated at all. core-rulebook.txt [pages 70–71] offers the
     // Hunter Zealot Prestige Class from level 3; leaving the select on
@@ -94,6 +96,15 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
       || features.some((feature) => /weapon mastery/i.test(feature.name))
       || automation.masteryCount > (saved.sheetAutomation?.weaponMasteries?.length ?? 0),
     whispers: whisperRemaining > 0 || automation.whisperLimit > (saved.preparedWhispers?.length ?? 0),
+  };
+  // A choice page that was in the flow when it opened stays there after it is
+  // completed, so the player sees "Done" instead of being jumped onwards.
+  const [openedWithPages] = useState(() => liveChoicePages);
+  const choicePages = {
+    subclass: liveChoicePages.subclass || openedWithPages.subclass,
+    expertise: liveChoicePages.expertise || openedWithPages.expertise,
+    mastery: liveChoicePages.mastery || openedWithPages.mastery,
+    whispers: liveChoicePages.whispers || openedWithPages.whispers,
   };
 
   const steps: Step[] = [];
@@ -115,6 +126,15 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
   const stepIndex = Math.min(requestedStep, steps.length - 1);
   const step = steps[stepIndex];
   const stepPending = pendingChoices.find((choice) => choice.stepId === step.id);
+  const todos: UpgradeTodo[] = step.kind === "feature" && step.feature
+    ? featureTodos(step.feature, state, card, klass)
+    : step.kind === "review"
+      ? remaining > 0
+        ? pendingChoices.map((choice) => ({ label: `${choice.label}: ${choice.detail}`, done: false }))
+        : [{ label: creating ? "Press “Create hunter” to finish" : "Press “Save upgrade” to finish your level-up", done: false }]
+      : step.kind === "choice"
+        ? [{ label: stepPending?.detail ?? `${step.title} — done`, done: !stepPending }]
+        : [];
 
   function saveUpgrade() {
     if (!canSave) return;
@@ -125,7 +145,11 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
       && automation.bonusComplete
       && remaining === 0;
     stage.apply({ lastSeenLevel: target, sheetAutomation: setupComplete ? { ...state, setupComplete: true } : state });
-    onComplete();
+    onComplete({
+      level: target,
+      changes: changes.filter(([label]) => label !== "Level").map(([label, before, after]) => [label, String(before ?? "—"), String(after ?? "—")]),
+      features: features.filter((feature) => !/subclass/i.test(feature.name)).map((feature) => feature.name),
+    });
   }
 
   function goToStep(next: number) {
@@ -142,8 +166,9 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
     className="character-sheet-upgrade-flow"
     contentClassName="character-sheet-upgrade-step"
     header={<header className="character-sheet-upgrade-step-header"><span>{creating ? `Character creation · Step ${stepIndex + 1}` : `Step ${stepIndex + 1} of ${steps.length}`}</span><i><b style={{ width: `${(stepIndex + 1) / steps.length * 100}%` }} /></i><h3>{step.title}</h3></header>}
-    footer={<footer className="character-sheet-upgrade-actions"><button type="button" className="back" disabled={stepIndex === 0} onClick={() => goToStep(stepIndex - 1)}>Previous</button><span>{step.kind === "review" ? (remaining > 0 ? `${remaining} choice${remaining === 1 ? "" : "s"} left` : creating ? "Ready to create" : "Ready to save") : stepPending?.status ?? (step.kind === "equipment" ? "Armor is optional" : "Step complete")}</span>{step.kind === "review" ? <button type="button" disabled={!canSave} onClick={saveUpgrade}>{creating ? "Create hunter" : "Save upgrade"}</button> : <button type="button" disabled={!!stepPending} onClick={() => goToStep(stepIndex + 1)}>Next</button>}</footer>}
+    footer={<footer className="character-sheet-upgrade-actions"><button type="button" className="back" disabled={stepIndex === 0} onClick={() => goToStep(stepIndex - 1)}>Previous</button><span>{step.kind === "review" ? (remaining > 0 ? `${remaining} choice${remaining === 1 ? "" : "s"} left` : creating ? "Ready to create" : "Ready to save") : stepPending?.status ?? (step.kind === "equipment" ? "Armor is optional" : "Step complete")}</span>{step.kind === "review" ? <button type="button" className={canSave ? "is-ready" : undefined} disabled={!canSave} onClick={saveUpgrade}>{creating ? "Create hunter" : "Save upgrade"}</button> : <button type="button" disabled={!!stepPending} onClick={() => goToStep(stepIndex + 1)}>Next</button>}</footer>}
   >
+      <CharacterSheetUpgradeTodo items={todos} />
       {step.kind === "automatic" && <AutomaticChanges changes={changes} />}
       {step.kind === "name" && <CreationName model={model} name={card.name} />}
       {step.kind === "abilities" && <AppAbilitiesSection model={model} view="abilities" creation />}

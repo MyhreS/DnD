@@ -9,6 +9,7 @@ import { hasStagedUpgrade, useAppEditStage } from "../appsheet/appEditStageConte
 import { useCharacterSheetPageSafeArea } from "../../hooks/useCharacterSheetPageSafeArea";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { CharacterSheetActionNeeded } from "./CharacterSheetActionNeeded";
+import { CharacterSheetUpgradeCelebration, type UpgradeSummary } from "./CharacterSheetUpgradeCelebration";
 import { CharacterSheetBackButton } from "./CharacterSheetBackButton";
 import { CharacterSheetClassAbilities } from "./CharacterSheetClassAbilities";
 import { CharacterSheetDerivedStat } from "./CharacterSheetDerivedStat";
@@ -86,6 +87,7 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
     .filter(({ item }) => item.category !== "Armor")
     .reduce((total, { qty }) => total + qty, 0);
   const [completedUpgrade, setCompletedUpgrade] = useState(0);
+  const [celebration, setCelebration] = useState<UpgradeSummary | null>(null);
   const missingChoices = Object.values(result.pending).filter((entry) => entry != null).map((entry) => entry.label);
   const showAction = !model.readOnly && upgradePending && !hasStagedUpgrade(stage.patch) && panel === null;
   const pageDefinition = panel ? PANELS[panel] : null;
@@ -97,6 +99,7 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
       <div className="character-sheet-identity-progress"><button className={upgradePending ? "character-sheet-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Level</small><strong>{displayedLevel}</strong></button><button className={upgradePending ? "character-sheet-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Insight</small><strong>{insight}</strong></button></div>
     </header>
     {completedUpgrade > 0 && <span key={completedUpgrade} className="character-sheet-upgrade-complete" role="status">Upgrade complete</span>}
+    {celebration && <CharacterSheetUpgradeCelebration summary={celebration} onClose={() => setCelebration(null)} />}
     {showAction && <CharacterSheetActionNeeded
       newLevel={earned > stage.savedCard.level ? earned : null}
       missing={missingChoices}
@@ -142,7 +145,7 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
           {panel === "progress" && <CharacterSheetProgress model={model} upgradePending={upgradePending} onUpgrade={() => onPanelChange("upgrade")} />}
           {panel === "resources" && <CharacterSheetResources model={model} />}
           {panel === "rites" && <CharacterSheetRites />}
-          {panel === "upgrade" && <CharacterSheetUpgrade model={model} onComplete={() => { setCompletedUpgrade((value) => value + 1); onPanelChange(null); }} />}
+          {panel === "upgrade" && <CharacterSheetUpgrade model={model} onComplete={(summary) => { setCompletedUpgrade((value) => value + 1); setCelebration(summary); onPanelChange(null); }} />}
         </AppAutoReasonsHidden>,
       }}
     />}
