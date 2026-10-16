@@ -27,7 +27,7 @@ function fromDoc(id: string, data: DocumentData): EnemyTemplate {
     name: String(data.name ?? "Enemy"),
     initiative: Number(data.initiative ?? 0),
     ac: typeof data.ac === "number" ? data.ac : null,
-    maxHp: Math.max(1, Number(data.maxHp ?? 1)),
+    maxHp: typeof data.maxHp === "number" ? Math.max(1, data.maxHp) : null,
     note: typeof data.note === "string" ? data.note : null,
     revealHp: data.revealHp === true,
     revealStats: data.revealStats === true,

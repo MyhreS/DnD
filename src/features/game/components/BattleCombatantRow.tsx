@@ -1,10 +1,13 @@
-import { useMemo } from "react";
-import { CONDITIONS, CONDITION_NAME } from "@/data/conditions";
 import { useCombatStore } from "@/features/play/store/combatStore";
 import type { Combatant, Game, HunterCard } from "@/types";
 import { combatVitals } from "../lib/combatPresentation";
+import { BattleConditionsCell } from "./BattleConditionsCell";
+import { BattleHealthCell } from "./BattleHealthCell";
 import { BattleRowMenu } from "./BattleRowMenu";
+import { BattleStepper } from "./BattleStepper";
 
+/** One line of the initiative list: position, who, hit points, AC, initiative,
+ * conditions and the DM's ••• menu, laid out on a fixed grid. */
 export function BattleCombatantRow({
   combatant,
   position,
@@ -27,147 +30,107 @@ export function BattleCombatantRow({
   encounterCombatants: Combatant[];
 }) {
   const patch = useCombatStore((state) => state.patch);
-  const toggleCondition = useCombatStore((state) => state.toggleCondition);
   const vitals = combatVitals(combatant, characters);
-  const healthPercent = vitals.maxHp && vitals.currentHp !== null
-    ? Math.min(100, Math.max(0, (vitals.currentHp / vitals.maxHp) * 100))
-    : 0;
-  const availableConditions = useMemo(
-    () => CONDITIONS.filter((condition) => !combatant.conditions.includes(condition.id)),
-    [combatant.conditions],
-  );
   const hunterCard = combatant.kind === "pc" && combatant.characterId
     ? characters.find((candidate) => candidate.id === combatant.characterId)
     : undefined;
-
-  async function setDamage(value: string) {
-    if (vitals.maxHp === null) return;
-    // Damage is deliberately NOT clamped to the HP maximum: Instant Death keys
-    // off the damage remaining after a Hunter drops to 0, so `currentHp` must
-    // be allowed to go negative for the DM to see it. The health bar clamps at
-    // 0% on its own.
-    const damage = Math.max(0, Number.parseInt(value, 10) || 0);
-    await patch(game.id, combatant.id, {
-      currentHp: vitals.maxHp - damage,
-      ...(combatant.kind === "monster" ? { defeated: damage >= vitals.maxHp } : {}),
-    });
-  }
-
-  function changeInitiative(delta: number) {
-    setInitiative(String(combatant.initiative + delta));
-  }
-
-  function setInitiative(value: string) {
-    const initiative = Math.min(99, Math.max(-99, Number.parseInt(value, 10) || 0));
-    if (initiative !== combatant.initiative) void patch(game.id, combatant.id, { initiative });
-  }
-
-  function changeArmorClass(delta: number) {
-    const current = combatant.ac ?? vitals.ac ?? 0;
-    const ac = Math.min(99, Math.max(0, current + delta));
-    if (ac !== current) void patch(game.id, combatant.id, { ac });
-  }
-
   // A Hunter is only ever dead because the DM said so (Not Tonight! means 0 HP
   // is not death); an enemy is dead at 0 HP too.
   const dead = combatant.defeated === true
     || (combatant.kind === "monster" && vitals.currentHp !== null && vitals.currentHp <= 0);
+  const monster = combatant.kind === "monster";
+
+  function setDamage(damage: number) {
+    if (vitals.maxHp === null) {
+      // Unknown max HP: keep a running tally until the DM learns the maximum.
+      if (monster && vitals.damageTaken !== null) void patch(game.id, combatant.id, { damageTaken: damage });
+      return;
+    }
+    // Damage is deliberately NOT clamped to the HP maximum: Instant Death keys
+    // off the damage remaining after a Hunter drops to 0, so `currentHp` must
+    // be allowed to go negative for the DM to see it. The health bar clamps at
+    // 0% on its own.
+    void patch(game.id, combatant.id, {
+      currentHp: vitals.maxHp - damage,
+      ...(monster ? { defeated: damage >= vitals.maxHp } : {}),
+    });
+  }
 
   return (
     <article
-      className={`battle-row${canManage ? " has-actions" : ""}${combatant.kind === "monster" ? " is-monster" : ""}${active ? " is-current" : ""}${dead ? " is-dead" : ""}`}
+      className={`battle-row battle-card${canManage ? " has-actions" : ""}${monster ? " is-monster" : ""}${active ? " is-current" : ""}${dead ? " is-dead" : ""}`}
       data-testid={`battle-combatant-${combatant.id}`}
       aria-current={active ? "true" : undefined}
     >
-      <header className="battle-row-header">
+      <header className="battle-card-head">
         <span className="battle-position" aria-label={`Turn position ${position}`}>{position}</span>
         <div className="battle-name">
-          <strong>{combatant.name}</strong>
-          <span>{combatant.kind === "monster" ? (dead ? "Enemy · dead" : "Enemy") : (dead ? "Hunter · fallen" : `Hunter${vitals.speed !== null ? ` · ${vitals.speed} ft speed` : ""}`)}</span>
+          <strong title={combatant.name}>{combatant.name}</strong>
+          <span className="battle-kind">{monster ? (dead ? "Enemy · dead" : "Enemy") : (dead ? "Hunter · fallen" : `Hunter${vitals.speed !== null ? ` · ${vitals.speed} ft` : ""}`)}</span>
         </div>
-        {active && <span className="battle-playing"><i aria-hidden="true" /> Playing</span>}
+        {active && <span className="battle-acting">Acting</span>}
         {canManage && (
           <BattleRowMenu
-            combatant={combatant}
-            game={game}
-            vitals={vitals}
-            hunterCard={hunterCard}
-            dead={dead}
-            disabled={disabled}
-            encounterCombatants={encounterCombatants}
-            onAddDamage={(amount) => void setDamage(String((vitals.damageTaken ?? 0) + amount))}
-          />
+          combatant={combatant}
+          game={game}
+          vitals={vitals}
+          hunterCard={hunterCard}
+          dead={dead}
+          disabled={disabled}
+          encounterCombatants={encounterCombatants}
+          onAddDamage={(amount) => setDamage((vitals.damageTaken ?? 0) + amount)}
+          onSetMaxHp={(maxHp) => {
+            const damage = vitals.damageTaken ?? 0;
+            void patch(game.id, combatant.id, {
+              maxHp,
+              currentHp: maxHp - damage,
+              damageTaken: null,
+              defeated: damage >= maxHp,
+              ...(combatant.baseStats ? { baseStats: { ...combatant.baseStats, maxHp } } : {}),
+            });
+          }}
+        />
         )}
       </header>
-
-      <div className="battle-card-body">
-        <div className="battle-health">
-          <div className="battle-health-heading">
-            <span>Hit points</span>
-            {vitals.currentHp !== null && vitals.maxHp !== null
-              ? <strong aria-label={`${combatant.name} hit points ${vitals.currentHp} of ${vitals.maxHp}`}><b>{vitals.currentHp}</b> / {vitals.maxHp}</strong>
-              : <strong>Hidden</strong>}
-          </div>
-          {vitals.maxHp !== null
-            ? <div className="battle-health-track" role="progressbar" aria-label={`${combatant.name} health`} aria-valuemin={0} aria-valuemax={vitals.maxHp} aria-valuenow={Math.max(0, vitals.currentHp ?? 0)}><span style={{ width: `${healthPercent}%` }} /></div>
-            : <div className="battle-health-track is-hidden" aria-hidden="true"><span /></div>}
-          <div className="battle-damage">
-            <div className="battle-damage-readout"><strong aria-label={`${combatant.name} damage taken ${vitals.damageTaken ?? "unknown"}`}>{vitals.damageTaken ?? "—"}</strong><span>damage</span></div>
-            {canManage && <div className="battle-health-actions">
-              <button type="button" aria-label={`Damage ${combatant.name} by 1`} disabled={disabled || vitals.maxHp === null || dead} onClick={() => void setDamage(String((vitals.damageTaken ?? 0) + 1))}>− HP</button>
-              <button type="button" aria-label={`Heal ${combatant.name} by 1`} disabled={disabled || vitals.damageTaken === null || vitals.damageTaken <= 0} onClick={() => void setDamage(String((vitals.damageTaken ?? 0) - 1))}>+ HP</button>
-            </div>}
-          </div>
-        </div>
-
-        <div className="battle-stat battle-initiative">
-          <span>Initiative</span>
-          <div className="battle-value">
-            {canManage && <button type="button" aria-label={`Decrease ${combatant.name} initiative`} disabled={disabled || combatant.initiative <= -99} onClick={() => changeInitiative(-1)}>−</button>}
-            {canManage
-              ? <input
-                  key={combatant.initiative}
-                  type="number"
-                  min="-99"
-                  max="99"
-                  defaultValue={combatant.initiative}
-                  aria-label={`Set ${combatant.name} initiative`}
-                  disabled={disabled}
-                  onBlur={(event) => setInitiative(event.target.value)}
-                  onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }}
-                />
-              : <strong aria-label={`${combatant.name} initiative ${combatant.initiative}`}>{combatant.initiative}</strong>}
-            {canManage && <button type="button" aria-label={`Increase ${combatant.name} initiative`} disabled={disabled || combatant.initiative >= 99} onClick={() => changeInitiative(1)}>+</button>}
-          </div>
-        </div>
-
-        <div className="battle-stat battle-ac">
-          <span>Armor class</span>
-          <div className="battle-value">
-            {canManage && <button type="button" aria-label={`Decrease ${combatant.name} armor class`} disabled={disabled || (vitals.ac ?? 0) <= 0} onClick={() => changeArmorClass(-1)}>−</button>}
-            <strong aria-label={`${combatant.name} armor class ${vitals.ac ?? "unknown"}`}>{vitals.ac ?? "—"}</strong>
-            {canManage && <button type="button" aria-label={`Increase ${combatant.name} armor class`} disabled={disabled || (vitals.ac ?? 0) >= 99} onClick={() => changeArmorClass(1)}>+</button>}
-          </div>
-        </div>
+      <BattleHealthCell name={combatant.name} vitals={vitals} canManage={canManage} disabled={disabled} dead={dead} onSetDamage={setDamage} />
+      <div className="battle-stats">
+        <BattleStepper
+          className="battle-ac"
+          icon={<ShieldIcon />}
+          label="Armor class"
+          name={combatant.name}
+          noun="armor class"
+          value={vitals.ac}
+          min={0}
+          max={99}
+          canManage={canManage}
+          disabled={disabled}
+          onChange={(ac) => void patch(game.id, combatant.id, { ac })}
+        />
+        <BattleStepper
+          className="battle-initiative"
+          icon={<BoltIcon />}
+          label="Initiative"
+          name={combatant.name}
+          noun="initiative"
+          value={combatant.initiative}
+          min={-99}
+          max={99}
+          canManage={canManage}
+          disabled={disabled}
+          editable
+          onChange={(initiative) => void patch(game.id, combatant.id, { initiative })}
+        />
       </div>
-
-      <div className="battle-conditions">
-        <span className="battle-conditions-label">Conditions</span>
-        {combatant.conditions.length === 0 ? <span className="battle-no-conditions">None</span> : combatant.conditions.map((conditionId) => {
-          const since = combatant.conditionSince?.[conditionId];
-          const rounds = since ? Math.max(1, round - since + 1) : null;
-          const label = `${CONDITION_NAME[conditionId] ?? conditionId}${rounds ? ` · ${rounds}r` : ""}`;
-          return canManage
-            ? <button className="battle-condition" key={conditionId} type="button" aria-label={`Remove ${CONDITION_NAME[conditionId] ?? conditionId} from ${combatant.name}`} disabled={disabled} onClick={() => void toggleCondition(game.id, combatant, conditionId, round)}>{label}<span aria-hidden="true">×</span></button>
-            : <span key={conditionId}>{label}</span>;
-        })}
-        {canManage && (
-          <select aria-label={`Add condition to ${combatant.name}`} value="" disabled={disabled || availableConditions.length === 0} onChange={(event) => { if (event.target.value) void toggleCondition(game.id, combatant, event.target.value, round); }}>
-            <option value="">+ Condition</option>
-            {availableConditions.map((condition) => <option key={condition.id} value={condition.id}>{condition.name}</option>)}
-          </select>
-        )}
-      </div>
+      <BattleConditionsCell combatant={combatant} game={game} round={round} canManage={canManage} disabled={disabled} />
     </article>
   );
+}
+
+function ShieldIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M12 3 5 6v5c0 4.4 2.9 8.3 7 9.6 4.1-1.3 7-5.2 7-9.6V6l-7-3Z" /></svg>;
+}
+
+function BoltIcon() {
+  return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinejoin="round"><path d="M13 2 4 14h7l-1 8 9-12h-7l1-8Z" /></svg>;
 }

@@ -5,7 +5,9 @@ import { useCharactersSync } from "@/features/play/hooks/useCharactersSync";
 import type { Game, HunterCard } from "@/types";
 import { BattleCombatantRow } from "./BattleCombatantRow";
 import { BattleFallenRoster } from "./BattleFallenRoster";
+import { BattleTurnTrack } from "./BattleTurnTrack";
 import { encounterCombatants } from "../lib/combatPresentation";
+import { useStickyTopbarOffset } from "../hooks/useStickyTopbarOffset";
 import "./battle-screen.css";
 
 export function SessionBattleView({
@@ -24,6 +26,7 @@ export function SessionBattleView({
   onBack: () => void;
 }) {
   useWakeLock();
+  useStickyTopbarOffset();
   // The fallen roster reads the shared archive subscription.
   useCharactersSync();
   const allCombatants = useCombatStore((state) => state.combatants);
@@ -40,26 +43,27 @@ export function SessionBattleView({
   return (
     <main className="battle-screen game-battle-mode" aria-label={`${game.title} battle screen`} data-testid="session-battle-screen">
       <header className="battle-header">
-        <div className="battle-title">
-          <button className="battle-back" type="button" onClick={onBack}><span aria-hidden="true">←</span> Session</button>
-          <h1>{game.title}</h1>
-        </div>
+        <button className="battle-back" type="button" onClick={onBack}><span aria-hidden="true">←</span> Session</button>
+        <h1>{game.title}</h1>
+      </header>
+
+      <section className="battle-command" aria-label="Current turn">
         <div className="battle-round" aria-label={`Round ${round}`}>
           <span>Round</span>
           <strong>{round}</strong>
         </div>
-      </header>
-
-      <section className="battle-spotlight" aria-label="Current turn">
-        <div className="battle-turn-mark" aria-hidden="true"><span>{currentPosition + 1 || "–"}</span></div>
         <div className="battle-live-status" aria-live="polite">
-          <span>Current turn</span>
-          <strong>{current?.name ?? "Waiting for initiative"}</strong>
-          {current && <small>{current.kind === "monster" ? "Enemy" : "Hunter"} · Turn {currentPosition + 1} of {order.length}</small>}
+          <span><em className="battle-round-inline">Round {round} · </em>{current ? `Turn ${currentPosition + 1} of ${order.length}` : "Current turn"}</span>
+          <strong className={current?.kind === "monster" ? "is-monster" : undefined}>{current?.name ?? "Waiting for initiative"}</strong>
         </div>
-        {next && <div className="battle-next-up"><span>Up next</span><strong>{next.name}</strong></div>}
+        <div className="battle-next-up">
+          <span>Up next</span>
+          <strong>{next?.name ?? "—"}</strong>
+        </div>
         {isDm && dmControls}
       </section>
+
+      {order.length > 0 && <BattleTurnTrack order={order} currentId={current?.id ?? null} characters={characters} />}
 
       {order.length === 0 ? (
         <section className="battle-waiting" aria-live="polite">
@@ -68,31 +72,22 @@ export function SessionBattleView({
           <p>The DM is preparing the encounter.</p>
         </section>
       ) : (
-        <div className="battle-layout">
-          <div className="battle-roster-heading">
-            <div>
-              <span>Encounter</span>
-              <h2>Turn order</h2>
-            </div>
-            <strong>{order.length} combatant{order.length === 1 ? "" : "s"}</strong>
-          </div>
-          <section className="battle-order" aria-label="Battle initiative order">
-            {order.map((combatant, index) => (
-              <BattleCombatantRow
-                key={combatant.id}
-                combatant={combatant}
-                position={index + 1}
-                round={round}
-                active={combatant.id === encounter.turnId}
-                characters={characters}
-                game={game}
-                canManage={isDm}
-                disabled={disabled}
-                encounterCombatants={combatants}
-              />
-            ))}
-          </section>
-        </div>
+        <section className={`battle-order${isDm ? " has-actions" : ""}`} aria-label="Battle initiative order">
+          {order.map((combatant, index) => (
+            <BattleCombatantRow
+              key={combatant.id}
+              combatant={combatant}
+              position={index + 1}
+              round={round}
+              active={combatant.id === current?.id}
+              characters={characters}
+              game={game}
+              canManage={isDm}
+              disabled={disabled}
+              encounterCombatants={combatants}
+            />
+          ))}
+        </section>
       )}
 
       <BattleFallenRoster gameId={game.id} isDm={isDm} disabled={disabled} />

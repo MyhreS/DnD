@@ -47,6 +47,7 @@ const damaged: Combatant = {
 assert.deepEqual(resetEnemyPatch(damaged), {
   ...templateStats(template),
   currentHp: 80,
+  damageTaken: null,
   defeated: false,
   conditions: [],
   conditionSince: {},
@@ -55,5 +56,12 @@ assert.deepEqual(resetEnemyPatch(damaged), {
 const legacy = { ...damaged, baseStats: null, maxHp: 50 };
 assert.equal(combatantBaseStats(legacy).maxHp, 50, "legacy enemies reset to their stored maximum");
 assert.equal(resetEnemyPatch(legacy).currentHp, 50, "legacy damage resets without a template snapshot");
+
+// Unknown max HP: the enemy keeps no maximum and resets to an empty damage tally.
+const unknown = { ...damaged, maxHp: null, currentHp: null, damageTaken: 12, baseStats: { ...templateStats(template), maxHp: null } };
+assert.equal(combatantBaseStats(unknown).maxHp, null, "an unknown maximum stays unknown");
+assert.equal(resetEnemyPatch(unknown).currentHp, null, "unknown-HP enemies reset without inventing HP");
+assert.equal(resetEnemyPatch(unknown).damageTaken, 0, "unknown-HP enemies reset their damage tally");
+assert.equal(combatantBaseStats({ ...unknown, baseStats: null }).maxHp, null, "a legacy row without HP stays unknown");
 
 console.log("enemy library: ok");

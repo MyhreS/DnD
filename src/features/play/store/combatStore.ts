@@ -36,7 +36,7 @@ export interface PcSeed {
 export interface MonsterInput {
   name: string;
   initiative: number;
-  maxHp: number;
+  maxHp: number | null;
   ac: number | null;
   note?: string | null;
   revealHp?: boolean;
@@ -295,6 +295,8 @@ export const useCombatStore = create<CombatState>((set, get) => {
         ac: m.ac,
         maxHp: m.maxHp,
         currentHp: m.maxHp,
+        // Unknown max HP: the DM tallies damage dealt instead.
+        damageTaken: m.maxHp === null ? 0 : null,
         defeated: false,
         conditions: [] as string[],
         note: m.note ?? null,

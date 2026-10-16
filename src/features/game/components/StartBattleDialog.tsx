@@ -34,7 +34,7 @@ export function StartBattleDialog({
             {available.map((template) => (
               <label key={template.id}>
                 <input type="checkbox" checked={selected.has(template.id)} onChange={() => toggle(template.id)} />
-                <span><strong>{template.name}</strong><small>{template.maxHp} HP · Initiative {template.initiative} · AC {template.ac ?? "—"}</small></span>
+                <span><strong>{template.name}</strong><small>{template.maxHp ?? "?"} HP · Initiative {template.initiative} · AC {template.ac ?? "—"}</small></span>
               </label>
             ))}
           </div>

@@ -28,7 +28,10 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
     return {
       currentHp: current,
       maxHp: max,
-      damageTaken: max === null || current === null ? null : Math.max(0, max - current),
+      // Unknown max HP: the stored tally is the only damage figure there is.
+      damageTaken: max === null
+        ? (typeof combatant.damageTaken === "number" ? combatant.damageTaken : null)
+        : current === null ? null : Math.max(0, max - current),
       ac: combatant.ac ?? null,
       speed: null,
     };

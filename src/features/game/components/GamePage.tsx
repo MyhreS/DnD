@@ -493,7 +493,12 @@ export function GamePage() {
     setManagingEnemies(true);
   }
 
-  async function saveEnemy(stats: EnemyStats, addToCurrentBattle: boolean) {
+  async function saveEnemy(stats: EnemyStats, addToCurrentBattle: boolean, saveToLibrary: boolean) {
+    if (!saveToLibrary) {
+      // A one-off foe: straight into the battle, never into the library.
+      if (selected && await addMonster(selected.id, stats, selected.combat?.encounterId ?? 0)) closeEnemyEditor();
+      return;
+    }
     let saved: EnemyTemplate | null = null;
     if (editingEnemy === "new") {
       saved = await enemyLibrary.create(stats);

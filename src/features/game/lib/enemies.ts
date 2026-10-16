@@ -18,7 +18,7 @@ export function combatantBaseStats(combatant: Combatant): EnemyStats {
     name: combatant.name,
     initiative: combatant.initiative,
     ac: combatant.ac ?? null,
-    maxHp: Math.max(1, combatant.maxHp ?? 1),
+    maxHp: combatant.maxHp == null ? null : Math.max(1, combatant.maxHp),
     note: combatant.note ?? null,
     revealHp: combatant.revealHp === true,
     revealStats: combatant.revealStats === true,
@@ -30,6 +30,7 @@ export function resetEnemyPatch(combatant: Combatant): Partial<Combatant> {
   return {
     ...stats,
     currentHp: stats.maxHp,
+    damageTaken: stats.maxHp === null ? 0 : null,
     defeated: false,
     conditions: [],
     conditionSince: {},
