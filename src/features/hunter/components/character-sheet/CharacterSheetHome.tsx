@@ -19,11 +19,12 @@ import { CharacterSheetIcon, type CharacterSheetIconName } from "./CharacterShee
 import { CharacterSheetPageStack } from "./CharacterSheetPageStack";
 import { CharacterSheetProgress } from "./CharacterSheetProgress";
 import { CharacterSheetResources } from "./CharacterSheetResources";
+import { CharacterSheetRites } from "./CharacterSheetRites";
 import { CharacterSheetNotes } from "./CharacterSheetNotes";
 import { CharacterSheetSanity } from "./CharacterSheetSanity";
 import { CharacterSheetUpgrade } from "./CharacterSheetUpgrade";
 
-export type CharacterSheetPanel = "profile" | "abilities" | "skills" | "classAbilities" | "ac" | "speed" | "passive" | "initiative" | "inventory" | "notes" | "equipment" | "health" | "sanity" | "progress" | "resources" | "upgrade";
+export type CharacterSheetPanel = "profile" | "abilities" | "skills" | "classAbilities" | "ac" | "speed" | "passive" | "initiative" | "inventory" | "notes" | "equipment" | "health" | "sanity" | "progress" | "resources" | "rites" | "upgrade";
 const PANELS: Record<CharacterSheetPanel, { title: string }> = {
   profile: { title: "Hunter & build" },
   abilities: { title: "Abilities" },
@@ -40,6 +41,7 @@ const PANELS: Record<CharacterSheetPanel, { title: string }> = {
   sanity: { title: "Madness" },
   progress: { title: "Insight & level" },
   resources: { title: "Resources" },
+  rites: { title: "Rites & Whispers" },
   upgrade: { title: "Upgrade character" },
 };
 const LEFT: Array<{ panel: CharacterSheetPanel; icon: CharacterSheetIconName; label: string }> = [
@@ -52,6 +54,7 @@ const RIGHT: Array<{ panel: CharacterSheetPanel; icon: CharacterSheetIconName; l
   { panel: "notes", icon: "notes", label: "Notes" },
   { panel: "resources", icon: "resources", label: "Resources" },
 ];
+const RITES = { panel: "rites", icon: "rites", label: "Rites & Whispers" } satisfies (typeof RIGHT)[number];
 
 function numberOf(value: unknown, fallback = 0): number {
   const parsed = Number.parseInt(String(value), 10);
@@ -64,7 +67,8 @@ function Rail({ items, open }: { items: typeof LEFT; open: (panel: CharacterShee
 
 export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, onBack, backRef, saveMsg }: { model: AppSheetModel; notesModel: AppSheetModel; panel: CharacterSheetPanel | null; onPanelChange: (panel: CharacterSheetPanel | null) => void; onBack: () => void; backRef: RefObject<HTMLButtonElement | null>; saveMsg: string }) {
   const stage = useAppEditStage();
-  const { card, klass, background, result } = useCharacterAutomation();
+  const { card, klass, background, result, whisperLimit } = useCharacterAutomation();
+  const rightRail = klass?.id === "deepcaller" || whisperLimit > 0 ? [...RIGHT, RITES] : RIGHT;
   const name = sheetText(model.data, "name") || card.name || "Unnamed hunter";
   const hpMax = numberOf(result.fields.hpMax);
   const hp = stage.previewCard.currentHp ?? hpMax;
@@ -93,7 +97,7 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
     <div className="character-sheet-stage">
       <div className="character-sheet-rail character-sheet-rail-left"><Rail items={LEFT} open={onPanelChange} /></div>
       <button className="character-sheet-character" type="button" aria-label="Open equipment slots" onClick={() => onPanelChange("equipment")}><span>Tap to equip</span><CharacterSheetFigure classId={card.classId} /><small><CharacterSheetIcon name="armor" /> Equipment</small></button>
-      <div className="character-sheet-rail character-sheet-rail-right"><Rail items={RIGHT} open={onPanelChange} /></div>
+      <div className="character-sheet-rail character-sheet-rail-right"><Rail items={rightRail} open={onPanelChange} /></div>
     </div>
     <section className="character-sheet-readouts" aria-label="At a glance">
       <button type="button" onClick={() => onPanelChange("ac")}><small>AC</small><strong>{String(result.fields.ac ?? "—")}</strong></button>
@@ -129,6 +133,7 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
           {panel === "sanity" && <CharacterSheetSanity model={model} />}
           {panel === "progress" && <CharacterSheetProgress model={model} upgradePending={upgradePending} onUpgrade={() => onPanelChange("upgrade")} />}
           {panel === "resources" && <CharacterSheetResources model={model} />}
+          {panel === "rites" && <CharacterSheetRites />}
           {panel === "upgrade" && <CharacterSheetUpgrade model={model} onComplete={() => { setCompletedUpgrade((value) => value + 1); onPanelChange(null); }} />}
         </AppAutoReasonsHidden>,
       }}

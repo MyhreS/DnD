@@ -1,12 +1,13 @@
 import { BACKGROUNDS } from "@/data/backgrounds";
 import { CLASSES } from "@/data/classes";
-import { ALWAYS_PREPARED_ZEALOT_IDS, DEEPCALLER_RITES, DEEPCALLER_WHISPERS, TOOL_PROFICIENCIES, type DeepcallerReference } from "@/data/characterOptions";
+import { TOOL_PROFICIENCIES } from "@/data/characterOptions";
 import { ORIGIN_FEATS } from "@/data/feats";
 import { SKILLS } from "@/data/skills";
 import { ChoiceToggle } from "../appsheet/appSheetShared";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { CharacterSheetBackgroundAbilities, CharacterSheetSkillChoices } from "./CharacterSheetGuidedChoices";
 import { CharacterSheetWeaponMasteryChoices } from "./CharacterSheetWeaponMasteryChoices";
+import { CharacterSheetWhisperChoices } from "./CharacterSheetWhisperChoices";
 
 export type UpgradeChoiceKind = "class" | "background" | "background-abilities" | "class-skills" | "skilled" | "subclass" | "expertise" | "mastery" | "whispers";
 
@@ -15,7 +16,6 @@ export function CharacterSheetUpgradeChoices({ kind, target }: { kind: UpgradeCh
   const { card, klass, background, state } = automation;
   const classSkills = state.classSkills ?? [];
   const expertise = state.expertiseSkills ?? [];
-  const whispers = card.preparedWhispers ?? [];
 
   if (kind === "class") return <div className="character-sheet-upgrade-choice-page"><label className="character-sheet-upgrade-select"><span>Hunter class</span><select value={card.classId} onChange={(event) => automation.chooseClass(event.target.value)}><option value="">Choose...</option>{CLASSES.map((entry) => <option key={entry.id} value={entry.id}>{entry.title}</option>)}</select></label>{klass && <article className="character-sheet-upgrade-detail"><b>{klass.tagline}</b><p>{klass.blurb}</p><small>d{klass.hitDie} hit die · {klass.primaryAbility} · {klass.maxSanity} sanity</small></article>}</div>;
 
@@ -38,28 +38,7 @@ export function CharacterSheetUpgradeChoices({ kind, target }: { kind: UpgradeCh
 
   if (kind === "expertise") return <CharacterSheetSkillChoices kind="expertise" intro={`Choose ${automation.expertiseLimit} skill${automation.expertiseLimit === 1 ? "" : "s"} for Expertise.`} options={SKILLS.filter((skill) => card.skillProficiencies.includes(skill.name)).map((skill) => skill.name)} selected={expertise} limit={automation.expertiseLimit} onToggle={automation.toggleExpertise} />;
   if (kind === "mastery") return <CharacterSheetWeaponMasteryChoices />;
-  if (kind === "whispers") {
-    // Zealot Whispers — core-rulebook.txt [pages 76–77]. A level-3+ Zealot may
-    // also prepare Level 1 Rites, and always has Eldritch Strike and Armor of
-    // The Drowned Star prepared without them counting against the limit.
-    const zealot = card.subclassId === "hunter-zealot" && card.level >= 3;
-    const options: Array<{ entry: DeepcallerReference; zealotOption: boolean }> = [
-      ...DEEPCALLER_WHISPERS.map((entry) => ({ entry, zealotOption: false })),
-      ...(zealot ? DEEPCALLER_RITES.filter((rite) => rite.level === 1).map((entry) => ({ entry, zealotOption: true })) : []),
-    ];
-    return <div className="character-sheet-upgrade-choice-page"><p>Prepare {automation.whisperLimit} Whispers. Each effect is shown here.</p>{options.map(({ entry, zealotOption }) => {
-      const granted = zealot && ALWAYS_PREPARED_ZEALOT_IDS.includes(entry.id);
-      const checked = granted || whispers.includes(entry.id);
-      return <ChoiceToggle
-        key={entry.id}
-        label={entry.name}
-        meta={`${granted ? "Always prepared · " : zealotOption ? "Zealot Whisper · " : ""}${entry.performing} · ${entry.range} · ${entry.damage} ${entry.damageType}`}
-        checked={checked}
-        disabled={granted || (!checked && whispers.length >= automation.whisperLimit)}
-        onChange={() => automation.toggleWhisper(entry.id)}
-      />;
-    })}</div>;
-  }
+  if (kind === "whispers") return <CharacterSheetWhisperChoices intro={`Prepare ${automation.whisperLimit} Whispers. Each effect is shown here.`} />;
   return <p>No choice is required on this step through level {target}.</p>;
 }
 

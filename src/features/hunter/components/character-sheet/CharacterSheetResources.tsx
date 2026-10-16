@@ -1,5 +1,4 @@
 import type { AppSheetModel } from "../appsheet/appSheetShared";
-import { AppDeepcallerReference } from "../appsheet/AppDeepcallerReference";
 import { sheetBool } from "../appsheet/appSheetValues";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { CharacterSheetRecovery } from "./CharacterSheetRecovery";
@@ -28,6 +27,5 @@ export function CharacterSheetResources({ model }: { model: AppSheetModel }) {
       {["dsF1", "dsF2", "dsF3"].map((field, index) => <label key={field}><input type="checkbox" checked={sheetBool(model.data, field)} disabled={disabled} onChange={(event) => model.setField(field, event.target.checked)} /> Death save failure {index + 1}</label>)}
     </div></section>
     <CharacterSheetTransformations disabled={disabled} />
-    <AppDeepcallerReference />
   </div>;
 }
