@@ -61,6 +61,7 @@ await db.doc(`characters/${characterId}`).set({
   studdedAddonIds: [],
   extraArmorIds: [],
   currentHp: 24,
+  notTonight: true,
   notes: "",
   sheet: { name: "Lady Maria", class: "Hunter Warden", level: "3", initiative: "+3", hpCur: "24", hpMax: "28", ac: "15" },
   createdAt: Date.now(),
@@ -359,6 +360,84 @@ try {
   if (pcCombatants.empty || (pcCombatants.docs[0].data().currentHp ?? null) !== null) throw new Error("Hunter battle HP should live on the sheet, not the battle record.");
   if (damagedHunter.data()?.currentHp !== 21 || damagedHunter.data()?.sheet?.hpCur !== "21") throw new Error("Battle damage did not reach the Hunter sheet.");
   if (damagedHunter.data()?.sheet?.ac !== "15") throw new Error("Battle controls must change only HP on the Hunter sheet.");
+
+  // --- Every Hunter HP action, core-rulebook.txt [pages 21, 45] ---
+  const hunterHp = async () => (await db.doc(`characters/${characterId}`).get()).data();
+  const playerHunter = playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" });
+  const hit = async (amount, action = "Damage") => {
+    await hunterControl.getByLabel("Amount for Lady Maria").fill(String(amount));
+    await hunterControl.getByRole("button", { name: `${action} Lady Maria`, exact: true }).click();
+  };
+  await hit(2, "Heal");
+  await hunterControl.getByLabel("Lady Maria damage taken 5").waitFor();
+  // Not Tonight! turns lethal damage into 1 HP and is expended.
+  await hit(40);
+  await hunterControl.getByText(/Not Tonight! spent/).waitFor();
+  await hunterControl.getByLabel("Lady Maria hit points 1 of 28").waitFor();
+  await sleep(300);
+  if ((await hunterHp())?.currentHp !== 1 || (await hunterHp())?.notTonight !== false) throw new Error("Not Tonight! did not keep the Hunter at 1 HP and expend itself.");
+  // Without Not Tonight!, 0 HP means Dying and Unconscious.
+  await hit(10);
+  await hunterControl.getByText("Hunter · dying", { exact: true }).waitFor();
+  await playerHunter.getByText(/Dying/).first().waitFor();
+  await playerHunter.getByText(/Unconscious/).waitFor();
+  await sleep(300);
+  if ((await hunterHp())?.currentHp !== 0) throw new Error("The Hunter sheet should floor at 0 HP while Dying.");
+  // Healing above 0 ends Dying.
+  await hit(15, "Heal");
+  await hunterControl.getByLabel("Lady Maria hit points 6 of 28").waitFor();
+  await playerHunter.getByText(/Unconscious/).waitFor({ state: "detached" });
+  // Remaining damage reaching the maximum is Instant Death: the death prompt opens.
+  await hit(40);
+  const deathDialog = dmPage.getByRole("dialog", { name: "Lady Maria dies" });
+  await deathDialog.waitFor();
+  await noHorizontalOverflow(dmPage, "Death prompt");
+  await dmPage.screenshot({ path: "screenshots/game-battle-instant-death.png", fullPage: true });
+  await deathDialog.getByRole("button", { name: "Close" }).click();
+  await deathDialog.waitFor({ state: "detached" });
+  await hit(50, "Heal");
+  await hunterControl.getByLabel("Lady Maria hit points 16 of 28").waitFor();
+  await hunterControl.getByText("Hunter · dying").waitFor({ state: "detached" });
+
+  // --- Enemy killed by damage, then revived ---
+  const houndControl = dmPage.locator(".battle-row").filter({ hasText: "Grave Hound" });
+  await houndControl.getByLabel("Amount for Grave Hound").fill("18");
+  await houndControl.getByRole("button", { name: "Damage Grave Hound", exact: true }).click();
+  await houndControl.getByText("Enemy · dead", { exact: true }).waitFor();
+  await playerPage.locator(".battle-row").filter({ hasText: "Grave Hound" }).getByText("Enemy · dead", { exact: true }).waitFor();
+  await openCombatantOptions(houndControl, "Grave Hound", "Revive Grave Hound");
+  await houndControl.getByRole("button", { name: "Revive Grave Hound" }).click();
+  await houndControl.getByText("Enemy", { exact: true }).waitFor();
+
+  // --- An enemy with unknown HP, added to this battle only ---
+  await dmPage.getByLabel("Battle options").click();
+  await dmPage.getByRole("button", { name: "Add enemy", exact: true }).click();
+  await dmPage.getByRole("dialog", { name: "Manage enemies" }).getByRole("button", { name: "New enemy" }).click();
+  const newEnemy = dmPage.getByRole("dialog", { name: "New enemy" });
+  await newEnemy.getByLabel("Name").fill("Shade of Yharnam");
+  await newEnemy.getByLabel("Initiative").fill("4");
+  await newEnemy.getByRole("button", { name: "Add to battle only" }).click();
+  const library = dmPage.getByRole("dialog", { name: "Manage enemies" });
+  await library.waitFor();
+  if (await library.getByText("Shade of Yharnam").count()) throw new Error("A battle-only enemy was saved to the library.");
+  await library.getByRole("button", { name: "Done", exact: true }).click();
+  const shade = dmPage.locator(".battle-row").filter({ hasText: "Shade of Yharnam" });
+  await shade.getByText("HP unknown", { exact: true }).waitFor();
+  await shade.getByLabel("Amount for Shade of Yharnam").fill("7");
+  await shade.getByRole("button", { name: "Damage Shade of Yharnam", exact: true }).click();
+  await shade.getByLabel("Shade of Yharnam damage taken 7").waitFor();
+  await openCombatantOptions(shade, "Shade of Yharnam", "Remove enemy");
+  await shade.getByLabel("Max HP for Shade of Yharnam").fill("20");
+  await shade.getByRole("button", { name: "Set", exact: true }).click();
+  await shade.getByLabel("Shade of Yharnam hit points 13 of 20").waitFor();
+  await openCombatantOptions(shade, "Shade of Yharnam", "Remove enemy");
+  await shade.getByRole("button", { name: "Remove enemy", exact: true }).click();
+  await shade.waitFor({ state: "detached" });
+
+  await dmPage.setViewportSize({ width: 390, height: 844 });
+  await noHorizontalOverflow(dmPage, "DM battle after every action, mobile");
+  await dmPage.screenshot({ path: "screenshots/game-battle-actions-mobile.png", fullPage: true });
+  await dmPage.setViewportSize({ width: 1280, height: 900 });
 
   await noHorizontalOverflow(dmPage, "Clean DM battle view");
   await dmPage.screenshot({ path: "screenshots/game-battle-mode-dm.png", fullPage: true });

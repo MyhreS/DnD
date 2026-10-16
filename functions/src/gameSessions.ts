@@ -582,6 +582,9 @@ export const setGameHunterHp = onCall(CALLABLE_OPTIONS, async (request) => {
     throw new HttpsError("invalid-argument", "gameId, characterId and currentHp are required.");
   }
   const currentHp = Math.max(0, Math.min(9999, Math.round(raw)));
+  // Not Tonight! [page 45]: when damage would drop the Hunter to 0, the feature
+  // is expended and they remain at 1 HP.
+  const spendNotTonight = request.data?.spendNotTonight === true;
   const db = getFirestore();
   const gameRef = db.doc(`games/${gameId}`);
   const characterRef = db.doc(`characters/${characterId}`);
@@ -602,6 +605,7 @@ export const setGameHunterHp = onCall(CALLABLE_OPTIONS, async (request) => {
     tx.update(characterRef, {
       currentHp,
       ...(sheet && typeof sheet === "object" && "hpCur" in sheet ? { "sheet.hpCur": String(currentHp) } : {}),
+      ...(spendNotTonight ? { notTonight: false } : {}),
     });
   });
   return { ok: true, currentHp };

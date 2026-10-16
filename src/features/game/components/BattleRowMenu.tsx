@@ -18,6 +18,8 @@ export function BattleRowMenu({
   encounterCombatants,
   onAddDamage,
   onSetMaxHp,
+  deathOpen,
+  onDeathOpenChange,
 }: {
   combatant: Combatant;
   game: Game;
@@ -28,6 +30,9 @@ export function BattleRowMenu({
   encounterCombatants: Combatant[];
   onAddDamage: (amount: number) => void;
   onSetMaxHp: (maxHp: number) => void;
+  /** The death confirmation is owned by the row, so lethal damage can open it too. */
+  deathOpen: boolean;
+  onDeathOpenChange: (open: boolean) => void;
 }) {
   const patch = useCombatStore((state) => state.patch);
   const remove = useCombatStore((state) => state.remove);
@@ -35,7 +40,6 @@ export function BattleRowMenu({
   const killCharacter = useCharactersStore((state) => state.killCharacter);
   const charactersBusy = useCharactersStore((state) => state.busy);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [deathOpen, setDeathOpen] = useState(false);
   const [maxHpDraft, setMaxHpDraft] = useState("");
   const unknownHp = combatant.kind === "monster" && vitals.maxHp === null;
 
@@ -48,7 +52,7 @@ export function BattleRowMenu({
    * marked dead so the initiative order shows what happened. */
   async function confirmDeath(spendFavor: boolean) {
     if (!hunterCard) return;
-    setDeathOpen(false);
+    onDeathOpenChange(false);
     const killed = await killCharacter(hunterCard, game.id, spendFavor);
     if (killed) await patch(game.id, combatant.id, { defeated: true });
   }
@@ -87,7 +91,7 @@ export function BattleRowMenu({
             type="button"
             aria-label={`Mark ${combatant.name} dead`}
             disabled={disabled}
-            onClick={() => runMenuAction(() => setDeathOpen(true))}
+            onClick={() => runMenuAction(() => onDeathOpenChange(true))}
           >Mark dead…</button>}
           <button className="battle-remove" type="button" disabled={disabled} onClick={() => runMenuAction(() => remove(game.id, combatant.id, game, encounterCombatants))}>Remove {combatant.kind === "monster" ? "enemy" : "Hunter"}</button>
         </div>
@@ -95,7 +99,7 @@ export function BattleRowMenu({
       {/* Portalled: the initiative list is a size container, which would
           otherwise trap this fixed-position dialog inside it. */}
       {deathOpen && hunterCard && createPortal(
-        <HunterDeathDialog card={hunterCard} busy={charactersBusy} onConfirm={(spendFavor) => void confirmDeath(spendFavor)} onClose={() => setDeathOpen(false)} />,
+        <HunterDeathDialog card={hunterCard} busy={charactersBusy} onConfirm={(spendFavor) => void confirmDeath(spendFavor)} onClose={() => onDeathOpenChange(false)} />,
         document.body,
       )}
     </div>
