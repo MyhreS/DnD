@@ -337,23 +337,28 @@ try {
   const hunterControl = dmPage.locator(".battle-row").filter({ hasText: "Lady Maria" });
   await openCombatantOptions(hunterControl, "Lady Maria", "Remove Hunter");
   await hunterControl.getByLabel("More options for Lady Maria").click();
+  // The starting AC is derived from the current rules, so read it rather than
+  // hard-coding it; the test is that two increases land on both screens.
+  const startingAc = Number((await hunterControl.getByLabel(/^Lady Maria armor class \d+$/).getAttribute("aria-label")).split(" ").at(-1));
   await hunterControl.getByRole("button", { name: "Increase Lady Maria armor class" }).click();
-  await hunterControl.locator(".battle-ac").getByText("16", { exact: true }).waitFor();
+  await hunterControl.locator(".battle-ac").getByText(String(startingAc + 1), { exact: true }).waitFor();
   await hunterControl.getByRole("button", { name: "Increase Lady Maria armor class" }).click();
-  await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).locator(".battle-ac").getByText("17", { exact: true }).waitFor();
+  await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).locator(".battle-ac").getByText(String(startingAc + 2), { exact: true }).waitFor();
   const armoredHunter = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
-  if (armoredHunter.empty || armoredHunter.docs[0].data().ac !== 17) throw new Error("Direct Hunter AC did not update the battle record.");
+  if (armoredHunter.empty || armoredHunter.docs[0].data().ac !== startingAc + 2) throw new Error("Direct Hunter AC did not update the battle record.");
 
-  await hunterControl.getByRole("button", { name: "Damage Lady Maria by 1" }).click();
+  await hunterControl.getByRole("button", { name: "Damage Lady Maria", exact: true }).click();
   await hunterControl.getByLabel("Lady Maria damage taken 5").waitFor();
-  await hunterControl.getByRole("button", { name: "Damage Lady Maria by 1" }).click();
+  await hunterControl.getByRole("button", { name: "Damage Lady Maria", exact: true }).click();
   await hunterControl.getByLabel("Lady Maria damage taken 6").waitFor();
-  await hunterControl.getByRole("button", { name: "Damage Lady Maria by 1" }).click();
+  await hunterControl.getByRole("button", { name: "Damage Lady Maria", exact: true }).click();
   await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).getByText("7", { exact: true }).waitFor();
   const damagedHunter = await db.doc(`characters/${characterId}`).get();
   const pcCombatants = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
-  if (pcCombatants.empty || pcCombatants.docs[0].data().currentHp !== 21) throw new Error("Direct Hunter damage did not update the battle record.");
-  if (damagedHunter.data()?.currentHp !== 24 || damagedHunter.data()?.sheet?.hpCur !== "24" || damagedHunter.data()?.sheet?.ac !== "15") throw new Error("Battle controls should not overwrite the Hunter sheet.");
+  // Battle HP is linked to the Hunter's own sheet; the battle row keeps no copy.
+  if (pcCombatants.empty || (pcCombatants.docs[0].data().currentHp ?? null) !== null) throw new Error("Hunter battle HP should live on the sheet, not the battle record.");
+  if (damagedHunter.data()?.currentHp !== 21 || damagedHunter.data()?.sheet?.hpCur !== "21") throw new Error("Battle damage did not reach the Hunter sheet.");
+  if (damagedHunter.data()?.sheet?.ac !== "15") throw new Error("Battle controls must change only HP on the Hunter sheet.");
 
   await noHorizontalOverflow(dmPage, "Clean DM battle view");
   await dmPage.screenshot({ path: "screenshots/game-battle-mode-dm.png", fullPage: true });
@@ -415,7 +420,7 @@ try {
   if (!claimedHunter.data()?.inventory?.some((item) => String(item.itemId).startsWith("session-"))) throw new Error("Claimed session weapon did not reach inventory.");
 
   await dmPage.setViewportSize({ width: 1280, height: 900 });
-  await dmPage.getByRole("button", { name: "Start new battle" }).click();
+  await dmPage.getByRole("button", { name: "New battle", exact: true }).click();
   const newBattlePicker = dmPage.getByRole("dialog", { name: "Start a new battle" });
   await newBattlePicker.getByLabel(/Grave Hound/).check();
   await newBattlePicker.getByRole("button", { name: "Start new battle", exact: true }).click();

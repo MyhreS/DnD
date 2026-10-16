@@ -35,7 +35,7 @@ export function EnemyLibraryDialog({
           <div className="game-library-list">
             {visible.map((template) => (
               <article key={template.id} className={template.archived ? "is-archived" : ""}>
-                <div><strong>{template.name}</strong><span>{template.maxHp} HP · Initiative {template.initiative} · AC {template.ac ?? "—"}</span>{template.note && <small>{template.note}</small>}</div>
+                <div><strong>{template.name}</strong><span>{template.maxHp ?? "?"} HP · Initiative {template.initiative} · AC {template.ac ?? "—"}</span>{template.note && <small>{template.note}</small>}</div>
                 <div className="game-library-actions">
                   {canAddToBattle && !template.archived && <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void onAdd(template)}>Add to battle</button>}
                   <button className="game-text-button" type="button" disabled={busy} onClick={() => onEdit(template)}>Edit</button>

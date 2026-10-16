@@ -129,9 +129,9 @@ export function SessionCombatControls({
 
   return (
     <div className="game-battle-toolbar" aria-label="DM battle controls">
-      <button className="battle-next-turn" type="button" disabled={disabled || order.length === 0} onClick={() => void nextTurn(game.id, game, combatants)}>
+      <button className="battle-next-turn" type="button" aria-label="Next turn" disabled={disabled || order.length === 0} onClick={() => void nextTurn(game.id, game, combatants)}>
         <span>Finish turn</span>
-        <strong>Next turn <span aria-hidden="true">→</span></strong>
+        <strong>Next<span className="battle-next-noun"> turn</span> <span aria-hidden="true">→</span></strong>
       </button>
       <details className="battle-tools" open={menuOpen} onToggle={(event) => setMenuOpen(event.currentTarget.open)}>
         <summary aria-label="Battle options"><span aria-hidden="true">•••</span><span>Battle options</span></summary>

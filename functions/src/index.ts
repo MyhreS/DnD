@@ -18,6 +18,7 @@ export {
   finishStandaloneGameSession,
   removeStandaloneGameParticipant,
   respondToStandaloneGameInvite,
+  setGameHunterHp,
 } from "./gameSessions";
 export {
   claimWorkshopAccess,

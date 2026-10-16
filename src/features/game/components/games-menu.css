@@ -1,0 +1,212 @@
+/* Games menu — current and previous sessions as illustrated cards in a grid.
+ * Sized to Apple's HIG: 44pt targets, nothing under 12px, one radius scale. */
+
+.games-menu { width: min(1120px, 100%); margin: 0 auto; }
+
+.games-menu-heading {
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 28px;
+  padding: clamp(22px, 4vw, 40px) clamp(20px, 4vw, 36px);
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 24px;
+  background:
+    radial-gradient(ellipse at 85% 0%, color-mix(in srgb, var(--blood) 30%, transparent), transparent 60%),
+    radial-gradient(ellipse at 0% 100%, color-mix(in srgb, var(--gold) 14%, transparent), transparent 55%),
+    linear-gradient(180deg, var(--bg-elev-2), var(--bg-elev));
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.32);
+}
+.games-menu-heading::after {
+  position: absolute;
+  right: -40px;
+  bottom: -60px;
+  width: 240px;
+  height: 240px;
+  border: 1px solid color-mix(in srgb, var(--gold) 22%, transparent);
+  border-radius: 50%;
+  box-shadow: 0 0 0 28px color-mix(in srgb, var(--gold) 4%, transparent), inset 0 0 0 40px color-mix(in srgb, var(--gold) 3%, transparent);
+  content: "";
+  pointer-events: none;
+}
+.games-menu-heading > div { position: relative; z-index: 1; min-width: 0; }
+.games-menu-heading .page-title { margin: 0; font-size: clamp(2rem, 5vw, 3rem); letter-spacing: 0.04em; }
+.games-menu-heading p { margin: 6px 0 0; color: var(--ink-dim); font-size: 0.9375rem; font-style: italic; }
+.games-menu-actions { position: relative; z-index: 1; display: flex; flex: none; align-items: center; gap: 10px; }
+.games-menu-switch,
+.games-menu-create {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+  padding: 0 18px;
+  border: 1px solid var(--border-strong);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 60%, transparent);
+  color: var(--ink-dim);
+  font: 600 0.9375rem/1 var(--font-body);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: border-color 140ms ease, color 140ms ease, background 140ms ease;
+}
+.games-menu-create { border-color: var(--gold); background: color-mix(in srgb, var(--gold) 16%, transparent); color: var(--gold); }
+.games-menu-switch:hover,
+.games-menu-switch[aria-pressed="true"] { border-color: var(--gold-dim); color: var(--ink); }
+.games-menu-create:hover { background: color-mix(in srgb, var(--gold) 26%, transparent); color: var(--ink); }
+.games-menu-switch:focus-visible,
+.games-menu-create:focus-visible,
+.game-card:focus-visible { outline: 2px solid var(--gold); outline-offset: 3px; }
+.games-menu-switch svg,
+.games-menu-create svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+
+/* --- Card grid --- */
+.games-menu-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: clamp(14px, 2vw, 22px);
+}
+.game-card {
+  position: relative;
+  display: grid;
+  grid-template-rows: 112px 1fr;
+  min-width: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--border-strong);
+  border-radius: 20px;
+  background: linear-gradient(180deg, var(--bg-elev-2), var(--bg-elev));
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.28);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
+}
+.game-card:hover { border-color: var(--gold); box-shadow: 0 18px 40px rgba(0, 0, 0, 0.36), 0 0 26px color-mix(in srgb, var(--gold) 14%, transparent); transform: translateY(-2px); }
+.game-card.is-live { border-color: color-mix(in srgb, var(--blood-bright) 55%, var(--border-strong)); }
+
+.game-card-banner {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 75% 120%, color-mix(in srgb, var(--gold) 26%, transparent), transparent 55%),
+    linear-gradient(135deg, color-mix(in srgb, var(--gold) 10%, var(--bg)), var(--bg));
+}
+.game-card.is-live .game-card-banner {
+  background:
+    radial-gradient(circle at 75% 120%, color-mix(in srgb, var(--blood-bright) 45%, transparent), transparent 60%),
+    linear-gradient(135deg, color-mix(in srgb, var(--blood) 22%, var(--bg)), var(--bg));
+}
+.game-card.is-ended .game-card-banner { filter: saturate(0.4); }
+.game-card-sigil {
+  position: absolute;
+  top: 50%;
+  right: 22px;
+  width: 132px;
+  height: 132px;
+  fill: none;
+  stroke: color-mix(in srgb, var(--gold) 45%, transparent);
+  stroke-width: 1;
+  opacity: 0.8;
+  transform: translateY(-38%);
+  transition: transform 400ms ease;
+}
+.game-card:hover .game-card-sigil { transform: translateY(-38%) rotate(22deg); }
+.game-card.is-live .game-card-sigil { stroke: color-mix(in srgb, var(--blood-bright) 60%, var(--gold)); }
+.game-card-date {
+  position: absolute;
+  top: 18px;
+  left: 18px;
+  display: grid;
+  width: 56px;
+  height: 60px;
+  place-content: center;
+  border: 1px solid var(--border-strong);
+  border-radius: 14px;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  text-align: center;
+  backdrop-filter: blur(6px);
+}
+.game-card-date b { color: var(--ink); font: 700 1.45rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.game-card-date small { margin-top: 3px; color: var(--gold); font-size: 0.75rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; }
+
+.game-card-body { display: grid; align-content: start; gap: 10px; min-width: 0; padding: 18px 20px 20px; }
+.game-card-status {
+  display: inline-flex;
+  width: fit-content;
+  min-height: 28px;
+  align-items: center;
+  gap: 8px;
+  padding: 0 12px;
+  border-radius: 999px;
+  background: var(--bg-elev-3);
+  color: var(--ink-dim);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.game-card-status i { width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.game-card-status.is-live { background: color-mix(in srgb, var(--blood) 28%, transparent); color: #ffb3b6; }
+.game-card-status.is-live i { background: var(--blood-bright); box-shadow: 0 0 0 0 var(--blood-bright); animation: game-card-pulse 1.8s ease-out infinite; }
+.game-card-status.is-waiting { background: color-mix(in srgb, var(--gold) 16%, transparent); color: var(--gold); }
+@keyframes game-card-pulse { 70% { box-shadow: 0 0 0 8px transparent; } }
+
+.game-card-title {
+  display: -webkit-box;
+  overflow: hidden;
+  font: 600 1.35rem/1.2 var(--font-display);
+  letter-spacing: 0.02em;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+.game-card-meta { display: flex; min-width: 0; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; }
+.game-card-hunters { display: flex; min-width: 0; align-items: center; padding-left: 8px; }
+.game-card-avatar {
+  display: grid;
+  flex: none;
+  width: 36px;
+  height: 36px;
+  margin-left: -8px;
+  place-items: center;
+  border: 2px solid var(--bg-elev);
+  border-radius: 50%;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--gold) 55%, var(--bg-elev-3)), var(--bg-elev-3));
+  color: var(--ink);
+  font: 700 0.8125rem/1 var(--font-display);
+}
+.game-card-avatar.is-more { background: var(--bg-elev-3); color: var(--ink-dim); }
+.game-card-none { margin-left: -8px; color: var(--ink-faint); font-size: 0.875rem; font-style: italic; }
+.game-card-dm { overflow: hidden; color: var(--ink-faint); font-size: 0.875rem; text-overflow: ellipsis; white-space: nowrap; }
+
+.games-menu-empty {
+  display: grid;
+  grid-column: 1 / -1;
+  justify-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 48px 20px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 20px;
+  color: var(--ink-faint);
+  text-align: center;
+}
+.games-menu-empty svg { width: 72px; height: 72px; margin-bottom: 6px; fill: none; stroke: color-mix(in srgb, var(--gold) 45%, transparent); stroke-width: 1.2; }
+.games-menu-empty strong { color: var(--ink); font: 600 1.15rem/1.3 var(--font-display); }
+.games-menu-empty span { font-size: 0.9375rem; }
+
+@media (max-width: 600px) {
+  .games-menu-heading { align-items: flex-start; flex-direction: column; gap: 18px; border-radius: 20px; }
+  .games-menu-actions { width: 100%; }
+  .games-menu-actions > button { flex: 1; justify-content: center; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .game-card, .game-card-sigil { transition: none; }
+  .game-card-status.is-live i { animation: none; }
+}

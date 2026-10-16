@@ -568,3 +568,41 @@ export const discardStandaloneGameSession = onCall(CALLABLE_OPTIONS, async (requ
   }
   return { ok: true };
 });
+
+/** The battle screen is linked to the Hunter sheet: when the DM changes a
+ * Hunter's HP in battle, the Hunter's own sheet follows. Only the game's DM,
+ * only for a Hunter who is a combatant in that game, and only `currentHp`
+ * (plus the legacy `sheet.hpCur` mirror) — nothing else on the card. */
+export const setGameHunterHp = onCall(CALLABLE_OPTIONS, async (request) => {
+  const uid = requireUid(request);
+  const gameId = cleanString(request.data?.gameId, 120);
+  const characterId = cleanString(request.data?.characterId, 120);
+  const raw = Number(request.data?.currentHp);
+  if (!gameId || !characterId || !Number.isFinite(raw)) {
+    throw new HttpsError("invalid-argument", "gameId, characterId and currentHp are required.");
+  }
+  const currentHp = Math.max(0, Math.min(9999, Math.round(raw)));
+  const db = getFirestore();
+  const gameRef = db.doc(`games/${gameId}`);
+  const characterRef = db.doc(`characters/${characterId}`);
+  const combatantQuery = gameRef.collection("combatants").where("characterId", "==", characterId).limit(1);
+  await db.runTransaction(async (tx) => {
+    const [gameSnapshot, characterSnapshot, combatants] = await Promise.all([
+      tx.get(gameRef),
+      tx.get(characterRef),
+      tx.get(combatantQuery),
+    ]);
+    if (!gameSnapshot.exists) throw new HttpsError("not-found", "Session not found.");
+    const game = gameSnapshot.data()!;
+    if (game.dmUid !== uid) throw new HttpsError("permission-denied", "Only the session DM can change a Hunter's HP in battle.");
+    if (game.status !== "active") throw new HttpsError("failed-precondition", "The session is not running.");
+    if (combatants.empty) throw new HttpsError("permission-denied", "That Hunter is not in this battle.");
+    if (!characterSnapshot.exists) throw new HttpsError("not-found", "Hunter not found.");
+    const sheet = characterSnapshot.data()?.sheet;
+    tx.update(characterRef, {
+      currentHp,
+      ...(sheet && typeof sheet === "object" && "hpCur" in sheet ? { "sheet.hpCur": String(currentHp) } : {}),
+    });
+  });
+  return { ok: true, currentHp };
+});

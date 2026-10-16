@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { createPortal } from "react-dom";
 import { useCombatStore } from "@/features/play/store/combatStore";
 import { useCharactersStore } from "@/features/play/store/charactersStore";
 import type { Combatant, Game, HunterCard } from "@/types";
@@ -16,6 +17,7 @@ export function BattleRowMenu({
   disabled,
   encounterCombatants,
   onAddDamage,
+  onSetMaxHp,
 }: {
   combatant: Combatant;
   game: Game;
@@ -25,6 +27,7 @@ export function BattleRowMenu({
   disabled: boolean;
   encounterCombatants: Combatant[];
   onAddDamage: (amount: number) => void;
+  onSetMaxHp: (maxHp: number) => void;
 }) {
   const patch = useCombatStore((state) => state.patch);
   const remove = useCombatStore((state) => state.remove);
@@ -33,6 +36,8 @@ export function BattleRowMenu({
   const charactersBusy = useCharactersStore((state) => state.busy);
   const [menuOpen, setMenuOpen] = useState(false);
   const [deathOpen, setDeathOpen] = useState(false);
+  const [maxHpDraft, setMaxHpDraft] = useState("");
+  const unknownHp = combatant.kind === "monster" && vitals.maxHp === null;
 
   function runMenuAction(action: () => void | Promise<unknown>) {
     setMenuOpen(false);
@@ -54,14 +59,24 @@ export function BattleRowMenu({
         <summary aria-label={`More options for ${combatant.name}`}>•••</summary>
         <div className="battle-more-menu">
           {combatant.kind === "monster" && <>
-            {vitals.maxHp !== null && <button
+            <button
               className="battle-death-toggle"
               type="button"
               aria-label={dead ? `Revive ${combatant.name}` : `Kill ${combatant.name}`}
               aria-pressed={dead}
               disabled={disabled}
-              onClick={() => runMenuAction(() => patch(game.id, combatant.id, { currentHp: dead ? 1 : 0, defeated: !dead }))}
-            >{dead ? "Revive" : "Kill enemy"}</button>}
+              onClick={() => runMenuAction(() => patch(game.id, combatant.id, unknownHp ? { defeated: !dead } : { currentHp: dead ? 1 : 0, defeated: !dead }))}
+            >{dead ? "Revive" : "Kill enemy"}</button>
+            {unknownHp && <form className="battle-more-maxhp" onSubmit={(event) => {
+              event.preventDefault();
+              const maxHp = Math.min(9999, Number.parseInt(maxHpDraft, 10) || 0);
+              if (maxHp < 1) return;
+              setMaxHpDraft("");
+              runMenuAction(() => onSetMaxHp(maxHp));
+            }}>
+              <input type="number" inputMode="numeric" min="1" max="9999" placeholder="Max HP" aria-label={`Max HP for ${combatant.name}`} value={maxHpDraft} disabled={disabled} onChange={(event) => setMaxHpDraft(event.target.value)} />
+              <button type="submit" disabled={disabled || !maxHpDraft}>Set</button>
+            </form>}
             <button type="button" disabled={disabled || dead} onClick={() => runMenuAction(() => onAddDamage(5))}>Add 5 damage</button>
             <button type="button" aria-pressed={combatant.revealHp === true} disabled={disabled} onClick={() => runMenuAction(() => patch(game.id, combatant.id, { revealHp: combatant.revealHp !== true }))}>{combatant.revealHp === true ? "Hide HP" : "Show HP"}</button>
             <button type="button" aria-pressed={combatant.revealStats === true} disabled={disabled} onClick={() => runMenuAction(() => patch(game.id, combatant.id, { revealStats: combatant.revealStats !== true }))}>{combatant.revealStats === true ? "Hide stats" : "Show stats"}</button>
@@ -77,8 +92,11 @@ export function BattleRowMenu({
           <button className="battle-remove" type="button" disabled={disabled} onClick={() => runMenuAction(() => remove(game.id, combatant.id, game, encounterCombatants))}>Remove {combatant.kind === "monster" ? "enemy" : "Hunter"}</button>
         </div>
       </details>
-      {deathOpen && hunterCard && (
-        <HunterDeathDialog card={hunterCard} busy={charactersBusy} onConfirm={(spendFavor) => void confirmDeath(spendFavor)} onClose={() => setDeathOpen(false)} />
+      {/* Portalled: the initiative list is a size container, which would
+          otherwise trap this fixed-position dialog inside it. */}
+      {deathOpen && hunterCard && createPortal(
+        <HunterDeathDialog card={hunterCard} busy={charactersBusy} onConfirm={(spendFavor) => void confirmDeath(spendFavor)} onClose={() => setDeathOpen(false)} />,
+        document.body,
       )}
     </div>
   );

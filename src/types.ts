@@ -261,7 +261,8 @@ export interface EnemyStats {
   name: string;
   initiative: number;
   ac: number | null;
-  maxHp: number;
+  /** Null when the DM does not know it yet; damage is then tallied instead. */
+  maxHp: number | null;
   note: string | null;
   revealHp: boolean;
   revealStats: boolean;
@@ -291,6 +292,8 @@ export interface Combatant {
   ac?: number | null;
   maxHp?: number | null;
   currentHp?: number | null;
+  /** Damage tally for a monster whose max HP is unknown (maxHp null). */
+  damageTaken?: number | null;
   /** Public defeat marker so players can see that a hidden-HP monster is dead. */
   defeated?: boolean;
   /** Condition ids (see src/data/conditions.ts). */

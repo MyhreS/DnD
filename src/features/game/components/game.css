@@ -39,60 +39,7 @@
 }
 .game-layout.is-player-focus { display: block; width: min(760px, 100%); margin: 0 auto; }
 
-.games-menu { width: min(620px, 100%); margin: 0 auto; }
-.games-menu-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 10px; }
-.games-menu-heading .page-title { margin: 0; font-size: clamp(1.75rem, 4vw, 2.35rem); }
-.games-menu-heading p { margin: 1px 0 0; color: var(--ink-faint); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
-.games-menu-actions { display: flex; align-items: center; gap: 14px; }
-.games-menu-switch,
-.games-menu-create {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  width: auto;
-  padding: 8px 4px;
-  border: 0;
-  background: transparent;
-  color: var(--ink-dim);
-  font: inherit;
-  font-size: 0.85rem;
-  cursor: pointer;
-}
-.games-menu-switch:hover,
-.games-menu-switch[aria-pressed="true"],
-.games-menu-create:hover { color: var(--gold); }
-.games-menu-switch:focus-visible,
-.games-menu-create:focus-visible,
-.games-menu-row:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
-.games-menu-switch svg,
-.games-menu-create svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
-.games-menu-list { display: grid; gap: 2px; }
-.games-menu-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  width: 100%;
-  min-height: 52px;
-  padding: 9px 8px;
-  border: 0;
-  border-radius: 4px;
-  background: transparent;
-  color: var(--ink);
-  font: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.games-menu-row:hover { background: rgba(201, 164, 90, 0.07); }
-.games-menu-row > span:first-child { min-width: 0; }
-.games-menu-row strong,
-.games-menu-row small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.games-menu-row strong { font-family: var(--font-display); font-size: 1rem; }
-.games-menu-row small { margin-top: 2px; color: var(--ink-faint); font-size: 0.78rem; }
-.games-menu-arrow { flex: none; color: var(--ink-faint); transition: transform 140ms ease, color 140ms ease; }
-.games-menu-row:hover .games-menu-arrow { color: var(--gold); transform: translateX(2px); }
-.games-menu-empty { margin: 0; padding: 13px 8px; color: var(--ink-faint); }
-.games-menu-create { color: var(--gold); }
+/* Games menu styles live in games-menu.css. */
 
 .game-table { min-width: 0; overflow: visible; }
 .game-back-button { width: auto; margin: 0 0 12px; padding: 4px 0; border: 0; background: transparent; color: var(--ink-faint); font: inherit; font-size: 0.82rem; cursor: pointer; }
@@ -597,9 +544,6 @@ button.game-player-open:hover strong { color: var(--gold); }
 }
 
 @media (max-width: 480px) {
-  .games-menu-heading { align-items: flex-start; }
-  .games-menu-actions { gap: 10px; }
-  .games-menu-row { padding-inline: 4px; }
   .game-waiting-heading { padding-bottom: 20px; }
   .game-waiting-roster { padding-block: 24px; }
   .game-waiting-player { grid-template-columns: 38px minmax(0, 1fr) 16px; }
@@ -619,11 +563,6 @@ button.game-player-open:hover strong { color: var(--gold); }
   .game-initiative-row { grid-template-columns: 24px minmax(0, 1fr) 68px; padding-inline: 2px; }
   .game-initiative-vitals { grid-column: 2 / -1; display: flex; gap: 14px; }
   .game-condition-controls { grid-column: 2 / -1; flex-wrap: wrap; justify-content: flex-start; }
-}
-
-@media (max-width: 340px) {
-  .games-menu-heading { display: grid; gap: 4px; }
-  .games-menu-actions { justify-content: flex-end; }
 }
 
 /* --- Session shop (DM controls; the big-screen board lives in ShopBoard) --- */
