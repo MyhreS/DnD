@@ -258,6 +258,22 @@ export interface ShopState {
   lines: ShopLine[];
 }
 
+/** A player's request to buy one shop line, waiting for the DM. Lives at
+ * /games/{gameId}/shopRequests/{id}; written only by Cloud Functions. */
+export interface ShopRequest {
+  id: string;
+  uid: string;
+  characterId: string;
+  characterName: string;
+  lineId: string;
+  lineName: string;
+  itemId: string | null;
+  priceGp: number;
+  status: "pending" | "approved" | "declined";
+  createdAt: number;
+  resolvedAt: number | null;
+}
+
 /** Reusable DM-owned enemy stats. A copy is stored on each spawned combatant so
  * reset always restores the values used when that enemy entered the battle. */
 export interface EnemyStats {

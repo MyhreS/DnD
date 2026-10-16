@@ -2,11 +2,12 @@ import { useState } from "react";
 import type { Game } from "@/types";
 import { emptyShop, shopSummary } from "@/features/play/lib/shop";
 import { useShopStore } from "@/features/play/store/shopStore";
+import { ShopRequestList } from "./ShopRequestList";
 import { ShopStockDialog } from "./ShopStockDialog";
 
 /** The DM's shop controls, alongside the battle stage: stock a shop, open it on
  * the table's big screen, and close it again when the party moves on. */
-export function SessionShopSection({ game, disabled }: { game: Game; disabled: boolean }) {
+export function SessionShopSection({ game, disabled, live = true }: { game: Game; disabled: boolean; live?: boolean }) {
   const shop = game.shop ?? emptyShop();
   const busy = useShopStore((state) => state.busy);
   const save = useShopStore((state) => state.save);
@@ -35,6 +36,7 @@ export function SessionShopSection({ game, disabled }: { game: Game; disabled: b
           </button>
         )}
       </div>
+      <div className="shop-requests-slot"><ShopRequestList gameId={game.id} live={live} /></div>
       {editing && (
         <ShopStockDialog
           shop={shop}

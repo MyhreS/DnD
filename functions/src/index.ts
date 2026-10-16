@@ -18,6 +18,8 @@ export {
   finishStandaloneGameSession,
   removeStandaloneGameParticipant,
   respondToStandaloneGameInvite,
+  requestShopPurchase,
+  resolveShopPurchase,
   setGameHunterHp,
 } from "./gameSessions";
 export {
