@@ -1,4 +1,5 @@
 import { useMemo } from "react";
+import { haptic } from "@/lib/haptics";
 import { CONDITIONS, CONDITION_NAME } from "@/data/conditions";
 import { useCombatStore } from "@/features/play/store/combatStore";
 import type { Combatant, Game } from "@/types";
@@ -31,7 +32,7 @@ export function BattleConditionsCell({ combatant, game, round, canManage, disabl
             : <span className="battle-condition" key={conditionId}>{label}</span>;
         })}
         {canManage && (
-          <select className="battle-condition-add" aria-label={`Add condition to ${combatant.name}`} value="" disabled={disabled || available.length === 0} onChange={(event) => { if (event.target.value) void toggleCondition(game.id, combatant, event.target.value, round); }}>
+          <select className="battle-condition-add" aria-label={`Add condition to ${combatant.name}`} value="" disabled={disabled || available.length === 0} onChange={(event) => { if (event.target.value) haptic("selection"); if (event.target.value) void toggleCondition(game.id, combatant, event.target.value, round); }}>
             <option value="">+ Condition</option>
             {available.map((condition) => <option key={condition.id} value={condition.id}>{condition.name}</option>)}
           </select>

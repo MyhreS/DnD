@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { haptic } from "@/lib/haptics";
 import type { CombatVitals } from "../lib/combatPresentation";
 
 /** Hit points for one battle row: the bar and numbers for everyone, plus an
@@ -31,6 +32,7 @@ export function BattleHealthCell({
   const state = !known ? "unknown" : percent <= 0 ? "down" : percent < 34 ? "critical" : percent < 67 ? "wounded" : "healthy";
 
   function apply(direction: 1 | -1) {
+    haptic("light");
     onSetDamage(Math.max(0, taken + direction * step));
     setAmount("");
   }
