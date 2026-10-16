@@ -344,7 +344,9 @@ export const useCombatStore = create<CombatState>((set, get) => {
       const characterId = combatant.characterId;
       const sheetHp = Math.max(0, currentHp);
       const overflow = currentHp < 0 ? currentHp : null;
-      if ((combatant.currentHp ?? null) !== overflow) {
+      // Read the live combatant: rapid taps queue writes from older renders.
+      const live = get().combatants.find((entry) => entry.id === combatant.id) ?? combatant;
+      if ((live.currentHp ?? null) !== overflow) {
         if (!await get().patch(gameId, combatant.id, { currentHp: overflow })) return false;
       }
       if (get().preview) {
