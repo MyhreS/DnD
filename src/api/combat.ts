@@ -8,8 +8,20 @@ import {
   type DocumentData,
   type Timestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "@/lib/firebase";
 import type { Combatant } from "@/types";
+
+const setGameHunterHpFn = httpsCallable<{ gameId: string; characterId: string; currentHp: number }, { ok: boolean; currentHp: number }>(
+  functions,
+  "setGameHunterHp",
+);
+
+/** Write a Hunter's HP from the battle screen to their own sheet. Runs server
+ * side: the game DM may change only this field, only for a Hunter in battle. */
+export async function setBattleHunterHp(gameId: string, characterId: string, currentHp: number): Promise<void> {
+  await setGameHunterHpFn({ gameId, characterId, currentHp });
+}
 
 function combatantsCol(gameId: string) {
   return collection(db, "games", gameId, "combatants");

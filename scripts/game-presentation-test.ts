@@ -51,7 +51,10 @@ assert.equal(currentVitals.currentHp, 17, "battle view uses the current structur
 assert.equal(currentVitals.maxHp, Number.parseInt(String(expected.hpMax), 10), "battle view recalculates maximum HP after upgrades");
 assert.equal(currentVitals.ac, Number.parseInt(String(expected.ac), 10), "battle view recalculates Armor Class after equipment or ability changes");
 assert.equal(participantInitiative(structured), Number.parseInt(String(expected.initiative), 10), "new encounters use the current calculated initiative");
-assert.equal(combatVitals({ ...pc, currentHp: 9, ac: 21 }, [structured]).currentHp, 9, "an encounter HP override remains authoritative during that battle");
+assert.equal(combatVitals({ ...pc, currentHp: 9, ac: 21 }, [structured]).currentHp, 17, "Hunter HP follows the linked character sheet, not a stale battle value");
+const downed: HunterCard = { ...structured, currentHp: 0 };
+assert.equal(combatVitals({ ...pc, currentHp: -6 }, [downed]).currentHp, -6, "below 0 the battle keeps the Instant Death remainder the sheet cannot hold");
+assert.equal(combatVitals({ ...pc, currentHp: -6 }, [structured]).currentHp, 17, "healing on the sheet clears a stale below-zero battle value");
 assert.equal(combatVitals({ ...pc, currentHp: 9, ac: 21 }, [structured]).ac, 21, "an encounter AC override remains authoritative during that battle");
 
 const overridden: HunterCard = {

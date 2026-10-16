@@ -7,7 +7,9 @@ import {
   patchCombatant,
   removeCombatant,
   clearCombatants,
+  setBattleHunterHp,
 } from "@/api/combat";
+import { useCharactersStore } from "./charactersStore";
 import { useGameStore } from "./gameStore";
 import { isPreviewActive, previewCombatants } from "@/dev/preview";
 import { emptyEncounter } from "../lib/turnTimer";
@@ -70,6 +72,9 @@ interface CombatState {
   addMonster: (gameId: string, m: MonsterInput, encounterId?: number) => Promise<boolean>;
   resetMonster: (gameId: string, id: string) => Promise<boolean>;
   patch: (gameId: string, id: string, partial: Partial<Combatant>) => Promise<boolean>;
+  /** Battle HP for a Hunter: the sheet takes the value (floored at 0); only a
+   * negative remainder, which Instant Death needs, stays on the combatant. */
+  setHunterHp: (gameId: string, combatant: Combatant, currentHp: number) => Promise<boolean>;
   remove: (
     gameId: string,
     id: string,
@@ -332,6 +337,23 @@ export const useCombatStore = create<CombatState>((set, get) => {
       set((s) => ({ combatants: s.combatants.map((c) => (c.id === id ? { ...c, ...partial } : c)) }));
       if (get().preview) return true;
       return (await run(() => patchCombatant(gameId, id, partial, next), "Couldn't update the combatant.")) !== null;
+    },
+
+    setHunterHp: async (gameId, combatant, currentHp) => {
+      if (!combatant.characterId) return false;
+      const characterId = combatant.characterId;
+      const sheetHp = Math.max(0, currentHp);
+      const overflow = currentHp < 0 ? currentHp : null;
+      if ((combatant.currentHp ?? null) !== overflow) {
+        if (!await get().patch(gameId, combatant.id, { currentHp: overflow })) return false;
+      }
+      if (get().preview) {
+        useCharactersStore.setState((s) => ({
+          party: s.party.map((card) => (card.id === characterId ? { ...card, currentHp: sheetHp } : card)),
+        }));
+        return true;
+      }
+      return (await run(() => setBattleHunterHp(gameId, characterId, sheetHp), "Couldn't update the Hunter's HP.")) !== null;
     },
 
     remove: async (gameId, id, game, combatants) => {

@@ -355,8 +355,10 @@ try {
   await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).getByText("7", { exact: true }).waitFor();
   const damagedHunter = await db.doc(`characters/${characterId}`).get();
   const pcCombatants = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
-  if (pcCombatants.empty || pcCombatants.docs[0].data().currentHp !== 21) throw new Error("Direct Hunter damage did not update the battle record.");
-  if (damagedHunter.data()?.currentHp !== 24 || damagedHunter.data()?.sheet?.hpCur !== "24" || damagedHunter.data()?.sheet?.ac !== "15") throw new Error("Battle controls should not overwrite the Hunter sheet.");
+  // Battle HP is linked to the Hunter's own sheet; the battle row keeps no copy.
+  if (pcCombatants.empty || (pcCombatants.docs[0].data().currentHp ?? null) !== null) throw new Error("Hunter battle HP should live on the sheet, not the battle record.");
+  if (damagedHunter.data()?.currentHp !== 21 || damagedHunter.data()?.sheet?.hpCur !== "21") throw new Error("Battle damage did not reach the Hunter sheet.");
+  if (damagedHunter.data()?.sheet?.ac !== "15") throw new Error("Battle controls must change only HP on the Hunter sheet.");
 
   await noHorizontalOverflow(dmPage, "Clean DM battle view");
   await dmPage.screenshot({ path: "screenshots/game-battle-mode-dm.png", fullPage: true });

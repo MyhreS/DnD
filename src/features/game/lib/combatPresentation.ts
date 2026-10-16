@@ -44,7 +44,13 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
     return { currentHp: null, maxHp: null, damageTaken: null, ac: combatant.ac ?? null, speed: null };
   }
   const vitals = characterVitals(card);
-  const current = combatant.currentHp ?? vitals.hpCur;
+  // The Hunter's sheet is the source of HP, so battle and sheet stay in step.
+  // A battle value below 0 is the one exception: the sheet floors at 0, but
+  // Instant Death keys off the damage left over, so that remainder is kept on
+  // the combatant until the Hunter is healed above 0 again.
+  const current = combatant.currentHp != null && combatant.currentHp < 0 && (vitals.hpCur ?? 0) <= 0
+    ? combatant.currentHp
+    : vitals.hpCur;
   return {
     currentHp: current,
     maxHp: vitals.hpMax,

@@ -30,6 +30,7 @@ export function BattleCombatantRow({
   encounterCombatants: Combatant[];
 }) {
   const patch = useCombatStore((state) => state.patch);
+  const setHunterHp = useCombatStore((state) => state.setHunterHp);
   const vitals = combatVitals(combatant, characters);
   const hunterCard = combatant.kind === "pc" && combatant.characterId
     ? characters.find((candidate) => candidate.id === combatant.characterId)
@@ -50,9 +51,14 @@ export function BattleCombatantRow({
     // off the damage remaining after a Hunter drops to 0, so `currentHp` must
     // be allowed to go negative for the DM to see it. The health bar clamps at
     // 0% on its own.
+    if (!monster) {
+      // Hunters: the change lands on their own character sheet too.
+      void setHunterHp(game.id, combatant, vitals.maxHp - damage);
+      return;
+    }
     void patch(game.id, combatant.id, {
       currentHp: vitals.maxHp - damage,
-      ...(monster ? { defeated: damage >= vitals.maxHp } : {}),
+      defeated: damage >= vitals.maxHp,
     });
   }
 
