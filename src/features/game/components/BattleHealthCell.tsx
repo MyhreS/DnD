@@ -1,3 +1,4 @@
+import { HapticTap } from "@/components/HapticTap";
 import { useState } from "react";
 import { haptic } from "@/lib/haptics";
 import type { CombatVitals } from "../lib/combatPresentation";
@@ -61,8 +62,8 @@ export function BattleHealthCell({
             onChange={(event) => setAmount(event.target.value)}
             onKeyDown={(event) => { if (event.key === "Enter" && !dead) apply(1); }}
           />
-          <button className="is-damage" type="button" aria-label={`Damage ${name}`} disabled={disabled || !canDamage || dead} onClick={() => apply(1)}>Damage</button>
-          <button className="is-heal" type="button" aria-label={`Heal ${name}`} disabled={disabled || vitals.damageTaken === null || taken <= 0} onClick={() => apply(-1)}>Heal</button>
+          <HapticTap disabled={disabled || !canDamage || dead}><button className="is-damage" type="button" aria-label={`Damage ${name}`} disabled={disabled || !canDamage || dead} onClick={() => apply(1)}>Damage</button></HapticTap>
+          <HapticTap disabled={disabled || vitals.damageTaken === null || taken <= 0}><button className="is-heal" type="button" aria-label={`Heal ${name}`} disabled={disabled || vitals.damageTaken === null || taken <= 0} onClick={() => apply(-1)}>Heal</button></HapticTap>
         </div>
       )}
     </div>

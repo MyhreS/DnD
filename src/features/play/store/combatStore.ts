@@ -115,6 +115,20 @@ export const useCombatStore = create<CombatState>((set, get) => {
     }
   }
 
+  /** For edits already shown on screen (optimistic): save without flagging the
+   * whole battle busy, so other controls don't dim and blink on every tap. */
+  async function quiet<T>(fn: () => Promise<T>, msg: string): Promise<T | null> {
+    try {
+      const out = await fn();
+      if (get().error) set({ error: null });
+      return out;
+    } catch (err) {
+      console.error(msg, err);
+      set({ error: msg });
+      return null;
+    }
+  }
+
   return {
     combatants: [],
     busy: false,
@@ -336,7 +350,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
       // latency-compensated snapshot then confirms or corrects.
       set((s) => ({ combatants: s.combatants.map((c) => (c.id === id ? { ...c, ...partial } : c)) }));
       if (get().preview) return true;
-      return (await run(() => patchCombatant(gameId, id, partial, next), "Couldn't update the combatant.")) !== null;
+      return (await quiet(() => patchCombatant(gameId, id, partial, next), "Couldn't update the combatant.")) !== null;
     },
 
     setHunterHp: async (gameId, combatant, currentHp, spendNotTonight = false) => {
@@ -355,7 +369,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
         }));
         return true;
       }
-      return (await run(() => setBattleHunterHp(gameId, characterId, sheetHp, spendNotTonight), "Couldn't update the Hunter's HP.")) !== null;
+      return (await quiet(() => setBattleHunterHp(gameId, characterId, sheetHp, spendNotTonight), "Couldn't update the Hunter's HP.")) !== null;
     },
 
     remove: async (gameId, id, game, combatants) => {

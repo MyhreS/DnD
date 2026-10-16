@@ -1,3 +1,4 @@
+import { HapticTap } from "@/components/HapticTap";
 import { useState } from "react";
 import { resolveShopPurchase } from "@/api/shopRequests";
 import { haptic } from "@/lib/haptics";
@@ -30,8 +31,8 @@ export function ShopRequestList({ gameId, live }: { gameId: string; live: boolea
     {pending.map((request) => <article key={request.id}>
       <span><b>{request.characterName}</b> wants <b>{request.lineName}</b> for {request.priceGp} GP</span>
       <div>
-        <button type="button" className="btn btn-primary" disabled={busy === request.id} onClick={() => void answer(request.id, true)}>Approve</button>
-        <button type="button" className="btn btn-ghost" disabled={busy === request.id} onClick={() => void answer(request.id, false)}>Decline</button>
+        <HapticTap disabled={busy === request.id}><button type="button" className="btn btn-primary" disabled={busy === request.id} onClick={() => void answer(request.id, true)}>Approve</button></HapticTap>
+        <HapticTap disabled={busy === request.id}><button type="button" className="btn btn-ghost" disabled={busy === request.id} onClick={() => void answer(request.id, false)}>Decline</button></HapticTap>
       </div>
     </article>)}
   </div>;

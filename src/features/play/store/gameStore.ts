@@ -100,6 +100,18 @@ export const useGameStore = create<GameState>((set, get) => {
     }
   }
 
+  /** Combat state shows at once from Firestore's local echo, so saving it
+   * must not flag the game busy (that dims and blinks every battle control). */
+  async function quiet<T>(fn: () => Promise<T>, fallbackMsg: string): Promise<T | null> {
+    try {
+      return await fn();
+    } catch (err) {
+      console.error(fallbackMsg, err);
+      set({ error: explain(fallbackMsg, err) });
+      return null;
+    }
+  }
+
   function actor() {
     const { user, member } = useAuthStore.getState();
     return { actorUid: user?.uid ?? "", actorName: member?.firstName || user?.displayName || "Someone" };
@@ -277,7 +289,7 @@ export const useGameStore = create<GameState>((set, get) => {
         set((s) => ({ games: s.games.map((g) => (g.id === gameId ? { ...g, combat } : g)) }));
         return true;
       }
-      return (await run(() => setGameCombat(gameId, combat), "Couldn't update combat.")) !== null;
+      return (await quiet(() => setGameCombat(gameId, combat), "Couldn't update combat.")) !== null;
     },
 
     stop: async (gameId, endedPhase, endedLocation) => {

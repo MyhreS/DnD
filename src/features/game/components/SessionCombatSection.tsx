@@ -1,3 +1,4 @@
+import { HapticTap } from "@/components/HapticTap";
 import { useMemo, useState } from "react";
 import { haptic } from "@/lib/haptics";
 import { emptyEncounter } from "@/features/play/lib/turnTimer";
@@ -130,10 +131,12 @@ export function SessionCombatControls({
 
   return (
     <div className="game-battle-toolbar" aria-label="DM battle controls">
-      <button className="battle-next-turn" type="button" aria-label="Next turn" disabled={disabled || order.length === 0} onClick={() => { haptic("selection"); void nextTurn(game.id, game, combatants); }}>
-        <span>Finish turn</span>
-        <strong>Next<span className="battle-next-noun"> turn</span> <span aria-hidden="true">→</span></strong>
-      </button>
+      <HapticTap disabled={disabled || order.length === 0}>
+        <button className="battle-next-turn" type="button" aria-label="Next turn" disabled={disabled || order.length === 0} onClick={() => { haptic("selection"); void nextTurn(game.id, game, combatants); }}>
+          <span>Finish turn</span>
+          <strong>Next<span className="battle-next-noun"> turn</span> <span aria-hidden="true">→</span></strong>
+        </button>
+      </HapticTap>
       <details className="battle-tools" open={menuOpen} onToggle={(event) => setMenuOpen(event.currentTarget.open)}>
         <summary aria-label="Battle options"><span aria-hidden="true">•••</span><span>Battle options</span></summary>
         <div className="battle-tools-menu">
