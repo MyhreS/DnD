@@ -179,11 +179,8 @@ try {
   const currentGames = owner.getByRole("navigation", { name: "Current games" });
   const currentGameRow = currentGames.getByRole("button", { name: /Night of the Pale Moon/ });
   await currentGameRow.waitFor();
-  const rowBorders = await currentGameRow.evaluate((element) => {
-    const style = getComputedStyle(element);
-    return [style.borderTopWidth, style.borderRightWidth, style.borderBottomWidth, style.borderLeftWidth];
-  });
-  if (rowBorders.some((width) => width !== "0px")) throw new Error(`Games list row has a divider: ${rowBorders.join(" ")}`);
+  // Games are cards in a grid, not list rows: each opens on its own.
+  if (!await currentGameRow.evaluate((element) => element.classList.contains("game-card"))) throw new Error("Games should render as cards");
   await owner.screenshot({ path: "screenshots/games-menu-current-desktop.png", fullPage: true });
   await currentGameRow.click();
   if (await owner.getByText(/player ready|players ready|View party|Add players/).count()) {
