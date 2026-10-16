@@ -728,4 +728,16 @@ assert.equal(bloodvialEffectLabel(BLOODVIAL_PURITY_BY_ID.tainted), "Heals 2d4 + 
   assert.equal(maxHp(deepcaller, { ...frail, con: 14 }, 2) - maxHp(deepcaller, { ...frail, con: 14 }, 1), 6, "a positive Constitution modifier is added");
 }
 
+// Level history: what each level gave, rebuilt from the saved card.
+{
+  const { levelHistory } = await import("../src/features/hunter/lib/levelHistory");
+  const history = levelHistory({ ...warden, level: 4, lastSeenLevel: 4, subclassId: "commander", sheetAutomation: { version: 3, classSkills: [], levelFeats: { "4:Ability Score Improvement": "Ability Score Improvement" }, levelAbilityBonuses: { "4:Ability Score Improvement": { wis: 2 } } } });
+  assert.deepEqual(history.map((entry) => entry.level), [4, 3, 2, 1], "history lists every level reached, newest first");
+  assert.equal(history[3].hpGained, 12, "level 1 HP: Warden d10 + Constitution +2");
+  assert.equal(history[2].hpGained, 8, "each later Warden level: 6 + Constitution +2");
+  assert.ok(history[1].choices.includes("Path: Commander"), "the path chosen at level 3 is shown");
+  assert.ok(history[0].choices.some((choice) => choice.includes("Ability Score Improvement") && choice.includes("Wisdom +2")), "the level 4 feat and its increase are shown");
+  assert.ok(history[1].features.some((feature) => feature.text.length > 0), "features come with their rule text");
+}
+
 console.log("Character automation tests passed.");
