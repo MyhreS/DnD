@@ -74,7 +74,7 @@ interface CombatState {
   patch: (gameId: string, id: string, partial: Partial<Combatant>) => Promise<boolean>;
   /** Battle HP for a Hunter: the sheet takes the value (floored at 0); only a
    * negative remainder, which Instant Death needs, stays on the combatant. */
-  setHunterHp: (gameId: string, combatant: Combatant, currentHp: number) => Promise<boolean>;
+  setHunterHp: (gameId: string, combatant: Combatant, currentHp: number, spendNotTonight?: boolean) => Promise<boolean>;
   remove: (
     gameId: string,
     id: string,
@@ -339,7 +339,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
       return (await run(() => patchCombatant(gameId, id, partial, next), "Couldn't update the combatant.")) !== null;
     },
 
-    setHunterHp: async (gameId, combatant, currentHp) => {
+    setHunterHp: async (gameId, combatant, currentHp, spendNotTonight = false) => {
       if (!combatant.characterId) return false;
       const characterId = combatant.characterId;
       const sheetHp = Math.max(0, currentHp);
@@ -349,11 +349,11 @@ export const useCombatStore = create<CombatState>((set, get) => {
       }
       if (get().preview) {
         useCharactersStore.setState((s) => ({
-          party: s.party.map((card) => (card.id === characterId ? { ...card, currentHp: sheetHp } : card)),
+          party: s.party.map((card) => (card.id === characterId ? { ...card, currentHp: sheetHp, ...(spendNotTonight ? { notTonight: false } : {}) } : card)),
         }));
         return true;
       }
-      return (await run(() => setBattleHunterHp(gameId, characterId, sheetHp), "Couldn't update the Hunter's HP.")) !== null;
+      return (await run(() => setBattleHunterHp(gameId, characterId, sheetHp, spendNotTonight), "Couldn't update the Hunter's HP.")) !== null;
     },
 
     remove: async (gameId, id, game, combatants) => {

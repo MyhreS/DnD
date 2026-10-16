@@ -1,6 +1,8 @@
 import { useCombatStore } from "@/features/play/store/combatStore";
 import type { Combatant, Game, HunterCard } from "@/types";
+import { useState } from "react";
 import { combatVitals } from "../lib/combatPresentation";
+import { DYING_CONDITIONS, hunterDamageOutcome } from "../lib/hunterDamage";
 import { BattleConditionsCell } from "./BattleConditionsCell";
 import { BattleHealthCell } from "./BattleHealthCell";
 import { BattleRowMenu } from "./BattleRowMenu";
@@ -31,6 +33,8 @@ export function BattleCombatantRow({
 }) {
   const patch = useCombatStore((state) => state.patch);
   const setHunterHp = useCombatStore((state) => state.setHunterHp);
+  const [deathOpen, setDeathOpen] = useState(false);
+  const [notice, setNotice] = useState<string | null>(null);
   const vitals = combatVitals(combatant, characters);
   const hunterCard = combatant.kind === "pc" && combatant.characterId
     ? characters.find((candidate) => candidate.id === combatant.characterId)
@@ -52,8 +56,7 @@ export function BattleCombatantRow({
     // be allowed to go negative for the DM to see it. The health bar clamps at
     // 0% on its own.
     if (!monster) {
-      // Hunters: the change lands on their own character sheet too.
-      void setHunterHp(game.id, combatant, vitals.maxHp - damage);
+      void applyHunterHp(vitals.maxHp, vitals.maxHp - damage);
       return;
     }
     void patch(game.id, combatant.id, {
@@ -61,6 +64,37 @@ export function BattleCombatantRow({
       defeated: damage >= vitals.maxHp,
     });
   }
+
+  /** Hunters: the change lands on their own character sheet too, and follows
+   * Not Tonight!, Dying and Instant Death ([pages 21, 45]). */
+  async function applyHunterHp(maxHp: number, nextHp: number) {
+    const previous = vitals.currentHp ?? maxHp;
+    const outcome = hunterDamageOutcome(previous, nextHp, maxHp, hunterCard?.notTonight === true);
+    setNotice(outcome.kind === "not-tonight" ? "Not Tonight! spent — stays at 1 HP."
+      : outcome.kind === "instant-death" ? "Instant Death — the damage left over reaches the HP maximum."
+        : outcome.kind === "dying" && previous > 0 ? "Down to 0 HP — Dying and Unconscious." : null);
+    const ok = await setHunterHp(game.id, combatant, outcome.hp, outcome.kind === "not-tonight");
+    if (!ok) return;
+    const down = outcome.kind === "dying" || outcome.kind === "instant-death";
+    const up = outcome.kind === "recovered" || outcome.kind === "not-tonight";
+    const missing = DYING_CONDITIONS.filter((id) => !combatant.conditions.includes(id));
+    if (down && missing.length) {
+      await patch(game.id, combatant.id, {
+        conditions: [...combatant.conditions, ...missing],
+        conditionSince: { ...(combatant.conditionSince ?? {}), ...Object.fromEntries(missing.map((id) => [id, round])) },
+      });
+    } else if (up && DYING_CONDITIONS.some((id) => combatant.conditions.includes(id))) {
+      const since = { ...(combatant.conditionSince ?? {}) };
+      for (const id of DYING_CONDITIONS) delete since[id];
+      await patch(game.id, combatant.id, {
+        conditions: combatant.conditions.filter((id) => !(DYING_CONDITIONS as readonly string[]).includes(id)),
+        conditionSince: since,
+      });
+    }
+    if (outcome.kind === "instant-death" && hunterCard && !dead) setDeathOpen(true);
+  }
+
+  const dying = !monster && !dead && vitals.currentHp !== null && vitals.currentHp <= 0;
 
   return (
     <article
@@ -72,7 +106,7 @@ export function BattleCombatantRow({
         <span className="battle-position" aria-label={`Turn position ${position}`}>{position}</span>
         <div className="battle-name">
           <strong title={combatant.name}>{combatant.name}</strong>
-          <span className="battle-kind">{monster ? (dead ? "Enemy · dead" : "Enemy") : (dead ? "Hunter · fallen" : `Hunter${vitals.speed !== null ? ` · ${vitals.speed} ft` : ""}`)}</span>
+          <span className="battle-kind">{monster ? (dead ? "Enemy · dead" : "Enemy") : (dead ? "Hunter · fallen" : dying ? "Hunter · dying" : `Hunter${vitals.speed !== null ? ` · ${vitals.speed} ft` : ""}`)}</span>
         </div>
         {active && <span className="battle-acting">Acting</span>}
         {canManage && (
@@ -85,6 +119,8 @@ export function BattleCombatantRow({
           disabled={disabled}
           encounterCombatants={encounterCombatants}
           onAddDamage={(amount) => setDamage((vitals.damageTaken ?? 0) + amount)}
+          deathOpen={deathOpen}
+          onDeathOpenChange={setDeathOpen}
           onSetMaxHp={(maxHp) => {
             const damage = vitals.damageTaken ?? 0;
             void patch(game.id, combatant.id, {
@@ -98,6 +134,7 @@ export function BattleCombatantRow({
         />
         )}
       </header>
+      {notice && canManage && <p className="battle-notice" role="status">{notice}</p>}
       <BattleHealthCell name={combatant.name} vitals={vitals} canManage={canManage} disabled={disabled} dead={dead} onSetDamage={setDamage} />
       <div className="battle-stats">
         <BattleStepper
