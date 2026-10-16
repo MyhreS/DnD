@@ -3,11 +3,13 @@ import { insightAwardPatch } from "../../lib/insightAward";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { sheetText } from "../appsheet/appSheetValues";
 import { hasStagedUpgrade, useAppEditStage } from "../appsheet/appEditStageContext";
+import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { CharacterSheetResourceControl } from "./CharacterSheetResourceControl";
 import { characterSheetNumber } from "./characterSheetValues";
 
 export function CharacterSheetProgress({ model, upgradePending, onUpgrade }: { model: AppSheetModel; upgradePending: boolean; onUpgrade: () => void }) {
   const stage = useAppEditStage();
+  const { result } = useCharacterAutomation();
   const insight = stage.previewCard.insight ?? characterSheetNumber(sheetText(model.data, "insight"));
   const level = stage.savedCard.level;
   const availableLevel = Math.max(level, levelForInsight(insight));
@@ -16,6 +18,13 @@ export function CharacterSheetProgress({ model, upgradePending, onUpgrade }: { m
   const range = nextThreshold == null ? 1 : nextThreshold - currentThreshold;
   const progress = nextThreshold == null ? 100 : Math.max(0, Math.min(100, (insight - currentThreshold) / range * 100));
   const remaining = nextThreshold == null ? 0 : Math.max(0, nextThreshold - insight);
+
+  // At the same level, the upgrade is only asking for choices this level still
+  // needs (e.g. a Warden path at level 3) — say so instead of "Upgrade".
+  const missing = Object.values(result.pending).filter((entry) => entry != null).map((entry) => entry.label);
+  const choicesOnly = availableLevel === level && missing.length > 0 && !hasStagedUpgrade(stage.patch);
+  const launchLabel = hasStagedUpgrade(stage.patch) ? "Resume upgrade" : choicesOnly ? `Choose ${missing.join(" and ")}` : "Upgrade character";
+  const launchNote = choicesOnly ? `Level ${level} still needs this choice. Make it, then save.` : "Preview gains, make choices, then save.";
 
   function setInsight(nextInsight: number) {
     const patch = insightAwardPatch(stage.previewCard, nextInsight - insight);
@@ -36,6 +45,6 @@ export function CharacterSheetProgress({ model, upgradePending, onUpgrade }: { m
       </div>
     </section>
     <CharacterSheetResourceControl label="Insight" value={insight} note="Insight is cumulative and never spent. Reaching a threshold unlocks a character upgrade." disabled={model.readOnly} onChange={setInsight} />
-    {!model.readOnly && <button type="button" className={`character-sheet-upgrade-launch ${upgradePending ? "pending" : ""}`} disabled={!upgradePending} onClick={openUpgrade}>{upgradePending ? (hasStagedUpgrade(stage.patch) ? "Resume upgrade" : "Upgrade character") : "No upgrade pending"}<small>{upgradePending ? "Preview gains, make choices, then save." : "Earn more Insight to unlock the next level."}</small></button>}
+    {!model.readOnly && <button type="button" className={`character-sheet-upgrade-launch ${upgradePending ? "pending" : ""}`} disabled={!upgradePending} onClick={openUpgrade}>{upgradePending ? launchLabel : "No upgrade pending"}<small>{upgradePending ? launchNote : "Earn more Insight to unlock the next level."}</small></button>}
   </div>;
 }

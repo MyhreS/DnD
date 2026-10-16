@@ -191,6 +191,15 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
       put(fields, reasons, "strainCur", String(strainCurrent), "Current available Strains, defaulting to the full allowance");
       put(fields, reasons, "strainLevel", String(strainLevel), `${klass.title} level ${level} progression`);
     }
+    // core-rulebook.txt [page 89] Bands Directive: uses = Wisdom modifier x 2
+    // (minimum 1); Effectiveness makes it x 3 at level 5 and Superior
+    // Effectiveness x 4 at level 11 ([pages 89–90]).
+    if (klass.id === "warden") {
+      const factor = level >= 11 ? 4 : level >= 5 ? 3 : 2;
+      const bandsMax = Math.max(1, abilityModifier(card.abilities.wis) * factor);
+      put(fields, reasons, "bandsMax", String(bandsMax), `Wisdom modifier x ${factor} (minimum 1)`);
+      put(fields, reasons, "bandsCur", String(Math.max(0, Math.min(bandsMax, intField(card.sheet, "bandsCur", bandsMax)))), "Bands Directive uses left, defaulting to the full allowance");
+    }
     // core-rulebook.txt [page 58] Roving, [page 103] Speedy, [page 106] Boon of
     // Speed, [page 40] carrying condition. `speedModifier` is kept as-is: a
     // player who compensated by hand still owns that override.
@@ -251,19 +260,24 @@ export function automationFor(card: HunterCard): CharacterAutomationResult {
   const backgroundSkills = background?.skills ?? [];
   const allSkills = new Set([...card.skillProficiencies, ...backgroundSkills, ...(card.featSkills ?? []).filter((choice) => SKILLS.some((skill) => skill.name === choice))]);
   const expertise = new Set(card.sheetAutomation?.expertiseSkills ?? []);
+  // core-rulebook.txt [page 89] Warden Experience (level 2): add half the
+  // Proficiency Bonus (round down) to checks with a skill you lack.
+  const experience = klass?.id === "warden" && level >= 2 ? Math.floor(prof / 2) : 0;
   for (const skill of SKILLS) {
     const key = skillAbility(skill.name);
     const proficient = allSkills.has(skill.name);
     const field = SHEET_SKILL_FIELD[skill.name];
     put(fields, reasons, `${field}P`, proficient, proficient ? (backgroundSkills.includes(skill.name) ? `${background?.name} background` : `${klass?.title ?? "Saved"} proficiency`) : "Not selected");
     const multiplier = expertise.has(skill.name) ? 2 : proficient ? 1 : 0;
-    put(fields, reasons, field, formatModifier(abilityModifier(card.abilities[key]) + prof * multiplier), expertise.has(skill.name) ? `${key.toUpperCase()} modifier + Expertise` : proficient ? `${key.toUpperCase()} modifier + proficiency` : `${key.toUpperCase()} modifier`);
+    const experienceBonus = multiplier === 0 ? experience : 0;
+    put(fields, reasons, field, formatModifier(abilityModifier(card.abilities[key]) + prof * multiplier + experienceBonus), expertise.has(skill.name) ? `${key.toUpperCase()} modifier + Expertise` : proficient ? `${key.toUpperCase()} modifier + proficiency` : experienceBonus ? `${key.toUpperCase()} modifier + half proficiency (Experience)` : `${key.toUpperCase()} modifier`);
   }
   put(fields, reasons, "initiative", formatModifier(abilityModifier(card.abilities.dex) + (featNames.has("Alert") ? prof : 0) + initiativeModifier), `${featNames.has("Alert") ? "Dexterity modifier + proficiency from Alert" : "Dexterity modifier"}${initiativeModifier ? ` + custom modifier ${formatModifier(initiativeModifier)}` : ""}`);
   // core-rulebook.txt [page 43]: Passive Perception = 10 + the full Wisdom
   // (Perception) check modifier, so Expertise doubles proficiency here too.
   const perceptionMultiplier = expertise.has("Perception") ? 2 : allSkills.has("Perception") ? 1 : 0;
-  put(fields, reasons, "passivePerception", String(10 + abilityModifier(card.abilities.wis) + prof * perceptionMultiplier + passiveModifier), `10 + Wisdom modifier${perceptionMultiplier === 2 ? " + Perception Expertise" : perceptionMultiplier === 1 ? " + Perception proficiency" : ""}${passiveModifier ? ` + custom modifier ${formatModifier(passiveModifier)}` : ""}`);
+  const perceptionExperience = perceptionMultiplier === 0 ? experience : 0;
+  put(fields, reasons, "passivePerception", String(10 + abilityModifier(card.abilities.wis) + prof * perceptionMultiplier + perceptionExperience + passiveModifier), `10 + Wisdom modifier${perceptionMultiplier === 2 ? " + Perception Expertise" : perceptionMultiplier === 1 ? " + Perception proficiency" : perceptionExperience ? " + half proficiency (Experience)" : ""}${passiveModifier ? ` + custom modifier ${formatModifier(passiveModifier)}` : ""}`);
   const tools = [klass?.toolProficiencies !== "—" ? klass?.toolProficiencies : null, background?.tool, ...(card.featSkills ?? []).filter((choice) => !SKILLS.some((skill) => skill.name === choice))].filter(Boolean);
   put(fields, reasons, "tools", [...new Set(tools)].join(", "), `${SOURCE.class} and ${SOURCE.background}. A tool proficiency adds your Proficiency Bonus to checks with that tool; when a skill also applies, add it once and roll with Advantage.`);
   put(fields, reasons, "feats", [background?.feat, ...(card.feats ?? [])].filter(Boolean).join("\n"), `${SOURCE.background} and level-up choices`);

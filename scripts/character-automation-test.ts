@@ -705,4 +705,18 @@ assert.equal(bloodvialEffectLabel(BLOODVIAL_PURITY_BY_ID.tainted), "Heals 2d4 + 
   assert.equal(weaponAttackBonus(holder("stalker"), facts("greatsword")), 3, "and withholds it otherwise");
 }
 
+// Warden, core-rulebook.txt [page 89]: Experience adds half the Proficiency
+// Bonus to skills the Warden lacks from level 2, and Bands Directive uses are
+// Wisdom modifier x 2 (x 3 from level 5, x 4 from level 11 [page 90]).
+{
+  const wardenAt = (level: number) => automationFor({ ...warden, level, lastSeenLevel: level, subclassId: "commander" });
+  assert.equal(wardenAt(1).fields.passivePerception, "12", "a level 1 Warden has no Experience yet");
+  assert.equal(wardenAt(2).fields.passivePerception, "13", "Experience adds half proficiency to an unproficient Perception");
+  assert.equal(wardenAt(1).fields.bandsMax, "4", "Bands Directive uses are Wisdom modifier x 2");
+  assert.equal(wardenAt(5).fields.bandsMax, "6", "Effectiveness raises Bands Directive uses to Wisdom modifier x 3");
+  assert.equal(wardenAt(11).fields.bandsMax, "8", "Superior Effectiveness raises them to Wisdom modifier x 4");
+  assert.equal(automationFor({ ...base, classId: "brute", level: 2, lastSeenLevel: 2, abilities: warden.abilities, skillProficiencies: [] }).fields.passivePerception, "12", "Experience is Warden-only");
+  assert.equal(getClass("warden")?.toolProficiencies, "Navigator's Tools", "the Warden tool matches the rulebook and item catalog");
+}
+
 console.log("Character automation tests passed.");
