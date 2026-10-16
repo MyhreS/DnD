@@ -90,6 +90,7 @@
 .character-sheet-modal .appsheet-workspace { height: 100%; min-height: 0; }
 
 .character-sheet-sheet { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto auto; gap: clamp(7px, 1.4vh, 13px); height: 100%; min-height: 0; overflow: hidden; padding-bottom: env(safe-area-inset-bottom); color: var(--app-text); }
+.character-sheet-sheet.has-action { grid-template-rows: auto auto minmax(0, 1fr) auto auto; }
 .character-sheet-identity { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 14px; padding: 5px clamp(6px, 2vw, 22px) 9px; border-bottom: 1px solid color-mix(in srgb, var(--app-line), transparent 25%); }
 .character-sheet-identity button { border: 0 !important; background: transparent !important; color: inherit !important; text-align: left; }
 .character-sheet-identity-profile { min-width: 0; padding: 0 !important; }
@@ -733,3 +734,57 @@
   .character-sheet-figure * { animation: none !important; }
   .character-sheet-page-shell, .character-sheet-upgrade-pending, .character-sheet-upgrade-launch, .character-sheet-upgrade-complete { animation: none !important; }
 }
+
+
+/* --- Action needed: an unfinished level upgrade, impossible to miss --- */
+.character-sheet-action-needed {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 14px;
+  margin: 0 clamp(6px, 2vw, 22px);
+  padding: 14px 16px;
+  border: 2px solid var(--app-warm);
+  border-radius: 16px;
+  background: linear-gradient(120deg, color-mix(in srgb, var(--app-warm), transparent 72%), color-mix(in srgb, var(--app-surface), var(--app-warm) 8%));
+  box-shadow: 0 0 0 0 color-mix(in srgb, var(--app-warm), transparent 40%);
+  color: var(--app-text);
+  animation: character-sheet-action-pulse 2.2s ease-in-out infinite;
+}
+.character-sheet-action-icon { display: grid; width: 40px; height: 40px; place-items: center; border-radius: 50%; background: var(--app-warm); color: #12100c; font: 800 22px/1 "Alegreya Sans SC", sans-serif; }
+.character-sheet-action-needed > div { min-width: 0; }
+.character-sheet-action-needed small { display: block; color: var(--app-warm); font: 800 12px/1.2 "Alegreya Sans SC", sans-serif; letter-spacing: .14em; text-transform: uppercase; }
+.character-sheet-action-needed strong { display: block; margin-top: 2px; font: 600 18px/1.25 "Cinzel", serif; }
+.character-sheet-action-needed p { margin: 4px 0 0; color: var(--app-muted); font: 14px/1.35 "Alegreya", serif; }
+.character-sheet-action-needed button { min-height: 44px; padding: 0 18px !important; border: 0 !important; border-radius: 12px !important; background: var(--app-warm) !important; color: #12100c !important; font: 800 14px/1 "Alegreya Sans SC", sans-serif !important; letter-spacing: .06em; white-space: nowrap; cursor: pointer; }
+@keyframes character-sheet-action-pulse { 50% { box-shadow: 0 0 0 6px color-mix(in srgb, var(--app-warm), transparent 82%); } }
+@media (max-width: 560px) {
+  .character-sheet-action-needed { grid-template-columns: auto minmax(0, 1fr); padding: 12px 14px; }
+  .character-sheet-action-needed button { grid-column: 1 / -1; width: 100%; }
+  .character-sheet-action-needed p { display: none; }
+}
+.character-sheet-progress-page > .character-sheet-action-needed { grid-column: 1 / -1; margin: 0; }
+.character-sheet-progress-page > .character-sheet-action-needed p { display: block; }
+
+/* --- Level history --- */
+.character-sheet-level-history { grid-column: 1 / -1; display: grid; gap: 10px; }
+.character-sheet-level-history h3 { margin: 8px 0 2px; font: 600 18px/1.2 "Cinzel", serif; }
+.character-sheet-level-entry { border: 1px solid var(--app-line); border-radius: 14px; background: var(--app-surface); overflow: hidden; }
+.character-sheet-level-entry > summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 56px; padding: 10px 14px; cursor: pointer; list-style: none; }
+.character-sheet-level-entry > summary::-webkit-details-marker { display: none; }
+.character-sheet-level-badge { display: grid; width: 36px; height: 36px; place-items: center; border: 1px solid var(--app-warm); border-radius: 50%; color: var(--app-warm); font: 700 16px/1 "Cinzel", serif; }
+.character-sheet-level-entry > summary b { display: block; font: 600 16px/1.2 "Cinzel", serif; }
+.character-sheet-level-entry > summary small { color: var(--app-faint); font: 13px/1.3 "Alegreya", serif; }
+.character-sheet-level-gains { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.character-sheet-level-gains em { padding: 4px 9px; border-radius: 999px; background: color-mix(in srgb, var(--app-positive), transparent 80%); color: var(--app-positive); font: 700 12px/1 "Alegreya Sans SC", sans-serif; font-style: normal; white-space: nowrap; }
+.character-sheet-level-body { display: grid; gap: 14px; padding: 4px 14px 16px; border-top: 1px solid var(--app-line); }
+.character-sheet-level-stats { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 10px 0 0; }
+.character-sheet-level-stats dt { color: var(--app-faint); font: 700 12px/1.2 "Alegreya Sans SC", sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.character-sheet-level-stats dd { margin: 2px 0 0; font: 600 16px/1.2 "Cinzel", serif; }
+.character-sheet-level-stats dd small { color: var(--app-positive); font: 13px "Alegreya", serif; }
+.character-sheet-level-body h4 { margin: 0 0 6px; color: var(--app-muted); font: 700 12px/1.2 "Alegreya Sans SC", sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.character-sheet-level-choices ul { margin: 0; padding-left: 18px; font: 15px/1.45 "Alegreya", serif; }
+.character-sheet-level-features details { border-top: 1px solid color-mix(in srgb, var(--app-line), transparent 40%); }
+.character-sheet-level-features summary { min-height: 44px; display: flex; align-items: center; cursor: pointer; font: 600 15px/1.3 "Alegreya", serif; }
+.character-sheet-level-features p { margin: 0 0 12px; color: var(--app-muted); font: 14px/1.5 "Alegreya", serif; white-space: pre-line; }
+@media (prefers-reduced-motion: reduce) { .character-sheet-action-needed { animation: none; } }

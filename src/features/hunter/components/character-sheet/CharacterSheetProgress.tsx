@@ -4,6 +4,8 @@ import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { sheetText } from "../appsheet/appSheetValues";
 import { hasStagedUpgrade, useAppEditStage } from "../appsheet/appEditStageContext";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
+import { CharacterSheetActionNeeded } from "./CharacterSheetActionNeeded";
+import { CharacterSheetLevelHistory } from "./CharacterSheetLevelHistory";
 import { CharacterSheetResourceControl } from "./CharacterSheetResourceControl";
 import { characterSheetNumber } from "./characterSheetValues";
 
@@ -37,6 +39,7 @@ export function CharacterSheetProgress({ model, upgradePending, onUpgrade }: { m
   }
 
   return <div className="character-sheet-progress-page">
+    {!model.readOnly && upgradePending && !hasStagedUpgrade(stage.patch) && <CharacterSheetActionNeeded newLevel={availableLevel > level ? availableLevel : null} missing={missing} onAct={openUpgrade} />}
     <section className="character-sheet-level-summary" aria-label="Level and Insight progress">
       <div><small>Current level</small><strong>{level}</strong><span>Level is set by Insight</span></div>
       <div className="character-sheet-insight-progress">
@@ -46,5 +49,6 @@ export function CharacterSheetProgress({ model, upgradePending, onUpgrade }: { m
     </section>
     <CharacterSheetResourceControl label="Insight" value={insight} note="Insight is cumulative and never spent. Reaching a threshold unlocks a character upgrade." disabled={model.readOnly} onChange={setInsight} />
     {!model.readOnly && <button type="button" className={`character-sheet-upgrade-launch ${upgradePending ? "pending" : ""}`} disabled={!upgradePending} onClick={openUpgrade}>{upgradePending ? launchLabel : "No upgrade pending"}<small>{upgradePending ? launchNote : "Earn more Insight to unlock the next level."}</small></button>}
+    <CharacterSheetLevelHistory />
   </div>;
 }

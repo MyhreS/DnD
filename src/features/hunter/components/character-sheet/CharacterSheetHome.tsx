@@ -8,6 +8,7 @@ import { sheetText } from "../appsheet/appSheetValues";
 import { hasStagedUpgrade, useAppEditStage } from "../appsheet/appEditStageContext";
 import { useCharacterSheetPageSafeArea } from "../../hooks/useCharacterSheetPageSafeArea";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
+import { CharacterSheetActionNeeded } from "./CharacterSheetActionNeeded";
 import { CharacterSheetBackButton } from "./CharacterSheetBackButton";
 import { CharacterSheetClassAbilities } from "./CharacterSheetClassAbilities";
 import { CharacterSheetDerivedStat } from "./CharacterSheetDerivedStat";
@@ -85,15 +86,22 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
     .filter(({ item }) => item.category !== "Armor")
     .reduce((total, { qty }) => total + qty, 0);
   const [completedUpgrade, setCompletedUpgrade] = useState(0);
+  const missingChoices = Object.values(result.pending).filter((entry) => entry != null).map((entry) => entry.label);
+  const showAction = !model.readOnly && upgradePending && !hasStagedUpgrade(stage.patch) && panel === null;
   const pageDefinition = panel ? PANELS[panel] : null;
   useCharacterSheetPageSafeArea(panel !== null);
-  return <div className="character-sheet-sheet" data-testid="character-sheet">
+  return <div className={`character-sheet-sheet${showAction ? " has-action" : ""}`} data-testid="character-sheet">
     <header className="character-sheet-identity">
       <div className="character-sheet-header-tools"><CharacterSheetBackButton backRef={backRef} onClick={onBack} ariaLabel="Back to hunters" />{saveMsg && <small className="character-sheet-save" role="status">{saveMsg}</small>}</div>
       <button className="character-sheet-identity-profile" type="button" onClick={() => onPanelChange("profile")}><small>{klass?.title ?? "Unbound hunter"}</small><h1>{name}</h1><span>{background?.name ?? "No background"}</span></button>
       <div className="character-sheet-identity-progress"><button className={upgradePending ? "character-sheet-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Level</small><strong>{displayedLevel}</strong></button><button className={upgradePending ? "character-sheet-upgrade-pending" : ""} type="button" onClick={() => onPanelChange("progress")}><small>Insight</small><strong>{insight}</strong></button></div>
     </header>
     {completedUpgrade > 0 && <span key={completedUpgrade} className="character-sheet-upgrade-complete" role="status">Upgrade complete</span>}
+    {showAction && <CharacterSheetActionNeeded
+      newLevel={earned > stage.savedCard.level ? earned : null}
+      missing={missingChoices}
+      onAct={() => { stage.stageLevel(earned); onPanelChange("upgrade"); }}
+    />}
     <div className="character-sheet-stage">
       <div className="character-sheet-rail character-sheet-rail-left"><Rail items={LEFT} open={onPanelChange} /></div>
       <button className="character-sheet-character" type="button" aria-label="Open equipment slots" onClick={() => onPanelChange("equipment")}><span>Tap to equip</span><CharacterSheetFigure classId={card.classId} /><small><CharacterSheetIcon name="armor" /> Equipment</small></button>
