@@ -9,8 +9,9 @@
  * iPhone: Safari has no Vibration API. Since iOS 18 toggling a native
  * `<input type="checkbox" switch>` plays the system's light "tick", so that
  * tick is the only iOS primitive; notification types are short tick
- * sequences. iOS 26.5+ only ticks for a real tap on a switch, so buttons
- * that matter are wrapped in <HapticTap>; scripted ticks still help older iOS.
+ * sequences. iOS 26.5+ only ticks for a real tap on a switch, so tapped
+ * controls are marked `data-haptic` (see hapticTaps.ts); scripted ticks still
+ * help older iOS for moments that are not a tap.
  * Android/others: `navigator.vibrate` with short patterns. Desktop or
  * unsupported browsers: nothing happens. */
 export type HapticKind = "selection" | "light" | "success" | "warning" | "error";
@@ -35,7 +36,7 @@ const IOS_TICKS: Record<HapticKind, number[]> = {
 
 let lastTapTick = 0;
 
-/** A real tap just ticked through a HapticTap switch; skip the scripted tick
+/** A real tap just ticked through the finger switch (hapticTaps.ts); skip the scripted tick
  * for that same tap so it never plays twice. */
 export function markTapTick(): void {
   lastTapTick = Date.now();
@@ -52,7 +53,7 @@ function isTouchDevice(): boolean {
 }
 
 /** Scripted tick: a fresh, undisplayed switch clicked through its label.
- * Works on iOS 18 to 26.4; iOS 26.5+ ignores it (see HapticTap). */
+ * Works on iOS 18 to 26.4; iOS 26.5+ ignores it (see hapticTaps.ts). */
 function iosTick() {
   const label = document.createElement("label");
   label.ariaHidden = "true";

@@ -28,7 +28,7 @@ export function BattleConditionsCell({ combatant, game, round, canManage, disabl
           const name = CONDITION_NAME[conditionId] ?? conditionId;
           const label = <>{name}{rounds && <small>{rounds}r</small>}</>;
           return canManage
-            ? <button className="battle-condition" key={conditionId} type="button" aria-label={`Remove ${name} from ${combatant.name}`} disabled={disabled} onClick={() => void toggleCondition(game.id, combatant, conditionId, round)}>{label}<span aria-hidden="true">×</span></button>
+            ? <button data-haptic className="battle-condition" key={conditionId} type="button" aria-label={`Remove ${name} from ${combatant.name}`} disabled={disabled} onClick={() => void toggleCondition(game.id, combatant, conditionId, round)}>{label}<span aria-hidden="true">×</span></button>
             : <span className="battle-condition" key={conditionId}>{label}</span>;
         })}
         {canManage && (

@@ -43,7 +43,7 @@ function FallenRow({ entry, isDm, disabled, onRecover }: {
           : "Died without a Favor · their gear dropped as loot."}</small>
       </div>
       {entry.favorSpent && <span className="battle-fallen-tag">Pending return</span>}
-      {isDm && <button className="btn btn-ghost" type="button" disabled={disabled} onClick={onRecover}>
+      {isDm && <button data-haptic="success" className="btn btn-ghost" type="button" disabled={disabled} onClick={onRecover}>
         {entry.favorSpent ? "Long Rest complete — return" : "Recover"}
       </button>}
     </article>

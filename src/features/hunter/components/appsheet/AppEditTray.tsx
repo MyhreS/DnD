@@ -95,7 +95,7 @@ export function AppEditTray() {
       </div>
       <div className="appsheet-edit-actions">
         <button type="button" className="cancel" onClick={stage.cancel}>Cancel</button>
-        <button type="button" className="apply" onClick={() => stage.apply()}>Apply changes</button>
+        <button data-haptic="success" type="button" className="apply" onClick={() => stage.apply()}>Apply changes</button>
       </div>
     </aside>
   );

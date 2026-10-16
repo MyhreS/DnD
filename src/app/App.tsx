@@ -1,3 +1,4 @@
+import { useHapticTaps } from "@/hooks/common/useHapticTaps";
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -82,6 +83,7 @@ function AuthedApp() {
 
 export default function App() {
   useAuthInit();
+  useHapticTaps();
   const status = useAuthStore((s) => s.status);
   const needsOnboarding = useAuthStore((s) => s.needsOnboarding);
 

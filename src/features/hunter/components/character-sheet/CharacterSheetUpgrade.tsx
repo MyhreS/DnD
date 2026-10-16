@@ -1,6 +1,4 @@
-import { HapticTap } from "@/components/HapticTap";
 import { useState } from "react";
-import { haptic } from "@/lib/haptics";
 import { AppAbilitiesSection } from "../appsheet/AppAbilitiesSection";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { useAppEditStage } from "../appsheet/appEditStageContext";
@@ -146,7 +144,6 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
       && automation.pointsLeft === 0
       && automation.bonusComplete
       && remaining === 0;
-    haptic("success");
     stage.apply({ lastSeenLevel: target, sheetAutomation: setupComplete ? { ...state, setupComplete: true } : state });
     onComplete({
       level: target,
@@ -169,7 +166,7 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
     className="character-sheet-upgrade-flow"
     contentClassName="character-sheet-upgrade-step"
     header={<header className="character-sheet-upgrade-step-header"><span>{creating ? `Character creation · Step ${stepIndex + 1}` : `Step ${stepIndex + 1} of ${steps.length}`}</span><i><b style={{ width: `${(stepIndex + 1) / steps.length * 100}%` }} /></i><h3>{step.title}</h3></header>}
-    footer={<footer className="character-sheet-upgrade-actions"><button type="button" className="back" disabled={stepIndex === 0} onClick={() => goToStep(stepIndex - 1)}>Previous</button><span>{step.kind === "review" ? (remaining > 0 ? `${remaining} choice${remaining === 1 ? "" : "s"} left` : creating ? "Ready to create" : "Ready to save") : stepPending?.status ?? (step.kind === "equipment" ? "Armor is optional" : "Step complete")}</span>{step.kind === "review" ? <HapticTap disabled={!canSave}><button type="button" className={canSave ? "is-ready" : undefined} disabled={!canSave} onClick={saveUpgrade}>{creating ? "Create hunter" : "Save upgrade"}</button></HapticTap> : <button type="button" disabled={!!stepPending} onClick={() => goToStep(stepIndex + 1)}>Next</button>}</footer>}
+    footer={<footer className="character-sheet-upgrade-actions"><button type="button" className="back" disabled={stepIndex === 0} onClick={() => goToStep(stepIndex - 1)}>Previous</button><span>{step.kind === "review" ? (remaining > 0 ? `${remaining} choice${remaining === 1 ? "" : "s"} left` : creating ? "Ready to create" : "Ready to save") : stepPending?.status ?? (step.kind === "equipment" ? "Armor is optional" : "Step complete")}</span>{step.kind === "review" ? <button type="button" className={canSave ? "is-ready" : undefined} disabled={!canSave} data-haptic="success" onClick={saveUpgrade}>{creating ? "Create hunter" : "Save upgrade"}</button> : <button type="button" disabled={!!stepPending} onClick={() => goToStep(stepIndex + 1)}>Next</button>}</footer>}
   >
       <CharacterSheetUpgradeTodo items={todos} />
       {step.kind === "automatic" && <AutomaticChanges changes={changes} />}

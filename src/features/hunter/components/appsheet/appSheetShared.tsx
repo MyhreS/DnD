@@ -159,7 +159,7 @@ export function ChoiceToggle({ checked, disabled, label, meta, onChange }: {
 }) {
   return (
     <label className={`appsheet-choice ${checked ? "selected" : ""}`}>
-      <input type="checkbox" checked={checked} disabled={disabled} onChange={onChange} />
+      <input data-haptic type="checkbox" checked={checked} disabled={disabled} onChange={onChange} />
       <span><b>{label}</b>{meta && <small>{meta}</small>}</span>
     </label>
   );
@@ -179,9 +179,9 @@ export function NumericStepper({ value, onChange, disabled = false, label, min =
 }) {
   return (
     <div className="appsheet-stepper compact">
-      <button type="button" aria-label={`Decrease ${label}`} disabled={disabled || value <= min} onClick={() => onChange(Math.max(min, value - 1))}>−</button>
+      <button data-haptic type="button" aria-label={`Decrease ${label}`} disabled={disabled || value <= min} onClick={() => onChange(Math.max(min, value - 1))}>−</button>
       <output aria-label={label}>{value}</output>
-      <button type="button" aria-label={`Increase ${label}`} disabled={disabled || (max != null && value >= max)} onClick={() => onChange(value + 1)}>+</button>
+      <button data-haptic type="button" aria-label={`Increase ${label}`} disabled={disabled || (max != null && value >= max)} onClick={() => onChange(value + 1)}>+</button>
     </div>
   );
 }

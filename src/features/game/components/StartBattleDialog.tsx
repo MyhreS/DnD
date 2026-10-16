@@ -33,13 +33,13 @@ export function StartBattleDialog({
           <div className="game-battle-picker">
             {available.map((template) => (
               <label key={template.id}>
-                <input type="checkbox" checked={selected.has(template.id)} onChange={() => toggle(template.id)} />
+                <input data-haptic type="checkbox" checked={selected.has(template.id)} onChange={() => toggle(template.id)} />
                 <span><strong>{template.name}</strong><small>{template.maxHp ?? "?"} HP · Initiative {template.initiative} · AC {template.ac ?? "—"}</small></span>
               </label>
             ))}
           </div>
         )}
-        <footer><button className="btn btn-ghost" type="button" onClick={onClose}>Cancel</button><button className="btn btn-primary" type="button" disabled={busy} onClick={() => void onStart(available.filter((template) => selected.has(template.id)))}>{mode === "resume" ? "Resume battle" : mode === "new" ? "Start new battle" : "Start battle"}</button></footer>
+        <footer><button className="btn btn-ghost" type="button" onClick={onClose}>Cancel</button><button data-haptic="success" className="btn btn-primary" type="button" disabled={busy} onClick={() => void onStart(available.filter((template) => selected.has(template.id)))}>{mode === "resume" ? "Resume battle" : mode === "new" ? "Start new battle" : "Start battle"}</button></footer>
       </section>
     </div>
   );

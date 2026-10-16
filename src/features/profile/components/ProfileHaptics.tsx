@@ -1,5 +1,4 @@
-import { HapticTap } from "@/components/HapticTap";
-import { haptic, isIos } from "@/lib/haptics";
+import { isIos } from "@/lib/haptics";
 
 /** Safari's native switch control (not yet in React's types). */
 const SWITCH = { switch: "" } as object;
@@ -25,9 +24,7 @@ export function ProfileHaptics() {
             Buttons like Damage, Heal, Next turn and Save upgrade tick when tapped.
             {ios && " If the switch doesn’t tick, turn on Settings → Sounds & Haptics → System Haptics, and turn off Low Power Mode."}
           </p>
-          <HapticTap>
-            <button type="button" className="btn btn-ghost" onClick={() => haptic("success")}>Test a tap</button>
-          </HapticTap>
+          <button type="button" className="btn btn-ghost" data-haptic="success">Test a tap</button>
         </>
       ) : (
         <p className="faint profile-haptics-note">This device or browser has no haptics.</p>

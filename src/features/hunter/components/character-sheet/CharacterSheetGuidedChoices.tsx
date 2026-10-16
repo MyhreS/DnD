@@ -38,7 +38,7 @@ export function CharacterSheetBackgroundAbilities() {
             <strong>{base[key]} <i>to</i> {finalScore}</strong>
           </header>
           <div className="character-sheet-background-bonus-buttons" role="group" aria-label={`${ABILITY_NAME[key]} background bonus`}>
-            {[0, 1, 2].map((value) => <button
+            {[0, 1, 2].map((value) => <button data-haptic
               key={value}
               type="button"
               aria-label={`${ABILITY_NAME[key]} background bonus +${value}`}
@@ -99,7 +99,7 @@ export function CharacterSheetSkillChoices({
               : `${formatModifier(baseCheck)} now; ${formatModifier(trainedCheck)} trained`;
 
         return <label key={skill.name} className={`character-sheet-guided-skill${checked ? " selected" : ""}${backgroundSkill ? " from-background" : ""}`}>
-          <input type="checkbox" aria-label={skill.name} checked={checked} disabled={disabled} onChange={() => onToggle(skill.name)} />
+          <input data-haptic type="checkbox" aria-label={skill.name} checked={checked} disabled={disabled} onChange={() => onToggle(skill.name)} />
           <span className="character-sheet-guided-skill-mark" aria-hidden="true" />
           <span className="character-sheet-guided-skill-copy">
             <span className="character-sheet-guided-skill-title"><b>{skill.name}</b><small>{ABILITY_NAME[skill.ability]}</small></span>

@@ -62,7 +62,7 @@ export function CharacterDeleteDialog({
           <button type="button" className="character-delete-cancel" disabled={deleting} onClick={onCancel}>
             Cancel
           </button>
-          <button type="submit" className="character-delete-confirm" disabled={!matches || deleting}>
+          <button data-haptic="error" type="submit" className="character-delete-confirm" disabled={!matches || deleting}>
             {deleting ? "Deleting…" : "Delete character"}
           </button>
         </div>

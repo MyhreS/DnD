@@ -354,7 +354,12 @@ try {
   await hunterControl.getByLabel("Lady Maria damage taken 6").waitFor();
   await hunterControl.getByRole("button", { name: "Damage Lady Maria", exact: true }).click();
   await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).getByText("7", { exact: true }).waitFor();
-  const damagedHunter = await db.doc(`characters/${characterId}`).get();
+  // Saves queue behind the screen update; give the last one time to land.
+  let damagedHunter = await db.doc(`characters/${characterId}`).get();
+  for (let attempt = 0; attempt < 20 && damagedHunter.data()?.currentHp !== 21; attempt += 1) {
+    await sleep(250);
+    damagedHunter = await db.doc(`characters/${characterId}`).get();
+  }
   const pcCombatants = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
   // Battle HP is linked to the Hunter's own sheet; the battle row keeps no copy.
   if (pcCombatants.empty || (pcCombatants.docs[0].data().currentHp ?? null) !== null) throw new Error("Hunter battle HP should live on the sheet, not the battle record.");

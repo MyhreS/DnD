@@ -1,8 +1,6 @@
-import { HapticTap } from "@/components/HapticTap";
 import { useState } from "react";
 import { requestShopPurchase } from "@/api/shopRequests";
 import { lineItem } from "@/features/play/lib/shop";
-import { haptic } from "@/lib/haptics";
 import type { Game } from "@/types";
 import { useRequestStatusHaptics } from "../hooks/useRequestStatusHaptics";
 import { useSeenShopLines } from "../hooks/useSeenShopLines";
@@ -27,7 +25,6 @@ export function PlayerShopPanel({ game, characterId, coins, live }: { game: Game
     setMessage("");
     try {
       await requestShopPurchase(game.id, lineId, characterId);
-      haptic("light");
       setMessage(`Asked ${game.dmName} to buy ${name}. You'll see the answer here.`);
     } catch (reason) {
       setMessage(reason instanceof Error ? reason.message : "The request could not be sent.");
@@ -59,11 +56,9 @@ export function PlayerShopPanel({ game, characterId, coins, live }: { game: Game
           <b className="player-shop-price">{line.priceGp} GP</b>
           {latest?.status === "approved" && <span className="player-shop-status is-approved">Bought ✓ — in your inventory</span>}
           {latest?.status === "declined" && <span className="player-shop-status is-declined">{game.dmName} said no</span>}
-          <HapticTap disabled={!live || !characterId || pending || tooPoor || asking === line.id}>
-            <button type="button" className="btn btn-primary" disabled={!live || !characterId || pending || tooPoor || asking === line.id} onClick={() => void ask(line.id, line.name)}>
-              {pending ? `Waiting for ${game.dmName}…` : asking === line.id ? "Asking…" : tooPoor ? "Not enough gold" : latest ? "Ask to buy another" : "Ask to buy"}
-            </button>
-          </HapticTap>
+          <button type="button" className="btn btn-primary" data-haptic="light" disabled={!live || !characterId || pending || tooPoor || asking === line.id} onClick={() => void ask(line.id, line.name)}>
+            {pending ? `Waiting for ${game.dmName}…` : asking === line.id ? "Asking…" : tooPoor ? "Not enough gold" : latest ? "Ask to buy another" : "Ask to buy"}
+          </button>
         </article>;
       })}
     </div>

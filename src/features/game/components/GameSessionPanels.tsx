@@ -36,10 +36,10 @@ export function SessionSwitchRequests({
             <span>{game.dmName} invited you{hasCurrentSession ? ". Accepting will leave your current session." : "."}</span>
           </div>
           <div>
-            <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void onRespond(game, "accept")}>
+            <button data-haptic="success" className="btn btn-primary" type="button" disabled={busy} onClick={() => void onRespond(game, "accept")}>
               {hasCurrentSession ? "Join and switch" : "Join"}
             </button>
-            <button className="game-text-button" type="button" disabled={busy} onClick={() => void onRespond(game, "decline")}>Decline</button>
+            <button data-haptic className="game-text-button" type="button" disabled={busy} onClick={() => void onRespond(game, "decline")}>Decline</button>
           </div>
         </article>
       ))}
@@ -92,7 +92,7 @@ export function ManagePlayersDialog({
         {query.trim() && <div className="game-dialog-results">{results.map((card) => {
           const unavailable = unavailableOwnerUids.has(card.ownerUid);
           const switchable = switchableOwnerUids.has(card.ownerUid);
-          return <button key={card.id} type="button" disabled={busy || locked || unavailable} onClick={() => void onAdd(card)}><span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail} · {cardClassName(card) || "Hunter"} · Level {card.level}</small></span><span>{unavailable ? "Running session" : switchable ? "Ask to switch" : "Add"}</span></button>;
+          return <button data-haptic="light" key={card.id} type="button" disabled={busy || locked || unavailable} onClick={() => void onAdd(card)}><span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail} · {cardClassName(card) || "Hunter"} · Level {card.level}</small></span><span>{unavailable ? "Running session" : switchable ? "Ask to switch" : "Add"}</span></button>;
         })}{results.length === 0 && <p className="muted">No available Hunters match.</p>}</div>}
         <div className="game-dialog-roster">
           {participants.length === 0 && invitations.length === 0 ? <p className="muted">No players have been added.</p> : participants.map((participant) => {
@@ -156,7 +156,7 @@ export function CreateItemDialog({ gameId, onClose }: { gameId: string; onClose:
       {category === "Weapon" && <><label className="game-field"><span>Attack bonus</span><input className="input" value={attackBonus} maxLength={80} onChange={(event) => setAttackBonus(event.target.value)} placeholder="e.g. +1" /></label><label className="game-field"><span>Damage</span><input className="input" value={damage} maxLength={120} onChange={(event) => setDamage(event.target.value)} placeholder="e.g. 1d8 piercing" /></label></>}
       <label className="game-field game-dialog-wide"><span>Notes</span><textarea className="input" value={note} maxLength={1000} onChange={(event) => setNote(event.target.value)} /></label>
     </div>
-    <footer><button className="btn btn-ghost" type="button" onClick={onClose}>Cancel</button><button className="btn btn-primary" type="submit" disabled={busy || !name.trim()}>{busy ? "Creating…" : "Create item"}</button></footer>
+    <footer><button className="btn btn-ghost" type="button" onClick={onClose}>Cancel</button><button data-haptic="success" className="btn btn-primary" type="submit" disabled={busy || !name.trim()}>{busy ? "Creating…" : "Create item"}</button></footer>
   </form></div>;
 }
 
@@ -173,6 +173,6 @@ export function SessionLootFeed({ game, characterId, isDm, threats = [] }: { gam
   const showThreat = Boolean(latestThreat && shown.length === 0 && !message);
   return <section className="game-focus-panel" aria-labelledby="session-items-title"><header><div><p className="eyebrow">{showThreat ? "Encounter" : "Found during play"}</p><h3 id="session-items-title">{isDm ? "Session items" : shown.length > 0 ? "Something was found" : message ? "Item secured" : "A threat appears"}</h3></div>{isDm && <span>{available.length} available</span>}</header>
     {message && <p className="game-success" role="status">{message}</p>}
-    {shown.length === 0 ? !message && (latestThreat ? <div className="game-threat"><strong>{latestThreat.name}</strong><span>The DM has added this enemy. Details remain hidden until revealed.</span></div> : <p className="muted">No items created yet.</p>) : <div className="game-loot-list">{shown.map((entry) => <article key={entry.id}><div><strong>{entry.item.name}</strong><span>{entry.item.category} · {entry.item.carry}{entry.item.damage ? ` · ${entry.item.damage}` : ""}</span>{entry.item.note && <small>{entry.item.note}</small>}</div>{isDm ? <span>{entry.status === "claimed" ? `Taken by ${entry.claimedByName || "Hunter"}` : "Available"}</span> : <button className="btn btn-primary" type="button" disabled={!characterId || claiming === entry.id} onClick={async () => { if (!characterId) return; setClaiming(entry.id); setMessage(""); try { await claimSessionLoot(game.id, entry.id, characterId); setMessage(`${entry.item.name} was added to your Hunter.`); } catch (reason) { setMessage(reason instanceof Error ? reason.message : "The item could not be taken."); } finally { setClaiming(null); } }}>{claiming === entry.id ? "Taking…" : "Take"}</button>}</article>)}</div>}
+    {shown.length === 0 ? !message && (latestThreat ? <div className="game-threat"><strong>{latestThreat.name}</strong><span>The DM has added this enemy. Details remain hidden until revealed.</span></div> : <p className="muted">No items created yet.</p>) : <div className="game-loot-list">{shown.map((entry) => <article key={entry.id}><div><strong>{entry.item.name}</strong><span>{entry.item.category} · {entry.item.carry}{entry.item.damage ? ` · ${entry.item.damage}` : ""}</span>{entry.item.note && <small>{entry.item.note}</small>}</div>{isDm ? <span>{entry.status === "claimed" ? `Taken by ${entry.claimedByName || "Hunter"}` : "Available"}</span> : <button data-haptic="success" className="btn btn-primary" type="button" disabled={!characterId || claiming === entry.id} onClick={async () => { if (!characterId) return; setClaiming(entry.id); setMessage(""); try { await claimSessionLoot(game.id, entry.id, characterId); setMessage(`${entry.item.name} was added to your Hunter.`); } catch (reason) { setMessage(reason instanceof Error ? reason.message : "The item could not be taken."); } finally { setClaiming(null); } }}>{claiming === entry.id ? "Taking…" : "Take"}</button>}</article>)}</div>}
   </section>;
 }

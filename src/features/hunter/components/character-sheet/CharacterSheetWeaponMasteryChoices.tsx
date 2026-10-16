@@ -29,7 +29,7 @@ export function CharacterSheetWeaponMasteryChoices() {
           : facts ? `${weaponDamageLabel(facts)} · ${facts.attack}` : "Weapon";
 
         return <label key={weapon.id} className={`character-sheet-mastery-option${checked ? " selected" : ""}`}>
-          <input
+          <input data-haptic
             type="checkbox"
             aria-label={weapon.name}
             checked={checked}

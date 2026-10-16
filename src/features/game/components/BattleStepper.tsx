@@ -39,7 +39,7 @@ export function BattleStepper({
     <div className={`battle-stat ${className}`}>
       <span className="battle-stat-label"><span className="battle-stat-icon" aria-hidden="true">{icon}</span>{label}</span>
       <div className="battle-stepper-value">
-        {canManage && <button type="button" aria-label={`Decrease ${name} ${noun}`} disabled={disabled || current <= min} onClick={() => onChange(current - 1)}>−</button>}
+        {canManage && <button data-haptic type="button" aria-label={`Decrease ${name} ${noun}`} disabled={disabled || current <= min} onClick={() => onChange(current - 1)}>−</button>}
         {canManage && editable
           ? <input
               key={current}
@@ -54,7 +54,7 @@ export function BattleStepper({
               onKeyDown={(event) => { if (event.key === "Enter") event.currentTarget.blur(); }}
             />
           : <strong aria-label={`${name} ${noun} ${value ?? "unknown"}`}>{value ?? "—"}</strong>}
-        {canManage && <button type="button" aria-label={`Increase ${name} ${noun}`} disabled={disabled || current >= max} onClick={() => onChange(current + 1)}>+</button>}
+        {canManage && <button data-haptic type="button" aria-label={`Increase ${name} ${noun}`} disabled={disabled || current >= max} onClick={() => onChange(current + 1)}>+</button>}
       </div>
     </div>
   );

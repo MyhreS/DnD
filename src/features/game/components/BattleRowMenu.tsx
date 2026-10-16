@@ -63,7 +63,7 @@ export function BattleRowMenu({
         <summary aria-label={`More options for ${combatant.name}`}>•••</summary>
         <div className="battle-more-menu">
           {combatant.kind === "monster" && <>
-            <button
+            <button data-haptic="warning"
               className="battle-death-toggle"
               type="button"
               aria-label={dead ? `Revive ${combatant.name}` : `Kill ${combatant.name}`}
@@ -81,7 +81,7 @@ export function BattleRowMenu({
               <input type="number" inputMode="numeric" min="1" max="9999" placeholder="Max HP" aria-label={`Max HP for ${combatant.name}`} value={maxHpDraft} disabled={disabled} onChange={(event) => setMaxHpDraft(event.target.value)} />
               <button type="submit" disabled={disabled || !maxHpDraft}>Set</button>
             </form>}
-            <button type="button" disabled={disabled || dead} onClick={() => runMenuAction(() => onAddDamage(5))}>Add 5 damage</button>
+            <button data-haptic="light" type="button" disabled={disabled || dead} onClick={() => runMenuAction(() => onAddDamage(5))}>Add 5 damage</button>
             <button type="button" aria-pressed={combatant.revealHp === true} disabled={disabled} onClick={() => runMenuAction(() => patch(game.id, combatant.id, { revealHp: combatant.revealHp !== true }))}>{combatant.revealHp === true ? "Hide HP" : "Show HP"}</button>
             <button type="button" aria-pressed={combatant.revealStats === true} disabled={disabled} onClick={() => runMenuAction(() => patch(game.id, combatant.id, { revealStats: combatant.revealStats !== true }))}>{combatant.revealStats === true ? "Hide stats" : "Show stats"}</button>
             <button type="button" disabled={disabled} onClick={() => runMenuAction(() => resetMonster(game.id, combatant.id))}>Reset stats</button>
@@ -93,7 +93,7 @@ export function BattleRowMenu({
             disabled={disabled}
             onClick={() => runMenuAction(() => onDeathOpenChange(true))}
           >Mark dead…</button>}
-          <button className="battle-remove" type="button" disabled={disabled} onClick={() => runMenuAction(() => remove(game.id, combatant.id, game, encounterCombatants))}>Remove {combatant.kind === "monster" ? "enemy" : "Hunter"}</button>
+          <button data-haptic="warning" className="battle-remove" type="button" disabled={disabled} onClick={() => runMenuAction(() => remove(game.id, combatant.id, game, encounterCombatants))}>Remove {combatant.kind === "monster" ? "enemy" : "Hunter"}</button>
         </div>
       </details>
       {/* Portalled: the initiative list is a size container, which would

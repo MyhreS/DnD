@@ -21,10 +21,10 @@ export function CharacterSheetResources({ model }: { model: AppSheetModel }) {
       </>}
     </div></section>
     <section className="character-sheet-resource-group"><h3>Battle states</h3><div className="character-sheet-state-grid">
-      <label><input type="checkbox" checked={card.bloodTinge === true} disabled={disabled} onChange={(event) => model.setFields({ bloodTinge: event.target.checked }, { bloodTinge: event.target.checked })} /> Blood Tinge held</label>
-      <label><input type="checkbox" checked={card.notTonight === true} disabled={disabled} onChange={(event) => model.setFields({ notTonight: event.target.checked }, { notTonight: event.target.checked })} /> Not Tonight! held</label>
-      {["dsS1", "dsS2", "dsS3"].map((field, index) => <label key={field}><input type="checkbox" checked={sheetBool(model.data, field)} disabled={disabled} onChange={(event) => model.setField(field, event.target.checked)} /> Death save success {index + 1}</label>)}
-      {["dsF1", "dsF2", "dsF3"].map((field, index) => <label key={field}><input type="checkbox" checked={sheetBool(model.data, field)} disabled={disabled} onChange={(event) => model.setField(field, event.target.checked)} /> Death save failure {index + 1}</label>)}
+      <label><input data-haptic type="checkbox" checked={card.bloodTinge === true} disabled={disabled} onChange={(event) => model.setFields({ bloodTinge: event.target.checked }, { bloodTinge: event.target.checked })} /> Blood Tinge held</label>
+      <label><input data-haptic type="checkbox" checked={card.notTonight === true} disabled={disabled} onChange={(event) => model.setFields({ notTonight: event.target.checked }, { notTonight: event.target.checked })} /> Not Tonight! held</label>
+      {["dsS1", "dsS2", "dsS3"].map((field, index) => <label key={field}><input data-haptic="success" type="checkbox" checked={sheetBool(model.data, field)} disabled={disabled} onChange={(event) => model.setField(field, event.target.checked)} /> Death save success {index + 1}</label>)}
+      {["dsF1", "dsF2", "dsF3"].map((field, index) => <label key={field}><input data-haptic="warning" type="checkbox" checked={sheetBool(model.data, field)} disabled={disabled} onChange={(event) => model.setField(field, event.target.checked)} /> Death save failure {index + 1}</label>)}
     </div></section>
     <CharacterSheetTransformations disabled={disabled} />
   </div>;

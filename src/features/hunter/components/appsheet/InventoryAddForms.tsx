@@ -37,7 +37,7 @@ export function CatalogItemForm({
           </optgroup>
         ))}
       </AppSelect>
-      <button type="button" data-testid="appsheet-add-catalog-item" disabled={!catalogId} onClick={onAdd}>Add</button>
+      <button data-haptic="success" type="button" data-testid="appsheet-add-catalog-item" disabled={!catalogId} onClick={onAdd}>Add</button>
     </div>
   );
 }
