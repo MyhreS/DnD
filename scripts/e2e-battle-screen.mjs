@@ -399,9 +399,24 @@ try {
   await hunterControl.getByLabel("Lady Maria hit points 16 of 28").waitFor();
   await hunterControl.getByText("Hunter · dying").waitFor({ state: "detached" });
 
+  // Many taps in a row all count: no lock while a save is in flight.
+  const damageMaria = hunterControl.getByRole("button", { name: "Damage Lady Maria", exact: true });
+  const healMaria = hunterControl.getByRole("button", { name: "Heal Lady Maria", exact: true });
+  for (let tap = 0; tap < 5; tap += 1) await damageMaria.click({ delay: 0 });
+  await hunterControl.getByLabel("Lady Maria hit points 11 of 28").waitFor();
+  for (let tap = 0; tap < 3; tap += 1) await healMaria.click({ delay: 0 });
+  await hunterControl.getByLabel("Lady Maria hit points 14 of 28").waitFor();
+  await playerHunter.getByLabel("Lady Maria hit points 14 of 28").waitFor();
+  await sleep(1500);
+  if ((await hunterHp())?.currentHp !== 14) throw new Error(`Rapid taps did not all reach the Hunter sheet (${(await hunterHp())?.currentHp}).`);
+  await hunterControl.getByLabel("Lady Maria hit points 14 of 28").waitFor();
+
   // --- Enemy killed by damage, then revived ---
   const houndControl = dmPage.locator(".battle-row").filter({ hasText: "Grave Hound" });
-  await houndControl.getByLabel("Amount for Grave Hound").fill("18");
+  const damageHound = houndControl.getByRole("button", { name: "Damage Grave Hound", exact: true });
+  for (let tap = 0; tap < 4; tap += 1) await damageHound.click({ delay: 0 });
+  await houndControl.getByLabel("Grave Hound damage taken 4").waitFor();
+  await houndControl.getByLabel("Amount for Grave Hound").fill("99");
   await houndControl.getByRole("button", { name: "Damage Grave Hound", exact: true }).click();
   await houndControl.getByText("Enemy · dead", { exact: true }).waitFor();
   await playerPage.locator(".battle-row").filter({ hasText: "Grave Hound" }).getByText("Enemy · dead", { exact: true }).waitFor();

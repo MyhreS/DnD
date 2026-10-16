@@ -1580,3 +1580,22 @@ button {
     background: transparent;
   }
 }
+
+/* Profile → Haptics test panel. */
+.profile-haptics-switch {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  margin-top: 8px;
+  font-size: 0.95rem;
+}
+.profile-haptics-switch input {
+  width: 51px;
+  height: 31px;
+  flex: none;
+}
+.profile-haptics-note {
+  font-size: 0.8rem;
+  margin: 8px 0 12px;
+}
