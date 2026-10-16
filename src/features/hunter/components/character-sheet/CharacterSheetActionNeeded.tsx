@@ -13,6 +13,6 @@ export function CharacterSheetActionNeeded({ newLevel, missing, onAct }: {
   return <section className="character-sheet-action-needed" role="alert" aria-live="polite">
     <span className="character-sheet-action-icon" aria-hidden="true">!</span>
     <div><small>Action needed</small><strong>{title}</strong><p>{detail}</p></div>
-    <button type="button" onClick={onAct}>{newLevel != null ? "Upgrade now" : "Choose now"} <span aria-hidden="true">→</span></button>
+    <button data-haptic="light" type="button" onClick={onAct}>{newLevel != null ? "Upgrade now" : "Choose now"} <span aria-hidden="true">→</span></button>
   </section>;
 }

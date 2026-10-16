@@ -46,7 +46,7 @@ export function ConfirmDialog({
           <button type="button" className="btn btn-ghost" data-dialog-initial-focus onClick={onCancel}>
             {cancelLabel}
           </button>
-          <button type="button" className="btn confirm-dialog-confirm" onClick={onConfirm}>
+          <button data-haptic="warning" type="button" className="btn confirm-dialog-confirm" onClick={onConfirm}>
             {confirmLabel}
           </button>
         </div>

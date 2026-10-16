@@ -50,7 +50,7 @@ export function AppAbilitiesSection({ model, view = "all", creation = false }: {
           <p className="appsheet-ability-intro">Set each base score with + or −. Higher scores use more points.{creation && " You will add your background bonuses next."}</p>
           <div className="appsheet-ability-method" role="group" aria-label="Ability method">
             {(["pointbuy", "alternative"] as BuyMode[]).map((mode) => (
-              <button key={mode} type="button" aria-pressed={automation.mode === mode} disabled={model.readOnly} onClick={() => automation.switchMode(mode)}>
+              <button data-haptic key={mode} type="button" aria-pressed={automation.mode === mode} disabled={model.readOnly} onClick={() => automation.switchMode(mode)}>
                 <span>{mode === "pointbuy" ? "Standard" : "Alternative point buy"}</span>
                 <small>{budgetFor(mode)} points</small>
               </button>
@@ -72,9 +72,9 @@ export function AppAbilitiesSection({ model, view = "all", creation = false }: {
                 <article key={ability.key}>
                   <header><span><b>{ability.short}</b><small>{ability.name}</small></span><em>{formatModifier(abilityModifier(score))} modifier</em></header>
                   <div className="appsheet-ability-controls">
-                    <button type="button" aria-label={`Decrease ${ability.name} score`} disabled={!canSetBase(ability.key, score - 1)} onClick={() => automation.setBase(ability.key, score - 1)}>−</button>
+                    <button data-haptic type="button" aria-label={`Decrease ${ability.name} score`} disabled={!canSetBase(ability.key, score - 1)} onClick={() => automation.setBase(ability.key, score - 1)}>−</button>
                     <span><output aria-label={`${ability.name} base score`}>{score}</output><small>Base score</small></span>
-                    <button type="button" aria-label={`Increase ${ability.name} score`} disabled={!canSetBase(ability.key, score + 1)} onClick={() => automation.setBase(ability.key, score + 1)}>+</button>
+                    <button data-haptic type="button" aria-label={`Increase ${ability.name} score`} disabled={!canSetBase(ability.key, score + 1)} onClick={() => automation.setBase(ability.key, score + 1)}>+</button>
                   </div>
                 </article>
               );

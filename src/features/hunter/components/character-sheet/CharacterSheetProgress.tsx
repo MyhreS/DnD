@@ -50,7 +50,7 @@ export function CharacterSheetProgress({ model, upgradePending, onUpgrade }: { m
       </div>
     </section>
     <CharacterSheetResourceControl label="Insight" value={insight} note="Insight is cumulative and never spent. Reaching a threshold unlocks a character upgrade." disabled={model.readOnly} onChange={setInsight} />
-    {!model.readOnly && <button type="button" className={`character-sheet-upgrade-launch ${upgradePending ? "pending" : ""}`} disabled={!upgradePending} onClick={openUpgrade}>{upgradePending ? launchLabel : "No upgrade pending"}<small>{upgradePending ? launchNote : "Earn more Insight to unlock the next level."}</small></button>}
+    {!model.readOnly && <button data-haptic="light" type="button" className={`character-sheet-upgrade-launch ${upgradePending ? "pending" : ""}`} disabled={!upgradePending} onClick={openUpgrade}>{upgradePending ? launchLabel : "No upgrade pending"}<small>{upgradePending ? launchNote : "Earn more Insight to unlock the next level."}</small></button>}
     <button type="button" className="character-sheet-history-launch" onClick={() => navigation.pushPage({ id: "level-history", title: "Level history", content: <CharacterSheetLevelHistory /> })}>
       <span><b>See level history</b><small>What each level gave you: HP, proficiency, your choices and new features.</small></span>
       <i aria-hidden="true">→</i>

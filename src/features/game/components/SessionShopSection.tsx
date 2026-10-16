@@ -29,7 +29,7 @@ export function SessionShopSection({ game, disabled, live = true }: { game: Game
       <div className="game-combat-actions">
         {shop.open ? (<>
           <button className="btn btn-primary" type="button" disabled={blocked} onClick={() => setEditing(true)}>Edit shop</button>
-          <button className="game-text-button" type="button" disabled={blocked} onClick={() => void closeShop(game.id, shop)}>Close shop</button>
+          <button data-haptic className="game-text-button" type="button" disabled={blocked} onClick={() => void closeShop(game.id, shop)}>Close shop</button>
         </>) : (
           <button className="btn btn-primary" type="button" disabled={blocked} onClick={() => setEditing(true)}>
             {shop.lines.length > 0 ? "Reopen shop" : "Open shop"}

@@ -109,7 +109,7 @@ export function GameWaitingRoom({
 
       <footer className="game-waiting-start">
         <p>Start when the table is gathered.</p>
-        <button className="btn btn-primary" type="button" disabled={busy} onClick={onStart}>Start session</button>
+        <button data-haptic="success" className="btn btn-primary" type="button" disabled={busy} onClick={onStart}>Start session</button>
       </footer>
     </section>
   );

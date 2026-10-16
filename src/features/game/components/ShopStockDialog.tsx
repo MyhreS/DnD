@@ -111,7 +111,7 @@ export function ShopStockDialog({
           {shop.open ? (
             <button className="btn btn-primary" type="button" disabled={busy} onClick={() => void onSave(draft()).then((ok) => ok && onClose())}>Save shop</button>
           ) : (
-            <button className="btn btn-primary" type="button" disabled={busy || lines.length === 0} onClick={() => void onOpenShop(draft()).then((ok) => ok && onClose())}>Open shop</button>
+            <button data-haptic="success" className="btn btn-primary" type="button" disabled={busy || lines.length === 0} onClick={() => void onOpenShop(draft()).then((ok) => ok && onClose())}>Open shop</button>
           )}
         </footer>
       </section>

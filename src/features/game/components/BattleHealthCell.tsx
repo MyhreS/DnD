@@ -1,6 +1,4 @@
-import { HapticTap } from "@/components/HapticTap";
 import { useState } from "react";
-import { haptic } from "@/lib/haptics";
 import type { CombatVitals } from "../lib/combatPresentation";
 
 /** Hit points for one battle row: the bar and numbers for everyone, plus an
@@ -33,7 +31,6 @@ export function BattleHealthCell({
   const state = !known ? "unknown" : percent <= 0 ? "down" : percent < 34 ? "critical" : percent < 67 ? "wounded" : "healthy";
 
   function apply(direction: 1 | -1) {
-    haptic("light");
     onSetDamage(Math.max(0, taken + direction * step));
     setAmount("");
   }
@@ -62,8 +59,8 @@ export function BattleHealthCell({
             onChange={(event) => setAmount(event.target.value)}
             onKeyDown={(event) => { if (event.key === "Enter" && !dead) apply(1); }}
           />
-          <HapticTap disabled={disabled || !canDamage || dead}><button className="is-damage" type="button" aria-label={`Damage ${name}`} disabled={disabled || !canDamage || dead} onClick={() => apply(1)}>Damage</button></HapticTap>
-          <HapticTap disabled={disabled || vitals.damageTaken === null || taken <= 0}><button className="is-heal" type="button" aria-label={`Heal ${name}`} disabled={disabled || vitals.damageTaken === null || taken <= 0} onClick={() => apply(-1)}>Heal</button></HapticTap>
+          <button className="is-damage" type="button" data-haptic="light" aria-label={`Damage ${name}`} disabled={disabled || !canDamage || dead} onClick={() => apply(1)}>Damage</button>
+          <button className="is-heal" type="button" data-haptic="light" aria-label={`Heal ${name}`} disabled={disabled || vitals.damageTaken === null || taken <= 0} onClick={() => apply(-1)}>Heal</button>
         </div>
       )}
     </div>

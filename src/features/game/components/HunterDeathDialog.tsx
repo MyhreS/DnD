@@ -52,7 +52,7 @@ export function HunterDeathDialog({
 
         <footer>
           <button className="btn btn-ghost" type="button" onClick={onClose}>Cancel</button>
-          <button className="btn btn-primary" type="button" disabled={busy} onClick={() => onConfirm(spendFavor && canSpend)}>
+          <button data-haptic="error" className="btn btn-primary" type="button" disabled={busy} onClick={() => onConfirm(spendFavor && canSpend)}>
             {spendFavor && canSpend ? "Expend a Favor" : "Confirm death"}
           </button>
         </footer>
