@@ -108,10 +108,16 @@ html {
   height: 100%;
 }
 
-/* Home-screen (standalone) iPhone app: iOS lays a frosted band just below the
-   status bar that softens whatever sits there, so the app's top edge gets a
-   little extra breathing room. Browsers keep 0. */
-:root { --app-top-gap: 0px; }
+/* Global top safe area. Home-screen (standalone) iPhone app: iOS lays a
+   frosted band just below the status bar that softens whatever sits there, so
+   the app's top edge gets a little extra breathing room (browsers keep 0).
+   Everything pinned to the top of the screen — headers, sheet pages, and every
+   dialog/pop-up backdrop — starts below `--safe-top`. */
+:root {
+  --app-top-gap: 0px;
+  --safe-top: calc(env(safe-area-inset-top) + var(--app-top-gap));
+  --safe-bottom: env(safe-area-inset-bottom);
+}
 @media (display-mode: standalone) {
   :root { --app-top-gap: 14px; }
 }
@@ -333,7 +339,7 @@ button {
 }
 
 .app-header {
-  padding: calc(env(safe-area-inset-top) + 12px + var(--app-top-gap)) 16px 12px;
+  padding: calc(var(--safe-top) + 12px) 16px 12px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1031,7 +1037,7 @@ button {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 0;
+  padding: var(--safe-top) 0 0;
   animation: fade-in 0.2s ease both;
 }
 @media (min-width: 540px) {
@@ -1044,7 +1050,7 @@ button {
 .modal {
   width: 100%;
   max-width: 480px;
-  max-height: 90vh;
+  max-height: min(90vh, calc(100dvh - var(--safe-top) - 12px));
   overflow-y: auto;
   background: linear-gradient(180deg, var(--bg-elev), var(--bg-elev-2));
   border: 1px solid var(--border-strong);
@@ -1078,7 +1084,7 @@ button {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  padding: 12px 12px max(12px, env(safe-area-inset-bottom));
+  padding: calc(var(--safe-top) + 12px) 12px max(12px, var(--safe-bottom));
   background: rgba(5, 5, 7, 0.76);
   backdrop-filter: blur(6px);
   animation: fade-in 0.16s ease both;
