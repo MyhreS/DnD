@@ -457,7 +457,7 @@ export const CLASSES: HunterClass[] = [
     speedFt: 30,
     armorTraining: ["Light armor", "Medium armor", "Heavy armor"],
     weaponProficiencies: "Simple and Martial weapons",
-    toolProficiencies: "Navigator Tools",
+    toolProficiencies: "Navigator's Tools",
     skillChoices: { count: 2, options: ["Perception", "Investigation", "Animal Handling", "Survival", "Presence", "Persuasion"] },
     startingEquipment: ["Hunter Rifle", "Longsword", "Navigator's Tools", "Bell", "1 Hunting Trap", "Tool Belt", "Bandolier", "14 bullets", "Tricorn"],
     baseClass: "Fighter",
