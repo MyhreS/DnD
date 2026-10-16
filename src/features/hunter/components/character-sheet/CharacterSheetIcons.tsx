@@ -1,6 +1,6 @@
 import type { SVGProps } from "react";
 
-export type CharacterSheetIconName = "abilities" | "skills" | "features" | "inventory" | "notes" | "profile" | "resources" | "armor";
+export type CharacterSheetIconName = "abilities" | "skills" | "features" | "inventory" | "notes" | "profile" | "resources" | "rites" | "armor";
 
 export function CharacterSheetIcon({ name, ...props }: { name: CharacterSheetIconName } & SVGProps<SVGSVGElement>) {
   return <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" {...props}>
@@ -11,6 +11,7 @@ export function CharacterSheetIcon({ name, ...props }: { name: CharacterSheetIco
     {name === "notes" && <><path d="M5 3h14v18H5z" /><path d="M8 8h8M8 12h8M8 16h5" /></>}
     {name === "profile" && <><circle cx="12" cy="7" r="3" /><path d="M5 21c.8-5 3.1-8 7-8s6.2 3 7 8" /></>}
     {name === "resources" && <><path d="M12 3C9 7 6 10 6 14a6 6 0 0 0 12 0c0-4-3-7-6-11Z" /><path d="M9 15h6M12 12v6" /></>}
+    {name === "rites" && <><path d="M5 4h9a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3V4Z" /><path d="M5 17a3 3 0 0 1 3-3h9" /><circle cx="11" cy="9" r="2" /></>}
     {name === "armor" && <><path d="m8 4 4-2 4 2 4 2-2 5v9l-6 2-6-2v-9L4 6l4-2Z" /><path d="M8 4c1 3 7 3 8 0M12 7v15" /></>}
   </svg>;
 }
