@@ -9,12 +9,11 @@
  * iPhone: Safari has no Vibration API. Since iOS 18 toggling a native
  * `<input type="checkbox" switch>` plays the system's light "tick", so that
  * tick is the only iOS primitive; notification types are short tick
- * sequences. There are a few ways to toggle the switch from script; Profile →
- * Haptics lets a player try each and keeps the one their phone answers to.
+ * sequences. iOS 26.5+ only ticks for a real tap on a switch, so buttons
+ * that matter are wrapped in <HapticTap>; scripted ticks still help older iOS.
  * Android/others: `navigator.vibrate` with short patterns. Desktop or
  * unsupported browsers: nothing happens. */
 export type HapticKind = "selection" | "light" | "success" | "warning" | "error";
-export type IosHapticMethod = "label" | "input" | "body";
 
 const VIBRATION: Record<HapticKind, number | number[]> = {
   // Many Android motors cannot render pulses shorter than ~20 ms.
@@ -34,8 +33,13 @@ const IOS_TICKS: Record<HapticKind, number[]> = {
   error: [0, 100, 200],
 };
 
-const METHOD_KEY = "haptics-ios-method";
-const IOS_METHODS: IosHapticMethod[] = ["label", "input", "body"];
+let lastTapTick = 0;
+
+/** A real tap just ticked through a HapticTap switch; skip the scripted tick
+ * for that same tap so it never plays twice. */
+export function markTapTick(): void {
+  lastTapTick = Date.now();
+}
 
 export function isIos(): boolean {
   if (typeof navigator === "undefined") return false;
@@ -47,68 +51,28 @@ function isTouchDevice(): boolean {
   return typeof window !== "undefined" && window.matchMedia?.("(pointer: coarse)").matches === true;
 }
 
-export function iosHapticMethod(): IosHapticMethod {
-  try {
-    const saved = localStorage.getItem(METHOD_KEY) as IosHapticMethod | null;
-    if (saved && IOS_METHODS.includes(saved)) return saved;
-  } catch {
-    // Storage can be unavailable (private mode); fall back to the default.
-  }
-  return "label";
-}
-
-export function setIosHapticMethod(method: IosHapticMethod): void {
-  try { localStorage.setItem(METHOD_KEY, method); } catch { /* ignore */ }
-}
-
-function makeSwitch(): { label: HTMLLabelElement; input: HTMLInputElement } {
+/** Scripted tick: a fresh, undisplayed switch clicked through its label.
+ * Works on iOS 18 to 26.4; iOS 26.5+ ignores it (see HapticTap). */
+function iosTick() {
   const label = document.createElement("label");
   label.ariaHidden = "true";
+  label.style.display = "none";
   const input = document.createElement("input");
   input.type = "checkbox";
   input.setAttribute("switch", "");
-  input.tabIndex = -1;
   label.appendChild(input);
-  return { label, input };
+  document.head.appendChild(label);
+  label.click();
+  label.remove();
 }
 
-let bodySwitch: HTMLLabelElement | null = null;
-
-function iosTick(method: IosHapticMethod) {
-  if (method === "label") {
-    // A fresh, undisplayed switch in <head>, clicked through its label.
-    const { label } = makeSwitch();
-    label.style.display = "none";
-    document.head.appendChild(label);
-    label.click();
-    label.remove();
-    return;
-  }
-  if (method === "input") {
-    // A fresh, rendered (but invisible) switch, clicked directly.
-    const { label, input } = makeSwitch();
-    label.style.cssText = "position:fixed;left:0;top:0;width:1px;height:1px;opacity:0.01;overflow:hidden";
-    document.body.appendChild(label);
-    input.click();
-    label.remove();
-    return;
-  }
-  if (!bodySwitch) {
-    const { label } = makeSwitch();
-    label.style.cssText = "position:fixed;width:1px;height:1px;opacity:0;pointer-events:none;overflow:hidden;clip-path:inset(50%)";
-    document.body.appendChild(label);
-    bodySwitch = label;
-  }
-  bodySwitch.click();
-}
-
-export function haptic(kind: HapticKind = "selection", method?: IosHapticMethod): void {
+export function haptic(kind: HapticKind = "selection"): void {
   try {
     if (isIos()) {
-      const chosen = method ?? iosHapticMethod();
+      if (Date.now() - lastTapTick < 600) return;
       for (const delay of IOS_TICKS[kind]) {
-        if (delay === 0) iosTick(chosen);
-        else window.setTimeout(() => iosTick(chosen), delay);
+        if (delay === 0) iosTick();
+        else window.setTimeout(iosTick, delay);
       }
       return;
     }

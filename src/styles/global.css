@@ -1599,3 +1599,25 @@ button {
   font-size: 0.8rem;
   margin: 8px 0 12px;
 }
+
+/* HapticTap: an invisible native switch over a button (iPhone haptics). The
+ * wrapper takes the button's place in grid/flex layouts. */
+.haptic-tap {
+  position: relative;
+  display: grid;
+  min-width: 0;
+}
+.haptic-tap > :first-child { min-width: 0; }
+input.haptic-tap-switch {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  width: 100% !important;
+  height: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  opacity: 0 !important;
+  cursor: pointer;
+}
