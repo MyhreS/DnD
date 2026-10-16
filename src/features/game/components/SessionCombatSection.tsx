@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { haptic } from "@/lib/haptics";
 import { emptyEncounter } from "@/features/play/lib/turnTimer";
 import { initiativeOrder, useCombatStore } from "@/features/play/store/combatStore";
 import type { EnemyTemplate, Game, GameParticipant, HunterCard } from "@/types";
@@ -129,7 +130,7 @@ export function SessionCombatControls({
 
   return (
     <div className="game-battle-toolbar" aria-label="DM battle controls">
-      <button className="battle-next-turn" type="button" aria-label="Next turn" disabled={disabled || order.length === 0} onClick={() => void nextTurn(game.id, game, combatants)}>
+      <button className="battle-next-turn" type="button" aria-label="Next turn" disabled={disabled || order.length === 0} onClick={() => { haptic("selection"); void nextTurn(game.id, game, combatants); }}>
         <span>Finish turn</span>
         <strong>Next<span className="battle-next-noun"> turn</span> <span aria-hidden="true">→</span></strong>
       </button>

@@ -1,6 +1,7 @@
 import { useCombatStore } from "@/features/play/store/combatStore";
 import type { Combatant, Game, HunterCard } from "@/types";
 import { useState } from "react";
+import { haptic } from "@/lib/haptics";
 import { combatVitals } from "../lib/combatPresentation";
 import { DYING_CONDITIONS, hunterDamageOutcome } from "../lib/hunterDamage";
 import { BattleConditionsCell } from "./BattleConditionsCell";
@@ -73,6 +74,10 @@ export function BattleCombatantRow({
     setNotice(outcome.kind === "not-tonight" ? "Not Tonight! spent — stays at 1 HP."
       : outcome.kind === "instant-death" ? "Instant Death — the damage left over reaches the HP maximum."
         : outcome.kind === "dying" && previous > 0 ? "Down to 0 HP — Dying and Unconscious." : null);
+    // Apple HIG: notification haptics for outcomes that matter.
+    if (outcome.kind === "instant-death") haptic("error");
+    else if (outcome.kind === "dying" && previous > 0) haptic("warning");
+    else if (outcome.kind === "not-tonight") haptic("warning");
     const ok = await setHunterHp(game.id, combatant, outcome.hp, outcome.kind === "not-tonight");
     if (!ok) return;
     const down = outcome.kind === "dying" || outcome.kind === "instant-death";

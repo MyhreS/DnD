@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { haptic } from "@/lib/haptics";
 import { AppAbilitiesSection } from "../appsheet/AppAbilitiesSection";
 import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { useAppEditStage } from "../appsheet/appEditStageContext";
@@ -144,6 +145,7 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
       && automation.pointsLeft === 0
       && automation.bonusComplete
       && remaining === 0;
+    haptic("success");
     stage.apply({ lastSeenLevel: target, sheetAutomation: setupComplete ? { ...state, setupComplete: true } : state });
     onComplete({
       level: target,
