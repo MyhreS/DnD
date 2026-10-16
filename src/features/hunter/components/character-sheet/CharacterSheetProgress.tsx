@@ -6,12 +6,14 @@ import { hasStagedUpgrade, useAppEditStage } from "../appsheet/appEditStageConte
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { CharacterSheetActionNeeded } from "./CharacterSheetActionNeeded";
 import { CharacterSheetLevelHistory } from "./CharacterSheetLevelHistory";
+import { useCharacterSheetPageNavigation } from "./characterSheetPageNavigation";
 import { CharacterSheetResourceControl } from "./CharacterSheetResourceControl";
 import { characterSheetNumber } from "./characterSheetValues";
 
 export function CharacterSheetProgress({ model, upgradePending, onUpgrade }: { model: AppSheetModel; upgradePending: boolean; onUpgrade: () => void }) {
   const stage = useAppEditStage();
   const { result } = useCharacterAutomation();
+  const navigation = useCharacterSheetPageNavigation();
   const insight = stage.previewCard.insight ?? characterSheetNumber(sheetText(model.data, "insight"));
   const level = stage.savedCard.level;
   const availableLevel = Math.max(level, levelForInsight(insight));
@@ -49,6 +51,9 @@ export function CharacterSheetProgress({ model, upgradePending, onUpgrade }: { m
     </section>
     <CharacterSheetResourceControl label="Insight" value={insight} note="Insight is cumulative and never spent. Reaching a threshold unlocks a character upgrade." disabled={model.readOnly} onChange={setInsight} />
     {!model.readOnly && <button type="button" className={`character-sheet-upgrade-launch ${upgradePending ? "pending" : ""}`} disabled={!upgradePending} onClick={openUpgrade}>{upgradePending ? launchLabel : "No upgrade pending"}<small>{upgradePending ? launchNote : "Earn more Insight to unlock the next level."}</small></button>}
-    <CharacterSheetLevelHistory />
+    <button type="button" className="character-sheet-history-launch" onClick={() => navigation.pushPage({ id: "level-history", title: "Level history", content: <CharacterSheetLevelHistory /> })}>
+      <span><b>See level history</b><small>What each level gave you: HP, proficiency, your choices and new features.</small></span>
+      <i aria-hidden="true">→</i>
+    </button>
   </div>;
 }

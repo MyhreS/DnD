@@ -233,3 +233,25 @@ export function upgradeFeatureComplete(feature: UpgradeFeature, state: SheetAuto
   const bonuses = state.levelAbilityBonuses?.[feature.key] ?? {};
   return Object.values(bonuses).reduce((sum, value) => sum + (value ?? 0), 0) === selected.abilityPoints;
 }
+
+/** The concrete actions a feature step still needs, for the step's To-do list:
+ * pick the feat, place its ability points, pick any skills it asks for — or
+ * make the recorded choice. */
+export function featureTodos(feature: UpgradeFeature, state: SheetAutomationState, card: HunterCard, klass: HunterClass | undefined): Array<{ label: string; done: boolean }> {
+  if (!feature.choice) return [];
+  const feats = featOptionsFor(feature, card, klass, state.levelFeats?.[feature.key]);
+  if (feats.length === 0) {
+    const label = recordedOptionsFor(feature, state).length ? recordedChoiceLabel(feature) : "Record your choice";
+    return [{ label: `${label} for ${feature.name}`, done: !!state.levelChoices?.[feature.key]?.trim() }];
+  }
+  const selected = feats.find((feat) => feat.name === state.levelFeats?.[feature.key]);
+  const todos = [{ label: selected ? `Feat chosen: ${selected.name}` : "Choose a feat from the list", done: !!selected }];
+  if (selected && selected.abilityPoints > 0) {
+    const placed = Object.values(state.levelAbilityBonuses?.[feature.key] ?? {}).reduce((sum, value) => sum + (value ?? 0), 0);
+    todos.push({ label: `Place ${selected.abilityPoints} ability point${selected.abilityPoints === 1 ? "" : "s"} (${placed} / ${selected.abilityPoints} placed)`, done: placed === selected.abilityPoints });
+  }
+  for (const pick of (selected ? FEAT_SKILL_PICKS[selected.name] : undefined) ?? []) {
+    todos.push({ label: `Choose ${pick.label.toLowerCase()}`, done: !!state.levelChoices?.[featPickKey(feature.key, pick.slot)] });
+  }
+  return todos;
+}
