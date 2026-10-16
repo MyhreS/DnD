@@ -1,4 +1,4 @@
-import type { HunterClass } from "@/types";
+import type { HunterClass, LevelFeature, Subclass } from "@/types";
 
 // The six hunter classes of Catacombs & Starspawns.
 // GENERATED from the DM's source PDFs (resources/) — class traits & level
@@ -334,6 +334,10 @@ export const CLASSES: HunterClass[] = [
       {
         id: "hunter-zealot",
         name: "Hunter Zealot",
+        // [page 75]: "You gain no further features from the Hunter Deepcaller
+        // class. Whenever you would gain a Hunter Deepcaller level, you only
+        // gain the features listed under the Hunter Zealot Prestige class."
+        replacesProgression: true,
         tagline: "Burn the Book. Serve One Truth.",
         blurb: "A Hunter Deepcaller Prestige Class is an alternative path that replaces the traditional progression of the Hunter Deepcaller. A Hunter Deepcaller who enters a Prestige Class abandons that path and is remade by a more focused, dangerous source of power.\n\nMost Deepcallers seek power through forbidden study, reading from the Book of the Deepcaller and calling upon many Patrons. A Zealot abandons that path. Through blood, fire, and devotion, the Zealot offers the book to a single eldritch being and becomes its living weapon. A Zealot does not search for many truths. A Zealot serves one Truth.",
         features: [
@@ -348,7 +352,10 @@ export const CLASSES: HunterClass[] = [
           { level: 4, name: "Ability Score Improvement", text: "You gain the Ability Score Improvement feat or another feat of your choice for which you qualify. You gain this feature again at Hunter Zealot levels 8, 12, and 16." },
           { level: 5, name: "Rite and Blade", text: "You can attack twice, instead of once, whenever you take the Attack Action on your turn. In addition, when you use your Action to perform a Whisper, you can make one weapon attack as a Bonus Action." },
           { level: 6, name: "Fanatical Focus", text: "Your devotion shields your mind from hesitation, fear, and pain. When you fail a saving throw, you can expend one Strain to reroll the saving throw. You must use the new roll. If the new roll succeeds, you can immediately move up to half your Speed without provoking opportunity attacks." },
+          { level: 8, name: "Ability Score Improvement", text: "You gain the Ability Score Improvement feat or another feat of your choice for which you qualify. You gain this feature again at Hunter Zealot levels 8, 12, and 16." },
           { level: 10, name: "Zealous Presence", text: "As a Bonus Action, you unleash a command filled with the authority of your Patron. Choose up to eight creatures of your choice within 60 feet that can see or hear you. Until the start of your next turn, each chosen creature has Advantage on attack rolls and saving throws. Once you use this feature, you cannot use it again until you finish a Long Rest, unless you expend one Strain to use it again." },
+          { level: 12, name: "Ability Score Improvement", text: "You gain the Ability Score Improvement feat or another feat of your choice for which you qualify. You gain this feature again at Hunter Zealot levels 8, 12, and 16." },
+          { level: 16, name: "Ability Score Improvement", text: "You gain the Ability Score Improvement feat or another feat of your choice for which you qualify. You gain this feature again at Hunter Zealot levels 8, 12, and 16." },
           { level: 19, name: "Epic Boon", text: "You gain an Epic Boon feat or another feat of your choice for which you qualify." },
           { level: 20, name: "Absolute Union", text: "As a Bonus Action, you allow your Patron to fully manifest through your body. This transformation lasts for 5 rounds, until you drop to 0 Hit Points, or until you end it early as a Bonus Action. Once you use this feature, you cannot use it again until you finish a Long Rest. When you enter this form, you suffer 20 Madness.\n\nWhile transformed, you gain the following benefits:\n\nPatron's Form. Your body becomes a living vessel for your Patron. Your eyes turn black like the abyss, blackened veins spread across your flesh, impossible shadows cling to your body, bone spines tear through your skin, and spectral limbs writhe around you as if guided by a will beyond your own. When you transform, each other creature within a 30-foot-radius Sphere centered on you must make a Wisdom saving throw against your Rite Save DC. On a failed save, a creature takes 8d10 Mind damage and suffers 6 Madness. On a successful save, a creature takes half as much damage and suffers 2 Madness. Each other creature within 120 feet that can see your transformation unfold, but is outside the 30-foot-radius Sphere, suffers 2 Madness.\n\nEldritch Resistance. You have Immunity to Mind damage and Resistance to Eldritch Power damage.\n\nUnshaken Vessel. You cannot be Frightened, Mesmerized, Paralyzed, or Stunned.\n\nDevoted Assault. The first time you hit a creature on each of your turns with a weapon attack or Eldritch Strike, the target takes an extra 4d8 Eldritch Power damage.\n\nLashing Tendrils. As an Action, you command the spectral limbs of your Patron to lash out. Choose up to three creatures you can see within 30 feet of you. Each target must make a Strength saving throw against your Rite Save DC. On a failed save, a target takes 6d10 Eldritch Power damage and gains the Restrained condition. On a successful save, a target takes half as much damage and is not Restrained. A Restrained creature can repeat the saving throw at the end of each of its turns, ending the condition on itself on a success. You cannot use Lashing Tendrils again while a creature is Restrained by this feature.\n\nTendril Reprisal. When a creature within 15 feet of you hits you with an attack, you can take a Reaction to lash out with a spectral tendril. The creature takes 3d10 Eldritch Power damage and must succeed on a Strength saving throw against your Rite Save DC or have the Restrained condition until the end of its next turn.\n\nUnbroken Vessel. If you would drop to 0 Hit Points while this transformation is active, you can expend one Strain to drop to 1 Hit Point instead. If you drop to 0 Hit Points and do not use this benefit, the transformation ends." },
         ],
@@ -537,6 +544,32 @@ export const CLASSES: HunterClass[] = [
 export const CLASS_BY_ID: Record<string, HunterClass> = Object.fromEntries(
   CLASSES.map((c) => [c.id, c]),
 );
+
+/** The class feature names gained at one level, as the class table lists them
+ * — or, once a prestige path that replaces the progression has been entered
+ * (level 3+), only that path's own features. */
+export function levelFeatureNames(klass: HunterClass, subclass: Subclass | undefined, level: number): string[] {
+  if (subclass?.replacesProgression && level >= 3) {
+    return subclass.features.filter((feature) => feature.level === level).map((feature) => feature.name);
+  }
+  const row = klass.progression.find((entry) => entry.level === level);
+  return row?.features && row.features !== "—"
+    ? row.features.split(",").map((entry) => entry.trim()).filter(Boolean)
+    : [];
+}
+
+/** Feature descriptions gained at one level (class + path, or path only once a
+ * replacing prestige path has been entered). */
+export function levelFeatureDetails(klass: HunterClass, subclass: Subclass | undefined, level: number): LevelFeature[] {
+  const own = subclass?.features.filter((feature) => feature.level === level) ?? [];
+  if (subclass?.replacesProgression && level >= 3) return own;
+  return [...(klass.features ?? []).filter((feature) => feature.level === level), ...own];
+}
+
+/** A Deepcaller who has entered the Hunter Zealot prestige path (level 3+). */
+export function isZealot(card: { classId: string; subclassId?: string | null; level: number }): boolean {
+  return card.classId === "deepcaller" && card.subclassId === "hunter-zealot" && card.level >= 3;
+}
 
 export function getClass(id: string | null | undefined): HunterClass | undefined {
   if (!id) return undefined;

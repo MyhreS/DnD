@@ -22,3 +22,21 @@ export const ORIGIN_FEATS = FEATS.filter((feat) => feat.category === "Origin");
 export const GENERAL_FEATS = FEATS.filter((feat) => feat.category === "General");
 export const FIGHTING_STYLE_FEATS = FEATS.filter((feat) => feat.category === "Fighting Style");
 export const EPIC_BOON_FEATS = FEATS.filter((feat) => feat.category === "Epic Boon");
+
+/** Feats that also ask for a skill. `any` = every skill, `proficient` = a skill
+ * the Hunter is proficient in. Keen Mind and Observant grant proficiency, or
+ * Expertise when the Hunter already has the skill ([pages 100, 102, 105]). */
+export type FeatSkillPick = { slot: "skill" | "expertise"; label: string; options: readonly string[] | "any" | "proficient" };
+export const FEAT_SKILL_PICKS: Record<string, readonly FeatSkillPick[]> = {
+  "Skill Expert": [
+    { slot: "skill", label: "Skill proficiency", options: "any" },
+    { slot: "expertise", label: "Expertise", options: "proficient" },
+  ],
+  "Keen Mind": [{ slot: "skill", label: "Lore Knowledge skill", options: ["Eldritch Knowledge", "Old World History", "Investigation", "Blood Nature", "Religion"] }],
+  Observant: [{ slot: "skill", label: "Keen Observer skill", options: ["Insight", "Investigation", "Perception"] }],
+  "Boon of Skill": [{ slot: "expertise", label: "Expertise", options: "any" }],
+};
+
+export function featPickKey(featureKey: string, slot: FeatSkillPick["slot"]): string {
+  return `${featureKey}:feat-${slot}`;
+}

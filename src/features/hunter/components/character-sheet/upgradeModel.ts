@@ -1,7 +1,9 @@
 import type { AbilityKey, HunterCard, HunterClass } from "@/types";
-import { armorClassFor } from "@/lib/character";
+import { armorClassFor, featsOf } from "@/lib/character";
+import { getClass, levelFeatureDetails, levelFeatureNames } from "@/data/classes";
+import { TRANSFORMATION_EFFECT_BY_ID } from "@/data/transformations";
 import { levelForInsight } from "@/lib/insight";
-import { EPIC_BOON_FEATS, FIGHTING_STYLE_FEATS, GENERAL_FEATS, type FeatOption } from "@/data/feats";
+import { FEAT_SKILL_PICKS, FEATS, FIGHTING_STYLE_FEATS, featPickKey, type FeatOption } from "@/data/feats";
 import { forbiddenRevelationLevel, forbiddenRevelationOptions, MANEUVERS, MANEUVER_KEY, MANEUVER_LEVELS } from "@/data/characterOptions";
 import type { SheetAutomationState } from "@/types";
 
@@ -13,7 +15,11 @@ export type UpgradeFeature = {
   choice: boolean;
 };
 
-const RECORDED_CHOICE = /^(ability score improvement|epic boon|fighting style|additional fighting style|forbidden revelation)/i;
+const RECORDED_CHOICE = /^(ability score improvement|epic boon|fighting style|additional fighting style|forbidden revelation|student of war|hunter's prey|one form)/i;
+
+/** Path features that ask the player to pick something, rather than only
+ * describing a benefit. */
+const SUBCLASS_CHOICE_FEATURES = new Set(["Student of War", "Hunter's Prey", "One Form"]);
 
 function baseName(name: string): string {
   return name.replace(/\s*\([^)]*\)\s*$/, "").trim();
@@ -28,18 +34,20 @@ export function upgradeFeatures(klass: HunterClass | undefined, subclassId: stri
   const subclass = klass.subclasses.find((entry) => entry.id === subclassId);
   const rows: UpgradeFeature[] = [];
   for (let level = fromLevel + 1; level <= toLevel; level += 1) {
-    const progression = klass.progression.find((entry) => entry.level === level);
-    const names = progression?.features && progression.features !== "\u2014"
-      ? progression.features.split(",").map((entry) => entry.trim()).filter(Boolean)
-      : [];
+    const names = levelFeatureNames(klass, subclass, level);
     for (const name of names) {
       const normalized = baseName(name).toLowerCase();
-      const detail = [...(klass.features ?? []), ...(subclass?.features ?? [])]
-        .find((entry) => entry.level === level && (
-          entry.name.toLowerCase() === normalized
-          || normalized.startsWith(entry.name.toLowerCase())
-          || entry.name.toLowerCase().startsWith(normalized)
-        ));
+      const matches = (entry: { name: string }) => (
+        entry.name.toLowerCase() === normalized
+        || normalized.startsWith(entry.name.toLowerCase())
+        || entry.name.toLowerCase().startsWith(normalized)
+      );
+      // A feature gained again (Ability Score Improvement at 8/12/16, Warden
+      // Indomitable at 13/17) is described once, at its first level.
+      const detail = levelFeatureDetails(klass, subclass, level).find(matches)
+        ?? [...(klass.features ?? []), ...(subclass?.features ?? [])]
+          .filter((entry) => entry.level < level && matches(entry))
+          .sort((a, b) => b.level - a.level)[0];
       rows.push({
         key: `${level}:${name}`,
         level,
@@ -47,6 +55,13 @@ export function upgradeFeatures(klass: HunterClass | undefined, subclassId: stri
         text: detail?.text ?? "This feature is added to your class progression when the upgrade is saved.",
         choice: RECORDED_CHOICE.test(name),
       });
+    }
+    // Path features that need a pick join the flow as their own rows. A path
+    // that replaces the progression already lists them above.
+    if (subclass && !(subclass.replacesProgression && level >= 3)) {
+      for (const feature of subclass.features.filter((entry) => entry.level === level && SUBCLASS_CHOICE_FEATURES.has(entry.name))) {
+        rows.push({ key: `${level}:${feature.name}`, level, name: feature.name, text: feature.text, choice: true });
+      }
     }
     // Combat Superiority is the one class rule that asks for several picks at
     // one level, so each pick gets its own row and reuses the ordinary
@@ -105,7 +120,9 @@ function meetsPrerequisite(feat: FeatOption, card: HunterCard, klass: HunterClas
     }
     const armor = clause.match(/^(Light|Medium|Heavy)\s+Armor\s+Training$/i);
     if (armor) {
-      if (!(klass?.armorTraining ?? []).some((entry) => entry.toLowerCase() === `${armor[1].toLowerCase()} armor`)) return false;
+      const fromFeat = (armor[1].toLowerCase() === "heavy" && featsOf(card).includes("Heavily Armored"))
+        || (armor[1].toLowerCase() === "medium" && featsOf(card).includes("Moderately Armored"));
+      if (!fromFeat && !(klass?.armorTraining ?? []).some((entry) => entry.toLowerCase() === `${armor[1].toLowerCase()} armor`)) return false;
       continue;
     }
     if (/^Shield Arm$/i.test(clause) && !armorClassFor(card).shieldArm) return false;
@@ -113,18 +130,31 @@ function meetsPrerequisite(feat: FeatOption, card: HunterCard, klass: HunterClas
   return true;
 }
 
+/** core-rulebook.txt [page 96]: "A feat can be taken only once unless its
+ * description states otherwise in a Repeatable subsection." */
+const REPEATABLE_FEATS = new Set(["Ability Score Improvement", "Skilled"]);
+
 export function featOptionsFor(feature: UpgradeFeature, card?: HunterCard, klass?: HunterClass, keepName?: string): FeatOption[] {
-  const all = /^ability score improvement/i.test(feature.name)
-    ? GENERAL_FEATS
-    : /epic boon/i.test(feature.name)
-      ? [...EPIC_BOON_FEATS, ...GENERAL_FEATS]
-      : /fighting style/i.test(feature.name)
-        ? FIGHTING_STYLE_FEATS
-        : [];
+  // Ability Score Improvement and Epic Boon read "the Ability Score
+  // Improvement feat ... or another feat of your choice for which you
+  // qualify" ([pages 50, 57]), and with no category named any category is
+  // allowed ([page 96]) — Origin and General included. Fighting Style feats
+  // need the Fighting Style feature ([pages 103–104]), so they join only for
+  // a class that has gained it by this level.
+  const hasFightingStyle = !!klass?.progression.some((row) => row.level <= feature.level && /fighting style/i.test(row.features));
+  const all = /^(ability score improvement|epic boon)/i.test(feature.name)
+    ? FEATS.filter((feat) => feat.category !== "Fighting Style" || hasFightingStyle)
+    : /fighting style/i.test(feature.name)
+      ? FIGHTING_STYLE_FEATS
+      : [];
   if (!card) return all;
-  // A feat this hunter already holds always stays selectable — the DM's earlier
-  // ruling stands and is never retroactively stripped.
-  return all.filter((feat) => feat.name === keepName || meetsPrerequisite(feat, card, klass));
+  const held = new Set(featsOf(card));
+  // A feat this hunter already holds in this slot always stays selectable —
+  // the DM's earlier ruling stands and is never retroactively stripped.
+  return all.filter((feat) => feat.name === keepName || (
+    (REPEATABLE_FEATS.has(feat.name) || !held.has(feat.name))
+    && meetsPrerequisite(feat, card, klass)
+  ));
 }
 
 export type RecordedChoiceOption = { value: string; label: string; detail: string };
@@ -159,6 +189,22 @@ export function recordedOptionsFor(feature: UpgradeFeature, state?: SheetAutomat
       .filter((entry) => !taken.has(entry.name) || entry.name === current)
       .map((entry) => ({ value: entry.name, label: entry.name, detail: entry.text }));
   }
+  // Student of War [page 52]: one more skill from the Brute's level-1 list.
+  if (/^student of war$/i.test(feature.name)) {
+    const brute = getClass("brute");
+    return (brute?.skillChoices.options ?? []).map((skill) => ({ value: skill, label: skill, detail: "Gain proficiency in this skill." }));
+  }
+  // Hunter's Prey [page 60]: Colossus Slayer or Horde Breaker (swappable on a rest).
+  if (/^hunter's prey$/i.test(feature.name)) {
+    return [
+      { value: "Colossus Slayer", label: "Colossus Slayer", detail: "Extra 1d8 damage to a creature below its Hit Point maximum, once per turn." },
+      { value: "Horde Breaker", label: "Horde Breaker", detail: "An extra attack against a different creature within 5 feet of the first, once per turn." },
+    ];
+  }
+  // One Form [page 85]: one permanent transformation, never the Lost one.
+  if (/^one form$/i.test(feature.name)) {
+    return Object.values(TRANSFORMATION_EFFECT_BY_ID).filter((effect) => effect.id !== "lost").map((effect) => ({ value: effect.name, label: effect.name, detail: effect.text }));
+  }
   const revelationLevel = forbiddenRevelationLevel(feature.name);
   if (revelationLevel == null) return [];
   return forbiddenRevelationOptions(revelationLevel).map((rite) => ({
@@ -182,6 +228,7 @@ export function upgradeFeatureComplete(feature: UpgradeFeature, state: SheetAuto
   }
   const selected = options.find((feat) => feat.name === state.levelFeats?.[feature.key]);
   if (!selected) return false;
+  if ((FEAT_SKILL_PICKS[selected.name] ?? []).some((pick) => !state.levelChoices?.[featPickKey(feature.key, pick.slot)])) return false;
   if (selected.abilityPoints === 0) return true;
   const bonuses = state.levelAbilityBonuses?.[feature.key] ?? {};
   return Object.values(bonuses).reduce((sum, value) => sum + (value ?? 0), 0) === selected.abilityPoints;

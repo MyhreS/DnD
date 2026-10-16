@@ -3,6 +3,7 @@ import type { AppSheetModel } from "../appsheet/appSheetShared";
 import { useAppEditStage } from "../appsheet/appEditStageContext";
 import { sheetText } from "../appsheet/appSheetValues";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
+import { classResources } from "../../lib/characterAutomation";
 import { CharacterSheetResourceControl } from "./CharacterSheetResourceControl";
 import { characterSheetNumber, madnessPatch } from "./characterSheetValues";
 
@@ -18,8 +19,7 @@ export function CharacterSheetRecovery({ model }: { model: AppSheetModel }) {
   const disabled = model.readOnly;
   const hdMax = characterSheetNumber(result.fields.hdMax);
   const strainMax = characterSheetNumber(result.fields.strainMax);
-  const bandsMax = characterSheetNumber(result.fields.bandsMax);
-  const warden = klass?.id === "warden";
+  const resources = classResources(stage.previewCard);
   const setNumber = (field: string) => (value: number) => model.setField(field, String(value));
   const card = stage.previewCard;
 
@@ -28,8 +28,8 @@ export function CharacterSheetRecovery({ model }: { model: AppSheetModel }) {
   // by the Sanity Die roll + Wisdom modifier (minimum 0), unspent Blood Tinge
   // lost, and Not Tonight! regained if not already held.
   function finishLongRest() {
-    // [page 89]: a Warden regains all Bands Directive uses on a Long Rest.
-    stage.stageChange(warden ? { bandsCur: String(bandsMax) } : {}, {
+    // Every tracked class resource is fully regained on a Long Rest.
+    stage.stageChange(Object.fromEntries(resources.map((resource) => [`${resource.key}Cur`, String(resource.max)])), {
       transformationLevel: 0,
       activeTransformations: [],
       bloodTinge: false,
@@ -45,11 +45,11 @@ export function CharacterSheetRecovery({ model }: { model: AppSheetModel }) {
     <CharacterSheetResourceControl label="Hit dice left" value={characterSheetNumber(sheetText(model.data, "hdCur"), hdMax)} max={hdMax} disabled={disabled} onChange={setNumber("hdCur")} />
     <CharacterSheetResourceControl label="Hit dice spent" value={characterSheetNumber(sheetText(model.data, "hdSpent"))} max={hdMax} disabled={disabled} onChange={setNumber("hdSpent")} />
     {klass?.caster && <CharacterSheetResourceControl label="Strains left" value={characterSheetNumber(sheetText(model.data, "strainCur"), strainMax)} max={strainMax} disabled={disabled} onChange={setNumber("strainCur")} />}
-    {warden && <CharacterSheetResourceControl label="Bands Directive uses" value={characterSheetNumber(sheetText(model.data, "bandsCur"), bandsMax)} min={0} max={bandsMax} note={`Wisdom modifier × ${card.level >= 11 ? 4 : card.level >= 5 ? 3 : 2}. All regained on a Long Rest${card.level >= 5 ? " or Short Rest" : ""}.`} disabled={disabled} onChange={setNumber("bandsCur")} />}
+    {resources.map((resource) => <CharacterSheetResourceControl key={resource.key} label={resource.label} value={characterSheetNumber(sheetText(model.data, `${resource.key}Cur`), resource.max)} min={0} max={resource.max} note={resource.note} disabled={disabled} onChange={setNumber(`${resource.key}Cur`)} />)}
     <CharacterSheetResourceControl label="Sleepless counters" value={card.sleeplessCounter ?? 0} min={0} note={SLEEPLESS_NOTE} disabled={disabled} onChange={(value) => stage.stageChange({}, { sleeplessCounter: Math.max(0, Math.floor(value)) })} />
     <CharacterSheetResourceControl label="Exhaustion" value={card.exhaustion ?? 0} min={0} max={6} note={EXHAUSTION_NOTE} disabled={disabled} onChange={(value) => stage.stageChange({}, { exhaustion: Math.max(0, Math.min(6, Math.floor(value))) })} />
     <CharacterSheetResourceControl label="Favors" value={card.favors ?? 0} min={0} max={2} note="Awarded only by your GM. You can hold no more than two." disabled={disabled} onChange={(value) => stage.stageChange({}, { favors: Math.max(0, Math.min(2, Math.floor(value))) })} />
     <CharacterSheetResourceControl label="Sanity Die roll + WIS" value={sanityRoll} min={0} note={`Roll ${String(result.fields.sanityDice ?? "your Sanity Die")} and add your Wisdom modifier, then finish the Long Rest.`} disabled={disabled} onChange={(value) => setSanityRoll(Math.max(0, Math.floor(value)))} />
-    {!disabled && <button type="button" className="character-sheet-upgrade-launch" onClick={finishLongRest}>Finish a Long Rest<small>Transformations cleared, Sleepless to 0, Exhaustion −1, Blood Tinge lost, Not Tonight! regained{warden ? ", Bands Directive refilled" : ""}, Madness −{Math.max(0, sanityRoll)}.</small></button>}
+    {!disabled && <button type="button" className="character-sheet-upgrade-launch" onClick={finishLongRest}>Finish a Long Rest<small>Transformations cleared, Sleepless to 0, Exhaustion −1, Blood Tinge lost, Not Tonight! regained{resources.length ? `, ${resources.map((resource) => resource.label.replace(/ uses$/, "")).join(", ")} refilled` : ""}, Madness −{Math.max(0, sanityRoll)}.</small></button>}
   </div></section>;
 }

@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { BACKGROUNDS } from "@/data/backgrounds";
+import { ALWAYS_PREPARED_ZEALOT_IDS } from "@/data/characterOptions";
 import { getClass } from "@/data/classes";
 import { ITEMS } from "@/data/items";
 import { SKILLS } from "@/data/skills";
@@ -318,6 +319,10 @@ export function CharacterAutomationProvider({
     const levelFeats = { ...(state.levelFeats ?? {}) };
     const levelAbilityBonuses = { ...(state.levelAbilityBonuses ?? {}) };
     const levelChoices = { ...(state.levelChoices ?? {}) };
+    // A different feat drops the skill picks that belonged to the old one.
+    if (state.levelFeats?.[key] !== feat) {
+      for (const choiceKey of Object.keys(levelChoices)) if (choiceKey.startsWith(`${key}:feat-`)) delete levelChoices[choiceKey];
+    }
     if (feat) {
       levelFeats[key] = feat;
       levelAbilityBonuses[key] = nextBonuses;
@@ -592,7 +597,15 @@ export function CharacterAutomationProvider({
     chooseClass,
     chooseBackground,
     chooseLevel: (level) => commit({ level }),
-    chooseSubclass: (subclassId) => commit({ subclassId: subclassId || null }),
+    // Entering the Zealot path makes Eldritch Strike and Armor of the Drowned
+    // Star always prepared and free ([page 76]); drop them from the counted
+    // list so they cannot keep holding a Whisper slot.
+    chooseSubclass: (subclassId) => commit({
+      subclassId: subclassId || null,
+      ...(subclassId === "hunter-zealot"
+        ? { preparedWhispers: (card.preparedWhispers ?? []).filter((id) => !ALWAYS_PREPARED_ZEALOT_IDS.includes(id)) }
+        : {}),
+    }),
     toggleClassSkill,
     toggleFeatSkill,
     toggleExpertise,
