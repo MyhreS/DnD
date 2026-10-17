@@ -707,3 +707,79 @@ export const resolveShopPurchase = onCall(CALLABLE_OPTIONS, async (request) => {
   });
   return { ok: true };
 });
+
+/** The session DM confirms a Hunter's death in battle (core-rulebook.txt
+ * [pages 44–45]). The Hunter is archived to the fallen roster and leaves play;
+ * a Favor is expended only if the Hunter holds one. Runs server side because
+ * the Hunter belongs to another player. */
+export const markGameHunterDead = onCall(CALLABLE_OPTIONS, async (request) => {
+  const uid = requireUid(request);
+  const gameId = cleanString(request.data?.gameId, 120);
+  const characterId = cleanString(request.data?.characterId, 120);
+  if (!gameId || !characterId) throw new HttpsError("invalid-argument", "gameId and characterId are required.");
+  const spendFavor = request.data?.spendFavor === true;
+  const db = getFirestore();
+  const gameRef = db.doc(`games/${gameId}`);
+  const characterRef = db.doc(`characters/${characterId}`);
+  const archiveRef = db.collection("archive").doc();
+  const combatantQuery = gameRef.collection("combatants").where("characterId", "==", characterId).limit(1);
+  return db.runTransaction(async (tx) => {
+    const [gameSnapshot, characterSnapshot, combatants] = await Promise.all([
+      tx.get(gameRef),
+      tx.get(characterRef),
+      tx.get(combatantQuery),
+    ]);
+    if (!gameSnapshot.exists) throw new HttpsError("not-found", "Session not found.");
+    const game = gameSnapshot.data()!;
+    if (game.dmUid !== uid) throw new HttpsError("permission-denied", "Only the session DM can mark a Hunter dead.");
+    if (game.status !== "active") throw new HttpsError("failed-precondition", "The session is not running.");
+    if (combatants.empty) throw new HttpsError("permission-denied", "That Hunter is not in this battle.");
+    if (!characterSnapshot.exists) throw new HttpsError("not-found", "Hunter not found.");
+    const card: DocumentData = { ...characterSnapshot.data()!, id: characterId };
+    const favors = typeof card.favors === "number" ? card.favors : 0;
+    const favorSpent = spendFavor && favors > 0;
+    tx.set(archiveRef, {
+      originalUid: card.ownerUid ?? null,
+      gameId,
+      reason: "dead",
+      archivedAt: FieldValue.serverTimestamp(),
+      favorSpent,
+      card: favorSpent ? { ...card, favors: favors - 1 } : card,
+    });
+    tx.delete(characterRef);
+    return { ok: true, favorSpent, dropsLoot: !favorSpent, archiveId: archiveRef.id };
+  });
+});
+
+/** The session DM returns a fallen Hunter to play from the fallen roster. The
+ * caller may only lower Insight (to the level's cap), never change anything
+ * else on the archived card. */
+export const recoverGameHunter = onCall(CALLABLE_OPTIONS, async (request) => {
+  const uid = requireUid(request);
+  const archiveId = cleanString(request.data?.archiveId, 120);
+  if (!archiveId) throw new HttpsError("invalid-argument", "archiveId is required.");
+  const db = getFirestore();
+  const archiveRef = db.doc(`archive/${archiveId}`);
+  return db.runTransaction(async (tx) => {
+    const archiveSnapshot = await tx.get(archiveRef);
+    if (!archiveSnapshot.exists) throw new HttpsError("not-found", "That fallen Hunter is gone.");
+    const entry = archiveSnapshot.data()!;
+    const gameId = typeof entry.gameId === "string" ? entry.gameId : null;
+    if (!gameId) throw new HttpsError("failed-precondition", "That Hunter did not fall in a session.");
+    const gameSnapshot = await tx.get(db.doc(`games/${gameId}`));
+    if (!gameSnapshot.exists || gameSnapshot.data()!.dmUid !== uid) {
+      throw new HttpsError("permission-denied", "Only the session DM can recover a fallen Hunter.");
+    }
+    const card = entry.card as DocumentData | undefined;
+    const characterId = typeof card?.id === "string" ? card.id : null;
+    if (!card || !characterId) throw new HttpsError("failed-precondition", "The archived Hunter is incomplete.");
+    const characterRef = db.doc(`characters/${characterId}`);
+    if ((await tx.get(characterRef)).exists) throw new HttpsError("already-exists", "That Hunter is already back in play.");
+    const archivedInsight = typeof card.insight === "number" ? card.insight : 0;
+    const asked = Number(request.data?.insight);
+    const insight = Number.isFinite(asked) ? Math.max(0, Math.min(archivedInsight, Math.round(asked))) : archivedInsight;
+    tx.set(characterRef, { ...card, insight });
+    tx.delete(archiveRef);
+    return { ok: true, characterId };
+  });
+});

@@ -4,6 +4,8 @@ import {
   subscribeAllCharacters,
   subscribeArchive,
   archiveCharacter,
+  markGameHunterDead,
+  recoverGameHunter,
   recoverCharacter,
   patchCharacter,
   awardInsight as apiAwardInsight,
@@ -132,17 +134,22 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
       }
       const ok =
         (await run(async () => {
-          await archiveCharacter(outcome.card, "dead", gameId, outcome.favorSpent);
-          // A dead hunter drops their gear as claimable loot — unless a Favor was
-          // expended, which takes body and gear out of the world entirely.
-          if (gameId && outcome.dropsLoot) {
-            await createLoot(gameId, {
-              fromUid: card.ownerUid,
-              fromName: card.name,
-              items: card.inventory ?? [],
-              coins: card.coins ?? 0,
-            });
+          if (gameId) {
+            // In a session the DM archives another player's Hunter: server side.
+            // Their gear drops as claimable loot unless a Favor was expended,
+            // which takes body and gear out of the world entirely.
+            const result = await markGameHunterDead(gameId, card.id, outcome.favorSpent);
+            if (result.dropsLoot) {
+              await createLoot(gameId, {
+                fromUid: card.ownerUid,
+                fromName: card.name,
+                items: card.inventory ?? [],
+                coins: card.coins ?? 0,
+              });
+            }
+            return;
           }
+          await archiveCharacter(outcome.card, "dead", gameId, outcome.favorSpent);
         }, "Couldn't archive the character.")) !== null;
       if (ok) {
         logHunter(card, "hunter.died", outcome.favorSpent
@@ -161,7 +168,8 @@ export const useCharactersStore = create<CharactersState>((set, get) => {
         return true;
       }
       const ok = (await run(async () => {
-        await recoverCharacter(a);
+        if (a.gameId) await recoverGameHunter(a);
+        else await recoverCharacter(a);
         // Their gear returns with them, so it must leave the loot feed.
         if (a.gameId) await clearFallenLoot(a.gameId, a.card.ownerUid);
       }, "Couldn't recover the character.")) !== null;

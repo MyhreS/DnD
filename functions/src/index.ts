@@ -20,6 +20,8 @@ export {
   respondToStandaloneGameInvite,
   requestShopPurchase,
   resolveShopPurchase,
+  markGameHunterDead,
+  recoverGameHunter,
   setGameHunterHp,
 } from "./gameSessions";
 export {

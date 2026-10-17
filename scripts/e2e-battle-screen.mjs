@@ -454,6 +454,31 @@ try {
   await shade.getByRole("button", { name: "Remove enemy", exact: true }).click();
   await shade.waitFor({ state: "detached" });
 
+  // --- Kill an enemy from its menu ---
+  await openCombatantOptions(houndControl, "Grave Hound", "Kill Grave Hound");
+  await houndControl.getByRole("button", { name: "Kill Grave Hound" }).click();
+  await houndControl.getByText("Enemy · dead", { exact: true }).waitFor();
+  await sleep(1500);
+  await houndControl.getByText("Enemy · dead", { exact: true }).waitFor();
+
+  // --- Mark a Hunter dead from the menu and confirm ---
+  await openCombatantOptions(hunterControl, "Lady Maria", "Mark Lady Maria dead");
+  await hunterControl.getByRole("button", { name: "Mark Lady Maria dead" }).click();
+  const markDead = dmPage.getByRole("dialog", { name: "Lady Maria dies" });
+  await markDead.waitFor();
+  await markDead.getByRole("button", { name: /Confirm death|Expend a Favor/ }).click();
+  await markDead.waitFor({ state: "detached" });
+  await hunterControl.getByText("Hunter · fallen", { exact: true }).waitFor();
+  await sleep(1500);
+  await hunterControl.getByText("Hunter · fallen", { exact: true }).waitFor();
+  if ((await db.doc(`characters/${characterId}`).get()).exists) throw new Error("A confirmed death did not move the Hunter to the fallen.");
+  const fallenEntry = (await db.collection("archive").where("gameId", "==", gameId).get()).docs.find((entry) => entry.data().card?.id === characterId);
+  if (!fallenEntry) throw new Error("The fallen Hunter is missing from the archive.");
+  // ...and the DM can bring them back from the fallen roster.
+  await dmPage.getByRole("button", { name: /^(Recover|Long Rest complete — return)$/ }).first().click();
+  for (let attempt = 0; attempt < 20 && !(await db.doc(`characters/${characterId}`).get()).exists; attempt += 1) await sleep(250);
+  if (!(await db.doc(`characters/${characterId}`).get()).exists) throw new Error("Recover did not return the Hunter to play.");
+
   await dmPage.setViewportSize({ width: 390, height: 844 });
   await noHorizontalOverflow(dmPage, "DM battle after every action, mobile");
   await dmPage.screenshot({ path: "screenshots/game-battle-actions-mobile.png", fullPage: true });

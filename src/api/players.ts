@@ -14,7 +14,8 @@ import {
   writeBatch,
   type Timestamp,
 } from "firebase/firestore";
-import { db } from "@/lib/firebase";
+import { httpsCallable } from "firebase/functions";
+import { db, functions } from "@/lib/firebase";
 import { normalizeCard } from "@/lib/character";
 import { recoveredCard } from "@/lib/recovery";
 import { isPreviewActive, previewCard, previewPartyCards, previewArchive } from "@/dev/preview";
@@ -162,6 +163,26 @@ export async function archiveCharacter(
   });
   batch.delete(doc(charsCol, card.id));
   await batch.commit();
+}
+
+const markGameHunterDeadFn = httpsCallable<{ gameId: string; characterId: string; spendFavor: boolean }, { ok: boolean; favorSpent: boolean; dropsLoot: boolean }>(
+  functions,
+  "markGameHunterDead",
+);
+const recoverGameHunterFn = httpsCallable<{ archiveId: string; insight: number }, { ok: boolean; characterId: string }>(
+  functions,
+  "recoverGameHunter",
+);
+
+/** The session DM confirms a Hunter's death in battle. Runs server side: the
+ * Hunter belongs to another player, so only the game's DM may archive them. */
+export async function markGameHunterDead(gameId: string, characterId: string, spendFavor: boolean) {
+  return (await markGameHunterDeadFn({ gameId, characterId, spendFavor })).data;
+}
+
+/** The session DM returns a fallen Hunter to play (server side, as above). */
+export async function recoverGameHunter(a: ArchivedCharacter): Promise<void> {
+  await recoverGameHunterFn({ archiveId: a.id, insight: recoveredCard(a.card).insight ?? 0 });
 }
 
 export async function recoverCharacter(a: ArchivedCharacter): Promise<void> {
