@@ -1,5 +1,6 @@
 import { useHapticTaps } from "@/hooks/common/useHapticTaps";
 import { useThemedSelects } from "@/hooks/common/useThemedSelects";
+import { useAppHeight } from "@/hooks/common/useAppHeight";
 import { Suspense, lazy } from "react";
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
@@ -86,6 +87,7 @@ export default function App() {
   useAuthInit();
   useHapticTaps();
   useThemedSelects();
+  useAppHeight();
   const status = useAuthStore((s) => s.status);
   const needsOnboarding = useAuthStore((s) => s.needsOnboarding);
 
