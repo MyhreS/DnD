@@ -153,8 +153,17 @@ export const useCombatStore = create<CombatState>((set, get) => {
       const unsub = subscribeCombatants(
         gameId,
         publicView,
-        (combatants) => set({ combatants }),
-        () => set({ error: "Couldn't load combat." }),
+        (combatants) => set({ combatants, error: null }),
+        () => {
+          set({ error: "Couldn't load combat." });
+          // A refused listener (e.g. started before sign-in was restored after
+          // an app update) never recovers on its own: subscribe again shortly.
+          window.setTimeout(() => {
+            if (get()._gameId !== gameId || get()._publicView !== publicView) return;
+            set({ _unsub: null });
+            get().sync(gameId, publicView);
+          }, 2000);
+        },
       );
       set({ _unsub: unsub });
     },

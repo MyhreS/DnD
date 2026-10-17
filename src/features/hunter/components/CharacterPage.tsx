@@ -1,4 +1,5 @@
 import { useState, type ReactNode } from "react";
+import { useUrlState } from "@/hooks/common/useUrlState";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { usePlayerStore } from "@/features/hunter/store/playerStore";
 import { useHunterCard } from "../hooks/useHunterCard";
@@ -23,7 +24,8 @@ export function CharacterPage() {
   const [sheetDraft, setSheetDraft] = useState<HunterCard | null>(null);
   // Which hunter's sheet is open (detail); null = the list. Nothing opens on
   // mount, so the page always lands on the list — never inside a hunter.
-  const [openId, setOpenId] = useState<string | null>(null);
+  // In the address (?sheet=<id>) so a reload or app update reopens it.
+  const [openId, setOpenId] = useUrlState("sheet");
 
   useHunterCard();
 

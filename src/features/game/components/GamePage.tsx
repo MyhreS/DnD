@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useUrlState } from "@/hooks/common/useUrlState";
 import {
   addGameParticipant,
   createGameSession,
@@ -75,7 +76,9 @@ export function GamePage() {
   );
   const [games, setGames] = useState<Game[]>([]);
   const [activeSeats, setActiveSeats] = useState<Map<string, ActiveGameSeat>>(new Map());
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  // In the address (?session=<id>) so a reload or app update returns to it;
+  // the games subscription clears it if that session is gone.
+  const [selectedId, setSelectedId] = useUrlState("session");
   const [dismissedBattleKey, setDismissedBattleKey] = useState<string | null>(null);
   const [lastCombatActive, setLastCombatActive] = useState(false);
   const [showingPrevious, setShowingPrevious] = useState(false);
@@ -84,6 +87,7 @@ export function GamePage() {
     "preview-game": previewParticipants(),
   });
   const [loading, setLoading] = useState(true);
+  const [gamesRetry, setGamesRetry] = useState(0);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -120,27 +124,40 @@ export function GamePage() {
           status: "ended" as const,
           endedAt: Date.now() - 86_400_000,
         }] : [];
-        setGames(game ? [game, ...history, ...(request ? [request] : [])] : []);
-        setSelectedId(null);
+        const previewGames = game ? [game, ...history, ...(request ? [request] : [])] : [];
+        setGames(previewGames);
+        setSelectedId((current) => current && previewGames.some((entry) => entry.id === current) ? current : null);
         setLoading(false);
       }, 0);
       return () => window.clearTimeout(timer);
     }
-    return subscribeUserGames(
+    let retryTimer = 0;
+    let snapshots = 0;
+    const unsubscribe = subscribeUserGames(
       user.uid,
       (next) => {
+        snapshots += 1;
         setGames(next);
         const joined = next.filter((game) => game.dmUid === user.uid || game.participantUids.includes(user.uid));
-        setSelectedId((current) => current && joined.some((game) => game.id === current) ? current : null);
+        // An empty first answer can be a cold cache right after a reload; only
+        // let a removed session drop the selection once real data has arrived.
+        if (next.length || snapshots > 1) setSelectedId((current) => current && joined.some((game) => game.id === current) ? current : null);
         setLoading(false);
         setError(null);
       },
       () => {
         setLoading(false);
         setError("Could not load your game sessions.");
+        // Right after an app update the listener can start before sign-in is
+        // restored and be refused; try again instead of staying empty.
+        retryTimer = window.setTimeout(() => setGamesRetry((count) => count + 1), 2000);
       },
     );
-  }, [emptyGamePreview, historyPreview, preview, switchInvitePreview, user]);
+    return () => {
+      window.clearTimeout(retryTimer);
+      unsubscribe();
+    };
+  }, [emptyGamePreview, historyPreview, preview, switchInvitePreview, user, gamesRetry, setSelectedId]);
 
   useEffect(() => {
     if (preview) return;
