@@ -1609,3 +1609,61 @@ select optgroup {
   color: var(--ink);
 }
 select option:disabled { color: var(--ink-faint); }
+
+/* Desktop dropdown lists (src/lib/themedSelects.ts): the app's own dark list
+ * instead of the operating system's bright one. */
+.app-select-menu {
+  position: fixed;
+  inset: auto;
+  z-index: 2147483000;
+  margin: 0;
+  padding: 6px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius);
+  background: var(--bg-elev-2);
+  box-shadow: var(--shadow), 0 0 0 1px rgba(0, 0, 0, 0.25);
+  color: var(--ink);
+  font: 1rem/1.25 var(--font-body);
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-dim) transparent;
+  animation: app-select-in 120ms ease-out;
+}
+@keyframes app-select-in {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: none; }
+}
+.app-select-option {
+  position: relative;
+  display: flex;
+  min-height: 36px;
+  align-items: center;
+  padding: 6px 12px 6px 30px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  user-select: none;
+}
+.app-select-option.is-active {
+  background: color-mix(in srgb, var(--gold) 16%, transparent);
+  color: var(--ink);
+}
+.app-select-option[aria-selected="true"] { color: var(--gold); font-weight: 600; }
+.app-select-option[aria-selected="true"]::before {
+  content: "✓";
+  position: absolute;
+  left: 10px;
+  color: var(--gold);
+  font-size: 0.85rem;
+}
+.app-select-option[aria-disabled="true"] { color: var(--ink-faint); cursor: default; }
+.app-select-option[aria-disabled="true"].is-active { background: transparent; }
+.app-select-group + .app-select-group,
+.app-select-option + .app-select-group { margin-top: 6px; padding-top: 6px; border-top: 1px solid var(--border); }
+.app-select-group-label {
+  padding: 6px 12px 4px;
+  color: var(--gold-dim);
+  font: 700 0.75rem/1.2 var(--font-body);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
