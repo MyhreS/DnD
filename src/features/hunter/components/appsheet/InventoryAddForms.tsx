@@ -1,6 +1,7 @@
-import type { Dispatch, SetStateAction } from "react";
+import { useState, type Dispatch, type SetStateAction } from "react";
 import type { CarrySignificance, Item } from "@/types";
 import { itemPriceLabel } from "@/data/items";
+import { BLOODVIAL_ITEM_ID, BLOODVIAL_PURITIES } from "@/data/bloodvial";
 import { AppSelect, DecisionField } from "./appSheetShared";
 
 export interface FoundItemDraft {
@@ -14,30 +15,75 @@ export interface FoundItemDraft {
   weaponNotes: string;
 }
 
-export function CatalogItemForm({
-  catalog,
-  catalogId,
-  setCatalogId,
-  onAdd,
-}: {
-  catalog: Item[];
-  catalogId: string;
-  setCatalogId: (id: string) => void;
-  onAdd: () => void;
-}) {
+const CATALOG_CATEGORIES = ["Weapon", "Ammunition", "Tool", "Gear", "Consumable", "Valuable"] as const;
+
+interface CatalogChoice {
+  /** The item id, or "blood-vial:<purity>" for a Bloodvial of that purity. */
+  value: string;
+  name: string;
+  category: string;
+  detail: string;
+  search: string;
+}
+
+function catalogChoices(catalog: Item[]): CatalogChoice[] {
+  return catalog.flatMap((item) => {
+    const price = item.priceGp === undefined ? "" : ` · ${itemPriceLabel(item.priceGp)}`;
+    if (item.id === BLOODVIAL_ITEM_ID) {
+      // Each purity is its own choice and its own inventory line.
+      return BLOODVIAL_PURITIES.map((purity) => ({
+        value: `${item.id}:${purity.id}`,
+        name: `${item.name} · ${purity.name}`,
+        category: item.category,
+        detail: `${item.carry} · ${item.weightLb} lb`,
+        search: `${item.name} blood vial ${purity.name} ${item.category}`.toLowerCase(),
+      }));
+    }
+    return [{
+      value: item.id,
+      name: item.name,
+      category: item.category,
+      detail: `${item.carry} · ${item.weightLb} lb${price}`,
+      search: `${item.name} ${item.category} ${item.carry}`.toLowerCase(),
+    }];
+  });
+}
+
+/** The game catalogue as a searchable list: type to filter, tap to add. */
+export function CatalogItemForm({ catalog, onAdd }: { catalog: Item[]; onAdd: (value: string) => void }) {
+  const [query, setQuery] = useState("");
+  const words = query.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  const matches = catalogChoices(catalog).filter((choice) => words.every((word) => choice.search.includes(word)));
+
   return (
-    <div className="appsheet-catalog-add">
-      <AppSelect label="Catalog item" value={catalogId} data-dialog-autofocus data-testid="appsheet-catalog-item" onChange={(event) => setCatalogId(event.target.value)}>
-        <option value="">Choose an item…</option>
-        {["Weapon", "Ammunition", "Tool", "Gear", "Consumable", "Valuable"].map((category) => (
-          <optgroup key={category} label={category}>
-            {catalog.filter((item) => item.category === category).map((item) => (
-              <option key={item.id} value={item.id}>{item.name} · {item.carry} · {item.weightLb} lb{item.priceGp === undefined ? "" : ` · ${itemPriceLabel(item.priceGp)}`}</option>
+    <div className="appsheet-catalog-search">
+      <input
+        type="search"
+        className="appsheet-catalog-search-input"
+        placeholder="Search the catalogue — e.g. rope, vial, pistol"
+        aria-label="Search the game catalogue"
+        data-dialog-autofocus
+        data-testid="appsheet-catalog-search"
+        value={query}
+        onChange={(event) => setQuery(event.target.value)}
+      />
+      <div className="appsheet-catalog-results" data-testid="appsheet-catalog-results">
+        {CATALOG_CATEGORIES.map((category) => {
+          const inCategory = matches.filter((choice) => choice.category === category);
+          if (!inCategory.length) return null;
+          return <section key={category} aria-label={category}>
+            <h4>{category}</h4>
+            {inCategory.map((choice) => (
+              <button key={choice.value} type="button" data-haptic="success" aria-label={`Add ${choice.name}`} onClick={() => onAdd(choice.value)}>
+                <b>{choice.name}</b>
+                <small>{choice.detail}</small>
+                <span aria-hidden="true">＋</span>
+              </button>
             ))}
-          </optgroup>
-        ))}
-      </AppSelect>
-      <button data-haptic="success" type="button" data-testid="appsheet-add-catalog-item" disabled={!catalogId} onClick={onAdd}>Add</button>
+          </section>;
+        })}
+        {!matches.length && <p className="appsheet-empty-copy">Nothing in the catalogue matches “{query.trim()}”. Use “Unique item” for something the GM made up.</p>}
+      </div>
     </div>
   );
 }

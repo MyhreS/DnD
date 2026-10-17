@@ -1,7 +1,8 @@
 // Pure helpers for a hunter's inventory: resolving catalog items, grouping by
 // carry significance, total weight, and the established carry-condition rule.
 
-import type { HunterCard, Item } from "@/types";
+import type { BloodvialPurity, HunterCard, Item } from "@/types";
+import { BLOODVIAL_ITEM_ID, bloodvialPurityOf } from "@/data/bloodvial";
 import { ITEM_BY_ID } from "@/data/items";
 import { wornArmorWeight } from "@/lib/character";
 import { itemFor } from "@/lib/customItems";
@@ -9,6 +10,8 @@ import { itemFor } from "@/lib/customItems";
 export interface ResolvedEntry {
   item: Item;
   qty: number;
+  /** Bloodvial lines only: each purity is its own line. */
+  purity?: BloodvialPurity;
 }
 
 /** Resolve a card's inventory entries to catalog items, dropping unknown ids,
@@ -21,12 +24,13 @@ export function resolveInventory(
     if (entry.qty <= 0) continue;
     const item = itemFor(card, entry.itemId);
     if (!item) continue;
-    resolved.push({ item, qty: entry.qty });
+    resolved.push(entry.itemId === BLOODVIAL_ITEM_ID ? { item, qty: entry.qty, purity: bloodvialPurityOf(entry) } : { item, qty: entry.qty });
   }
   return resolved.sort(
     (a, b) =>
       a.item.category.localeCompare(b.item.category) ||
-      a.item.name.localeCompare(b.item.name),
+      a.item.name.localeCompare(b.item.name) ||
+      (a.purity ?? "").localeCompare(b.purity ?? ""),
   );
 }
 

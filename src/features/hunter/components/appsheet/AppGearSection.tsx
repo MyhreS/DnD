@@ -1,4 +1,4 @@
-import { BLOODVIAL_ITEM_ID } from "@/data/bloodvial";
+import { BLOODVIAL_ITEM_ID, BLOODVIAL_PURITY_BY_ID } from "@/data/bloodvial";
 import { ITEMS } from "@/data/items";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { ARMOR_BY_ID } from "@/data/armor";
@@ -69,7 +69,7 @@ export function AppGearSection({
       ) : <span className="appsheet-status-word">{inventory.length} item types</span>}>
         {inventory.length ? (
           <div className={`appsheet-inventory-list${manageEquipmentSeparately ? " appsheet-inventory-loose" : ""}`} data-testid="appsheet-inventory">
-            {inventory.map(({ item, qty }) => {
+            {inventory.map(({ item, qty, purity }) => {
               const armor = ARMOR_BY_ID[item.id];
               const armorEquipped = armor?.category === "Main Armor"
                 ? card.mainArmorId === item.id
@@ -81,9 +81,9 @@ export function AppGearSection({
               const storage = STORAGE_BY_ITEM_ID[item.id];
               const assignments = card.slotAssignments?.[item.id] ?? [];
               return (
-              <div key={item.id}>
+              <div key={purity ? `${item.id}#${purity}` : item.id}>
                 <span className="appsheet-item-mark">{item.category.slice(0, 1)}</span>
-                <span className="appsheet-item-name"><b>{item.name}</b><small>{item.category} · {item.carry}{item.unique ? " · Unique" : ""}</small>
+                <span className="appsheet-item-name"><b>{item.name}{purity ? ` · ${BLOODVIAL_PURITY_BY_ID[purity].name}` : ""}</b><small>{item.category} · {item.carry}{item.unique ? " · Unique" : ""}</small>
                   {!manageEquipmentSeparately && !armor && item.carry !== "Insignificant" && <span className="appsheet-item-assignments">
                     {Array.from({ length: qty }, (_, index) => (
                       <label key={index}>Item {index + 1}
@@ -99,7 +99,8 @@ export function AppGearSection({
                       </label>
                     ))}
                   </span>}
-                  {item.id === BLOODVIAL_ITEM_ID && <AppBloodvialPurity card={card} readOnly={model.readOnly} onChange={automation.setBloodvialPurity} />}
+                  {item.id === BLOODVIAL_ITEM_ID && purity && <AppBloodvialPurity purity={purity} readOnly={model.readOnly} onChange={(next) => automation.setBloodvialPurity(purity, next)} />}
+                  {purity && !model.readOnly && <button type="button" className="appsheet-spend-vial" data-haptic="success" aria-label={`Spend one ${BLOODVIAL_PURITY_BY_ID[purity].name} Bloodvial`} onClick={() => automation.spendBloodvial(purity)}>Spend 1 <small>drink or give one · leaves an empty Vial</small></button>}
                 </span>
                 {armor ? (
                   <select
@@ -115,7 +116,7 @@ export function AppGearSection({
                   ><option value="equipped">Equipped</option><option value="unequipped">Unequipped</option></select>
                 ) : !manageEquipmentSeparately && <span className="appsheet-item-slot">{slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unassigned")}</span>}
                 <span className="appsheet-item-weight">{Math.round(item.weightLb * qty * 10) / 10} lb</span>
-                <NumericStepper value={qty} label={`${item.name} quantity`} disabled={model.readOnly} onChange={(next) => automation.changeQty(item.id, next - qty)} />
+                <NumericStepper value={qty} label={`${item.name}${purity ? ` ${BLOODVIAL_PURITY_BY_ID[purity].name}` : ""} quantity`} disabled={model.readOnly} onChange={(next) => automation.changeQty(item.id, next - qty, purity)} />
                 {!manageEquipmentSeparately && storage && !model.readOnly && <button type="button" className="appsheet-secondary-action" onClick={() => automation.toggleStorage(item.id)}>Wear</button>}
               </div>
               );
