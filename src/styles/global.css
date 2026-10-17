@@ -1599,3 +1599,13 @@ button {
   font-size: 0.8rem;
   margin: 8px 0 12px;
 }
+
+/* Native dropdown lists: Windows/Linux browsers draw the open list on a white
+ * default background but inherit the select's (light) text colour, which made
+ * options unreadable. Give every option the theme's surface and ink. */
+select option,
+select optgroup {
+  background-color: var(--bg-elev);
+  color: var(--ink);
+}
+select option:disabled { color: var(--ink-faint); }
