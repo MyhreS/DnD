@@ -15,7 +15,7 @@ export type UpgradeFeature = {
   choice: boolean;
 };
 
-const RECORDED_CHOICE = /^(ability score improvement|epic boon|fighting style|additional fighting style|forbidden revelation|student of war|hunter's prey|one form)/i;
+export const RECORDED_CHOICE = /^(ability score improvement|epic boon|fighting style|additional fighting style|forbidden revelation|student of war|hunter's prey|one form)/i;
 
 /** Path features that ask the player to pick something, rather than only
  * describing a benefit. */
