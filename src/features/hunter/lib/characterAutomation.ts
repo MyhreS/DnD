@@ -238,7 +238,8 @@ export function automationFor(storedCard: HunterCard): CharacterAutomationResult
       const progression = klass.progression.find((row) => row.level === level);
       const strainMax = Number(progression?.extras.Strains ?? 0);
       const strainLevel = progression?.extras["Strain Level"] ?? "—";
-      const strainCurrent = Math.max(0, Math.min(strainMax, intField(card.sheet, "strainCur", strainMax)));
+      // No upper limit: the player decides how many Strains they have left.
+      const strainCurrent = Math.max(0, intField(card.sheet, "strainCur", strainMax));
       put(fields, reasons, "strainMax", String(strainMax), `${klass.title} level ${level} progression`);
       put(fields, reasons, "strainCur", String(strainCurrent), "Current available Strains, defaulting to the full allowance");
       put(fields, reasons, "strainLevel", String(strainLevel), `${klass.title} level ${level} progression`);
