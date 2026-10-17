@@ -1,0 +1,145 @@
+/* Game catalogue browser: search, category chips and a grid of item cards. */
+.catalog-browser { display: grid; gap: 14px; }
+
+.catalog-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.catalog-search svg {
+  position: absolute;
+  left: 14px;
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: var(--app-warm);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  pointer-events: none;
+}
+.catalog-search input {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 14px 0 44px !important;
+  border: 1px solid var(--app-line);
+  border-radius: 12px;
+  background: var(--app-subtle);
+  color: var(--app-text);
+  font: var(--sheet-fs-16)/1.2 "Alegreya", serif;
+}
+.catalog-search input:focus { border-color: var(--app-warm); outline: none; box-shadow: 0 0 0 3px color-mix(in srgb, var(--app-warm) 18%, transparent); }
+
+.catalog-icon { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+
+.catalog-chips { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: thin; }
+.catalog-chips button {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  gap: 7px;
+  min-height: 40px;
+  padding: 6px 12px !important;
+  border: 1px solid var(--app-line) !important;
+  border-radius: 999px !important;
+  background: var(--app-subtle) !important;
+  color: var(--app-muted) !important;
+  font: 700 var(--sheet-fs-12)/1 "Alegreya Sans SC", sans-serif;
+  letter-spacing: .06em;
+  cursor: pointer;
+}
+.catalog-chips button .catalog-icon { width: 18px; height: 18px; }
+.catalog-chips button small { min-width: 20px; padding: 2px 6px; border-radius: 999px; background: rgba(255, 255, 255, .06); font-size: var(--sheet-fs-11); text-align: center; }
+.catalog-chips button[aria-pressed="true"] { border-color: var(--app-warm) !important; background: color-mix(in srgb, var(--app-warm) 16%, transparent) !important; color: var(--app-warm) !important; }
+.catalog-chips button:disabled { opacity: .35; cursor: default; }
+
+.catalog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  grid-auto-rows: max-content;
+  align-content: start;
+  gap: 10px;
+  max-height: min(64vh, 640px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 2px;
+}
+.catalog-card {
+  position: relative;
+  display: grid;
+  grid-template-columns: 52px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  height: auto !important;
+  min-height: 96px;
+  padding: 14px 44px 14px 14px !important;
+  border: 1px solid var(--app-line) !important;
+  border-radius: 14px !important;
+  background: linear-gradient(160deg, rgba(255, 255, 255, .045), rgba(255, 255, 255, .01)) , var(--app-subtle) !important;
+  color: var(--app-text) !important;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color 140ms ease, transform 140ms ease, box-shadow 140ms ease;
+}
+.catalog-card:hover, .catalog-card:focus-visible {
+  border-color: var(--app-warm) !important;
+  box-shadow: 0 8px 22px rgba(0, 0, 0, .35), 0 0 0 1px color-mix(in srgb, var(--app-warm) 30%, transparent);
+  transform: translateY(-1px);
+}
+.catalog-card:active { transform: scale(.985); }
+.catalog-card-art {
+  display: grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  padding: 11px;
+  border: 1px solid color-mix(in srgb, var(--cat, var(--app-warm)) 45%, transparent);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--cat, var(--app-warm)) 22%, transparent), transparent 70%);
+  color: var(--cat, var(--app-warm));
+}
+.catalog-card.is-weapon { --cat: #d0a45c; }
+.catalog-card.is-ammunition { --cat: #b9b3a6; }
+.catalog-card.is-tool { --cat: #8fb0c9; }
+.catalog-card.is-gear { --cat: #a7c08a; }
+.catalog-card.is-consumable { --cat: #c98f8f; }
+.catalog-card.is-valuable { --cat: #d9c27a; }
+.catalog-blood { fill: currentColor; fill-opacity: .35; }
+.catalog-blood.is-tainted { color: #8e5b56; }
+.catalog-blood.is-stirred { color: #c2363c; }
+.catalog-blood.is-concentrated { color: #8f0f1a; }
+.catalog-blood.is-pure { color: #e3c26e; }
+.catalog-card-body { display: grid; gap: 6px; min-width: 0; }
+.catalog-card-body b { white-space: normal; font: 600 var(--sheet-fs-16)/1.2 "Alegreya", serif; }
+.catalog-card-body small {
+  display: -webkit-box;
+  white-space: normal;
+  overflow: hidden;
+  color: var(--app-muted);
+  font: var(--sheet-fs-13)/1.4 "Alegreya", serif;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+.catalog-card-tags { display: flex; flex-wrap: wrap; gap: 5px; }
+.catalog-card-tags em {
+  padding: 2px 8px;
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  color: var(--app-muted);
+  font: 600 var(--sheet-fs-11)/1.4 "Alegreya Sans SC", sans-serif;
+  font-style: normal;
+  letter-spacing: .04em;
+}
+.catalog-card-add {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--app-warm) 18%, transparent);
+  color: var(--app-warm);
+  font: 700 20px/1 sans-serif;
+}
+.catalog-empty { grid-column: 1 / -1; color: var(--app-muted); font: var(--sheet-fs-14)/1.5 "Alegreya", serif; }
