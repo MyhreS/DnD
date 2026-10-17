@@ -90,15 +90,14 @@ try {
   await page.locator(".character-sheet-page-stack").last().getByRole("button", { name: /back/i }).first().click();
   await page.getByRole("button", { name: /^Resources/i }).first().click();
   await page.getByRole("button", { name: "Increase Favors" }).click();
-  await tray.waitFor();
+  await waitFor(async () => (await savedNotes())?.favors === 1, "A Favor change did not save on its own.");
+  if (await tray.count()) throw new Error("A sheet edit opened the Review changes bar.");
   await page.locator(".character-sheet-page-stack").last().getByRole("button", { name: /back/i }).first().click();
   await page.getByRole("button", { name: /^Notes/i }).first().click();
   notes = page.getByTestId("appsheet-notes");
   await notes.click(); await page.keyboard.press("End");
   await page.keyboard.type(" Bring silver.", { delay: 15 });
   await waitFor(async () => (await savedNotes())?.sheet?.pageNotes === "The bell tolls at midnight. Bring silver.", "Notes typed during a review were not saved.");
-  await page.getByRole("button", { name: "Apply changes" }).click();
-  await tray.waitFor({ state: "detached" });
   await sleep(1500);
   const after = await savedNotes();
   if (after?.sheet?.pageNotes !== "The bell tolls at midnight. Bring silver.") throw new Error(`Applying another change overwrote the notes: ${after?.sheet?.pageNotes}`);
@@ -109,7 +108,7 @@ try {
   if (await notes.inputValue() !== "The bell tolls at midnight. Bring silver.") throw new Error("Notes did not survive reopening the sheet.");
 
   if (errors.length) throw new Error(`Browser errors:\n${errors.join("\n")}`);
-  console.log("Personal notes E2E passed: autosave while typing, no review bar, never overwritten by a staged apply, persists.");
+  console.log("Personal notes E2E passed: autosave while typing, no review bar, never overwritten by another sheet edit, persists.");
 } finally {
   await browser.close();
   server.kill("SIGTERM");
