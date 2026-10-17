@@ -96,7 +96,7 @@
   border-radius: 7px;
   background: var(--app-subtle);
   color: var(--app-muted);
-  font: 800 11px/1 "Alegreya Sans SC", sans-serif;
+  font: 800 var(--sheet-fs-11)/1 "Alegreya Sans SC", sans-serif;
   letter-spacing: .09em;
   text-transform: uppercase;
   cursor: pointer;
@@ -105,8 +105,8 @@
 .character-sheet-back:hover,
 .character-sheet-back:focus-visible { border-color: var(--app-warm); background: var(--app-subtle-hover); color: var(--app-text); }
 .character-sheet-back:focus-visible { outline: 2px solid var(--app-warm); outline-offset: 2px; }
-.character-sheet-back > span:first-child { font-size: 17px; line-height: .7; }
-.character-sheet-save { color: var(--app-muted); font: 12px/1.1 "Alegreya", serif; }
+.character-sheet-back > span:first-child { font-size: var(--sheet-fs-17); line-height: .7; }
+.character-sheet-save { color: var(--app-muted); font: var(--sheet-fs-12)/1.1 "Alegreya", serif; }
 
 .appsheet-workspace {
   min-width: 0;
@@ -202,7 +202,7 @@
   gap: 4px 0;
   padding-bottom: 5px;
   color: var(--app-muted);
-  font: 600 14px/1.3 "Alegreya", serif;
+  font: 600 var(--sheet-fs-14)/1.3 "Alegreya", serif;
 }
 
 .appsheet-character-meta span + span::before {
@@ -229,7 +229,7 @@
 .appsheet-panel > header h3 {
   margin: 0;
   color: var(--app-text);
-  font: 700 16px/1.25 "Alegreya Sans SC", sans-serif;
+  font: 700 var(--sheet-fs-16)/1.25 "Alegreya Sans SC", sans-serif;
 }
 
 .appsheet-two-column,
@@ -345,7 +345,7 @@
 
 .background-details > b,
 .background-details > span {
-  font-size: 14px;
+  font-size: var(--sheet-fs-14);
   line-height: 1.4;
 }
 
@@ -360,12 +360,12 @@
 
 .background-details h3 {
   margin: 0;
-  font: 700 18px/1.15 "Cinzel", serif;
+  font: 700 var(--sheet-fs-18)/1.15 "Cinzel", serif;
 }
 
 .background-details-heading span {
   color: var(--app-muted);
-  font-size: 11px;
+  font-size: var(--sheet-fs-11);
   font-weight: 800;
   letter-spacing: .08em;
   text-transform: uppercase;
@@ -373,7 +373,7 @@
 
 .background-details p {
   margin: 0;
-  font: 16px/1.35 "Alegreya", serif;
+  font: var(--sheet-fs-16)/1.35 "Alegreya", serif;
 }
 
 .background-details dl {
@@ -384,9 +384,9 @@
 }
 
 .background-details dl > div { min-width: 0; }
-.background-details dt { color: var(--app-muted); font-size: 11px; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
-.background-details dd { margin: 2px 0 0; font: 600 14px/1.3 "Alegreya Sans SC", sans-serif; }
-.background-details dd small { display: block; margin-top: 2px; color: var(--app-muted); font: 13px/1.3 "Alegreya", serif; }
+.background-details dt { color: var(--app-muted); font-size: var(--sheet-fs-11); font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.background-details dd { margin: 2px 0 0; font: 600 var(--sheet-fs-14)/1.3 "Alegreya Sans SC", sans-serif; }
+.background-details dd small { display: block; margin-top: 2px; color: var(--app-muted); font: var(--sheet-fs-13)/1.3 "Alegreya", serif; }
 
 .origin-feat-info { display: inline-flex; align-items: center; gap: 5px; }
 .origin-feat-info details { position: relative; }
@@ -399,7 +399,7 @@
   border: 1px solid currentColor;
   border-radius: 50%;
   color: var(--app-muted);
-  font: 700 12px/1 sans-serif;
+  font: 700 var(--sheet-fs-12)/1 sans-serif;
 }
 .origin-feat-info summary::-webkit-details-marker { display: none; }
 .origin-feat-info summary:focus-visible { outline: 2px solid var(--app-gold); outline-offset: 2px; }
@@ -417,10 +417,10 @@
   background: var(--app-surface);
   box-shadow: 0 2px 8px rgb(0 0 0 / 12%);
   color: var(--app-text);
-  font: 14px/1.35 "Alegreya", serif;
+  font: var(--sheet-fs-14)/1.35 "Alegreya", serif;
 }
-.origin-feat-popover b { font: 700 14px/1.2 "Alegreya Sans SC", sans-serif; }
-.origin-feat-popover a { color: inherit; font: 700 13px/1.2 "Alegreya Sans SC", sans-serif; }
+.origin-feat-popover b { font: 700 var(--sheet-fs-14)/1.2 "Alegreya Sans SC", sans-serif; }
+.origin-feat-popover a { color: inherit; font: 700 var(--sheet-fs-13)/1.2 "Alegreya Sans SC", sans-serif; }
 
 .appsheet-vital-editors,
 .appsheet-inline-fields {
@@ -436,7 +436,7 @@
 
 .appsheet-field-label {
   color: var(--app-muted);
-  font-size: 13px;
+  font-size: var(--sheet-fs-13);
   font-weight: 700;
 }
 
@@ -451,7 +451,7 @@
   border-radius: 5px;
   background: var(--app-input);
   color: var(--app-text);
-  font: 600 15px/1.3 "Alegreya Sans SC", sans-serif;
+  font: 600 var(--sheet-fs-15)/1.3 "Alegreya Sans SC", sans-serif;
   outline: none;
 }
 
@@ -470,7 +470,7 @@
 .character-app-sheet textarea {
   min-height: 110px;
   resize: vertical;
-  font: 15px/1.5 "Alegreya", serif;
+  font: var(--sheet-fs-15)/1.5 "Alegreya", serif;
 }
 
 .character-app-sheet input:focus,
@@ -500,7 +500,7 @@
 
 .appsheet-decision small {
   color: var(--app-faint);
-  font: 12px/1.35 "Alegreya", serif;
+  font: var(--sheet-fs-12)/1.35 "Alegreya", serif;
 }
 
 .appsheet-metric-grid,
@@ -571,13 +571,13 @@
 }
 
 .appsheet-disclosure-heading > b {
-  font-size: 15px;
+  font-size: var(--sheet-fs-15);
 }
 
 .appsheet-disclosure-summary {
   margin-top: 3px;
   color: var(--app-muted);
-  font: 13px/1.35 "Alegreya", serif;
+  font: var(--sheet-fs-13)/1.35 "Alegreya", serif;
   overflow-wrap: anywhere;
 }
 
@@ -587,7 +587,7 @@
 
 .appsheet-disclosure-aside {
   color: var(--app-muted);
-  font-size: 12px;
+  font-size: var(--sheet-fs-12);
 }
 
 .appsheet-disclosure-icon {
@@ -642,13 +642,13 @@
 
 .appsheet-auto-reason {
   color: var(--app-faint);
-  font: 12px/1.4 "Alegreya", serif;
+  font: var(--sheet-fs-12)/1.4 "Alegreya", serif;
 }
 
 .appsheet-auto-reason summary {
   width: max-content;
   color: var(--app-positive);
-  font: 700 13px/1.3 "Alegreya Sans SC", sans-serif;
+  font: 700 var(--sheet-fs-13)/1.3 "Alegreya Sans SC", sans-serif;
   cursor: pointer;
   list-style: none;
 }
@@ -667,7 +667,7 @@
 .appsheet-status-word,
 .appsheet-complete,
 .appsheet-incomplete {
-  font-size: 12px;
+  font-size: var(--sheet-fs-12);
   font-weight: 700;
 }
 
@@ -696,7 +696,7 @@
   border: 0;
   background: var(--app-control);
   color: var(--app-text);
-  font: 700 18px/1 sans-serif;
+  font: 700 var(--sheet-fs-18)/1 sans-serif;
   cursor: pointer;
 }
 
@@ -713,7 +713,7 @@
   display: grid;
   place-items: center;
   color: var(--app-text);
-  font: 700 16px/1 "Cinzel", serif;
+  font: 700 var(--sheet-fs-16)/1 "Cinzel", serif;
 }
 
 .appsheet-stepper.compact {
@@ -745,7 +745,7 @@
 .appsheet-pending p {
   margin: 2px 0 0;
   color: var(--app-muted);
-  font: 13px/1.35 "Alegreya", serif;
+  font: var(--sheet-fs-13)/1.35 "Alegreya", serif;
 }
 
 .appsheet-choice-list {
@@ -793,13 +793,13 @@
 
 .appsheet-choice b {
   color: var(--app-text);
-  font-size: 13px;
+  font-size: var(--sheet-fs-13);
   overflow-wrap: anywhere;
 }
 
 .appsheet-choice small {
   color: var(--app-muted);
-  font: 11px/1.25 "Alegreya", serif;
+  font: var(--sheet-fs-11)/1.25 "Alegreya", serif;
 }
 
 .appsheet-rites-disclosure .appsheet-panel + .appsheet-panel {
@@ -809,7 +809,7 @@
 .appsheet-rites-intro {
   margin: 2px 0 16px;
   color: var(--app-muted);
-  font: 14px/1.35 "Alegreya", serif;
+  font: var(--sheet-fs-14)/1.35 "Alegreya", serif;
 }
 
 .appsheet-rite-reference-list {
@@ -839,9 +839,9 @@
 .appsheet-rite-reference > summary > span:first-child { min-width: 0; }
 .appsheet-rite-reference > summary b,
 .appsheet-rite-reference > summary small { display: block; }
-.appsheet-rite-reference > summary b { font-size: 14px; }
-.appsheet-rite-reference > summary small { margin-top: 2px; color: var(--app-muted); font: 12px/1.2 "Alegreya", serif; }
-.appsheet-rite-reference > summary > span:last-child { flex: none; max-width: 42%; color: var(--app-warm); text-align: right; font-size: 13px; }
+.appsheet-rite-reference > summary b { font-size: var(--sheet-fs-14); }
+.appsheet-rite-reference > summary small { margin-top: 2px; color: var(--app-muted); font: var(--sheet-fs-12)/1.2 "Alegreya", serif; }
+.appsheet-rite-reference > summary > span:last-child { flex: none; max-width: 42%; color: var(--app-warm); text-align: right; font-size: var(--sheet-fs-13); }
 
 .appsheet-rite-reference > div {
   padding: 12px;
@@ -856,14 +856,14 @@
 }
 
 .appsheet-rite-reference dl > div { min-width: 0; }
-.appsheet-rite-reference dt { color: var(--app-faint); font-size: 11px; }
-.appsheet-rite-reference dd { margin: 2px 0 0; color: var(--app-text); font: 13px/1.25 "Alegreya", serif; }
-.appsheet-rite-reference a { color: var(--app-warm); font-size: 13px; }
+.appsheet-rite-reference dt { color: var(--app-faint); font-size: var(--sheet-fs-11); }
+.appsheet-rite-reference dd { margin: 2px 0 0; color: var(--app-text); font: var(--sheet-fs-13)/1.25 "Alegreya", serif; }
+.appsheet-rite-reference a { color: var(--app-warm); font-size: var(--sheet-fs-13); }
 
 .appsheet-weapon-reference-note {
   margin: 0;
   color: var(--app-muted);
-  font: 13px/1.35 "Alegreya", serif;
+  font: var(--sheet-fs-13)/1.35 "Alegreya", serif;
 }
 
 .appsheet-weapons-disclosure .appsheet-panel + .appsheet-panel { margin-top: 20px; }
@@ -884,15 +884,15 @@
 .appsheet-weapon-bonuses > div:last-child { border-bottom: 0; }
 .appsheet-weapon-bonuses span { min-width: 0; }
 .appsheet-weapon-bonuses b, .appsheet-weapon-bonuses small { display: block; }
-.appsheet-weapon-bonuses b { font-size: 14px; }
-.appsheet-weapon-bonuses small { margin-top: 2px; color: var(--app-muted); font: 12px/1.3 "Alegreya", serif; }
-.appsheet-weapon-bonuses strong { flex: none; color: var(--app-warm); font-size: 13px; text-align: right; }
+.appsheet-weapon-bonuses b { font-size: var(--sheet-fs-14); }
+.appsheet-weapon-bonuses small { margin-top: 2px; color: var(--app-muted); font: var(--sheet-fs-12)/1.3 "Alegreya", serif; }
+.appsheet-weapon-bonuses strong { flex: none; color: var(--app-warm); font-size: var(--sheet-fs-13); text-align: right; }
 
 .appsheet-ability-intro {
   max-width: 42rem;
   margin: 0 0 14px;
   color: var(--app-muted);
-  font: 15px/1.4 "Alegreya", serif;
+  font: var(--sheet-fs-15)/1.4 "Alegreya", serif;
 }
 
 .appsheet-ability-method {
@@ -917,11 +917,11 @@
   border-radius: 6px !important;
   background: transparent !important;
   color: var(--app-muted) !important;
-  font: 700 14px/1.1 "Alegreya Sans SC", sans-serif;
+  font: 700 var(--sheet-fs-14)/1.1 "Alegreya Sans SC", sans-serif;
   cursor: pointer;
 }
 
-.appsheet-ability-method button small { color: var(--app-faint); font: 12px/1.1 "Alegreya", serif; }
+.appsheet-ability-method button small { color: var(--app-faint); font: var(--sheet-fs-12)/1.1 "Alegreya", serif; }
 .character-app-sheet .appsheet-ability-method button:hover:not(:disabled) { background: var(--app-subtle-hover) !important; color: var(--app-text) !important; }
 .character-app-sheet .appsheet-ability-method button[aria-pressed="true"] { background: var(--app-surface-hover) !important; color: var(--app-text) !important; box-shadow: var(--app-shadow); }
 .appsheet-ability-method button[aria-pressed="true"] small { color: var(--app-warm); }
@@ -941,8 +941,8 @@
 }
 
 .appsheet-ability-budget > span { display: grid; gap: 2px; }
-.appsheet-ability-budget strong { color: var(--app-text); font: 700 18px/1.1 "Cinzel", serif; }
-.appsheet-ability-budget small { color: var(--app-muted); font: 13px/1.2 "Alegreya", serif; }
+.appsheet-ability-budget strong { color: var(--app-text); font: 700 var(--sheet-fs-18)/1.1 "Cinzel", serif; }
+.appsheet-ability-budget small { color: var(--app-muted); font: var(--sheet-fs-13)/1.2 "Alegreya", serif; }
 .appsheet-ability-budget > div { height: 7px; overflow: hidden; border-radius: 8px; background: var(--app-line); }
 .appsheet-ability-budget i { display: block; height: 100%; border-radius: inherit; background: var(--app-warm); transition: width .18s ease; }
 .appsheet-ability-budget.is-complete { border-color: color-mix(in srgb, var(--app-positive), transparent 48%); background: var(--app-positive-bg); }
@@ -973,9 +973,9 @@
 }
 
 .appsheet-ability-builder article > header > span { display: grid; min-width: 0; }
-.appsheet-ability-builder article > header b { color: var(--app-warm); font-size: 15px; letter-spacing: .06em; }
-.appsheet-ability-builder article > header small { overflow: hidden; color: var(--app-muted); font: 12px/1.1 "Alegreya", serif; text-overflow: ellipsis; }
-.appsheet-ability-builder article > header em { flex: none; color: var(--app-muted); font: 11px/1.15 "Alegreya", serif; text-align: right; }
+.appsheet-ability-builder article > header b { color: var(--app-warm); font-size: var(--sheet-fs-15); letter-spacing: .06em; }
+.appsheet-ability-builder article > header small { overflow: hidden; color: var(--app-muted); font: var(--sheet-fs-12)/1.1 "Alegreya", serif; text-overflow: ellipsis; }
+.appsheet-ability-builder article > header em { flex: none; color: var(--app-muted); font: var(--sheet-fs-11)/1.15 "Alegreya", serif; text-align: right; }
 
 .appsheet-ability-controls {
   display: grid;
@@ -1003,7 +1003,7 @@
 .appsheet-ability-controls button:disabled { cursor: not-allowed; opacity: .3; }
 .appsheet-ability-controls > span { display: grid; place-content: center; text-align: center; }
 .appsheet-ability-controls output { color: var(--app-text); font: 700 23px/1 "Cinzel", serif; }
-.appsheet-ability-controls small { margin-top: 3px; color: var(--app-faint); font: 9px/1 "Alegreya Sans SC", sans-serif; letter-spacing: .06em; text-transform: uppercase; }
+.appsheet-ability-controls small { margin-top: 3px; color: var(--app-faint); font: var(--sheet-fs-9)/1 "Alegreya Sans SC", sans-serif; letter-spacing: .06em; text-transform: uppercase; }
 
 .appsheet-final-abilities {
   display: grid;
@@ -1022,12 +1022,12 @@
 }
 
 .appsheet-final-score span {
-  font-size: 12px;
+  font-size: var(--sheet-fs-12);
   font-weight: 700;
 }
 
 .appsheet-final-score strong {
-  font: 700 18px "Cinzel", serif;
+  font: 700 var(--sheet-fs-18) "Cinzel", serif;
 }
 
 .appsheet-final-score b {
@@ -1037,7 +1037,7 @@
 .appsheet-final-score small {
   grid-column: 1 / 3;
   color: var(--app-muted);
-  font: 12px/1.2 "Alegreya", serif;
+  font: var(--sheet-fs-12)/1.2 "Alegreya", serif;
 }
 
 .appsheet-final-score .appsheet-auto-reason {
@@ -1047,7 +1047,7 @@
 }
 
 .appsheet-final-abilities .appsheet-derived > strong {
-  font-size: 16px;
+  font-size: var(--sheet-fs-16);
 }
 
 .appsheet-skill-table {
@@ -1076,7 +1076,7 @@
 
 .appsheet-skill-table span > b {
   color: var(--app-text);
-  font-size: 13px;
+  font-size: var(--sheet-fs-13);
 }
 
 .appsheet-skill-table span > small {
@@ -1096,7 +1096,7 @@
   border-radius: 5px;
   background: var(--app-action);
   color: var(--app-action-text);
-  font: 700 13px/1.25 "Alegreya Sans SC", sans-serif;
+  font: 700 var(--sheet-fs-13)/1.25 "Alegreya Sans SC", sans-serif;
   cursor: pointer;
 }
 
@@ -1110,7 +1110,7 @@
   border-radius: 7px;
   background: var(--app-subtle);
   color: var(--app-muted);
-  font-size: 11px;
+  font-size: var(--sheet-fs-11);
 }
 
 .character-app-sheet .character-sheet-back:hover:not(:disabled),

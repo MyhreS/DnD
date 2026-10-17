@@ -45,7 +45,7 @@
   gap: 6px;
   padding: 6px 10px;
   color: var(--app-muted);
-  font-size: 12px;
+  font-size: var(--sheet-fs-12);
 }
 
 .appsheet-read-list,
@@ -71,14 +71,14 @@
 .appsheet-read-list b,
 .appsheet-read-copy b {
   color: var(--app-muted);
-  font-size: 12px;
+  font-size: var(--sheet-fs-12);
 }
 
 .appsheet-read-list strong,
 .appsheet-read-copy p {
   margin: 3px 0 0;
   color: var(--app-text);
-  font: 14px/1.45 "Alegreya", serif;
+  font: var(--sheet-fs-14)/1.45 "Alegreya", serif;
 }
 
 .appsheet-catalog-add {
@@ -119,8 +119,8 @@
 }
 
 .appsheet-add-choices > button:hover { background: var(--app-control-hover) !important; }
-.appsheet-add-choices b { font-size: 14px; }
-.appsheet-add-choices span { color: var(--app-muted); font: 14px/1.35 "Alegreya", serif; }
+.appsheet-add-choices b { font-size: var(--sheet-fs-14); }
+.appsheet-add-choices span { color: var(--app-muted); font: var(--sheet-fs-14)/1.35 "Alegreya", serif; }
 .appsheet-add-form { display: grid; gap: 14px; }
 .appsheet-add-form .appsheet-form-intro { margin-top: 0; }
 
@@ -172,7 +172,7 @@
 .appsheet-item-slot,
 .appsheet-item-weight {
   color: var(--app-muted);
-  font-size: 11px;
+  font-size: var(--sheet-fs-11);
 }
 
 .appsheet-item-assignments {
@@ -187,14 +187,14 @@
   align-items: center;
   gap: 4px;
   color: var(--app-muted);
-  font-size: 10px;
+  font-size: var(--sheet-fs-10);
 }
 
 .appsheet-item-assignments select {
   width: auto;
   min-width: 92px;
   padding: 3px 5px;
-  font-size: 11px;
+  font-size: var(--sheet-fs-11);
 }
 
 .appsheet-coin-editor {
@@ -213,7 +213,7 @@
 
 .appsheet-coin-editor small {
   color: var(--app-muted);
-  font: 11px "Alegreya", serif;
+  font: var(--sheet-fs-11) "Alegreya", serif;
 }
 
 .appsheet-storage-list > div,
@@ -238,7 +238,7 @@
 .appsheet-slot-list small,
 .appsheet-pending-list small {
   color: var(--app-muted);
-  font: 11px/1.3 "Alegreya", serif;
+  font: var(--sheet-fs-11)/1.3 "Alegreya", serif;
 }
 
 .appsheet-storage-list .equipped {
@@ -261,7 +261,7 @@
   padding: 8px 6px;
   border-radius: 4px;
   color: var(--app-muted);
-  font: 12px/1.35 "Alegreya", serif;
+  font: var(--sheet-fs-12)/1.35 "Alegreya", serif;
 }
 
 .appsheet-weapon-table > div:not(.heading):hover {
@@ -270,7 +270,7 @@
 
 .appsheet-weapon-table .heading {
   color: var(--app-faint);
-  font: 700 11px/1.2 "Alegreya Sans SC", sans-serif;
+  font: 700 var(--sheet-fs-11)/1.2 "Alegreya Sans SC", sans-serif;
 }
 
 .appsheet-weapon-table b {
@@ -284,7 +284,7 @@
 .appsheet-form-intro,
 .appsheet-empty-copy {
   color: var(--app-muted);
-  font: 14px/1.45 "Alegreya", serif;
+  font: var(--sheet-fs-14)/1.45 "Alegreya", serif;
 }
 
 .appsheet-form-actions {
@@ -316,7 +316,7 @@
 
 .appsheet-feature-hero > div:first-child > span {
   color: var(--app-muted);
-  font-size: 12px;
+  font-size: var(--sheet-fs-12);
 }
 
 .appsheet-feature-hero h3 {
@@ -327,13 +327,13 @@
 
 .appsheet-feature-hero p {
   color: var(--app-muted);
-  font: 15px/1.45 "Alegreya", serif;
+  font: var(--sheet-fs-15)/1.45 "Alegreya", serif;
 }
 
 .appsheet-abilities-intro {
   margin: 0 0 10px;
   color: var(--app-muted);
-  font: 15px/1.45 "Alegreya", serif;
+  font: var(--sheet-fs-15)/1.45 "Alegreya", serif;
 }
 
 .appsheet-feature-timeline {
@@ -359,7 +359,7 @@
 
 .appsheet-feature-timeline summary span {
   color: var(--app-warm);
-  font-size: 11px;
+  font-size: var(--sheet-fs-11);
 }
 
 .appsheet-feature-timeline summary b {
@@ -368,7 +368,7 @@
 
 .appsheet-feature-timeline summary em {
   color: var(--app-positive);
-  font-size: 11px;
+  font-size: var(--sheet-fs-11);
 }
 
 .appsheet-feature-timeline details p {
@@ -376,7 +376,7 @@
   max-width: 680px;
   white-space: pre-line;
   color: var(--app-muted);
-  font: 14px/1.55 "Alegreya", serif;
+  font: var(--sheet-fs-14)/1.55 "Alegreya", serif;
 }
 
 .appsheet-token-list {
@@ -390,13 +390,13 @@
   border-radius: 4px;
   background: var(--app-token-bg);
   color: var(--app-token-text);
-  font-size: 12px;
+  font-size: var(--sheet-fs-12);
 }
 
 .appsheet-large-readout {
   margin: 0;
   color: var(--app-text);
-  font: 17px/1.45 "Alegreya", serif;
+  font: var(--sheet-fs-17)/1.45 "Alegreya", serif;
 }
 
 .appsheet-notes-panel textarea {
@@ -432,13 +432,13 @@
 
 .appsheet-edit-title b {
   color: var(--app-muted);
-  font: 11px "Alegreya", serif;
+  font: var(--sheet-fs-11) "Alegreya", serif;
   font-size: 0;
 }
 
 .appsheet-edit-title b::after {
   content: "Changes are only saved after you apply.";
-  font-size: 11px;
+  font-size: var(--sheet-fs-11);
 }
 
 .appsheet-change-list {
@@ -459,7 +459,7 @@
 .appsheet-change-list > span b {
   grid-column: 1 / -1;
   color: var(--app-muted);
-  font-size: 10px;
+  font-size: var(--sheet-fs-10);
 }
 
 .appsheet-change-list s {
@@ -520,7 +520,7 @@
   .character-app-sheet input:not([type="checkbox"]),
   .character-app-sheet select,
   .character-app-sheet textarea {
-    font-size: 16px;
+    font-size: var(--sheet-fs-16);
   }
 
   .appsheet-overview-layout,
@@ -618,7 +618,7 @@
 
   .appsheet-ability-builder { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
   .appsheet-ability-builder > article { padding: 10px; }
-  .appsheet-ability-builder article > header em { font-size: 10px; }
+  .appsheet-ability-builder article > header em { font-size: var(--sheet-fs-10); }
   .appsheet-ability-controls { grid-template-columns: 38px minmax(44px, 1fr) 38px; }
 
   .appsheet-catalog-add {
@@ -672,7 +672,7 @@
     display: block;
     margin-bottom: 2px;
     color: var(--app-faint);
-    font: 700 10px/1.2 "Alegreya Sans SC", sans-serif;
+    font: 700 var(--sheet-fs-10)/1.2 "Alegreya Sans SC", sans-serif;
   }
 
   .appsheet-weapon-table > div:not(.heading) span:nth-child(1) {
@@ -749,6 +749,6 @@
   display: block;
   margin-top: 3px;
   color: var(--app-positive);
-  font: 600 13px/1.35 "Alegreya", serif;
+  font: 600 var(--sheet-fs-13)/1.35 "Alegreya", serif;
 }
 .appsheet-ability-choice.is-missing { color: var(--app-warm); }
