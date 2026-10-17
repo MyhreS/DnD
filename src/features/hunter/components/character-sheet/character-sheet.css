@@ -870,14 +870,11 @@
   .character-sheet-figure { width: min(100%, 230px); }
 }
 
-/* iOS home-screen apps can measure a fixed "inset: 0" layer short on first
- * open and only grow it after a later layout change, so the stats row at the
- * bottom jumped between visits. An explicit full-screen height is stable.
- * Home-screen app only: in a Safari tab it would reach under the toolbar. */
-@media (display-mode: standalone) {
-  .character-editor-modal.character-sheet-modal {
-    bottom: auto;
-    height: 100vh;
-    height: 100lvh;
-  }
+/* iPhone home-screen apps measure a fixed "inset: 0" layer (and 100vh/lvh)
+ * inconsistently — short on first open, too tall after rotating — so the
+ * stats row at the bottom moved or was cut off. The sheet takes the measured
+ * visible height instead (src/lib/appHeight.ts). */
+.character-editor-modal.character-sheet-modal {
+  bottom: auto;
+  height: var(--app-height, 100dvh);
 }
