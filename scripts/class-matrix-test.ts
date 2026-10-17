@@ -10,6 +10,7 @@ import { automationFor, classResources } from "../src/features/hunter/lib/charac
 import { FEAT_SKILL_PICKS, featPickKey } from "../src/data/feats";
 import { SKILLS } from "../src/data/skills";
 import { armorClassFor } from "../src/lib/character";
+import { abilityChoice, classAbilitiesThroughLevel } from "../src/features/hunter/lib/classAbilityChoices";
 import {
   featOptionsFor,
   recordedOptionsFor,
@@ -119,6 +120,16 @@ for (const klass of CLASSES) {
       // Every tracked class resource has a positive maximum on the sheet.
       for (const resource of classResources(card)) {
         assert.ok(resource.max > 0 && fields[`${resource.key}Max`] === String(resource.max), `${label} level ${level}: ${resource.label} maximum`);
+      }
+
+      // Class abilities list what was chosen: once every upgrade choice is
+      // made, no class or path ability may still read "Not chosen yet".
+      const path = klass.subclasses.find((entry) => entry.id === subclassId);
+      for (const ability of classAbilitiesThroughLevel(klass, level >= 3 ? subclassId : null, level)) {
+        if (/^(expertise|weapon mastery)$/i.test(ability.name)) continue; // picked on the sheet, not by this test
+        if (/ subclass$/i.test(ability.name) && !subclassId) continue;
+        const choice = abilityChoice(ability, state, level >= 3 ? path : undefined);
+        assert.ok(!choice?.missing, `${label} level ${level}: Class abilities shows "${ability.name}" as not chosen`);
       }
 
       // Hunter Zealot replaces the Deepcaller progression from level 3 ([page 75]).

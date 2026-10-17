@@ -743,3 +743,12 @@
     scroll-behavior: auto;
   }
 }
+
+/* What this Hunter chose for a class ability, shown on the row itself. */
+.appsheet-ability-choice {
+  display: block;
+  margin-top: 3px;
+  color: var(--app-positive);
+  font: 600 13px/1.35 "Alegreya", serif;
+}
+.appsheet-ability-choice.is-missing { color: var(--app-warm); }
