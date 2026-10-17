@@ -115,6 +115,7 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
       <button type="button" onClick={() => onPanelChange("speed")}><small>Speed</small><strong>{String(result.fields.speed ?? "—")}</strong></button>
       <button type="button" onClick={() => onPanelChange("passive")}><small>Passive</small><strong>{String(result.fields.passivePerception ?? "—")}</strong></button>
       <button type="button" onClick={() => onPanelChange("initiative")}><small>Initiative</small><strong>{String(result.fields.initiative ?? "—")}</strong></button>
+      <button type="button" aria-label={`Proficiency Bonus ${String(result.fields.profBonus ?? "—")}`} onClick={() => onPanelChange("progress")}><small>Prof. bonus</small><strong>{String(result.fields.profBonus ?? "—")}</strong></button>
     </section>
     <section className="character-sheet-vitals" aria-label="Current resources">
       <button type="button" onClick={() => onPanelChange("health")}><span><b>Hit points</b><em>{hp} / {hpMax}{tempHp > 0 && <small> +{tempHp} temp</small>}</em></span><i><span style={{ width: `${hpMax ? Math.max(0, Math.min(100, hp / hpMax * 100)) : 0}%` }} /></i></button>
