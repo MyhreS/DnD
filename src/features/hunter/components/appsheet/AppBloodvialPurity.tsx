@@ -3,9 +3,8 @@ import {
   BLOODVIAL_PURITY_BY_ID,
   bloodvialEffectLabel,
   bloodvialFailureLabel,
-  cardBloodvialPurity,
 } from "@/data/bloodvial";
-import type { BloodvialPurity, HunterCard } from "@/types";
+import type { BloodvialPurity } from "@/types";
 
 /** The Bloodvial's purity on its existing inventory row, core-rulebook.txt
  * [page 123]. Purity is a field on the one `blood-vial` id, so this renders
@@ -13,15 +12,14 @@ import type { BloodvialPurity, HunterCard } from "@/types";
  * and Grit figures. The Grit check itself is rolled at the table: this
  * displays the DC and the consequences and never rolls anything. */
 export function AppBloodvialPurity({
-  card,
+  purity,
   readOnly,
   onChange,
 }: {
-  card: HunterCard;
+  purity: BloodvialPurity;
   readOnly: boolean;
   onChange: (purity: BloodvialPurity) => void;
 }) {
-  const purity = cardBloodvialPurity(card);
   const facts = BLOODVIAL_PURITY_BY_ID[purity];
   return (
     <>

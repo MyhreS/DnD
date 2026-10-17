@@ -10,7 +10,7 @@ import { ABILITY_KEYS } from "@/lib/ability-keys";
 import { isWeaponProficient, maxAddonPieces } from "@/lib/character";
 import { armorFor } from "@/lib/customItems";
 import { startingKit } from "@/lib/startingEquipment";
-import { BLOODVIAL_ITEM_ID } from "@/data/bloodvial";
+import { BLOODVIAL_ITEM_ID, EMPTY_VIAL_ITEM_ID, bloodvialPurityOf } from "@/data/bloodvial";
 import type {
   AbilityKey,
   BloodvialPurity,
@@ -36,20 +36,21 @@ const ZERO_BONUS = (): Partial<Record<AbilityKey, number>> => Object.fromEntries
   ABILITY_KEYS.map((key) => [key, 0]),
 ) as Partial<Record<AbilityKey, number>>;
 
+/** One inventory line per item — except Bloodvials, which keep one line per
+ * purity (core-rulebook.txt [page 123]); a line without one is Tainted. */
+function lineKey(entry: Pick<InventoryEntry, "itemId" | "purity">): string {
+  return entry.itemId === BLOODVIAL_ITEM_ID ? `${entry.itemId}#${bloodvialPurityOf(entry)}` : entry.itemId;
+}
+
 function mergeInventory(base: InventoryEntry[], additions: InventoryEntry[]): InventoryEntry[] {
-  const counts = new Map(base.map((entry) => [entry.itemId, entry.qty]));
-  // Per-line extras (such as a Bloodvial's purity) survive quantity changes.
-  const extras = new Map(base.map((entry) => [entry.itemId, entry.purity]));
-  for (const entry of additions) {
-    counts.set(entry.itemId, (counts.get(entry.itemId) ?? 0) + entry.qty);
-    if (entry.purity) extras.set(entry.itemId, entry.purity);
+  const lines = new Map<string, InventoryEntry>();
+  for (const entry of [...base, ...additions]) {
+    const key = lineKey(entry);
+    const current = lines.get(key);
+    const purity = entry.itemId === BLOODVIAL_ITEM_ID ? bloodvialPurityOf(entry) : undefined;
+    lines.set(key, { itemId: entry.itemId, qty: (current?.qty ?? 0) + entry.qty, ...(purity ? { purity } : {}) });
   }
-  return [...counts]
-    .filter(([, qty]) => qty > 0)
-    .map(([itemId, qty]) => {
-      const purity = extras.get(itemId);
-      return purity ? { itemId, qty, purity } : { itemId, qty };
-    });
+  return [...lines.values()].filter((entry) => entry.qty > 0);
 }
 
 function removeInventory(base: InventoryEntry[], removals: InventoryEntry[]): InventoryEntry[] {
@@ -382,9 +383,9 @@ export function CharacterAutomationProvider({
     });
   }
 
-  function changeQty(id: string, delta: number) {
-    const inventory = mergeInventory(card.inventory ?? [], [{ itemId: id, qty: delta }]);
-    const nextQty = inventory.find((entry) => entry.itemId === id)?.qty ?? 0;
+  function changeQty(id: string, delta: number, purity?: BloodvialPurity) {
+    const inventory = mergeInventory(card.inventory ?? [], [{ itemId: id, qty: delta, ...(purity ? { purity } : {}) }]);
+    const nextQty = inventory.filter((entry) => entry.itemId === id).reduce((sum, entry) => sum + entry.qty, 0);
     const keptAssignments = (card.slotAssignments?.[id] ?? []).filter(Boolean).slice(0, nextQty);
     const slotAssignments = { ...(card.slotAssignments ?? {}) };
     if (keptAssignments.length) slotAssignments[id] = keptAssignments;
@@ -392,12 +393,27 @@ export function CharacterAutomationProvider({
     commit({ inventory, slotAssignments });
   }
 
-  /** Bloodvial purity, core-rulebook.txt [page 123]. Stored on the existing
-   * `blood-vial` inventory line — no separate item id. */
-  function setBloodvialPurity(purity: BloodvialPurity) {
-    const inventory = (card.inventory ?? []).map((entry) => (
-      entry.itemId === BLOODVIAL_ITEM_ID ? { ...entry, purity } : entry
-    ));
+  /** Bloodvial purity, core-rulebook.txt [page 123]: move one purity line's
+   * vials to another purity (merging into that line if it exists). */
+  function setBloodvialPurity(from: BloodvialPurity, to: BloodvialPurity) {
+    if (from === to) return;
+    const line = (card.inventory ?? []).find((entry) => entry.itemId === BLOODVIAL_ITEM_ID && bloodvialPurityOf(entry) === from);
+    if (!line) return;
+    const inventory = mergeInventory(card.inventory ?? [], [
+      { itemId: BLOODVIAL_ITEM_ID, qty: -line.qty, purity: from },
+      { itemId: BLOODVIAL_ITEM_ID, qty: line.qty, purity: to },
+    ]);
+    commit({ inventory });
+  }
+
+  /** Spend (drink or administer) one Bloodvial of this purity: the vial is
+   * emptied, so one Bloodvial becomes one empty Vial ([page 123]; the Vial
+   * itself is the Adventuring Gear entry, [page 122]). */
+  function spendBloodvial(purity: BloodvialPurity) {
+    const inventory = mergeInventory(card.inventory ?? [], [
+      { itemId: BLOODVIAL_ITEM_ID, qty: -1, purity },
+      { itemId: EMPTY_VIAL_ITEM_ID, qty: 1 },
+    ]);
     commit({ inventory });
   }
 
@@ -618,6 +634,7 @@ export function CharacterAutomationProvider({
     switchMode,
     changeQty,
     setBloodvialPurity,
+    spendBloodvial,
     addCatalogItemToSlot,
     setSlotAssignment,
     toggleStorage,

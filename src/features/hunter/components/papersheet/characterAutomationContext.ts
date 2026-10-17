@@ -44,8 +44,10 @@ export interface CharacterAutomationController {
   setBase: (key: AbilityKey, value: number) => void;
   setBonus: (key: AbilityKey, value: number) => void;
   switchMode: (mode: BuyMode) => void;
-  changeQty: (id: string, delta: number) => void;
-  setBloodvialPurity: (purity: BloodvialPurity) => void;
+  changeQty: (id: string, delta: number, purity?: BloodvialPurity) => void;
+  setBloodvialPurity: (from: BloodvialPurity, to: BloodvialPurity) => void;
+  /** One Bloodvial of this purity is drunk or administered: it becomes an empty Vial. */
+  spendBloodvial: (purity: BloodvialPurity) => void;
   addCatalogItemToSlot: (id: string, target: SlotAssignment, replace?: SlotReplacement) => void;
   setSlotAssignment: (id: string, index: number, location: SlotAssignment | null, replace?: SlotReplacement) => void;
   toggleStorage: (id: string, replace?: SlotReplacement) => void;

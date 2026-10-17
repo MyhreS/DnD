@@ -5,9 +5,9 @@ import type { HunterCard } from "@/types";
 /** Inventory units that are not currently placed in a valid equipment slot. */
 export function resolveUnassignedInventory(card: HunterCard) {
   const placed = computeSlots(card).placedAssignments;
-  return resolveInventory(card).flatMap(({ item, qty }) => {
-    const equippedQty = (placed[item.id] ?? []).filter(Boolean).length;
-    const unassignedQty = Math.max(0, qty - equippedQty);
-    return unassignedQty > 0 ? [{ item, qty: unassignedQty }] : [];
+  return resolveInventory(card).flatMap((entry) => {
+    const equippedQty = (placed[entry.item.id] ?? []).filter(Boolean).length;
+    const unassignedQty = Math.max(0, entry.qty - equippedQty);
+    return unassignedQty > 0 ? [{ ...entry, qty: unassignedQty }] : [];
   });
 }

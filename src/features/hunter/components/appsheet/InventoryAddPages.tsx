@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { ITEMS } from "@/data/items";
+import type { BloodvialPurity } from "@/types";
 import { useCharacterSheetPageNavigation } from "../character-sheet/characterSheetPageNavigation";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { CatalogItemForm, UniqueItemForm, type FoundItemDraft } from "./InventoryAddForms";
@@ -18,17 +19,15 @@ const EMPTY_ITEM: FoundItemDraft = {
 function CatalogInventoryPage() {
   const automation = useCharacterAutomation();
   const navigation = useCharacterSheetPageNavigation();
-  const [catalogId, setCatalogId] = useState("");
   const catalog = useMemo(() => ITEMS.filter((item) => item.category !== "Armor"), []);
 
   return <div className="appsheet-add-form character-sheet-inventory-add-page">
     <CatalogItemForm
       catalog={catalog}
-      catalogId={catalogId}
-      setCatalogId={setCatalogId}
-      onAdd={() => {
-        if (!catalogId) return;
-        automation.changeQty(catalogId, 1);
+      onAdd={(value) => {
+        // "blood-vial:stirred" adds a Bloodvial of that purity.
+        const [itemId, purity] = value.split(":") as [string, BloodvialPurity | undefined];
+        automation.changeQty(itemId, 1, purity);
         navigation.returnToRoot();
       }}
     />

@@ -14,6 +14,9 @@ import type { BloodvialPurity, HunterCard, InventoryEntry } from "@/types";
 
 export const BLOODVIAL_ITEM_ID = "blood-vial";
 
+/** The empty Vial a spent Bloodvial leaves behind. */
+export const EMPTY_VIAL_ITEM_ID = "vial";
+
 /** Stored lines predating purity are Tainted. */
 export const DEFAULT_BLOODVIAL_PURITY: BloodvialPurity = "tainted";
 
