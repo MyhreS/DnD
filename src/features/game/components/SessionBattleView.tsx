@@ -30,6 +30,7 @@ export function SessionBattleView({
   // The fallen roster reads the shared archive subscription.
   useCharactersSync();
   const allCombatants = useCombatStore((state) => state.combatants);
+  const loaded = useCombatStore((state) => state.loaded);
   const encounter = game.combat!;
   const combatants = useMemo(() => encounterCombatants(allCombatants, encounter), [allCombatants, encounter]);
   const order = useMemo(() => initiativeOrder(combatants), [combatants]);
@@ -54,7 +55,7 @@ export function SessionBattleView({
         </div>
         <div className="battle-live-status" aria-live="polite">
           <span><em className="battle-round-inline">Round {round} · </em>{current ? `Turn ${currentPosition + 1} of ${order.length}` : "Current turn"}</span>
-          <strong className={current?.kind === "monster" ? "is-monster" : undefined}>{current?.name ?? "Waiting for initiative"}</strong>
+          <strong className={current?.kind === "monster" ? "is-monster" : undefined}>{current?.name ?? (loaded ? "Waiting for initiative" : "Loading…")}</strong>
         </div>
         <div className="battle-next-up">
           <span>Up next</span>
@@ -65,7 +66,13 @@ export function SessionBattleView({
 
       {order.length > 0 && <BattleTurnTrack order={order} currentId={current?.id ?? null} characters={characters} />}
 
-      {order.length === 0 ? (
+      {order.length === 0 && !loaded ? (
+        <section className="battle-waiting" aria-live="polite" data-testid="battle-loading">
+          <span className="btn-spinner battle-loading-spinner" aria-hidden="true" />
+          <strong>Loading the battle…</strong>
+          <p>Fetching every combatant from the table.</p>
+        </section>
+      ) : order.length === 0 ? (
         <section className="battle-waiting" aria-live="polite">
           <span className="battle-waiting-mark" aria-hidden="true">✦</span>
           <strong>Waiting for initiative</strong>
