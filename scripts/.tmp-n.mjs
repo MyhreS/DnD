@@ -1,0 +1,14 @@
+import { chromium } from "playwright";
+const b = await chromium.launch(); const p = await b.newPage({ viewport: { width: 1280, height: 900 } });
+const errs = []; p.on("pageerror", (e) => errs.push(e.message)); p.on("console", (m) => m.type() === "error" && errs.push(m.text()));
+await p.goto("http://localhost:5199/character?preview=user.player"); await p.waitForTimeout(2500);
+await p.getByText("View character").first().click(); await p.waitForTimeout(1500);
+await p.getByRole("button", { name: /^Notes/i }).first().click(); await p.waitForTimeout(700);
+const ta = p.getByTestId("appsheet-notes");
+console.log("before:", JSON.stringify(await ta.inputValue()), "disabled", await ta.isDisabled());
+await ta.click(); await p.keyboard.type("Hello notes", { delay: 30 }); await p.waitForTimeout(500);
+console.log("after typing:", JSON.stringify(await ta.inputValue()));
+console.log("tray visible:", await p.getByText("Review changes").count(), await p.locator(".appsheet-edit-tray").count());
+await p.screenshot({ path: "/private/tmp/claude-501/-Users-simonmyhre-workdir-gitdir-DnD--claude-worktrees-firebase-dnd-setup-9a96a3/3975e3e8-3685-40e5-8dea-01b358fab5ca/scratchpad/notes.png" });
+console.log("errors", errs.slice(0, 5));
+await b.close();

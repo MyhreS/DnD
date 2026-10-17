@@ -19,13 +19,17 @@ export function useAppEditStageValue(
   onPendingChange?: (pending: boolean) => void,
 ): AppEditStageValue {
   const [patch, setPatch] = useState<StagedPatch>({});
-  const [fields, setFields] = useState(model.data);
+  // Only the sheet fields edited in this review are held here; everything else
+  // follows the live sheet. A field saved directly (personal notes) therefore
+  // never looks like a pending change and is never overwritten by an old copy.
+  const [overrides, setOverrides] = useState<SheetData>({});
+  const fields = useMemo(() => ({ ...model.data, ...overrides }), [model.data, overrides]);
   const currentResult = useMemo(() => automationFor(model.card), [model.card]);
   const previewCard = useMemo(() => ({ ...model.card, ...patch, sheet: fields }), [fields, model.card, patch]);
   const previewResult = useMemo(() => automationFor(previewCard), [previewCard]);
   const changedFields = useMemo(
-    () => Object.keys(fields).filter((field) => fields[field] !== model.data[field]),
-    [fields, model.data],
+    () => Object.keys(overrides).filter((field) => overrides[field] !== model.data[field]),
+    [overrides, model.data],
   );
   const hasChanges = Object.keys(patch).length > 0 || changedFields.length > 0;
 
@@ -48,7 +52,7 @@ export function useAppEditStageValue(
   }
 
   function stageChange(nextFields: SheetData, partial: Partial<HunterCard>) {
-    setFields((current) => ({ ...current, ...nextFields }));
+    setOverrides((current) => ({ ...current, ...nextFields }));
     setPatch((current) => keepDifferences({ ...current, ...partial }));
   }
 
@@ -118,16 +122,13 @@ export function useAppEditStageValue(
     // Explicit migration overrides are filtered by calculatedSheetFields.
     const finalCard = { ...model.card, ...finalPatch, sheet: fields };
     const synchronizedFields = { ...fields, ...calculatedSheetFields(finalCard) };
-    // `fields` starts as a snapshot so preview calculations can use a complete
-    // sheet. Apply only the actual differences: notes intentionally save
-    // directly, and a note typed while this review is open must never be
-    // replaced with an older staged snapshot.
+    // Apply only the actual differences against the live sheet.
     const changedFieldPatch = Object.fromEntries(
       Object.entries(synchronizedFields).filter(([field, value]) => value !== model.data[field]),
     ) as SheetData;
     model.setFields(changedFieldPatch, finalPatch);
     setPatch({});
-    setFields({ ...model.data, ...changedFieldPatch });
+    setOverrides({});
   }
 
   return {
@@ -147,7 +148,7 @@ export function useAppEditStageValue(
     apply,
     cancel: () => {
       setPatch({});
-      setFields(model.data);
+      setOverrides({});
     },
   };
 }

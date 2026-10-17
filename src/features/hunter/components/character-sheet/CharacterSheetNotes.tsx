@@ -7,7 +7,8 @@ import { CharacterSheetSessionNotes } from "./CharacterSheetSessionNotes";
 
 type NotesView = "personal" | "sessions";
 
-export function CharacterSheetNotes({ model }: { model: AppSheetModel }) {
+/** Personal notes save on their own as you type (no review step). */
+export function CharacterSheetNotes({ model, saveMsg = "" }: { model: AppSheetModel; saveMsg?: string }) {
   const { card } = useCharacterAutomation();
   const [view, setView] = useState<NotesView>("personal");
   const notes = sheetText(model.data, "pageNotes") || card.notes || "";
@@ -20,7 +21,7 @@ export function CharacterSheetNotes({ model }: { model: AppSheetModel }) {
       <button type="button" role="tab" aria-selected={view === "personal"} onClick={() => setView("personal")}><span>Personal</span><small>This character</small></button>
       <button type="button" role="tab" aria-selected={view === "sessions"} onClick={() => setView("sessions")}><span>Sessions</span><small>Shared records</small></button>
     </div>}
-    footer={view === "personal" ? <footer className="character-sheet-notes-status"><span>Saved with {card.name}</span><span>{words} word{words === 1 ? "" : "s"}</span></footer> : undefined}
+    footer={view === "personal" ? <footer className="character-sheet-notes-status"><span aria-live="polite">{saveMsg === "…" ? "Saving…" : saveMsg === "Save failed" ? "Couldn’t save — check your connection" : "Saves automatically"}</span><span>{words} word{words === 1 ? "" : "s"}</span></footer> : undefined}
   >
     {view === "personal" ? <section className="character-sheet-notes-paper" role="tabpanel">
       <label htmlFor="character-sheet-personal-notes">Personal journal</label>
