@@ -104,6 +104,7 @@ export function SessionCombatSection({
 export function SessionCombatControls({
   game,
   disabled,
+  onAddHunter,
   onAddEnemy,
   onCreateItem,
   canCreateItem,
@@ -111,6 +112,7 @@ export function SessionCombatControls({
 }: {
   game: Game;
   disabled: boolean;
+  onAddHunter: () => void;
   onAddEnemy: () => void;
   onCreateItem: () => void;
   canCreateItem: boolean;
@@ -136,6 +138,7 @@ export function SessionCombatControls({
       <details className="battle-tools" open={menuOpen} onToggle={(event) => setMenuOpen(event.currentTarget.open)}>
         <summary aria-label="Battle options"><span aria-hidden="true">•••</span><span>Battle options</span></summary>
         <div className="battle-tools-menu">
+          <button type="button" aria-label="Add Hunter" disabled={disabled} onClick={() => runMenuAction(onAddHunter)}><span aria-hidden="true">＋</span><span><strong>Add Hunter</strong><small>Bring a Hunter into combat, or back after removing them</small></span></button>
           <button type="button" aria-label="Add enemy" disabled={disabled} onClick={() => runMenuAction(onAddEnemy)}><span aria-hidden="true">＋</span><span><strong>Add enemy</strong><small>Bring another foe into combat</small></span></button>
           {canCreateItem && <button type="button" aria-label="Create item" disabled={disabled} onClick={() => runMenuAction(onCreateItem)}><span aria-hidden="true">◇</span><span><strong>Create item</strong><small>Add loot found in this session</small></span></button>}
           <button className="battle-end" type="button" aria-label="End battle" disabled={disabled} onClick={() => runMenuAction(onEndBattle)}><span aria-hidden="true">×</span><span><strong>End battle</strong><small>Save this encounter and leave combat</small></span></button>

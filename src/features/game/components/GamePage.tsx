@@ -18,6 +18,8 @@ import { isPreviewActive, previewGame, previewParticipants } from "@/dev/preview
 import { useAllCharacters } from "@/features/game/hooks/useAllCharacters";
 import { useEnemyLibrary } from "@/features/game/hooks/useEnemyLibrary";
 import { templateStats } from "@/features/game/lib/enemies";
+import { searchHunters } from "@/features/game/lib/hunterSearch";
+import { encounterCombatants, participantInitiative } from "@/features/game/lib/combatPresentation";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { PaperSheetModal } from "@/features/hunter/components/papersheet/PaperSheetModal";
 import { cardClassName } from "@/features/hunter/lib/papersheet";
@@ -25,6 +27,7 @@ import { useCombatSync } from "@/features/play/hooks/useCombatSync";
 import { emptyEncounter } from "@/features/play/lib/turnTimer";
 import { useCombatStore } from "@/features/play/store/combatStore";
 import type { EnemyStats, EnemyTemplate, Game, GameParticipant, HunterCard } from "@/types";
+import { AddHunterToBattleDialog } from "./AddHunterToBattleDialog";
 import { EnemyEditorDialog } from "./EnemyEditorDialog";
 import { EnemyLibraryDialog } from "./EnemyLibraryDialog";
 import { GamesMenu } from "./GamesMenu";
@@ -42,12 +45,6 @@ type GameConfirmation = "end-battle" | "finish-session" | "discard-session";
 
 function displayClass(participant: GameParticipant): string {
   return participant.className || getClass(participant.classId)?.name || participant.classId || "Hunter";
-}
-
-function hunterSearchText(card: HunterCard): string {
-  return [card.name, card.ownerName, card.ownerEmail, card.classId, cardClassName(card), card.background, card.level]
-    .join(" ")
-    .toLocaleLowerCase();
 }
 
 function historyDate(game: Game): string {
@@ -89,6 +86,7 @@ export function GamePage() {
   const [notice, setNotice] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [managingPlayers, setManagingPlayers] = useState(false);
+  const [addingBattleHunter, setAddingBattleHunter] = useState(false);
   const [creatingItem, setCreatingItem] = useState(false);
   const [managingEnemies, setManagingEnemies] = useState(false);
   const [editingEnemy, setEditingEnemy] = useState<EnemyTemplate | "new" | null>(null);
@@ -323,8 +321,26 @@ export function GamePage() {
     }, "Could not create the session.");
   }
 
+  /** During a battle, roster changes also change who is in the fight: a removed
+   * or switched-out Hunter leaves it, and a newly added Hunter rolls in. */
+  async function syncBattleRoster(addCard: HunterCard | null, removeCharacterId: string | null) {
+    const combat = selected?.combat;
+    if (!selected || !combat?.active) return;
+    const store = useCombatStore.getState();
+    if (removeCharacterId) {
+      const inEncounter = encounterCombatants(store.combatants, combat);
+      const row = inEncounter.find((combatant) => combatant.kind === "pc" && combatant.characterId === removeCharacterId);
+      if (row) await store.remove(selected.id, row.id, selected, inEncounter);
+    }
+    if (addCard) {
+      await store.addHunters(selected.id, [{ characterId: addCard.id, name: addCard.name, dexMod: participantInitiative(addCard) }], combat.encounterId);
+    }
+  }
+
   async function addHunter(card: HunterCard) {
     if (!selected) return;
+    const previous = displayedParticipants.find((participant) => participant.uid === card.ownerUid)?.characterId ?? null;
+    const switchedOut = previous && previous !== card.id ? previous : null;
     const occupied = effectiveSeats.get(card.ownerUid);
     if (occupied?.role === "dm" && occupied.gameId !== selected.id) {
       setError(`${card.ownerName || card.name} is currently running another session.`);
@@ -353,12 +369,16 @@ export function GamePage() {
         participantRoster: [...selected.participantRoster.filter((item) => item.uid !== card.ownerUid), participant],
         attendeeRoster: [...(selected.attendeeRoster ?? selected.participantRoster).filter((item) => item.uid !== card.ownerUid), participant],
       });
+      await syncBattleRoster(card, switchedOut);
       return;
     }
+    let joined = false;
     await perform(async () => {
       const pending = await addGameParticipant(selected, card);
       if (pending) setNotice(`Switch request sent to ${card.ownerName || card.name}.`);
+      joined = !pending;
     }, "Could not add that player.");
+    if (joined) await syncBattleRoster(card, switchedOut);
   }
 
   async function respondToInvite(game: Game, action: "accept" | "decline") {
@@ -397,6 +417,7 @@ export function GamePage() {
 
   async function removeHunter(uid: string) {
     if (!selected) return;
+    const removedCharacterId = displayedParticipants.find((participant) => participant.uid === uid)?.characterId ?? null;
     if (preview) {
       setPreviewRosters((current) => ({
         ...current,
@@ -406,9 +427,11 @@ export function GamePage() {
         participantUids: selected.participantUids.filter((item) => item !== uid),
         participantRoster: selected.participantRoster.filter((item) => item.uid !== uid),
       });
+      await syncBattleRoster(null, removedCharacterId);
       return;
     }
-    await perform(() => removeGameParticipant(selected, uid), "Could not remove that player.");
+    const removed = await perform(() => removeGameParticipant(selected, uid), "Could not remove that player.");
+    if (removed) await syncBattleRoster(null, removedCharacterId);
   }
 
   async function beginSession() {
@@ -581,6 +604,7 @@ export function GamePage() {
             <SessionCombatControls
               game={selected}
               disabled={combatBusy || busy}
+              onAddHunter={() => setAddingBattleHunter(true)}
               onAddEnemy={openEnemyLibrary}
               onCreateItem={() => setCreatingItem(true)}
               canCreateItem={selected.campaignId === null}
@@ -590,6 +614,7 @@ export function GamePage() {
           disabled={combatBusy || busy}
         />
         {enemyDialogs}
+        {addingBattleHunter && <AddHunterToBattleDialog game={selected} participants={displayedParticipants} characters={characters ?? []} busy={combatBusy || busy} onClose={() => setAddingBattleHunter(false)} />}
         {creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
         {confirmationDialog}
       </div>
@@ -708,7 +733,7 @@ export function GamePage() {
           </main>
         </div>
       )}
-      {selected && managingPlayers && <ManagePlayersDialog game={selected} characters={otherCharacters.concat((characters ?? []).filter((card) => displayedParticipants.some((participant) => participant.characterId === card.id)))} participants={displayedParticipants} invitations={selected.inviteRoster} unavailableOwnerUids={unavailableForSelected} switchableOwnerUids={switchableForSelected} busy={busy} onAdd={addHunter} onRemove={removeHunter} onClose={() => setManagingPlayers(false)} />}
+      {selected && managingPlayers && <ManagePlayersDialog game={selected} characters={otherCharacters} participants={displayedParticipants} invitations={selected.inviteRoster} unavailableOwnerUids={unavailableForSelected} switchableOwnerUids={switchableForSelected} busy={busy || combatBusy} error={error} notice={notice} onAdd={addHunter} onRemove={removeHunter} onClose={() => setManagingPlayers(false)} />}
       {selected && creatingItem && <CreateItemDialog gameId={selected.id} onClose={() => setCreatingItem(false)} />}
       {enemyDialogs}
       {openSheet && <PaperSheetModal card={openSheet} readOnly={openSheet.ownerUid !== user?.uid} onClose={() => setOpenSheet(null)} />}
@@ -735,11 +760,7 @@ function CreateSession({
   const [title, setTitle] = useState(DEFAULT_TITLE);
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<HunterCard[]>([]);
-  const results = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase();
-    if (!needle) return characters.slice(0, 10);
-    return characters.filter((card) => hunterSearchText(card).includes(needle)).slice(0, 10);
-  }, [characters, query]);
+  const results = useMemo(() => searchHunters(characters, query, query.trim() ? 20 : 10), [characters, query]);
 
   function choose(card: HunterCard) {
     setSelected((current) => [...current.filter((hunter) => hunter.ownerUid !== card.ownerUid), card]);
@@ -767,7 +788,7 @@ function CreateSession({
       </label>
       <label className="game-field">
         <span>Search for a player or Hunter</span>
-        <input className="input" type="search" value={query} placeholder="Name, class, background…" onChange={(event) => setQuery(event.target.value)} />
+        <input className="input" type="search" value={query} placeholder="Player name, Hunter name, class…" onChange={(event) => setQuery(event.target.value)} />
       </label>
       <div className="game-hunter-results" aria-label="Hunter search results">
         {results.map((card) => {

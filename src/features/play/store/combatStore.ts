@@ -69,6 +69,9 @@ interface CombatState {
   ) => Promise<boolean>;
   /** Starts a distinct battle without removing the completed encounter's rows. */
   startNewSessionEncounter: (gameId: string, pcs: PcSeed[], existing: Combatant[], encounterId: number) => Promise<boolean>;
+  /** Brings Hunters into a running battle (or back, after a removal) with a
+   * fresh initiative roll. Hunters already in that encounter are skipped. */
+  addHunters: (gameId: string, pcs: PcSeed[], encounterId: number) => Promise<boolean>;
   addMonster: (gameId: string, m: MonsterInput, encounterId?: number) => Promise<boolean>;
   resetMonster: (gameId: string, id: string) => Promise<boolean>;
   patch: (gameId: string, id: string, partial: Partial<Combatant>) => Promise<boolean>;
@@ -293,6 +296,39 @@ export const useCombatStore = create<CombatState>((set, get) => {
         timerEndsAt: null,
         pausedRemainingMs: null,
       });
+    },
+
+    addHunters: async (gameId, pcs, encounterId) => {
+      const present = new Set(
+        get().combatants
+          .filter((combatant) => combatant.kind === "pc" && (combatant.encounterId ?? 0) === encounterId)
+          .map((combatant) => combatant.characterId),
+      );
+      const seeded = pcs
+        .filter((pc) => !present.has(pc.characterId))
+        .map((pc) => ({
+          kind: "pc" as const,
+          encounterId,
+          name: pc.name,
+          characterId: pc.characterId,
+          initiative: rollD20() + pc.dexMod,
+          ac: null,
+          maxHp: null,
+          currentHp: null,
+          conditions: [] as string[],
+        }));
+      if (seeded.length === 0) return true;
+      if (get().preview) {
+        const local = seeded.map((combatant) => ({ ...combatant, id: previewId(), createdAt: Date.now() }));
+        set((state) => ({ combatants: [...state.combatants, ...local] }));
+        return true;
+      }
+      const created = await run(() => addCombatants(gameId, seeded), "Couldn't add the Hunter to the battle.");
+      if (!created) return false;
+      set((state) => ({
+        combatants: [...state.combatants, ...created.filter((row) => !state.combatants.some((combatant) => combatant.id === row.id))],
+      }));
+      return true;
     },
 
     addMonster: async (gameId, m, encounterId = 0) => {

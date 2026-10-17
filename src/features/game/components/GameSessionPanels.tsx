@@ -4,11 +4,8 @@ import { claimSessionLoot, createSessionLoot, subscribeSessionLoot, type Session
 import { getClass } from "@/data/classes";
 import { PaperSheetModal } from "@/features/hunter/components/papersheet/PaperSheetModal";
 import { cardClassName } from "@/features/hunter/lib/papersheet";
+import { searchHunters } from "../lib/hunterSearch";
 import type { Combatant, Game, GameParticipant, HunterCard, SessionLoot } from "@/types";
-
-function searchText(card: HunterCard): string {
-  return [card.name, card.ownerName, card.ownerEmail, card.classId, cardClassName(card), card.background].join(" ").toLocaleLowerCase();
-}
 
 function participantClassName(participant: GameParticipant, card: HunterCard | undefined): string {
   return (card && cardClassName(card)) || participant.className || getClass(participant.classId)?.name || participant.classId || "Hunter";
@@ -55,6 +52,8 @@ export function ManagePlayersDialog({
   unavailableOwnerUids,
   switchableOwnerUids,
   busy,
+  error,
+  notice,
   onAdd,
   onRemove,
   onClose,
@@ -66,42 +65,55 @@ export function ManagePlayersDialog({
   unavailableOwnerUids: Set<string>;
   switchableOwnerUids: Set<string>;
   busy: boolean;
+  error: string | null;
+  notice: string | null;
   onAdd: (card: HunterCard) => Promise<void>;
   onRemove: (uid: string) => Promise<void>;
   onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
   const [openCard, setOpenCard] = useState<HunterCard | null>(null);
-  const currentUids = useMemo(
-    () => new Set([...participants, ...invitations].map((participant) => participant.uid)),
-    [invitations, participants],
+  const seatedHunters = useMemo(
+    () => new Map(participants.map((participant) => [participant.uid, participant.characterId])),
+    [participants],
+  );
+  const invitedHunters = useMemo(
+    () => new Map(invitations.map((participant) => [participant.uid, participant.characterId])),
+    [invitations],
   );
   const byId = new Map(characters.map((card) => [card.id, card]));
-  const results = useMemo(() => {
-    const needle = query.trim().toLocaleLowerCase();
-    return characters.filter((card) => !currentUids.has(card.ownerUid) && (!needle || searchText(card).includes(needle))).slice(0, 8);
-  }, [characters, currentUids, query]);
-  const locked = game.combat?.active === true;
+  const results = useMemo(() => searchHunters(characters, query, 20), [characters, query]);
+  const inBattle = game.combat?.active === true;
+
+  function resultLabel(card: HunterCard): { label: string; disabled: boolean } {
+    if (seatedHunters.get(card.ownerUid) === card.id) return { label: "In session", disabled: true };
+    if (invitedHunters.get(card.ownerUid) === card.id) return { label: "Requested", disabled: true };
+    if (unavailableOwnerUids.has(card.ownerUid)) return { label: "Running session", disabled: true };
+    if (seatedHunters.has(card.ownerUid)) return { label: "Switch Hunter", disabled: false };
+    if (switchableOwnerUids.has(card.ownerUid)) return { label: "Ask to switch", disabled: false };
+    return { label: "Add", disabled: false };
+  }
 
   return createPortal(
     <div className="game-dialog-backdrop" role="presentation" onMouseDown={(event) => event.target === event.currentTarget && onClose()}>
       <section className="game-dialog game-manage-dialog" role="dialog" aria-modal="true" aria-labelledby="manage-players-title">
         <header><div><p className="eyebrow">Session roster</p><h2 id="manage-players-title">Manage players</h2></div><button className="game-dialog-close" type="button" onClick={onClose} aria-label="Close">×</button></header>
-        {locked && <p className="game-dialog-note">Finish the current battle before changing the roster. Character sheets remain available below.</p>}
-        <label className="game-field"><span>Add a player</span><input className="input" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search player or Hunter…" /></label>
+        {error && <div className="banner-error" role="alert">{error}</div>}
+        {notice && <div className="game-notice" role="status">{notice}</div>}
+        {inBattle && <p className="game-dialog-note">A battle is running. Added Hunters join the fight with a fresh initiative roll; removed Hunters leave it.</p>}
+        <label className="game-field"><span>Add a player</span><input className="input" type="search" value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Player name or Hunter name…" /></label>
         {query.trim() && <div className="game-dialog-results">{results.map((card) => {
-          const unavailable = unavailableOwnerUids.has(card.ownerUid);
-          const switchable = switchableOwnerUids.has(card.ownerUid);
-          return <button data-haptic="light" key={card.id} type="button" disabled={busy || locked || unavailable} onClick={() => void onAdd(card)}><span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail} · {cardClassName(card) || "Hunter"} · Level {card.level}</small></span><span>{unavailable ? "Running session" : switchable ? "Ask to switch" : "Add"}</span></button>;
-        })}{results.length === 0 && <p className="muted">No available Hunters match.</p>}</div>}
+          const { label, disabled } = resultLabel(card);
+          return <button data-haptic="light" key={card.id} type="button" disabled={busy || disabled} onClick={() => void onAdd(card)}><span><strong>{card.name}</strong><small>{card.ownerName || card.ownerEmail} · {cardClassName(card) || "Hunter"} · Level {card.level}</small></span><span>{label}</span></button>;
+        })}{results.length === 0 && <p className="muted">No Hunters or players match.</p>}</div>}
         <div className="game-dialog-roster">
           {participants.length === 0 && invitations.length === 0 ? <p className="muted">No players have been added.</p> : participants.map((participant) => {
             const card = participant.characterId ? byId.get(participant.characterId) : undefined;
-            return <div className="game-dialog-player" key={participant.uid}><button type="button" disabled={!card} onClick={() => card && setOpenCard(card)}><strong>{participant.name}</strong><span>{participant.playerName || "Player"} · {participantClassName(participant, card)} · Level {participant.level}</span></button><button className="game-text-button" type="button" disabled={busy || locked} onClick={() => void onRemove(participant.uid)}>Remove</button></div>;
+            return <div className="game-dialog-player" key={participant.uid}><button type="button" disabled={!card} onClick={() => card && setOpenCard(card)}><strong>{participant.name}</strong><span>{participant.playerName || "Player"} · {participantClassName(participant, card)} · Level {participant.level}</span></button><button className="game-text-button" type="button" disabled={busy} onClick={() => void onRemove(participant.uid)}>Remove</button></div>;
           })}
           {invitations.map((participant) => {
             const card = participant.characterId ? byId.get(participant.characterId) : undefined;
-            return <div className="game-dialog-player" key={`invite-${participant.uid}`}><button type="button" disabled={!card} onClick={() => card && setOpenCard(card)}><strong>{participant.name}</strong><span>{participant.playerName || "Player"} · Awaiting response</span></button><button className="game-text-button" type="button" disabled={busy || locked} onClick={() => void onRemove(participant.uid)}>Cancel request</button></div>;
+            return <div className="game-dialog-player" key={`invite-${participant.uid}`}><button type="button" disabled={!card} onClick={() => card && setOpenCard(card)}><strong>{participant.name}</strong><span>{participant.playerName || "Player"} · Awaiting response</span></button><button className="game-text-button" type="button" disabled={busy} onClick={() => void onRemove(participant.uid)}>Cancel request</button></div>;
           })}
         </div>
         <footer><button className="btn btn-ghost" type="button" onClick={onClose}>Done</button></footer>

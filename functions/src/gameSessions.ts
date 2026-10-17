@@ -255,7 +255,7 @@ export const addStandaloneGameParticipant = onCall(CALLABLE_OPTIONS, async (requ
     if (game.campaignId != null) throw new HttpsError("failed-precondition", "This is not a standalone session.");
     if (game.dmUid !== uid) throw new HttpsError("permission-denied", "Only the session creator can add players.");
     if (game.status === "ended") throw new HttpsError("failed-precondition", "This session has ended.");
-    if (game.combat?.active === true) throw new HttpsError("failed-precondition", "End the current battle before changing players.");
+    // Allowed mid-battle: the DM's client also adds the Hunter to the fight.
 
     const participant = participantFrom(characterSnapshot.id, characterSnapshot.data()!);
     if (!participant.uid || participant.uid === uid) {
@@ -313,7 +313,7 @@ export const removeStandaloneGameParticipant = onCall(CALLABLE_OPTIONS, async (r
     if (game.campaignId != null) throw new HttpsError("failed-precondition", "This is not a standalone session.");
     if (game.dmUid !== uid) throw new HttpsError("permission-denied", "Only the session creator can remove players.");
     if (game.status === "ended") throw new HttpsError("failed-precondition", "This session has ended.");
-    if (game.combat?.active === true) throw new HttpsError("failed-precondition", "End the current battle before changing players.");
+    // Allowed mid-battle: the DM's client also takes the Hunter out of the fight.
     if (participantUid === uid) throw new HttpsError("failed-precondition", "The session creator is not a player seat.");
 
     const seatRef = db.doc(`activeGameSeats/${participantUid}`);
