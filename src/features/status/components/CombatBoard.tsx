@@ -1,7 +1,7 @@
 import type { Combatant, Game, HunterCard } from "@/types";
 import { characterVitals } from "@/features/hunter/lib/papersheet";
 import { initiativeOrder } from "@/features/play/store/combatStore";
-import { CONDITION_NAME } from "@/data/conditions";
+import { conditionName } from "@/data/conditions";
 
 /** Resolve a combatant's HP/AC: monsters carry their own; Hunters use the same
  * current sheet projection as the game controls, with encounter overrides. */
@@ -82,8 +82,8 @@ function CombatRow({ c, hp, max, ac, active, round }: { c: Combatant; hp: number
           {c.conditions.map((id) => {
             const since = c.conditionSince?.[id];
             const label = since
-              ? `${CONDITION_NAME[id] ?? id} · ${Math.max(1, round - since + 1)}r`
-              : CONDITION_NAME[id] ?? id;
+              ? `${conditionName(id)} · ${Math.max(1, round - since + 1)}r`
+              : conditionName(id);
             return (
               <span key={id} className="chip" style={{ fontSize: "0.8rem" }}>{label}</span>
             );

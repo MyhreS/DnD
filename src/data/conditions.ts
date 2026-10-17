@@ -37,6 +37,18 @@ export const CONDITIONS: ConditionOption[] = [
   ...EXTRA_MARKERS,
 ];
 
+/** A condition the GM typed in themselves, stored as "custom:<name>". */
+export const CUSTOM_CONDITION_PREFIX = "custom:";
+
+export function customConditionId(name: string): string {
+  return `${CUSTOM_CONDITION_PREFIX}${name.trim().replace(/\s+/g, " ").slice(0, 40)}`;
+}
+
+/** Display name for any stored condition id, including GM-made ones. */
+export function conditionName(id: string): string {
+  return id.startsWith(CUSTOM_CONDITION_PREFIX) ? id.slice(CUSTOM_CONDITION_PREFIX.length) : CONDITION_NAME[id] ?? id;
+}
+
 export const CONDITION_NAME: Record<string, string> = Object.fromEntries(
   [...GENERATED, ...EXHAUSTION_LEVELS, ...EXTRA_MARKERS].map((condition) => [condition.id, condition.name]),
 );
