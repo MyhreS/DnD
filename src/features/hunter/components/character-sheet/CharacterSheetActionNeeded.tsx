@@ -1,9 +1,11 @@
 /** The unmissable "you have something to do" banner for an unfinished level
  * upgrade: what is needed, in words, and one button that goes there. */
-export function CharacterSheetActionNeeded({ newLevel, missing, onAct }: {
+export function CharacterSheetActionNeeded({ newLevel, missing, onAct, onDismiss }: {
   newLevel: number | null;
   missing: string[];
   onAct: () => void;
+  /** Lets the player put the banner away for now (the front page only). */
+  onDismiss?: () => void;
 }) {
   if (newLevel == null && missing.length === 0) return null;
   const title = newLevel != null ? `Level ${newLevel} is ready` : `Finish your level: ${missing.join(" and ")}`;
@@ -14,5 +16,6 @@ export function CharacterSheetActionNeeded({ newLevel, missing, onAct }: {
     <span className="character-sheet-action-icon" aria-hidden="true">!</span>
     <div><small>Action needed</small><strong>{title}</strong><p>{detail}</p></div>
     <button data-haptic="light" type="button" onClick={onAct}>{newLevel != null ? "Upgrade now" : "Choose now"} <span aria-hidden="true">→</span></button>
+    {onDismiss && <button type="button" className="character-sheet-action-dismiss" aria-label="Hide for now — level up later from Insight & Level" onClick={onDismiss}>×</button>}
   </section>;
 }
