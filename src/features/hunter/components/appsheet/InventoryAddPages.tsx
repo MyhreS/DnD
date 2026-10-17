@@ -3,7 +3,8 @@ import { ITEMS } from "@/data/items";
 import type { BloodvialPurity } from "@/types";
 import { useCharacterSheetPageNavigation } from "../character-sheet/characterSheetPageNavigation";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
-import { CatalogItemForm, UniqueItemForm, type FoundItemDraft } from "./InventoryAddForms";
+import { UniqueItemForm, type FoundItemDraft } from "./InventoryAddForms";
+import { CatalogBrowser } from "./CatalogBrowser";
 
 const EMPTY_ITEM: FoundItemDraft = {
   name: "",
@@ -22,7 +23,7 @@ function CatalogInventoryPage() {
   const catalog = useMemo(() => ITEMS.filter((item) => item.category !== "Armor"), []);
 
   return <div className="appsheet-add-form character-sheet-inventory-add-page">
-    <CatalogItemForm
+    <CatalogBrowser
       catalog={catalog}
       onAdd={(value) => {
         // "blood-vial:stirred" adds a Bloodvial of that purity.
