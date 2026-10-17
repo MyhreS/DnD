@@ -48,6 +48,8 @@ export interface MonsterInput {
 
 interface CombatState {
   combatants: Combatant[];
+  /** False until the open game's combatants have arrived at least once. */
+  loaded: boolean;
   busy: boolean;
   error: string | null;
   preview: boolean;
@@ -131,6 +133,7 @@ export const useCombatStore = create<CombatState>((set, get) => {
 
   return {
     combatants: [],
+    loaded: false,
     busy: false,
     error: null,
     preview: false,
@@ -140,20 +143,22 @@ export const useCombatStore = create<CombatState>((set, get) => {
 
     sync: (gameId, publicView = false) => {
       if (isPreviewActive()) {
-        if (!get().preview) set({ preview: true, combatants: previewCombatants() });
+        if (!get().preview) set({ preview: true, combatants: previewCombatants(), loaded: true });
         return;
       }
       if (gameId === get()._gameId && publicView === get()._publicView && get()._unsub) return;
       get()._unsub?.();
       if (!gameId) {
-        set({ _unsub: null, _gameId: null, _publicView: false, combatants: [] });
+        set({ _unsub: null, _gameId: null, _publicView: false, combatants: [], loaded: false });
         return;
       }
-      set({ _gameId: gameId, _publicView: publicView, combatants: [] });
+      // Keep showing the same game's rows while switching DM/player view.
+      const sameGame = get()._gameId === gameId;
+      set({ _gameId: gameId, _publicView: publicView, ...(sameGame ? {} : { combatants: [], loaded: false }) });
       const unsub = subscribeCombatants(
         gameId,
         publicView,
-        (combatants) => set({ combatants, error: null }),
+        (combatants) => set({ combatants, loaded: true, error: null }),
         () => {
           set({ error: "Couldn't load combat." });
           // A refused listener (e.g. started before sign-in was restored after

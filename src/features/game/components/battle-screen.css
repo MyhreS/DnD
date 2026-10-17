@@ -590,3 +590,4 @@ button.battle-condition:hover:not(:disabled) { border-color: var(--blood-bright)
 }
 .battle-card.is-bloodied { border-color: color-mix(in srgb, var(--blood-bright) 45%, var(--border)); }
 .battle-card.is-bloodied .battle-health-track span { background: linear-gradient(90deg, var(--blood-deep), var(--blood-bright)); }
+.battle-loading-spinner { width: 28px; height: 28px; border-width: 3px; }
