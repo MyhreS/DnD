@@ -403,6 +403,8 @@ try {
   await hit(50, "Heal");
   await hunterControl.getByLabel("Lady Maria hit points 16 of 28").waitFor();
   await hunterControl.getByText("Hunter · dying").waitFor({ state: "detached" });
+  // Bloodied at or below half the maximum, rounded down ([page 29]): 16/28 is not.
+  if (await hunterControl.locator(".battle-bloodied").count()) throw new Error("16 of 28 HP must not be Bloodied.");
 
   // Many taps in a row all count: no lock while a save is in flight.
   const damageMaria = hunterControl.getByRole("button", { name: "Damage Lady Maria", exact: true });
@@ -414,6 +416,7 @@ try {
   await playerHunter.getByLabel("Lady Maria hit points 14 of 28").waitFor();
   await sleep(1500);
   if ((await hunterHp())?.currentHp !== 14) throw new Error(`Rapid taps did not all reach the Hunter sheet (${(await hunterHp())?.currentHp}).`);
+  await hunterControl.locator(".battle-bloodied").waitFor(); // 14 of 28 = half: Bloodied
   await hunterControl.getByLabel("Lady Maria hit points 14 of 28").waitFor();
 
   // --- Enemy killed by damage, then revived ---

@@ -2,6 +2,7 @@ import { useCombatStore } from "@/features/play/store/combatStore";
 import type { Combatant, Game, HunterCard } from "@/types";
 import { useState } from "react";
 import { haptic } from "@/lib/haptics";
+import { isBloodied } from "@/lib/character";
 import { combatVitals } from "../lib/combatPresentation";
 import { useOptimisticHunterHp } from "../hooks/useOptimisticHunterHp";
 import { DYING_CONDITIONS, hunterDamageOutcome } from "../lib/hunterDamage";
@@ -115,10 +116,13 @@ export function BattleCombatantRow({
   }
 
   const dying = !monster && !dead && vitals.currentHp !== null && vitals.currentHp <= 0;
+  // core-rulebook.txt [page 29]: Bloodied while current HP is at or below half
+  // the HP maximum, rounded down. Shown only while still up (not dying/dead).
+  const bloodied = !dead && !dying && vitals.currentHp !== null && vitals.currentHp > 0 && isBloodied(vitals.currentHp, vitals.maxHp);
 
   return (
     <article
-      className={`battle-row battle-card${canManage ? " has-actions" : ""}${monster ? " is-monster" : ""}${active ? " is-current" : ""}${dead ? " is-dead" : ""}`}
+      className={`battle-row battle-card${canManage ? " has-actions" : ""}${monster ? " is-monster" : ""}${active ? " is-current" : ""}${dead ? " is-dead" : ""}${bloodied ? " is-bloodied" : ""}`}
       data-testid={`battle-combatant-${combatant.id}`}
       aria-current={active ? "true" : undefined}
     >
@@ -126,7 +130,7 @@ export function BattleCombatantRow({
         <span className="battle-position" aria-label={`Turn position ${position}`}>{position}</span>
         <div className="battle-name">
           <strong title={combatant.name}>{combatant.name}</strong>
-          <span className="battle-kind">{monster ? (dead ? "Enemy · dead" : "Enemy") : (dead ? "Hunter · fallen" : dying ? "Hunter · dying" : `Hunter${vitals.speed !== null ? ` · ${vitals.speed} ft` : ""}`)}</span>
+          <span className="battle-kind-line"><span className="battle-kind">{monster ? (dead ? "Enemy · dead" : "Enemy") : (dead ? "Hunter · fallen" : dying ? "Hunter · dying" : `Hunter${vitals.speed !== null ? ` · ${vitals.speed} ft` : ""}`)}</span>{bloodied && <span className="battle-bloodied" title="At or below half its Hit Point maximum">Bloodied</span>}</span>
         </div>
         {active && <span className="battle-acting">Acting</span>}
         {canManage && (
