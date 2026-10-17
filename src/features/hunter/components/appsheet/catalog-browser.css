@@ -143,3 +143,64 @@
   font: 700 20px/1 sans-serif;
 }
 .catalog-empty { grid-column: 1 / -1; color: var(--app-muted); font: var(--sheet-fs-14)/1.5 "Alegreya", serif; }
+
+/* Inventory in the catalogue's style: a grid of item cards. */
+.inventory-card-grid {
+  display: grid !important;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 380px), 1fr));
+  grid-auto-rows: max-content;
+  align-items: start;
+  gap: 10px !important;
+}
+.inventory-card .catalog-card-body b { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.inventory-card.catalog-card {
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  padding: 14px !important;
+  cursor: default;
+}
+.inventory-card.catalog-card:hover { transform: none; box-shadow: none; border-color: var(--app-line) !important; }
+.inventory-card .catalog-card-body { gap: 8px; }
+.inventory-card-count { align-self: start; }
+.inventory-card-slots, .inventory-card-worn { display: flex; flex-wrap: wrap; gap: 8px; color: var(--app-muted); font: var(--sheet-fs-12)/1.3 "Alegreya", serif; }
+.inventory-card-slots label, .inventory-card-worn { display: inline-flex; align-items: center; gap: 6px; }
+.inventory-card-slots select, .inventory-card-worn select { min-height: 36px; max-width: 100%; }
+.inventory-card-blood { display: grid; gap: 4px; padding: 10px 12px; border: 1px solid var(--app-line); border-radius: 10px; background: rgba(0, 0, 0, .18); }
+.inventory-card-blood small { display: block; color: var(--app-muted); font: var(--sheet-fs-12)/1.4 "Alegreya", serif; -webkit-line-clamp: unset; }
+.inventory-card-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.inventory-card-actions:empty { display: none; }
+.inventory-card-actions .appsheet-spend-vial { margin-top: 0; }
+
+.inventory-gold-card {
+  display: grid !important;
+  grid-template-columns: 52px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  margin-top: 12px;
+  padding: 14px !important;
+  border: 1px solid color-mix(in srgb, #d9c27a 40%, var(--app-line));
+  border-radius: 14px;
+  background: radial-gradient(circle at 10% 50%, rgba(217, 194, 122, .12), transparent 55%), var(--app-subtle);
+}
+.inventory-gold-card .catalog-card-art { --cat: #d9c27a; }
+.inventory-gold-card b { font: 600 var(--sheet-fs-16)/1.2 "Alegreya", serif; }
+.inventory-gold-card small { display: block; color: var(--app-muted); font: var(--sheet-fs-12)/1.3 "Alegreya", serif; }
+
+@media (max-width: 520px) {
+  .inventory-card.catalog-card { grid-template-columns: 40px minmax(0, 1fr) auto; gap: 10px; padding: 12px !important; }
+  .inventory-card .catalog-card-art { width: 40px; height: 40px; padding: 8px; }
+  .inventory-gold-card { grid-template-columns: 40px minmax(0, 1fr) auto; }
+  .inventory-gold-card .catalog-card-art { width: 40px; height: 40px; padding: 8px; }
+}
+.inventory-card .catalog-card-body > * { min-width: 0; max-width: 100%; }
+.inventory-card-blood .appsheet-item-assignments, .inventory-card-blood label { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.inventory-card-blood select { min-width: 0; max-width: 100%; }
+@media (max-width: 520px) {
+  .inventory-card-blood select { flex: 1 1 140px; }
+  .inventory-card .appsheet-spend-vial { white-space: normal; }
+}
+/* The card's own controls sit in a full-width row under the name and count. */
+.inventory-card-extras { grid-column: 2 / -1; display: grid; gap: 8px; min-width: 0; }
+.inventory-card-extras:not(:has(> :not(.inventory-card-actions:empty))) { display: none; }
+@media (max-width: 520px) {
+  .inventory-card-extras { grid-column: 1 / -1; }
+}
