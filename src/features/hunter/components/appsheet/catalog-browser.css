@@ -204,3 +204,6 @@
 @media (max-width: 520px) {
   .inventory-card-extras { grid-column: 1 / -1; }
 }
+/* Cards carry their own borders: drop the old list's divider above them. */
+.character-sheet-page-content .appsheet-inventory-list.inventory-card-grid,
+.appsheet-inventory-list.inventory-card-grid { border-top: 0; padding-top: 2px; }
