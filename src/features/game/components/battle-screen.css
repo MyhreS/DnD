@@ -591,3 +591,18 @@ button.battle-condition:hover:not(:disabled) { border-color: var(--blood-bright)
 .battle-card.is-bloodied { border-color: color-mix(in srgb, var(--blood-bright) 45%, var(--border)); }
 .battle-card.is-bloodied .battle-health-track span { background: linear-gradient(90deg, var(--blood-deep), var(--blood-bright)); }
 .battle-loading-spinner { width: 28px; height: 28px; border-width: 3px; }
+
+/* A condition the GM names themselves. */
+.battle-condition-custom { display: inline-flex; align-items: center; gap: 6px; max-width: 100%; }
+.battle-condition-custom input {
+  min-width: 0; width: 180px; max-width: 100%; height: 44px; padding: 0 14px;
+  border: 1px solid var(--gold); border-radius: 999px; background: var(--bg); color: var(--ink);
+  font: 0.95rem/1 var(--font-body);
+}
+.battle-condition-custom button {
+  height: 44px; padding: 0 16px; border: 1px solid var(--gold); border-radius: 999px;
+  background: color-mix(in srgb, var(--gold) 18%, transparent); color: var(--gold);
+  font: 800 0.75rem/1 var(--font-body); letter-spacing: .1em; text-transform: uppercase; cursor: pointer;
+}
+.battle-condition-custom button:disabled { opacity: .45; cursor: default; }
+.battle-condition-custom button.is-cancel { width: 44px; padding: 0; border-color: var(--border); background: transparent; color: var(--ink-dim); font-size: 1.1rem; }

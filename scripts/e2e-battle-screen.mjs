@@ -291,6 +291,12 @@ try {
   if (directInitiativeEnemy.data()?.initiative !== 12) throw new Error("Direct initiative edit did not update the battle record.");
   await enemyControl.getByLabel("Add condition to Moon Beast").selectOption("poisoned");
   await enemyDisplay.getByText(/Poisoned/).waitFor();
+  // The GM can name a condition of their own; players see it too.
+  await enemyControl.getByLabel("Add condition to Moon Beast").selectOption("__custom");
+  await enemyControl.getByLabel("Custom condition for Moon Beast").fill("Marked by the Moon");
+  await enemyControl.getByRole("button", { name: "Add", exact: true }).click();
+  await enemyControl.getByRole("button", { name: "Remove Marked by the Moon from Moon Beast" }).waitFor();
+  await enemyDisplay.getByText(/Marked by the Moon/).waitFor();
 
   const playerEnemyText = await enemyDisplay.innerText();
   if (playerEnemyText.includes("30") || playerEnemyText.includes("14") || playerEnemyText.includes("Howls")) {
