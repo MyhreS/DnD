@@ -120,7 +120,9 @@ export function CharacterSheetUpgrade({ model, onComplete, creating = false }: {
   if (choicePages.expertise) steps.push({ id: "expertise", title: "Choose Expertise", kind: "choice", choice: "expertise" });
   if (choicePages.mastery) steps.push({ id: "mastery", title: "Weapon mastery", kind: "choice", choice: "mastery" });
   if (choicePages.whispers) steps.push({ id: "whispers", title: "Prepare Whispers", kind: "choice", choice: "whispers" });
-  for (const feature of features.filter((entry) => !/subclass|^expertise$|weapon mastery/i.test(entry.name) && !(choicePages.subclass && gainedSubclassKeys.has(`${entry.level}:${entry.name}`)))) steps.push({ id: feature.key, title: feature.name, kind: "feature", feature });
+  // A path's features are described on the path page, but one that asks for a
+  // pick (Hunter's Prey, Student of War, One Form) still needs its own step.
+  for (const feature of features.filter((entry) => !/subclass|^expertise$|weapon mastery/i.test(entry.name) && (entry.choice || !(choicePages.subclass && gainedSubclassKeys.has(`${entry.level}:${entry.name}`))))) steps.push({ id: feature.key, title: feature.name, kind: "feature", feature });
   if (creating) steps.push({ id: "equipment", title: "Armor & carrying", kind: "equipment" });
   steps.push({ id: "review", title: creating ? "Review your hunter" : "Review & save", kind: "review" });
   const stepIndex = Math.min(requestedStep, steps.length - 1);
