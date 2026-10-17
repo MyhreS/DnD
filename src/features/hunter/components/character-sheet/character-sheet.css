@@ -869,3 +869,15 @@
 @media (min-width: 1024px) and (max-height: 820px) {
   .character-sheet-figure { width: min(100%, 230px); }
 }
+
+/* iOS home-screen apps can measure a fixed "inset: 0" layer short on first
+ * open and only grow it after a later layout change, so the stats row at the
+ * bottom jumped between visits. An explicit full-screen height is stable.
+ * Home-screen app only: in a Safari tab it would reach under the toolbar. */
+@media (display-mode: standalone) {
+  .character-editor-modal.character-sheet-modal {
+    bottom: auto;
+    height: 100vh;
+    height: 100lvh;
+  }
+}
