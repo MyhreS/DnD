@@ -574,3 +574,19 @@ button.battle-condition:hover:not(:disabled) { border-color: var(--blood-bright)
   .battle-fallen-row { flex-wrap: wrap; }
   .battle-fallen-row .btn { width: 100%; }
 }
+
+/* Bloodied: at or below half HP (core-rulebook.txt [page 29]). */
+.battle-kind-line { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; min-width: 0; }
+.battle-bloodied {
+  flex: none;
+  padding: 3px 9px;
+  border: 1px solid color-mix(in srgb, var(--blood-bright) 75%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--blood) 28%, transparent);
+  color: #ffb3b6;
+  font: 800 0.75rem/1 var(--font-body);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.battle-card.is-bloodied { border-color: color-mix(in srgb, var(--blood-bright) 45%, var(--border)); }
+.battle-card.is-bloodied .battle-health-track span { background: linear-gradient(90deg, var(--blood-deep), var(--blood-bright)); }
