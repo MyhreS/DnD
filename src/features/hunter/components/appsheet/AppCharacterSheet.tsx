@@ -5,7 +5,7 @@ import { CharacterSheetHome, type CharacterSheetPanel } from "../character-sheet
 import { CharacterSheetCreationSheet } from "../character-sheet/CharacterSheetCreationSheet";
 import type { AppSheetModel } from "./appSheetShared";
 import { AppEditStage } from "./AppEditStage";
-import { AppEditTray } from "./AppEditTray";
+import { useAutoApplyStage } from "../../hooks/useAutoApplyStage";
 import { useAppEditStage } from "./appEditStageContext";
 import "./appsheet.css";
 import "./appsheet-details.css";
@@ -59,6 +59,7 @@ function StagedCharacterSheet({ model, creating, onCreationComplete, onBack, bac
   onPanelChange: (panel: CharacterSheetPanel | null) => void;
 }) {
   const stage = useAppEditStage();
+  useAutoApplyStage(stage, !model.readOnly && !creating && panel !== "upgrade");
   const stageModel: AppSheetModel = {
     ...model,
     card: stage.previewCard,
@@ -77,7 +78,6 @@ function StagedCharacterSheet({ model, creating, onCreationComplete, onBack, bac
           ? <CharacterSheetCreationSheet model={stageModel} onBack={onBack} onComplete={() => onCreationComplete?.()} />
           : <CharacterSheetHome model={stageModel} notesModel={model} panel={panel} onPanelChange={onPanelChange} onBack={onBack} backRef={backRef} saveMsg={saveMsg} />}
       </main>
-      {!model.readOnly && !creating && panel !== "upgrade" && <AppEditTray />}
     </div>
   </CharacterAutomationProvider>;
 }

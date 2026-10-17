@@ -88,12 +88,16 @@ try {
     await page.getByRole("heading", { name: "Hunters", exact: true }).waitFor();
     await page.getByRole("button", { name: /Open Eileen the Crow/ }).click();
     await page.getByTestId("character-sheet").waitFor();
-    await page.getByRole("button", { name: /Hit points/ }).click();
-    const health = page.getByRole("dialog", { name: "Health", exact: true });
-    await health.getByRole("button", { name: "Decrease Hit points", exact: true }).click();
-    await page.getByTestId("appsheet-edit-stage").waitFor();
-    await health.getByRole("button", { name: "Back", exact: true }).click();
-    await health.waitFor({ state: "detached" });
+    // Ordinary edits save at once, so only a level-up left half-way is
+    // unsaved: start one, step back out of it, then try to close the sheet.
+    await page.getByRole("button", { name: /Upgrade now/ }).first().click();
+    const upgrade = page.getByRole("dialog", { name: "Upgrade character", exact: true });
+    await upgrade.waitFor();
+    // Step back out to the sheet (via Insight & Level, where the upgrade lives).
+    for (let depth = 0; depth < 3 && await page.locator(".character-sheet-page-stack").count(); depth += 1) {
+      await page.locator(".character-sheet-page-stack").last().getByRole("button", { name: "Back", exact: true }).first().click();
+      await page.waitForTimeout(300);
+    }
     const backToHunters = page.getByRole("button", { name: "Back to hunters", exact: true });
     await backToHunters.click();
 
@@ -111,7 +115,6 @@ try {
 
     await safeAction.click();
     await confirmation.waitFor({ state: "detached" });
-    await page.getByTestId("appsheet-edit-stage").waitFor();
     if (!await backToHunters.evaluate((element) => element === document.activeElement)) {
       throw new Error(`${viewport.name} character confirmation did not restore focus`);
     }

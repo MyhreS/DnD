@@ -131,8 +131,8 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.screenshot({ path: `screenshots/background-abilities-guidance-${suffix}.png`, fullPage: true });
   await next.click();
   await page.getByRole("heading", { name: "Class skills", exact: true }).waitFor();
-  await page.getByText("Climb, jump, grapple, escape physical holds, and force obstacles.", { exact: true }).waitFor();
-  await page.getByText("+3 now; +5 trained", { exact: true }).waitFor();
+  await page.getByText("Climb, jump, grapple, escape physical holds, and force obstacles.", { exact: true }).first().waitFor();
+  await page.getByText("+3 now; +5 trained", { exact: true }).first().waitFor();
   await page.waitForTimeout(250);
   await page.screenshot({ path: `screenshots/class-skill-guidance-${suffix}.png`, fullPage: true });
   await page.getByLabel("Athletics", { exact: true }).check();
@@ -140,12 +140,12 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await next.click();
 
   await page.getByRole("heading", { name: "Weapon mastery", exact: true }).waitFor();
-  await page.getByText("3 weapons needed", { exact: true }).waitFor();
-  await page.getByText("Mastery unlocks the special effect shown for each one", { exact: false }).waitFor();
-  await page.getByText("On a miss, deal damage equal to the ability modifier", { exact: false }).waitFor();
-  await page.getByText("After a melee hit, make one extra attack", { exact: false }).waitFor();
-  await page.getByText("On a hit, the target has Disadvantage on its next attack", { exact: false }).waitFor();
-  await page.getByText("DM-set", { exact: true }).waitFor();
+  await page.getByText("3 weapons needed", { exact: true }).first().waitFor();
+  await page.getByText("Mastery unlocks the special effect shown for each one", { exact: false }).first().waitFor();
+  await page.getByText("On a miss, deal damage equal to the ability modifier", { exact: false }).first().waitFor();
+  await page.getByText("After a melee hit, make one extra attack", { exact: false }).first().waitFor();
+  await page.getByText("On a hit, the target has Disadvantage on its next attack", { exact: false }).first().waitFor();
+  await page.getByText("DM-set", { exact: true }).first().waitFor();
   if (!await next.isDisabled()) throw new Error("Weapon Mastery could be skipped with three choices missing");
   const masteryOverflow = await page.locator(".character-sheet-upgrade-step").evaluate((element) => element.scrollWidth > element.clientWidth);
   if (masteryOverflow) throw new Error(`Weapon Mastery guidance overflows the ${suffix} creation page`);
@@ -157,7 +157,7 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await page.getByLabel(/^Greatsword/).check();
   await page.getByLabel(/^Greataxe/).check();
   await page.getByLabel(/^Longsword/).check();
-  await page.getByText("3 / 3 chosen", { exact: true }).waitFor();
+  await page.getByText("3 / 3 chosen", { exact: true }).first().waitFor();
   if (!await page.getByLabel("Shortsword", { exact: true }).isDisabled()) throw new Error("A fourth Weapon Mastery choice remained enabled");
   await page.screenshot({ path: `screenshots/weapon-mastery-selected-${suffix}.png`, fullPage: true });
   if (await next.isDisabled()) throw new Error("Weapon Mastery stayed blocked after three selections");
@@ -269,10 +269,13 @@ async function completeBruteCreation(browser, viewport, suffix) {
   await sheet.locator(".character-sheet-vitals button").filter({ hasText: "Sanity" }).click();
   await page.getByRole("heading", { name: "Sanity", exact: true }).waitFor();
   await page.getByText("Tracked separately from Sanity.", { exact: true }).waitFor();
+  const madness = page.getByLabel("Madness", { exact: true });
+  const madnessBefore = Number(await madness.innerText());
   await page.getByRole("button", { name: "Increase Madness", exact: true }).click();
-  await page.getByTestId("appsheet-edit-stage").getByText("Madness", { exact: true }).waitFor();
+  await page.getByLabel("Madness", { exact: true }).getByText(String(madnessBefore + 1), { exact: true }).waitFor();
+  if (await page.getByText("Review changes").count()) throw new Error("Sheet edits must save at once, without a Review changes bar");
   await page.screenshot({ path: `screenshots/sanity-independent-${suffix}.png`, fullPage: true, animations: "disabled" });
-  await page.getByTestId("appsheet-edit-stage").getByRole("button", { name: "Cancel", exact: true }).click();
+  await page.getByRole("button", { name: "Decrease Madness", exact: true }).click();
   await page.getByRole("button", { name: "Back", exact: true }).click();
 
   await sheet.getByRole("button", { name: "Resources", exact: true }).click();
