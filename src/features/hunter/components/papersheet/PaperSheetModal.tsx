@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { createPortal } from "react-dom";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
+import { useUrlState } from "@/hooks/common/useUrlState";
 import type { HunterCard } from "@/types";
 import { usePaperSheetAutosave } from "../../hooks/usePaperSheetAutosave";
 import { usePaperSheetFocus } from "../../hooks/usePaperSheetFocus";
@@ -17,7 +18,20 @@ export function PaperSheetModal({ card, onClose, readOnly = false, create = fals
   create?: boolean;
 }) {
   const { data, setField, setFields, workingCard, saveMsg } = usePaperSheetAutosave(card, { readOnly, create });
-  const [panel, setPanel] = useState<CharacterSheetPanel | null>(null);
+  // The open section lives in the address (?panel=…) so a reload or app update
+  // returns to it. A half-finished upgrade is not restorable, so while it is
+  // open the address says Insight & Level, where the upgrade is resumed.
+  const [panelParam, setPanelParam] = useUrlState("panel");
+  const [upgradeOpen, setUpgradeOpen] = useState(false);
+  const panel = (upgradeOpen ? "upgrade" : panelParam === "upgrade" ? "progress" : panelParam) as CharacterSheetPanel | null;
+  const setPanel = (next: CharacterSheetPanel | null) => {
+    setUpgradeOpen(next === "upgrade");
+    setPanelParam(next === "upgrade" ? "progress" : next);
+  };
+  const close = () => {
+    setPanelParam(null);
+    onClose();
+  };
   const [appEditPending, setAppEditPending] = useState(false);
   const [confirmingClose, setConfirmingClose] = useState(false);
   const [creationFinished, setCreationFinished] = useState(false);
@@ -30,7 +44,7 @@ export function PaperSheetModal({ card, onClose, readOnly = false, create = fals
       setConfirmingClose(true);
       return;
     }
-    onClose();
+    close();
   };
   const handleBack = () => {
     if (confirmingClose) {
@@ -70,7 +84,7 @@ export function PaperSheetModal({ card, onClose, readOnly = false, create = fals
           description="These previewed character changes have not been applied. Closing now will leave the saved character unchanged."
           confirmLabel="Discard changes"
           onCancel={() => setConfirmingClose(false)}
-          onConfirm={onClose}
+          onConfirm={close}
         />
       )}
     </div>,
