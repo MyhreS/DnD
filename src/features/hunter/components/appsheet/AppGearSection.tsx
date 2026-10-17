@@ -1,7 +1,7 @@
 import { ITEMS } from "@/data/items";
 import { WEAPON_FACTS, weaponDamageLabel } from "@/data/weapons";
 import { STORAGE_BY_ITEM_ID } from "@/data/storage";
-import { resolveUnassignedInventory } from "@/features/hunter/lib/inventoryPlacement";
+import { wornEquipment } from "@/features/hunter/lib/inventoryPlacement";
 import { resolveInventory } from "@/lib/inventory";
 import { computeSlots, SLOT_LOCATION_LABEL } from "@/lib/slots";
 import { formatModifier } from "@/data/abilities";
@@ -41,9 +41,10 @@ export function AppGearSection({
   const automation = useCharacterAutomation();
   const pageNavigation = useCharacterSheetPageNavigation();
   const { card, result } = automation;
-  const inventory = (manageEquipmentSeparately ? resolveUnassignedInventory(card) : resolveInventory(card))
-    .filter(({ item }) => !hideArmor || item.category !== "Armor");
+  const inventory = resolveInventory(card).filter(({ item }) => !hideArmor || item.category !== "Armor");
   const slots = computeSlots(card);
+  // Everything worn right now, which is held outside the inventory lines.
+  const wornItems = manageEquipmentSeparately ? wornEquipment(card) : [];
   const weapons = inventory.filter(({ item }) => item.category === "Weapon");
   const wornStorage = (card.equippedStorageIds ?? []).flatMap((id) => {
     const definition = STORAGE_BY_ITEM_ID[id];
@@ -66,7 +67,7 @@ export function AppGearSection({
           Add
         </button>
       ) : <span className="appsheet-status-word">{inventory.length} item types</span>}>
-        {inventory.length ? (
+        {inventory.length || wornItems.length ? (
           <div className={`appsheet-inventory-list inventory-card-grid${manageEquipmentSeparately ? " appsheet-inventory-loose" : ""}`} data-testid="appsheet-inventory">
             {inventory.map(({ item, qty, purity }) => (
               <InventoryCard
@@ -77,7 +78,11 @@ export function AppGearSection({
                 slotLabel={slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unassigned")}
                 readOnly={model.readOnly}
                 loose={manageEquipmentSeparately}
+                placements={manageEquipmentSeparately ? slots.placements[item.id] : undefined}
               />
+            ))}
+            {wornItems.map(({ item, label }) => (
+              <InventoryCard key={`worn:${item.id}`} item={item} qty={1} worn={label} readOnly={model.readOnly} loose={manageEquipmentSeparately} />
             ))}
           </div>
         ) : <p className="appsheet-empty-copy">{manageEquipmentSeparately ? "Everything is equipped. Add another item or return equipment to Inventory." : "Choose a class to receive its starting equipment, then add a background kit or catalog items."}</p>}

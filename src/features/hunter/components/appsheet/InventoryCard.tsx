@@ -13,13 +13,17 @@ const FIREARM = /rifle|pistol|gun|musket|blunderbuss|cannon|carbine/i;
 /** One inventory line as a card in the game catalogue's style: icon, name,
  * tags, count, and the line's own controls (carrying slots, armor worn state,
  * Bloodvial purity and Spend, Wear for storage). */
-export function InventoryCard({ item, qty, purity, slotLabel, readOnly, loose }: {
+export function InventoryCard({ item, qty, purity, slotLabel, placements, worn, readOnly, loose }: {
   item: Item;
   qty: number;
   purity?: BloodvialPurity;
   slotLabel?: string;
+  /** Where this line's units are: shown as chips ("1 × Right Hand"). */
+  placements?: Array<{ label: string; count: number }>;
+  /** Set for something worn right now (armor, a belt): shown as "Worn · …", no count. */
+  worn?: string;
   readOnly: boolean;
-  /** The Equipment page's loose list: no slot controls there. */
+  /** The Inventory page: equipping happens on the Equipment page, so no slot controls. */
   loose: boolean;
 }) {
   const automation = useCharacterAutomation();
@@ -44,9 +48,14 @@ export function InventoryCard({ item, qty, purity, slotLabel, readOnly, loose }:
       <div className="catalog-card-body">
         <b>{item.name}{purity ? ` · ${purityName}` : ""}</b>
         <span className="catalog-card-tags">{tags.map((tag) => <em key={tag}>{tag}</em>)}</span>
+        {(worn || placements?.length) && <span className="inventory-card-where" aria-label={`Where: ${worn ?? placements!.map((entry) => `${entry.count} ${entry.label}`).join(", ")}`}>
+          {worn
+            ? <strong className="is-equipped">{worn}</strong>
+            : placements!.map((entry) => <strong key={entry.label} className={entry.label === "Unassigned" ? "is-loose" : "is-equipped"}>{entry.count} × {entry.label === "Unassigned" ? "Not equipped" : entry.label}</strong>)}
+        </span>}
       </div>
       <div className="inventory-card-count">
-        <NumericStepper value={qty} label={`${item.name}${purity ? ` ${purityName}` : ""} quantity`} disabled={readOnly} onChange={(next) => automation.changeQty(item.id, next - qty, purity)} />
+        {worn ? null : <NumericStepper value={qty} label={`${item.name}${purity ? ` ${purityName}` : ""} quantity`} disabled={readOnly} onChange={(next) => automation.changeQty(item.id, next - qty, purity)} />}
       </div>
       <div className="inventory-card-extras">
         {!loose && !armor && item.carry !== "Insignificant" && <span className="appsheet-item-assignments inventory-card-slots">
@@ -64,7 +73,7 @@ export function InventoryCard({ item, qty, purity, slotLabel, readOnly, loose }:
             </label>
           ))}
         </span>}
-        {armor && <label className="inventory-card-worn">Worn
+        {armor && !worn && <label className="inventory-card-worn">Worn
           <select
             aria-label={`${item.name} worn state`}
             disabled={readOnly}
@@ -80,7 +89,8 @@ export function InventoryCard({ item, qty, purity, slotLabel, readOnly, loose }:
         {item.id === BLOODVIAL_ITEM_ID && purity && <div className="inventory-card-blood"><AppBloodvialPurity purity={purity} readOnly={readOnly} onChange={(next) => automation.setBloodvialPurity(purity, next)} /></div>}
         <div className="inventory-card-actions">
           {purity && !readOnly && <button type="button" className="appsheet-spend-vial" data-haptic="success" aria-label={`Spend one ${purityName} Bloodvial`} onClick={() => automation.spendBloodvial(purity)}>Spend 1 <small>drink or give one · leaves an empty Vial</small></button>}
-          {!loose && storage && !readOnly && <button type="button" className="appsheet-secondary-action" onClick={() => automation.toggleStorage(item.id)}>Wear</button>}
+          {!loose && storage && !readOnly && !worn && <button type="button" className="appsheet-secondary-action" onClick={() => automation.toggleStorage(item.id)}>Wear</button>}
+          {worn && storage && !readOnly && <button type="button" className="appsheet-secondary-action" onClick={() => automation.toggleStorage(item.id)}>Take off</button>}
         </div>
       </div>
     </article>

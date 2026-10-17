@@ -106,6 +106,8 @@ export interface SlotComputation {
   rows: SlotRow[];
   /** itemId → table label, e.g. "Back", "Chest ×2 · Hand", or "Unassigned". */
   byItem: Record<string, string>;
+  /** itemId → where its units are, as counts: [{ label: "Right Hand", count: 1 }, { label: "Unassigned", count: 3 }]. */
+  placements: Record<string, Array<{ label: string; count: number }>>;
   /** Item units that found no free slot (no mechanical penalty — a marker).
    * `clamped` marks a qty capped at MAX_UNITS_PER_ENTRY (render "×99+"). */
   unstowed: { itemId: string; name: string; count: number; clamped?: boolean }[];
@@ -306,5 +308,9 @@ export function computeSlots(
     });
   }
 
-  return { rows, byItem, unstowed: [...unstowedMap.values()], placedAssignments };
+  // The same placements as structured counts, for the inventory's chips.
+  const placements: Record<string, Array<{ label: string; count: number }>> = {};
+  for (const [itemId, m] of placed) placements[itemId] = [...m.entries()].map(([label, count]) => ({ label, count }));
+
+  return { rows, byItem, placements, unstowed: [...unstowedMap.values()], placedAssignments };
 }

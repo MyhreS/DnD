@@ -138,7 +138,7 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
           {panel === "speed" && <CharacterSheetDerivedStat model={model} kind="speed" />}
           {panel === "passive" && <CharacterSheetDerivedStat model={model} kind="passive" />}
           {panel === "initiative" && <CharacterSheetDerivedStat model={model} kind="initiative" />}
-          {panel === "inventory" && <AppGearSection model={model} hideArmor hideGoldSummary includeDamageBonuses manageEquipmentSeparately />}
+          {panel === "inventory" && <AppGearSection model={model} hideGoldSummary includeDamageBonuses manageEquipmentSeparately />}
           {panel === "notes" && <CharacterSheetNotes model={notesModel} saveMsg={saveMsg} />}
           {panel === "equipment" && <CharacterSheetEquipment model={model} />}
           {panel === "health" && <CharacterSheetHealth model={model} />}
