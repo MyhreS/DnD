@@ -30,6 +30,7 @@
     "e2e:game": "node scripts/e2e-game-page.mjs",
     "e2e:confirmations": "node scripts/e2e-confirmations.mjs",
     "e2e:upgrade": "node scripts/e2e-upgrade-required-choices.mjs",
+    "e2e:notes": "firebase emulators:exec --only auth,firestore \"node scripts/e2e-personal-notes.mjs\"",
     "e2e:battle": "npm --prefix functions run build && firebase emulators:exec --only auth,firestore,functions \"node scripts/e2e-battle-screen.mjs\"",
     "e2e:workshop": "npm --prefix functions run build && firebase emulators:exec --only auth,firestore,functions,storage \"node scripts/with-firebase-web-config.mjs node scripts/e2e-workshop.mjs\"",
     "test:game-presentation": "bun scripts/game-presentation-test.ts",
