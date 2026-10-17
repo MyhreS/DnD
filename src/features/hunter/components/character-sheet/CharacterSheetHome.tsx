@@ -9,6 +9,7 @@ import { hasStagedUpgrade, useAppEditStage } from "../appsheet/appEditStageConte
 import { useCharacterSheetPageSafeArea } from "../../hooks/useCharacterSheetPageSafeArea";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { CharacterSheetActionNeeded } from "./CharacterSheetActionNeeded";
+import { useTimedBanner } from "../../hooks/useTimedBanner";
 import { CharacterSheetUpgradeCelebration, type UpgradeSummary } from "./CharacterSheetUpgradeCelebration";
 import { CharacterSheetBackButton } from "./CharacterSheetBackButton";
 import { CharacterSheetClassAbilities } from "./CharacterSheetClassAbilities";
@@ -89,7 +90,11 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
   const [completedUpgrade, setCompletedUpgrade] = useState(0);
   const [celebration, setCelebration] = useState<UpgradeSummary | null>(null);
   const missingChoices = Object.values(result.pending).filter((entry) => entry != null).map((entry) => entry.label);
-  const showAction = !model.readOnly && upgradePending && !hasStagedUpgrade(stage.patch) && panel === null;
+  // Levelling up can wait for the table, so the front-page banner steps aside
+  // after a minute (or when closed); Level / Insight keep their pending glow
+  // and Insight & Level keeps the upgrade button.
+  const [actionBannerVisible, dismissActionBanner] = useTimedBanner(60_000);
+  const showAction = !model.readOnly && upgradePending && !hasStagedUpgrade(stage.patch) && panel === null && actionBannerVisible;
   const pageDefinition = panel ? PANELS[panel] : null;
   useCharacterSheetPageSafeArea(panel !== null);
   return <div className={`character-sheet-sheet${showAction ? " has-action" : ""}`} data-testid="character-sheet">
@@ -104,6 +109,7 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
       newLevel={earned > stage.savedCard.level ? earned : null}
       missing={missingChoices}
       onAct={() => { stage.stageLevel(earned); onPanelChange("upgrade"); }}
+      onDismiss={dismissActionBanner}
     />}
     <div className="character-sheet-stage">
       <div className="character-sheet-rail character-sheet-rail-left"><Rail items={LEFT} open={onPanelChange} /></div>

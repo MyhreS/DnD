@@ -878,3 +878,27 @@
   bottom: auto;
   height: var(--app-height, 100dvh);
 }
+
+/* Put the level-up banner away for now (it also hides itself after a minute). */
+.character-sheet-action-needed { position: relative; }
+.character-sheet-action-needed:has(.character-sheet-action-dismiss) { padding-right: 52px; }
+.character-sheet-action-needed button.character-sheet-action-dismiss {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  display: grid;
+  place-items: center;
+  width: 36px !important;
+  min-height: 36px;
+  height: 36px;
+  padding: 0 !important;
+  border: 1px solid color-mix(in srgb, var(--app-warm), transparent 55%) !important;
+  border-radius: 50% !important;
+  background: transparent !important;
+  color: var(--app-warm) !important;
+  font: 400 22px/1 sans-serif;
+  grid-column: auto;
+}
+@media (max-width: 560px) {
+  .character-sheet-action-needed button.character-sheet-action-dismiss { width: 36px !important; grid-column: auto; }
+}
