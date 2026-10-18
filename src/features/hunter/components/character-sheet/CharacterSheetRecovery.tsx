@@ -6,6 +6,8 @@ import { useCharacterAutomation } from "../papersheet/characterAutomationContext
 import { classResources } from "../../lib/characterAutomation";
 import { CharacterSheetResourceControl } from "./CharacterSheetResourceControl";
 import { characterSheetNumber, madnessPatch } from "./characterSheetValues";
+import { abilityModifier, formatModifier } from "@/data/abilities";
+import { proficiencyBonus, withClassAbilityBonuses } from "@/lib/character";
 
 const SLEEPLESS_NOTE = "1 per hour outside a rest; Short Rest −6; Long Rest → 0. At 24 you gain Sleepless and 1d4 Madness, again at 30, 36, 42 and every further 6. Ends below 24.";
 const EXHAUSTION_NOTE = "Subtract twice your level from every D20 Test and reduce every Speed by 5 ft per level. You die at level 6. A Long Rest removes 1.";
@@ -22,6 +24,13 @@ export function CharacterSheetRecovery({ model }: { model: AppSheetModel }) {
   const resources = classResources(stage.previewCard);
   const setNumber = (field: string) => (value: number) => model.setField(field, String(value));
   const card = stage.previewCard;
+  // core-rulebook.txt [page 43]: each Hit Point Die is the class's die plus the
+  // Constitution modifier; up to Proficiency Bonus of them per Short Rest, and
+  // only in a Safe Zone.
+  const conMod = abilityModifier(withClassAbilityBonuses(card).abilities.con);
+  const hitDieNote = klass
+    ? `Roll 1d${klass.hitDie} ${formatModifier(conMod)} per die (Constitution). Spend up to ${proficiencyBonus(card.level)} per Short Rest, in a Safe Zone. Maximum ${hdMax}.`
+    : undefined;
 
   // core-rulebook.txt [page 25], "When you finish a Long Rest": Exhaustion −1,
   // all Transformation Levels removed, Sleepless Counters to 0, Madness reduced
@@ -42,7 +51,7 @@ export function CharacterSheetRecovery({ model }: { model: AppSheetModel }) {
   }
 
   return <section className="character-sheet-resource-group"><h3>Recovery</h3><div className="character-sheet-resource-grid">
-    <CharacterSheetResourceControl label="Hit dice left" value={characterSheetNumber(sheetText(model.data, "hdCur"), hdMax)} max={hdMax} disabled={disabled} onChange={setNumber("hdCur")} />
+    <CharacterSheetResourceControl label={klass ? `Hit dice left (d${klass.hitDie})` : "Hit dice left"} value={characterSheetNumber(sheetText(model.data, "hdCur"), hdMax)} max={hdMax} note={hitDieNote} disabled={disabled} onChange={setNumber("hdCur")} />
     <CharacterSheetResourceControl label="Hit dice spent" value={characterSheetNumber(sheetText(model.data, "hdSpent"))} max={hdMax} disabled={disabled} onChange={setNumber("hdSpent")} />
     {klass?.caster && <CharacterSheetResourceControl label="Strains left" value={characterSheetNumber(sheetText(model.data, "strainCur"), strainMax)} note={`Level allowance ${strainMax}. No upper limit.`} disabled={disabled} onChange={setNumber("strainCur")} />}
     {resources.map((resource) => <CharacterSheetResourceControl key={resource.key} label={resource.label} value={characterSheetNumber(sheetText(model.data, `${resource.key}Cur`), resource.max)} min={0} max={resource.max} note={resource.note} disabled={disabled} onChange={setNumber(`${resource.key}Cur`)} />)}
