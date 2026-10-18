@@ -459,6 +459,14 @@ export function weaponAttackBonus(
   card: HunterCard,
   facts: { properties: string; attack: "Melee" | "Ranged"; category?: string } | undefined,
 ): number {
+  return weaponAttackParts(card, facts).total;
+}
+
+/** The pieces of a weapon's attack bonus, for "how is this calculated". */
+export function weaponAttackParts(
+  card: HunterCard,
+  facts: { properties: string; attack: "Melee" | "Ranged"; category?: string } | undefined,
+): { ability: "Strength" | "Dexterity" | "Intelligence"; abilityMod: number; proficient: boolean; prof: number; total: number; why: string } {
   card = withClassAbilityBonuses(card);
   const klass = getClass(card.classId);
   const zealot = isZealot(card);
@@ -470,7 +478,17 @@ export function weaponAttackBonus(
   const str = abilityModifier(card.abilities?.str ?? 10);
   const dex = abilityModifier(card.abilities?.dex ?? 10);
   const rite = zealot && proficient ? abilityModifier(card.abilities?.int ?? 10) : Number.NEGATIVE_INFINITY;
-  if (!facts) return prof + Math.max(str, rite);
-  if (/Finesse/i.test(facts.properties)) return prof + Math.max(str, dex, rite);
-  return prof + Math.max(facts.attack === "Ranged" ? dex : str, rite);
+  const options: Array<["Strength" | "Dexterity" | "Intelligence", number]> = !facts
+    ? [["Strength", str]]
+    : /Finesse/i.test(facts.properties)
+      ? [["Strength", str], ["Dexterity", dex]]
+      : [[facts.attack === "Ranged" ? "Dexterity" : "Strength", facts.attack === "Ranged" ? dex : str]];
+  if (rite > Number.NEGATIVE_INFINITY) options.push(["Intelligence", rite]);
+  const [ability, abilityMod] = options.reduce((best, entry) => (entry[1] > best[1] ? entry : best));
+  const why = ability === "Intelligence"
+    ? "Eldritch Armament: a proficient weapon may use Intelligence ([page 76])."
+    : facts && /Finesse/i.test(facts.properties)
+      ? "Finesse: the better of Strength and Dexterity ([page 43])."
+      : facts?.attack === "Ranged" ? "Ranged weapons use Dexterity ([page 43])." : "Melee weapons use Strength ([page 43]).";
+  return { ability, abilityMod, proficient, prof, total: prof + abilityMod, why };
 }

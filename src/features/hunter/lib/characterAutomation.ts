@@ -11,7 +11,7 @@ import { armorFor } from "@/lib/customItems";
 import { carryCondition, resolveInventory, resolveStorage, totalCarriedWeight } from "@/lib/inventory";
 import { computeSlots } from "@/lib/slots";
 import { catalogIdForName } from "@/lib/startingEquipment";
-import type { HunterCard, LegacyEquipmentLine, SheetData } from "@/types";
+import type { AbilityKey, HunterCard, LegacyEquipmentLine, SheetData } from "@/types";
 
 export interface PendingChoice {
   label: string;
@@ -186,6 +186,57 @@ export function classResources(card: HunterCard): ClassResource[] {
   return resources;
 }
 
+/** Which saving throws a Hunter is proficient in: the class's, Slippery Mind
+ * (Stalker 15, [page 65]) and Resilient ([page 101], the ability its +1 went to). */
+export function saveProficiency(card: HunterCard, key: AbilityKey): { proficient: boolean; fromSlipperyMind: boolean; fromResilient: boolean } {
+  const klass = getClass(card.classId);
+  const level = Math.max(1, Math.min(20, card.level || 1));
+  const fromSlipperyMind = card.classId === "stalker" && level >= 15 && (key === "wis" || key === "cha");
+  const fromResilient = Object.entries(card.sheetAutomation?.levelFeats ?? {})
+    .some(([featKey, feat]) => feat === "Resilient" && (card.sheetAutomation?.levelAbilityBonuses?.[featKey]?.[key] ?? 0) > 0);
+  const proficient = (klass?.savingThrows.includes(key) ?? false) || fromSlipperyMind || fromResilient;
+  return { proficient, fromSlipperyMind, fromResilient };
+}
+
+/** Skill proficiency, Expertise and the Warden's Experience bonus — shared by
+ * the sheet and its "how is this calculated" breakdowns. */
+export function skillProficiencyState(card: HunterCard): { allSkills: Set<string>; expertise: Set<string>; experience: number } {
+  const klass = getClass(card.classId);
+  const level = Math.max(1, Math.min(20, card.level || 1));
+  const prof = proficiencyBonus(level);
+  const background = BACKGROUNDS.find((entry) => entry.id === card.backgroundId);
+  const featNames = new Set([background?.feat, ...(card.feats ?? [])].filter(Boolean));
+  const backgroundSkills = background?.skills ?? [];
+  // Boon of Skill [page 105]: proficiency in all skills.
+  const allSkills = new Set([
+    ...card.skillProficiencies,
+    ...backgroundSkills,
+    ...(card.featSkills ?? []).filter((choice) => SKILLS.some((skill) => skill.name === choice)),
+    ...(featNames.has("Boon of Skill") ? SKILLS.map((skill) => skill.name) : []),
+  ]);
+  const expertise = new Set(card.sheetAutomation?.expertiseSkills ?? []);
+  // Skill picks made inside feats (Skill Expert, Keen Mind, Observant, Boon of
+  // Skill — [pages 100, 102, 105]).
+  // Battle Master Student of War [page 52]: one more Brute skill.
+  for (const [key, skill] of Object.entries(card.sheetAutomation?.levelChoices ?? {})) {
+    if (/^7:Student of War$/.test(key) && SHEET_SKILL_FIELD[skill]) allSkills.add(skill);
+  }
+  const proficientBeforeFeats = new Set(allSkills);
+  for (const [key, feat] of Object.entries(card.sheetAutomation?.levelFeats ?? {})) {
+    for (const pick of FEAT_SKILL_PICKS[feat] ?? []) {
+      const skill = card.sheetAutomation?.levelChoices?.[featPickKey(key, pick.slot)];
+      if (!skill || !SHEET_SKILL_FIELD[skill]) continue;
+      if (pick.slot === "expertise") expertise.add(skill);
+      else if (feat !== "Skill Expert" && proficientBeforeFeats.has(skill)) expertise.add(skill);
+      else allSkills.add(skill);
+    }
+  }
+  // core-rulebook.txt [page 89] Warden Experience (level 2): add half the
+  // Proficiency Bonus (round down) to checks with a skill you lack.
+  const experience = klass?.id === "warden" && level >= 2 ? Math.floor(prof / 2) : 0;
+  return { allSkills, expertise, experience };
+}
+
 export function automationFor(storedCard: HunterCard): CharacterAutomationResult {
   const card = withClassAbilityBonuses(storedCard);
   const fields: SheetData = {};
@@ -196,10 +247,6 @@ export function automationFor(storedCard: HunterCard): CharacterAutomationResult
   const prof = proficiencyBonus(level);
   const background = BACKGROUNDS.find((entry) => entry.id === card.backgroundId);
   const featNames = new Set([background?.feat, ...(card.feats ?? [])].filter(Boolean));
-  // Resilient [page 101]: saving throw proficiency in the ability its +1 went to.
-  const resilientSaves = new Set(Object.entries(card.sheetAutomation?.levelFeats ?? {})
-    .filter(([, feat]) => feat === "Resilient")
-    .flatMap(([key]) => Object.entries(card.sheetAutomation?.levelAbilityBonuses?.[key] ?? {}).filter(([, points]) => (points ?? 0) > 0).map(([ability]) => ability)));
   const speedModifier = intField(card.sheet, "speedModifier", 0);
   const initiativeModifier = intField(card.sheet, "initiativeModifier", 0);
   const passiveModifier = intField(card.sheet, "passivePerceptionModifier", 0);
@@ -295,14 +342,10 @@ export function automationFor(storedCard: HunterCard): CharacterAutomationResult
 
   if (background?.feat === "Skilled" && (card.featSkills?.length ?? 0) < 3) pending.featSkills = { label: "Skilled feat proficiencies", remaining: 3 - (card.featSkills?.length ?? 0), reason: "Skilled grants any combination of three skill or tool proficiencies." };
 
-  // Slippery Mind — core-rulebook.txt [page 65]: the Stalker gains Wisdom and
-  // Charisma saving throw proficiency at level 15.
-  const slipperyMind = card.classId === "stalker" && level >= 15;
   for (const key of ABILITY_KEYS) {
     const score = card.abilities[key];
     const mod = abilityModifier(score);
-    const fromSlipperyMind = slipperyMind && (key === "wis" || key === "cha");
-    const saveProficient = (klass?.savingThrows.includes(key) ?? false) || fromSlipperyMind || resilientSaves.has(key);
+    const { proficient: saveProficient, fromSlipperyMind } = saveProficiency(card, key);
     put(fields, reasons, `${key}Score`, String(score), card.baseAbilities ? "Bought score + background adjustment + structured level increases" : "Saved ability score");
     put(fields, reasons, `${key}Mod`, formatModifier(mod), `Modifier from ${score}`);
     put(fields, reasons, `${key}SaveP`, saveProficient, saveProficient ? (fromSlipperyMind && !klass?.savingThrows.includes(key) ? `${klass?.title} Slippery Mind saving throw proficiency` : `${klass?.title} saving throw proficiency`) : "Not granted by class");
@@ -310,33 +353,7 @@ export function automationFor(storedCard: HunterCard): CharacterAutomationResult
   }
 
   const backgroundSkills = background?.skills ?? [];
-  // Boon of Skill [page 105]: proficiency in all skills.
-  const allSkills = new Set([
-    ...card.skillProficiencies,
-    ...backgroundSkills,
-    ...(card.featSkills ?? []).filter((choice) => SKILLS.some((skill) => skill.name === choice)),
-    ...(featNames.has("Boon of Skill") ? SKILLS.map((skill) => skill.name) : []),
-  ]);
-  const expertise = new Set(card.sheetAutomation?.expertiseSkills ?? []);
-  // Skill picks made inside feats (Skill Expert, Keen Mind, Observant, Boon of
-  // Skill — [pages 100, 102, 105]).
-  // Battle Master Student of War [page 52]: one more Brute skill.
-  for (const [key, skill] of Object.entries(card.sheetAutomation?.levelChoices ?? {})) {
-    if (/^7:Student of War$/.test(key) && SHEET_SKILL_FIELD[skill]) allSkills.add(skill);
-  }
-  const proficientBeforeFeats = new Set(allSkills);
-  for (const [key, feat] of Object.entries(card.sheetAutomation?.levelFeats ?? {})) {
-    for (const pick of FEAT_SKILL_PICKS[feat] ?? []) {
-      const skill = card.sheetAutomation?.levelChoices?.[featPickKey(key, pick.slot)];
-      if (!skill || !SHEET_SKILL_FIELD[skill]) continue;
-      if (pick.slot === "expertise") expertise.add(skill);
-      else if (feat !== "Skill Expert" && proficientBeforeFeats.has(skill)) expertise.add(skill);
-      else allSkills.add(skill);
-    }
-  }
-  // core-rulebook.txt [page 89] Warden Experience (level 2): add half the
-  // Proficiency Bonus (round down) to checks with a skill you lack.
-  const experience = klass?.id === "warden" && level >= 2 ? Math.floor(prof / 2) : 0;
+  const { allSkills, expertise, experience } = skillProficiencyState(card);
   for (const skill of SKILLS) {
     const key = skillAbility(skill.name);
     const proficient = allSkills.has(skill.name);

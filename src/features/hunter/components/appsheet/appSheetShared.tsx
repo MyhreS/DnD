@@ -1,5 +1,7 @@
 import { createContext, useContext, useState, type ReactNode, type SelectHTMLAttributes } from "react";
 import type { HunterCard, SheetData } from "@/types";
+import { ExplainValue } from "../character-sheet/CharacterSheetExplain";
+import type { Breakdown } from "../../lib/calculationBreakdowns";
 
 export interface AppSheetModel {
   card: HunterCard;
@@ -109,16 +111,19 @@ export function AutoReason({ reason }: { reason?: string }) {
   );
 }
 
-export function DerivedValue({ label, value, reason, testId }: {
+export function DerivedValue({ label, value, reason, testId, breakdown }: {
   label: string;
   value: ReactNode;
   reason?: string;
   testId?: string;
+  /** Tap the value to see how it is calculated. */
+  breakdown?: Breakdown | null;
 }) {
+  const shown = value === "" || value == null ? "—" : value;
   return (
     <div className="appsheet-derived" data-testid={testId}>
       <span className="appsheet-field-label">{label}</span>
-      <strong>{value === "" || value == null ? "—" : value}</strong>
+      <strong>{breakdown ? <ExplainValue breakdown={breakdown}>{shown}</ExplainValue> : shown}</strong>
       <AutoReason reason={reason} />
     </div>
   );
