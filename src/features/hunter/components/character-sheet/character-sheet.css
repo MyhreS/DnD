@@ -904,12 +904,26 @@
 }
 
 /* Tap any calculated value to see how it is worked out. */
-.sheet-explain-value {
+.sheet-explain-value,
+.character-app-sheet button.sheet-explain-value {
   all: unset;
-  display: inline;
+  display: inline !important;
+  width: auto !important;
+  min-width: 0 !important;
+  height: auto !important;
+  min-height: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  border-bottom: 1px dotted color-mix(in srgb, currentColor, transparent 45%) !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+  font: inherit !important;
+  letter-spacing: inherit !important;
+  text-transform: inherit !important;
   cursor: pointer;
-  border-bottom: 1px dotted color-mix(in srgb, var(--app-warm), transparent 35%);
-  border-radius: 2px;
 }
 .sheet-explain-value:focus-visible { outline: 2px solid var(--app-warm); outline-offset: 2px; }
 .sheet-explain-value:hover { color: var(--app-warm); }
@@ -956,3 +970,11 @@
 .sheet-explain .is-total dt { color: var(--app-text); font-weight: 700; }
 .sheet-explain .is-total dd { color: var(--app-warm); font: 700 var(--sheet-fs-18)/1.2 "Cinzel", serif; }
 .sheet-explain p { margin: 8px 0 0; color: var(--app-muted); font: var(--sheet-fs-13)/1.45 "Alegreya", serif; }
+
+/* Small phones (iPhone SE): stack the vital's label over its value so
+ * "Hit points 22 / 31" and "Madness 4 / 13" never break mid-number. */
+@media (max-width: 400px) {
+  .character-sheet-vitals button > span { flex-direction: column; align-items: flex-start; gap: 3px; }
+  .character-sheet-vitals em { white-space: nowrap; }
+  .character-sheet-vitals em small { display: none; }
+}

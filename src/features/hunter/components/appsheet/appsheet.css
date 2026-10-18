@@ -1089,7 +1089,7 @@
   text-align: right;
 }
 
-.character-app-sheet button:not(.appsheet-stepper button):not(.character-sheet-back) {
+.character-app-sheet button:not(.appsheet-stepper button):not(.character-sheet-back):not(.sheet-explain-value) {
   width: auto;
   padding: 9px 13px;
   border: 0;
@@ -1100,7 +1100,7 @@
   cursor: pointer;
 }
 
-.character-app-sheet button:not(.appsheet-stepper button):not(.character-sheet-back):hover:not(:disabled) {
+.character-app-sheet button:not(.appsheet-stepper button):not(.character-sheet-back):not(.sheet-explain-value):hover:not(:disabled) {
   background: var(--app-action-hover);
 }
 
