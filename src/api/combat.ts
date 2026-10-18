@@ -8,20 +8,8 @@ import {
   type DocumentData,
   type Timestamp,
 } from "firebase/firestore";
-import { httpsCallable } from "firebase/functions";
-import { db, functions } from "@/lib/firebase";
+import { db } from "@/lib/firebase";
 import type { Combatant } from "@/types";
-
-const setGameHunterHpFn = httpsCallable<{ gameId: string; characterId: string; currentHp: number; spendNotTonight?: boolean }, { ok: boolean; currentHp: number }>(
-  functions,
-  "setGameHunterHp",
-);
-
-/** Write a Hunter's HP from the battle screen to their own sheet. Runs server
- * side: the game DM may change only this field, only for a Hunter in battle. */
-export async function setBattleHunterHp(gameId: string, characterId: string, currentHp: number, spendNotTonight = false): Promise<void> {
-  await setGameHunterHpFn({ gameId, characterId, currentHp, ...(spendNotTonight ? { spendNotTonight: true } : {}) });
-}
 
 function combatantsCol(gameId: string) {
   return collection(db, "games", gameId, "combatants");
@@ -50,6 +38,7 @@ function playerProjection(combatant: Omit<Combatant, "id"> | Combatant): Documen
     maxHp: revealHp ? combatant.maxHp ?? null : null,
     currentHp: revealHp ? combatant.currentHp ?? null : null,
     damageTaken: revealHp ? combatant.damageTaken ?? null : null,
+    tempHp: revealHp ? combatant.tempHp ?? null : null,
     defeated: combatant.kind === "monster" && combatant.defeated === true,
     conditions: combatant.conditions ?? [],
     conditionSince: combatant.conditionSince ?? {},
@@ -72,6 +61,7 @@ function fromDoc(id: string, data: DocumentData): Combatant {
     maxHp: (data.maxHp as number | null) ?? null,
     currentHp: (data.currentHp as number | null) ?? null,
     damageTaken: typeof data.damageTaken === "number" ? data.damageTaken : null,
+    tempHp: typeof data.tempHp === "number" ? data.tempHp : null,
     defeated: data.defeated === true,
     conditions: (data.conditions as string[]) ?? [],
     conditionSince: (data.conditionSince as Record<string, number>) ?? {},

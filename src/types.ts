@@ -313,6 +313,9 @@ export interface Combatant {
   currentHp?: number | null;
   /** Damage tally for a monster whose max HP is unknown (maxHp null). */
   damageTaken?: number | null;
+  /** Temporary Hit Points on an enemy, lost before its HP. Hunters keep
+   * theirs on their own sheet (`sheet.hpTemp`). */
+  tempHp?: number | null;
   /** Public defeat marker so players can see that a hidden-HP monster is dead. */
   defeated?: boolean;
   /** Condition ids (see src/data/conditions.ts). */

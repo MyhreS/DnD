@@ -70,15 +70,13 @@ assert.equal(recoveredCard(card({ level: 1, insight: 0 })).insight, 0);
 assert.equal(recoveredCard(card({ level: 99, insight: 99999 })).insight, INSIGHT_BY_LEVEL[INSIGHT_BY_LEVEL.length - 1]);
 assert.equal(recoveredCard(card({ level: 0, insight: 5 })).insight, 0);
 
-// Battle damage on a Hunter, core-rulebook.txt [pages 21, 45].
+// Battle damage on an enemy with Temporary HP.
 {
-  const { hunterDamageOutcome } = await import("../src/features/game/lib/hunterDamage");
-  assert.deepEqual(hunterDamageOutcome(10, -45, 30, true), { kind: "not-tonight", hp: 1 }, "Not Tonight! keeps the Hunter at 1 HP even against lethal damage");
-  assert.deepEqual(hunterDamageOutcome(10, -20, 30, false), { kind: "dying", hp: -20 }, "remaining damage below the maximum means Dying");
-  assert.deepEqual(hunterDamageOutcome(10, -30, 30, false), { kind: "instant-death", hp: -30 }, "remaining damage equal to the maximum is Instant Death");
-  assert.deepEqual(hunterDamageOutcome(0, 5, 30, false), { kind: "recovered", hp: 5 }, "healing above 0 ends Dying");
-  assert.deepEqual(hunterDamageOutcome(20, 12, 30, true), { kind: "normal", hp: 12 }, "ordinary damage spends nothing");
-  assert.deepEqual(hunterDamageOutcome(0, -3, 30, true), { kind: "dying", hp: -3 }, "Not Tonight! only triggers when damage first drops the Hunter to 0");
+  const { absorbDamage } = await import("../src/features/game/lib/tempHp");
+  // Temporary Hit Points are lost before Hit Points ([page 10]).
+  assert.deepEqual(absorbDamage(5, 3), { temp: 2, rest: 0 }, "temp HP soaks small hits");
+  assert.deepEqual(absorbDamage(5, 8), { temp: 0, rest: 3 }, "the rest reaches HP");
+  assert.deepEqual(absorbDamage(0, 4), { temp: 0, rest: 4 }, "no temp HP, all damage reaches HP");
 }
 
 console.log("death/Favor rules ok");

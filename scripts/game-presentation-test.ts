@@ -76,7 +76,7 @@ const legacy: HunterCard = {
 const legacyPc = { ...pc, id: "pc-legacy", characterId: legacy.id, name: "Legacy Hunter" };
 assert.deepEqual(
   combatVitals(legacyPc, [legacy]),
-  { currentHp: 8, maxHp: 12, damageTaken: 4, ac: 15, speed: null },
+  { currentHp: 8, maxHp: 12, damageTaken: 4, ac: 15, tempHp: 0, speed: null },
   "legacy sheet-only Hunters retain their written combat values",
 );
 assert.equal(
@@ -85,5 +85,9 @@ assert.equal(
   "the battle row shows the Hunter's derived speed",
 );
 assert.equal(participantInitiative(legacy), 1, "legacy sheet-only initiative remains supported");
+
+// Temporary Hit Points: a Hunter's come from their own sheet, an enemy's from its row.
+assert.equal(combatVitals(legacyPc, [{ ...legacy, sheet: { ...legacy.sheet, hpTemp: "5" } }]).tempHp, 5, "Hunter Temp HP is read from the sheet");
+assert.equal(combatVitals({ ...legacyPc, kind: "monster", characterId: null, maxHp: 20, currentHp: 14, tempHp: 7 }, []).tempHp, 7, "enemy Temp HP is read from its row");
 
 console.log("Game presentation edge tests passed.");

@@ -13,6 +13,8 @@ export interface CombatVitals {
   maxHp: number | null;
   damageTaken: number | null;
   ac: number | null;
+  /** Temporary Hit Points, lost before HP; 0 when none (or hidden). */
+  tempHp: number;
   /** Derived Hunter movement speed in feet, so the DM can see it while
    * adjudicating movement. Enemy rows carry no speed. */
   speed: number | null;
@@ -33,6 +35,7 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
         ? (typeof combatant.damageTaken === "number" ? combatant.damageTaken : null)
         : current === null ? null : Math.max(0, max - current),
       ac: combatant.ac ?? null,
+      tempHp: Math.max(0, combatant.tempHp ?? 0),
       speed: null,
     };
   }
@@ -41,7 +44,7 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
     ? characters.find((candidate) => candidate.id === combatant.characterId)
     : undefined;
   if (!card) {
-    return { currentHp: null, maxHp: null, damageTaken: null, ac: combatant.ac ?? null, speed: null };
+    return { currentHp: null, maxHp: null, damageTaken: null, ac: combatant.ac ?? null, tempHp: 0, speed: null };
   }
   const vitals = characterVitals(card);
   // The Hunter's sheet is the source of HP, so battle and sheet stay in step.
@@ -58,6 +61,7 @@ export function combatVitals(combatant: Combatant, characters: HunterCard[]): Co
     // An AC recorded on the combatant is the DM's encounter-only override.
     // A missing value deliberately falls back to the current Hunter sheet.
     ac: combatant.ac ?? vitals.ac,
+    tempHp: Math.max(0, Number.parseInt(String(card.sheet?.hpTemp ?? "0"), 10) || 0),
     speed: characterSheetInt(card, "speed"),
   };
 }
