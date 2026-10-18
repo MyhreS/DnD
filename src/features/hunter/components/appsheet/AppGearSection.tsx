@@ -22,6 +22,8 @@ import {
   NumericStepper,
   type AppSheetModel,
 } from "./appSheetShared";
+import { ExplainValue } from "../character-sheet/CharacterSheetExplain";
+import { breakdownFor, weaponBreakdown } from "../../lib/calculationBreakdowns";
 
 export function AppGearSection({
   model,
@@ -56,8 +58,8 @@ export function AppGearSection({
     <AppSection title="Gear & carrying" defaultOpen={defaultOpen}>
       <div className="appsheet-focus-strip appsheet-gear-summary">
         {!hideGoldSummary && <DerivedValue label="Gold" value={card.coins ?? 0} reason="Saved gold pieces; coins do not consume carrying slots." />}
-        <DerivedValue label="Carried weight" value={result.fields.weight} reason={result.reasons.weight} />
-        <DerivedValue label="Load" value={result.fields.weightCondition} reason={result.reasons.weightCondition} />
+        <DerivedValue label="Carried weight" value={result.fields.weight} reason={result.reasons.weight} breakdown={breakdownFor(card, "weight")} />
+        <DerivedValue label="Load" value={result.fields.weightCondition} reason={result.reasons.weightCondition} breakdown={breakdownFor(card, "weightCondition")} />
         <DerivedValue label="Unassigned" value={slots.unstowed.reduce((sum, entry) => sum + entry.count, 0)} reason="Significant and oversized items stay unassigned until you choose a carrying slot." />
       </div>
 
@@ -126,7 +128,7 @@ export function AppGearSection({
               return (
                 <div key={item.id}>
                   <span><b>{item.name}</b>{qty > 1 ? ` ×${qty}` : ""}{heavyWarning && <small>{heavyWarning}</small>}{proficiencyWarning && <small>{proficiencyWarning}</small>}</span>
-                  <span><small className="appsheet-weapon-label">Attack</small>{custom?.attackBonus || formatModifier(weaponAttackBonus(card, facts))}</span>
+                  <span><small className="appsheet-weapon-label">Attack</small>{custom?.attackBonus || <ExplainValue breakdown={weaponBreakdown(card, item.name, facts)}>{formatModifier(weaponAttackBonus(card, facts))}</ExplainValue>}</span>
                   <span><small className="appsheet-weapon-label">Damage</small>{custom?.damage || weaponDamageLabel(facts)}</span>
                   <span><small className="appsheet-weapon-label">Properties</small>{custom?.weaponNotes || facts?.properties || item.note || "—"}</span>
                   <span><small className="appsheet-weapon-label">Mastery</small>{facts?.mastery || "—"}</span>

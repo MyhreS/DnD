@@ -8,8 +8,9 @@ import { CLASSES } from "../src/data/classes";
 import { BACKGROUNDS } from "../src/data/backgrounds";
 import { automationFor, classResources } from "../src/features/hunter/lib/characterAutomation";
 import { FEAT_SKILL_PICKS, featPickKey } from "../src/data/feats";
-import { SKILLS } from "../src/data/skills";
+import { SHEET_SKILL_FIELD, SKILLS } from "../src/data/skills";
 import { armorClassFor } from "../src/lib/character";
+import { breakdownFor } from "../src/features/hunter/lib/calculationBreakdowns";
 import { abilityChoice, classAbilitiesThroughLevel } from "../src/features/hunter/lib/classAbilityChoices";
 import {
   featOptionsFor,
@@ -130,6 +131,15 @@ for (const klass of CLASSES) {
         if (/ subclass$/i.test(ability.name) && !subclassId) continue;
         const choice = abilityChoice(ability, state, level >= 3 ? path : undefined);
         assert.ok(!choice?.missing, `${label} level ${level}: Class abilities shows "${ability.name}" as not chosen`);
+      }
+
+      // Every "how is this calculated" breakdown adds up to the value shown.
+      for (const key of ["hpMax", "sanityMax", "profBonus", "weight", "weightCondition", "meleeAttack", "rangedAttack",
+        ...["str", "dex", "con", "int", "wis", "cha"].flatMap((ability) => [`${ability}Score`, `${ability}Mod`, `${ability}Save`]),
+        ...SKILLS.map((skill) => SHEET_SKILL_FIELD[skill.name])]) {
+        const breakdown = breakdownFor(card, key);
+        assert.ok(breakdown, `${label} level ${level}: no breakdown for ${key}`);
+        assert.equal(breakdown!.total, String(fields[key]), `${label} level ${level}: ${key} breakdown says ${breakdown!.total}, sheet says ${fields[key]}`);
       }
 
       // Hunter Zealot replaces the Deepcaller progression from level 3 ([page 75]).

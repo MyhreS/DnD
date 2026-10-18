@@ -9,6 +9,8 @@ import { CharacterSheetLevelHistory } from "./CharacterSheetLevelHistory";
 import { useCharacterSheetPageNavigation } from "./characterSheetPageNavigation";
 import { CharacterSheetResourceControl } from "./CharacterSheetResourceControl";
 import { characterSheetNumber } from "./characterSheetValues";
+import { ExplainValue } from "./CharacterSheetExplain";
+import { breakdownFor } from "../../lib/calculationBreakdowns";
 
 export function CharacterSheetProgress({ model, upgradePending, onUpgrade }: { model: AppSheetModel; upgradePending: boolean; onUpgrade: () => void }) {
   const stage = useAppEditStage();
@@ -44,7 +46,7 @@ export function CharacterSheetProgress({ model, upgradePending, onUpgrade }: { m
     {!model.readOnly && upgradePending && !hasStagedUpgrade(stage.patch) && <CharacterSheetActionNeeded newLevel={availableLevel > level ? availableLevel : null} missing={missing} onAct={openUpgrade} />}
     <section className="character-sheet-level-summary" aria-label="Level and Insight progress">
       <div><small>Current level</small><strong>{level}</strong><span>Level is set by Insight</span></div>
-      <div className="character-sheet-proficiency"><small>Proficiency Bonus</small><strong>{String(result.fields.profBonus ?? "—")}</strong><span>{level >= 17 ? "Highest bonus reached" : `Rises at level ${Math.floor((level - 1) / 4) * 4 + 5}`}</span></div>
+      <div className="character-sheet-proficiency"><small>Proficiency Bonus</small><strong><ExplainValue breakdown={breakdownFor(stage.previewCard, "profBonus")}>{String(result.fields.profBonus ?? "—")}</ExplainValue></strong><span>{level >= 17 ? "Highest bonus reached" : `Rises at level ${Math.floor((level - 1) / 4) * 4 + 5}`}</span></div>
       <div className="character-sheet-insight-progress">
         <span><b>{availableLevel > level ? `Level ${availableLevel} upgrade ready` : nextThreshold == null ? "Maximum level reached" : `${remaining} Insight to level ${availableLevel + 1}`}</b><small>{nextThreshold == null ? `${insight} total Insight` : `${insight} / ${nextThreshold} total Insight`}</small></span>
         <i role="progressbar" aria-label="Insight progress to next level" aria-valuemin={0} aria-valuemax={100} aria-valuenow={Math.round(progress)}><span style={{ width: `${progress}%` }} /></i>

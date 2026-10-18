@@ -3,8 +3,11 @@ import { SHEET_SKILL_FIELD, SKILLS } from "@/data/skills";
 import { abilityBuySummary, budgetFor, scoreRangeFor, type BuyMode } from "../../lib/abilityBuy";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { AppPanel, AppSection, AutoReason, type AppSheetModel } from "./appSheetShared";
+import { ExplainValue } from "../character-sheet/CharacterSheetExplain";
+import { breakdownFor } from "../../lib/calculationBreakdowns";
+import type { HunterCard } from "@/types";
 
-function SkillList({ result }: { result: ReturnType<typeof useCharacterAutomation>["result"] }) {
+function SkillList({ result, card }: { result: ReturnType<typeof useCharacterAutomation>["result"]; card: HunterCard }) {
   return <div className="appsheet-skill-table">
     {SKILLS.map((skill) => {
       const field = SHEET_SKILL_FIELD[skill.name];
@@ -12,19 +15,20 @@ function SkillList({ result }: { result: ReturnType<typeof useCharacterAutomatio
       return <div key={skill.name} className={proficient ? "proficient" : ""}>
         <span className="appsheet-skill-prof" aria-label={proficient ? "Proficient" : "Not proficient"}>{proficient ? "●" : "○"}</span>
         <span><b>{skill.name}</b><small>{skill.ability.toUpperCase()}</small></span>
-        <strong>{result.fields[field]}</strong>
-        <AutoReason reason={result.reasons[field]} />
+        <strong><ExplainValue breakdown={breakdownFor(card, field)}>{result.fields[field]}</ExplainValue></strong>
       </div>;
     })}
   </div>;
 }
 
-function FinalAbilities({ result }: { result: ReturnType<typeof useCharacterAutomation>["result"] }) {
+function FinalAbilities({ result, card }: { result: ReturnType<typeof useCharacterAutomation>["result"]; card: HunterCard }) {
   return <div className="appsheet-final-abilities">
     {ABILITIES.map((ability) => (
       <div className="appsheet-final-score" key={ability.key}>
-        <span>{ability.name}</span><strong>{result.fields[`${ability.key}Score`]}</strong><b>{result.fields[`${ability.key}Mod`]}</b><small>Save {result.fields[`${ability.key}Save`]}</small>
-        <AutoReason reason={result.reasons[`${ability.key}Save`]} />
+        <span>{ability.name}</span>
+        <strong><ExplainValue breakdown={breakdownFor(card, `${ability.key}Score`)}>{result.fields[`${ability.key}Score`]}</ExplainValue></strong>
+        <b><ExplainValue breakdown={breakdownFor(card, `${ability.key}Mod`)}>{result.fields[`${ability.key}Mod`]}</ExplainValue></b>
+        <small>Save <ExplainValue breakdown={breakdownFor(card, `${ability.key}Save`)}>{result.fields[`${ability.key}Save`]}</ExplainValue></small>
       </div>
     ))}
   </div>;
@@ -32,7 +36,7 @@ function FinalAbilities({ result }: { result: ReturnType<typeof useCharacterAuto
 
 export function AppAbilitiesSection({ model, view = "all", creation = false }: { model: AppSheetModel; view?: "all" | "abilities" | "skills"; creation?: boolean }) {
   const automation = useCharacterAutomation();
-  const { result, state, background, base, pointsLeft } = automation;
+  const { result, state, background, base, pointsLeft, card } = automation;
   const canEditCreationScores = state.setupComplete !== true;
   const budget = budgetFor(automation.mode);
   const pointsSpent = pointsLeft == null ? null : budget - pointsLeft;
@@ -84,11 +88,11 @@ export function AppAbilitiesSection({ model, view = "all", creation = false }: {
         </AppPanel>
       )}
 
-      {view === "abilities" && (!creation || !canEditCreationScores) && <FinalAbilities result={result} />}
-      {view === "all" && <AppPanel title="Abilities and saves"><FinalAbilities result={result} /></AppPanel>}
+      {view === "abilities" && (!creation || !canEditCreationScores) && <FinalAbilities result={result} card={card} />}
+      {view === "all" && <AppPanel title="Abilities and saves"><FinalAbilities result={result} card={card} /></AppPanel>}
 
-      {view === "skills" && <SkillList result={result} />}
-      {view === "all" && <AppPanel title="Skills"><SkillList result={result} /></AppPanel>}
+      {view === "skills" && <SkillList result={result} card={card} />}
+      {view === "all" && <AppPanel title="Skills"><SkillList result={result} card={card} /></AppPanel>}
     </AppSection>
   );
 }
