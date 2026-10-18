@@ -354,76 +354,42 @@ try {
   const armoredHunter = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
   if (armoredHunter.empty || armoredHunter.docs[0].data().ac !== startingAc + 2) throw new Error("Direct Hunter AC did not update the battle record.");
 
-  await hunterControl.getByRole("button", { name: "Damage Lady Maria", exact: true }).click();
-  await hunterControl.getByLabel("Lady Maria damage taken 5").waitFor();
-  await hunterControl.getByRole("button", { name: "Damage Lady Maria", exact: true }).click();
-  await hunterControl.getByLabel("Lady Maria damage taken 6").waitFor();
-  await hunterControl.getByRole("button", { name: "Damage Lady Maria", exact: true }).click();
-  await playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" }).getByText("7", { exact: true }).waitFor();
-  // Saves queue behind the screen update; give the last one time to land.
-  let damagedHunter = await db.doc(`characters/${characterId}`).get();
-  for (let attempt = 0; attempt < 20 && damagedHunter.data()?.currentHp !== 21; attempt += 1) {
-    await sleep(250);
-    damagedHunter = await db.doc(`characters/${characterId}`).get();
+  // --- Hunters keep their own HP: the DM gets no Damage / Heal / Temp HP on them ---
+  for (const action of ["Damage", "Heal", "Give"]) {
+    if (await hunterControl.getByRole("button", { name: new RegExp(`^${action} Lady Maria`) }).count()) throw new Error(`The DM must not have ${action} on a Hunter.`);
   }
-  const pcCombatants = await db.collection(`games/${gameId}/combatants`).where("characterId", "==", characterId).get();
-  // Battle HP is linked to the Hunter's own sheet; the battle row keeps no copy.
-  if (pcCombatants.empty || (pcCombatants.docs[0].data().currentHp ?? null) !== null) throw new Error("Hunter battle HP should live on the sheet, not the battle record.");
-  if (damagedHunter.data()?.currentHp !== 21 || damagedHunter.data()?.sheet?.hpCur !== "21") throw new Error("Battle damage did not reach the Hunter sheet.");
-  if (damagedHunter.data()?.sheet?.ac !== "15") throw new Error("Battle controls must change only HP on the Hunter sheet.");
-
-  // --- Every Hunter HP action, core-rulebook.txt [pages 21, 45] ---
-  const hunterHp = async () => (await db.doc(`characters/${characterId}`).get()).data();
+  // What the player keeps on their sheet shows on both screens: HP, Temporary
+  // HP (extra HP on the bar), Madness against Max Sanity, Insane, Not Tonight!.
   const playerHunter = playerPage.locator(".battle-row").filter({ hasText: "Lady Maria" });
-  const hit = async (amount, action = "Damage") => {
-    await hunterControl.getByLabel("Amount for Lady Maria").fill(String(amount));
-    await hunterControl.getByRole("button", { name: `${action} Lady Maria`, exact: true }).click();
-  };
-  await hit(2, "Heal");
-  await hunterControl.getByLabel("Lady Maria damage taken 5").waitFor();
-  // Not Tonight! turns lethal damage into 1 HP and is expended.
-  await hit(40);
-  await hunterControl.getByText(/Not Tonight! spent/).waitFor();
-  await hunterControl.getByLabel("Lady Maria hit points 1 of 28").waitFor();
-  await sleep(300);
-  if ((await hunterHp())?.currentHp !== 1 || (await hunterHp())?.notTonight !== false) throw new Error("Not Tonight! did not keep the Hunter at 1 HP and expend itself.");
-  // Without Not Tonight!, 0 HP means Dying and Unconscious.
-  await hit(10);
-  await hunterControl.getByText("Hunter · dying", { exact: true }).waitFor();
-  await playerHunter.getByText(/Dying/).first().waitFor();
-  await playerHunter.getByText(/Unconscious/).waitFor();
-  await sleep(300);
-  if ((await hunterHp())?.currentHp !== 0) throw new Error("The Hunter sheet should floor at 0 HP while Dying.");
-  // Healing above 0 ends Dying.
-  await hit(15, "Heal");
-  await hunterControl.getByLabel("Lady Maria hit points 6 of 28").waitFor();
-  await playerHunter.getByText(/Unconscious/).waitFor({ state: "detached" });
-  // Remaining damage reaching the maximum is Instant Death: the death prompt opens.
-  await hit(40);
-  const deathDialog = dmPage.getByRole("dialog", { name: "Lady Maria dies" });
-  await deathDialog.waitFor();
-  await noHorizontalOverflow(dmPage, "Death prompt");
-  await dmPage.screenshot({ path: "screenshots/game-battle-instant-death.png", fullPage: true });
-  await deathDialog.getByRole("button", { name: "Close" }).click();
-  await deathDialog.waitFor({ state: "detached" });
-  await hit(50, "Heal");
-  await hunterControl.getByLabel("Lady Maria hit points 16 of 28").waitFor();
-  await hunterControl.getByText("Hunter · dying").waitFor({ state: "detached" });
-  // Bloodied at or below half the maximum, rounded down ([page 29]): 16/28 is not.
-  if (await hunterControl.locator(".battle-bloodied").count()) throw new Error("16 of 28 HP must not be Bloodied.");
+  await playerHunter.getByText(/Not Tonight! ready/i).waitFor();
+  await db.doc(`characters/${characterId}`).update({ currentHp: 20, "sheet.hpCur": "20", "sheet.hpTemp": "4", madness: 3, notTonight: false });
+  await hunterControl.getByLabel("Lady Maria hit points 20 of 28").waitFor();
+  await hunterControl.getByLabel("Lady Maria temporary hit points 4").waitFor();
+  await playerHunter.getByLabel("Lady Maria temporary hit points 4").waitFor();
+  await hunterControl.locator(".battle-health-temp").waitFor();
+  await hunterControl.getByText(/Not Tonight! used/i).waitFor();
+  await playerHunter.getByLabel(/^Madness 3 of \d+$/).waitFor();
+  const sanityMax = Number((await playerHunter.getByLabel(/^Madness 3 of \d+$/).getAttribute("aria-label")).split(" ").at(-1));
+  await db.doc(`characters/${characterId}`).update({ madness: sanityMax });
+  await playerHunter.locator(".battle-state-chip.is-insane").waitFor();
+  await hunterControl.locator(".battle-state-chip.is-insane").waitFor();
+  await db.doc(`characters/${characterId}`).update({ madness: 0, notTonight: true, "sheet.hpTemp": "0" });
+  await hunterControl.locator(".battle-temp-hp").waitFor({ state: "detached" });
+  await dmPage.screenshot({ path: "screenshots/game-battle-hunter-state.png", fullPage: true });
 
-  // Many taps in a row all count: no lock while a save is in flight.
-  const damageMaria = hunterControl.getByRole("button", { name: "Damage Lady Maria", exact: true });
-  const healMaria = hunterControl.getByRole("button", { name: "Heal Lady Maria", exact: true });
-  for (let tap = 0; tap < 5; tap += 1) await damageMaria.click({ delay: 0 });
-  await hunterControl.getByLabel("Lady Maria hit points 11 of 28").waitFor();
-  for (let tap = 0; tap < 3; tap += 1) await healMaria.click({ delay: 0 });
-  await hunterControl.getByLabel("Lady Maria hit points 14 of 28").waitFor();
-  await playerHunter.getByLabel("Lady Maria hit points 14 of 28").waitFor();
-  await sleep(1500);
-  if ((await hunterHp())?.currentHp !== 14) throw new Error(`Rapid taps did not all reach the Hunter sheet (${(await hunterHp())?.currentHp}).`);
-  await hunterControl.locator(".battle-bloodied").waitFor(); // 14 of 28 = half: Bloodied
-  await hunterControl.getByLabel("Lady Maria hit points 14 of 28").waitFor();
+  // --- Enemy Temporary HP: extra HP lost before its HP ([page 10]) ---
+  {
+    const hound = dmPage.locator(".battle-row").filter({ hasText: "Grave Hound" });
+    await hound.getByLabel("Amount for Grave Hound").fill("5");
+    await hound.getByRole("button", { name: "Give Grave Hound temporary hit points", exact: true }).click();
+    await hound.getByLabel("Grave Hound temporary hit points 5").waitFor();
+    await hound.getByLabel("Amount for Grave Hound").fill("3");
+    await hound.getByRole("button", { name: "Damage Grave Hound", exact: true }).click();
+    await hound.getByLabel("Grave Hound temporary hit points 2").waitFor();
+    await hound.getByLabel("Grave Hound damage taken 0").waitFor();
+    await hound.getByRole("button", { name: "Clear Grave Hound temporary hit points", exact: true }).click();
+    await hound.locator(".battle-temp-hp").waitFor({ state: "detached" });
+  }
 
   // --- Enemy killed by damage, then revived ---
   const houndControl = dmPage.locator(".battle-row").filter({ hasText: "Grave Hound" });

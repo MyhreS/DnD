@@ -1,11 +1,9 @@
 import { useCombatStore } from "@/features/play/store/combatStore";
 import type { Combatant, Game, HunterCard } from "@/types";
 import { useState } from "react";
-import { haptic } from "@/lib/haptics";
 import { isBloodied } from "@/lib/character";
-import { combatVitals } from "../lib/combatPresentation";
-import { useOptimisticHunterHp } from "../hooks/useOptimisticHunterHp";
-import { DYING_CONDITIONS, hunterDamageOutcome } from "../lib/hunterDamage";
+import { useBattleRowHealth } from "../hooks/useBattleRowHealth";
+import { BattleHunterState } from "./BattleHunterState";
 import { BattleConditionsCell } from "./BattleConditionsCell";
 import { BattleHealthCell } from "./BattleHealthCell";
 import { BattleRowMenu } from "./BattleRowMenu";
@@ -35,85 +33,17 @@ export function BattleCombatantRow({
   encounterCombatants: Combatant[];
 }) {
   const patch = useCombatStore((state) => state.patch);
-  const setHunterHp = useCombatStore((state) => state.setHunterHp);
   const [deathOpen, setDeathOpen] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
-  const serverVitals = combatVitals(combatant, characters);
   const hunterCard = combatant.kind === "pc" && combatant.characterId
     ? characters.find((candidate) => candidate.id === combatant.characterId)
     : undefined;
-  const hunterHp = useOptimisticHunterHp({ hp: serverVitals.currentHp, notTonight: hunterCard?.notTonight === true });
-  const vitals = combatant.kind === "pc" && serverVitals.maxHp !== null && hunterHp.current.hp !== null
-    ? { ...serverVitals, currentHp: hunterHp.current.hp, damageTaken: Math.max(0, serverVitals.maxHp - hunterHp.current.hp) }
-    : serverVitals;
+  const monster = combatant.kind === "monster";
+  const health = useBattleRowHealth({ combatant, characters, game });
+  const { vitals } = health;
   // A Hunter is only ever dead because the DM said so (Not Tonight! means 0 HP
   // is not death); an enemy is dead at 0 HP too.
   const dead = combatant.defeated === true
-    || (combatant.kind === "monster" && vitals.currentHp !== null && vitals.currentHp <= 0);
-  const monster = combatant.kind === "monster";
-
-  function setDamage(damage: number) {
-    if (vitals.maxHp === null) {
-      // Unknown max HP: keep a running tally until the DM learns the maximum.
-      if (monster && vitals.damageTaken !== null) void patch(game.id, combatant.id, { damageTaken: damage });
-      return;
-    }
-    // Damage is deliberately NOT clamped to the HP maximum: Instant Death keys
-    // off the damage remaining after a Hunter drops to 0, so `currentHp` must
-    // be allowed to go negative for the DM to see it. The health bar clamps at
-    // 0% on its own.
-    if (!monster) {
-      applyHunterHp(vitals.maxHp, vitals.maxHp - damage);
-      return;
-    }
-    void patch(game.id, combatant.id, {
-      currentHp: vitals.maxHp - damage,
-      defeated: damage >= vitals.maxHp,
-    });
-  }
-
-  /** Hunters: the change lands on their own character sheet too, and follows
-   * Not Tonight!, Dying and Instant Death ([pages 21, 45]). */
-  function applyHunterHp(maxHp: number, nextHp: number) {
-    const previous = vitals.currentHp ?? maxHp;
-    const outcome = hunterDamageOutcome(previous, nextHp, maxHp, hunterHp.current.notTonight);
-    setNotice(outcome.kind === "not-tonight" ? "Not Tonight! spent — stays at 1 HP."
-      : outcome.kind === "instant-death" ? "Instant Death — the damage left over reaches the HP maximum."
-        : outcome.kind === "dying" && previous > 0 ? "Down to 0 HP — Dying and Unconscious." : null);
-    // Apple HIG: notification haptics for outcomes that matter.
-    if (outcome.kind === "instant-death") haptic("error");
-    else if (outcome.kind === "dying" && previous > 0) haptic("warning");
-    else if (outcome.kind === "not-tonight") haptic("warning");
-    const spend = outcome.kind === "not-tonight";
-    hunterHp.enqueue(
-      { hp: outcome.hp, notTonight: hunterHp.current.notTonight && !spend },
-      () => writeHunterHp(outcome, spend),
-    );
-  }
-
-  /** One queued write; reads the live combatant, since taps queue up. */
-  async function writeHunterHp(outcome: ReturnType<typeof hunterDamageOutcome>, spend: boolean) {
-    if (!await setHunterHp(game.id, combatant, outcome.hp, spend)) return false;
-    const live = useCombatStore.getState().combatants.find((entry) => entry.id === combatant.id) ?? combatant;
-    const down = outcome.kind === "dying" || outcome.kind === "instant-death";
-    const up = outcome.kind === "recovered" || outcome.kind === "not-tonight";
-    const missing = DYING_CONDITIONS.filter((id) => !live.conditions.includes(id));
-    if (down && missing.length) {
-      await patch(game.id, combatant.id, {
-        conditions: [...live.conditions, ...missing],
-        conditionSince: { ...(live.conditionSince ?? {}), ...Object.fromEntries(missing.map((id) => [id, round])) },
-      });
-    } else if (up && DYING_CONDITIONS.some((id) => live.conditions.includes(id))) {
-      const since = { ...(live.conditionSince ?? {}) };
-      for (const id of DYING_CONDITIONS) delete since[id];
-      await patch(game.id, combatant.id, {
-        conditions: live.conditions.filter((id) => !(DYING_CONDITIONS as readonly string[]).includes(id)),
-        conditionSince: since,
-      });
-    }
-    if (outcome.kind === "instant-death" && hunterCard && !dead) setDeathOpen(true);
-    return true;
-  }
+    || (monster && vitals.currentHp !== null && vitals.currentHp <= 0);
 
   const dying = !monster && !dead && vitals.currentHp !== null && vitals.currentHp <= 0;
   // core-rulebook.txt [page 29]: Bloodied while current HP is at or below half
@@ -142,7 +72,7 @@ export function BattleCombatantRow({
           dead={dead}
           disabled={disabled}
           encounterCombatants={encounterCombatants}
-          onAddDamage={(amount) => setDamage((vitals.damageTaken ?? 0) + amount)}
+          onAddDamage={health.damageBy}
           deathOpen={deathOpen}
           onDeathOpenChange={setDeathOpen}
           onSetMaxHp={(maxHp) => {
@@ -158,9 +88,10 @@ export function BattleCombatantRow({
         />
         )}
       </header>
-      {notice && canManage && <p className="battle-notice" role="status">{notice}</p>}
-      {/* Never locked while a save is in flight: the DM can tap Damage/Heal as often as they like. */}
-      <BattleHealthCell name={combatant.name} vitals={vitals} canManage={canManage} disabled={false} dead={dead} onSetDamage={setDamage} />
+      {/* Players keep their own Hunter's HP; the DM manages enemies only. Never
+          locked while a save is in flight: tap Damage/Heal as often as needed. */}
+      <BattleHealthCell name={combatant.name} vitals={vitals} canManage={canManage && monster} disabled={false} dead={dead} onDamage={health.damageBy} onHeal={health.healBy} onSetTemp={health.setTemp} />
+      {hunterCard && <BattleHunterState card={hunterCard} />}
       <div className="battle-stats">
         <BattleStepper
           className="battle-ac"

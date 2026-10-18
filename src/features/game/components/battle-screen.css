@@ -606,3 +606,82 @@ button.battle-condition:hover:not(:disabled) { border-color: var(--blood-bright)
 }
 .battle-condition-custom button:disabled { opacity: .45; cursor: default; }
 .battle-condition-custom button.is-cancel { width: 44px; padding: 0; border-color: var(--border); background: transparent; color: var(--ink-dim); font-size: 1.1rem; }
+
+/* Temporary Hit Points: extra HP on top, lost first (core-rulebook.txt
+   [page 10]). A pale ward segment after the HP on the bar, and a badge. */
+.battle-health { --ward: #9fc7e8; }
+.battle-health-track { display: flex; }
+.battle-health-track > .battle-health-temp {
+  display: block;
+  flex: none;
+  height: 100%;
+  margin-left: 2px;
+  border-radius: 999px;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--ward) 95%, white) 0 5px, var(--ward) 5px 10px);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--ward) 60%, transparent);
+  transition: width 220ms ease;
+}
+.battle-health-numbers { flex-wrap: wrap; }
+.battle-temp-hp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-right: auto;
+  padding: 4px 6px 4px 10px;
+  border: 1px solid color-mix(in srgb, var(--ward) 60%, transparent);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--ward) 14%, transparent);
+  color: var(--ward);
+  font: 800 0.72rem/1 var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.battle-temp-hp:not(:has(button)) { padding-right: 10px; }
+.battle-temp-hp b { font: 700 1rem/1 var(--font-display); letter-spacing: 0; }
+.battle-temp-hp button { display: grid; place-items: center; width: 22px; height: 22px; padding: 0; border: 0; border-radius: 50%; background: color-mix(in srgb, var(--ward) 22%, transparent); color: var(--ward); font: 700 0.9rem/1 var(--font-body); cursor: pointer; }
+.battle-health-actions:has(.is-temp) { grid-template-columns: 68px repeat(3, minmax(0, 1fr)); gap: 8px; }
+.battle-health-actions .is-temp { border-color: color-mix(in srgb, var(--ward) 65%, transparent); background: color-mix(in srgb, var(--ward) 14%, transparent); color: var(--ward); }
+.battle-health-actions .is-temp:hover:not(:disabled) { background: color-mix(in srgb, var(--ward) 26%, transparent); }
+
+/* A Hunter's mind and Not Tonight! under their HP. Read-only: players keep
+   these on their own sheet. */
+.battle-hunter-state { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.battle-madness {
+  display: grid;
+  grid-template-columns: auto auto;
+  align-items: baseline;
+  gap: 4px 10px;
+  min-width: 140px;
+  flex: 1 1 160px;
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: color-mix(in srgb, var(--bg) 65%, transparent);
+  --mind: #b493d6;
+}
+.battle-madness small { color: var(--ink-faint); font: 800 0.7rem/1 var(--font-body); letter-spacing: 0.12em; text-transform: uppercase; }
+.battle-madness b { justify-self: end; color: var(--ink); font: 700 1.05rem/1 var(--font-display); font-variant-numeric: tabular-nums; }
+.battle-madness b span { color: var(--ink-faint); font-size: 0.8rem; }
+.battle-madness i { grid-column: 1 / -1; height: 5px; overflow: hidden; border-radius: 999px; background: var(--bg-elev-3); }
+.battle-madness i span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg, color-mix(in srgb, var(--mind) 55%, black), var(--mind)); }
+.battle-madness.is-insane { border-color: color-mix(in srgb, var(--mind) 70%, transparent); --mind: #d66bd0; }
+.battle-state-chip {
+  padding: 6px 11px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font: 800 0.72rem/1 var(--font-body);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.battle-state-chip em { font-style: normal; font-weight: 600; opacity: 0.8; }
+.battle-state-chip.is-insane { border-color: #d66bd0; background: color-mix(in srgb, #d66bd0 22%, transparent); color: #f2b6ef; }
+.battle-state-chip.is-ready { border-color: color-mix(in srgb, var(--ok) 65%, transparent); background: color-mix(in srgb, var(--ok) 14%, transparent); color: #b9e3c0; }
+.battle-state-chip.is-used { border-style: dashed; color: var(--ink-faint); }
+@media (max-width: 560px) {
+  .battle-health-actions:has(.is-temp) { grid-template-columns: 64px repeat(2, minmax(0, 1fr)); }
+  .battle-health-actions .is-temp { grid-column: 1 / -1; }
+}
+@media (max-width: 400px) {
+  .battle-stats:has(button) { grid-template-columns: 1fr; }
+}

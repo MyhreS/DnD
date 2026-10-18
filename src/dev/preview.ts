@@ -154,7 +154,7 @@ export function previewGame(): import("@/types").Game {
 export function previewCombatants(): import("@/types").Combatant[] {
   const now = Date.now();
   return [
-    { id: "prev-monster-1", kind: "monster", name: "Cleric Beast", characterId: null, initiative: 19, ac: 14, maxHp: 80, currentHp: 52, conditions: ["poisoned"], conditionSince: { poisoned: 1 }, note: "Claws +6 to hit, 2d8+3 slashing; howl frightens on hit", createdAt: now },
+    { id: "prev-monster-1", kind: "monster", name: "Cleric Beast", characterId: null, initiative: 19, ac: 14, maxHp: 80, currentHp: 52, tempHp: 10, conditions: ["poisoned"], conditionSince: { poisoned: 1 }, note: "Claws +6 to hit, 2d8+3 slashing; howl frightens on hit", createdAt: now },
     { id: "prev-pc-1", kind: "pc", name: "Eileen the Crow", characterId: "preview-uid-char", initiative: 17, ac: null, maxHp: null, currentHp: null, conditions: ["frightened"], conditionSince: { frightened: 1 }, createdAt: now },
     { id: "prev-pc-2", kind: "pc", name: "Gascoigne", characterId: "preview-p2-char", initiative: 12, ac: null, maxHp: null, currentHp: null, conditions: ["prone"], conditionSince: { prone: 2 }, createdAt: now },
   ];
@@ -343,6 +343,7 @@ export function previewCard(uid: string): import("@/types").HunterCard {
       sanityMax: "13",
       sanityDice: "2d6",
       hpCur: "22",
+      hpTemp: "6",
       hpMax: "25",
       hdCur: "3",
       hdSpent: "0",
