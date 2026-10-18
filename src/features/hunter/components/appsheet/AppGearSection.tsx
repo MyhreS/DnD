@@ -24,6 +24,7 @@ import {
 } from "./appSheetShared";
 import { ExplainValue } from "../character-sheet/CharacterSheetExplain";
 import { breakdownFor, weaponBreakdown } from "../../lib/calculationBreakdowns";
+import { weaponDamageBreakdown } from "../../lib/classBreakdowns";
 
 /** The inventory's sections, in the order players look for things. Anything
  * of a category not listed lands in "Other". */
@@ -153,7 +154,7 @@ export function AppGearSection({
                 <div key={item.id}>
                   <span><b>{item.name}</b>{qty > 1 ? ` ×${qty}` : ""}{heavyWarning && <small>{heavyWarning}</small>}{proficiencyWarning && <small>{proficiencyWarning}</small>}</span>
                   <span><small className="appsheet-weapon-label">Attack</small>{custom?.attackBonus || <ExplainValue breakdown={weaponBreakdown(card, item.name, facts)}>{formatModifier(weaponAttackBonus(card, facts))}</ExplainValue>}</span>
-                  <span><small className="appsheet-weapon-label">Damage</small>{custom?.damage || weaponDamageLabel(facts)}</span>
+                  <span><small className="appsheet-weapon-label">Damage</small>{custom?.damage || <ExplainValue breakdown={weaponDamageBreakdown(card, item.name, facts)}>{weaponDamageLabel(facts)}</ExplainValue>}</span>
                   <span><small className="appsheet-weapon-label">Properties</small>{custom?.weaponNotes || facts?.properties || item.note || "—"}</span>
                   <span><small className="appsheet-weapon-label">Mastery</small>{facts?.mastery || "—"}</span>
                 </div>

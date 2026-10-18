@@ -146,6 +146,8 @@ export interface ClassResource {
   /** How the uses come back, shown under the counter. */
   note: string;
   reason: string;
+  /** How the maximum is worked out, for the tap-to-explain pop-up. */
+  lines: Array<{ label: string; value: string }>;
 }
 
 /** Per-rest class resources tracked on the sheet; Finish a Long Rest refills
@@ -161,27 +163,27 @@ export function classResources(card: HunterCard): ClassResource[] {
   // level 5 (Effectiveness), x 4 from level 11 (Superior Effectiveness, [page 90]).
   if (klass.id === "warden") {
     const factor = level >= 11 ? 4 : level >= 5 ? 3 : 2;
-    resources.push({ key: "bands", label: "Bands Directive uses", max: Math.max(1, wis * factor), reason: `Wisdom modifier x ${factor} (minimum 1)`, note: `Wisdom modifier × ${factor}. All regained on a Long Rest${level >= 5 ? " or Short Rest" : ""}.` });
+    resources.push({ key: "bands", label: "Bands Directive uses", max: Math.max(1, wis * factor), reason: `Wisdom modifier x ${factor} (minimum 1)`, lines: [{ label: "Wisdom modifier", value: formatModifier(wis) }, { label: level >= 11 ? "× 4 (Superior Effectiveness, level 11, [page 90])" : level >= 5 ? "× 3 (Effectiveness, level 5, [page 89])" : "× 2 (Bands Directive, [page 89])", value: `× ${factor}` }, { label: "Minimum", value: "1" }], note: `Wisdom modifier × ${factor}. All regained on a Long Rest${level >= 5 ? " or Short Rest" : ""}.` });
   }
   // Bloodbound Blood Frenzy [page 80]: uses from the class table.
   if (klass.id === "bloodbound") {
     const max = Number(row?.extras["Blood Frenzy"] ?? 0);
-    if (max > 0) resources.push({ key: "frenzy", label: "Blood Frenzy uses", max, reason: `${klass.title} level ${level} table`, note: "One regained on a Short Rest, all on a Long Rest." });
+    if (max > 0) resources.push({ key: "frenzy", label: "Blood Frenzy uses", max, reason: `${klass.title} level ${level} table`, lines: [{ label: "Your level", value: String(level) }, { label: `${klass.title} Features table, Blood Frenzy column ([page 80])`, value: String(max) }], note: "One regained on a Short Rest, all on a Long Rest." });
   }
   // Brute Refuse the Bleeding [page 50]: uses from the class table.
   if (klass.id === "brute") {
     const max = Number(row?.extras["Refuse the Bleeding"] ?? 0);
-    if (level >= 2 && max > 0) resources.push({ key: "refuse", label: "Refuse the Bleeding uses", max, reason: `${klass.title} level ${level} table`, note: "Reduce damage by 1d10 + Brute level. One regained on a Short Rest, all on a Long Rest." });
+    if (level >= 2 && max > 0) resources.push({ key: "refuse", label: "Refuse the Bleeding uses", max, reason: `${klass.title} level ${level} table`, lines: [{ label: "Your level", value: String(level) }, { label: `${klass.title} Features table, Refuse the Bleeding column ([page 50])`, value: String(max) }], note: "Reduce damage by 1d10 + Brute level. One regained on a Short Rest, all on a Long Rest." });
     // Battle Master Superiority Dice [page 52]: 4 d8s, 5 at level 7, 6 at 15;
     // d10 at level 10, d12 at 18.
     if (card.subclassId === "battle-master" && level >= 3) {
       const die = level >= 18 ? "d12" : level >= 10 ? "d10" : "d8";
-      resources.push({ key: "superiority", label: `Superiority Dice (${die})`, max: level >= 15 ? 6 : level >= 7 ? 5 : 4, reason: "Battle Master Combat Superiority", note: "All regained on a Short or Long Rest." });
+      resources.push({ key: "superiority", label: `Superiority Dice (${die})`, max: level >= 15 ? 6 : level >= 7 ? 5 : 4, reason: "Battle Master Combat Superiority", lines: [{ label: "Combat Superiority: 4 dice, 5 from level 7, 6 from level 15 ([page 52])", value: String(level >= 15 ? 6 : level >= 7 ? 5 : 4) }, { label: "Die size: d8, d10 from level 10, d12 from level 18", value: die }], note: "All regained on a Short or Long Rest." });
     }
   }
   // Scout Tireless [page 58]: Wisdom modifier uses (minimum 1) from level 10.
   if (klass.id === "scout" && level >= 10) {
-    resources.push({ key: "tireless", label: "Tireless uses", max: Math.max(1, wis), reason: "Wisdom modifier (minimum 1)", note: "Temporary HP 1d8 + Wisdom modifier. All regained on a Long Rest." });
+    resources.push({ key: "tireless", label: "Tireless uses", max: Math.max(1, wis), reason: "Wisdom modifier (minimum 1)", lines: [{ label: "Wisdom modifier (Tireless, [page 58])", value: formatModifier(wis) }, { label: "Minimum", value: "1" }], note: "Temporary HP 1d8 + Wisdom modifier. All regained on a Long Rest." });
   }
   return resources;
 }

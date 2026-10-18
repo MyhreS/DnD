@@ -12,11 +12,11 @@ export function CharacterSheetResources({ model }: { model: AppSheetModel }) {
   return <div className="character-sheet-resource-layout">
     <CharacterSheetRecovery model={model} />
     <section className="character-sheet-resource-group"><h3>Character sheet values</h3><div className="character-sheet-resource-grid">
-      <div className="character-sheet-resource"><span>Sanity dice</span><strong>{String(result.fields.sanityDice ?? "—")}</strong></div>
+      <div className="character-sheet-resource"><span>Sanity dice</span><strong><ExplainValue breakdown={breakdownFor(card, "sanityDice")}>{String(result.fields.sanityDice ?? "—")}</ExplainValue></strong></div>
       <div className="character-sheet-resource"><span>Melee attack bonus</span><strong><ExplainValue breakdown={breakdownFor(card, "meleeAttack")}>{String(result.fields.meleeAttack ?? "—")}</ExplainValue></strong></div>
       <div className="character-sheet-resource"><span>Ranged attack bonus</span><strong><ExplainValue breakdown={breakdownFor(card, "rangedAttack")}>{String(result.fields.rangedAttack ?? "—")}</ExplainValue></strong></div>
       {klass?.caster && <>
-        <div className="character-sheet-resource"><span>Rite performing ability</span><strong>{String(result.fields.riteAbility ?? "—")}</strong></div>
+        <div className="character-sheet-resource"><span>Rite performing ability</span><strong><ExplainValue breakdown={breakdownFor(card, "riteAbility")}>{String(result.fields.riteAbility ?? "—")}</ExplainValue></strong></div>
         <div className="character-sheet-resource"><span>Rite modifier</span><strong><ExplainValue breakdown={breakdownFor(card, "riteMod")}>{String(result.fields.riteMod ?? "—")}</ExplainValue></strong></div>
         <div className="character-sheet-resource"><span>Rite save DC</span><strong><ExplainValue breakdown={breakdownFor(card, "riteDC")}>{String(result.fields.riteDC ?? "—")}</ExplainValue></strong></div>
         <div className="character-sheet-resource"><span>Rite attack bonus</span><strong><ExplainValue breakdown={breakdownFor(card, "riteAttack")}>{String(result.fields.riteAttack ?? "—")}</ExplainValue></strong></div>

@@ -136,10 +136,17 @@ for (const klass of CLASSES) {
       // Every "how is this calculated" breakdown adds up to the value shown.
       for (const key of ["hpMax", "sanityMax", "profBonus", "weight", "weightCondition", "meleeAttack", "rangedAttack",
         ...["str", "dex", "con", "int", "wis", "cha"].flatMap((ability) => [`${ability}Score`, `${ability}Mod`, `${ability}Save`]),
-        ...SKILLS.map((skill) => SHEET_SKILL_FIELD[skill.name])]) {
+        ...SKILLS.map((skill) => SHEET_SKILL_FIELD[skill.name]),
+        "sanityDice", ...(klass.caster ? ["strainMax", "strainLevel", "riteAbility", "riteMod", "riteDC", "riteAttack"] : [])]) {
         const breakdown = breakdownFor(card, key);
         assert.ok(breakdown, `${label} level ${level}: no breakdown for ${key}`);
         assert.equal(breakdown!.total, String(fields[key]), `${label} level ${level}: ${key} breakdown says ${breakdown!.total}, sheet says ${fields[key]}`);
+      }
+
+      assert.equal(breakdownFor(card, "hitDie")?.total, `d${klass.hitDie}`, `${label} level ${level}: Hit Die breakdown`);
+      assert.equal(breakdownFor(card, "level")?.total, String(level), `${label} level ${level}: level breakdown`);
+      for (const resource of classResources(card)) {
+        assert.equal(breakdownFor(card, `resource:${resource.key}`)?.total, fields[`${resource.key}Max`], `${label} level ${level}: ${resource.label} breakdown`);
       }
 
       // Hunter Zealot replaces the Deepcaller progression from level 3 ([page 75]).
