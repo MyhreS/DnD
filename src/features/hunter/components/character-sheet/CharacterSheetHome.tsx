@@ -107,6 +107,7 @@ export function CharacterSheetHome({ model, notesModel, panel, onPanelChange, on
     {celebration && <CharacterSheetUpgradeCelebration summary={celebration} onClose={() => setCelebration(null)} />}
     {showAction && <CharacterSheetActionNeeded
       newLevel={earned > stage.savedCard.level ? earned : null}
+      currentLevel={stage.savedCard.level}
       missing={missingChoices}
       onAct={() => { stage.stageLevel(earned); onPanelChange("upgrade"); }}
       onDismiss={dismissActionBanner}

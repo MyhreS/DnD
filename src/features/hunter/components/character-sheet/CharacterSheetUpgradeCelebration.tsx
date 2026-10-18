@@ -2,6 +2,8 @@ import { createPortal } from "react-dom";
 
 export interface UpgradeSummary {
   level: number;
+  /** The level before this upgrade, when it moved up several at once. */
+  fromLevel?: number;
   /** [label, before, after] for every value that changed. */
   changes: Array<[string, string, string]>;
   features: string[];
@@ -15,7 +17,7 @@ export function CharacterSheetUpgradeCelebration({ summary, onClose }: { summary
       <div className="upgrade-celebration-burst" aria-hidden="true">{Array.from({ length: 14 }, (_, index) => <i key={index} style={{ ["--i" as string]: index }} />)}</div>
       <section className="upgrade-celebration-card" onClick={(event) => event.stopPropagation()}>
         <div className="upgrade-celebration-medal" aria-hidden="true"><span>{summary.level}</span></div>
-        <small>Upgrade saved</small>
+        <small>{summary.fromLevel != null && summary.level - summary.fromLevel > 1 ? `Upgrade saved · ${summary.level - summary.fromLevel} levels` : "Upgrade saved"}</small>
         <h2 id="upgrade-celebration-title">Level {summary.level} reached!</h2>
         {summary.changes.length > 0 && <ul className="upgrade-celebration-gains">{summary.changes.map(([label, before, after]) => <li key={label}><span>{label}</span><b>{before} → {after}</b></li>)}</ul>}
         {summary.features.length > 0 && <p className="upgrade-celebration-features"><b>New:</b> {summary.features.join(", ")}</p>}
