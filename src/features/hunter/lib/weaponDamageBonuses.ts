@@ -2,7 +2,6 @@ import { abilityModifier } from "@/data/abilities";
 import { WEAPON_FACTS } from "@/data/weapons";
 import { featsOf } from "@/lib/character";
 import type { HunterCard, HunterClass } from "@/types";
-import { AppPanel, AutoReason } from "./appSheetShared";
 
 interface DamageBonus {
   label: string;
@@ -14,7 +13,9 @@ function signed(value: number): string {
   return value >= 0 ? `+${value}` : String(value);
 }
 
-function bonusesFor(card: HunterCard, klass: HunterClass): DamageBonus[] {
+/** Conditional damage bonuses from this hunter's class, subclass, progression
+ * and feats, shown on a weapon's item page. */
+export function weaponDamageBonuses(card: HunterCard, klass: HunterClass): DamageBonus[] {
   const progression = klass.progression.find((row) => row.level === card.level);
   const bonuses: DamageBonus[] = [
     {
@@ -56,18 +57,4 @@ function bonusesFor(card: HunterCard, klass: HunterClass): DamageBonus[] {
   if (feats.includes("Great Weapon Master")) bonuses.push({ label: "Great Weapon Master", value: `+${progression?.profBonus ?? 2}`, detail: "Once per turn when a Heavy weapon hits as part of the Attack action." });
   if (feats.includes("Charger")) bonuses.push({ label: "Charger", value: "+1d8", detail: "Once per turn after moving at least 10 feet straight before a melee hit." });
   return bonuses;
-}
-
-export function AppWeaponDamageBonuses({ card, klass, contextLabel = "Class & feats", reason = "Conditional damage bonuses use this hunter's class, subclass, progression, and selected feats." }: {
-  card: HunterCard;
-  klass: HunterClass | undefined;
-  contextLabel?: string;
-  reason?: string;
-}) {
-  if (!klass) return null;
-  const bonuses = bonusesFor(card, klass);
-  return <AppPanel title="Potential damage bonuses" aside={<span className="appsheet-status-word">{contextLabel}</span>}>
-    <div className="appsheet-weapon-bonuses">{bonuses.map((bonus) => <div key={bonus.label}><span><b>{bonus.label}</b><small>{bonus.detail}</small></span><strong>{bonus.value}</strong></div>)}</div>
-    <AutoReason reason={reason} />
-  </AppPanel>;
 }
