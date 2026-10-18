@@ -5,10 +5,11 @@
 import { ABILITIES, abilityModifier, formatModifier } from "@/data/abilities";
 import { getClass, isZealot } from "@/data/classes";
 import { skillAbility, SHEET_SKILL_FIELD, SKILLS } from "@/data/skills";
-import { featsOf, proficiencyBonus, weaponAttackParts, withClassAbilityBonuses, wornArmorWeight } from "@/lib/character";
+import { featsOf, isWeaponProficient, proficiencyBonus, weaponAttackParts, withClassAbilityBonuses, wornArmorWeight } from "@/lib/character";
 import { carryCondition, resolveInventory, resolveStorage, totalCarriedWeight, totalWeight } from "@/lib/inventory";
 import type { AbilityKey, HunterCard } from "@/types";
 import { saveProficiency, skillProficiencyState } from "./characterAutomation";
+import { classBreakdownFor } from "./classBreakdowns";
 
 export interface Breakdown {
   title: string;
@@ -154,6 +155,10 @@ function attackBreakdown(card: HunterCard, attack: "Melee" | "Ranged"): Breakdow
 /** A carried weapon's attack bonus, step by step. */
 export function weaponBreakdown(card: HunterCard, name: string, facts: { properties: string; attack: "Melee" | "Ranged"; category?: string } | undefined): Breakdown {
   const parts = weaponAttackParts(card, facts);
+  const klass = getClass(card.classId);
+  const weaponKind = facts?.category && facts.category !== "Unarmed" ? `${name} is a ${facts.category} ${facts.attack} weapon ([page 111]). ` : "";
+  const fromElsewhere = parts.proficient && facts && klass && !isWeaponProficient(klass.weaponProficiencies, facts);
+  const training = fromElsewhere ? "Your Martial weapon training comes from your Zealot path or a feat. " : klass ? `${klass.title} is trained in ${klass.weaponProficiencies} ([page 31]). ` : "";
   return {
     title: `${name} attack bonus`,
     lines: [
@@ -161,7 +166,7 @@ export function weaponBreakdown(card: HunterCard, name: string, facts: { propert
       { label: parts.proficient ? "Proficiency Bonus" : "Not proficient with this weapon", value: signed(parts.prof) },
     ],
     total: signed(parts.total),
-    note: `${parts.why} Damage adds the same ${parts.ability} modifier.`,
+    note: `${weaponKind}${training}${parts.why} Anyone can use any weapon; proficiency only adds the bonus to hit ([page 12]).`,
   };
 }
 
@@ -175,6 +180,8 @@ export function breakdownFor(stored: HunterCard, key: string): Breakdown | null 
   }
   const skill = SKILLS.find((entry) => SHEET_SKILL_FIELD[entry.name] === key);
   if (skill) return skillBreakdown(card, skill.name);
+  const fromClass = classBreakdownFor(card, key);
+  if (fromClass !== undefined) return fromClass;
   switch (key) {
     case "hpMax": return hpBreakdown(card);
     case "sanityMax": return sanityBreakdown(card);

@@ -15,6 +15,9 @@ export function ExplainValue({ breakdown, children, className = "" }: { breakdow
   </>;
 }
 
+/** "[page 43]" (the rulebook reference form) reads as "page 43". */
+const pages = (text: string) => text.replace(/\[page (\d+)\]/g, "page $1");
+
 function ExplainSheet({ breakdown, onClose }: { breakdown: Breakdown; onClose: () => void }) {
   const dialogRef = useModalDialog(onClose);
   // Inside the character sheet so it takes the sheet's colours; on top of it.
@@ -28,10 +31,10 @@ function ExplainSheet({ breakdown, onClose }: { breakdown: Breakdown; onClose: (
           <button type="button" className="sheet-explain-close" aria-label="Close" data-dialog-initial-focus onClick={onClose}>×</button>
         </header>
         <dl>
-          {breakdown.lines.map((line) => <div key={line.label}><dt>{line.label}</dt>{line.value && <dd>{line.value}</dd>}</div>)}
+          {breakdown.lines.map((line) => <div key={line.label}><dt>{pages(line.label)}</dt>{line.value && <dd>{line.value}</dd>}</div>)}
           <div className="is-total"><dt>{breakdown.totalLabel ?? "Total"}</dt><dd>{breakdown.total}</dd></div>
         </dl>
-        {breakdown.note && <p>{breakdown.note.replace(/\[page (\d+)\]/g, "page $1")}</p>}
+        {breakdown.note && <p>{pages(breakdown.note)}</p>}
       </section>
     </div>,
     host,

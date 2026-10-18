@@ -12,6 +12,8 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { useCharacterAutomation } from "../papersheet/characterAutomationContext";
 import { AppPanel } from "./appSheetShared";
+import { ExplainValue } from "../character-sheet/CharacterSheetExplain";
+import { breakdownFor } from "../../lib/calculationBreakdowns";
 
 function numberOf(value: unknown): number {
   const parsed = Number.parseInt(String(value), 10);
@@ -89,7 +91,7 @@ export function AppDeepcallerReference({ swap }: { swap?: ReactNode }) {
   });
   return <div className="appsheet-rites-disclosure">
     <p className="appsheet-rites-intro">{deepcaller
-      ? <>Strain level {strainLevel} · {rites.length} Rites{revelations.length ? ` · ${revelations.length} Revelations` : ""}. Whisper damage follows hunter level. Rite damage and printed higher-Strain upgrades use this hunter's current Strain level.</>
+      ? <>Strain level <ExplainValue breakdown={breakdownFor(card, "strainLevel")}>{strainLevel}</ExplainValue> · {rites.length} Rites{revelations.length ? ` · ${revelations.length} Revelations` : ""}. Whisper damage follows hunter level. Rite damage and printed higher-Strain upgrades use this hunter's current Strain level.</>
       : "Whisper damage follows hunter level."}</p>
     <AppPanel title="Prepared Whispers" aside={<span className="appsheet-status-word">{prepared.length} prepared</span>}>
       {prepared.length
