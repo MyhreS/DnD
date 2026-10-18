@@ -1,0 +1,182 @@
+/* An inventory item's own page: hero, stat tiles, rule cards. */
+.item-detail { --cat: var(--app-warm); display: grid; gap: 16px; max-width: 980px; }
+.item-detail.is-weapon { --cat: #d0a45c; }
+.item-detail.is-ammunition { --cat: #b9b3a6; }
+.item-detail.is-tool { --cat: #8fb0c9; }
+.item-detail.is-gear { --cat: #a7c08a; }
+.item-detail.is-consumable { --cat: #c98f8f; }
+.item-detail.is-valuable { --cat: #d9c27a; }
+
+.item-detail-hero {
+  position: relative;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 18px;
+  align-items: center;
+  padding: 22px 20px;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--cat) 35%, var(--app-line));
+  border-radius: 18px;
+  background:
+    radial-gradient(circle at 12% 30%, color-mix(in srgb, var(--cat) 22%, transparent), transparent 55%),
+    linear-gradient(160deg, rgba(255, 255, 255, .05), rgba(255, 255, 255, .01)),
+    var(--app-subtle);
+}
+.item-detail-art {
+  display: grid;
+  place-items: center;
+  width: 96px;
+  height: 96px;
+  padding: 20px;
+  border: 1px solid color-mix(in srgb, var(--cat) 55%, transparent);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--cat) 30%, transparent), rgba(0, 0, 0, .25) 75%);
+  box-shadow: 0 0 32px color-mix(in srgb, var(--cat) 18%, transparent), inset 0 1px 0 rgba(255, 255, 255, .08);
+  color: var(--cat);
+}
+.item-detail-art .catalog-icon { stroke-width: 1.4; }
+.item-detail-hero > div { display: grid; gap: 6px; min-width: 0; }
+.item-detail-hero small {
+  color: var(--cat);
+  font: 700 var(--sheet-fs-12)/1.2 "Alegreya Sans SC", sans-serif;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+.item-detail-hero h3 {
+  margin: 0;
+  color: var(--app-text);
+  font: 600 var(--sheet-fs-18)/1.1 "Cinzel", "Alegreya", serif;
+  font-size: clamp(24px, 4vw, 32px);
+  overflow-wrap: anywhere;
+}
+.item-detail-hero h3 em { display: block; margin-top: 4px; color: var(--app-muted); font: italic var(--sheet-fs-16)/1.2 "Alegreya", serif; }
+.item-detail-where { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 4px; }
+.item-detail-where strong {
+  padding: 3px 10px;
+  border: 1px solid var(--app-line);
+  border-radius: 999px;
+  color: var(--app-muted);
+  font: 700 var(--sheet-fs-11)/1.4 "Alegreya Sans SC", sans-serif;
+  letter-spacing: .05em;
+}
+.item-detail-where .is-equipped { border-color: color-mix(in srgb, var(--app-warm) 60%, transparent); background: color-mix(in srgb, var(--app-warm) 14%, transparent); color: var(--app-warm); }
+
+.item-detail-stats, .item-detail-facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+.item-detail-stat {
+  display: grid;
+  align-content: start;
+  gap: 4px;
+  min-width: 0;
+  padding: 14px 16px;
+  border: 1px solid var(--app-line);
+  border-radius: 14px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, .04), rgba(255, 255, 255, 0)), var(--app-subtle);
+}
+.item-detail-stat small { color: var(--app-muted); font: 700 var(--sheet-fs-11)/1.2 "Alegreya Sans SC", sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.item-detail-stat strong { color: var(--app-text); font: 600 var(--sheet-fs-18)/1.1 "Cinzel", "Alegreya", serif; font-size: clamp(20px, 3vw, 26px); overflow-wrap: anywhere; }
+.item-detail-stat span { color: var(--app-muted); font: var(--sheet-fs-13)/1.3 "Alegreya", serif; }
+.item-detail-stats .item-detail-stat:first-child strong { color: var(--cat); }
+.item-detail-facts .item-detail-stat { padding: 10px 14px; background: transparent; }
+.item-detail-facts .item-detail-stat strong { font-size: var(--sheet-fs-16); }
+
+.item-detail-callout {
+  display: grid;
+  gap: 3px;
+  margin: 0;
+  padding: 12px 16px 12px 14px;
+  border: 1px solid var(--app-line);
+  border-left: 3px solid var(--app-muted);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, .16);
+  color: var(--app-muted);
+  font: var(--sheet-fs-14)/1.45 "Alegreya", serif;
+}
+.item-detail-callout b { color: var(--app-text); font: 700 var(--sheet-fs-13)/1.3 "Alegreya Sans SC", sans-serif; letter-spacing: .06em; }
+.item-detail-callout.is-good { border-left-color: var(--app-positive, #7fae7a); }
+.item-detail-callout.is-good b { color: var(--app-positive, #7fae7a); }
+.item-detail-callout.is-warning { border-left-color: #d08a4a; }
+.item-detail-callout.is-warning b { color: #e0a060; }
+
+.item-detail-feature {
+  display: grid;
+  gap: 8px;
+  padding: 16px;
+  border: 1px solid var(--app-line);
+  border-radius: 14px;
+  background: var(--app-subtle);
+}
+.item-detail-feature.is-active { border-color: color-mix(in srgb, var(--cat) 45%, var(--app-line)); background: radial-gradient(circle at 100% 0, color-mix(in srgb, var(--cat) 12%, transparent), transparent 60%), var(--app-subtle); }
+.item-detail-feature header { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+.item-detail-feature header small { width: 100%; color: var(--app-muted); font: 700 var(--sheet-fs-11)/1.2 "Alegreya Sans SC", sans-serif; letter-spacing: .1em; text-transform: uppercase; }
+.item-detail-feature header b { color: var(--app-text); font: 600 var(--sheet-fs-18)/1.1 "Cinzel", "Alegreya", serif; }
+.item-detail-feature header em { color: var(--app-muted); font: italic var(--sheet-fs-13)/1.3 "Alegreya", serif; }
+.item-detail-feature.is-active header em { color: var(--cat); font-style: normal; font-weight: 700; }
+.item-detail-feature p { margin: 0; color: var(--app-text); font: var(--sheet-fs-15)/1.5 "Alegreya", serif; }
+
+.item-detail-section { display: grid; gap: 10px; }
+.item-detail-section h4 { margin: 4px 0 0; color: var(--app-muted); font: 700 var(--sheet-fs-12)/1.2 "Alegreya Sans SC", sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.item-detail-properties { display: grid; gap: 8px; }
+.item-detail-properties details { border: 1px solid var(--app-line); border-radius: 12px; background: var(--app-subtle); }
+.item-detail-properties summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 46px;
+  padding: 0 16px;
+  color: var(--app-text);
+  font: 600 var(--sheet-fs-15)/1.2 "Alegreya", serif;
+  list-style: none;
+  cursor: pointer;
+}
+.item-detail-properties summary::-webkit-details-marker { display: none; }
+.item-detail-properties summary::after { content: ""; width: 8px; height: 8px; border-right: 1.5px solid var(--app-muted); border-bottom: 1.5px solid var(--app-muted); transform: rotate(45deg); transition: transform 160ms ease; }
+.item-detail-properties details[open] summary::after { transform: rotate(-135deg); }
+.item-detail-properties details[open] { border-color: color-mix(in srgb, var(--cat) 40%, var(--app-line)); }
+.item-detail-properties details p { margin: 0; padding: 0 16px 14px; color: var(--app-muted); font: var(--sheet-fs-14)/1.5 "Alegreya", serif; }
+
+.item-detail-bonuses { display: grid; gap: 0; margin: 0; padding: 0; list-style: none; border: 1px solid var(--app-line); border-radius: 14px; background: var(--app-subtle); }
+.item-detail-bonuses li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 4px 14px; padding: 12px 16px; }
+.item-detail-bonuses li > span { display: contents; }
+.item-detail-bonuses li b { grid-row: 1; }
+.item-detail-bonuses li strong { grid-row: 1; grid-column: 2; }
+.item-detail-bonuses li small { grid-row: 2; grid-column: 1 / -1; }
+.item-detail-bonuses li + li { border-top: 1px solid var(--app-line); }
+.item-detail-bonuses b { color: var(--app-text); font: 600 var(--sheet-fs-15)/1.25 "Alegreya", serif; }
+.item-detail-bonuses small { color: var(--app-muted); font: var(--sheet-fs-13)/1.45 "Alegreya", serif; }
+.item-detail-bonuses strong { flex: none; color: var(--cat); font: 700 var(--sheet-fs-13)/1.3 "Alegreya Sans SC", sans-serif; letter-spacing: .04em; text-align: right; }
+
+.item-detail-quote { margin: 0; padding: 4px 0 4px 16px; border-left: 2px solid color-mix(in srgb, var(--cat) 50%, transparent); color: var(--app-muted); font: italic var(--sheet-fs-15)/1.55 "Alegreya", serif; }
+
+/* The card that opens the page. */
+.inventory-card-open {
+  grid-column: 1 / 3;
+  display: grid !important;
+  grid-template-columns: subgrid;
+  align-items: start;
+  min-width: 0;
+  height: auto !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: none !important;
+  color: inherit !important;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.inventory-card-open .catalog-card-body b::after { content: "›"; margin-left: 8px; color: var(--app-muted); font-weight: 400; }
+.inventory-card-open:hover .catalog-card-body b, .inventory-card-open:focus-visible .catalog-card-body b { color: var(--app-warm); }
+.inventory-card-open:focus-visible { outline: 2px solid var(--app-warm); outline-offset: 4px; border-radius: 10px; }
+.inventory-card:has(.inventory-card-open:active) { transform: scale(.99); }
+
+@media (max-width: 520px) {
+  .item-detail-hero { grid-template-columns: 72px minmax(0, 1fr); gap: 14px; padding: 18px 16px; }
+  .item-detail-art { width: 72px; height: 72px; padding: 15px; }
+  .item-detail-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  /* Weight, carry and value as one compact list: label, value, caption. */
+  .item-detail-facts { grid-template-columns: 1fr; gap: 0; border: 1px solid var(--app-line); border-radius: 14px; }
+  .item-detail-facts .item-detail-stat { grid-template-columns: 76px minmax(0, 1fr); align-items: baseline; gap: 2px 12px; padding: 12px 14px; border: 0; border-radius: 0; }
+  .item-detail-facts .item-detail-stat span { grid-column: 2; }
+  .item-detail-facts .item-detail-stat + .item-detail-stat { border-top: 1px solid var(--app-line); }
+  .item-detail-stats > .item-detail-stat:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}

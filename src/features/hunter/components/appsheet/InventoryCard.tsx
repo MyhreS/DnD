@@ -7,6 +7,8 @@ import { useCharacterAutomation } from "../papersheet/characterAutomationContext
 import { AppBloodvialPurity } from "./AppBloodvialPurity";
 import { BloodvialIcon, CatalogCategoryIcon, type CatalogIconName } from "./CatalogIcons";
 import { NumericStepper } from "./appSheetShared";
+import { InventoryItemDetail } from "./InventoryItemDetail";
+import { useCharacterSheetPageNavigation } from "../character-sheet/characterSheetPageNavigation";
 
 const FIREARM = /rifle|pistol|gun|musket|blunderbuss|cannon|carbine/i;
 
@@ -27,6 +29,7 @@ export function InventoryCard({ item, qty, purity, slotLabel, placements, worn, 
   loose: boolean;
 }) {
   const automation = useCharacterAutomation();
+  const navigation = useCharacterSheetPageNavigation();
   const { card } = automation;
   const armor = ARMOR_BY_ID[item.id];
   const armorEquipped = armor?.category === "Main Armor"
@@ -44,6 +47,18 @@ export function InventoryCard({ item, qty, purity, slotLabel, placements, worn, 
 
   return (
     <article className={`inventory-card catalog-card is-${item.category.toLowerCase()}`}>
+      <button
+        type="button"
+        className="inventory-card-open"
+        data-haptic="light"
+        aria-label={`${item.name}${purity ? ` ${purityName}` : ""}: show details`}
+        onClick={() => navigation.pushPage({
+          id: `item-${item.id}${purity ? `-${purity}` : ""}`,
+          title: item.name,
+          eyebrow: "Inventory",
+          content: <InventoryItemDetail item={item} qty={qty} purity={purity} where={worn ? [worn] : (placements ?? []).filter((entry) => entry.label !== "Unassigned").map((entry) => `${entry.count} × ${entry.label}`)} />,
+        })}
+      >
       <span className="catalog-card-art">{purity ? <BloodvialIcon purity={purity} /> : <CatalogCategoryIcon category={icon} />}</span>
       <div className="catalog-card-body">
         <b>{item.name}{purity ? ` · ${purityName}` : ""}</b>
@@ -54,6 +69,7 @@ export function InventoryCard({ item, qty, purity, slotLabel, placements, worn, 
             : placements!.map((entry) => <strong key={entry.label} className={entry.label === "Unassigned" ? "is-loose" : "is-equipped"}>{entry.count} × {entry.label === "Unassigned" ? "Not equipped" : entry.label}</strong>)}
         </span>}
       </div>
+      </button>
       <div className="inventory-card-count">
         {worn ? null : <NumericStepper value={qty} label={`${item.name}${purity ? ` ${purityName}` : ""} quantity`} disabled={readOnly} onChange={(next) => automation.changeQty(item.id, next - qty, purity)} />}
       </div>

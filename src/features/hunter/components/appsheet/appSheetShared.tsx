@@ -61,45 +61,6 @@ export function AppPanel({ title, aside, children, className = "" }: {
   );
 }
 
-export function AppDisclosure({
-  title,
-  summary,
-  aside,
-  children,
-  defaultOpen = false,
-  className = "",
-  id,
-}: {
-  title: string;
-  summary?: ReactNode;
-  aside?: ReactNode;
-  children: ReactNode;
-  defaultOpen?: boolean;
-  className?: string;
-  id?: string;
-}) {
-  const [isOpen, setIsOpen] = useState(defaultOpen);
-
-  return (
-    <details
-      id={id}
-      className={`appsheet-disclosure ${className}`.trim()}
-      open={isOpen}
-      onToggle={(event) => setIsOpen(event.currentTarget.open)}
-    >
-      <summary>
-        <span className="appsheet-disclosure-heading">
-          <b>{title}</b>
-          {summary && <span className="appsheet-disclosure-summary">{summary}</span>}
-        </span>
-        {aside && <span className="appsheet-disclosure-aside">{aside}</span>}
-        <span className="appsheet-disclosure-icon" aria-hidden="true" />
-      </summary>
-      <div className="appsheet-disclosure-content">{children}</div>
-    </details>
-  );
-}
-
 export function AutoReason({ reason }: { reason?: string }) {
   const visible = useContext(AppAutoReasonsVisibleContext);
   if (!reason || !visible) return null;
