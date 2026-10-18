@@ -293,7 +293,8 @@ export function previewCard(uid: string): import("@/types").HunterCard {
     feats: ["Tough"],
     abilities: { str: 12, dex: 15, con: 13, int: 10, wis: 12, cha: 8 },
     baseAbilities: { str: 12, dex: 15, con: 13, int: 10, wis: 12, cha: 8 },
-    skillProficiencies: ["Stealth", "Perception", "Survival"],
+    // Grave Tender gives Grit and Perception; Scout picks three of its own.
+    skillProficiencies: ["Stealth", "Survival", "Investigation", "Grit", "Perception"],
     mainArmorId: "hunter-leather-coat",
     addonArmorIds: ["leather-pauldron-right", "leather-vambrace-right"],
     studdedAddonIds: ["leather-pauldron-right"],
