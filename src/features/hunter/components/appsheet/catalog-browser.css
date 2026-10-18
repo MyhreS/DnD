@@ -217,3 +217,18 @@
 }
 .inventory-card-where .is-equipped { border: 1px solid color-mix(in srgb, var(--app-warm) 60%, transparent); background: color-mix(in srgb, var(--app-warm) 16%, transparent); color: var(--app-warm); }
 .inventory-card-where .is-loose { border: 1px dashed var(--app-line); color: var(--app-muted); }
+
+/* Inventory sections: Worn, Weapons, Ammunition, Armor, Consumables, … */
+.inventory-groups { display: grid; gap: 18px; }
+.inventory-group { display: grid; gap: 8px; }
+.inventory-group h4 {
+  display: flex; align-items: center; gap: 8px; margin: 0;
+  color: var(--app-warm);
+  font: 700 var(--sheet-fs-12)/1.2 "Alegreya Sans SC", sans-serif;
+  letter-spacing: .12em; text-transform: uppercase;
+}
+.inventory-group h4 small {
+  min-width: 22px; padding: 2px 7px; border-radius: 999px;
+  background: color-mix(in srgb, var(--app-warm) 14%, transparent);
+  font-size: var(--sheet-fs-11); letter-spacing: 0; text-align: center;
+}

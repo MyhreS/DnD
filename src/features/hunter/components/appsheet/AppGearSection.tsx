@@ -25,6 +25,20 @@ import {
 import { ExplainValue } from "../character-sheet/CharacterSheetExplain";
 import { breakdownFor, weaponBreakdown } from "../../lib/calculationBreakdowns";
 
+/** The inventory's sections, in the order players look for things. Anything
+ * of a category not listed lands in "Other". */
+const INVENTORY_GROUPS: Array<{ title: string; categories: string[] }> = [
+  { title: "Weapons", categories: ["Weapon"] },
+  { title: "Ammunition", categories: ["Ammunition"] },
+  { title: "Armor", categories: ["Armor"] },
+  { title: "Consumables", categories: ["Consumable"] },
+  { title: "Tools", categories: ["Tool"] },
+  { title: "Gear", categories: ["Gear"] },
+  { title: "Valuables", categories: ["Valuable"] },
+];
+const GROUPED = new Set(INVENTORY_GROUPS.flatMap((group) => group.categories));
+INVENTORY_GROUPS.push({ title: "Other", categories: [] });
+
 export function AppGearSection({
   model,
   defaultOpen = false,
@@ -70,21 +84,31 @@ export function AppGearSection({
         </button>
       ) : <span className="appsheet-status-word">{inventory.length} item types</span>}>
         {inventory.length || wornItems.length ? (
-          <div className={`appsheet-inventory-list inventory-card-grid${manageEquipmentSeparately ? " appsheet-inventory-loose" : ""}`} data-testid="appsheet-inventory">
-            {inventory.map(({ item, qty, purity }) => (
-              <InventoryCard
-                key={purity ? `${item.id}#${purity}` : item.id}
-                item={item}
-                qty={qty}
-                purity={purity}
-                slotLabel={slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unassigned")}
-                readOnly={model.readOnly}
-                loose={manageEquipmentSeparately}
-                placements={manageEquipmentSeparately ? slots.placements[item.id] : undefined}
-              />
-            ))}
-            {wornItems.map(({ item, label }) => (
-              <InventoryCard key={`worn:${item.id}`} item={item} qty={1} worn={label} readOnly={model.readOnly} loose={manageEquipmentSeparately} />
+          <div className="inventory-groups" data-testid="appsheet-inventory">
+            {[
+              { title: "Worn", cards: wornItems.map(({ item, label }) => (
+                <InventoryCard key={`worn:${item.id}`} item={item} qty={1} worn={label} readOnly={model.readOnly} loose={manageEquipmentSeparately} />
+              )) },
+              ...INVENTORY_GROUPS.map(({ title, categories }) => ({
+                title,
+                cards: inventory.filter(({ item }) => (categories.length ? categories.includes(item.category) : !GROUPED.has(item.category))).map(({ item, qty, purity }) => (
+                  <InventoryCard
+                    key={purity ? `${item.id}#${purity}` : item.id}
+                    item={item}
+                    qty={qty}
+                    purity={purity}
+                    slotLabel={slots.byItem[item.id] ?? (item.carry === "Insignificant" ? "No slot" : "Unassigned")}
+                    readOnly={model.readOnly}
+                    loose={manageEquipmentSeparately}
+                    placements={manageEquipmentSeparately ? slots.placements[item.id] : undefined}
+                  />
+                )),
+              })),
+            ].filter((group) => group.cards.length).map((group) => (
+              <section key={group.title} className="inventory-group" aria-label={group.title}>
+                <h4>{group.title}<small>{group.cards.length}</small></h4>
+                <div className={`appsheet-inventory-list inventory-card-grid${manageEquipmentSeparately ? " appsheet-inventory-loose" : ""}`}>{group.cards}</div>
+              </section>
             ))}
           </div>
         ) : <p className="appsheet-empty-copy">{manageEquipmentSeparately ? "Everything is equipped. Add another item or return equipment to Inventory." : "Choose a class to receive its starting equipment, then add a background kit or catalog items."}</p>}
