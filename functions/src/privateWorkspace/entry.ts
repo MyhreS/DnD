@@ -7,4 +7,4 @@ export async function publicEntry(path: string) {
   const body = await readFile(resolve(root, file));
   return {body, type:file.endsWith(".html")?"text/html":file.endsWith(".css")?"text/css":"application/javascript"};
 }
-export const gatePolicy = "default-src 'self'; script-src 'self' https://apis.google.com; style-src 'self'; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com; frame-src https://dandd-ea955.firebaseapp.com; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; object-src 'none'";
+export const gatePolicy = "default-src 'self'; script-src 'self' https://apis.google.com; style-src 'self'; connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.googleapis.com; frame-src https://dandd-ea955.firebaseapp.com https://dandd-ea955.web.app; img-src 'self' data:; frame-ancestors 'none'; base-uri 'none'; object-src 'none'";
