@@ -94,6 +94,33 @@ Keep technical details in internal notes intended for developers. This
 communication rule changes wording only; it does not weaken identity checks,
 privacy requirements, review gates, or the need to report a real blocker.
 
+## Christoffer's developer access
+
+Christoffer has direct access to both GitHub and Firebase, so his own agent can
+work on the main D&D app much like Simon's:
+
+- **GitHub:** the account `myhrefjeld-blip` is a collaborator on `MyhreS/DnD`
+  with **write** access. It can push branches, open and merge pull requests,
+  and run the `Deploy` workflow (see below). Repository settings and secrets
+  stay with Simon (admin).
+- **Firebase / Google Cloud:** `myhrefjeld@gmail.com` is an **Editor** on the
+  project `dandd-ea955`. It can read and change Firestore data and deploy
+  Hosting, Firestore and Storage rules, and Cloud Functions with the Firebase
+  CLI. It cannot change who has access or billing; Simon
+  (`simonmyhre1@gmail.com`) is the Owner.
+- **Firebase CLI:** log in with that account (`firebase login:add
+  myhrefjeld@gmail.com`) and pass `--account myhrefjeld@gmail.com --project
+  dandd-ea955` to every command, so another login on the machine is never used.
+- **Doppler:** not part of this access. Without it a local `bun run build` or
+  `bun run deploy` cannot get the web config, so deploy the web app by merging
+  to `main` or running the `Deploy` workflow.
+
+The same data rules apply to him as to everyone: back up before changing stored
+data, never commit secrets or players' data, and keep
+`docs/rules/hidden-condition-sheet.txt` out of anything public. This developer
+access is to the main app's project; it is not a pattern for authorizing his
+separate private app, whose owner-only checks above still apply.
+
 ## GitHub Actions deployment
 
 The `Deploy` workflow automatically deploys the main D&D app to Firebase after
