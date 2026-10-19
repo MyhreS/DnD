@@ -1,3 +1,4 @@
+import './private-workspace-runtime-test.mjs';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {createRequire} from 'node:module';
@@ -40,6 +41,15 @@ for(const user of [gm,admin]){
  user.cookie=unlocked.headers.get('set-cookie').split(';')[0];
  const resource=await call('/app/',{cookie:user.cookie});assert.equal(resource.status,200);assert.match(await resource.text(),/SYNTHETIC_PRIVATE_CANARY_7f19/);assert.match(resource.headers.get('cache-control'),/private.*no-store/);
 }
+const reusedEntry={sha256:hash(body),type:'text/html',bytes:body.length,chunks:1,sourceRelease:release};
+for(const [entry,expected] of [[reusedEntry,200],[{...reusedEntry,sourceRelease:'../outside'},404],[{...reusedEntry,sourceRelease:'f'.repeat(64)},404],[{...reusedEntry,sha256:'0'.repeat(64)},404]]){
+ const nextManifest=JSON.stringify({'index.html':entry}),nextRelease=hash(nextManifest);
+ await db.doc(`privateWorkspaceReleases/${nextRelease}`).set({manifest:nextManifest});await db.doc('privateWorkspaceSettings/current').update({release:nextRelease});
+ const response=await call('/app/',{cookie:gm.cookie});assert.equal(response.status,expected,'Reused payloads must retain path, source and checksum verification');
+ if(expected===200)assert.match(await response.text(),/SYNTHETIC_PRIVATE_CANARY_7f19/);else assert.doesNotMatch(await response.text(),/SYNTHETIC_PRIVATE_CANARY_7f19/);
+ assert.equal((await call('/app/',{user:player})).status,404,'Payload reuse cannot bypass password or identity checks');
+}
+await db.doc('privateWorkspaceSettings/current').update({release});
 assert.equal((await call('/api/unlock',{user:gm,method:'POST',body:{password},headers:{Origin:'https://unrelated.example.test'}})).status,404,'Cross-origin unlock must be denied');
 const reference={version:3,npcEdits:{},creatureArt:{},customItems:[]};
 assert.deepEqual(await (await call('/api/state',{cookie:gm.cookie})).json(),{revision:0,state:null});
