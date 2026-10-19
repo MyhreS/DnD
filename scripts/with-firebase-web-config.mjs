@@ -9,7 +9,7 @@ function capture(tool, toolArgs) {
   return result.stdout;
 }
 
-const account = "simonmyhre1@gmail.com";
+const account = process.env.FIREBASE_ACCOUNT ?? "simonmyhre1@gmail.com";
 const project = "dandd-ea955";
 const common = ["--account", account, "--project", project];
 const firebaseTool = process.platform === "win32" ? "firebase.cmd" : "firebase";

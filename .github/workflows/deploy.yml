@@ -84,10 +84,27 @@ jobs:
           echo "$RUNNER_TEMP/doppler-bin" >> "$GITHUB_PATH"
           "$RUNNER_TEMP/doppler-bin/doppler" --version
 
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install backend test dependencies
+        run: npm --prefix functions ci
+
+      - name: Test protected workspace policy
+        run: bun run test:private-workspace
+
       - name: Build
-        run: doppler run --token="$DOPPLER_TOKEN" -- bun run build:ci
+        run: doppler run --token="$DOPPLER_TOKEN" -- sh -c "bun run build:ci && bun run build:secure:ci"
         env:
           DOPPLER_TOKEN: ${{ secrets.DOPPLER_TOKEN }}
+
+      - name: Test protected workspace boundary
+        run: |
+          node scripts/check-public-workspace-artifacts.mjs
+          npm --prefix functions run build
+          bunx firebase-tools@15.34.0 emulators:exec --project demo-protected --only auth,firestore,functions "node scripts/private-workspace-emulator-test.mjs"
 
       - name: Deploy to live channel
         if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'

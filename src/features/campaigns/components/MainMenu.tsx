@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { useAuthStore } from "@/features/auth/store/authStore";
+import { useWorkspaceAccess } from "@/features/secureWorkspace/hooks/useWorkspaceAccess";
 import { Sigil } from "@/components/icons";
 
 /** The main menu: the stable player surfaces and their purpose. */
 export function MainMenu() {
+  const workspace = useWorkspaceAccess();
   const member = useAuthStore((s) => s.member);
 
   return (
@@ -35,6 +37,7 @@ export function MainMenu() {
         <GuideCard to="/profile" title="Profile" body="Your account and settings — tap your initial in the corner." />
       </div>
 
+      {workspace.available && <a className="btn btn-ghost" href={workspace.url} target="_blank" rel="noreferrer">{workspace.label} ↗</a>}
       <div className="rule-ornament">◆</div>
       <Link className="btn btn-ghost" to="/codex">Open the Codex</Link>
     </div>

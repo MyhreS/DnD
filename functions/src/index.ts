@@ -1,3 +1,5 @@
+export { privateWorkspace } from "./privateWorkspace/server";
+export { getPrivateWorkspaceAccess, revokePrivateWorkspaceSessions } from "./privateWorkspace/access";
 import { getApps, initializeApp } from "firebase-admin/app";
 import { getFirestore } from "firebase-admin/firestore";
 import { setGlobalOptions, logger } from "firebase-functions/v2";
