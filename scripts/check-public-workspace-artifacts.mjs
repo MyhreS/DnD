@@ -7,12 +7,19 @@ async function files(root) {
  return (await Promise.all(entries.map(entry=>entry.isDirectory()?files(join(root,entry.name)):[join(root,entry.name)]))).flat();
 }
 let count=0;
+const policy=await readFile('functions/src/privateWorkspace/entry.ts','utf8');
+const authDomains=new Set();
 for(const root of ['dist','functions/secure-entry']) {
  for(const file of await files(root)) {
   const body=await readFile(file);count++;
   assert.ok(!file.endsWith('.map'),'Public source maps must stay disabled.');
   assert.ok(!body.includes(Buffer.from('SYNTHETIC_PRIVATE_CANARY_7f19')),'Private canary appeared in a public artifact.');
   assert.ok(!/\/app\/(?:assets|resources|bundle)\/[a-f0-9]{64}/.test(body.toString()),'A private release resource appeared in a public artifact.');
+  if(root==='functions/secure-entry'&&file.endsWith('.js')) {
+   for(const match of body.toString().matchAll(/(?:["']?authDomain["']?)\s*:\s*["']([^"']+)["']/g))authDomains.add(match[1]);
+  }
  }
 }
+assert.equal(authDomains.size,1,'The public entry must use one explicit authentication domain.');
+for(const domain of authDomains)assert.ok(policy.includes(`https://${domain}`),'The built authentication domain is blocked by the entry frame policy.');
 console.log(`Public workspace artifact boundary passed (${count} files).`);
