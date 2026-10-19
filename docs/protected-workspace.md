@@ -14,6 +14,8 @@ Passwords are individual, with a minimum length of twelve characters. Store only
 
 Private releases live in dedicated Firestore namespaces, with binary resources split into chunks below the document limit. Existing default-deny rules prohibit direct client access. Only the authenticated delivery function uses the Admin SDK to retrieve them. Release manifests and every resource are checked against SHA-256 before delivery. Names exposed in resource requests should be opaque content identifiers, not campaign names or original filenames.
 
+An entry may pin `sourceRelease` to an earlier release's payload to reuse unchanged resources. This field must be a full SHA-256 identifier inside the selected, hash-verified manifest. The delivery function still checks the current caller, the allowed path, exact byte length and payload hash; it does not follow another manifest or accept a source release from the request. Keep referenced release chunks when retiring old releases. Presentation windows retain the same authorization and lock handling, with the lock button kept on the GM console so artwork remains clear.
+
 Never copy a private application into `src`, `public`, static Hosting output, source maps, PWA caches or CI artifacts. Use a trusted local importer after the production access boundary passes synthetic canary checks. The public entry build goes into ignored `functions/secure-entry`, included with the backend deployment; it contains no private application code.
 
 ## Provisioning and release
