@@ -21,7 +21,7 @@
     "lint:fix": "eslint . --fix",
     "deadcode": "knip",
     "deadcode:fix": "knip --fix --allow-remove-files",
-    "check": "bun run test:codex && bun run test:ability-buy && bun run test:stored-character-migration && bun run test:character-automation && bun run test:class-matrix && bun run test:game-presentation && bun run test:enemy-library && bun run test:item-prices && bun run test:shop && bun run test:death-favor && bun run test:workshop-manager && bun run test:pwa-update-policy && tsc -b && eslint . && knip",
+    "check": "bun run test:private-workspace && bun run test:codex && bun run test:ability-buy && bun run test:stored-character-migration && bun run test:character-automation && bun run test:class-matrix && bun run test:game-presentation && bun run test:enemy-library && bun run test:item-prices && bun run test:shop && bun run test:death-favor && bun run test:workshop-manager && bun run test:pwa-update-policy && tsc -b && eslint . && knip",
     "token": "doppler run -- bun scripts/mint-test-token.mjs",
     "e2e": "node scripts/e2e-character-automation.mjs && node scripts/e2e-game-page.mjs && node scripts/e2e-confirmations.mjs && node scripts/e2e-codex.mjs && node scripts/e2e-app-audit.mjs && bun run e2e:workshop && npm run e2e:battle",
     "e2e:audit": "node scripts/e2e-app-audit.mjs",
@@ -62,7 +62,10 @@
     "workshop:bot": "bun scripts/workshop-manager.ts",
     "workshop:bot:once": "bun scripts/workshop-manager.ts --once",
     "workshop:storage-cors": "gcloud storage buckets update gs://dandd-ea955.firebasestorage.app --cors-file=storage.cors.json --project=dandd-ea955 --account=simonmyhre1@gmail.com",
-    "deploy:workshop": "bun run build:workshop && firebase deploy --only hosting:workshop"
+    "deploy:workshop": "bun run build:workshop && firebase deploy --only hosting:workshop",
+    "build:secure:ci": "tsc -b && vite build --config vite.secure.config.ts",
+    "test:private-workspace": "bun scripts/private-workspace-test.ts",
+    "test:private-workspace:emulator": "npm --prefix functions run build && firebase emulators:exec --project demo-protected --only auth,firestore,functions \"node scripts/private-workspace-emulator-test.mjs\""
   },
   "dependencies": {
     "date-fns": "^4.1.0",

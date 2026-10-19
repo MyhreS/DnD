@@ -53,3 +53,9 @@ logs
 *.log
 npm-debug.log*
 bun-debug.log*
+
+# Generic protected-entry build only; private payloads must never be tracked.
+dist-secure/
+private-workspace/
+
+/functions/secure-entry/

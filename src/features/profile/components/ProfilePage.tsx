@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { useAuthStore } from "@/features/auth/store/authStore";
 import { fullName } from "@/config";
 import { format } from "date-fns";
@@ -12,6 +13,8 @@ export function ProfilePage() {
   const member = useAuthStore((s) => s.member);
   const signOut = useAuthStore((s) => s.signOut);
   const navigate = useNavigate();
+  const [signingOut, setSigningOut] = useState(false);
+  const [signOutError, setSignOutError] = useState("");
 
   const name = member ? fullName(member) : (user?.displayName ?? "Hunter");
   return (
@@ -44,13 +47,18 @@ export function ProfilePage() {
       <button
         className="btn btn-ghost"
         style={{ marginTop: 18 }}
+        disabled={signingOut}
         onClick={async () => {
-          await signOut();
-          navigate("/");
+          setSigningOut(true);
+          setSignOutError("");
+          try { await signOut(); navigate("/"); }
+          catch { setSignOutError("Could not sign out safely. Check your connection and try again."); }
+          finally { setSigningOut(false); }
         }}
       >
         <SignOutIcon width={18} height={18} /> Sign out
       </button>
+      {signOutError && <p role="alert">{signOutError}</p>}
 
       <p className="faint center" style={{ fontSize: "0.78rem", marginTop: 24 }}>
         Catacombs &amp; Starspawns — a private companion for our table.

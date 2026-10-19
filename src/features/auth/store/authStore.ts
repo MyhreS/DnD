@@ -1,3 +1,4 @@
+import { lockWorkspaceSessions } from "@/api/secureWorkspace";
 import { create } from "zustand";
 import {
   onAuthStateChanged,
@@ -154,6 +155,9 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   },
 
   signOut: async () => {
+    if (auth.currentUser && (await auth.currentUser.getIdTokenResult()).claims.protectedWorkspace === true) {
+      try { await lockWorkspaceSessions(); } catch { throw new Error("Could not lock your private workspace. Check your connection and try again."); }
+    }
     await fbSignOut(auth);
     set({
       user: null,
